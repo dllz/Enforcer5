@@ -6,6 +6,7 @@
 
   "dependencies": {
     "Microsoft.NETCore.App": "1.1.0",
+    "Microsoft.Win32.Registry": "4.0.0",
     "StackExchange.Redis": "1.1.608",
     "Telegram.Bot": "10.4.0"
   },

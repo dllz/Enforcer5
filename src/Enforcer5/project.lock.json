@@ -296,7 +296,7 @@
           "System.Runtime.InteropServices": "4.1.0"
         },
         "compile": {
-          "ref/netstandard1.3/_._": {}
+          "ref/netstandard1.3/Microsoft.Win32.Registry.dll": {}
         },
         "runtimeTargets": {
           "runtimes/unix/lib/netstandard1.3/Microsoft.Win32.Registry.dll": {
@@ -7200,6 +7200,7 @@
   "projectFileDependencyGroups": {
     "": [
       "Microsoft.NETCore.App >= 1.1.0",
+      "Microsoft.Win32.Registry >= 4.0.0",
       "StackExchange.Redis >= 1.1.608",
       "Telegram.Bot >= 10.4.0"
     ],
