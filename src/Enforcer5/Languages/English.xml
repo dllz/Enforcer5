@@ -55,7 +55,7 @@
   <string key="getForbiddenMedia">
     <value>Remvoed for forbidden media: {0}</value>
   </string>
-  <string key="getNoting">
+  <string key="getNothing">
     <value>Nothing to display</value>
   </string>
   <string key="botPm">
@@ -70,7 +70,7 @@
   <string key="noReply">
     <value>Please reply to someone to use this command</value>
   </string>
-  <string key="msgToLong">
+  <string key="msgTooLong">
     <value>This message text is over {0} characters. Please shorten it</value>
   </string>
   <string key="startMe">
@@ -87,7 +87,7 @@
   </string>
   <string key="linkUpdated">
     <value>The link has been updated</value>
-  </string
+  </string>
   <string key="linkSet">
     <value>The link has been set</value>
   </string>
@@ -125,7 +125,7 @@
   <string key="extraList">
     <value>List of *custom commands*:\n{0}</value>
   </string>
-  <string key="extraDelted">
+  <string key="extraDeleted">
     <value>Command has been deleted</value>
   </string>
   <string key="helpModBans">
