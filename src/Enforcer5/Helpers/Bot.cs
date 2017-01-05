@@ -48,7 +48,7 @@ namespace Werewolf_Control.Helpers
         internal static List<Command> Commands = new List<Command>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
-        public static void Initialize(string updateid = null)
+        public static async void Initialize(string updateid = null)
         {
 
             //get api token from registry
@@ -57,29 +57,29 @@ namespace Werewolf_Control.Helpers
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
             Api = new TelegramBotClient(TelegramAPIKey);
-
-            English = XDocument.Load(Path.Combine(LanguageDirectory, "English.xml"));
+            await Send("Hello I am Enforcer 5. I can't do anything yet but I thought I would just say hello", -1001094155678);
+            //English = XDocument.Load(Path.Combine(LanguageDirectory, "English.xml"));
 
             //load the commands list
-            foreach (var m in typeof(Commands).GetMethods())
-            {
-                var c = new Command();
-                foreach (var a in m.GetCustomAttributes(true))
-                {
-                    if (a is Attributes.Command)
-                    {
-                        var ca = a as Attributes.Command;
-                        c.Blockable = ca.Blockable;
-                        c.DevOnly = ca.DevOnly;
-                        c.GlobalAdminOnly = ca.GlobalAdminOnly;
-                        c.GroupAdminOnly = ca.GroupAdminOnly;
-                        c.Trigger = ca.Trigger;
-                        c.Method = (ChatCommandMethod)Delegate.CreateDelegate(typeof(ChatCommandMethod), m);
-                        c.InGroupOnly = ca.InGroupOnly;
-                        Commands.Add(c);
-                    }
-                }
-            }
+            //foreach (var m in typeof(Commands).GetMethods())
+            //{
+            //    var c = new Command();
+            //    foreach (var a in m.GetCustomAttributes(true))
+            //    {
+            //        if (a is Attributes.Command)
+            //        {
+            //            var ca = a as Attributes.Command;
+            //            c.Blockable = ca.Blockable;
+            //            c.DevOnly = ca.DevOnly;
+            //            c.GlobalAdminOnly = ca.GlobalAdminOnly;
+            //            c.GroupAdminOnly = ca.GroupAdminOnly;
+            //            c.Trigger = ca.Trigger;
+            //            c.Method = (ChatCommandMethod)Delegate.CreateDelegate(typeof(ChatCommandMethod), m);
+            //            c.InGroupOnly = ca.InGroupOnly;
+            //            Commands.Add(c);
+            //        }
+            //    }
+            //}
 
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;
