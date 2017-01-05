@@ -134,7 +134,7 @@
   <string key="helpModInfo">
     <value>*Admins: info about the group*\n/setrules [group rules]` = set the new rules for the group (the old ones will be overwritten).\n/addrules [text]` = add some text at the end of the existing rules.\n/setabout [group description]` = set a new description for the group (the old one will be overwritten).\n/addabout [text]` = add some text at the end of the existing description.\n*Note:* Markdown is supported. If the text sent breaks the markdown, the bot will notify that something is wrong.\n</value>
   </string>
-  <string key="heloModFlood">
+  <string key="helpModFlood">
     <value>*Admins: flood settings*\n/antiflood` = manage the flood settings in private, with an inline keyboard. You can change the sensitivity, the action (kick/ban), and even set some exceptions.\n_Note_ : the number must be higher than 3 and lower than 26.\n</value>
   </string>
   <string key="helpModMedia">
