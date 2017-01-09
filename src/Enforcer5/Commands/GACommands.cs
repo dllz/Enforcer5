@@ -15,7 +15,7 @@ namespace Enforcer5.Commands
 {
     public class GACommands
     {
-        [Command(Trigger = "uploadlang", GlobalAdminOnly = true)]
+        [Command(Trigger = "uploadlanguage", GlobalAdminOnly = true)]
         public static async void UploadLang(Update update, string[] args)
         {
             try
@@ -38,7 +38,7 @@ namespace Enforcer5.Commands
             }
         }
 
-        [Command(Trigger = "validatelangs", GlobalAdminOnly = true)]
+        [Command(Trigger = "validatelanguages", GlobalAdminOnly = true)]
         public static async void ValidateLangs(Update update, string[] args)
         {
             //var langs = Directory.GetFiles(Bot.LanguageDirectory)
