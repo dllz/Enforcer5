@@ -27,10 +27,10 @@ namespace Enforcer5.Commands
                     return;
                 }
                 var fileid = update.Message.ReplyToMessage.Document?.FileId;
-                //if (fileid != null)
-                //    LanguageHelper.UploadFile(fileid, id,
-                //        update.Message.ReplyToMessage.Document.FileName,
-                //        update.Message.MessageId);
+                if (fileid != null)
+                    LanguageHelper.UploadFile(fileid, id,
+                        update.Message.ReplyToMessage.Document.FileName,
+                        update.Message.MessageId);
             }
             catch (Exception e)
             {
