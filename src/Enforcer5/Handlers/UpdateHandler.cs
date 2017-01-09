@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
@@ -192,6 +193,17 @@ namespace Enforcer5.Handlers
         //            }
         //        }
 
+
+        private static void Log(Models.Commands command, Update update)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write($"[{System.DateTime.Now.Date}]");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(command.Method.GetMethodInfo().Name);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($"{update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+        }
+
         internal static void HandleUpdate(Update update)
         {
             {
@@ -222,7 +234,8 @@ namespace Enforcer5.Handlers
                                                 StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {
-                                    Console.WriteLine($"{ConsoleColor.Blue}[{System.DateTime.Now.Date}]{ConsoleColor.Red} {command} {ConsoleColor.White} {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+                                    Log(command, update);
+                                    
                                     //check that we should run the command
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
                                     {

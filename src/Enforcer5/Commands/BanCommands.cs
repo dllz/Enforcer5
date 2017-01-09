@@ -7,9 +7,9 @@ using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
 
-namespace Enforcer5.Commands
+namespace Enforcer5
 {
-    public static partial class BanCommands
+    public static partial class Commands
     {
         [Command(Trigger = "kickme", InGroupOnly = true)]
         public static void Kickme(Update update, string[] args)

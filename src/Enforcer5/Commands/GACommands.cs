@@ -11,9 +11,9 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Enforcer5.Commands
+namespace Enforcer5
 {
-    public class GACommands
+    public static partial class Commands
     {
         [Command(Trigger = "uploadlanguage", GlobalAdminOnly = true)]
         public static async void UploadLang(Update update, string[] args)
