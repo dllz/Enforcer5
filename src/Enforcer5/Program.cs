@@ -25,7 +25,6 @@ namespace Enforcer5
         public static void Main(string[] args)
         {
             Console.Title = "Enforcer";
-
             //Make sure another instance isn't already running
             if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
             {

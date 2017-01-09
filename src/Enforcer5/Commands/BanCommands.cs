@@ -28,19 +28,25 @@ namespace Enforcer5
         [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true)]
         public static async void Kick(Update update, string[] args)
         {
-            var userid = Methods.GetUserId(update, args);
-            var res = Methods.KickUser(update.Message.Chat.Id, userid);
-            if (res.Result)
+            try
             {
-               
+                var userid = Methods.GetUserId(update, args);
+                var res = Methods.KickUser(update.Message.Chat.Id, userid).Result;
+
                 Methods.SaveBan(userid, "kick");
                 var lang = Methods.GetGroupLanguage(update.Message);
-                object[] arguments = { Methods.GetNick(update.Message, args, true), Methods.GetNick(update.Message, args)};
+                object[] arguments =
+                {
+                        Methods.GetNick(update.Message, args, true),
+                        Methods.GetNick(update.Message, args)
+                    };
                 await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+
+
             }
-            if (res.Exception != null)
+            catch (AggregateException e)
             {
-                Methods.SendError(res.Exception.InnerExceptions[0], update.Message);
+                Methods.SendError(e.InnerExceptions[0], update.Message);
             }
         }
     }

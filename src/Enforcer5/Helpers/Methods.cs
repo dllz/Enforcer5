@@ -15,36 +15,42 @@ namespace Enforcer5.Helpers
 {
     public class Methods
     {
-        public static Task<bool> KickUser(long chatId, int userId)
+        public static async Task<bool> KickUser(long chatId, int userId)
         {
-            var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None);
-            if (res.IsCompleted && res.Result)
+            
+            try
             {
-                Redis.db.HashIncrement("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                var check = Bot.Api.GetChatMemberAsync(chatId, userId);
-                var status = check.Result.Status;
-                var count = 0;
+                var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None).Result;
+                if (res)
+                {
+                    Redis.db.HashIncrement("bot:general", "kick", 1); //Save the number of kicks made by the bot
+                    var check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                    var status = check.Status;
+                    var count = 0;
 
-                while (status == ChatMemberStatus.Member && count < 10)
-                {
-                    check = Bot.Api.GetChatMemberAsync(chatId, userId);
-                    status = check.Result.Status;
-                    count++;
-                }
-                count = 0;
-                while (status != ChatMemberStatus.Left && count < 10)
-                {
-                    Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                    check = Bot.Api.GetChatMemberAsync(chatId, userId);
-                    status = check.Result.Status;
-                    count++;
+                    while (status == ChatMemberStatus.Member && count < 10)
+                    {
+                        check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                        status = check.Status;
+                        count++;
+                    }
+                    count = 0;
+                    while (status != ChatMemberStatus.Left && count < 10)
+                    {
+                        await Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                        check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                        status = check.Status;
+                        count++;
+                    }
                 }
                 return res;
             }
-            else
+            catch (AggregateException e)
             {
-                return res;
+                await Bot.Send(e.InnerExceptions[0].Message, -1001077134233);
+                return false;
             }
+            
         }
 
         public static async void SendError(Exception exceptionInnerException, Message updateMessage)

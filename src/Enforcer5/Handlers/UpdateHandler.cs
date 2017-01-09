@@ -210,12 +210,17 @@ namespace Enforcer5.Handlers
                 //CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
+
+                if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
+                    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+
                 Console.WriteLine($"Message Received {update.Message.Type}");
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
 
                 var id = update.Message.Chat.Id;
                 var args = GetParameters(update.Message.Text);
+                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;              
                 try
                 {
