@@ -7,6 +7,7 @@
 --suppress-warning:CS1702
 --suppress-warning:CS1705
 --optimize:True
+--debug-type:portable
 --emit-entry-point:True
 --output-name:Enforcer5
 --title:Enforcer 5

@@ -5,7 +5,7 @@
 -nowarn:CS1702
 -nowarn:CS1705
 -optimize
--debug:full
+-debug:portable
 -nostdlib
 -nologo
 "C:\Users\jus00091\Source\Repos\Enforcer5\src\Enforcer5\obj\Release\netcoreapp1.0\dotnet-compile.assemblyinfo.cs"

@@ -55,7 +55,7 @@ namespace Enforcer5.Helpers
             await Send($"Bot Started:\n{System.DateTime.Now.Date}", Constants.Devs[0]);
 
             //load the commands list
-            foreach (var m in typeof(Models.Commands).GetMethods())
+            foreach (var m in typeof(Commands).GetMethods())
             {
                 var c = new Models.Commands();
                 foreach (var a in m.GetCustomAttributes(true))
