@@ -221,9 +221,12 @@ namespace Enforcer5.Handlers
                 var id = update.Message.Chat.Id;
                 var args = GetParameters(update.Message.Text);
                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;              
+                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;   
+#if DEBUG           
                 try
-                {
+                { 
+#endif
+                
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
@@ -358,14 +361,15 @@ namespace Enforcer5.Handlers
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+#if DEBUG
                 }
-#if !DEBUG
+
                 catch (Exception ex)
                 {
                     Send(ex.Message, id);
                 }
 #endif
-            }
+                }
         }
 
         private static void CollectStats(Message updateMessage)
