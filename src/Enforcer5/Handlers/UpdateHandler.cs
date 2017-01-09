@@ -197,17 +197,17 @@ namespace Enforcer5.Handlers
         private static void Log(Models.Commands command, Update update)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write($"[{System.DateTime.Now.Date}]");
+            Console.Write($"[{System.DateTime.Now.Date}] ");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write(command.Method.GetMethodInfo().Name);
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($"{update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+            Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
         }
 
         internal static void HandleUpdate(Update update)
         {
             {
-                CollectStats(update.Message);
+                //CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
                 Console.WriteLine($"Message Received {update.Message.Type}");
@@ -365,6 +365,7 @@ namespace Enforcer5.Handlers
 
         private static void CollectStats(Message updateMessage)
         {
+            Console.WriteLine("Collecting Stats");
             Redis.db.HashIncrement("bot:general", "messages");
             if (updateMessage.From?.Username != null)
             {

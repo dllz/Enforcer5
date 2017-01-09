@@ -23,7 +23,7 @@ namespace Enforcer5
                 var id = update.Message.Chat.Id;
                 if (update.Message.ReplyToMessage?.Type != MessageType.DocumentMessage)
                 {
-                    await Bot.Send("Please reply to the file with /uploadlang", id);
+                    await Bot.Send("Please reply to the file with /uploadlanguage", id);
                     return;
                 }
                 var fileid = update.Message.ReplyToMessage.Document?.FileId;
