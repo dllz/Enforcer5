@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Werewolf_Control.Attributes
+namespace Enforcer5.Attributes
 {
     public class Command : Attribute
     {

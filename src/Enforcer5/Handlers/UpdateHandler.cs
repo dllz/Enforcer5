@@ -1,388 +1,244 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
-using Werewolf_Control.Helpers;
-using Werewolf_Control.Models;
+
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-namespace Werewolf_Control.Handler
+namespace Enforcer5.Handlers
 {
 
     internal static class UpdateHandler
     {
-        //internal static Dictionary<int, SpamDetector> UserMessages = new Dictionary<int, SpamDetector>();
-
-        internal static HashSet<int> SpamBanList = new HashSet<int>
-        {
-
-        };
-        //internal static List<GlobalBan> BanList = new List<GlobalBan>();
-
-        internal static bool SendGifIds = false;
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             new Task(() => { HandleUpdate(e.Update); }).Start();
         }
 
-//        private static void AddCount(int id, string command)
-//        {
-//            try
-//            {
-//                if (!UserMessages.ContainsKey(id))
-//                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
-//                UserMessages[id].Messages.Add(new UserMessage(command));
-//            }
-//            catch
-//            {
-//                // ignored
-//            }
-//        }
+        //        private static void AddCount(int id, string command)
+        //        {
+        //            try
+        //            {
+        //                if (!UserMessages.ContainsKey(id))
+        //                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+        //                UserMessages[id].Messages.Add(new UserMessage(command));
+        //            }
+        //            catch
+        //            {
+        //                // ignored
+        //            }
+        //        }
 
-//        internal static void BanMonitor()
-//        {
-//            while (true)
-//            {
-//                try
-//                {
-//                    //first load up the ban list
-//                    using (var db = new WWContext())
-//                    {
-//                        foreach (var id in SpamBanList)
-//                        {
-//                            var p = db.Players.FirstOrDefault(x => x.TelegramId == id);
-//                            var name = p?.Name;
-//                            var count = p?.TempBanCount ?? 0;
-//                            count++;
-//                            if (p != null)
-//                                p.TempBanCount = count; //update the count
+        //        internal static void BanMonitor()
+        //        {
+        //            while (true)
+        //            {
+        //                try
+        //                {
+        //                    //first load up the ban list
+        //                    using (var db = new WWContext())
+        //                    {
+        //                        foreach (var id in SpamBanList)
+        //                        {
+        //                            var p = db.Players.FirstOrDefault(x => x.TelegramId == id);
+        //                            var name = p?.Name;
+        //                            var count = p?.TempBanCount ?? 0;
+        //                            count++;
+        //                            if (p != null)
+        //                                p.TempBanCount = count; //update the count
 
-//                            var expireTime = DateTime.Now;
-//                            switch (count)
-//                            {
-//                                case 1:
-//                                    expireTime = expireTime.AddHours(12);
-//                                    break;
-//                                case 2:
-//                                    expireTime = expireTime.AddDays(1);
-//                                    break;
-//                                case 3:
-//                                    expireTime = expireTime.AddDays(3);
-//                                    break;
-//                                default: //perm ban
-//                                    expireTime = (DateTime)SqlDateTime.MaxValue;
-//                                    break;
+        //                            var expireTime = DateTime.Now;
+        //                            switch (count)
+        //                            {
+        //                                case 1:
+        //                                    expireTime = expireTime.AddHours(12);
+        //                                    break;
+        //                                case 2:
+        //                                    expireTime = expireTime.AddDays(1);
+        //                                    break;
+        //                                case 3:
+        //                                    expireTime = expireTime.AddDays(3);
+        //                                    break;
+        //                                default: //perm ban
+        //                                    expireTime = (DateTime)SqlDateTime.MaxValue;
+        //                                    break;
 
-//                            }
-//                            db.GlobalBans.Add(new GlobalBan
-//                            {
-//                                BannedBy = "Moderator",
-//                                Expires = expireTime,
-//                                TelegramId = id,
-//                                Reason = "Spam / Flood",
-//                                BanDate = DateTime.Now,
-//                                Name = name
-//                            });
-//                        }
-//                        SpamBanList.Clear();
-//                        db.SaveChanges();
+        //                            }
+        //                            db.GlobalBans.Add(new GlobalBan
+        //                            {
+        //                                BannedBy = "Moderator",
+        //                                Expires = expireTime,
+        //                                TelegramId = id,
+        //                                Reason = "Spam / Flood",
+        //                                BanDate = DateTime.Now,
+        //                                Name = name
+        //                            });
+        //                        }
+        //                        SpamBanList.Clear();
+        //                        db.SaveChanges();
 
-//                        //now refresh the list
-//                        var list = db.GlobalBans.ToList();
-//#if RELEASE2
-//                        for (var i = list.Count - 1; i >= 0; i--)
-//                        {
-//                            if (list[i].Expires > DateTime.Now) continue;
-//                            db.GlobalBans.Remove(db.GlobalBans.Find(list[i].Id));
-//                            list.RemoveAt(i);
-//                        }
-//                        db.SaveChanges();
-//#endif
+        //                        //now refresh the list
+        //                        var list = db.GlobalBans.ToList();
+        //#if RELEASE2
+        //                        for (var i = list.Count - 1; i >= 0; i--)
+        //                        {
+        //                            if (list[i].Expires > DateTime.Now) continue;
+        //                            db.GlobalBans.Remove(db.GlobalBans.Find(list[i].Id));
+        //                            list.RemoveAt(i);
+        //                        }
+        //                        db.SaveChanges();
+        //#endif
 
-//                        BanList = list;
-//                    }
-//                }
-//                catch
-//                {
-//                    // ignored
-//                }
+        //                        BanList = list;
+        //                    }
+        //                }
+        //                catch
+        //                {
+        //                    // ignored
+        //                }
 
-//                //refresh every 20 minutes
-//                Thread.Sleep(TimeSpan.FromMinutes(1));
-//            }
-//        }
+        //                //refresh every 20 minutes
+        //                Thread.Sleep(TimeSpan.FromMinutes(1));
+        //            }
+        //        }
 
-//        internal static void SpamDetection()
-//        {
-//            while (true)
-//            {
-//                try
-//                {
-//                    var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
-//                    //clone the dictionary
-//                    foreach (var key in temp.Keys.ToList())
-//                    {
-//                        try
-//                        {
-//                            //drop older messages (1 minute)
-//                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
+        //        internal static void SpamDetection()
+        //        {
+        //            while (true)
+        //            {
+        //                try
+        //                {
+        //                    var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
+        //                    //clone the dictionary
+        //                    foreach (var key in temp.Keys.ToList())
+        //                    {
+        //                        try
+        //                        {
+        //                            //drop older messages (1 minute)
+        //                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
 
-//                            //comment this out - if we remove it, it doesn't keep the warns
-//                            //if (temp[key].Messages.Count == 0)
-//                            //{
-//                            //    temp.Remove(key);
-//                            //    continue;
-//                            //}
-//                            //now count, notify if limit hit
-//                            if (temp[key].Messages.Count() >= 20) // 20 in a minute
-//                            {
-//                                temp[key].Warns++;
-//                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 40)
-//                                {
-//                                    Send($"Please do not spam me. Next time is automated ban.", key);
-//                                    //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-//                                    //    Para);
-//                                    continue;
-//                                }
-//                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count >= 40) & !temp[key].NotifiedAdmin)
-//                                {
-//                                    //Send(
-//                                    //    $"User {key} has been banned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-//                                    //    Para);
-//                                    temp[key].NotifiedAdmin = true;
-//                                    //ban
-//                                    SpamBanList.Add(key);
-//                                    var count = 0;
-//                                    using (var db = new WWContext())
-//                                    {
-//                                        count = db.Players.FirstOrDefault(x => x.TelegramId == key).TempBanCount ?? 0;
-//                                    }
-//                                    var unban = "";
-//                                    switch (count)
-//                                    {
-//                                        case 0:
-//                                            unban = "12 hours";
-//                                            break;
-//                                        case 1:
-//                                            unban = "24 hours";
-//                                            break;
-//                                        case 2:
-//                                            unban = "3 days";
-//                                            break;
-//                                        default:
-//                                            unban =
-//                                                "Permanent. You have reached the max limit of temp bans for spamming.";
-//                                            break;
-//                                    }
-//                                    Send("You have been banned for spamming.  Your ban period is: " + unban,
-//                                        key);
-//                                }
+        //                            //comment this out - if we remove it, it doesn't keep the warns
+        //                            //if (temp[key].Messages.Count == 0)
+        //                            //{
+        //                            //    temp.Remove(key);
+        //                            //    continue;
+        //                            //}
+        //                            //now count, notify if limit hit
+        //                            if (temp[key].Messages.Count() >= 20) // 20 in a minute
+        //                            {
+        //                                temp[key].Warns++;
+        //                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 40)
+        //                                {
+        //                                    Send($"Please do not spam me. Next time is automated ban.", key);
+        //                                    //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
+        //                                    //    Para);
+        //                                    continue;
+        //                                }
+        //                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count >= 40) & !temp[key].NotifiedAdmin)
+        //                                {
+        //                                    //Send(
+        //                                    //    $"User {key} has been banned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
+        //                                    //    Para);
+        //                                    temp[key].NotifiedAdmin = true;
+        //                                    //ban
+        //                                    SpamBanList.Add(key);
+        //                                    var count = 0;
+        //                                    using (var db = new WWContext())
+        //                                    {
+        //                                        count = db.Players.FirstOrDefault(x => x.TelegramId == key).TempBanCount ?? 0;
+        //                                    }
+        //                                    var unban = "";
+        //                                    switch (count)
+        //                                    {
+        //                                        case 0:
+        //                                            unban = "12 hours";
+        //                                            break;
+        //                                        case 1:
+        //                                            unban = "24 hours";
+        //                                            break;
+        //                                        case 2:
+        //                                            unban = "3 days";
+        //                                            break;
+        //                                        default:
+        //                                            unban =
+        //                                                "Permanent. You have reached the max limit of temp bans for spamming.";
+        //                                            break;
+        //                                    }
+        //                                    Send("You have been banned for spamming.  Your ban period is: " + unban,
+        //                                        key);
+        //                                }
 
-//                                temp[key].Messages.Clear();
-//                            }
-//                        }
-//                        catch (Exception e)
-//                        {
-//                            //Console.WriteLine(e.Message);
-//                        }
-//                    }
-//                    UserMessages = temp;
-//                }
-//                catch (Exception e)
-//                {
-//                    //Console.WriteLine(e.Message);
-//                }
-//                Thread.Sleep(2000);
-//            }
-//        }
+        //                                temp[key].Messages.Clear();
+        //                            }
+        //                        }
+        //                        catch (Exception e)
+        //                        {
+        //                            //Console.WriteLine(e.Message);
+        //                        }
+        //                    }
+        //                    UserMessages = temp;
+        //                }
+        //                catch (Exception e)
+        //                {
+        //                    //Console.WriteLine(e.Message);
+        //                }
+        //                Thread.Sleep(2000);
+        //            }
+        //        }
 
         internal static void HandleUpdate(Update update)
         {
             {
-                Bot.MessagesProcessed++;
-
+                Bot.MessagesProcessed++;               
                 //ignore previous messages
+                Console.WriteLine($"Message Received {update.Message.Type}");
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
 
                 var id = update.Message.Chat.Id;
-                
-#if DEBUG
-                //if (update.Message.Chat.Title != "Werewolf Translators Group" && !String.IsNullOrEmpty(update.Message.Chat.Title) && update.Message.Chat.Title != "Werewolf Mod / Dev chat (SFW CUZ YOUNGENS)" && update.Message.Chat.Title != "Werewolf Translators Group (SFW cuz YOUNGENS)")
-                //{
-                //    try
-                //    {
-                //        Bot.Api.LeaveChat(update.Message.Chat.Id);
-                //    }
-                //    catch
-                //    {
-                //        // ignored
-                //    }
-                //}
-#endif
-
-                //let's make sure it is a bot command, as we shouldn't see anything else....
-                //if (update.Message.Type != MessageType.ServiceMessage &&
-                //    update.Message.Type != MessageType.UnknownMessage && update.Message.Chat.Type != ChatType.Private)
-                //{
-                //    if (
-                //        update.Message.Entities.All(
-                //            x => x.Type != MessageEntityType.BotCommand && x.Type != MessageEntityType.Mention))
-                //    {
-                //        var admins = Bot.Api.GetChatAdministrators(update.Message.Chat.Id).Result.ToList();
-
-
-                //        var adminlist = admins.Aggregate("", (a, b) => a + Environment.NewLine + "@" + b.User.Username);
-                //        //I shouldn't have seen this message!
-                //        Send(
-                //            "Privacy mode has been enabled, but has not updated for this group.  In order for it to be updated, I need to leave and be added back.  Admin, please add me back to this group!\n" +
-                //            adminlist.FormatHTML(),
-                //            update.Message.Chat.Id);
-
-                //        try
-                //        {
-                //            using (var db = new WWContext())
-                //            {
-                //                var grps = db.Groups.Where(x => x.GroupId == id);
-                //                if (!grps.Any())
-                //                {
-                //                    return;
-                //                }
-                //                foreach (var g in grps)
-                //                {
-                //                    g.BotInGroup = false;
-                //                    g.UserName = update.Message.Chat.Username;
-                //                    g.Name = update.Message.Chat.Title;
-                //                }
-                //                db.SaveChanges();
-                //            }
-                //        }
-                //        catch
-                //        {
-                //            // ignored
-                //        }
-
-                //        Bot.Api.LeaveChat(update.Message.Chat.Id);
-                //    }
-                //}
-
-
+                var args = GetParameters(update.Message.Text);
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;              
-#if !DEBUG
                 try
-#endif
                 {
-                    Group grp;
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
                             break;
                         case MessageType.TextMessage:
-                            if (update.Message.Text.StartsWith("!") || update.Message.Text.StartsWith("/"))
+                            if (update.Message.Text.StartsWith("/"))
                             {
-
-                                //if (BanList.Any(x => x.TelegramId == (update.Message?.From?.Id ?? 0)) || SpamBanList.Contains(update.Message?.From?.Id ?? 0))
-                                //{
-                                //    return;
-                                //}
-                                //if (update.Message.Chat.Type == ChatType.Private)
-                                //    AddCount(update.Message.From.Id, update.Message.Text);
-                                //var args = GetParameters(update.Message.Text);
-                                //args[0] = args[0].ToLower().Replace("@" + Bot.Me.Username.ToLower(), "");
-
-                                //if (args[0].StartsWith("about"))
-                                //{
-                                //    var reply = Commands.GetAbout(update, args);
-                                //    if (reply != null)
-                                //    {
-                                //        try
-                                //        {
-                                //            var result = Send(reply, update.Message.From.Id).Result;
-                                //            if (update.Message.Chat.Type != ChatType.Private)
-                                //                Send(GetLocaleString("SentPrivate", GetLanguage(update.Message.From.Id)), update.Message.Chat.Id);
-
-                                //        }
-                                //        catch (Exception e)
-                                //        {
-                                //            Commands.RequestPM(update.Message.Chat.Id);
-                                //        }
-                                //    }
-                                //    return;
-                                //}
-
                                 //check for the command
-
-                                #region More optimized code, but slow as hell
-
-//                                var command = Bot.Commands.FirstOrDefault(
-//                                        x =>
-//                                            String.Equals(x.Trigger, args[0],
-//                                                StringComparison.InvariantCultureIgnoreCase));
-//                                if (command != null)
-//                                {
-//#if RELEASE2
-//                                    Send($"Bot 2 is retiring.  Please switch to @werewolfbot", update.Message.Chat.Id);
-//                                    if (update.Message.Chat.Type != ChatType.Private)
-//                                    {
-//                                        Thread.Sleep(1000);
-//                                        Bot.Api.LeaveChat(update.Message.Chat.Id);
-//                                    }
-//#endif
-//                                    //check that we should run the command
-//                                    if (block && command.Blockable)
-//                                    {
-//                                        Send(id == Settings.SupportChatId
-//                                                ? "No games in support chat!"
-//                                                : "اینجا گروه پشتیبانیه نه بازی، لطفا دکمه استارت رو نزنید.", id);
-//                                        return;
-//                                    }
-//                                    if (command.DevOnly & !UpdateHelper.Devs.Contains(update.Message.From.Id))
-//                                    {
-//                                        Send(GetLocaleString("NotPara", GetLanguage(id)), id);
-//                                        return;
-//                                    }
-//                                    if (command.GlobalAdminOnly)
-//                                    {
-//                                        if (!UpdateHelper.IsGlobalAdmin(update.Message.From.Id))
-//                                        {
-//                                            Send(GetLocaleString("NotGlobalAdmin", GetLanguage(id)), id);
-//                                            return;
-//                                        }
-//                                    }
-//                                    if (command.GroupAdminOnly & !UpdateHelper.IsGroupAdmin(update) & !UpdateHelper.Devs.Contains(update.Message.From.Id) & !UpdateHelper.IsGlobalAdmin(update.Message.From.Id))
-//                                    {
-//                                        Send(GetLocaleString("GroupAdminOnly", GetLanguage(update.Message.Chat.Id)), id);
-//                                        return;
-//                                    }
-//                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-//                                    {
-//                                        Send(GetLocaleString("GroupCommandOnly", GetLanguage(id)), id);
-//                                        return;
-//                                    }
-//                                    Bot.CommandsReceived++;
-//                                    if (update.Message.Chat.Type != ChatType.Private)
-//                                        AddCount(update.Message.From.Id, update.Message.Text);
-//                                    command.Method.Invoke(update, args);
-//                                }
-                                
-
-                                #endregion
+                                var command = Bot.Commands.FirstOrDefault(
+                                        x =>
+                                            String.Equals(x.Trigger, args[0],
+                                                StringComparison.CurrentCultureIgnoreCase));
+                                if (command != null)
+                                {
+                                    Console.WriteLine($"{ConsoleColor.Blue}[{System.DateTime.Now.Date}]{ConsoleColor.Red} {command} {ConsoleColor.White} {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+                                    //check that we should run the command
+                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
+                                    {
+                                        return;
+                                    }
+                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    {
+                                        Bot.SendReply(Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc, "userNotAdmin"), update.Message);
+                                        return;
+                                    }
+                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                                    {
+                                        return;
+                                    }
+                                    Bot.CommandsReceived++;                                      
+                                    command.Method.Invoke(update, args);
+                                }
                             }
-                            //else if (update.Message.Chat.Type == ChatType.Private && update.Message?.ReplyToMessage?.Text == "Please reply to this message with your Telegram authorization code" && update.Message.From.Id == UpdateHelper.Devs[0])
-                            //{
-                            //    CLI.AuthCode = update.Message.Text;
-                            //}
                             break;
                         case MessageType.PhotoMessage:
                             break;
@@ -492,30 +348,6 @@ namespace Werewolf_Control.Handler
             }
         }
 
-
-
-
-        /// <summary>
-        /// Gets the language for the group, defaulting to English
-        /// </summary>
-        /// <param name="id">The ID of the group</param>
-        /// <returns></returns>
-        //private static string GetLanguage(long id)
-        //{
-        //    return Commands.GetLanguage(id);
-        //}
-
-        ////private static GameInfo GetGroupNodeAndGame(long id)
-        //{
-        //    var node = Bot.Nodes.ToList().FirstOrDefault(n => n.Games.Any(g => g.GroupId == id))?.Games.FirstOrDefault(x => x.GroupId == id);
-        //    if (node == null)
-        //        node = Bot.Nodes.ToList().FirstOrDefault(n => n.Games.Any(g => g.GroupId == id))?.Games.FirstOrDefault(x => x.GroupId == id);
-        //    if (node == null)
-        //        node = Bot.Nodes.ToList().FirstOrDefault(n => n.Games.Any(g => g.GroupId == id))?.Games.FirstOrDefault(x => x.GroupId == id);
-        //    return node;
-        //}
-
-        private static string[] nonCommandsList = new[] { "vote", "getlang", "validate", "setlang", "groups", "status", "done" };
 
         public static void CallbackReceived(object sender, CallbackQueryEventArgs e)
         {
@@ -1190,130 +1022,12 @@ namespace Werewolf_Control.Handler
             return input.Contains(" ") ? new[] { input.Substring(1, input.IndexOf(" ")).Trim(), input.Substring(input.IndexOf(" ") + 1) } : new[] { input.Substring(1).Trim(), null };
         }
 
-        internal static Task<Message> Send(string message, long id, bool clearKeyboard = false, InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+        internal static Task<Message> Send(string message, long id, bool clearKeyboard = false,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             return Bot.Send(message, id, clearKeyboard, customMenu, parseMode);
         }
 
-        
-        //internal static LangFile SelectLanguage(string command, string[] args, ref InlineKeyboardMarkup menu, bool addAllbutton = true)
-        //{
-        //    var langs = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new LangFile(x)).ToList();
-        //    var isBase = args[4] == "base";
-        //    if (isBase)
-        //    {
-        //        var variants = langs.Where(x => x.Base == args[2]).ToList();
-        //        if (variants.Count() > 1)
-        //        {
-        //            var buttons = new List<InlineKeyboardButton>();
-        //            buttons.AddRange(variants.Select(x => new InlineKeyboardButton(x.Variant, $"{command}|{args[1]}|{x.Base}|{x.Variant}|v")));
-        //            if (addAllbutton)
-        //                buttons.Insert(0, new InlineKeyboardButton("All", $"{command}|{args[1]}|{args[2]}|All|v"));
-
-        //            var twoMenu = new List<InlineKeyboardButton[]>();
-        //            for (var i = 0; i < buttons.Count; i++)
-        //            {
-        //                if (buttons.Count - 1 == i)
-        //                {
-        //                    twoMenu.Add(new[] { buttons[i] });
-        //                }
-        //                else
-        //                    twoMenu.Add(new[] { buttons[i], buttons[i + 1] });
-        //                i++;
-        //            }
-        //            menu = new InlineKeyboardMarkup(twoMenu.ToArray());
-
-        //            return null;
-        //        }
-        //        else                
-        //            return variants.First(); 
-        //    }
-        //    else
-        //    {
-        //        return langs.First(x => x.Base == args[2] && x.Variant == args[3]);
-        //    }
-        //}
-
-
-        //internal static string GetLocaleString(string key, string language, params object[] args)
-        //{
-        //    var files = Directory.GetFiles(Bot.LanguageDirectory);
-        //    XDocument doc;
-        //    var file = files.First(x => Path.GetFileNameWithoutExtension(x) == language);
-        //    {
-        //        doc = XDocument.Load(file);
-        //    }
-        //    var strings = doc.Descendants("string").FirstOrDefault(x => x.Attribute("key").Value == key);
-        //    if (strings == null)
-        //    {
-        //        //fallback to English
-        //        strings = Bot.English.Descendants("string").FirstOrDefault(x => x.Attribute("key").Value == key);
-        //    }
-        //    var values = strings.Descendants("value");
-        //    var choice = Bot.R.Next(values.Count());
-        //    var selected = values.ElementAt(choice);
-        //    return String.Format(selected.Value.FormatHTML(), args).Replace("\\n", Environment.NewLine);
-        //}
-
-        //internal static Group MakeDefaultGroup(long groupid, string name, string createdBy)
-        //{
-        //    return new Group
-        //    {
-        //        GroupId = groupid,
-        //        Name = name,
-        //        Language = "English",
-        //        BotInGroup = true,
-        //        ShowRoles = true,
-        //        Mode = "Player",
-        //        DayTime = Settings.TimeDay,
-        //        LynchTime = Settings.TimeLynch,
-        //        NightTime = Settings.TimeNight,
-        //        AllowFool = true,
-        //        AllowTanner = true,
-        //        AllowCult = true,
-        //        DisableFlee = false,
-        //        MaxPlayers = 35,
-        //        CreatedBy = createdBy
-        //    };
-        //}
-
-        internal static InlineKeyboardMarkup GetConfigMenu(long id)
-        {
-            List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
-            //base menu
-            //buttons.Add(new InlineKeyboardButton("Show Online Message", $"online|{id}"));
-            buttons.Add(new InlineKeyboardButton("Change Language", $"lang|{id}"));
-            buttons.Add(new InlineKeyboardButton("Change Game Mode", $"mode|{id}"));
-            buttons.Add(new InlineKeyboardButton("Show Roles On Death", $"roles|{id}"));
-            buttons.Add(new InlineKeyboardButton("Show Roles At Game End", $"endroles|{id}"));
-            buttons.Add(new InlineKeyboardButton("Allow Fleeing", $"flee|{id}"));
-            buttons.Add(new InlineKeyboardButton("Allow Extending Timer", $"extend|{id}"));
-            buttons.Add(new InlineKeyboardButton("Set Max Players", $"maxplayer|{id}"));
-            buttons.Add(new InlineKeyboardButton("Set Day Timer", $"day|{id}"));
-            buttons.Add(new InlineKeyboardButton("Set Lynch Timer", $"lynch|{id}"));
-            buttons.Add(new InlineKeyboardButton("Set Night Timer", $"night|{id}"));
-            buttons.Add(new InlineKeyboardButton("Allow Fool", $"fool|{id}"));
-            buttons.Add(new InlineKeyboardButton("Allow Tanner", $"tanner|{id}"));
-            buttons.Add(new InlineKeyboardButton("Allow Cult", $"cult|{id}"));
-            buttons.Add(new InlineKeyboardButton("Done", $"done|{id}"));
-            var twoMenu = new List<InlineKeyboardButton[]>();
-            for (var i = 0; i < buttons.Count; i++)
-            {
-                if (buttons.Count - 1 == i)
-                {
-                    twoMenu.Add(new[] { buttons[i] });
-                }
-                else
-                    twoMenu.Add(new[] { buttons[i], buttons[i + 1] });
-                i++;
-            }
-
-            var menu = new InlineKeyboardMarkup(twoMenu.ToArray());
-            return menu;
-        }
-
-
-        
         public static void InlineQueryReceived(object sender, InlineQueryEventArgs e)
         {
             new Task(() => { HandleInlineQuery(e.InlineQuery); }).Start();

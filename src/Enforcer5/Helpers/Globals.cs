@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Enforcer5;
+using Enforcer5.Handlers;
+using Enforcer5.Models;
 using Microsoft.Win32;
+using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using Werewolf_Control.Handler;
-using Werewolf_Control.Models;
 
-namespace Werewolf_Control.Helpers
+namespace Enforcer5.Helpers
 {
     internal static class Bot
     {
@@ -57,8 +52,7 @@ namespace Werewolf_Control.Helpers
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
             Api = new TelegramBotClient(TelegramAPIKey);
-            await Send("Hello I am Enforcer 5. I can't do anything yet but I thought I would just say hello", -1001094155678);
-            //English = XDocument.Load(Path.Combine(LanguageDirectory, "English.xml"));
+            await Send($"Bot Started:\n{System.DateTime.Now.Date}", Constants.Devs[0]);
 
             //load the commands list
             //foreach (var m in typeof(Commands).GetMethods())
@@ -129,7 +123,7 @@ namespace Werewolf_Control.Helpers
         }
 
         internal static async Task<Message> Send(string message, long id, bool clearKeyboard = false,
-            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Markdown)
         {
             MessagesSent++;
             //message = message.Replace("`",@"\`");
@@ -150,5 +144,16 @@ namespace Werewolf_Control.Helpers
             }
 
         }
+
+        internal static async Task<Message> SendReply(string message, Message msg, IReplyMarkup replyMarkup = null)
+        {
+            return await Api.SendTextMessageAsync(msg.Chat.Id, message, false, false, msg.MessageId, replyMarkup);
+        }
+    }
+
+    internal static class Redis
+    {
+        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
+        public static IDatabase db = redis.GetDatabase(Constants.EnforcerDB);
     }
 }

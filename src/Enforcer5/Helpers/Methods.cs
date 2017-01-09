@@ -1,0 +1,208 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using Enforcer5.Helpers;
+using Enforcer5.Languages;
+using Enforcer5.Models;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+
+namespace Enforcer5.Helpers
+{
+    public class Methods
+    {
+        public static Task<bool> KickUser(long chatId, int userId)
+        {
+            var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None);
+            if (res.IsCompleted && res.Result)
+            {
+                Redis.db.HashIncrement("bot:general", "kick", 1); //Save the number of kicks made by the bot
+                var check = Bot.Api.GetChatMemberAsync(chatId, userId);
+                var status = check.Result.Status;
+                var count = 0;
+
+                while (status == ChatMemberStatus.Member && count < 10)
+                {
+                    check = Bot.Api.GetChatMemberAsync(chatId, userId);
+                    status = check.Result.Status;
+                    count++;
+                }
+                count = 0;
+                while (status != ChatMemberStatus.Left && count < 10)
+                {
+                    Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                    check = Bot.Api.GetChatMemberAsync(chatId, userId);
+                    status = check.Result.Status;
+                    count++;
+                }
+                return res;
+            }
+            else
+            {
+                return res;
+            }
+        }
+
+        public static async void SendError(Exception exceptionInnerException, Message updateMessage)
+        {
+            await Bot.SendReply(exceptionInnerException.Message, updateMessage);
+        }
+
+        public static Language GetGroupLanguage(Message uMessage)
+        {
+            var lang = Redis.db.StringGet($"chat:{uMessage.Chat.Id}:language");
+            return Program.LangaugeList.FirstOrDefault(x => x.Name == lang) ?? Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+        }
+
+        public static void IntialiseLanguages()
+        {
+            foreach (var language in Directory.GetFiles(Bot.LanguageDirectory))
+            {
+                Program.LangaugeList.Add(new Language(language));   
+            }
+        }
+
+        /// Gets the matching language string and formats it with parameters
+        /// </summary>
+        /// <param name="file">The XML File</param>
+        /// <param name="key">The XML Key of the string needed</param>
+        /// <param name="args">Any arguments to fill the strings {0} {n}</param>
+        /// <returns></returns>
+        public static string GetLocaleString(XDocument file, string key, params object[] args)
+        {
+            try
+            {
+                var strings = file.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
+                if (strings != null)
+                {
+                    var values = strings.Descendants("value");                   
+                    return String.Format(values.FirstOrDefault().Value, args).Replace("\\n", Environment.NewLine);
+                }
+                else
+                {
+                    throw new Exception($"Error getting string {key} with parameters {(args != null && args.Length > 0 ? args.Aggregate((a, b) => a + "," + b.ToString()) : "none")}");
+                }
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    //try the english string to be sure
+                    var strings =
+                        Program.LangaugeList.FirstOrDefault(x => x.Name == "English").Doc.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
+                    var values = strings?.Descendants("value");
+                    if (values != null)
+                    {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        return String.Format(values.FirstOrDefault().Value, args).Replace("\\n", Environment.NewLine);
+                    }
+                    else
+                        throw new Exception("Cannot load english string for fallback");
+                }
+                catch
+                {
+                    throw new Exception(
+                        $"Error getting string {key} with parameters {(args != null && args.Length > 0 ? args.Aggregate((a, b) => a + "," + b.ToString()) : "none")}",
+                        e);
+                }
+            }
+        }
+
+        public static string GetNick(Message msg, string[] args, bool sender = false)
+        {
+            if (sender)
+            {
+                return $"{msg.From.FirstName} ({msg.From.Id})";
+            } else if (msg.ReplyToMessage != null)
+            {
+                return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
+            } else if (args[1] != null)
+            {
+                return args[1];
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static int GetUserId(Update update, string[] args)
+        {
+            if (update.Message.ReplyToMessage != null)
+            {
+                return update.Message.ReplyToMessage.From.Id;
+            }
+            if (args[1] != null)
+            {
+                return ResolveIdFromusername(args[1], update.Message.Chat.Id);
+            }
+            else
+            {
+                throw new Exception("UnableToResolveId");
+            }
+        }
+
+        public static int ResolveIdFromusername(string s, long chatId = 0)
+        {
+            if (chatId != 0)
+            {
+               var userid =  Redis.db.HashGet($"bot:usernames:{chatId}", s);
+                var id = 0;
+                if (int.TryParse(userid, out id))
+                {
+                    return id;
+                }
+                else
+                {
+                    throw new Exception("UnableToResolveUsername"); 
+                }
+            }
+            else
+            {
+                var userid = Redis.db.HashGet($"bot:usernames", s);
+                var id = 0;
+                if (int.TryParse(userid, out id))
+                {
+                    return id;
+                }
+                else
+                {
+                    throw new Exception("UnableToResolveUsername");
+                }
+            }
+        }
+
+        public static void SaveBan(int userId, string banType)
+        {
+            Redis.db.HashIncrement($"ban:{userId}", banType);
+        }
+
+        public static bool IsGroupAdmin(Update update)
+        {
+            return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
+        }
+
+        public static bool IsGroupAdmin(int user, long group)
+        {
+            //fire off admin request
+            try
+            {
+                var admin = Bot.Api.GetChatMemberAsync(group, user).Result;
+                return admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool IsGlobalAdmin(int id)
+        {
+            return Constants.GlobalAdmins.Contains(id);
+        }
+    }
+}

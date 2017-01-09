@@ -168,4 +168,16 @@
   <string key="helpHeader">
     <value>Tap on a button to see the *related commands*</value>
   </string>
+  <string key="SuccesfulKick">
+    <value>{0} has been kicked by {1}.</value>
+  </string>
+  <string key="FailedKick">
+    <value>{0} has not been kicked, please manually unban.</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>I can not kick or ban an admin.</value>
+  </string>
+  <string key="Error">
+    <value>An error occured. Error Details: {0}</value>
+  </string>
 </strings>

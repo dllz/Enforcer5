@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Werewolf_Control.Helpers;
+﻿using Enforcer5.Helpers;
 
-namespace Werewolf_Control.Models
+namespace Enforcer5.Models
 {
     class Command
     {

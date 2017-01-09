@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Werewolf_Control.Helpers;
+using Enforcer5.Helpers;
+using Enforcer5.Languages;
 
 namespace Enforcer5
 {
@@ -19,6 +20,7 @@ namespace Enforcer5
         internal static float MessagePxPerSecond, MessageRxPerSecond, MessageTxPerSecond;
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
+        internal static List<Language> LangaugeList;
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
         {
@@ -35,6 +37,7 @@ namespace Enforcer5
             //new Thread(UpdateHandler.SpamDetection).Start();
             //new Thread(UpdateHandler.BanMonitor).Start();
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
+            new Task(Methods.IntialiseLanguages);
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
         }
