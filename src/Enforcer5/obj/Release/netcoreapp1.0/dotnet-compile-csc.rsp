@@ -96,6 +96,8 @@
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Program.cs"
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Attributes\Command.cs"
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Commands\BanCommands.cs"
+"C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Commands\GACommands.cs"
+"C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Handlers\LanguageHelper.cs"
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Handlers\UpdateHandler.cs"
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Helpers\Globals.cs"
 "C:\Users\danie\Documents\GitHub\Enforcer5\src\Enforcer5\Helpers\Methods.cs"

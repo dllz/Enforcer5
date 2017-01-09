@@ -2,7 +2,7 @@
 
 namespace Enforcer5.Models
 {
-    class Command
+    class Commands
     {
         public string Trigger { get; set; }
         public bool GroupAdminOnly { get; set; }

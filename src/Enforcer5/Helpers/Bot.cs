@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
@@ -28,7 +29,6 @@ namespace Enforcer5.Helpers
         public static long TotalPlayers = 0;
         public static long TotalGames = 0;
         public static Random R = new Random();
-        public static XDocument English;
         public static int MessagesSent = 0;
         public static string CurrentStatus = "";
         internal static string RootDirectory
@@ -40,7 +40,7 @@ namespace Enforcer5.Helpers
             }
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
-        internal static List<Command> Commands = new List<Command>();
+        internal static List<Models.Commands> Commands = new List<Models.Commands>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
@@ -55,25 +55,25 @@ namespace Enforcer5.Helpers
             await Send($"Bot Started:\n{System.DateTime.Now.Date}", Constants.Devs[0]);
 
             //load the commands list
-            //foreach (var m in typeof(Commands).GetMethods())
-            //{
-            //    var c = new Command();
-            //    foreach (var a in m.GetCustomAttributes(true))
-            //    {
-            //        if (a is Attributes.Command)
-            //        {
-            //            var ca = a as Attributes.Command;
-            //            c.Blockable = ca.Blockable;
-            //            c.DevOnly = ca.DevOnly;
-            //            c.GlobalAdminOnly = ca.GlobalAdminOnly;
-            //            c.GroupAdminOnly = ca.GroupAdminOnly;
-            //            c.Trigger = ca.Trigger;
-            //            c.Method = (ChatCommandMethod)Delegate.CreateDelegate(typeof(ChatCommandMethod), m);
-            //            c.InGroupOnly = ca.InGroupOnly;
-            //            Commands.Add(c);
-            //        }
-            //    }
-            //}
+            foreach (var m in typeof(Models.Commands).GetMethods())
+            {
+                var c = new Models.Commands();
+                foreach (var a in m.GetCustomAttributes(true))
+                {
+                    if (a is Attributes.Command)
+                    {
+                        var ca = a as Attributes.Command;
+                        c.Blockable = ca.Blockable;
+                        c.DevOnly = ca.DevOnly;
+                        c.GlobalAdminOnly = ca.GlobalAdminOnly;
+                        c.GroupAdminOnly = ca.GroupAdminOnly;
+                        c.Trigger = ca.Trigger;
+                        c.Method = (ChatCommandMethod)m.CreateDelegate(typeof(ChatCommandMethod));
+                        c.InGroupOnly = ca.InGroupOnly;
+                        Commands.Add(c);
+                    }
+                }
+            }
 
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;

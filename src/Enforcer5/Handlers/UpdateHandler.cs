@@ -214,6 +214,7 @@ namespace Enforcer5.Handlers
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 //check for the command
+                                Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
                                         x =>
                                             String.Equals(x.Trigger, args[0],
