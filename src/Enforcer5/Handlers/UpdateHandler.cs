@@ -219,8 +219,7 @@ namespace Enforcer5.Handlers
                     return; //toss it
 
                 var id = update.Message.Chat.Id;
-                var args = GetParameters(update.Message.Text);
-                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;   
 #if DEBUG           
                 try
@@ -232,8 +231,11 @@ namespace Enforcer5.Handlers
                         case MessageType.UnknownMessage:
                             break;
                         case MessageType.TextMessage:
+
                             if (update.Message.Text.StartsWith("/"))
                             {
+                                var args = GetParameters(update.Message.Text);
+                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
                                 Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
