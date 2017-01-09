@@ -195,6 +195,7 @@ namespace Enforcer5.Handlers
         internal static void HandleUpdate(Update update)
         {
             {
+                CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
                 Console.WriteLine($"Message Received {update.Message.Type}");
@@ -347,6 +348,31 @@ namespace Enforcer5.Handlers
                 }
 #endif
             }
+        }
+
+        private static void CollectStats(Message updateMessage)
+        {
+            Redis.db.HashIncrement("bot:general", "messages");
+            if (updateMessage.From?.Username != null)
+            {
+                Redis.db.HashSet("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+            }
+            if (updateMessage.ForwardFrom?.Username != null)
+            {
+                Redis.db.HashSet("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+            }
+            if (updateMessage.Chat.Type != ChatType.Private)
+            {
+                if (updateMessage.From != null)
+                {
+                    Redis.db.HashIncrement($"chat:{updateMessage.From.Id}", "msgs");
+                    Redis.db.HashSet($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
+                    Redis.db.StringSet($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
+                }                
+            }
+
         }
 
 
