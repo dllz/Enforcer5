@@ -139,8 +139,6 @@ namespace Enforcer5.Handlers
                 var response = sendTask.Result.EnsureSuccessStatusCode();
                 var httpStream = await response.Content.ReadAsStreamAsync();
 
-                string OutputDirectory = "StockQuotes";
-
                 using (var fileStream = File.Create(newFilePath))
                 using (var reader = new StreamReader(httpStream))
                 {
