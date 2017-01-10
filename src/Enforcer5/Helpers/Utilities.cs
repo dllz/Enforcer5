@@ -79,6 +79,7 @@ namespace Enforcer5.Helpers
             Api.OnUpdate += UpdateHandler.UpdateReceived;
             Api.OnCallbackQuery += UpdateHandler.CallbackReceived;
             Api.OnReceiveError += ApiOnReceiveError;
+
             Me = Api.GetMeAsync().Result;
 
             Console.Title += " " + Me.Username;

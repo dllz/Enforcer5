@@ -123,31 +123,11 @@ namespace Enforcer5.Handlers
 
         internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
-            var file = Bot.Api.GetFileAsync(fileid).Result;
+            
             var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
-            //var fileName = file.FilePath.Substring(file.FilePath.LastIndexOf("/") + 1);
-            var uri = $"https://api.telegram.org";
-            var requestUri = $"/file/bot{Bot.TelegramAPIKey}/{file.FilePath}";
             var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(uri);
-                client.Timeout = TimeSpan.FromMinutes(5);
-
-                var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-                var sendTask = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-                var response = sendTask.Result.EnsureSuccessStatusCode();
-                var httpStream = await response.Content.ReadAsStreamAsync();
-
-                using (var fileStream = File.Create(newFilePath))
-                using (var reader = new StreamReader(httpStream))
-                {
-                    httpStream.CopyTo(fileStream);
-                    fileStream.Flush();
-                }
-            }
-
-
+            using (var fs = new FileStream(newFilePath, FileMode.Create))
+                await Bot.Api.GetFileAsync(fileid, fs);
             //ok, we have the file.  Now we need to determine the language, scan it and the original file.
             var newFileErrors = new List<LanguageError>();
             //first, let's load up the English file, which is our master file
