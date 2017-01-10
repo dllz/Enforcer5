@@ -47,10 +47,10 @@ namespace Enforcer5.Helpers
         {
 
             //get api token from registry
-            var key =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\Werewolf");
-            TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
+            //var key =
+            //        RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+            //            .OpenSubKey("SOFTWARE\\Werewolf");
+            TelegramAPIKey = Constants.APIKey;
             Api = new TelegramBotClient(TelegramAPIKey);
             //await Send($"Bot Started:\n{System.DateTime.Now.Date}", Constants.Devs[0]);
 
@@ -154,6 +154,6 @@ namespace Enforcer5.Helpers
     internal static class Redis
     {
         static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
-        public static IDatabase db = redis.GetDatabase(Constants.EnforcerDB);
+        public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
     }
 }
