@@ -180,4 +180,10 @@
   <string key="Error">
     <value>An error occured. Error Details: {0}</value>
   </string>
+  <string key="PingInfo">
+    <value>Time to receive ping message: {0}</value>
+  </string>
+  <string key="Ping2">
+    <value>Time to send ping message: {0}</value>
+  </string>
 </strings>

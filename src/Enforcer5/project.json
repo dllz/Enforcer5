@@ -5,7 +5,9 @@
   "version": "1.0.0-*",
   "buildOptions": {
     "emitEntryPoint": true,
-    "debugType": "full"
+    "debugType": "full",
+    "optimize": true,
+    "preserveCompilationContext": true 
   },
 
   "dependencies": {

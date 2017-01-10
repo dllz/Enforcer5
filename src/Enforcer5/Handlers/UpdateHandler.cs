@@ -213,8 +213,6 @@ namespace Enforcer5.Handlers
 
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
-
-                Console.WriteLine($"Message Received {update.Message.Type}");
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
 
