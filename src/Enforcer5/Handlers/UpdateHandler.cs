@@ -207,12 +207,12 @@ namespace Enforcer5.Handlers
         internal static void HandleUpdate(Update update)
         {
             {
-                //CollectStats(update.Message);
+                CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
 
-                if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
-                    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
+                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
 
                 Console.WriteLine($"Message Received {update.Message.Type}");
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
@@ -378,19 +378,19 @@ namespace Enforcer5.Handlers
         {
             Console.WriteLine("Collecting Stats");
             Redis.db.HashIncrement("bot:general", "messages");
-            if (updateMessage.From?.Username != null)
+            if (updateMessage?.From?.Username != null)
             {
                 Redis.db.HashSet("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
                 Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
             }
-            if (updateMessage.ForwardFrom?.Username != null)
+            if (updateMessage?.ForwardFrom?.Username != null)
             {
                 Redis.db.HashSet("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
                 Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
             }
-            if (updateMessage.Chat.Type != ChatType.Private)
+            if (updateMessage?.Chat.Type != ChatType.Private)
             {
-                if (updateMessage.From != null)
+                if (updateMessage?.From != null)
                 {
                     Redis.db.HashIncrement($"chat:{updateMessage.From.Id}", "msgs");
                     Redis.db.HashSet($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);

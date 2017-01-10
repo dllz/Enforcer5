@@ -15,7 +15,7 @@ namespace Enforcer5.Helpers
 {
     public class Methods
     {
-        public static async Task<bool> KickUser(long chatId, int userId)
+        public static async Task<bool> KickUser(long chatId, int userId, XDocument doc)
         {
             
             try
@@ -47,27 +47,53 @@ namespace Enforcer5.Helpers
             }
             catch (AggregateException e)
             {
-                await Bot.Send(e.InnerExceptions[0].Message, -1001077134233);
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
                 return false;
             }
             
         }
 
-        public static async void SendError(Exception exceptionInnerException, Message updateMessage)
+        public static async void SendError(Exception exceptionInnerException, Message updateMessage, XDocument doc)
         {
-            await Bot.SendReply(exceptionInnerException.Message, updateMessage);
+            object[] arguments =
+                {
+                    exceptionInnerException.Message
+                };
+            await Bot.SendReply(GetLocaleString(doc, "Error", arguments), updateMessage);
+        }
+
+        public static async void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
+        {
+            object[] arguments =
+                {
+                    exceptionInnerException.Message
+                };
+            await Bot.SendReply(GetLocaleString(doc, "Error", arguments), chatid);
         }
 
         public static Language GetGroupLanguage(Message uMessage)
         {
             var lang = Redis.db.StringGet($"chat:{uMessage.Chat.Id}:language");
-            return Program.LangaugeList.FirstOrDefault(x => x.Name == lang) ?? Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+            if (lang.HasValue)
+            {
+                return Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+            }
+            else
+            {
+                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+            }
         }
 
         public static void IntialiseLanguages()
         {
-            foreach (var language in Directory.GetFiles(Bot.LanguageDirectory))
+            foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
             {
+               
                 Program.LangaugeList.Add(new Language(language));   
             }
         }

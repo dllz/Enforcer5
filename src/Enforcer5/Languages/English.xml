@@ -65,7 +65,7 @@
     <value>I do not know who this user is</value>
   </string>
   <string key="botNotAdmin">
-    <value>I am not admin of this chat, only an admin can run this command</value>
+    <value>I am not admin of this chat, I need to be an admin can run that command</value>
   </string>
   <string key="noReply">
     <value>Please reply to someone to use this command</value>

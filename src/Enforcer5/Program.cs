@@ -20,7 +20,7 @@ namespace Enforcer5
         internal static float MessagePxPerSecond, MessageRxPerSecond, MessageTxPerSecond;
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
-        internal static List<Language> LangaugeList;
+        internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
         {
@@ -30,13 +30,13 @@ namespace Enforcer5
             {
                 Environment.Exit(2);
             }
-
+            
             new Thread(() => Bot.Initialize()).Start();
 
             //new Thread(UpdateHandler.SpamDetection).Start();
             //new Thread(UpdateHandler.BanMonitor).Start();
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
-            new Task(Methods.IntialiseLanguages);
+            new Task(Methods.IntialiseLanguages).Start();
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
         }
