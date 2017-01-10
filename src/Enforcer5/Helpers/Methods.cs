@@ -236,5 +236,50 @@ namespace Enforcer5.Helpers
         {
             return Constants.GlobalAdmins.Contains(id);
         }
+
+        public static string GetAdminList(Message message, XDocument lang)
+        {
+            var chatAdmins = Bot.Api.GetChatAdministratorsAsync(message.Chat.Id).Result;
+            string creater = "Unknown";
+            string adminList = "Unknown";
+            foreach (var member in chatAdmins)
+            {
+                if (member.Status.Equals(ChatMemberStatus.Administrator))
+                {
+                    adminList = string.Join("\n", member.User.FirstName);
+                }
+                else if (member.Status.Equals(ChatMemberStatus.Creator))
+                {
+                    creater = member.User.FirstName;
+                }
+            }
+            return Methods.GetLocaleString(lang, "adminList", creater, adminList);
+        }
+
+        public static string GetAbout(long chatId, XDocument lang)
+        {
+            var about = Redis.db.StringGet($"chat:{chatId}:about");
+            if (about.HasValue)
+            {
+                return GetLocaleString(lang, "about", about);
+            }
+            else
+            {
+                return GetLocaleString(lang, "noAbout");
+            }
+        }
+
+        public static string GetRules(long chatId, XDocument lang)
+        {
+            var rules = Redis.db.StringGet($"chat:{chatId}:about");
+            if (rules.HasValue)
+            {
+                return GetLocaleString(lang, "rules", rules);
+            }
+            else
+            {
+                return GetLocaleString(lang, "noRules");
+            }
+        }
     }
 }

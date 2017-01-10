@@ -285,76 +285,7 @@ namespace Enforcer5.Handlers
                         case MessageType.ContactMessage:
                             break;
                         case MessageType.ServiceMessage:
-//                            using (var DB = new WWContext())
-//                            {
-//                                id = update.Message.Chat.Id;
-//                                var m = update.Message;
-
-//                                if (m.LeftChatMember != null)
-//                                {
-//                                    if (m.LeftChatMember.Id == Bot.Me.Id)
-//                                    {
-//                                        //removed from group
-//                                        var grps = DB.Groups.Where(x => x.GroupId == id);
-//                                        if (!grps.Any())
-//                                        {
-//                                            return;
-//                                        }
-//                                        foreach (var g in grps)
-//                                        {
-//                                            g.BotInGroup = false;
-//                                            g.UserName = update.Message.Chat.Username;
-//                                            g.Name = update.Message.Chat.Title;
-//                                        }
-//                                        DB.SaveChanges();
-//                                    }
-//                                    else
-//                                    {
-//                                        //player left, attempt smite
-//                                        Bot.GetGroupNodeAndGame(id)?.SmitePlayer(m.LeftChatMember.Id);
-//                                    }
-//                                }
-//                                if (m.NewChatMember?.Id == Bot.Me.Id)
-//                                {
-//                                    //added to a group
-//                                    grp = DB.Groups.FirstOrDefault(x => x.GroupId == id);
-//                                    if (grp == null)
-//                                    {
-//                                        grp = MakeDefaultGroup(id, update.Message.Chat.Title, "NewChatMember");
-//                                        DB.Groups.Add(grp);
-//                                        DB.SaveChanges();
-//                                        grp = DB.Groups.FirstOrDefault(x => x.GroupId == id);
-//                                    }
-//                                    grp.BotInGroup = true;
-//                                    grp.UserName = update.Message.Chat.Username;
-//                                    grp.Name = update.Message.Chat.Title;
-//                                    DB.SaveChanges();
-
-//                                    var msg =
-//                                        $"You've just added Werewolf Moderator!  Use /config (group admins) to configure group settings.   If you need assistance, join the [support channel](https://telegram.me/werewolfsupport)";
-//                                    msg += Environment.NewLine +
-//                                           "For updates on what is happening, join the dev channel @werewolfdev" +
-//                                           Environment.NewLine +
-//                                           "Full information is available on the [website](http://www.tgwerewolf.com)";
-//                                    Send(msg, id, parseMode: ParseMode.Markdown);
-
-//#if BETA
-//                                    Send(
-//                                        "*IMPORTANT NOTE- THIS IS A BETA BOT.  EXPECT BUGS, EXPECT SHUTDOWNS, EXPECT.. THE UNEXPECTED!*",
-//                                        id, parseMode: ParseMode.Markdown);
-//#endif
-//                                }
-//                                else if (m.NewChatMember != null && m.Chat.Id == Settings.VeteranChatId)
-//                                {
-//                                    var uid = m.NewChatMember.Id;
-//                                    //check that they are allowed to join.
-//                                    var p = DB.Players.FirstOrDefault(x => x.TelegramId == uid);
-//                                    if ((p?.GamePlayers.Count ?? 0) >= 500) return;
-//                                    //user has not reach veteran
-//                                    Send($"{m.NewChatMember.FirstName} removed, as they have not unlocked veteran", m.Chat.Id);
-//                                    Commands.KickChatMember(Settings.VeteranChatId, uid);
-//                                }
-//                            }
+                            
                             break;
                         case MessageType.VenueMessage:
                             break;
