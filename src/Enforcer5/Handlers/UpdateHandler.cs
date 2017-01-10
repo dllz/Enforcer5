@@ -285,7 +285,17 @@ namespace Enforcer5.Handlers
                         case MessageType.ContactMessage:
                             break;
                         case MessageType.ServiceMessage:
-                            
+                            if (update.Message.NewChatMember != null)
+                            {
+                                if (update.Message.NewChatMember.Id == Bot.Me.Id)
+                                {
+                                    Service.BotAdded(update.Message);
+                                }
+                                else
+                                {
+                                    Service.Welcome(update.Message);
+                                }
+                            }                          
                             break;
                         case MessageType.VenueMessage:
                             break;

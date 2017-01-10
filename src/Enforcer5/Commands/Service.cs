@@ -12,7 +12,7 @@ namespace Enforcer5
 {
     public static class Service
     {
-        public static async Task Welcome(Message message, Update update)
+        public static async Task Welcome(Message message)
         {
             var type = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "type");
             var content = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "content");
@@ -92,6 +92,23 @@ namespace Enforcer5
                 username = "(no username)";
             }
             return "Still being implemented";//TO-DO Implement custom welcome
+        }
+
+        public static async Task BotAdded(Message updateMessage)
+        {
+            var groupBan = Redis.db.HashGet($"groupBan:{updateMessage.Chat.Id}", "banned");
+            if (groupBan.Equals("1"))
+            {
+                var lang = Methods.GetGroupLanguage(updateMessage).Doc;
+                await Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
+                await Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
+                return;
+            }
+            var alreadyExists = Redis.db.SetContains($"bot:groupsid", updateMessage.Chat.Id);
+            if (!alreadyExists)
+            {
+                
+            }
         }
     }
 }

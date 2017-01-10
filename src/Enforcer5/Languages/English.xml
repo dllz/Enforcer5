@@ -186,4 +186,7 @@
   <string key="Ping2">
     <value>Time to send ping message: {0}</value>
   </string>
+  <string key="groupBanned">
+    <value>Your group has been banned from using Werewolf Enforcer</value>
+  </string>
 </strings>
