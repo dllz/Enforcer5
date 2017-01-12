@@ -108,6 +108,7 @@ namespace Enforcer5
             var alreadyExists = Redis.db.SetContains($"bot:groupsid", updateMessage.Chat.Id);
             if (!alreadyExists)
             {
+
             }
             else
             {

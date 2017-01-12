@@ -189,4 +189,19 @@
   <string key="groupBanned">
     <value>Your group has been banned from using Werewolf Enforcer</value>
   </string>
+  <string key="warnMaxKick">
+    <value>User {0} *kicked*: as they reached the max number of warns</value>
+  </string>
+  <string key="warnMaxBan">
+    <value>User {0} *banned*: as they reached the max number of warns</value>
+  </string>
+  <string key="resetWarn">
+    <value>Reset Warn</value>
+  </string>
+  <string key="removeWarn">
+    <value>Remove Warn</value>
+  </string>
+  <string key="warn">
+    <value>{0} *has been warned.*\n_Number of warns_   *{1}*\n_Max allowed_   *{2}*</value>
+  </string>
 </strings>

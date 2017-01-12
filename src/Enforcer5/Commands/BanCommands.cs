@@ -6,6 +6,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
 {
@@ -58,6 +59,50 @@ namespace Enforcer5
             else
             {
                await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message);
+            }
+        }
+
+        [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async void Warn(Update update, string[] args)
+        {
+            var num = Redis.db.HashIncrement($"chat:{update.Message.Chat.Id}:warns", update.Message.From.Id, 1);
+            var max = 3;
+            int.TryParse(Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "max"), out max);
+            var lang = Methods.GetGroupLanguage(update.Message);
+            if (num >= max)
+            {                
+                var type = Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "type").HasValue
+                    ? Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "type").ToString()
+                    : "kick";
+                if (type.Equals("ban"))
+                {
+                    try
+                    {
+                        await Bot.Api.KickChatMemberAsync(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id);
+                        var name = Methods.GetNick(update.Message, args);
+                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "WarnMaxBan", name), update.Message);
+                    }
+                    catch (AggregateException e)
+                    {
+                        Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
+                    }
+                }
+                else
+                {
+                    await Methods.KickUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
+                    var name = Methods.GetNick(update.Message, args);
+                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "WarnMaxKick", name), update.Message);
+                }
+            }
+            else
+            {
+                var diff = max - num;
+                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args), num, max);
+                var baseMenu = new List<InlineKeyboardButton>();
+                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang.Doc, "resetWarn"), $"resetwarns:{update.Message.ReplyToMessage.From.Id}"));
+                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang.Doc, "removeWarn"), $"removewarn:{update.Message.ReplyToMessage.From.Id}"));
+                var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
+                await Bot.Send(text, update.Message.Chat.Id, customMenu: menu);
             }
         }
     }

@@ -30,5 +30,7 @@ namespace Enforcer5.Attributes
         public bool Blockable { get; set; } = false;
 
         public bool InGroupOnly { get; set; } = false;
+
+        public bool RequiresReply { get; set; } = false;
     }
 }

@@ -272,11 +272,6 @@ namespace Enforcer5.Handlers
                         case MessageType.VoiceMessage:
                             break;
                         case MessageType.DocumentMessage:
-                            //if (UpdateHelper.Devs.Contains(update.Message.From.Id) && SendGifIds)
-                            //{
-                            //    var doc = update.Message.Document;
-                            //    Send(doc.FileId, update.Message.Chat.Id);
-                            //}
                             break;
                         case MessageType.StickerMessage:
                             break;
