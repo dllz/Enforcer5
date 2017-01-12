@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
@@ -107,8 +108,74 @@ namespace Enforcer5
             var alreadyExists = Redis.db.SetContains($"bot:groupsid", updateMessage.Chat.Id);
             if (!alreadyExists)
             {
-                
             }
+            else
+            {
+                await Bot.Send(
+                    "Welcome to Enforcer. Default settings have been loaded, please use /menu to configure them or /help for more information",
+                    updateMessage.Chat.Id);
+                IntiliseSettings(updateMessage.Chat.Id);
+            }
+        }
+
+        private static void IntiliseSettings(long chatId)
+        {
+            object[,,] defaultSettings =
+            {
+                {
+                    {"settings", "Rules", "no"},
+                    {"settings", "About", "no"},
+                    {"settings", "Modlist", "no"},
+                    {"settings", "Report", "yes"},
+                    {"settings", "Welcome", "yes"},
+                    {"settings", "Extra", "yes"},
+                    {"settings", "Flood", "no"},
+                    {"settings", "Admin_mode", "yes"},
+                    {"flood", "MaxFlood", 5},
+                    {"flood", "ActionFlood", "kick"},
+                    {"char", "Arab", "allowed"},
+                    {"char", "Rtl", "allowed"},
+                    {"floodexceptions", "image", "no"},
+                    {"floodexceptions", "video", "no"},
+                    {"floodexceptions", "sticker", "no"},
+                    {"floodexceptions", "gif", "no"},
+                    {"warnsettings", "type", "ban"},
+                    {"warnsettings", "max", 3},
+                    {"warnsettings", "mediamax", 2},
+                    {"welcome", "type", "composed"},
+                    {"welcome", "content", "no"},
+                    {"media", "image", "allowed"},
+                    {"media", "audio", "allowed"},
+                    {"media", "video", "allowed"},
+                    {"media", "sticker", "allowed"},
+                    {"media", "gif", "allowed"},
+                    {"media", "voice", "allowed"},
+                    {"media", "contact", "allowed"},
+                    {"media", "file", "allowed"},
+                    {"media", "link", "allowed"},
+                }
+            };
+
+
+            var num = 0;
+            for (int i = 0; i < defaultSettings.GetLength(0); i++)
+            {
+                for (int j = 0; j < defaultSettings.GetLength(1); j++)
+                {
+                    var hash = $"chat:{chatId}:{defaultSettings[i, j, 0]}";
+                    var value = defaultSettings[i, j, 1];
+                    var setting = defaultSettings[i, j, 2];
+                    if (int.TryParse(setting.ToString(), out num))
+                    {
+                        Redis.db.HashSet(hash, defaultSettings[i, j, 1].ToString(), num);
+                    }
+                    else if (setting is string)
+                    {
+                        Redis.db.HashSet(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                    }
+                }
+            }
+            Redis.db.SetAdd($"bot:groupsid", chatId);
         }
     }
 }
