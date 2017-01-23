@@ -28,7 +28,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true, RequiresReply = true)]
         public static async void Kick(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);

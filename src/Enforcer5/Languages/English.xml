@@ -204,4 +204,25 @@
   <string key="warn">
     <value>{0} *has been warned.*\n_Number of warns_   *{1}*\n_Max allowed_   *{2}*</value>
   </string>
+  <string key="alreadyFlagged">
+    <value>Message already reported</value>
+  </string>
+  <string key="ban">
+    <value>Ban</value>
+  </string>
+  <string key="kick">
+    <value>Kick</value>
+  </string>
+  <string key="warn">
+    <value>Warn</value>
+  </string>
+  <string key="markSolved">
+    <value>Mark Solved</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nReport ID: #r{2}\n#Unsolved</value>
+  </string>
+  <string key="reported">
+    <value>Reported!\n#Report ID: {0}</value>
+  </string>
 </strings>

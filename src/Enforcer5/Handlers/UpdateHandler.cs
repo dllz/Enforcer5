@@ -258,6 +258,12 @@ namespace Enforcer5.Handlers
                                     {
                                         return;
                                     }
+                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    {
+                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        Bot.Send(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message.Chat.Id);
+                                        return;
+                                    }
                                     Bot.CommandsReceived++;                                      
                                     command.Method.Invoke(update, args);
                                 }

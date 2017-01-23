@@ -11,5 +11,6 @@ namespace Enforcer5.Models
         public bool Blockable { get; set; }
         public Bot.ChatCommandMethod Method { get; set; }
         public bool InGroupOnly { get; set; }
+        public bool RequiresReply { get; set; }
     }
 }

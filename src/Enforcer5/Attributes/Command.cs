@@ -19,6 +19,8 @@ namespace Enforcer5.Attributes
         /// </summary>
         public bool GroupAdminOnly { get; set; } = false;
 
+        public bool RequiresReply { get; set; } = false;
+
         /// <summary>
         /// Developer only command
         /// </summary>
@@ -31,6 +33,6 @@ namespace Enforcer5.Attributes
 
         public bool InGroupOnly { get; set; } = false;
 
-        public bool RequiresReply { get; set; } = false;
+        
     }
 }
