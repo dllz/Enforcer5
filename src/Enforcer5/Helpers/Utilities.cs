@@ -181,6 +181,10 @@ namespace Enforcer5.Helpers
         {
             return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId);
         }
+        internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
+        {
+            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard);
+        }
     }
 
     internal static class Redis

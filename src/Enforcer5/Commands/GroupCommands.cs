@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
 {
@@ -200,5 +201,29 @@ namespace Enforcer5
             await Bot.SendReply(Methods.GetLocaleString(lang, "Support"), update.Message.Chat.Id, msgToReplyTo);
         }
 
+        [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async void User(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                var userid = Methods.GetUserId(update, args);
+                var buttons = new[]
+                {
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"), 
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"userbutton:warnuser:{userid}"), 
+                };
+                var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
+                var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
+                await Bot.SendReply(text, update, keyboard);
+            }
+            catch (Exception e)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+            }
+            
+
+        }
     }
 }

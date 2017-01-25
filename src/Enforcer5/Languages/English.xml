@@ -22,16 +22,13 @@
   <string key="userinfoGlobal">
     <value>*Global ban info*:\n</value>
   </string>
-  <string key="getRemovedForFlood">
-    <value>Removed for flood: {0}</value>
-  </string>
-  <string key="getKick">
+  <string key="getkick">
     <value>Kick: {0}</value>
   </string>
-  <string key="getBan">
+  <string key="getban">
     <value>Ban: {0}</value>
   </string>
-  <string key="getTempban">
+  <string key="gettempban">
     <value>Tempban: {0}</value>
   </string>
   <string key="getWarn">
@@ -43,16 +40,16 @@
   <string key="userinfoGroup">
     <value>*Info for group {0}*:</value>
   </string>
-  <string key="getRTLBan">
+  <string key="getrtl">
     <value>Removed for Right to left characters: {0}</value>
   </string>
-  <string key="getFlood">
+  <string key="getflood">
     <value>Removed for flood: {0}</value>
   </string>
-  <string key="getArab">
+  <string key="getarab">
     <value>Removed for persian characters: {0}</value>
   </string>
-  <string key="getForbiddenMedia">
+  <string key="getmedia">
     <value>Remvoed for forbidden media: {0}</value>
   </string>
   <string key="getNothing">
@@ -254,5 +251,8 @@
   </string>
   <string key="Support">
     <value>[Click here to get help from the support group] (https://telegram.me/werewolfsupport)</value>
+  </string>
+  <string key="UnableToGetID">
+    <value>Unable to get the users ID</value>
   </string>
 </strings>

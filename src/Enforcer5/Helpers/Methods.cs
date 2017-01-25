@@ -284,7 +284,27 @@ namespace Enforcer5.Helpers
 
         public static bool SendInPm(Message updateMessage, string rules)
         {
-            throw new NotImplementedException();
+            var enabled = Redis.db.HashGet($"chat:{updateMessage.Chat.Id}:settings", "Admin_mode");
+            return enabled.Equals("yes");
+        }
+
+        public static string GetUserInfo(int userid, long? chatId, string chatTitle, XDocument lang)
+        {
+            var text = GetLocaleString(lang, "userinfoGroup", chatTitle);
+            var hash = $"ban:{userid}";
+            var banInfo = Redis.db.HashGetAll(hash);
+            var completedList = new List<string>();
+            completedList.Add(text);
+            completedList = banInfo.
+                Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
+            if (chatId != null)
+            {
+                var warns = Redis.db.HashGet($"chat:{chatId}:warns", userid);
+                completedList.Add(GetLocaleString(lang, "getWarn", warns));
+                warns = Redis.db.HashGet($"chat:{chatId}:mediawarns", userid);
+                completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
+            }
+            return string.Join("\n", completedList);
         }
     }
 }
