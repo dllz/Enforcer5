@@ -258,4 +258,7 @@
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
   </string>
+  <string key="globalBan">
+    <value>{0} has been automatically banned for:{1}\nThe user can go to @werewolfsupport to appeal this ban.</value>
+  </string>
 </strings>

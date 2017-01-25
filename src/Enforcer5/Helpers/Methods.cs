@@ -307,7 +307,7 @@ namespace Enforcer5.Helpers
             return string.Join("\n", completedList);
         }
 
-        public static bool IsRekt(Update update)
+        public static async bool IsRekt(Update update)
         {
             var isBanned = Redis.db.HashGetAll($"globanBan:{update.Message.From.Id}");
             int banned = int.Parse(isBanned[0].Value);
@@ -315,7 +315,10 @@ namespace Enforcer5.Helpers
             var time = isBanned[2].Value;
             if (banned == 1)
             {
-               
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                await BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
+                SaveBan(update.Message.From.Id, "ban");
+                await Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
             }
         }
 
