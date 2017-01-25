@@ -261,4 +261,10 @@
   <string key="globalBan">
     <value>{0} has been automatically banned for:{1}\nThe user can go to @werewolfsupport to appeal this ban.</value>
   </string>
+  <string key="goToMessage">
+    <value>Go to message</value>
+  </string>
+  <string key="goToChat">
+    <value>Go to chat</value>
+  </string>
 </strings>

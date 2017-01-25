@@ -179,6 +179,7 @@ namespace Enforcer5
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
             var count = 0;
+            var groupLink = Redis.db.HashGet($"chat:{chatId}links", "link");
             foreach (var mod in mods)
             {
                 Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
@@ -193,6 +194,10 @@ namespace Enforcer5
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),                            
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
+                            {
+                                Url = $"http://t.me/{username}/{repId}"
+                            }
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
@@ -202,7 +207,11 @@ namespace Enforcer5
                     {
                         var buttons = new[]
                         {
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"), 
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
+                            {
+                                Url = $"http://t.me/{username}/{repId}"
+                            }
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
@@ -210,7 +219,7 @@ namespace Enforcer5
                     }
                 }
                 else
-                {
+                {                    
                     if (updateMessage.ReplyToMessage != null)
                     {
                         var buttons = new[]
@@ -219,6 +228,11 @@ namespace Enforcer5
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            groupLink.HasValue ? 
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
+                            {
+                                Url = groupLink
+                            } : null
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
@@ -229,6 +243,11 @@ namespace Enforcer5
                         var buttons = new[]
                         {
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            groupLink.HasValue ?
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
+                            {
+                                Url = groupLink
+                            } : null
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,

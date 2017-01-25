@@ -352,7 +352,7 @@ namespace Enforcer5.Helpers
 
         public static void CheckTempBans(object state)
         {
-            
+            var tempbans = Redis.db.HashGetAll();
         }
     }
 }
