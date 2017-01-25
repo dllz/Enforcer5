@@ -105,5 +105,31 @@ namespace Enforcer5
                 await Bot.Send(text, update.Message.Chat.Id, customMenu: menu);
             }
         }
+
+        [Command(Trigger = "ban", GroupAdminOnly = true, RequiresReply = true)]
+        public static async void Ban(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message);
+            try
+            {
+                var userid = Methods.GetUserId(update, args);
+                var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc).Result;
+
+                if (res)
+                {
+                    Methods.SaveBan(userid, "ban");
+                    object[] arguments =
+                    {
+                        Methods.GetNick(update.Message, args),
+                        Methods.GetNick(update.Message, args, true)
+                    };
+                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
+                }
+            }
+            catch (AggregateException e)
+            {
+                Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
+            }
+        }
     }
 }

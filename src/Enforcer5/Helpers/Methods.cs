@@ -306,5 +306,40 @@ namespace Enforcer5.Helpers
             }
             return string.Join("\n", completedList);
         }
+
+        public static bool IsRekt(Update update)
+        {
+            var isBanned = Redis.db.HashGetAll($"globanBan:{update.Message.From.Id}");
+            int banned = int.Parse(isBanned[0].Value);
+            var reason = isBanned[1].Value;
+            var time = isBanned[2].Value;
+            if (banned == 1)
+            {
+               
+            }
+        }
+
+        public static async Task<bool> BanUser(long chatId, int userId, XDocument doc)
+        {
+            try
+            {
+                var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
+                if (res)
+                {
+                    Redis.db.HashIncrement("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
+                }
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                {
+                    await Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
+        }
     }
 }

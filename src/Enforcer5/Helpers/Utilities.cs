@@ -70,6 +70,7 @@ namespace Enforcer5.Helpers
                         c.Trigger = ca.Trigger;
                         c.Method = (ChatCommandMethod)m.CreateDelegate(typeof(ChatCommandMethod));
                         c.InGroupOnly = ca.InGroupOnly;
+                        c.RequiresReply = ca.RequiresReply;
                         Commands.Add(c);
                     }
                 }

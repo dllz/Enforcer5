@@ -217,6 +217,9 @@ namespace Enforcer5.Handlers
                     return; //toss it
 
                 var id = update.Message.Chat.Id;
+
+                if (Methods.IsRekt(update))
+                    return;
                 
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;   
 #if DEBUG           
@@ -261,7 +264,7 @@ namespace Enforcer5.Handlers
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message);
-                                        Bot.Send(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message.Chat.Id);
+                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
                                     Bot.CommandsReceived++;                                      
