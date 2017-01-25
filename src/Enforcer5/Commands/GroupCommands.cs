@@ -225,5 +225,34 @@ namespace Enforcer5
             
 
         }
+
+        [Command(Trigger = "me", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async void Me(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                var userid = Methods.GetUserId(update, args);
+                var buttons = new[]
+                {
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"),
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"userbutton:warnuser:{userid}"),
+                };
+                var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
+                var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
+                await Bot.Send(text, update.Message.From.Id);
+            }
+            catch (AggregateException e)
+            {
+                Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+            }
+            catch (Exception e)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+            }
+
+
+        }
     }
 }
