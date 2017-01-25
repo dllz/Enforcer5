@@ -249,4 +249,7 @@
   <string key="incorrectArgument">
     <value>Wrong argument type for command</value>
   </string>
+  <string key="NoInput">
+    <value>No input with command</value>
+  </string>
 </strings>

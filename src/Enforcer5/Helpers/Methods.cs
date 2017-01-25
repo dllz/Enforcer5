@@ -281,5 +281,10 @@ namespace Enforcer5.Helpers
                 return GetLocaleString(lang, "noRules");
             }
         }
+
+        public static bool SendInPm(Message updateMessage, string rules)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

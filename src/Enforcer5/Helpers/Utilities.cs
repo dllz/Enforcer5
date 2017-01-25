@@ -145,6 +145,29 @@ namespace Enforcer5.Helpers
             }
 
         }
+        internal static async Task<Message> Send(string message, Update chatUpdate, bool clearKeyboard = false,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Markdown)
+        {
+            MessagesSent++;
+            var id = chatUpdate.Message.Chat.Id
+            //message = message.Replace("`",@"\`");
+            if (clearKeyboard)
+            {
+                var menu = new ReplyKeyboardHide { HideKeyboard = true };
+                return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
+                    parseMode: parseMode);
+            }
+            else if (customMenu != null)
+            {
+                return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
+                    parseMode: parseMode);
+            }
+            else
+            {
+                return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+            }
+
+        }
 
         internal static async Task<Message> SendReply(string message, Message msg, IReplyMarkup replyMarkup = null)
         {
