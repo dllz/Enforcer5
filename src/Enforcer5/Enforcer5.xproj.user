@@ -3,5 +3,6 @@
   <PropertyGroup>
     <ActiveDebugProfile>Enforcer5</ActiveDebugProfile>
     <ShowAllFiles>true</ShowAllFiles>
+    <NameOfLastUsedPublishProfile>Default</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>

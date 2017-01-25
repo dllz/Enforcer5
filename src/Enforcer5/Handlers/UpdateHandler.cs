@@ -197,7 +197,7 @@ namespace Enforcer5.Handlers
         private static void Log(Models.Commands command, Update update)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write($"[{System.DateTime.Now.Date}] ");
+            Console.Write($"[{System.DateTime.Now:hh:mm:ss dd-MM-yyyy}] ");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write(command.Method.GetMethodInfo().Name);
             Console.ForegroundColor = ConsoleColor.Gray;

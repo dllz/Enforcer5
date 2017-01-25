@@ -4854,7 +4854,7 @@
         }
       }
     },
-    ".NETCoreApp,Version=v1.0/win10-x64": {
+    ".NETCoreApp,Version=v1.0/win81-x64": {
       "Libuv/1.9.1": {
         "type": "package",
         "dependencies": {
@@ -5073,7 +5073,10 @@
         }
       },
       "Microsoft.NETCore.Windows.ApiSets/1.0.1": {
-        "type": "package"
+        "type": "package",
+        "dependencies": {
+          "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets": "1.0.1"
+        }
       },
       "Microsoft.VisualBasic/10.0.1": {
         "type": "package",
@@ -5633,6 +5636,20 @@
         },
         "runtime": {
           "runtimes/win/lib/netstandard1.0/System.Private.Uri.dll": {}
+        }
+      },
+      "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets/1.0.1": {
+        "type": "package",
+        "native": {
+          "runtimes/win81-x64/native/API-MS-Win-Core-Kernel32-Private-L1-1-2.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-kernel32-legacy-l1-1-2.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-memory-l1-1-3.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-namedpipe-l1-2-1.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-string-obsolete-l1-1-1.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-sysinfo-l1-2-2.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-core-sysinfo-l1-2-3.dll": {},
+          "runtimes/win81-x64/native/api-ms-win-security-cpwl-l1-1-0.dll": {},
+          "runtimes/win81-x64/native/ext-ms-win-ntuser-keyboard-l1-2-1.dll": {}
         }
       },
       "StackExchange.Redis/1.1.608": {
@@ -8689,6 +8706,26 @@
         "runtime.win7.System.Private.Uri.nuspec",
         "runtimes/aot/lib/netcore50/System.Private.Uri.dll",
         "runtimes/win/lib/netstandard1.0/System.Private.Uri.dll"
+      ]
+    },
+    "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets/1.0.1": {
+      "sha512": "ORzCMW0hj0mJ4+waqA26AeUfFnynxRlMrlsJnuuoOexQczhPRDt+5sXtDHGh/uT9DOFoXFkbr2BTCKDRsFbrDQ==",
+      "type": "package",
+      "path": "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets/1.0.1",
+      "files": [
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets.1.0.1.nupkg.sha512",
+        "runtime.win81-x64.Microsoft.NETCore.Windows.ApiSets.nuspec",
+        "runtimes/win81-x64/native/API-MS-Win-Core-Kernel32-Private-L1-1-2.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-kernel32-legacy-l1-1-2.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-memory-l1-1-3.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-namedpipe-l1-2-1.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-string-obsolete-l1-1-1.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-sysinfo-l1-2-2.dll",
+        "runtimes/win81-x64/native/api-ms-win-core-sysinfo-l1-2-3.dll",
+        "runtimes/win81-x64/native/api-ms-win-security-cpwl-l1-1-0.dll",
+        "runtimes/win81-x64/native/ext-ms-win-ntuser-keyboard-l1-2-1.dll"
       ]
     },
     "StackExchange.Redis/1.1.608": {
