@@ -88,6 +88,18 @@ namespace Enforcer5.Helpers
                 return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
             }
         }
+        public static Language GetGroupLanguage(long chatId)
+        {
+            var lang = Redis.db.StringGet($"chat:{chatId}:language");
+            if (lang.HasValue)
+            {
+                return Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+            }
+            else
+            {
+                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+            }
+        }
 
         public static void IntialiseLanguages()
         {
@@ -352,7 +364,41 @@ namespace Enforcer5.Helpers
 
         public static void CheckTempBans(object state)
         {
-            var tempbans = Redis.db.HashGetAll();
+            var tempbans = Redis.db.HashGetAll("tempbanned");
+            foreach (var mem in tempbans)
+            {
+                if (System.DateTime.Now.Ticks >= int.Parse(mem.Name))
+                {
+                    var subStrings = mem.Value.ToString().Split(':');
+                    var chatId = long.Parse(subStrings[0]);
+                    var userId = int.Parse(subStrings[1]);
+                    UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                    Redis.db.HashDelete("tempbanned", mem.Name);
+                    Redis.db.SetRemove($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
+                }
+                
+            }
+        }
+
+        public static bool UnbanUser(long chatId, int userId, XDocument doc)
+        {
+            try
+            {
+                Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                var rem = Redis.db.SetRemove($"chat:{chatId}:banned", userId);
+                Redis.db.ListRemove($"chat:{chatId}:bannedlist", userId);
+                return true;
+            }                
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
@@ -130,6 +131,24 @@ namespace Enforcer5
             {
                 Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
             }
+        }
+
+        [Command(Trigger = "unban", GroupAdminOnly = true)]
+        public static async void UnBan(Update update, string[] args)
+        {
+            var chatId = update.Message.Chat.Id;
+            var userId = Methods.GetUserId(update, args);
+            var status = Bot.Api.GetChatMemberAsync(chatId, userId).Result.Status;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (status == ChatMemberStatus.Kicked)
+            {
+                var res = Methods.UnbanUser(chatId, userId, lang);
+                if (res)
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
+                }
+            }
+
         }
     }
 }

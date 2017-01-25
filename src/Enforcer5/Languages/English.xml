@@ -245,7 +245,7 @@
   </string>
   <string key="solvedNoReply">
     <value>Please reply to a flagged message (contains @admin) or send the reportID</value>
-  </string>
+  </string>bannedlist
   <string key="incorrectArgument">
     <value>Wrong argument type for command</value>
   </string>
@@ -266,5 +266,8 @@
   </string>
   <string key="goToChat">
     <value>Go to chat</value>
+  </string>
+  <string key="userUnbanned">
+    <value>User unbanned!</value>
   </string>
 </strings>
