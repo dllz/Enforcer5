@@ -169,13 +169,17 @@ namespace Enforcer5.Helpers
 
         }
 
-        internal static async Task<Message> SendReply(string message, Message msg, IReplyMarkup replyMarkup = null)
+        internal static async Task<Message> SendReply(string message, Message msg)
         {
-            return await Api.SendTextMessageAsync(msg.Chat.Id, message, false, false, msg.MessageId, replyMarkup);
+            return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId);
         }
-        internal static async Task<Message> SendReply(string message, long chatid, IReplyMarkup replyMarkup = null)
+        internal static async Task<Message> SendReply(string message, long chatid, int msgid)
         {
-            return await Api.SendTextMessageAsync(chatid, message);
+            return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid);
+        }
+        internal static async Task<Message> SendReply(string message, Update msg)
+        {
+            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId);
         }
     }
 

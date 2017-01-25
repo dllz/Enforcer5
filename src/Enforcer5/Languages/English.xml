@@ -252,4 +252,7 @@
   <string key="NoInput">
     <value>No input with command</value>
   </string>
+  <string key="Support">
+    <value>[Click here to get help from the support group] (https://telegram.me/werewolfsupport)</value>
+  </string>
 </strings>

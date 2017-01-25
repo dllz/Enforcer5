@@ -51,7 +51,7 @@ namespace Enforcer5
             SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title,update.Message, repId, username, lang);
         }
 
-        [Command(Trigger = "solved", InGroupOnly = true, RequiresReply = true, GroupAdminOnly = true)]
+        [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
         public static async void Solved(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
