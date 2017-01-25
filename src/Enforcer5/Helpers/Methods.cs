@@ -49,7 +49,7 @@ namespace Enforcer5.Helpers
             {
                 if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                 {
-                    await Bot.SendReply(Methods.GetLocaleString(doc, "botNotAdmin"), chatId);
+                    await Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
@@ -73,7 +73,7 @@ namespace Enforcer5.Helpers
                 {
                     exceptionInnerException.Message
                 };
-            await Bot.SendReply(GetLocaleString(doc, "Error", arguments), chatid);
+            await Bot.Send(GetLocaleString(doc, "Error", arguments), chatid);
         }
 
         public static Language GetGroupLanguage(Message uMessage)

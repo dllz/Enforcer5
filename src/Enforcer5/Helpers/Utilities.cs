@@ -149,7 +149,7 @@ namespace Enforcer5.Helpers
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Markdown)
         {
             MessagesSent++;
-            var id = chatUpdate.Message.Chat.Id
+            var id = chatUpdate.Message.Chat.Id;
             //message = message.Replace("`",@"\`");
             if (clearKeyboard)
             {
