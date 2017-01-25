@@ -51,6 +51,129 @@ namespace Enforcer5
             SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title,update.Message, repId, username, lang);
         }
 
+        [Command(Trigger = "solved", InGroupOnly = true, RequiresReply = true, GroupAdminOnly = true)]
+        public static async void Solved(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (update.Message.ReplyToMessage != null && string.IsNullOrEmpty(args[2]))
+            {
+                var msgid = update.Message.ReplyToMessage.MessageId;
+                var chatid = update.Message.Chat.Id;
+                var hash = $"flagged:{chatid}:{msgid}";
+                var isReported = Redis.db.HashGet(hash, "Solved");
+                if (!isReported.HasValue)
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
+                    return;
+                }
+                int isReport;
+                if (isReported.TryParse(out isReport) && isReport == 0)
+                {
+                    var solvedBy = update.Message.From.FirstName;
+                    if (update.Message.From.Username != null)
+                        solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
+                    var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd:mm:yyyy");
+                    Redis.db.HashSet(hash, "SolvedAt", solvedAt);
+                    Redis.db.HashSet(hash, "solvedBy", solvedBy);
+                    Redis.db.HashSet(hash, "Solved", 1);
+                    var counter = int.Parse(Redis.db.HashGet(hash, "#Admin"));
+                    var reporter = Redis.db.HashGet(hash, "Reporter");
+                    var repID = Redis.db.HashGet(hash, "repID");
+                    string text;
+                    if (!reporter.HasValue)
+                    {
+                        text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
+                            update.Message.Chat.Title, reporter);
+                    }
+                    else
+                    {
+                        text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
+                            update.Message.Chat.Title);
+                    }
+                    for (int i = 0; i < counter; i++)
+                    {
+                        var id = Redis.db.HashGet(hash, $"adminID{i}");
+                        var msgID = Redis.db.HashGet(hash, $"Message{i}");
+                        if (id.HasValue && msgID.HasValue)
+                        {
+                            await Bot.Api.EditMessageTextAsync(id, msgid,
+                                $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
+                        }
+                    }
+                    await Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
+                }
+                else if (isReported.TryParse(out isReport) && isReport == 1)
+                {
+                    var solvedTime = Redis.db.HashGet(hash, "SolvedAt");
+                    var solvedBy = Redis.db.HashGet(hash, "solvedBy");
+                    await Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
+                }
+            }
+            else if (!string.IsNullOrEmpty(args[2]))
+            {
+                int msgid;
+                if (int.TryParse(args[2], out msgid))
+                {
+                    var chatid = update.Message.Chat.Id;
+                    var hash = $"flagged:{chatid}:{msgid}";
+                    var isReported = Redis.db.HashGet(hash, "Solved");
+                    if (!isReported.HasValue)
+                    {
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
+                        return;
+                    }
+                    int isReport;
+                    if (isReported.TryParse(out isReport) && isReport == 0)
+                    {
+                        var solvedBy = update.Message.From.FirstName;
+                        if (update.Message.From.Username != null)
+                            solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
+                        var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd:mm:yyyy");
+                        Redis.db.HashSet(hash, "SolvedAt", solvedAt);
+                        Redis.db.HashSet(hash, "solvedBy", solvedBy);
+                        Redis.db.HashSet(hash, "Solved", 1);
+                        var counter = int.Parse(Redis.db.HashGet(hash, "#Admin"));
+                        var reporter = Redis.db.HashGet(hash, "Reporter");
+                        var repID = Redis.db.HashGet(hash, "repID");
+                        string text;
+                        if (!reporter.HasValue)
+                        {
+                            text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
+                                update.Message.Chat.Title, reporter);
+                        }
+                        else
+                        {
+                            text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
+                                update.Message.Chat.Title);
+                        }
+                        for (int i = 0; i < counter; i++)
+                        {
+                            var id = Redis.db.HashGet(hash, $"adminID{i}");
+                            var msgID = Redis.db.HashGet(hash, $"Message{i}");
+                            if (id.HasValue && msgID.HasValue)
+                            {
+                                await Bot.Api.EditMessageTextAsync(id, msgid,
+                                    $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
+                            }
+                        }
+                        await Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
+                    }
+                    else if (isReported.TryParse(out isReport) && isReport == 1)
+                    {
+                        var solvedTime = Redis.db.HashGet(hash, "SolvedAt");
+                        var solvedBy = Redis.db.HashGet(hash, "solvedBy");
+                        await Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
+                    }
+                }
+                else
+                {
+                    await Bot.Send(Methods.GetLocaleString(lang, "incorrectArgument"), update.Message.Chat.Id);
+                }
+            }
+            else
+                await Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
+        }
+
         private static void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
         {
             var sendMessageIds = new List<int>();

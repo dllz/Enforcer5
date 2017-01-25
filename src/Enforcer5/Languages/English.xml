@@ -225,4 +225,28 @@
   <string key="reported">
     <value>Reported!\n#Report ID: {0}</value>
   </string>
+  <string key="reportNotFound">
+    <value>Report not found</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>This has been solved by: {0}\n{1}\n({2})\nIt was reported by: {3}</value>
+  </string>
+  <string key="solvedBy">
+    <value>This has been solved by: {0}\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>Report ID: {0}</value>
+  </string>
+  <string key="markSolved">
+    <value>Marked as solved</value>
+  </string>
+  <string key="alreadySolved">
+    <value>This was solved at {0} by {1}</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>Please reply to a flagged message (contains @admin) or send the reportID</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>Wrong argument type for command</value>
+  </string>
 </strings>
