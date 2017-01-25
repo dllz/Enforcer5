@@ -233,13 +233,6 @@ namespace Enforcer5
             try
             {
                 var userid = Methods.GetUserId(update, args);
-                var buttons = new[]
-                {
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"),
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"userbutton:warnuser:{userid}"),
-                };
-                var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
                 await Bot.Send(text, update.Message.From.Id);
             }
