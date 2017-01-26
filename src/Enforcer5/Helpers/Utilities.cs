@@ -102,7 +102,6 @@ namespace Enforcer5.Helpers
 
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;
-            Api.OnReceiveError += ApiOnReceiveError;
             Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
 
             Me = Api.GetMeAsync().Result;
@@ -134,19 +133,19 @@ namespace Enforcer5.Helpers
         }
 
 
-        private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
-        {
-            if (!Api.IsReceiving)
-            {
-                Api.StartReceiving();
-            }
-            var e = receiveErrorEventArgs.ApiRequestException;
-            using (var sw = System.IO.File.AppendText(Path.Combine(RootDirectory, "..\\Logs\\apireceiveerror.log")))
-            {
-                sw.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}");
-            }
+        //private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
+        //{
+        //    if (!Api.IsReceiving)
+        //    {
+        //        Api.StartReceiving();
+        //    }
+        //    var e = receiveErrorEventArgs.ApiRequestException;
+        //    using (var sw = System.IO.File.AppendText(Path.Combine(RootDirectory, "..\\Logs\\apireceiveerror.log")))
+        //    {
+        //        sw.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}");
+        //    }
                 
-        }
+        //}
 
         internal static async Task<Message> Send(string message, long id, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Markdown)

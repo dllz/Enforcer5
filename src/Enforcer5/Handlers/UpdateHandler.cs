@@ -290,13 +290,13 @@ namespace Enforcer5.Handlers
                                     command.Method.Invoke(update, args);
                                 }
                             }
-                            else if (update.Message.Text.StartsWith("@"))
+                            else if (update.Message.Text.StartsWith("@admin"))
                             {
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
                                 Console.WriteLine("Looking for command");
-                                var command = Bot.Commands.FirstOrDefault(
+                                    var command = Bot.Commands.FirstOrDefault(
                                     x =>
                                         String.Equals(x.Trigger, args[0],
                                             StringComparison.CurrentCultureIgnoreCase));

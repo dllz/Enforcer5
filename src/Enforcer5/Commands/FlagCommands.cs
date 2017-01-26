@@ -10,7 +10,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
 {
-    public class FlagCommands
+    public static partial class Commands
     {
         [Command(Trigger = "admin", InGroupOnly = true)]
         public static async void Admin(Update update, string[] args)
