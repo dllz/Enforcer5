@@ -234,7 +234,7 @@ namespace Enforcer5.Handlers
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
-                Console.WriteLine("Checking Global Ban");
+                //Console.WriteLine("Checking Global Ban");
                 if (Methods.IsRekt(update))
                 {
                     return;
@@ -243,7 +243,7 @@ namespace Enforcer5.Handlers
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try
                 {    
-                    Console.WriteLine("Checking Message");                    
+                    //Console.WriteLine("Checking Message");                    
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
@@ -255,7 +255,7 @@ namespace Enforcer5.Handlers
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
-                                Console.WriteLine("Looking for command");
+                                //Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
                                         x =>
                                             String.Equals(x.Trigger, args[0],
