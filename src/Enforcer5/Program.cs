@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,19 @@ namespace Enforcer5
             }
             
             new Thread(() => Bot.Initialize()).Start();
-
+            //AppDomain.UnhandledException += (sender, eventArgs) =>
+            //{
+            //    //drop the error to log file and exit
+            //    using (var sw = new StreamWriter(Path.Combine(Bot.RootDirectory, "..\\Logs\\error.log"), true))
+            //    {
+            //        var e = (eventArgs.ExceptionObject as Exception);
+            //        sw.WriteLine(DateTime.Now);
+            //        sw.WriteLine(e.Message);
+            //        sw.WriteLine(e.StackTrace + "\n");
+            //        if (eventArgs.IsTerminating)
+            //            Environment.Exit(5);
+            //    }
+            //};
             //new Thread(UpdateHandler.SpamDetection).Start();
             //new Thread(UpdateHandler.BanMonitor).Start();
             _timer = new Timer(TimerOnTick, null, 5000, 1000);

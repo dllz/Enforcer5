@@ -212,7 +212,7 @@ namespace Enforcer5
                 {
                     new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
                     new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"), 
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"userbutton:warnuser:{userid}"), 
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"userbutton:warnuser:{userid}"), 
                 };
                 var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
@@ -220,7 +220,14 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+                if (e.Message.Equals("UnableToResolveId"))
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+                }
+                else
+                {
+                    Methods.SendError(e.InnerException, update.Message, lang);
+                }
             }
             
 

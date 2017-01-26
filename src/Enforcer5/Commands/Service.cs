@@ -106,9 +106,11 @@ namespace Enforcer5
                 return;
             }
             var alreadyExists = Redis.db.SetContains($"bot:groupsid", updateMessage.Chat.Id);
-            if (!alreadyExists)
+            if (alreadyExists)
             {
-
+                await Bot.Send(
+                    "Welcome back to Enforcer. Your settings are still intack",
+                    updateMessage.Chat.Id);
             }
             else
             {
@@ -124,25 +126,25 @@ namespace Enforcer5
             object[,,] defaultSettings =
             {
                 {
-                    {"settings", "Rules", "no"},
-                    {"settings", "About", "no"},
-                    {"settings", "Modlist", "no"},
+                    {"settings", "Rules", "yes"},
+                    {"settings", "About", "yes"},
+                    {"settings", "Modlist", "yes"},
                     {"settings", "Report", "yes"},
                     {"settings", "Welcome", "yes"},
                     {"settings", "Extra", "yes"},
-                    {"settings", "Flood", "no"},
-                    {"settings", "Admin_mode", "yes"},
+                    {"settings", "Flood", "yes"},
+                    {"settings", "Admin_mode", "no"},
                     {"flood", "MaxFlood", 5},
                     {"flood", "ActionFlood", "kick"},
                     {"char", "Arab", "allowed"},
                     {"char", "Rtl", "allowed"},
-                    {"floodexceptions", "image", "no"},
-                    {"floodexceptions", "video", "no"},
-                    {"floodexceptions", "sticker", "no"},
-                    {"floodexceptions", "gif", "no"},
+                    {"floodexceptions", "image", "yes"},
+                    {"floodexceptions", "video", "yes"},
+                    {"floodexceptions", "sticker", "yes"},
+                    {"floodexceptions", "gif", "yes"},
                     {"warnsettings", "type", "ban"},
-                    {"warnsettings", "max", 3},
-                    {"warnsettings", "mediamax", 2},
+                    {"warnsettings", "max", 5},
+                    {"warnsettings", "mediamax", 3},
                     {"welcome", "type", "composed"},
                     {"welcome", "content", "no"},
                     {"media", "image", "allowed"},

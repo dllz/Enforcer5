@@ -81,7 +81,7 @@ namespace Enforcer5
                     {
                         await Bot.Api.KickChatMemberAsync(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id);
                         var name = Methods.GetNick(update.Message, args);
-                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "WarnMaxBan", name), update.Message);
+                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
                     }
                     catch (AggregateException e)
                     {
@@ -92,7 +92,7 @@ namespace Enforcer5
                 {
                     await Methods.KickUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
                     var name = Methods.GetNick(update.Message, args);
-                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "WarnMaxKick", name), update.Message);
+                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                 }
             }
             else

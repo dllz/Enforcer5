@@ -192,7 +192,7 @@ namespace Enforcer5
                         {
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),                            
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
                             {
@@ -226,7 +226,7 @@ namespace Enforcer5
                         {
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                             groupLink.HasValue ? 
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))

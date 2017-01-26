@@ -31,7 +31,7 @@
   <string key="gettempban">
     <value>Tempban: {0}</value>
   </string>
-  <string key="getWarn">
+  <string key="getwarn">
     <value>Warns: {0}</value>
   </string>
   <string key="getMediaWarn">
@@ -213,7 +213,7 @@
   <string key="kick">
     <value>Kick</value>
   </string>
-  <string key="warn">
+  <string key="Warn">
     <value>Warn</value>
   </string>
   <string key="markSolved">

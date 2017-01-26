@@ -65,7 +65,14 @@ namespace Enforcer5.Helpers
                 {
                     exceptionInnerException.Message
                 };
-            await Bot.SendReply(GetLocaleString(doc, "Error", arguments), updateMessage);
+            try
+            {
+                await Bot.SendReply(GetLocaleString(doc, "Error", arguments), updateMessage);
+            }
+            catch (Exception e)
+            {
+                //fucked
+            }
         }
 
         public static async void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
@@ -313,7 +320,7 @@ namespace Enforcer5.Helpers
             if (chatId != null)
             {
                 var warns = Redis.db.HashGet($"chat:{chatId}:warns", userid);
-                completedList.Add(GetLocaleString(lang, "getWarn", warns));
+                completedList.Add(GetLocaleString(lang, "getwarn", warns));
                 warns = Redis.db.HashGet($"chat:{chatId}:mediawarns", userid);
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
