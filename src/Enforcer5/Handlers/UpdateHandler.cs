@@ -372,8 +372,21 @@ namespace Enforcer5.Handlers
                 {
                     try
                     {
-                        Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                        Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                        if (e.ErrorCode.Equals(112))
+                        {
+                            if (update.Message != null && update.Message.Chat.Title != null)
+                            {
+                                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                                Bot.SendReply(
+                                Methods.GetLocaleString(lang, "markdownBroken"), update);
+                            }
+                            Bot.SendReply("The markdown in this text is broken", update);
+                        }
+                        else
+                        {
+                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
+                            Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                        }                        
                     }
                     catch (ApiRequestException ex)
                     {
@@ -385,7 +398,7 @@ namespace Enforcer5.Handlers
                     }
                 }
                 catch (AggregateException e)
-                {
+                {                   
                     Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)

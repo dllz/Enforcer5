@@ -427,5 +427,84 @@ namespace Enforcer5.Helpers
                 return false;
             }
         }
+
+        public static string GetMediaId(Message msg)
+        {
+            if (msg.Photo != null)
+            {
+                if (msg.Photo[3] != null)
+                {
+                    return msg.Photo[3].FileId;
+                }
+                if (msg.Photo[2] != null)
+                {
+                    return msg.Photo[2].FileId;
+                }
+                if (msg.Photo[1] != null)
+                {
+                    return msg.Photo[1].FileId;
+                }
+                if (msg.Photo[0] != null)
+                {
+                    return msg.Photo[0].FileId;
+                }
+            }
+            if (msg.Document != null)
+            {
+                return msg.Document.FileId;
+            }
+            if (msg.Video != null)
+            {
+                return msg.Video.FileId;
+            }
+            if (msg.Audio != null)
+            {
+                return msg.Audio.FileId;
+            }
+            if (msg.Voice != null)
+            {
+                return msg.Voice.FileId;
+            }
+            return msg.Sticker?.FileId;
+        }
+
+        public static string GetMediaType(Message msg)
+        {
+            if (msg.Photo != null)
+            {
+                return "photo";
+            }
+            if (msg.Document != null)
+            {
+                if (msg.Document.MimeType.Equals("video/mp4"))
+                {
+                    return "gif";
+                }
+                else
+                {
+                    return "file";
+                }
+            }
+            if (msg.Video != null)
+            {
+                return "video";
+            }
+            if (msg.Audio != null)
+            {
+                return "audio";
+            }
+            if (msg.Voice != null)
+            {
+                return "voice";
+            }
+            if (msg.Sticker != null)
+            {
+                return "sticker";
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

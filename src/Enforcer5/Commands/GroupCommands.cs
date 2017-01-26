@@ -261,5 +261,114 @@ namespace Enforcer5
                 Methods.SendError($"{e.InnerExceptions[0].Message}\n{e.StackTrace}", update.Message, lang);
             }
         }
+
+        [Command(Trigger = "extra", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async void Extra(Update update, string[] args)
+        {
+            if (args[1] == null)
+                return;
+            if (args[2] == null && update.Message.ReplyToMessage == null)
+                return;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (update.Message.ReplyToMessage != null && args[2] == null)
+            {
+                var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
+                if (!string.IsNullOrEmpty(fileId))
+                {
+                    var type = Methods.GetMediaType(update.Message.ReplyToMessage);
+                    if (!string.IsNullOrEmpty(type))
+                    {
+                        var toSave = $"###file_id!{type}###:{fileId}";
+                        await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", args[1], toSave);
+                        await Bot.Send(Methods.GetLocaleString(lang, "extraSaved"), update);
+                        return;
+                    }
+                    return;
+                }
+                return;
+            }
+            if (update.Message.ReplyToMessage != null && args[2] != null)
+            {
+                var type = Methods.GetMediaType(update.Message.ReplyToMessage);
+                if (!string.IsNullOrEmpty(type))
+                {
+                    if (type.Equals("gif"))
+                    {
+                        var toSave = update.Message.ReplyToMessage.Document.FileId;
+                        string text = "";
+                        for (int i = 2; i < args.Length; i++)
+                        {
+                            text = text + args[i].ToString();
+                        }
+                        try
+                        {
+                            var res = Bot.SendReply(text, update);
+                            var result = res.Result;
+                            var hash = $"chat:{update.Message.Chat.Id}:extra";
+                            await Redis.db.HashSetAsync($"{hash}:{args[1]}", "mediaid", toSave);
+                            await Redis.db.HashSetAsync(hash, args[1], text);
+                            await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                                Methods.GetLocaleString(lang, "extraSaved"));
+                        }
+                        catch (ApiRequestException e)
+                        {
+                            if (e.ErrorCode.Equals(118))
+                            {
+                                await Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
+                                    update);
+                            }
+                            else if(e.ErrorCode.Equals(112))
+                            {
+                                await Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "markdownBroken"), update);
+                            }
+                            else
+                            {
+                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                            }
+                        }
+                    }
+                    return;
+                }                
+            }
+            else
+            {
+                string text = "";
+                for (int i = 2; i < args.Length; i++)
+                {
+                    text = text + args[i].ToString();
+                }
+                try
+                {
+                    var res = Bot.SendReply(text, update);
+                    var result = res.Result;
+                    var hash = $"chat:{update.Message.Chat.Id}:extra";
+                    await Redis.db.HashDeleteAsync($"{hash}:{args[1]}", "mediaid");
+                    await Redis.db.HashSetAsync(hash, args[1], text);
+                    await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                        Methods.GetLocaleString(lang, "extraSaved"));
+                }
+                catch (ApiRequestException e)
+                {
+                    if (e.ErrorCode.Equals(118))
+                    {
+                        await Bot.SendReply(
+                            Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
+                            update);
+                    }
+                    else if (e.ErrorCode.Equals(112))
+                    {
+                        await Bot.SendReply(
+                            Methods.GetLocaleString(lang, "markdownBroken"), update);
+                    }
+                    else
+                    {
+                        Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                    }
+                }
+
+            }
+        }
     }
 }

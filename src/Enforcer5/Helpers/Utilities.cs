@@ -202,19 +202,19 @@ namespace Enforcer5.Helpers
 
         internal static async Task<Message> SendReply(string message, Message msg)
         {
-            return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId);
+            return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Markdown);
         }
         internal static async Task<Message> SendReply(string message, long chatid, int msgid)
         {
-            return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid);
+            return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Markdown);
         }
         internal static async Task<Message> SendReply(string message, Update msg)
         {
-            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId);
+            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Markdown);
         }
         internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
-            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard);
+            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Markdown);
         }
     }
 

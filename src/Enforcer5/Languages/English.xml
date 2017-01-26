@@ -270,4 +270,13 @@
   <string key="userUnbanned">
     <value>User unbanned!</value>
   </string>
+  <string key="extraSaved">
+    <value>This media has been saved as response to {0}</value>
+  </string>
+  <string key="tooLong">
+    <value>{0} is to long</value>
+  </string>
+  <string key="extra">
+    <value>Extra</value>
+  </string>
 </strings>
