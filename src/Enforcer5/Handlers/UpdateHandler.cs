@@ -271,6 +271,44 @@ namespace Enforcer5.Handlers
                                     command.Method.Invoke(update, args);
                                 }
                             }
+                            else if (update.Message.Text.StartsWith("@admin"))
+                            {
+                                var args = GetParameters(update.Message.Text);
+                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                                //check for the command
+                                Console.WriteLine("Looking for command");
+                                var command = Bot.Commands.FirstOrDefault(
+                                        x =>
+                                            String.Equals(x.Trigger, args[0],
+                                                StringComparison.CurrentCultureIgnoreCase));
+                                if (command != null)
+                                {
+                                    Log(command, update);
+
+                                    //check that we should run the command
+                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
+                                    {
+                                        return;
+                                    }
+                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    {
+                                        Bot.SendReply(Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc, "userNotAdmin"), update.Message);
+                                        return;
+                                    }
+                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                                    {
+                                        return;
+                                    }
+                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    {
+                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        return;
+                                    }
+                                    Bot.CommandsReceived++;
+                                    command.Method.Invoke(update, args);
+                                }
+                            }
                             break;
                         case MessageType.PhotoMessage:
                             break;
@@ -306,15 +344,14 @@ namespace Enforcer5.Handlers
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-#if DEBUG
                 }
 
                 catch (Exception ex)
                 {
-                    Send(ex.Message, id);
+                    Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
+                    Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
                 }
-#endif
-                }
+            }
         }
 
         private static void CollectStats(Message updateMessage)
