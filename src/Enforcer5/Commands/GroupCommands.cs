@@ -370,7 +370,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "extra list", InGroupOnly = true)]
+        [Command(Trigger = "extralist", InGroupOnly = true)]
         public static async void ExtraList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -385,6 +385,25 @@ namespace Enforcer5
             {
                 var text = string.Join("\n", commands.ToList());
                 await Bot.SendReply(Methods.GetLocaleString(lang, "extraList", text), update);
+            }
+        }
+
+        [Command(Trigger = "extradel", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async void ExtraDelete(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (args[1] != null)
+            {                
+                var hash = $"chat:{update.Message.Chat.Id}:extra";
+                var res = Redis.db.HashDeleteAsync(hash, args[1]);
+                if (res.Result)
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "extraDeleted"), update);
+                }
+            }
+            else
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);   
             }
         }
     }

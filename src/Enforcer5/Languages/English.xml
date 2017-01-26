@@ -117,7 +117,7 @@
     <value>{0} command saved</value>
   </string>
   <string key="noExtra">
-    <value>No commands set</value>
+    <value>No command set</value>
   </string>
   <string key="extraList">
     <value>List of *custom commands*:\n{0}</value>
