@@ -415,9 +415,9 @@ namespace Enforcer5
             var text = Redis.db.HashGetAsync(hash, args[0]).Result;
             if (!text.HasValue)
                 return;
-            var fileId = text.ToString();
+            var fileId = "";
             var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;
-            var specialMethod = text.ToString();
+            var specialMethod = "";
             var repId = update.Message.MessageId;
             if (update.Message.ReplyToMessage != null)
             {

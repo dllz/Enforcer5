@@ -219,7 +219,13 @@ namespace Enforcer5.Handlers
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
-            }      
+            }else if (text.Equals("extra"))
+            {
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+            }     
         }
 
         internal static void HandleUpdate(Update update)
@@ -293,11 +299,12 @@ namespace Enforcer5.Handlers
                             else if (update.Message.Text.StartsWith("#"))
                             {
                                 string[] args = new string[1];
-                                args[0] = update.Message.Text.Replace("#", "");
+                                args[0] = update.Message.Text;
                                 if (update.Message.Chat.Type == ChatType.Private)
                                 {
                                     return;
                                 }
+                                Log(update, "extra");
                                 Commands.SendExtra(update, args);
                             }
                             else if (update.Message.Text.StartsWith("@admin"))
