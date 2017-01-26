@@ -216,8 +216,6 @@ namespace Enforcer5.Handlers
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(command.Method.GetMethodInfo().Name);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
             }      

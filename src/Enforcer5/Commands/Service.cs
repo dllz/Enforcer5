@@ -15,8 +15,8 @@ namespace Enforcer5
     {
         public static async Task Welcome(Message message)
         {
-            var type = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "type");
-            var content = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "content");
+            var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
+            var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
             if (!string.IsNullOrEmpty(type) && type.Equals("media"))
             {
                 var file_id = content;
@@ -24,10 +24,10 @@ namespace Enforcer5
             }
             else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
             {
-                var hasMedia = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "hasMedia");
+                var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasMedia").Result;
                 if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
                 {
-                    var file = Redis.db.HashGet($"chat:{message.Chat.Id}:welcome", "media");
+                    var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                     var text = GetCustomWelcome(message, content);
                     await Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
                 }
@@ -97,7 +97,7 @@ namespace Enforcer5
 
         public static async Task BotAdded(Message updateMessage)
         {
-            var groupBan = Redis.db.HashGet($"groupBan:{updateMessage.Chat.Id}", "banned");
+            var groupBan = Redis.db.HashGetAsync($"groupBan:{updateMessage.Chat.Id}", "banned").Result;
             if (groupBan.Equals("1"))
             {
                 var lang = Methods.GetGroupLanguage(updateMessage).Doc;
@@ -105,7 +105,7 @@ namespace Enforcer5
                 await Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
                 return;
             }
-            var alreadyExists = Redis.db.SetContains($"bot:groupsid", updateMessage.Chat.Id);
+            var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;
             if (alreadyExists)
             {
                 await Bot.Send(
@@ -170,15 +170,16 @@ namespace Enforcer5
                     var setting = defaultSettings[i, j, 2];
                     if (int.TryParse(setting.ToString(), out num))
                     {
-                        Redis.db.HashSet(hash, defaultSettings[i, j, 1].ToString(), num);
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
                     }
                     else if (setting is string)
                     {
-                        Redis.db.HashSet(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
                     }
                 }
             }
-            Redis.db.SetAdd($"bot:groupsid", chatId);
+            Redis.db.SetAddAsync($"bot:groupsid", chatId);
+            Redis.db.SetAddAsync("bot:e5groupsid", chatId); 
         }
     }
 }
