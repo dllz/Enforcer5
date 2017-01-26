@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
@@ -245,7 +246,10 @@ namespace Enforcer5
                 var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
                 await Bot.Send(text, update.Message.From.Id);
-                await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
+                if (update.Message.Chat.Type != ChatType.Private)
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
+                }
             }
             catch (AggregateException e)
             {
