@@ -24,7 +24,7 @@ namespace Enforcer5
             }
             if (res.Exception != null)
             {
-                
+
                 Methods.SendError(res.Exception.InnerExceptions[0], update.Message, lang.Doc);
             }
         }
@@ -34,7 +34,7 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             if (update.Message.ReplyToMessage != null)
-            { 
+            {
                 try
                 {
                     var userid = Methods.GetUserId(update, args);
@@ -59,21 +59,21 @@ namespace Enforcer5
             }
             else
             {
-               await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message);
+                await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message);
             }
         }
 
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static async void Warn(Update update, string[] args)
         {
-            var num = Redis.db.HashIncrement($"chat:{update.Message.Chat.Id}:warns", update.Message.From.Id, 1);
+            var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.From.Id, 1).Result;
             var max = 3;
-            int.TryParse(Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "max"), out max);
+            int.TryParse(Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result, out max);
             var lang = Methods.GetGroupLanguage(update.Message);
             if (num >= max)
-            {                
-                var type = Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "type").HasValue
-                    ? Redis.db.HashGet($"chat:{update.Message.Chat.Id}:warnsettings", "type").ToString()
+            {
+                var type = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").Result.HasValue
+                    ? Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").ToString()
                     : "kick";
                 if (type.Equals("ban"))
                 {
@@ -157,7 +157,7 @@ namespace Enforcer5
         [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
         public static void ResetWarns(CallbackQuery call, string[] args)
         {
-            
+
         }
     }
 }

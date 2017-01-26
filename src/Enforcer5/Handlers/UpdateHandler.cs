@@ -255,7 +255,7 @@ namespace Enforcer5.Handlers
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
-                                //Console.WriteLine("Looking for command");
+                                Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
                                         x =>
                                             String.Equals(x.Trigger, args[0],

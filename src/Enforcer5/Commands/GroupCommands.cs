@@ -38,7 +38,7 @@ namespace Enforcer5
                 try
                 {
                     var result = Bot.SendReply(input, update);
-                    Redis.db.StringSet($"chat:{update.Message.Chat.Id}:rules", input);
+                    await Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", input);
                     await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
                         Methods.GetLocaleString(lang, "RulesSet"));
                 }
@@ -81,7 +81,7 @@ namespace Enforcer5
                 try
                 {
                     var result = Bot.SendReply(input, update);
-                    Redis.db.StringSet($"chat:{update.Message.Chat.Id}:about", input);
+                    await Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:about", input);
                     await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
                         Methods.GetLocaleString(lang, "AboutSet"));
                 }
@@ -215,8 +215,8 @@ namespace Enforcer5
                 var buttons = new[]
                 {
                     new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"), 
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"userbutton:warnuser:{userid}"), 
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"),
+                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"userbutton:warnuser:{userid}"),
                 };
                 var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
@@ -233,7 +233,7 @@ namespace Enforcer5
                     Methods.SendError(e.InnerException, update.Message, lang);
                 }
             }
-            
+
 
         }
 

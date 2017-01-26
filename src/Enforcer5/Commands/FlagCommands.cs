@@ -22,16 +22,16 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null)
             {
-                var alreadyFlagged = Redis.db.HashExists($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported");
+                var alreadyFlagged = Redis.db.HashExistsAsync($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported").Result;
                 if (alreadyFlagged)
-                {                  
+                {
                     await Bot.SendReply(Methods.GetLocaleString(lang, "alreadyFlagged"), update.Message);
                     return;
                 }
                 if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)
                 {
                     return;
-                }                               
+                }
             }
             var mods = GetModId(update.Message.Chat.Id);
             var repId = update.Message.MessageId;
@@ -48,7 +48,7 @@ namespace Enforcer5
             {
                 reporter = $"{reporter} (@{update.Message.From.Username}";
             }
-            SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title,update.Message, repId, username, lang);
+            SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
         }
 
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
@@ -60,7 +60,7 @@ namespace Enforcer5
                 var msgid = update.Message.ReplyToMessage.MessageId;
                 var chatid = update.Message.Chat.Id;
                 var hash = $"flagged:{chatid}:{msgid}";
-                var isReported = Redis.db.HashGet(hash, "Solved");
+                var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
                 if (!isReported.HasValue)
                 {
                     await Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
@@ -73,12 +73,12 @@ namespace Enforcer5
                     if (update.Message.From.Username != null)
                         solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
                     var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-                    Redis.db.HashSet(hash, "SolvedAt", solvedAt);
-                    Redis.db.HashSet(hash, "solvedBy", solvedBy);
-                    Redis.db.HashSet(hash, "Solved", 1);
-                    var counter = int.Parse(Redis.db.HashGet(hash, "#Admin"));
-                    var reporter = Redis.db.HashGet(hash, "Reporter");
-                    var repID = Redis.db.HashGet(hash, "repID");
+                    await Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
+                    await Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
+                    await Redis.db.HashSetAsync(hash, "Solved", 1);
+                    var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
+                    var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
+                    var repID = Redis.db.HashGetAsync(hash, "repID");
                     string text;
                     if (!reporter.HasValue)
                     {
@@ -92,8 +92,8 @@ namespace Enforcer5
                     }
                     for (int i = 0; i < counter; i++)
                     {
-                        var id = Redis.db.HashGet(hash, $"adminID{i}");
-                        var msgID = Redis.db.HashGet(hash, $"Message{i}");
+                        var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
+                        var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
                         if (id.HasValue && msgID.HasValue)
                         {
                             await Bot.Api.EditMessageTextAsync(id, msgid,
@@ -104,8 +104,8 @@ namespace Enforcer5
                 }
                 else if (isReported.TryParse(out isReport) && isReport == 1)
                 {
-                    var solvedTime = Redis.db.HashGet(hash, "SolvedAt");
-                    var solvedBy = Redis.db.HashGet(hash, "solvedBy");
+                    var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt");
+                    var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy");
                     await Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
                 }
             }
@@ -116,7 +116,7 @@ namespace Enforcer5
                 {
                     var chatid = update.Message.Chat.Id;
                     var hash = $"flagged:{chatid}:{msgid}";
-                    var isReported = Redis.db.HashGet(hash, "Solved");
+                    var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
                     if (!isReported.HasValue)
                     {
                         await Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
@@ -129,12 +129,12 @@ namespace Enforcer5
                         if (update.Message.From.Username != null)
                             solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
                         var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-                        Redis.db.HashSet(hash, "SolvedAt", solvedAt);
-                        Redis.db.HashSet(hash, "solvedBy", solvedBy);
-                        Redis.db.HashSet(hash, "Solved", 1);
-                        var counter = int.Parse(Redis.db.HashGet(hash, "#Admin"));
-                        var reporter = Redis.db.HashGet(hash, "Reporter");
-                        var repID = Redis.db.HashGet(hash, "repID");
+                        await Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
+                        await Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
+                        await Redis.db.HashSetAsync(hash, "Solved", 1);
+                        var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
+                        var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
+                        var repID = Redis.db.HashGetAsync(hash, "repID");
                         string text;
                         if (!reporter.HasValue)
                         {
@@ -148,8 +148,8 @@ namespace Enforcer5
                         }
                         for (int i = 0; i < counter; i++)
                         {
-                            var id = Redis.db.HashGet(hash, $"adminID{i}");
-                            var msgID = Redis.db.HashGet(hash, $"Message{i}");
+                            var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
+                            var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
                             if (id.HasValue && msgID.HasValue)
                             {
                                 await Bot.Api.EditMessageTextAsync(id, msgid,
@@ -160,8 +160,8 @@ namespace Enforcer5
                     }
                     else if (isReported.TryParse(out isReport) && isReport == 1)
                     {
-                        var solvedTime = Redis.db.HashGet(hash, "SolvedAt");
-                        var solvedBy = Redis.db.HashGet(hash, "solvedBy");
+                        var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt");
+                        var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy");
                         await Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
                     }
                 }
@@ -179,7 +179,7 @@ namespace Enforcer5
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
             var count = 0;
-            var groupLink = Redis.db.HashGet($"chat:{chatId}links", "link");
+            var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
             foreach (var mod in mods)
             {
                 await Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
@@ -191,7 +191,7 @@ namespace Enforcer5
                         var buttons = new[]
                         {
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),                            
+                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
@@ -219,7 +219,7 @@ namespace Enforcer5
                     }
                 }
                 else
-                {                    
+                {
                     if (updateMessage.ReplyToMessage != null)
                     {
                         var buttons = new[]
@@ -228,10 +228,10 @@ namespace Enforcer5
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                            groupLink.HasValue ? 
+                            groupLink.Result.HasValue ?
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
                             {
-                                Url = groupLink
+                                Url = groupLink.Result.ToString()
                             } : null
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
@@ -243,10 +243,10 @@ namespace Enforcer5
                         var buttons = new[]
                         {
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                            groupLink.HasValue ?
+                            groupLink.Result.HasValue ?
                             new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
                             {
-                                Url = groupLink
+                                Url = groupLink.Result
                             } : null
                         };
                         var menu = new InlineKeyboardMarkup(buttons.ToArray());
@@ -263,18 +263,18 @@ namespace Enforcer5
             }
             var hash = $"flagged:{chatId}:{msgId}";
             var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-            var alreadyReported = Redis.db.HashGet(hash, "Solved");
-            if (alreadyReported.IsNullOrEmpty)
+            var alreadyReported = Redis.db.HashGetAsync(hash, "Solved");
+            if (alreadyReported.Result.IsNullOrEmpty)
             {
-                Redis.db.HashSet(hash, "Solved", 0);
-                Redis.db.HashSet(hash, "Created", time);
-                Redis.db.HashSet(hash, "#Admin", count);
-                Redis.db.HashSet(hash, "Solved", reporter);
-                Redis.db.HashSet(hash, "Solved", repId);
+               await Redis.db.HashSetAsync(hash, "Solved", 0);
+               await Redis.db.HashSetAsync(hash, "Created", time);
+               await Redis.db.HashSetAsync(hash, "#Admin", count);
+               await Redis.db.HashSetAsync(hash, "Solved", reporter);
+               await Redis.db.HashSetAsync(hash, "Solved", repId);
             }
             if (count > 0)
             {
-               await Bot.Send(Methods.GetLocaleString(lang, "reported", repId), chatId);
+                await Bot.Send(Methods.GetLocaleString(lang, "reported", repId), chatId);
             }
         }
 
