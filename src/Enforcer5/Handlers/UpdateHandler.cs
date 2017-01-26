@@ -290,6 +290,16 @@ namespace Enforcer5.Handlers
                                     command.Method.Invoke(update, args);
                                 }
                             }
+                            else if (update.Message.Text.StartsWith("#"))
+                            {
+                                string[] args = new string[1];
+                                args[0] = update.Message.Text.Replace("#", "");
+                                if (update.Message.Chat.Type == ChatType.Private)
+                                {
+                                    return;
+                                }
+                                Commands.SendExtra(update, args);
+                            }
                             else if (update.Message.Text.StartsWith("@admin"))
                             {
                                 var args = GetParameters(update.Message.Text);

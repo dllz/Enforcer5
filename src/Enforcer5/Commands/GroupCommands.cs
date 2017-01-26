@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
@@ -404,6 +405,58 @@ namespace Enforcer5
             else
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);   
+            }
+        }
+
+        public static async void SendExtra(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var hash = $"chat:{update.Message.Chat.Id}:extra";
+            var text = Redis.db.HashGetAsync(hash, args[0]).Result;
+            if (!text.HasValue)
+                return;
+            var fileId = text.ToString();
+            var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;
+            var specialMethod = text.ToString();
+            var repId = update.Message.MessageId;
+            if (update.Message.ReplyToMessage != null)
+            {
+                repId = update.Message.ReplyToMessage.MessageId;
+            }
+            if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(hasMedia))
+            {
+                await Bot.SendReply(text, update.Message.Chat.Id, repId);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(specialMethod))
+                {
+                    switch (specialMethod)
+                    {
+                        case "voice":
+                            await Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
+                                replyToMessageId: repId);
+                            break;
+                        case "video":
+                            await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
+                                replyToMessageId: repId);
+                            break;
+                        case "photo":
+                            await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
+                                replyToMessageId: repId);
+                            break;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(hasMedia))
+                {
+                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                        replyToMessageId: repId);
+                }
+                else
+                {
+                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                        replyToMessageId: repId);
+                }
             }
         }
     }
