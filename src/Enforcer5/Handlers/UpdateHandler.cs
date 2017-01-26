@@ -301,7 +301,7 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {
                                     Log(update, "text", command);
-
+                                        
                                     //check that we should run the command
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
