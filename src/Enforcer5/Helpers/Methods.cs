@@ -321,9 +321,9 @@ namespace Enforcer5.Helpers
                 Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
             if (chatId != null)
             {
-                var warns = Redis.db.HashGetAsync($"chat:{chatId}:warns", userid);
+                var warns = Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
                 completedList.Add(GetLocaleString(lang, "getwarn", warns));
-                warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid);
+                warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
             return string.Join("\n", completedList);
