@@ -6,6 +6,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
+using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -151,6 +152,55 @@ namespace Enforcer5
                 }
             }
 
+        }
+
+        [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async void Tempban(Update update, string[] args)
+        {
+            var userId = update.Message.ReplyToMessage.From.Id;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            int time;
+            if (int.TryParse(args[1], out time))
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                return;
+            }
+            if (time == 0)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "tempbanZero"), update);
+            }
+            var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
+            var hash = $"{update.Message.Chat.Id}:{userId}";
+            var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
+            if (res.Result)
+            {
+                
+            }
+            else
+            {
+                Methods.SaveBan(userId, "tempban");
+                await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
+                await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+                var timeBanned = new TimeSpan(0 ,time, 0);
+                string timeText = "";
+                if (timeBanned.TotalDays > 0)
+                {
+                    timeText = $"{timeText} Days";
+                }
+                if (timeBanned.TotalHours > 0)
+                {
+                    timeText = $"{timeText} Hours";
+                }
+                if (timeBanned.TotalMinutes > 0)
+                {
+                    timeText = $"{timeText} Minutes";
+                }
+                await Bot.SendReply(
+                    Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
+                    update);
+                await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
+
+            }
         }
     }
 

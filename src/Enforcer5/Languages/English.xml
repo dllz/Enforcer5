@@ -279,4 +279,10 @@
   <string key="extra">
     <value>Extra</value>
   </string>
+  <string key="tempbanZero">
+    <Value>Tempban can not be zero</Value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} has been banned for {0}\nID: {2}</value>
+  </string>
 </strings>
