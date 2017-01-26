@@ -323,36 +323,43 @@ namespace Enforcer5.Helpers
         public static bool IsRekt(Update update)
         {
             var isBanned = Redis.db.HashGetAll($"globanBan:{update.Message.From.Id}");
-            int banned = int.Parse(isBanned[0].Value);
-            var reason = isBanned[1].Value;
-            var time = isBanned[2].Value;
-            Console.WriteLine($"banned:{banned} reason:{reason}");
-            if (banned == 1)
+            try
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                try
+                int banned = int.Parse(isBanned[0].Value);
+                var reason = isBanned[1].Value;
+                var time = isBanned[2].Value;
+                Console.WriteLine($"banned:{banned} reason:{reason}");
+                if (banned == 1)
                 {
-
-                    var temp =  BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
-                    SaveBan(update.Message.From.Id, "ban");
-                    var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
-                }
-                catch (AggregateException e)
-                {
-                    if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    try
                     {
-                        var temp = Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+
+                        var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
+                        SaveBan(update.Message.From.Id, "ban");
+                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
+                    }
+                    catch (AggregateException e)
+                    {
+                        if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                        {
+                            var temp = Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+                            return false;
+                        }
+                        Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
                         return false;
                     }
-                    Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
+                    return true;
+                }
+                else
+                {
                     return false;
                 }
-                return true;
             }
-            else
+            catch (Exception e)
             {
-                return false;                
-            }
+                return false;
+            }                        
         }
 
         public static async Task<bool> BanUser(long chatId, int userId, XDocument doc)
