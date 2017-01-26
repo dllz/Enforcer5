@@ -40,7 +40,10 @@ namespace Enforcer5.Helpers
             }
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
+
+        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);
         internal static List<Models.Commands> Commands = new List<Models.Commands>();
+        internal static List<Models.CallBacks> CallBacks = new List<Models.CallBacks>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
@@ -75,11 +78,32 @@ namespace Enforcer5.Helpers
                     }
                 }
             }
+            //loadCallbackQuries
+            foreach (var m in typeof(CallBacks).GetMethods())
+            {
+                var c = new Models.CallBacks();
+                foreach (var a in m.GetCustomAttributes(true))
+                {
+                    if (a is Attributes.Callback)
+                    {
+                        var ca = a as Attributes.Callback;
+                        c.Blockable = ca.Blockable;
+                        c.DevOnly = ca.DevOnly;
+                        c.GlobalAdminOnly = ca.GlobalAdminOnly;
+                        c.GroupAdminOnly = ca.GroupAdminOnly;
+                        c.Trigger = ca.Trigger;
+                        c.Method = (ChatCallbackMethod)m.CreateDelegate(typeof(ChatCallbackMethod));
+                        c.InGroupOnly = ca.InGroupOnly;
+                        c.RequiresReply = ca.RequiresReply;
+                        CallBacks.Add(c);
+                    }
+                }
+            }
 
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;
-            Api.OnCallbackQuery += UpdateHandler.CallbackReceived;
             Api.OnReceiveError += ApiOnReceiveError;
+            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
 
             Me = Api.GetMeAsync().Result;
 
@@ -127,22 +151,29 @@ namespace Enforcer5.Helpers
         internal static async Task<Message> Send(string message, long id, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Markdown)
         {
-            MessagesSent++;
-            //message = message.Replace("`",@"\`");
-            if (clearKeyboard)
+            try
             {
-                var menu = new ReplyKeyboardHide {HideKeyboard = true};
-                return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                    parseMode: parseMode);
+                MessagesSent++;
+                //message = message.Replace("`",@"\`");
+                if (clearKeyboard)
+                {
+                    var menu = new ReplyKeyboardHide { HideKeyboard = true };
+                    return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
+                        parseMode: parseMode);
+                }
+                else if (customMenu != null)
+                {
+                    return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
+                        parseMode: parseMode);
+                }
+                else
+                {
+                    return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                }
             }
-            else if (customMenu != null)
+            catch (Exception e)
             {
-                return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
-                    parseMode: parseMode);
-            }
-            else
-            {
-                return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                return null;
             }
 
         }

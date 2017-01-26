@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Enforcer5.Attributes
 {
-    public class Command : Attribute
+    public class Callback : Attribute
     {
         /// <summary>
         /// The string to trigger the command
@@ -36,4 +39,5 @@ namespace Enforcer5.Attributes
         public bool CallbackQuery { get; set; } = false;
 
     }
+   
 }

@@ -151,4 +151,13 @@ namespace Enforcer5
 
         }
     }
+
+    public static partial class CallBacks
+    {
+        [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
+        public static void ResetWarns(CallbackQuery call, string[] args)
+        {
+            
+        }
+    }
 }
