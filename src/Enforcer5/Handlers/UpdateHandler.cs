@@ -348,8 +348,29 @@ namespace Enforcer5.Handlers
 
                 catch (Exception ex)
                 {
-                    Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
-                    Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
+                    try
+                    {
+                        Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
+                    }
+                    catch (Exception e)
+                    {
+                        //fuckit
+                    }
+                    try
+                    {
+                        Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
+                    }
+                    catch (Exception e)
+                    {
+                        try
+                        {
+                            Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
+                        }
+                        catch (Exception exception)
+                        {
+                            //fuckit
+                        }
+                    }
                 }
             }
         }
