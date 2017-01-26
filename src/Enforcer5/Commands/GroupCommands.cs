@@ -19,6 +19,7 @@ namespace Enforcer5
             if (Methods.SendInPm(update.Message, "Rules"))
             {
                 await Bot.Send(text, update.Message.From.Id);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
             {
@@ -57,9 +58,10 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var chatId = update.Message.Chat.Id;
             var text = Methods.GetAbout(chatId, lang);
-            if (Methods.SendInPm(update.Message, "Rules"))
+            if (Methods.SendInPm(update.Message, "About"))
             {
                 await Bot.Send(text, update.Message.From.Id);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
             {
@@ -98,9 +100,10 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
-            if (Methods.SendInPm(update.Message, "Rules"))
+            if (Methods.SendInPm(update.Message, "Modlist"))
             {
                 await Bot.Send(text, update.Message.From.Id);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
             {
@@ -233,26 +236,21 @@ namespace Enforcer5
 
         }
 
-        [Command(Trigger = "me", InGroupOnly = true, GroupAdminOnly = true)]
+        [Command(Trigger = "me")]
         public static async void Me(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                var userid = Methods.GetUserId(update, args);
+                var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
                 await Bot.Send(text, update.Message.From.Id);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             catch (AggregateException e)
             {
                 Methods.SendError(e.InnerExceptions[0], update.Message, lang);
             }
-            catch (Exception e)
-            {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
-            }
-
-
         }
     }
 }
