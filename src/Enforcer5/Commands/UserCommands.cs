@@ -27,7 +27,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                Methods.SendError(e.InnerException, update.Message, lang.Doc);
+                Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang.Doc);
             }
         }
     }

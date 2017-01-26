@@ -44,7 +44,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
             else
@@ -87,7 +87,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
             else
@@ -125,7 +125,7 @@ namespace Enforcer5
             catch (AggregateException e)
             {
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
             }
         }
 
@@ -172,7 +172,7 @@ namespace Enforcer5
                 catch (AggregateException e)
                 {
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                    Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
             else
@@ -184,7 +184,7 @@ namespace Enforcer5
                 catch (AggregateException e)
                 {
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                    Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
         }
@@ -230,7 +230,7 @@ namespace Enforcer5
                 }
                 else
                 {
-                    Methods.SendError(e.InnerException, update.Message, lang);
+                    Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
                 }
             }
 
@@ -253,7 +253,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
-                Methods.SendError(e.InnerExceptions[0], update.Message, lang);
+                Methods.SendError($"{e.InnerExceptions[0].Message}\n{e.StackTrace}", update.Message, lang);
             }
         }
     }

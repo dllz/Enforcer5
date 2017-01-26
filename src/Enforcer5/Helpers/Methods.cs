@@ -59,15 +59,11 @@ namespace Enforcer5.Helpers
 
         }
 
-        public static async void SendError(Exception exceptionInnerException, Message updateMessage, XDocument doc)
+        public static async void SendError(string exception, Message updateMessage, XDocument doc)
         {
-            object[] arguments =
-                {
-                    exceptionInnerException.Message
-                };
             try
             {
-                await Bot.SendReply(GetLocaleString(doc, "Error", arguments), updateMessage);
+                await Bot.SendReply(GetLocaleString(doc, "Error", exception), updateMessage);
             }
             catch (Exception e)
             {

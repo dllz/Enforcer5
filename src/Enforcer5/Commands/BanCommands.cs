@@ -25,7 +25,7 @@ namespace Enforcer5
             if (res.Exception != null)
             {
 
-                Methods.SendError(res.Exception.InnerExceptions[0], update.Message, lang.Doc);
+                Methods.SendError($"{res.Exception.InnerExceptions[0]}\n{res.Exception.StackTrace}", update.Message, lang.Doc);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
                 }
             }
             else
@@ -85,7 +85,7 @@ namespace Enforcer5
                     }
                     catch (AggregateException e)
                     {
-                        Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
+                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
                     }
                 }
                 else
@@ -129,7 +129,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
-                Methods.SendError(e.InnerExceptions[0], update.Message, lang.Doc);
+                Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
             }
         }
 

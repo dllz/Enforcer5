@@ -240,7 +240,7 @@ namespace Enforcer5.Handlers
                 
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try
-                {    
+                {
                     //Console.WriteLine("Checking Message");                    
                     switch (update.Message.Type)
                     {
@@ -255,59 +255,24 @@ namespace Enforcer5.Handlers
                                 //check for the command
                                 Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
-                                        x =>
-                                            String.Equals(x.Trigger, args[0],
-                                                StringComparison.CurrentCultureIgnoreCase));
+                                    x =>
+                                        String.Equals(x.Trigger, args[0],
+                                            StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {
                                     Log(update, "text", command);
-                                    
+
                                     //check that we should run the command
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         return;
                                     }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
-                                        Bot.SendReply(Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc, "userNotAdmin"), update.Message);
-                                        return;
-                                    }
-                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-                                    {
-                                        return;
-                                    }
-                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
-                                    {
-                                        var lang = Methods.GetGroupLanguage(update.Message);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
-                                        return;
-                                    }
-                                    Bot.CommandsReceived++;                                      
-                                    command.Method.Invoke(update, args);
-                                }
-                            }
-                            else if (update.Message.Text.StartsWith("@admin"))
-                            {
-                                var args = GetParameters(update.Message.Text);
-                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                                //check for the command
-                                Console.WriteLine("Looking for command");
-                                var command = Bot.Commands.FirstOrDefault(
-                                        x =>
-                                            String.Equals(x.Trigger, args[0],
-                                                StringComparison.CurrentCultureIgnoreCase));
-                                if (command != null)
-                                {
-                                    Log(update, "text", command);
-                                        
-                                    //check that we should run the command
-                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.Message.From.Id))
-                                    {
-                                        Bot.SendReply(Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc, "userNotAdmin"), update.Message);
+                                        Bot.SendReply(
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                                "userNotAdmin"), update.Message);
                                         return;
                                     }
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
@@ -324,7 +289,48 @@ namespace Enforcer5.Handlers
                                     command.Method.Invoke(update, args);
                                 }
                             }
-                            break;                
+                            else if (update.Message.Text.StartsWith("@"))
+                            {
+                                var args = GetParameters(update.Message.Text);
+                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                                //check for the command
+                                Console.WriteLine("Looking for command");
+                                var command = Bot.Commands.FirstOrDefault(
+                                    x =>
+                                        String.Equals(x.Trigger, args[0],
+                                            StringComparison.CurrentCultureIgnoreCase));
+                                if (command != null)
+                                {
+                                    Log(update, "text", command);
+
+                                    //check that we should run the command
+                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
+                                    {
+                                        return;
+                                    }
+                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    {
+                                        Bot.SendReply(
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                                "userNotAdmin"), update.Message);
+                                        return;
+                                    }
+                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                                    {
+                                        return;
+                                    }
+                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    {
+                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        return;
+                                    }
+                                    Bot.CommandsReceived++;
+                                    command.Method.Invoke(update, args);
+                                }
+                            }
+                            break;
                         case MessageType.PhotoMessage:
                             break;
                         case MessageType.AudioMessage:
@@ -353,7 +359,7 @@ namespace Enforcer5.Handlers
                                 {
                                     Service.Welcome(update.Message);
                                 }
-                            }                          
+                            }
                             break;
                         case MessageType.VenueMessage:
                             break;
@@ -362,6 +368,10 @@ namespace Enforcer5.Handlers
                     }
                 }
 
+                catch (AggregateException e)
+                {
+                    Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
+                }
                 catch (Exception ex)
                 {
                     try
