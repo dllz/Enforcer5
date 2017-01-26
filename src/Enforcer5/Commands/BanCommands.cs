@@ -124,6 +124,8 @@ namespace Enforcer5
                         Methods.GetNick(update.Message, args),
                         Methods.GetNick(update.Message, args, true)
                     };
+                    await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
+                        update.Message.ReplyToMessage.MessageId, disableNotification: true);
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                 }
             }
