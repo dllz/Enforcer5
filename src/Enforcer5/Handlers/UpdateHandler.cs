@@ -356,26 +356,33 @@ namespace Enforcer5.Handlers
 
         private static void CollectStats(Message updateMessage)
         {
-            Console.WriteLine("Collecting Stats");
-            Redis.db.HashIncrement("bot:general", "messages");
-            if (updateMessage?.From?.Username != null)
+            try
             {
-                Redis.db.HashSet("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-                Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-            }
-            if (updateMessage?.ForwardFrom?.Username != null)
-            {
-                Redis.db.HashSet("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-            }
-            if (updateMessage?.Chat.Type != ChatType.Private)
-            {
-                if (updateMessage?.From != null)
+                Console.WriteLine("Collecting Stats");
+                Redis.db.HashIncrement("bot:general", "messages");
+                if (updateMessage?.From?.Username != null)
                 {
-                    Redis.db.HashIncrement($"chat:{updateMessage.From.Id}", "msgs");
-                    Redis.db.HashSet($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
-                    Redis.db.StringSet($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
-                }                
+                    Redis.db.HashSet("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                    Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                }
+                if (updateMessage?.ForwardFrom?.Username != null)
+                {
+                    Redis.db.HashSet("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                    Redis.db.HashSet($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                }
+                if (updateMessage?.Chat.Type != ChatType.Private)
+                {
+                    if (updateMessage?.From != null)
+                    {
+                        Redis.db.HashIncrement($"chat:{updateMessage.From.Id}", "msgs");
+                        Redis.db.HashSet($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
+                        Redis.db.StringSet($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
             }
 
         }
