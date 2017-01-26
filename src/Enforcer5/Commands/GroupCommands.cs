@@ -329,7 +329,6 @@ namespace Enforcer5
                             }
                         }
                     }
-                    return;
                 }                
             }
             else
@@ -368,6 +367,24 @@ namespace Enforcer5
                     }
                 }
 
+            }
+        }
+
+        [Command(Trigger = "extra list", InGroupOnly = true)]
+        public static async void ExtraList(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var hash = $"chat:{update.Message.Chat.Id}:extra";
+            var commands = Redis.db.HashKeysAsync(hash).Result;
+           
+            if (!commands[0].HasValue)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);
+            }
+            else
+            {
+                var text = string.Join("\n", commands.ToList());
+                await Bot.SendReply(Methods.GetLocaleString(lang, "extraList", text), update);
             }
         }
     }
