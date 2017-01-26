@@ -326,12 +326,27 @@ namespace Enforcer5.Helpers
             int banned = int.Parse(isBanned[0].Value);
             var reason = isBanned[1].Value;
             var time = isBanned[2].Value;
+            Console.WriteLine($"banned:{banned} reason:{reason}");
             if (banned == 1)
             {
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
-                SaveBan(update.Message.From.Id, "ban");
-                Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
+                try
+                {
+
+                    var temp =  BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
+                    SaveBan(update.Message.From.Id, "ban");
+                    var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
+                }
+                catch (AggregateException e)
+                {
+                    if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                    {
+                        var temp = Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+                        return false;
+                    }
+                    Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
+                    return false;
+                }
                 return true;
             }
             else
@@ -393,7 +408,7 @@ namespace Enforcer5.Helpers
             {
                 if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                 {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    var temp = Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);

@@ -219,7 +219,9 @@ namespace Enforcer5.Handlers
                 var id = update.Message.Chat.Id;
                 Console.WriteLine("Checking Global Ban");
                 if (Methods.IsRekt(update))
+                {
                     return;
+                }
                 
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try

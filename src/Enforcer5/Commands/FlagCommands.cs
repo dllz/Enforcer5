@@ -174,7 +174,7 @@ namespace Enforcer5
                 await Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
         }
 
-        private static void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
+        private static async void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
@@ -182,7 +182,7 @@ namespace Enforcer5
             var groupLink = Redis.db.HashGet($"chat:{chatId}links", "link");
             foreach (var mod in mods)
             {
-                Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
+                await Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
                 Task<Message> result;
                 if (!string.IsNullOrEmpty(username))
                 {
@@ -274,7 +274,7 @@ namespace Enforcer5
             }
             if (count > 0)
             {
-               Bot.Send(Methods.GetLocaleString(lang, "reported", repId), chatId);
+               await Bot.Send(Methods.GetLocaleString(lang, "reported", repId), chatId);
             }
         }
 
