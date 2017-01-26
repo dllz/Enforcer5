@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -250,6 +251,10 @@ namespace Enforcer5
                 {
                     await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
                 }
+            }
+            catch (ApiRequestException e)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "startMe"), update);
             }
             catch (AggregateException e)
             {

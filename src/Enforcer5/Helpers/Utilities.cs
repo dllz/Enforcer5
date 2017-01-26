@@ -171,7 +171,7 @@ namespace Enforcer5.Helpers
                     return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
                 }
             }
-            catch (Exception e)
+            catch (AggregateException e)
             {
                 return null;
             }

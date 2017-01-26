@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Args;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -367,7 +368,22 @@ namespace Enforcer5.Handlers
                             throw new ArgumentOutOfRangeException();
                     }
                 }
-
+                catch (ApiRequestException e)
+                {
+                    try
+                    {
+                        Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
+                        Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        //fuckit   
+                    }
+                    catch (Exception exception)
+                    {
+                        //fuckit
+                    }
+                }
                 catch (AggregateException e)
                 {
                     Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
