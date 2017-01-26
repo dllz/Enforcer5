@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Languages;
 using Enforcer5.Models;
+using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -367,7 +368,7 @@ namespace Enforcer5.Helpers
             var tempbans = Redis.db.HashGetAll("tempbanned");
             foreach (var mem in tempbans)
             {
-                if (System.DateTime.Now.Ticks >= int.Parse(mem.Name))
+                if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= int.Parse(mem.Name))
                 {
                     var subStrings = mem.Value.ToString().Split(':');
                     var chatId = long.Parse(subStrings[0]);
@@ -385,8 +386,7 @@ namespace Enforcer5.Helpers
             try
             {
                 Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                var rem = Redis.db.SetRemove($"chat:{chatId}:banned", userId);
-                Redis.db.ListRemove($"chat:{chatId}:bannedlist", userId);
+                Redis.db.SetRemove($"chat:{chatId}:bannedlist", userId);
                 return true;
             }                
             catch (AggregateException e)

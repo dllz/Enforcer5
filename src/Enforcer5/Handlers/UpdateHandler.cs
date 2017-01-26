@@ -197,7 +197,7 @@ namespace Enforcer5.Handlers
         private static void Log(Models.Commands command, Update update)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write($"[{System.DateTime.Now:hh:mm:ss dd-MM-yyyy}] ");
+            Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write(command.Method.GetMethodInfo().Name);
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -217,16 +217,14 @@ namespace Enforcer5.Handlers
                     return; //toss it
 
                 var id = update.Message.Chat.Id;
-
+                Console.WriteLine("Checking Global Ban");
                 if (Methods.IsRekt(update))
                     return;
                 
-                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;   
-#if DEBUG           
+                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try
-                { 
-#endif
-                
+                {    
+                    Console.WriteLine("Checking Message");          
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:

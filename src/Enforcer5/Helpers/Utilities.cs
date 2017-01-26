@@ -52,7 +52,7 @@ namespace Enforcer5.Helpers
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
             Api = new TelegramBotClient(TelegramAPIKey);
-            await Send($"Bot Started:\n{System.DateTime.Now:hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
+            await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())

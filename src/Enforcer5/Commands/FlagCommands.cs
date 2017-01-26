@@ -72,7 +72,7 @@ namespace Enforcer5
                     var solvedBy = update.Message.From.FirstName;
                     if (update.Message.From.Username != null)
                         solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
-                    var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd:mm:yyyy");
+                    var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
                     Redis.db.HashSet(hash, "SolvedAt", solvedAt);
                     Redis.db.HashSet(hash, "solvedBy", solvedBy);
                     Redis.db.HashSet(hash, "Solved", 1);
@@ -128,7 +128,7 @@ namespace Enforcer5
                         var solvedBy = update.Message.From.FirstName;
                         if (update.Message.From.Username != null)
                             solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
-                        var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd:mm:yyyy");
+                        var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
                         Redis.db.HashSet(hash, "SolvedAt", solvedAt);
                         Redis.db.HashSet(hash, "solvedBy", solvedBy);
                         Redis.db.HashSet(hash, "Solved", 1);
@@ -262,7 +262,7 @@ namespace Enforcer5
                 }
             }
             var hash = $"flagged:{chatId}:{msgId}";
-            var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd:mm:yyyy");
+            var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
             var alreadyReported = Redis.db.HashGet(hash, "Solved");
             if (alreadyReported.IsNullOrEmpty)
             {
