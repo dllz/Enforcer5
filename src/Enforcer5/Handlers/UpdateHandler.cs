@@ -18,9 +18,72 @@ namespace Enforcer5.Handlers
 
     internal static class UpdateHandler
     {
-        public static void UpdateReceived(object sender, UpdateEventArgs e)
+        public static void UpdateReceived(object sender, UpdateEventArgs ev)
         {
-            new Task(() => { HandleUpdate(e.Update); }).Start();
+            var update = ev.Update;
+            try
+            {                
+                new Task(() => { HandleUpdate(ev.Update); }).Start();
+            }
+            catch (ApiRequestException e)
+            {
+                try
+                {
+                    if (e.ErrorCode.Equals(112))
+                    {
+                        if (update.Message != null && update.Message.Chat.Title != null)
+                        {
+                            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                            Bot.SendReply(
+                            Methods.GetLocaleString(lang, "markdownBroken"), update);
+                        }
+                        Bot.SendReply("The markdown in this text is broken", update);
+                    }
+                    else
+                    {
+                        Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
+                        Bot.Send($"@falconza shit happened before thread start\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit   
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                }
+            }
+            catch (AggregateException e)
+            {
+                Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
+                }
+                catch (Exception e)
+                {
+                    //fuckit
+                }
+                try
+                {
+                    Bot.Send($"@falconza shit happened before thread start\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
+                }
+                catch (Exception e)
+                {
+                    try
+                    {
+                        Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
+                    }
+                    catch (Exception exception)
+                    {
+                        //fuckit
+                    }
+                }
+            }
         }
 
         //        private static void AddCount(int id, string command)

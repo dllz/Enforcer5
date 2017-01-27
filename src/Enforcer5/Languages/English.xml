@@ -289,7 +289,7 @@
     <value>{1} has been banned for {0}\nID: {2}</value>
   </string>
   <string key="warnsReset">
-    <value>Warnings rest.\nReset by: {0}</value>
+    <value>Warnings reset.\nReset by: {0}</value>
   </string>
   <string key="ZeroWarnings">
     <value>User already has zero warnings</value>
