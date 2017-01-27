@@ -442,22 +442,7 @@ namespace Enforcer5.Helpers
         {
             if (msg.Photo != null)
             {
-                if (msg.Photo[3] != null)
-                {
-                    return msg.Photo[3].FileId;
-                }
-                if (msg.Photo[2] != null)
-                {
-                    return msg.Photo[2].FileId;
-                }
-                if (msg.Photo[1] != null)
-                {
-                    return msg.Photo[1].FileId;
-                }
-                if (msg.Photo[0] != null)
-                {
-                    return msg.Photo[0].FileId;
-                }
+                return msg.Photo.Last().FileId;
             }
             if (msg.Document != null)
             {

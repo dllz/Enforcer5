@@ -332,6 +332,37 @@ namespace Enforcer5
                             }
                         }
                     }
+                    else
+                    {
+                        string text = words[1];
+                        try
+                        {
+                            var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
+                            var toSave = $"###file_id!{type}###:{fileId}";
+                            await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
+                            var hash = $"chat:{update.Message.Chat.Id}:extra";
+                            await Redis.db.HashSetAsync($"{hash}:{words[0]}", "caption", words[1]);
+                            await Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
+                        }
+                        catch (ApiRequestException e)
+                        {
+                            if (e.ErrorCode.Equals(118))
+                            {
+                                await Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
+                                    update);
+                            }
+                            else if (e.ErrorCode.Equals(112))
+                            {
+                                await Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "markdownBroken"), update);
+                            }
+                            else
+                            {
+                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                            }
+                        }
+                    }
                 }                
             }
             else
@@ -436,6 +467,7 @@ namespace Enforcer5
             {
                 if (!string.IsNullOrEmpty(specialMethod))
                 {
+                    var caption = Redis.db.HashGetAsync($"{hash}:{args[0]}", "caption").Result;
                     switch (specialMethod)
                     {
                         case "voice":
@@ -443,12 +475,28 @@ namespace Enforcer5
                                 replyToMessageId: repId);
                             break;
                         case "video":
-                            await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
-                                replyToMessageId: repId);
+                            if (!string.IsNullOrEmpty(caption))
+                            {
+                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: text,
+                                    replyToMessageId: repId);
+                            }
+                            else
+                            {
+                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
+                                    replyToMessageId: repId);
+                            }
                             break;
                         case "photo":
-                            await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
-                                replyToMessageId: repId);
+                            if (!string.IsNullOrEmpty(caption))
+                            {
+                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, text,
+                                    replyToMessageId: repId);
+                            }
+                            else
+                            {
+                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
+                                    replyToMessageId: repId);
+                            }
                             break;
                         case "gif":
                             if (!string.IsNullOrEmpty(hasMedia))
