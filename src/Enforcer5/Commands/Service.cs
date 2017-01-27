@@ -92,7 +92,11 @@ namespace Enforcer5
             {
                 username = "(no username)";
             }
-            return "Still being implemented";//TO-DO Implement custom welcome
+            string welcome = content.ToString().Replace("$name", name);
+            welcome = welcome.Replace("$username", username);
+            welcome = welcome.Replace("$id", id.ToString());
+            welcome = welcome.Replace("$title", message.Chat.Title);
+            return welcome;
         }
 
         public static async Task BotAdded(Message updateMessage)
