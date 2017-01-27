@@ -486,7 +486,7 @@ namespace Enforcer5.Handlers
         }
         private static string[] GetCallbackParameters(string input)
         {
-            return input.Contains(":") ? new[] { input.Substring(1, input.IndexOf(":")).Trim(), input.Substring(input.IndexOf(":") + 1) } : new[] { input.Substring(1).Trim(), null };
+            return input.Contains(":") ? new[] { input.Substring(0, input.IndexOf(":")).Trim(), input.Substring(input.IndexOf(":") + 1) } : new[] { input.Substring(1).Trim(), null };
         }
 
 

@@ -280,7 +280,7 @@
     <value>Extra</value>
   </string>
   <string key="tempbanZero">
-    <Value>Tempban can not be zero</Value>
+    <value>Tempban can not be zero</value>
   </string>
   <string key="tempbanned">
     <value>{1} has been banned for {0}\nID: {2}</value>
@@ -289,9 +289,9 @@
     <value>Warnings rest.\nReset by: {0}</value>
   </string>
   <string key="ZeroWarnings">
-    <Value>User already has zero warnings</Value>
+    <value>User already has zero warnings</value>
   </string>
   <string key="warnRemoved">
-    <Value>Warning has been removed</Value>
+    <value>Warning has been removed</value>
   </string>
 </strings>

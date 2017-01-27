@@ -67,7 +67,7 @@ namespace Enforcer5
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static async void Warn(Update update, string[] args)
         {
-            var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.From.Id, 1).Result;
+            var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 1).Result;
             var max = 3;
             int.TryParse(Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result, out max);
             var lang = Methods.GetGroupLanguage(update.Message);
@@ -217,22 +217,14 @@ namespace Enforcer5
                 Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));            
         }
 
-        [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
+        [Callback(Trigger = "removewarn", GroupAdminOnly = true)]
         public static async void RemoveWarn(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[1];
-            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
-            var text = "";
-            if (res.Result == 0)
-            {
-                text = Methods.GetLocaleString(lang, "ZeroWarnings");
-            }
-            else
-            {
-                await Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, -1);
+            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
+            var text = "";            
                 text = Methods.GetLocaleString(lang, "warnRemoved");
-            }
             await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                text);
         }
