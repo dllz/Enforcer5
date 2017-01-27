@@ -160,8 +160,15 @@ namespace Enforcer5
                     }
                     Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
                     await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
-                    await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
-                        update.Message.ReplyToMessage.MessageId, disableNotification: true);
+                    try
+                    {
+                        await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
+                            update.Message.ReplyToMessage.MessageId, disableNotification: true);
+                    }
+                    catch (AggregateException e)
+                    {
+                        //meh
+                    }
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                 }
             }
