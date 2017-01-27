@@ -477,7 +477,7 @@ namespace Enforcer5
                         case "video":
                             if (!string.IsNullOrEmpty(caption))
                             {
-                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: text,
+                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
                                     replyToMessageId: repId);
                             }
                             else
@@ -489,7 +489,7 @@ namespace Enforcer5
                         case "photo":
                             if (!string.IsNullOrEmpty(caption))
                             {
-                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, text,
+                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
                                     replyToMessageId: repId);
                             }
                             else
@@ -501,7 +501,7 @@ namespace Enforcer5
                         case "gif":
                             if (!string.IsNullOrEmpty(hasMedia))
                             {
-                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
                                     replyToMessageId: repId);
                             }
                             else
