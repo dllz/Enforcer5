@@ -11,7 +11,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "ping")]
-        public static Task Ping(Update update, string[] args)
+        public static async Task Ping(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             try
@@ -23,7 +23,7 @@ namespace Enforcer5
                 var result = Bot.Send(message, update.Message.Chat.Id).Result;
                 var second  = DateTime.UtcNow - send;
                 message += "\n" + Methods.GetLocaleString(lang.Doc, "Ping2", $"{second:mm\\:ss\\.ff}");
-                Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId, message);
+                await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId, message);
             }
             catch (Exception e)
             {

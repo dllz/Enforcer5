@@ -16,7 +16,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "kickme", InGroupOnly = true)]
-        public static Task Kickme(Update update, string[] args)
+        public static async Task Kickme(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc);
