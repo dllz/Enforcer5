@@ -202,7 +202,7 @@ namespace Enforcer5
             var userId = update.Message.ReplyToMessage.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int time;
-            if (int.TryParse(args[1], out time))
+            if (!int.TryParse(args[1], out time))
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                 return;
@@ -214,34 +214,17 @@ namespace Enforcer5
             var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
             var hash = $"{update.Message.Chat.Id}:{userId}";
             var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
-            if (res.Result)
-            {
-                
-            }
-            else
+            if (res.Result.Equals(true))
             {
                 Methods.SaveBan(userId, "tempban");
                 await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
                 await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
-                var timeBanned = new TimeSpan(0 ,time, 0);
-                string timeText = "";
-                if (timeBanned.TotalDays > 0)
-                {
-                    timeText = $"{timeText} Days";
-                }
-                if (timeBanned.TotalHours > 0)
-                {
-                    timeText = $"{timeText} Hours";
-                }
-                if (timeBanned.TotalMinutes > 0)
-                {
-                    timeText = $"{timeText} Minutes";
-                }
+                var timeBanned = TimeSpan.FromMinutes(time);
+                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                 await Bot.SendReply(
                     Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
                     update);
                 await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
-
             }
         }
     }

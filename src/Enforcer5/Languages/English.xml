@@ -286,7 +286,7 @@
     <value>Tempban can not be zero</value>
   </string>
   <string key="tempbanned">
-    <value>{1} has been banned for {0}\nID: {2}</value>
+    <value>{1} has been banned for {0} (days:hours:minutes)\nID: {2}</value>
   </string>
   <string key="warnsReset">
     <value>Warnings reset.\nReset by: {0}</value>
