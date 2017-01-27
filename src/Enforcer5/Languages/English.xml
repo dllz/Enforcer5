@@ -70,8 +70,8 @@
   <string key="msgTooLong">
     <value>This message text is over {0} characters. Please shorten it</value>
   </string>
-  <string key="startMe">
-    <value>You need to message me before I can send this to you</value>
+  <string key="StartMe">
+    <value>Start me</value>
   </string>
   <string key="userNotAdmin">
     <value>You are *not* an admin in this chat</value>
@@ -308,5 +308,8 @@
   </string>
   <string key="NoLinkInputed">
     <value>No link detected. Usage: /setlink (link)</value>
+  </string>
+  <string key="botNotStarted">
+    <value>You need to start the bot first. Click below, then click start</value>
   </string>
 </strings>

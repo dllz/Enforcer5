@@ -389,20 +389,36 @@ namespace Enforcer5.Handlers
                 {
                     try
                     {
-                        if (e.ErrorCode.Equals(112))
+                        if (e.ErrorCode == 112)
                         {
                             if (update.Message != null && update.Message.Chat.Title != null)
                             {
                                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
                                 await Bot.SendReply(
-                                Methods.GetLocaleString(lang, "markdownBroken"), update);
+                                    Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
-                            await Bot.SendReply("The markdown in this text is broken", update);
+                            else
+                            {
+                                await Bot.SendReply("The markdown in this text is broken", update);
+                            }
+                        }
+                        else if (e.ErrorCode == 403)
+                        {
+                            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                            var startMe = new Menu(1)
+                            {
+                                Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                            };
+                            await Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), update, Key.CreateMarkupFromMenu(startMe));
                         }
                         else
                         {
                             await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                            await Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                            await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)
