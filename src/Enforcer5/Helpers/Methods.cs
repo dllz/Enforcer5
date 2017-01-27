@@ -288,9 +288,9 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static string GetRules(long chatId, XDocument lang)
+        public static string  GetRules(long chatId, XDocument lang)
         {
-            var rules = Redis.db.StringGetAsync($"chat:{chatId}:about").Result;
+            var rules = Redis.db.StringGetAsync($"chat:{chatId}:rules").Result;
             if (rules.HasValue)
             {
                 return GetLocaleString(lang, "rules", rules);
