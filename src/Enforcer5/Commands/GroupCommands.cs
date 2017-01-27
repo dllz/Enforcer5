@@ -437,6 +437,44 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "link", InGroupOnly = true)]
+        public static async Task Link(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
+            if (link.Equals("no") || link.IsNullOrEmpty)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "linkMissing"), update);
+            }
+            else
+            {
+                await Bot.SendReply(link.ToString(), update);
+            }
+        }
+
+        [Command(Trigger = "setlink", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task SetLink(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var link = "";
+            if (update.Message.Chat.Username != null)
+            {
+                link = $"https://t.me/{update.Message.Chat.Username}";
+            }
+            else
+            {
+                if (args.Length == 2)
+                {
+                    link = args[1];
+                    await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
+                }
+                else
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "NoLinkInputed"), update);
+                }
+            }   
+        }
         public static async Task SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;

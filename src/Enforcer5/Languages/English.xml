@@ -306,4 +306,7 @@
   <string key ="userKicked">
     <value>User Kicked</value>
   </string>
+  <string key="NoLinkInputed">
+    <value>No link detected. Usage: /setlink (link)</value>
+  </string>
 </strings>
