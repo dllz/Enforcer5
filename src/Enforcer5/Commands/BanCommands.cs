@@ -72,6 +72,10 @@ namespace Enforcer5
                 return;            
             var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 1).Result;
             var max = 3;
+            if(num < 0)
+            {
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);
+            }
             int.TryParse(Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result, out max);
             var lang = Methods.GetGroupLanguage(update.Message);
             if (num >= max)
@@ -250,6 +254,10 @@ namespace Enforcer5
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
             var text = "";            
                 text = Methods.GetLocaleString(lang, "warnRemoved");
+            if (res < 0)
+            {
+                await Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
+            }
             await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                text);
         }
