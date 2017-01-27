@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -188,70 +189,72 @@ namespace Enforcer5
                 {
                     if (updateMessage.ReplyToMessage != null)
                     {
-                        var buttons = new[]
+                        var solvedMenu = new Menu(2) {Buttons = new List<InlineButton>
                         {
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
+                            new InlineButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                             {
                                 Url = $"http://t.me/{username}/{repId}"
                             }
-                        };
-                        var menu = new InlineKeyboardMarkup(buttons.ToArray());
+                        }};                       
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
-                            false, menu);
+                            false, Key.CreateMarkupFromMenu(solvedMenu));
                     }
                     else
                     {
-                        var buttons = new[]
+                        var solvedMenu = new Menu(2)
                         {
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToMessage"))
+                            Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                             {
                                 Url = $"http://t.me/{username}/{repId}"
                             }
-                        };
-                        var menu = new InlineKeyboardMarkup(buttons.ToArray());
+                        }};                        
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
-                            false, menu);
+                            false, Key.CreateMarkupFromMenu(solvedMenu));
                     }
                 }
                 else
                 {
                     if (updateMessage.ReplyToMessage != null)
                     {
-                        var buttons = new[]
+                        var solvedMenu = new Menu(2)
                         {
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "ban"), $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "kick"), $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                            new InlineButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                             groupLink.Result.HasValue ?
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
+                            new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                             {
                                 Url = groupLink.Result.ToString()
                             } : null
-                        };
-                        var menu = new InlineKeyboardMarkup(buttons.ToArray());
+                        }};
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
-                            false, menu);
+                            false, Key.CreateMarkupFromMenu(solvedMenu));
                     }
                     else
                     {
-                        var buttons = new[]
+                        var solvedMenu = new Menu(2)
                         {
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                            Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "markSolved"), $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                             groupLink.Result.HasValue ?
-                            new InlineKeyboardButton(Methods.GetLocaleString(lang, "goToChat"))
+                            new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                             {
                                 Url = groupLink.Result
                             } : null
-                        };
-                        var menu = new InlineKeyboardMarkup(buttons.ToArray());
+                        }};
                         result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId), mod,
-                            false, menu);
+                            false, Key.CreateMarkupFromMenu(solvedMenu));
                     }
                 }
                 if (result.Result != null)

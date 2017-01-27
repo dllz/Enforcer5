@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -214,15 +215,16 @@ namespace Enforcer5
             try
             {
                 var userid = Methods.GetUserId(update, args);
-                var buttons = new[]
+                var userMenu = new Menu(2);
+                userMenu.Buttons = new List<InlineButton>
                 {
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"),
-                    new InlineKeyboardButton(Methods.GetLocaleString(lang, "Warn"), $"userbutton:warnuser:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbutton:remwarns:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbutton:banuser:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbutton:warnuser:{userid}")
                 };
-                var keyboard = new InlineKeyboardMarkup(buttons.ToArray());
+                
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-                await Bot.SendReply(text, update, keyboard);
+                await Bot.SendReply(text, update, Key.CreateMarkupFromMenu(userMenu));
             }
             catch (Exception e)
             {

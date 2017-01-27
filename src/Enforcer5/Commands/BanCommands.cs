@@ -6,6 +6,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -102,11 +103,17 @@ namespace Enforcer5
             {
                 var diff = max - num;
                 var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args), num, max);
-                var baseMenu = new List<InlineKeyboardButton>();
-                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang.Doc, "resetWarn"), $"resetwarns:{update.Message.ReplyToMessage.From.Id}"));
-                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang.Doc, "removeWarn"), $"removewarn:{update.Message.ReplyToMessage.From.Id}"));
-                var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                await Bot.Send(text, update.Message.Chat.Id, customMenu: menu);
+                var solvedMenu = new Menu(2)
+                {
+                    Buttons = new List<InlineButton>
+                    {
+                        new InlineButton(Methods.GetLocaleString(lang.Doc, "resetWarn"),
+                            $"resetwarns:{update.Message.ReplyToMessage.From.Id}"),
+                        new InlineButton(Methods.GetLocaleString(lang.Doc, "removeWarn"),
+                            $"removewarn:{update.Message.ReplyToMessage.From.Id}"),
+                    }
+                };
+                await Bot.Send(text, update.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
             }
         }
 
