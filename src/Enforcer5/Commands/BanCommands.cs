@@ -207,9 +207,34 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
-        public static void ResetWarns(CallbackQuery call, string[] args)
+        public static async void ResetWarns(CallbackQuery call, string[] args)
         {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var userId = args[1];
+            await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
+            await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+            await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));            
+        }
 
+        [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
+        public static async void RemoveWarn(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var userId = args[1];
+            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
+            var text = "";
+            if (res.Result == 0)
+            {
+                text = Methods.GetLocaleString(lang, "ZeroWarnings");
+            }
+            else
+            {
+                await Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, -1);
+                text = Methods.GetLocaleString(lang, "warnRemoved");
+            }
+            await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+               text);
         }
     }
 }
