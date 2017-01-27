@@ -13,7 +13,6 @@ namespace Enforcer5
     public class Program
     {
         internal static bool Running = true;
-        private static bool _writingInfo = false;
         internal static List<long> MessagesReceived = new List<long>();
         internal static List<long> MessagesProcessed = new List<long>();
         internal static List<long> MessagesSent = new List<long>();

@@ -10,7 +10,6 @@ using Microsoft.Win32;
 using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Args;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -49,107 +48,68 @@ namespace Enforcer5.Helpers
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
         {
-            try
+
+            //get api token from registry
+            var key =
+                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+                        .OpenSubKey("SOFTWARE\\Werewolf");
+            TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
+            Api = new TelegramBotClient(TelegramAPIKey);
+            await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
+
+            //load the commands list
+            foreach (var m in typeof(Commands).GetMethods())
             {
-                //get api token from registry
-                var key =
-                        RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                            .OpenSubKey("SOFTWARE\\Werewolf");
-                TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
-                Api = new TelegramBotClient(TelegramAPIKey);
-                await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
-
-                //load the commands list
-                foreach (var m in typeof(Commands).GetMethods())
+                var c = new Models.Commands();
+                foreach (var a in m.GetCustomAttributes(true))
                 {
-                    var c = new Models.Commands();
-                    foreach (var a in m.GetCustomAttributes(true))
+                    if (a is Attributes.Command)
                     {
-                        if (a is Attributes.Command)
-                        {
-                            var ca = a as Attributes.Command;
-                            c.Blockable = ca.Blockable;
-                            c.DevOnly = ca.DevOnly;
-                            c.GlobalAdminOnly = ca.GlobalAdminOnly;
-                            c.GroupAdminOnly = ca.GroupAdminOnly;
-                            c.Trigger = ca.Trigger;
-                            c.Method = (ChatCommandMethod)m.CreateDelegate(typeof(ChatCommandMethod));
-                            c.InGroupOnly = ca.InGroupOnly;
-                            c.RequiresReply = ca.RequiresReply;
-                            Commands.Add(c);
-                        }
+                        var ca = a as Attributes.Command;
+                        c.Blockable = ca.Blockable;
+                        c.DevOnly = ca.DevOnly;
+                        c.GlobalAdminOnly = ca.GlobalAdminOnly;
+                        c.GroupAdminOnly = ca.GroupAdminOnly;
+                        c.Trigger = ca.Trigger;
+                        c.Method = (ChatCommandMethod)m.CreateDelegate(typeof(ChatCommandMethod));
+                        c.InGroupOnly = ca.InGroupOnly;
+                        c.RequiresReply = ca.RequiresReply;
+                        Commands.Add(c);
                     }
                 }
-                //loadCallbackQuries
-                foreach (var m in typeof(CallBacks).GetMethods())
-                {
-                    var c = new Models.CallBacks();
-                    foreach (var a in m.GetCustomAttributes(true))
-                    {
-                        if (a is Attributes.Callback)
-                        {
-                            var ca = a as Attributes.Callback;
-                            c.Blockable = ca.Blockable;
-                            c.DevOnly = ca.DevOnly;
-                            c.GlobalAdminOnly = ca.GlobalAdminOnly;
-                            c.GroupAdminOnly = ca.GroupAdminOnly;
-                            c.Trigger = ca.Trigger;
-                            c.Method = (ChatCallbackMethod)m.CreateDelegate(typeof(ChatCallbackMethod));
-                            c.InGroupOnly = ca.InGroupOnly;
-                            c.RequiresReply = ca.RequiresReply;
-                            CallBacks.Add(c);
-                        }
-                    }
-                }
-
-                Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
-                Api.OnUpdate += UpdateHandler.UpdateReceived;
-                Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
-
-                Me = Api.GetMeAsync().Result;
-
-                Console.Title += " " + Me.Username;
-                StartTime = DateTime.UtcNow;
-                //now we can start receiving
-                Api.StartReceiving();
             }
-            catch (ApiRequestException e)
+            //loadCallbackQuries
+            foreach (var m in typeof(CallBacks).GetMethods())
             {
-                try
+                var c = new Models.CallBacks();
+                foreach (var a in m.GetCustomAttributes(true))
                 {
-                        await Bot.Send($"@falconza shit happened right at the top \n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
-                }
-                catch (ApiRequestException ex)
-                {
-                    //fuckit   
-                }
-                catch (Exception exception)
-                {
-                    //fuckit
-                }
-            }
-            catch (AggregateException e)
-            {
-                await Bot.Send($"#TopLevel {e.InnerExceptions[0]}\n{e.StackTrace}", -1001094155678);
-            }
-            catch (Exception ex)
-            {                
-                try
-                {
-                    await Bot.Send($"@falconza shit happened right at the top \n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
-                }
-                catch (Exception e)
-                {
-                    try
+                    if (a is Attributes.Callback)
                     {
-                        await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
-                    }
-                    catch (Exception exception)
-                    {
-                        //fuckit
+                        var ca = a as Attributes.Callback;
+                        c.Blockable = ca.Blockable;
+                        c.DevOnly = ca.DevOnly;
+                        c.GlobalAdminOnly = ca.GlobalAdminOnly;
+                        c.GroupAdminOnly = ca.GroupAdminOnly;
+                        c.Trigger = ca.Trigger;
+                        c.Method = (ChatCallbackMethod)m.CreateDelegate(typeof(ChatCallbackMethod));
+                        c.InGroupOnly = ca.InGroupOnly;
+                        c.RequiresReply = ca.RequiresReply;
+                        CallBacks.Add(c);
                     }
                 }
             }
+
+            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
+            Api.OnUpdate += UpdateHandler.UpdateReceived;
+            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
+
+            Me = Api.GetMeAsync().Result;
+
+            Console.Title += " " + Me.Username;
+            StartTime = DateTime.UtcNow;
+            //now we can start receiving
+            Api.StartReceiving();
         }
 
         internal static void ReplyToCallback(CallbackQuery query, string text = null, bool edit = true, bool showAlert = false, InlineKeyboardMarkup replyMarkup = null)

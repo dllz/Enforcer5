@@ -12,78 +12,15 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+//#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 namespace Enforcer5.Handlers
 {
 
     internal static class UpdateHandler
     {
-        public static void UpdateReceived(object sender, UpdateEventArgs ev)
+        public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
-            var update = ev.Update;
-            try
-            {                
-                new Task(() => { HandleUpdate(ev.Update); }).Start();
-            }
-            catch (ApiRequestException e)
-            {
-                try
-                {
-                    if (e.ErrorCode.Equals(112))
-                    {
-                        if (update.Message != null && update.Message.Chat.Title != null)
-                        {
-                            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                            Bot.SendReply(
-                            Methods.GetLocaleString(lang, "markdownBroken"), update);
-                        }
-                        Bot.SendReply("The markdown in this text is broken", update);
-                    }
-                    else
-                    {
-                        Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                        Bot.Send($"@falconza shit happened before thread start\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
-                    }
-                }
-                catch (ApiRequestException ex)
-                {
-                    //fuckit   
-                }
-                catch (Exception exception)
-                {
-                    //fuckit
-                }
-            }
-            catch (AggregateException e)
-            {
-                Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
-                }
-                catch (Exception e)
-                {
-                    //fuckit
-                }
-                try
-                {
-                    Bot.Send($"@falconza shit happened before thread start\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
-                }
-                catch (Exception e)
-                {
-                    try
-                    {
-                        Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
-                    }
-                    catch (Exception exception)
-                    {
-                        //fuckit
-                    }
-                }
-            }
+            new Task(() => { HandleUpdate(e.Update); }).Start();
         }
 
         //        private static void AddCount(int id, string command)
@@ -291,7 +228,7 @@ namespace Enforcer5.Handlers
             }     
         }
 
-        internal static void HandleUpdate(Update update)
+        internal static async void HandleUpdate(Update update)
         {
             {
                 CollectStats(update.Message);
@@ -340,7 +277,7 @@ namespace Enforcer5.Handlers
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
-                                        Bot.SendReply(
+                                        await Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
@@ -352,11 +289,11 @@ namespace Enforcer5.Handlers
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    command.Method.Invoke(update, args);
+                                    await Task.Run(() => command.Method.Invoke(update, args));
                                 }
                             }
                             else if (update.Message.Text.StartsWith("#"))
@@ -368,7 +305,7 @@ namespace Enforcer5.Handlers
                                     return;
                                 }
                                 Log(update, "extra");
-                                Commands.SendExtra(update, args);
+                                await Task.Run(() => Commands.SendExtra(update, args));
                             }
                             else if (update.Message.Text.StartsWith("@admin"))
                             {
@@ -392,7 +329,7 @@ namespace Enforcer5.Handlers
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
-                                        Bot.SendReply(
+                                        await Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
@@ -404,11 +341,11 @@ namespace Enforcer5.Handlers
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    command.Method.Invoke(update, args);
+                                    await Task.Run(() => command.Method.Invoke(update, args));
                                 }
                             }
                             break;
@@ -434,11 +371,11 @@ namespace Enforcer5.Handlers
                                 Log(update, "chatMember");
                                 if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                 {
-                                    Service.BotAdded(update.Message);
+                                    await Service.BotAdded(update.Message);
                                 }
                                 else
                                 {
-                                    Service.Welcome(update.Message);
+                                    await Service.Welcome(update.Message);
                                 }
                             }
                             break;
@@ -457,15 +394,15 @@ namespace Enforcer5.Handlers
                             if (update.Message != null && update.Message.Chat.Title != null)
                             {
                                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                                Bot.SendReply(
+                                await Bot.SendReply(
                                 Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
-                            Bot.SendReply("The markdown in this text is broken", update);
+                            await Bot.SendReply("The markdown in this text is broken", update);
                         }
                         else
                         {
-                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                            Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
+                            await Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
                         }                        
                     }
                     catch (ApiRequestException ex)
@@ -478,14 +415,14 @@ namespace Enforcer5.Handlers
                     }
                 }
                 catch (AggregateException e)
-                {                   
-                    Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
+                {
+                    await Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)
                 {
                     try
                     {
-                        Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
+                        await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
                     }
                     catch (Exception e)
                     {
@@ -493,13 +430,13 @@ namespace Enforcer5.Handlers
                     }
                     try
                     {
-                        Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
+                        await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
                     }
                     catch (Exception e)
                     {
                         try
                         {
-                            Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
+                            await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
                         }
                         catch (Exception exception)
                         {
@@ -510,35 +447,35 @@ namespace Enforcer5.Handlers
             }
         }
 
-        private static void CollectStats(Message updateMessage)
+        private static async void CollectStats(Message updateMessage)
         {
             try
             {
                 Console.WriteLine("Collecting Stats");
-                Redis.db.HashIncrementAsync("bot:general", "messages");
+                await Redis.db.HashIncrementAsync("bot:general", "messages");
                 if (updateMessage?.From?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                    await Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                    await Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
                 }
                 if (updateMessage?.ForwardFrom?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                    await Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                    await Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
                 }
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {
                     if (updateMessage?.From != null)
                     {
-                        Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
-                        Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
-                        Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
+                        await Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
+                        await Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
+                        await Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }
                 }
             }
             catch (Exception e)
             {
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
             }
 
         }
