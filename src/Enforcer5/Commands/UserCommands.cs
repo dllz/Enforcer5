@@ -11,7 +11,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "ping")]
-        public static void Ping(Update update, string[] args)
+        public static Task Ping(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             try

@@ -16,7 +16,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "rules", InGroupOnly = true)]
-        public static async void Rules(Update update, string[] args)
+        public static async Task Rules(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetRules(update.Message.Chat.Id, lang);
@@ -32,7 +32,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setrules", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void SetRules(Update update, string[] args)
+        public static async Task SetRules(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
@@ -57,7 +57,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "about", InGroupOnly = true)]
-        public static async void About(Update update, string[] args)
+        public static async Task About(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var chatId = update.Message.Chat.Id;
@@ -75,7 +75,7 @@ namespace Enforcer5
 
 
         [Command(Trigger = "setabout", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void SetAbout(Update update, string[] args)
+        public static async Task SetAbout(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
@@ -100,7 +100,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "adminlist", InGroupOnly = true)]
-        public static async void AdminList(Update update, string[] args)
+        public static async Task AdminList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
@@ -116,7 +116,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]
-        public static async void SaveMessage(Update update, string[] args)
+        public static async Task SaveMessage(Update update, string[] args)
         {
             var msgID = update.Message.ReplyToMessage.MessageId;
             var saveTo = update.Message.From.Id;
@@ -133,7 +133,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "id")]
-        public static async void GetId(Update update, string[] args)
+        public static async Task GetId(Update update, string[] args)
         {
             long id;
             string user = "";
@@ -193,7 +193,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "support")]
-        public static async void Support(Update update, string[] args)
+        public static async Task Support(Update update, string[] args)
         {
             int msgToReplyTo;
             if (update.Message.ReplyToMessage != null)
@@ -209,7 +209,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void User(Update update, string[] args)
+        public static async Task User(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -242,7 +242,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "me")]
-        public static async void Me(Update update, string[] args)
+        public static async Task Me(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -266,7 +266,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extra", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void Extra(Update update, string[] args)
+        public static async Task Extra(Update update, string[] args)
         {
             if (args[1] == null)
                 return;
@@ -370,7 +370,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extralist", InGroupOnly = true)]
-        public static async void ExtraList(Update update, string[] args)
+        public static async Task ExtraList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
@@ -388,7 +388,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extradel", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void ExtraDelete(Update update, string[] args)
+        public static async Task ExtraDelete(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (args[1] != null)
@@ -406,7 +406,7 @@ namespace Enforcer5
             }
         }
 
-        public static async void SendExtra(Update update, string[] args)
+        public static async Task SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
@@ -493,7 +493,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "userbutton", GroupAdminOnly = true)]
-        public static async void UserButtons(CallbackQuery call, string[] args)
+        public static async Task UserButtons(CallbackQuery call, string[] args)
         {
             switch (args[1])
             {

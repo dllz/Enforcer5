@@ -293,7 +293,7 @@ namespace Enforcer5.Handlers
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    await Task.Run(() => command.Method.Invoke(update, args));
+                                    await command.Method.Invoke(update, args);
                                 }
                             }
                             else if (update.Message.Text.StartsWith("#"))
@@ -345,7 +345,7 @@ namespace Enforcer5.Handlers
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    await Task.Run(() => command.Method.Invoke(update, args));
+                                    await command.Method.Invoke(update, args);
                                 }
                             }
                             break;

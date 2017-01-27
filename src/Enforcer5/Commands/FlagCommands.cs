@@ -14,7 +14,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "admin", InGroupOnly = true)]
-        public static async void Admin(Update update, string[] args)
+        public static async Task Admin(Update update, string[] args)
         {
             if (Methods.IsGroupAdmin(update))
             {
@@ -53,7 +53,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async void Solved(Update update, string[] args)
+        public static async Task Solved(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null && string.IsNullOrEmpty(args[2]))
@@ -175,7 +175,7 @@ namespace Enforcer5
                 await Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
         }
 
-        private static async void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
+        private static async Task SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
@@ -291,7 +291,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "banflag", GroupAdminOnly = true)]
-        public static async void BanFlag(CallbackQuery call, string[] args)
+        public static async Task BanFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = int.Parse(args[1]);
@@ -318,7 +318,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
-        public static async void KickFlag(CallbackQuery call, string[] args)
+        public static async Task KickFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = int.Parse(args[1]);
@@ -336,7 +336,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]
-        public static async void WarnFlag(CallbackQuery call, string[] args)
+        public static async Task WarnFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = int.Parse(args[1]);
@@ -379,7 +379,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
-        public static async void SolveFlag(CallbackQuery call, string[] args)
+        public static async Task SolveFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatid = int.Parse(args[1]);

@@ -16,7 +16,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "kickme", InGroupOnly = true)]
-        public static void Kickme(Update update, string[] args)
+        public static Task Kickme(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc);
@@ -32,7 +32,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true, RequiresReply = true)]
-        public static async void Kick(Update update, string[] args)
+        public static async Task Kick(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             if (update.Message.ReplyToMessage != null)
@@ -66,7 +66,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async void Warn(Update update, string[] args)
+        public static async Task Warn(Update update, string[] args)
         {
             if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id)) 
                 return;            
@@ -118,7 +118,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "ban", GroupAdminOnly = true, RequiresReply = true)]
-        public static async void Ban(Update update, string[] args)
+        public static async Task Ban(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             try
@@ -172,7 +172,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "unban", GroupAdminOnly = true)]
-        public static async void UnBan(Update update, string[] args)
+        public static async Task UnBan(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
             var userId = Methods.GetUserId(update, args);
@@ -190,7 +190,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async void Tempban(Update update, string[] args)
+        public static async Task Tempban(Update update, string[] args)
         {
             var userId = update.Message.ReplyToMessage.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -242,7 +242,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
-        public static async void ResetWarns(CallbackQuery call, string[] args)
+        public static async Task ResetWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[1];
@@ -253,7 +253,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "removewarn", GroupAdminOnly = true)]
-        public static async void RemoveWarn(CallbackQuery call, string[] args)
+        public static async Task RemoveWarn(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[1];
