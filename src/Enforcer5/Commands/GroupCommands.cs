@@ -268,10 +268,14 @@ namespace Enforcer5
         {
             if (args[1] == null)
                 return;
-            if (args[2] == null && update.Message.ReplyToMessage == null)
+            if (!args[1].StartsWith("#"))
+                return;
+            var words = args[1].Contains(" ") ? new[] { args[1].Substring(1, args[1].IndexOf(" ")).Trim(), args[1].Substring(args[1].IndexOf(" ") + 1) } : new[] { args[1].Substring(1).Trim(), null };
+            words[0] = $"#{words[0]}";
+            if (words[1] == null && update.Message.ReplyToMessage == null)
                 return;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            if (update.Message.ReplyToMessage != null && args[2] == null)
+            if (update.Message.ReplyToMessage != null && words[1] == null)
             {
                 var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
                 if (!string.IsNullOrEmpty(fileId))
@@ -280,15 +284,15 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type))
                     {
                         var toSave = $"###file_id!{type}###:{fileId}";
-                        await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", args[1], toSave);
-                        await Bot.Send(Methods.GetLocaleString(lang, "extraSaved"), update);
+                        await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
+                        await Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
                         return;
                     }
                     return;
                 }
                 return;
             }
-            if (update.Message.ReplyToMessage != null && args[2] != null)
+            if (update.Message.ReplyToMessage != null && words[1] != null)
             {
                 var type = Methods.GetMediaType(update.Message.ReplyToMessage);
                 if (!string.IsNullOrEmpty(type))
@@ -296,20 +300,16 @@ namespace Enforcer5
                     if (type.Equals("gif"))
                     {
                         var toSave = update.Message.ReplyToMessage.Document.FileId;
-                        string text = "";
-                        for (int i = 2; i < args.Length; i++)
-                        {
-                            text = text + args[i].ToString();
-                        }
+                        string text = words[1];
                         try
                         {
                             var res = Bot.SendReply(text, update);
                             var result = res.Result;
                             var hash = $"chat:{update.Message.Chat.Id}:extra";
-                            await Redis.db.HashSetAsync($"{hash}:{args[1]}", "mediaid", toSave);
-                            await Redis.db.HashSetAsync(hash, args[1], text);
+                            await Redis.db.HashSetAsync($"{hash}:{words[0]}", "mediaid", toSave);
+                            await Redis.db.HashSetAsync(hash, words[0], text);
                             await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
-                                Methods.GetLocaleString(lang, "extraSaved"));
+                                Methods.GetLocaleString(lang, "extraSaved", words[0]));
                         }
                         catch (ApiRequestException e)
                         {
@@ -334,20 +334,16 @@ namespace Enforcer5
             }
             else
             {
-                string text = "";
-                for (int i = 2; i < args.Length; i++)
-                {
-                    text = text + args[i].ToString();
-                }
+                string text = words[1];
                 try
                 {
                     var res = Bot.SendReply(text, update);
                     var result = res.Result;
                     var hash = $"chat:{update.Message.Chat.Id}:extra";
-                    await Redis.db.HashDeleteAsync($"{hash}:{args[1]}", "mediaid");
-                    await Redis.db.HashSetAsync(hash, args[1], text);
+                    await Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
+                    await Redis.db.HashSetAsync(hash, words[0], text);
                     await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
-                        Methods.GetLocaleString(lang, "extraSaved"));
+                        Methods.GetLocaleString(lang, "extraSaved", words[0]));
                 }
                 catch (ApiRequestException e)
                 {
@@ -415,16 +411,22 @@ namespace Enforcer5
             var text = Redis.db.HashGetAsync(hash, args[0]).Result;
             if (!text.HasValue)
                 return;
-            var split = text.ToString().Replace("###file_id!", "").Split(new[] { "###:" }, StringSplitOptions.RemoveEmptyEntries);
-            var fileId = split[0];
-            var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;
-            var specialMethod = split[1];
+            var fileId = "";
+            var specialMethod = "";
+            if (text.ToString().Contains("###file_id!"))
+            {
+                var split = text.ToString().Replace("###file_id!", "").Split(new[] { "###:" }, StringSplitOptions.RemoveEmptyEntries);
+                 fileId = split[1];
+                specialMethod = split[0];
+
+            }            
+            var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;            
             var repId = update.Message.MessageId;
             if (update.Message.ReplyToMessage != null)
             {
                 repId = update.Message.ReplyToMessage.MessageId;
             }
-            if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(hasMedia))
+            if (string.IsNullOrEmpty(fileId) && string.IsNullOrEmpty(hasMedia))
             {
                 await Bot.SendReply(text, update.Message.Chat.Id, repId);
             }
@@ -446,16 +448,40 @@ namespace Enforcer5
                             await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
                                 replyToMessageId: repId);
                             break;
+                        case "gif":
+                            if (!string.IsNullOrEmpty(hasMedia))
+                            {
+                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                    replyToMessageId: repId);
+                            }
+                            else
+                            {
+                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                    replyToMessageId: repId);
+                            }
+                            break;
+                        default:
+                            if (!string.IsNullOrEmpty(hasMedia))
+                            {
+                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                    replyToMessageId: repId);
+                            }
+                            else
+                            {
+                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                    replyToMessageId: repId);
+                            }
+                            break;
                     }
                 }
                 else if (!string.IsNullOrEmpty(hasMedia))
                 {
-                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
                         replyToMessageId: repId);
                 }
                 else
                 {
-                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
                         replyToMessageId: repId);
                 }
             }
