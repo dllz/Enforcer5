@@ -284,4 +284,152 @@ namespace Enforcer5
             return res.Result.Select(member => member.User.Id).ToList();
         }
     }
+
+    public static partial class CallBacks
+    {
+        [Callback(Trigger = "banflag", GroupAdminOnly = true)]
+        public static async void BanFlag(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var chatId = int.Parse(args[1]);
+            var userId = int.Parse(args[2]);
+            var res = Methods.BanUser(chatId, userId, lang);
+            var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
+            if (isAlreadyTempbanned)
+            {
+                var all = Redis.db.HashGetAllAsync("tempbanned").Result;
+                foreach (var mem in all)
+                {
+                    if ($"{chatId}:{userId}".Equals(mem.Value))
+                    {
+                        await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                    }
+                }
+                await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+            }
+            Methods.SaveBan(userId, "ban");
+            var why = Methods.GetLocaleString(lang, "inlineBan");
+            Methods.AddBanList(chatId, userId, userId.ToString(), why);
+            await Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
+            await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+        }
+
+        [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
+        public static async void KickFlag(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var chatId = int.Parse(args[1]);
+            var userId = int.Parse(args[2]);
+            await Methods.KickUser(chatId, userId, lang);
+            Methods.SaveBan(userId, "kick");
+
+            object[] arguments =
+            {
+                            Methods.GetNick(call.Message, args),
+                            Methods.GetNick(call.Message, args, true)
+                        };
+            await Bot.SendReply(Methods.GetLocaleString(lang, "SuccesfulKick", arguments), call.Message);
+            await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+        }
+
+        [Callback(Trigger = "warnflag", GroupAdminOnly = true)]
+        public static async void WarnFlag(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var chatId = int.Parse(args[1]);
+            var userId = int.Parse(args[2]);
+            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
+            var max = 3;
+            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
+            if (num >= max)
+            {
+                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
+                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").ToString()
+                    : "kick";
+                if (type.Equals("ban"))
+                {
+                    try
+                    {
+                        await Bot.Api.KickChatMemberAsync(chatId, userId);
+                        var name = Methods.GetNick(call.Message, args);
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxBan", name), call.Message);
+                    }
+                    catch (AggregateException e)
+                    {
+                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", call.Message, lang);
+                    }
+                }
+                else
+                {
+                    await Methods.KickUser(chatId, userId, lang);
+                    var name = Methods.GetNick(call.Message, args);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxKick", name), call.Message);
+                }
+            }
+            else
+            {
+                var diff = max - num;
+                var text = Methods.GetLocaleString(lang, "warnFlag", userId, call.From.Id, num, max);               
+                await Bot.Send(text, chatId);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, text, true);
+            }
+        }
+
+        [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
+        public static async void SolveFlag(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var chatid = int.Parse(args[1]);
+            var msgid = int.Parse(args[2]);
+            var hash = $"flagged:{chatid}:{msgid}";
+            var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
+            if (!isReported.HasValue)
+            {
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
+                return;
+            }
+            int isReport;
+            if (isReported.TryParse(out isReport) && isReport == 0)
+            {
+                var solvedBy = call.From.FirstName;
+                if (call.From.Username != null)
+                    solvedBy = $"{solvedBy} (@{call.From.Username}";
+                var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
+                await Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
+                await Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
+                await Redis.db.HashSetAsync(hash, "Solved", 1);
+                var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
+                var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
+                var repID = Redis.db.HashGetAsync(hash, "repID");
+                string text;
+                if (!reporter.HasValue)
+                {
+                    text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
+                        chatid, reporter);
+                }
+                else
+                {
+                    text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
+                        chatid);
+                }
+                for (int i = 0; i < counter; i++)
+                {
+                    var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
+                    var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
+                    if (id.HasValue && msgID.HasValue)
+                    {
+                        await Bot.Api.EditMessageTextAsync(id, msgid,
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
+                    }
+                }
+                await Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved",chatid, repID), chatid);
+            }
+            else if (isReported.TryParse(out isReport) && isReport == 1)
+            {
+                var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt");
+                var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy");
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
+            }
+        }
+    }
 }

@@ -204,6 +204,9 @@
   <string key="warn">
     <value>{0} *has been warned.*\n_Number of warns_   *{1}*\n_Max allowed_   *{2}*</value>
   </string>
+  <string key="warnFlag">
+    <value>{0} *has been warned by {1}.*\n_Number of warns_   *{2}*\n_Max allowed_   *{3}*</value>
+  </string>
   <string key="alreadyFlagged">
     <value>Message already reported</value>
   </string>
@@ -215,9 +218,6 @@
   </string>
   <string key="Warn">
     <value>Warn</value>
-  </string>
-  <string key="markSolved">
-    <value>Mark Solved</value>
   </string>
   <string key="reportAdmin">
     <value>{0}\n\n{1}\nReport ID: #r{2}\n#Unsolved</value>
@@ -240,12 +240,15 @@
   <string key="markSolved">
     <value>Marked as solved</value>
   </string>
+  <string key="markedAsSolved">
+    <value>Report {1} has been solved by {0}</value>
+  </string>
   <string key="alreadySolved">
     <value>This was solved at {0} by {1}</value>
   </string>
   <string key="solvedNoReply">
     <value>Please reply to a flagged message (contains @admin) or send the reportID</value>
-  </string>bannedlist
+  </string>
   <string key="incorrectArgument">
     <value>Wrong argument type for command</value>
   </string>
@@ -293,5 +296,14 @@
   </string>
   <string key="warnRemoved">
     <value>Warning has been removed</value>
+  </string>
+  <string key="inlineBan">
+    <value>Banned using inline buttons</value>
+  </string>
+  <string key ="userBanned">
+    <value>User banned</value>
+  </string>
+  <string key ="userKicked">
+    <value>User Kicked</value>
   </string>
 </strings>

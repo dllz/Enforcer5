@@ -121,12 +121,38 @@ namespace Enforcer5
 
                 if (res)
                 {
+                    var chatId = update.Message.Chat.Id;
+                    var userId = update.Message.Chat.Id;
+                    var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
+                    if (isAlreadyTempbanned)
+                    {
+                        var all = Redis.db.HashGetAllAsync("tempbanned").Result;
+                        foreach (var mem in all)
+                        {
+                            if ($"{chatId}:{userId}".Equals(mem.Value))
+                            {
+                                await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                            }
+                        }
+                        await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+                    }
                     Methods.SaveBan(userid, "ban");
                     object[] arguments =
                     {
                         Methods.GetNick(update.Message, args),
                         Methods.GetNick(update.Message, args, true)
                     };
+                    string why;
+                    if (!string.IsNullOrEmpty(args[1]))
+                    {
+                        why = args[1];
+                    }
+                    else
+                    {
+                        why = update.Message.ReplyToMessage.Text;
+                    }
+                    Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
+                    await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                     await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
                         update.Message.ReplyToMessage.MessageId, disableNotification: true);
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);

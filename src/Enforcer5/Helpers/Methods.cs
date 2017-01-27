@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Languages;
 using Enforcer5.Models;
+using StackExchange.Redis;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -390,6 +391,15 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static async void AddBanList(long chatId, int userId, string name, string why)
+        {
+            var hash = $"chat:{chatId}:bannedlist";
+            var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
+            kvp.Add(new KeyValuePair<RedisKey, RedisValue>(hash, userId.ToString()));
+            await Redis.db.StringSetAsync(kvp.ToArray());
+            await Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
+            await Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
+        }
         public static void CheckTempBans(object state)
         {
             var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
