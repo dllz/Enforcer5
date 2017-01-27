@@ -16,7 +16,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "uploadlanguage", GlobalAdminOnly = true)]
-        public static async void UploadLang(Update update, string[] args)
+        public static async Task UploadLang(Update update, string[] args)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "validatelanguages", GlobalAdminOnly = true)]
-        public static async void ValidateLangs(Update update, string[] args)
+        public static async Task ValidateLangs(Update update, string[] args)
         {
             //var langs = Directory.GetFiles(Bot.LanguageDirectory)
             //                                            .Select(x => XDocument.Load(x)

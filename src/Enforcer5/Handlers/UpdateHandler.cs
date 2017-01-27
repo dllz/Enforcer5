@@ -402,7 +402,7 @@ namespace Enforcer5.Handlers
                         else
                         {
                             await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                            await Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+                            await Bot.Send($"@falconza shit happened\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)
@@ -430,7 +430,7 @@ namespace Enforcer5.Handlers
                     }
                     try
                     {
-                        await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001094155678);
+                        await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
                     }
                     catch (Exception e)
                     {
