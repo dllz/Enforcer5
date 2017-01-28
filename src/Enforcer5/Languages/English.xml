@@ -315,4 +315,7 @@
   <string key="bannedFor">
     <value>Banned for: {0}</value>
   </string>
+  <string key="welcomeSet">
+    <value>Welcome set by {0}</value>
+  </string>
 </strings>

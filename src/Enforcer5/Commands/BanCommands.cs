@@ -160,7 +160,7 @@ namespace Enforcer5
                     }
                     else
                     {
-                        why = update.Message.ReplyToMessage.Text;
+                        why = $"\"update.Message.ReplyToMessage.Text\"";
                     }
                     Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
                     await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
