@@ -507,7 +507,7 @@ namespace Enforcer5
                     {
                         name = $"{name}\t{Methods.GetLocaleString(lang, "bannedFor")}";
                     }
-                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}"), update);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
                 }
             }
 
