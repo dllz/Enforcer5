@@ -101,8 +101,11 @@ namespace Enforcer5
         public static async Task StopBot(Update update, string[] args)
         {
             await Bot.SendReply("Stopping bot", update);
-            await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
+            if (update.Message.From.Id != Constants.Devs[0])
+            {
+                await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
                 Constants.Devs[0]);
+            }
             Redis.SaveRedis();
             Environment.Exit(0);
         }
