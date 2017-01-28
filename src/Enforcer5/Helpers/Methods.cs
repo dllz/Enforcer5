@@ -503,5 +503,12 @@ namespace Enforcer5.Helpers
                 return null;
             }
         }
+
+        public static bool IsBanned(long chatId, int userId)
+        {
+            var hash = $"chat:{chatId}:banned";
+            var res = Redis.db.SetContainsAsync(hash, userId).Result;
+            return res;
+        }
     }
 }

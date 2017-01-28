@@ -73,7 +73,6 @@ namespace Enforcer5
             }
         }
 
-
         [Command(Trigger = "setabout", InGroupOnly = true, GroupAdminOnly = true)]
         public static async Task SetAbout(Update update, string[] args)
         {
@@ -476,6 +475,42 @@ namespace Enforcer5
                     await Bot.SendReply(Methods.GetLocaleString(lang, "NoLinkInputed"), update);
                 }
             }
+        }
+
+        [Command(Trigger = "status", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task Status(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userId = 0;
+            var chatId = update.Message.Chat.Id;
+            if (args.Length == 2)
+            {
+                if (int.TryParse(args[1], out userId))
+                {
+
+                }
+                else
+                {
+                    userId = Methods.ResolveIdFromusername(args[1], chatId);
+                }
+                if (userId > 0)
+                {
+                    var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var status = user.Status;
+                    var name = user.User.FirstName;
+                    if (user.User.Username != null)
+                        name = $"@{user.User.Username}";
+                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                        status = ChatMemberStatus.Kicked;
+                    var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
+                    if (!reason.IsNullOrEmpty)
+                    {
+                        name = $"{name}\t{Methods.GetLocaleString(lang, "bannedFor")}";
+                    }
+                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}"), update);
+                }
+            }
+
         }
 
         public static async Task SendExtra(Update update, string[] args)

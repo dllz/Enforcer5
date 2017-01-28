@@ -7,7 +7,7 @@
   <string key="statusLeft">
     <value>{0} left the group or has been kicked.</value>
   </string>
-  <string key="statusAdmin">
+  <string key="statusAdministrator">
     <value>{0} is an admin.</value>
   </string>
   <string key="statusCreator">
