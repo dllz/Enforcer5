@@ -201,6 +201,7 @@ namespace Enforcer5.Helpers
         {
             if (!s.StartsWith("@"))
                 throw new Exception("UnableToResolveUsername");
+            s = s.ToLower();
             if (chatId != 0)
             {
                 var userid = Redis.db.HashGetAsync($"bot:usernames:{chatId}", s).Result;

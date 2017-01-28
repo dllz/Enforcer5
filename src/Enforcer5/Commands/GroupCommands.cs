@@ -513,6 +513,8 @@ namespace Enforcer5
 
         }
 
+        [Command(Trigger = "welcome", InGroupOnly = true, GroupAdminOnly = true)]
+
         public static async Task SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
