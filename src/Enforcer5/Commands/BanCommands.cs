@@ -166,7 +166,7 @@ namespace Enforcer5
                     await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                     try
                     {
-                        if (update.Message.Type == MessageType.ServiceMessage)
+                        if (update.Message.ReplyToMessage.Type == MessageType.ServiceMessage)
                         {
                             
                         }
