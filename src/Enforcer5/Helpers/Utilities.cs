@@ -223,5 +223,10 @@ namespace Enforcer5.Helpers
         private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
         static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"138.201.172.150:6379, password={key}");        
         public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
+
+        public static void SaveRedis()
+        {
+            redis.GetServer($"138.201.172.150:6379").Save(SaveType.BackgroundSave);
+        }
     }
 }
