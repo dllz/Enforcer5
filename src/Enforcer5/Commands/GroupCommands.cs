@@ -596,7 +596,9 @@ namespace Enforcer5
                 {
                     var fileID = Methods.GetMediaId(update.Message);
                     await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "media");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", fileID);
+                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
+                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileID);
+                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
                     await Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update);
                 }
             }

@@ -24,7 +24,7 @@ namespace Enforcer5
             }
             else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
             {
-                var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasMedia").Result;
+                var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
                 if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
                 {
                     var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;

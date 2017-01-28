@@ -260,7 +260,7 @@ namespace Enforcer5.Handlers
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
-                                Console.WriteLine("Looking for command");
+                                //Console.WriteLine("Looking for command");
                                 var command = Bot.Commands.FirstOrDefault(
                                     x =>
                                         String.Equals(x.Trigger, args[0],
@@ -312,7 +312,7 @@ namespace Enforcer5.Handlers
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
-                                Console.WriteLine("Looking for command");
+                                //Console.WriteLine("Looking for command");
                                     var command = Bot.Commands.FirstOrDefault(
                                     x =>
                                         String.Equals(x.Trigger, args[0],
@@ -467,7 +467,7 @@ namespace Enforcer5.Handlers
         {
             try
             {
-                Console.WriteLine("Collecting Stats");
+                //Console.WriteLine("Collecting Stats");
                 await Redis.db.HashIncrementAsync("bot:general", "messages");
                 if (updateMessage?.From?.Username != null)
                 {
