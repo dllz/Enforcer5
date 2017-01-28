@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -94,6 +95,14 @@ namespace Enforcer5
             {
                 await Bot.Send(ex.Message, update.Message.Chat.Id);
             }
+        }
+
+        [Command(Trigger = "halt", GlobalAdminOnly = true)]
+        public static async Task StopBot(Update update, string[] args)
+        {
+            await Bot.SendReply("Stopping bot", update);
+            await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
+                Constants.Devs[0]);
         }
     }
 }

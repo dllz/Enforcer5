@@ -231,6 +231,26 @@ namespace Enforcer5
                 await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
             }
         }
+
+        [Command(Trigger = "status", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task Status(Update update, string[] args)
+        {
+            var userId = 0;
+            var chatId = update.Message.Chat.Id;
+            if (args.Length == 2)
+            {
+                if (int.TryParse(args[1], out userId))
+                {
+
+                }
+                else
+                {
+                    userId = Methods.ResolveIdFromusername(args[1], chatId);
+                }
+            }
+            
+        }
+    }
     }
 
     public static partial class CallBacks

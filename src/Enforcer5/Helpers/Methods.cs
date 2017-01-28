@@ -187,7 +187,7 @@ namespace Enforcer5.Helpers
             {
                 return update.Message.ReplyToMessage.From.Id;
             }
-            if (args[1] != null)
+            if (args.Length == 2)
             {
                 return ResolveIdFromusername(args[1], update.Message.Chat.Id);
             }
@@ -199,11 +199,13 @@ namespace Enforcer5.Helpers
 
         public static int ResolveIdFromusername(string s, long chatId = 0)
         {
+            if (!s.StartsWith("@"))
+                throw new Exception("UnableToResolveUsername");
             if (chatId != 0)
             {
                 var userid = Redis.db.HashGetAsync($"bot:usernames:{chatId}", s).Result;
                 var id = 0;
-                if (int.TryParse(userid, out id))
+                if (int.TryParse(userid.ToString(), out id))
                 {
                     return id;
                 }
@@ -216,7 +218,7 @@ namespace Enforcer5.Helpers
             {
                 var userid = Redis.db.HashGetAsync($"bot:usernames", s).Result;
                 var id = 0;
-                if (int.TryParse(userid, out id))
+                if (int.TryParse(userid.ToString(), out id))
                 {
                     return id;
                 }

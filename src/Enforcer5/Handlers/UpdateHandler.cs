@@ -452,7 +452,7 @@ namespace Enforcer5.Handlers
                     {
                         try
                         {
-                            await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", 125311351);
+                            await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
                         }
                         catch (Exception exception)
                         {
