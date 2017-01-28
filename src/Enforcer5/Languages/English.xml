@@ -313,6 +313,6 @@
     <value>You need to start the bot first. Click below, then click start</value>
   </string>
   <string key="bannedFor">
-    <value>Banned for: </value>
+    <value>Banned for: {0}</value>
   </string>
 </strings>

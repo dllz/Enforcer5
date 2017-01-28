@@ -491,7 +491,8 @@ namespace Enforcer5
                 }
                 else
                 {
-                    userId = Methods.ResolveIdFromusername(args[1], chatId);
+                    if (args[1].StartsWith("@"))
+                        userId = Methods.ResolveIdFromusername(args[1], chatId);
                 }
                 if (userId > 0)
                 {
@@ -505,7 +506,7 @@ namespace Enforcer5
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                     if (!reason.IsNullOrEmpty)
                     {
-                        name = $"{name}\t{Methods.GetLocaleString(lang, "bannedFor")}";
+                        name = $"{name}   {Methods.GetLocaleString(lang, "bannedFor", reason)}";
                     }
                     await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
                 }
