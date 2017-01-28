@@ -166,8 +166,15 @@ namespace Enforcer5
                     await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                     try
                     {
-                        await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
+                        if (update.Message.Type == MessageType.ServiceMessage)
+                        {
+                            
+                        }
+                        else
+                        {
+                            await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
                             update.Message.ReplyToMessage.MessageId, disableNotification: true);
+                        }                        
                     }
                     catch (AggregateException e)
                     {
