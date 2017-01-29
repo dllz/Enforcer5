@@ -420,6 +420,24 @@ namespace Enforcer5.Helpers
 
             }
         }
+        public static void CheckTempBans()
+        {
+            var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
+            foreach (var mem in tempbans)
+            {
+                var now = System.DateTime.UtcNow.AddHours(2).ToUnixTime();
+                if (now >= int.Parse(mem.Name))
+                {
+                    var subStrings = mem.Value.ToString().Split(':');
+                    var chatId = long.Parse(subStrings[0]);
+                    var userId = int.Parse(subStrings[1]);
+                    UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                    Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                    Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
+                }
+
+            }
+        }
 
         public static bool UnbanUser(long chatId, int userId, XDocument doc)
         {

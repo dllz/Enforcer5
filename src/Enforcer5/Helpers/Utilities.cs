@@ -226,7 +226,7 @@ namespace Enforcer5.Helpers
 
         public static void SaveRedis()
         {
-            redis.GetServer($"138.201.172.150:6379").Save(SaveType.BackgroundSave);
+            redis.GetServer($"redis.daniellotz.com:6379").Save(SaveType.BackgroundSave);
         }
     }
 }

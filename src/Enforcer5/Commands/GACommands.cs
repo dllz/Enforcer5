@@ -61,7 +61,12 @@ namespace Enforcer5
             var langs = Program.LangaugeList;
 
 
-            List<InlineKeyboardButton> buttons = langs.Select(x => x.Base).Distinct().OrderBy(x => x).Select(x => new InlineKeyboardButton(x, $"validate|{update.Message.From.Id}|{x}|null|base")).ToList();
+            List<InlineKeyboardButton> buttons =
+                langs.Select(x => x.Base)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(x => new InlineKeyboardButton(x, $"validate|{update.Message.From.Id}|{x}|null|base"))
+                    .ToList();
             //buttons.Insert(0, new InlineKeyboardButton("All", $"validate|{update.Message.From.Id}|All|null|base"));
 
             var baseMenu = new List<InlineKeyboardButton[]>();
@@ -69,10 +74,10 @@ namespace Enforcer5
             {
                 if (buttons.Count - 1 == i)
                 {
-                    baseMenu.Add(new[] { buttons[i] });
+                    baseMenu.Add(new[] {buttons[i]});
                 }
                 else
-                    baseMenu.Add(new[] { buttons[i], buttons[i + 1] });
+                    baseMenu.Add(new[] {buttons[i], buttons[i + 1]});
                 i++;
             }
 
@@ -104,10 +109,16 @@ namespace Enforcer5
             if (update.Message.From.Id != Constants.Devs[0])
             {
                 await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
-                Constants.Devs[0]);
+                    Constants.Devs[0]);
             }
             Redis.SaveRedis();
             Environment.Exit(0);
+        }
+
+        [Command(Trigger = "checktempbans", GlobalAdminOnly = true)]
+        public static async Task ManuallyCheckTempban(Update update, string[] args)
+        {
+            Methods.CheckTempBans();
         }
     }
 }

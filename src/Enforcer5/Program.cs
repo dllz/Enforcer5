@@ -50,7 +50,7 @@ namespace Enforcer5
             //new Thread(UpdateHandler.BanMonitor).Start();
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             new Task(Methods.IntialiseLanguages).Start();
-            var wait = TimeSpan.FromSeconds(60);
+            var wait = TimeSpan.FromSeconds(30);
             _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
