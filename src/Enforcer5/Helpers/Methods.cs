@@ -443,9 +443,15 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                var res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                while (!res.Result)
+                {
+                    res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                    
+                }
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
                 return true;
+
             }
             catch (AggregateException e)
             {
