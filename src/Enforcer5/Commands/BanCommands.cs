@@ -7,6 +7,7 @@ using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -176,9 +177,17 @@ namespace Enforcer5
                             update.Message.ReplyToMessage.MessageId, disableNotification: true);
                         }                        
                     }
+                    catch (ApiRequestException e)
+                    {
+
+                    }
                     catch (AggregateException e)
                     {
-                        //meh
+
+                    }
+                    catch (Exception e)
+                    {
+
                     }
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                 }
