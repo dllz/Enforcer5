@@ -521,71 +521,74 @@ namespace Enforcer5
             var chatId = update.Message.Chat.Id;
             if (args.Length == 2)
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", false);
-                if (update.Message.ReplyToMessage != null)
+                if (!string.IsNullOrEmpty(args[1]))
                 {
-                    var repliedTo = Methods.GetMediaType(update.Message);
-                    if (repliedTo.Equals("gif"))
+                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", false);
+                    if (update.Message.ReplyToMessage != null)
                     {
-                        var fileId = Methods.GetMediaId(update.Message);
-                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
-                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileId);
+                        var repliedTo = Methods.GetMediaType(update.Message);
+                        if (repliedTo.Equals("gif"))
+                        {
+                            var fileId = Methods.GetMediaId(update.Message);
+                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
+                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileId);
+                        }
                     }
-                }
-                if (args[1].Equals("a"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
-                }
-                else if (args[1].Equals("r"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "r");
-                }
-                else if (args[1].Equals("m"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "m");
-                }
-                else if (args[1].Equals("ar") || args[1].Equals("ra"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ra");
-                }
-                else if (args[1].Equals("mr") || args[1].Equals("rm"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "rm");
-                }
-                else if (args[1].Equals("am") || args[1].Equals("ma"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "am");
-                }
-                else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
-                }
-                else if (args[1].Equals("no"))
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
-                }
-                else
-                {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "custom");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
-                    try
+                    if (args[1].Equals("a"))
                     {
-                        var res = Bot.SendReply(args[1], update);
-                        await Bot.Api.EditMessageTextAsync(chatId, res.Result.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
                     }
-                    catch (AggregateException e)
+                    else if (args[1].Equals("r"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "r");
+                    }
+                    else if (args[1].Equals("m"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "m");
+                    }
+                    else if (args[1].Equals("ar") || args[1].Equals("ra"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ra");
+                    }
+                    else if (args[1].Equals("mr") || args[1].Equals("rm"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "rm");
+                    }
+                    else if (args[1].Equals("am") || args[1].Equals("ma"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "am");
+                    }
+                    else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
+                    }
+                    else if (args[1].Equals("no"))
                     {
                         await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
-                        await Bot.SendReply(e.Message, update);
+                    }
+                    else
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "custom");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
+                        try
+                        {
+                            var res = Bot.SendReply(args[1], update);
+                            await Bot.Api.EditMessageTextAsync(chatId, res.Result.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                        }
+                        catch (AggregateException e)
+                        {
+                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
+                            await Bot.SendReply(e.Message, update);
+                        }
                     }
                 }
             }
