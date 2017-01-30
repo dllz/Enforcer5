@@ -10,7 +10,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Enforcer5   
+namespace Enforcer5
 {
     public static partial class Commands
     {
@@ -21,18 +21,14 @@ namespace Enforcer5
             var chatId = update.Message.Chat.Id;
             var menuText = Methods.GetLocaleString(lang, "mainMenu", update.Message.Chat.Title);
             var menu = genMenu(chatId, lang);
-            await Bot.Send(menuText, update.Message.From.Id, customMenu:menu);
+            await Bot.Send(menuText, update.Message.From.Id, customMenu: menu);
             await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
         }
-        [Command(Trigger = "dashboard", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task Dashboard(Update update, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            //var buttons = new[]
-            //{
-            //    new InlineKeyboardButton(), 
-            //}
-        }
+
+        //[Command(Trigger = "dashboard", GroupAdminOnly = true, InGroupOnly = true)]
+        //public static async Task Dashboard(Update update, string[] args)
+        //{            
+        //}
 
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
@@ -44,7 +40,16 @@ namespace Enforcer5
             {
                 if (mem.Name.Equals("Flood") || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
+                    if (mem.Name.Equals("Flood"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                            $"openFloodMenu:{chatId}"));
+                    }
+                    else
+                    {
+                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                            $"menusettings:{mem.Name}"));
+                    }
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
@@ -57,7 +62,8 @@ namespace Enforcer5
                 else if (mem.Name.Equals("Modlist") || mem.Name.Equals("About") || mem.Name.Equals("Rules") ||
                          mem.Name.Equals("Extra"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
+                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                        $"menusettings:{mem.Name}"));
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("👤", $"menu{mem.Name}:{chatId}"));
@@ -71,10 +77,12 @@ namespace Enforcer5
             settings = Redis.db.HashGetAllAsync($"chat:{chatId}:char").Result;
             foreach (var mem in settings)
             {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                    $"menusettings:{mem.Name}"));
                 if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}", $"menu{mem.Name}:{chatId}"));
+                    mainMenu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}",
+                        $"menu{mem.Name}:{chatId}"));
                 }
                 else if (mem.Value.Equals("allowed"))
                 {
@@ -93,6 +101,50 @@ namespace Enforcer5
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
             return Key.CreateMarkupFromMenus(mainMenu, warnTitle, editWarn, close);
         }
+
+        public static InlineKeyboardMarkup genFlood(long chatId, XDocument lang)
+        {
+            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            var oneRow = new Menu(2);
+            if (flood.Equals("no"))
+            {
+                oneRow.Buttons.Add(new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}",
+                    $"floodstatus:{chatId}"));
+            }
+            else if (flood.Equals("yes"))
+            {
+                oneRow.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
+                    $"floodstatus:{chatId}"));
+            }
+            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
+            var action = settings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
+            oneRow.Buttons.Add(action.Value.Equals("kick")
+                ? new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"floodaction:{chatId}")
+                : new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"floodaction:{chatId}"));
+            action = settings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
+            var twoRow = new Menu(3);
+            twoRow.Buttons.Add(new InlineButton("➖", $"flooddim:{chatId}"));
+            twoRow.Buttons.Add(new InlineButton(action.Value, $"floodSettings:{chatId}"));
+            twoRow.Buttons.Add(new InlineButton("➕", $"floodraise:{chatId}"));
+            var exceptions = Redis.db.HashGetAllAsync($"chat:{chatId}:floodexceptions").Result;
+            var exeMenu = new Menu(2);
+            foreach (var mem in exceptions)
+            {
+                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                    $"floodSettings:{mem.Name}"));
+                if (mem.Value.Equals("yes"))
+                {
+                    exeMenu.Buttons.Add(new InlineButton("✅", $"flood{mem.Name}:{chatId}"));
+                }
+                else 
+                {
+                    exeMenu.Buttons.Add(new InlineButton("❌", $"flood{mem.Name}:{chatId}"));
+                }
+            }
+            var close = new Menu(1);
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            return Key.CreateMarkupFromMenus(oneRow, twoRow, exeMenu, close);
+        }
     }
 
     public static partial class CallBacks
@@ -108,6 +160,7 @@ namespace Enforcer5
         {
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, "Still coming");
         }
+
         [Callback(Trigger = "menuFlood")]
         public static async Task MenuFlood(CallbackQuery call, string[] args)
         {
@@ -130,6 +183,7 @@ namespace Enforcer5
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
+
         [Callback(Trigger = "menuReport")]
         public static async Task MenuReport(CallbackQuery call, string[] args)
         {
@@ -152,6 +206,7 @@ namespace Enforcer5
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
+
         [Callback(Trigger = "menuWelcome")]
         public static async Task MenuWelcome(CallbackQuery call, string[] args)
         {
@@ -374,6 +429,191 @@ namespace Enforcer5
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "openFloodMenu", GroupAdminOnly = true)]
+        public static async Task openFloodMenu(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var text = Methods.GetLocaleString(lang, "floodMenu");
+            var keys = Commands.genFlood(chatId, lang);
+            await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup: keys);
+        }
+
+        [Callback(Trigger = "floodSettings")]
+        public static async Task floodSettings(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "doNothing"));
+        }
+
+        [Callback(Trigger = "flooddim")]
+        public static async Task flooddim(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:flood", "MaxFlood").Result;
+            if (num > 0)
+            {
+                var keys = Commands.genFlood(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else
+            {
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
+                await Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+            }
+        }
+
+        [Callback(Trigger = "floodraise")]
+        public static async Task floodraise(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            await Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
+            var keys = Commands.genFlood(chatId, lang);
+            await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+            await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+        }
+
+        [Callback(Trigger = "floodaction")]
+        public static async Task floodaction(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "ActionFlood";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:flood", option).Result;
+            if (current.Equals("ban"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "kick");
+                var keys = Commands.genFlood(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("kick"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
+                var keys = Commands.genFlood(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "floodtext")]
+        public static async Task floodtext(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "text";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else 
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+        [Callback(Trigger = "floodsticker")]
+        public static async Task floodsticker(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "sticker";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "floodimage")]
+        public static async Task floodimage(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "image";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "floodvideo")]
+        public static async Task floodvideo(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "video";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "floodgif")]
+        public static async Task floodgif(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "gif";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                var keys = Commands.genMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));

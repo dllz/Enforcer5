@@ -579,12 +579,12 @@ namespace Enforcer5.Handlers
                         {
                             return;
                         }
-                        //if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update.Message..Id) & !Methods.IsGlobalAdmin(update.From.Id))
-                        //{
-                        //    Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
-                        //    return;
-                        //}
-                        if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                    //if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(args[1]) & !Methods.IsGlobalAdmin(args[1]))
+                    //{
+                    //    Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
+                    //    return;
+                    //}
+                    if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                         {
                             return;
                         }

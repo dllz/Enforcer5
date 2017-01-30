@@ -373,4 +373,48 @@
   <string key="settingChanged">
     <value>Setting has been changed</value>
   </string>
+  <string key="floodMenu">
+    <value>
+      You can manage the group flood settings from here.
+
+      1st row
+      • ON/OFF: the current status of the anti-flood
+      • Kick/Ban: what to do when someone is flooding
+
+      2nd row
+      • you can use +/- to change the current sensitivity of the anti-flood system
+      • the number is the max number of messages that can be sent in 5 seconds
+      • max value: 25 - min value: 4
+
+      3rd row and below
+      You can set some exceptions for the anti-flood:
+      • ✅: the media will be ignored by the anti-flood
+      • ❌: the media won't be ignored by the anti-flood
+      • Note: in "texts" are included all the other types of media (file, audio...)
+    </value>
+  </string>
+  <string key="on">
+    <value>On</value>
+  </string>
+  <string key="off">
+    <value>Off</value>
+  </string>
+  <string key="textButton">
+    <value>Text</value>
+  </string>
+  <string key="stickerButton">
+    <value>Sticker</value>
+  </string>
+  <string key="imageButton">
+    <value>Image</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>Video</value>
+  </string>
+  <string key="doNothing">
+    <value>I do not do anything</value>
+  </string>
 </strings>
