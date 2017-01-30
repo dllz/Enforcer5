@@ -318,4 +318,53 @@
   <string key="welcomeSet">
     <value>Welcome set by {0}</value>
   </string>
+  <string key ="mainMenu">
+    <value>
+      Manage the settings of {0}.
+
+      Some commands (/rules, /about, /adminlist, #extra commands) can be disabled for non-admin users
+      What happens if a command is disabled for non-admins:
+      • If the command is triggered by an admin, the bot will reply in the group
+      • If the command is triggered by a normal user, the bot will reply in the private chat with the user (only if the user has already started the bot)
+
+      The icons near the command will show the current status:
+      • 👥: the bot will reply in the group, with everyone
+      • 👤: the bot will reply in private with normal users and in the group with admins
+
+      Other settings: for the other settings, icons are self explanatory
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>Welcome Message</value>
+  </string>
+  <string key="ReportButton">
+    <value>Report</value>
+  </string>
+  <string key="FloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Extra</value>
+  </string>
+  <string key="RtlButton">
+    <value>Right to left</value>
+  </string>
+  <string key="ArabButton">
+    <value>Arab</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Warns 👇🏼</value>
+  </string>
+  <string key="closeButton">
+    <value>Done</value>
+  </string>
 </strings>
