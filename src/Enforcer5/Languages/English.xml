@@ -367,4 +367,10 @@
   <string key="closeButton">
     <value>Done</value>
   </string>
+  <string key="warnToLow">
+    <value>Number of warnings can not be below 1</value>
+  </string>
+  <string key="settingChanged">
+    <value>Setting has been changed</value>
+  </string>
 </strings>
