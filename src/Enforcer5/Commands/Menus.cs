@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -26,51 +27,51 @@ namespace Enforcer5
             {
                 if (mem.Name.Equals("Flood")  || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menu:settings:{mem.Name}"));
+                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
                     if (mem.Value.Equals("yes"))
                     {
-                        mainMenu.Buttons.Add(new InlineButton("🚫", $"menu:{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
                     }
                     else if (mem.Value.Equals("no"))
                     {
-                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu:{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
                     }
                 }
                 else if (mem.Name.Equals("Modlist") || mem.Name.Equals("About") || mem.Name.Equals("Rules") ||
                          mem.Name.Equals("Extra"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menu:settings:{mem.Name}"));
+                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
                     if (mem.Value.Equals("yes"))
                     {
-                        mainMenu.Buttons.Add(new InlineButton("👤", $"menu:{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton("👤", $"menu{mem.Name}:{chatId}"));
                     }
                     else if (mem.Value.Equals("no"))
                     {
-                        mainMenu.Buttons.Add(new InlineButton("👥", $"menu:{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton("👥", $"menu{mem.Name}:{chatId}"));
                     }
                 }                
             }
             settings = Redis.db.HashGetAllAsync($"chat:{chatId}:char").Result;
             foreach (var mem in settings)
             {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menu:settings:{mem.Name}"));
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"), $"menusettings:{mem.Name}"));
                 if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton("🔐", $"menu:{mem.Name}:{chatId}"));
+                    mainMenu.Buttons.Add(new InlineButton("🔐", $"menu{mem.Name}:{chatId}"));
                 }
                 else if (mem.Value.Equals("allowed"))
                 {
-                    mainMenu.Buttons.Add(new InlineButton("✅", $"menu:{mem.Name}:{chatId}"));
+                    mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
                 }
             }
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menu:alert:warns"));
+            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
             var editWarn = new Menu(3);
-            editWarn.Buttons.Add(new InlineButton("➖", $"menu:DimWarn:{chatId}"));
-            editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}", $"menu:ActionWarn:{chatId}"));
-            editWarn.Buttons.Add(new InlineButton("➕", $"menu:RaiseWarn:{chatId}"));
+            editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
+            editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}", $"menuActionWarn:{chatId}"));
+            editWarn.Buttons.Add(new InlineButton("➕", $"menuRaiseWarn:{chatId}"));
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));            
             var menu = Key.CreateMarkupFromMenus(mainMenu, warnTitle, editWarn, close);
@@ -85,6 +86,15 @@ namespace Enforcer5
             //{
             //    new InlineKeyboardButton(), 
             //}
+        }
+    }
+
+    public static partial class CallBacks
+    {
+        [Callback(Trigger = "closeButton")]
+        public static async Task CloseButton(CallbackQuery call, string[] args)
+        {
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, "Bye");
         }
     }
 }
