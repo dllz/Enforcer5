@@ -256,7 +256,7 @@
     <value>No input with command</value>
   </string>
   <string key="Support">
-    <value>[Click here to get help from the support group] (https://telegram.me/werewolfsupport)</value>
+    <value>[Click here to get help from the support group](https://telegram.me/werewolfsupport)</value>
   </string>
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
@@ -416,5 +416,8 @@
   </string>
   <string key="doNothing">
     <value>I do not do anything</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>{0} has been Banned for Flood</value>
   </string>
 </strings>
