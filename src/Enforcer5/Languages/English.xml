@@ -420,4 +420,15 @@
   <string key="bannedForFlood">
     <value>{0} has been Banned for Flood</value>
   </string>
+  <string key="bannedForRtl">
+    <value>{0} has been Banned for Right to left characters</value>
+  </string>
+  <string key="bannedForNoEnglishScript">
+    <value>{0} has been Banned for using none Latin characters</value>
+  </string>
+  <string key ="globalBanNotif">
+    <value>{0} has been automatically banned as they have a history of: {1)
+            They can appeal this ban in @werewolfsupport
+    </value>
+  </string>
 </strings>

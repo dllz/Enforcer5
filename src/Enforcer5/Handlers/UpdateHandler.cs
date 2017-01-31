@@ -254,7 +254,7 @@ namespace Enforcer5.Handlers
                         case MessageType.UnknownMessage:
                             break;
                         case MessageType.TextMessage:
-
+                            new Task(() => { OnMessage.OnChatMessage(update); }).Start();
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
