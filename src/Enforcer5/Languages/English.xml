@@ -235,7 +235,7 @@
     <value>This has been solved by: {0}\n{1}\n({2})</value>
   </string>
   <string key="reportID">
-    <value>Report ID: {0}</value>
+    <value>Report ID: #r{0}</value>
   </string>
   <string key="markSolved">
     <value>Marked as solved</value>
@@ -433,5 +433,13 @@
   </string>
   <string key="GetLang">
     <value>Get which language file?</value>
+  </string>
+
+  <string key="mediaMenu">
+    <value>
+      Tap on a voice in the right column to change the setting
+      You can use the last line to change how many warns should the bot give before kick/ban someone for a forbidden media
+      The number is not related to the normal /warn command
+    </value>
   </string>
 </strings>

@@ -145,6 +145,35 @@ namespace Enforcer5
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
             return Key.CreateMarkupFromMenus(oneRow, twoRow, exeMenu, close);
         }
+
+        public static InlineKeyboardMarkup genMediaMenu(long chatId, XDocument lang)
+        {
+            var mediaList = Redis.db.HashGetAllAsync($"chat:{chatId}:media").Result;
+            var menu = new Menu(2);
+            foreach (var mem in mediaList)
+            {
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                    $"mediasettings:{mem.Name}"));
+                if (mem.Value.Equals("yes"))
+                {
+                    menu.Buttons.Add(new InlineButton("✅", $"media{mem.Name}:{chatId}"));
+                }
+                else
+                {
+                    menu.Buttons.Add(new InlineButton("❌", $"media{mem.Name}:{chatId}"));
+                }
+            }
+            var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
+            var warnTitle = new Menu(1);
+            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
+            var editWarn = new Menu(3);
+            editWarn.Buttons.Add(new InlineButton("➖", $"mediaDimWarn:{chatId}"));
+            editWarn.Buttons.Add(new InlineButton($"📍 {max}", $"mediaActionWarn:{chatId}"));
+            editWarn.Buttons.Add(new InlineButton("➕", $"mediaRaiseWarn:{chatId}"));
+            var close = new Menu(1);
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            return Key.CreateMarkupFromMenus(menu, editWarn, close);
+        }
     }
 
     public static partial class CallBacks
