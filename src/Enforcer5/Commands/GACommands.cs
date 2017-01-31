@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
@@ -16,7 +17,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        [Command(Trigger = "uploadlanguage", GlobalAdminOnly = true)]
+        [Command(Trigger = "uploadlanguage", UploadAdmin = true)]
         public static async Task UploadLang(Update update, string[] args)
         {
             try
@@ -39,25 +40,9 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "validatelanguages", GlobalAdminOnly = true)]
+        [Command(Trigger = "validatelanguages", UploadAdmin = true)]
         public static async Task ValidateLangs(Update update, string[] args)
         {
-            //var langs = Directory.GetFiles(Bot.LanguageDirectory)
-            //                                            .Select(x => XDocument.Load(x)
-            //                                                        .Descendants("language")
-            //                                                        .First()
-            //                                                        .Attribute("name")
-            //                                                        .Value
-            //                                            ).ToList();
-            //langs.Insert(0, "All");
-
-            //var buttons =
-            //    langs.Select(x => new[] { new InlineKeyboardButton(x, $"validate|{update.Message.Chat.Id}|{x}") }).ToArray();
-            //var menu = new InlineKeyboardMarkup(buttons.ToArray());
-            //Bot.Api.SendTextMessage(update.Message.Chat.Id, "Validate which language?",
-            //    replyToMessageId: update.Message.MessageId, replyMarkup: menu);
-
-
             var langs = Program.LangaugeList;
 
 
@@ -65,7 +50,7 @@ namespace Enforcer5
                 langs.Select(x => x.Base)
                     .Distinct()
                     .OrderBy(x => x)
-                    .Select(x => new InlineKeyboardButton(x, $"validate|{update.Message.From.Id}|{x}|null|base"))
+                    .Select(x => new InlineKeyboardButton(x, $"validate:{update.Message.From.Id}:{x}:null:base"))
                     .ToList();
             //buttons.Insert(0, new InlineKeyboardButton("All", $"validate|{update.Message.From.Id}|All|null|base"));
 
@@ -102,6 +87,47 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "getlanguage", UploadAdmin = true)]
+        public static async Task GetLang(Update update, string[] args)
+        {
+            var langs = Program.LangaugeList;
+
+
+            List<InlineKeyboardButton> buttons = langs.Select(x => x.Base).Distinct().OrderBy(x => x).Select(x => new InlineKeyboardButton(x, $"getlang:{update.Message.From.Id}:{x}:null:base")).ToList();
+            buttons.Insert(0, new InlineKeyboardButton("All", $"getlang:{update.Message.From.Id}:All:null:base"));
+
+            var baseMenu = new List<InlineKeyboardButton[]>();
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                if (buttons.Count - 1 == i)
+                {
+                    baseMenu.Add(new[] { buttons[i] });
+                }
+                else
+                    baseMenu.Add(new[] { buttons[i], buttons[i + 1] });
+                i++;
+            }
+
+            var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
+            try
+            {
+               await Bot.SendReply(Methods.GetLocaleString(langs.FirstOrDefault(e => e.Name.Equals("English")).Doc, "GetLang"), update, keyboard:menu);
+            }
+            catch (AggregateException e)
+            {
+                foreach (var ex in e.InnerExceptions)
+                {
+                    var x = ex as ApiRequestException;
+
+                    await Bot.Send(x.Message, update.Message.Chat.Id);
+                }
+            }
+            catch (ApiRequestException ex)
+            {
+                await Bot.Send(ex.Message, update.Message.Chat.Id);
+            }
+        }
+
         [Command(Trigger = "halt", GlobalAdminOnly = true)]
         public static async Task StopBot(Update update, string[] args)
         {
@@ -120,5 +146,80 @@ namespace Enforcer5
         {
             Methods.CheckTempBans();
         }
+    }
+
+    public static partial class CallBacks
+    {
+        [Callback(Trigger = "validate", UploadAdmin = true)]
+        public static void validateLang(CallbackQuery query, string[] args)
+        {
+            var command = args[0];
+            var choice = "";
+            if (args.Length > 2)
+                choice = args[2];
+            //choice = args[1];
+            if (choice == "All")
+            {
+                LanguageHelper.ValidateFiles(query.Message.Chat.Id, query.Message.MessageId);
+                return;
+            }
+
+            if (args[4] != "base" && args[3] == "All")
+            {
+                LanguageHelper.ValidateFiles(query.Message.Chat.Id, query.Message.MessageId, choice);
+                return;
+            }
+
+            var vlang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).GetEnumerator().Current;
+
+            //var menu = new ReplyKeyboardHide { HideKeyboard = true, Selective = true };
+            //Bot.SendTextMessage(id, "", replyToMessageId: update.Message.MessageId, replyMarkup: menu);
+            LanguageHelper.ValidateLanguageFile(query.Message.Chat.Id, vlang.FilePath, query.Message.MessageId);
+            return;
+        }
+
+        [Callback(Trigger = "getlang", UploadAdmin = true)]
+        public static void getLang(CallbackQuery query, string[] args)
+        {
+            var command = args[0];
+            var choice = "";
+            if (args.Length > 2)
+                choice = args[2];
+            if (choice == "All")
+            {
+                Bot.ReplyToCallback(query, "One moment...");
+                LanguageHelper.SendAllFiles(query.Message.Chat.Id);
+                return;
+            }
+
+            if (args[4] != "base" && args[3] == "All")
+            {
+                Bot.ReplyToCallback(query, "One moment...");
+                LanguageHelper.SendBase(choice, query.Message.Chat.Id);
+                return;
+            }
+
+            var glang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).GetEnumerator().Current;
+            Bot.ReplyToCallback(query, "One moment...");
+            LanguageHelper.SendFile(query.Message.Chat.Id, glang.Name);
+        }
+
+        [Callback(Trigger = "upload", UploadAdmin = true)]
+        public static void uploadLang(CallbackQuery query, string[] args)
+        {
+            var command = args[0];
+            var choice = "";
+            if (args.Length > 2)
+                choice = args[2];
+            if (choice == "current")
+            {
+                Bot.ReplyToCallback(query, "No action taken.");
+                return;
+            }
+            LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
+            return;
+        }
+
+        
     }
 }

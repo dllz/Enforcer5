@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <strings>
-  <language name="English" base="English" variant="Normal" owner="BladeZero"/>
+  <language name="English" base="English" owner="BladeZero"/>
   <string key="statusKicked">
     <value>{0) is kicked from this group.</value>
   </string>
@@ -430,5 +430,8 @@
     <value>{0} has been automatically banned as they have a history of: {1)
             They can appeal this ban in @werewolfsupport
     </value>
+  </string>
+  <string key="GetLang">
+    <value>Get which language file?</value>
   </string>
 </strings>

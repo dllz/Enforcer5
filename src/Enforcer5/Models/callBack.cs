@@ -17,5 +17,6 @@ namespace Enforcer5.Models
         public bool InGroupOnly { get; set; }
         public bool RequiresReply { get; set; }
         public bool CallbackQuery { get; set; }
+        public bool UploadAdmin { get; set; }
     }
 }

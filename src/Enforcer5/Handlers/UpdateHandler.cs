@@ -292,6 +292,10 @@ namespace Enforcer5.Handlers
                                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
+                                    if (command.UploadAdmin & (update.Message.From.Id != 9375804 || update.Message.From.Id != Constants.Devs[0]))
+                                    {
+                                        return;
+                                    }
                                     Bot.CommandsReceived++;
                                     await command.Method.Invoke(update, args);
                                 }
@@ -579,6 +583,10 @@ namespace Enforcer5.Handlers
                         {
                             return;
                         }
+                    if (callbacks.UploadAdmin & (update.Message.From.Id != 9375804 || update.Message.From.Id != Constants.Devs[0]))
+                    {
+                        return;
+                    }
                     //if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(args[1]) & !Methods.IsGlobalAdmin(args[1]))
                     //{
                     //    Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);

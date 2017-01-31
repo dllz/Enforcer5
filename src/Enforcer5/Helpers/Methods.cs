@@ -12,6 +12,7 @@ using StackExchange.Redis;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5.Helpers
 {
@@ -534,6 +535,44 @@ namespace Enforcer5.Helpers
             var hash = $"chat:{chatId}:banned";
             var res = Redis.db.SetContainsAsync(hash, userId).Result;
             return res;
+        }
+
+        internal static Language SelectLanguage(string command, string[] args, ref InlineKeyboardMarkup menu, bool addAllbutton = true)
+        {
+            var langs = Program.LangaugeList;
+            var isBase = args[4] == "base";
+            if (isBase)
+            {
+                var variants = langs.Where(x => x.Base == args[2]).ToList();
+                if (variants.Count() > 1)
+                {
+                    var buttons = new List<InlineKeyboardButton>();
+                    buttons.AddRange(variants.Select(x => new InlineKeyboardButton(x.Variant, $"{command}:{args[1]}:{x.Base}:{x.Variant}:v")));
+                    if (addAllbutton)
+                        buttons.Insert(0, new InlineKeyboardButton("All", $"{command}:{args[1]}:{args[2]}:All:v"));
+
+                    var twoMenu = new List<InlineKeyboardButton[]>();
+                    for (var i = 0; i < buttons.Count; i++)
+                    {
+                        if (buttons.Count - 1 == i)
+                        {
+                            twoMenu.Add(new[] { buttons[i] });
+                        }
+                        else
+                            twoMenu.Add(new[] { buttons[i], buttons[i + 1] });
+                        i++;
+                    }
+                    menu = new InlineKeyboardMarkup(twoMenu.ToArray());
+
+                    return null;
+                }
+                else
+                    return variants.First();
+            }
+            else
+            {
+                return langs.First(x => x.Base == args[2] && x.Variant == args[3]);
+            }
         }
     }
 }

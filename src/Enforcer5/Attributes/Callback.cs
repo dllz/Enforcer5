@@ -35,9 +35,7 @@ namespace Enforcer5.Attributes
         public bool Blockable { get; set; } = false;
 
         public bool InGroupOnly { get; set; } = false;
-
-        public bool CallbackQuery { get; set; } = false;
-
+        public bool UploadAdmin { get; set; } = false;
     }
    
 }

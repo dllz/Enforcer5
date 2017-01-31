@@ -74,6 +74,7 @@ namespace Enforcer5.Helpers
                         c.Method = (ChatCommandMethod)m.CreateDelegate(typeof(ChatCommandMethod));
                         c.InGroupOnly = ca.InGroupOnly;
                         c.RequiresReply = ca.RequiresReply;
+                        c.UploadAdmin = ca.UploadAdmin;
                         Commands.Add(c);
                     }
                 }
@@ -95,6 +96,7 @@ namespace Enforcer5.Helpers
                         c.Method = (ChatCallbackMethod)m.CreateDelegate(typeof(ChatCallbackMethod));
                         c.InGroupOnly = ca.InGroupOnly;
                         c.RequiresReply = ca.RequiresReply;
+                        c.UploadAdmin = ca.UploadAdmin;
                         CallBacks.Add(c);
                     }
                 }
