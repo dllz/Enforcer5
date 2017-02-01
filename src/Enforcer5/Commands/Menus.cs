@@ -93,7 +93,8 @@ namespace Enforcer5
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
             warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupLanguage"), $"openLangMenu:{chatId}"));
             var editWarn = new Menu(3);
             editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
             editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}", $"menuActionWarn:{chatId}"));
@@ -175,6 +176,27 @@ namespace Enforcer5
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
             return Key.CreateMarkupFromMenus(menu, editWarn, close);
+        }
+
+        public static InlineKeyboardMarkup genLangMenu(long chatId, XDocument lang)
+        {
+            var langs = Program.LangaugeList;
+            List<InlineKeyboardButton> buttons = langs.Select(x => x.Name).Distinct().OrderBy(x => x).Select(x => new InlineKeyboardButton(x, $"changeLang:{chatId}:{x}")).ToList();
+            buttons.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            var baseMenu = new List<InlineKeyboardButton[]>();
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                if (buttons.Count - 1 == i)
+                {
+                    baseMenu.Add(new[] { buttons[i] });
+                }
+                else
+                    baseMenu.Add(new[] { buttons[i], buttons[i + 1] });
+                i++;
+            }
+
+            var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
+            return menu;
         }
     }
 
@@ -483,6 +505,28 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "mediaMenu");
             var keys = Commands.genMediaMenu(chatId, lang);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+        }
+
+        [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
+        public static async Task openLangMenu(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId);
+            var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
+            var keys = Commands.genLangMenu(chatId, lang.Doc);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+        }
+
+        [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
+        public static async Task changeLang(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var newLang = args[2];
+            Methods.SetGroupLang(newLang, chatId);
+            var lang = Methods.GetGroupLanguage(chatId);
+            var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
+            var keys = Commands.genLangMenu(chatId, lang.Doc);
             await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
 

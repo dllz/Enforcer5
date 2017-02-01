@@ -585,5 +585,10 @@ namespace Enforcer5.Helpers
         {
             return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
         }
+
+        public static void SetGroupLang(string newLang, long chatId)
+        {
+            Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
+        }
     }
 }

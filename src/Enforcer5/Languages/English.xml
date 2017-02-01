@@ -459,4 +459,10 @@
       The number is not related to the normal /warn command
     </value>
   </string>
+<string key="groupLanguage">
+  <value>Group Language</value>
+</string>
+<string key="langMenu">
+  <value>Here you can set your group language.\nYour current language is set to: *{0}*</value>
+</string>
 </strings>
