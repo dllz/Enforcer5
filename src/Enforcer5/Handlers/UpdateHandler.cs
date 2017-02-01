@@ -376,6 +376,7 @@ namespace Enforcer5.Handlers
                                 else
                                 {
                                     await Service.Welcome(update.Message);
+                                    await Service.ResetUser(update.Message);
                                 }
                             }
                             break;
