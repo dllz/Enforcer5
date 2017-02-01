@@ -584,10 +584,13 @@ namespace Enforcer5.Handlers
                     {
                         return;
                     }
-                    if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.From.Id))
+                    if (args.Length >= 1)
                     {
-                        Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
-                        return;
+                        if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) & !Methods.IsGlobalAdmin(update.From.Id))
+                        {
+                            Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
+                            return;
+                        }
                     }
                     if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                     {
