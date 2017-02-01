@@ -292,6 +292,10 @@ namespace Enforcer5.Handlers
                                     {
                                         return;
                                     }
+                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    {
+                                        return;
+                                    }
                                     Bot.CommandsReceived++;
                                     await command.Method.Invoke(update, args);
                                 }
@@ -344,7 +348,7 @@ namespace Enforcer5.Handlers
                                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
-                                    if (command.GlobalAdminOnly & update.Message.From.Id != 125311351)
+                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
