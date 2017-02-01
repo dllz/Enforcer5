@@ -79,7 +79,7 @@ namespace Enforcer5.Helpers
                 {
                     exceptionInnerException.Message
                 };
-            await Bot.Send(GetLocaleString(doc, "Error", arguments), chatid);
+            await Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
         }
 
         public static Language GetGroupLanguage(Message uMessage)
