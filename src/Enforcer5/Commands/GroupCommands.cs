@@ -217,9 +217,9 @@ namespace Enforcer5
                 var userMenu = new Menu(2);
                 userMenu.Buttons = new List<InlineButton>
                 {
-                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{userid}"),
-                    new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbuttonbanuser:{userid}"),
-                    new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{userid}")
+                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{update.Message.Chat.Id}:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbuttonbanuser:{update.Message.Chat.Id}:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}")
                 };
 
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
@@ -720,7 +720,7 @@ namespace Enforcer5
         public static async Task UserButtonRemWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var userId = args[1];
+            var userId = args[2];
             await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
             await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
             await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
@@ -731,7 +731,7 @@ namespace Enforcer5
         public static async Task UserButtonsBanUser(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var userId = args[1];
+            var userId = args[2];
             await Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
@@ -747,23 +747,24 @@ namespace Enforcer5
                 await Redis.db.SetRemoveAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId);
             }
             Methods.SaveBan(int.Parse(userId), "ban");
+            await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Methods.GetLocaleString(lang, "userBanned"));
         }
 
         [Callback(Trigger = "userbuttonwarnuser", GroupAdminOnly = true)]
         public static async Task UserButtonsWarnUser(CallbackQuery call, string[] args)
         {
-            if (Methods.IsGroupAdmin(call.Message.ReplyToMessage.From.Id, call.Message.Chat.Id))
-                return;
-            var userId = args[1];
+            var userId = args[2];
+            var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var num = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, 1).Result;
+            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             var max = 3;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{call.Message.Chat.Id}:warnsettings", "max").Result, out max);
+            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
             lang = Methods.GetGroupLanguage(call.Message).Doc;
             if (num >= max)
             {
-                var type = Redis.db.HashGetAsync($"chat:{call.Message.Chat.Id}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{call.Message.Chat.Id}:warnsettings", "type").ToString()
+                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
+                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").ToString()
                     : "kick";
                 if (type.Equals("ban"))
                 {
@@ -772,7 +773,7 @@ namespace Enforcer5
                         await Bot.Api.KickChatMemberAsync(call.Message.Chat.Id, int.Parse(userId));
                         var name = Methods.GetNick(call.Message, args);
                         await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxBan", name), call.Message);
-                        await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId, "");
+                        await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
                     }
                     catch (AggregateException e)
                     {
@@ -784,8 +785,9 @@ namespace Enforcer5
                     await Methods.KickUser(call.Message.Chat.Id, int.Parse(userId), lang);
                     var name = Methods.GetNick(call.Message, args);
                     await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxKick", name), call.Message);
-                    await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId, "");
+                    await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
                 }
+                await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
             }
             else
             {
@@ -793,12 +795,12 @@ namespace Enforcer5
                 var text = Methods.GetLocaleString(lang, "warn", Methods.GetNick(call.Message, args), num, max);
                 var baseMenu = new List<InlineKeyboardButton>();
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "resetWarn"),
-                    $"resetwarns:{call.Message.ReplyToMessage.From.Id}"));
+                    $"resetwarns:{chatId}:{userId}"));
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"),
-                    $"removewarn:{call.Message.ReplyToMessage.From.Id}"));
+                    $"removewarn:{chatId}:{userId}"));
                 var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                await Bot.Send(text, call.Message.Chat.Id, customMenu: menu);
-                await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId, "");
+                await Bot.Send(text, chatId, customMenu: menu);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
             }
         }
     }

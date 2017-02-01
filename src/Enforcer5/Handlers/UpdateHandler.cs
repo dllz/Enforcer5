@@ -439,7 +439,7 @@ namespace Enforcer5.Handlers
                 {
                     try
                     {
-                        await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}\n\n{ex.StackTrace}", update);
+                        await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
                     }
                     catch (Exception e)
                     {

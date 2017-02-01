@@ -184,13 +184,21 @@ namespace Enforcer5.Helpers
 
         public static int GetUserId(Update update, string[] args)
         {
+            var lang = GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null)
             {
                 return update.Message.ReplyToMessage.From.Id;
             }
             if (args.Length == 2)
             {
-                return ResolveIdFromusername(args[1], update.Message.Chat.Id);
+                if (!string.IsNullOrEmpty(args[1]))
+                {
+                    return ResolveIdFromusername(args[1], update.Message.Chat.Id);
+                }
+                else
+                {
+                    throw new Exception(GetLocaleString(lang, "incorrectArgument"));
+                }
             }
             else
             {
@@ -311,6 +319,18 @@ namespace Enforcer5.Helpers
             return enabled.Equals("yes");
         }
 
+        public static T[] RemoveAt<T>(this T[] source, int index)
+        {
+            T[] dest = new T[source.Length - 1];
+            if (index > 0)
+                Array.Copy(source, 0, dest, 0, index);
+
+            if (index < source.Length - 1)
+                Array.Copy(source, index + 1, dest, index, source.Length - index - 1);
+
+            return dest;
+        }
+
         public static string GetUserInfo(int userid, long? chatId, string chatTitle, XDocument lang)
         {
             var text = GetLocaleString(lang, "userinfoGroup", chatTitle);
@@ -320,13 +340,38 @@ namespace Enforcer5.Helpers
             completedList.Add(text);
             completedList = banInfo.
                 Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
+            var listArray = completedList.ToArray();
+            for (int i = 0; i < listArray.Length; i++)
+            {
+                if (listArray[i].Contains(Methods.GetLocaleString(lang, "getwarn")))
+                {
+                    listArray = RemoveAt(listArray, i);
+                }
+            }
+            completedList = listArray.ToList();
             if (chatId != null)
             {
-                var warns = Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
+                string warns;
+                if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
+                {
+                    warns = Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
+                }
+                else
+                {
+                    warns = "0";
+                }
                 completedList.Add(GetLocaleString(lang, "getwarn", warns));
-                warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
+                if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result.HasValue)
+                {
+                    warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
+                }
+                else
+                {
+                    warns = "0";
+                }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
+            
             return string.Join("\n", completedList);
         }
 
@@ -526,7 +571,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                return null;
+                return "unknown";
             }
         }
 
