@@ -493,8 +493,11 @@ namespace Enforcer5
                 }
                 else
                 {
-                    if (args[1].StartsWith("@"))
-                        userId = Methods.ResolveIdFromusername(args[1], chatId);
+                    if (!string.IsNullOrEmpty(args[1]))
+                    {
+                        if (args[1].StartsWith("@"))
+                            userId = Methods.ResolveIdFromusername(args[1], chatId);
+                    }
                 }
                 if (userId > 0)
                 {
