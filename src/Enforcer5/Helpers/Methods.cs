@@ -445,7 +445,7 @@ namespace Enforcer5.Helpers
             var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
             foreach (var mem in tempbans)
             {
-                if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= int.Parse(mem.Name))
+                if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
                 {
                     var subStrings = mem.Value.ToString().Split(':');
                     var chatId = long.Parse(subStrings[0]);

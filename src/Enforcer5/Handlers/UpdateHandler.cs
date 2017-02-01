@@ -231,7 +231,7 @@ namespace Enforcer5.Handlers
         internal static async void HandleUpdate(Update update)
         {
             {
-                CollectStats(update.Message);
+                //CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
 
