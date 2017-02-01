@@ -89,8 +89,7 @@
     <value>The link has been set</value>
   </string>
   <string key="adminList">
-    <value>*Creator*: {0}\n
-           *Admins*:{1}</value>
+    <value>*Creator*: {0}\n*Admins*:\n{1}</value>
   </string>
   <string key="defaultWelcome">
     <value>Hi {0} welcome to {1}</value>

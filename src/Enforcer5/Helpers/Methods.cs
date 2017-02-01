@@ -272,12 +272,12 @@ namespace Enforcer5.Helpers
         {
             var chatAdmins = Bot.Api.GetChatAdministratorsAsync(message.Chat.Id).Result;
             string creater = "Unknown";
-            string adminList = "Unknown";
+            string adminList = "";
             foreach (var member in chatAdmins)
             {
                 if (member.Status.Equals(ChatMemberStatus.Administrator))
                 {
-                    adminList = string.Join("\n", member.User.FirstName);
+                    adminList = $"{adminList}\n{member.User.FirstName}";
                 }
                 else if (member.Status.Equals(ChatMemberStatus.Creator))
                 {
