@@ -434,7 +434,9 @@
   <string key="GetLang">
     <value>Get which language file?</value>
   </string>
-
+  <string key="mediaMenuHeader">
+    <value>Media Warn Settings</value>
+  </string>
   <string key="mediaMenu">
     <value>
       Tap on a voice in the right column to change the setting
