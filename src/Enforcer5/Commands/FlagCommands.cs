@@ -63,7 +63,7 @@ namespace Enforcer5
             {
                 reporter = $"{reporter} (@{update.Message.From.Username}";
             }
-            SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
+            await SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
         }
 
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
@@ -330,7 +330,7 @@ namespace Enforcer5
                     }
                     if (result != null)
                     {
-                        var nme = $"flagged:{chatId}:{msgId}";
+                        var nme = $"flagged:{chatId}:{repId}";
                         var noti = new AdminNotification();
                         noti.hash = nme;
                         noti.chatId = chatId;
