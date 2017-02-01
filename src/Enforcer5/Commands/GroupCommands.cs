@@ -461,6 +461,8 @@ namespace Enforcer5
             if (update.Message.Chat.Username != null)
             {
                 link = $"https://t.me/{update.Message.Chat.Username}";
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
             }
             else
             {
