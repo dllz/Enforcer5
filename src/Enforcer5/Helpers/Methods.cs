@@ -463,7 +463,7 @@ namespace Enforcer5.Helpers
             foreach (var mem in tempbans)
             {
                 var now = System.DateTime.UtcNow.AddHours(2).ToUnixTime();
-                if (now >= double.Parse(mem.Name))
+                if (now >= long.Parse(mem.Name))
                 {
                     var subStrings = mem.Value.ToString().Split(':');
                     var chatId = long.Parse(subStrings[0]);
