@@ -30,5 +30,13 @@ namespace Enforcer5
                 Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang.Doc);
             }
         }
+
+        [Command(Trigger = "getCommands")]
+        public static async Task GetCommands(Update update, string[] args)
+        {
+            var comList = string.Join("\n", Bot.Commands.Select(e => e.Trigger));
+            await Bot.SendReply(comList, update);
+        }
+            
     }
 }
