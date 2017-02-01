@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -80,7 +85,6 @@ namespace Enforcer5
                     await Redis.db.HashSetAsync(hash, "Solved", 1);
                     var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                     var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                    var repID = Redis.db.HashGetAsync(hash, "repID");
                     string text;
                     if (!reporter.HasValue)
                     {
@@ -94,20 +98,13 @@ namespace Enforcer5
                     }
                     for (int i = 0; i < counter; i++)
                     {
-                        var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
-                        var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
-                        if (id.HasValue && msgID.HasValue)
-                        {
-                            try
-                            {
-                                await Bot.Api.EditMessageTextAsync(id, msgid,
-                                $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
-                            }
-                            catch (ApiRequestException e)
-                            {
-                                
-                            }
-                        }
+                        var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
+                        AdminNotification noti = new AdminNotification();
+                        MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                        DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
+                        noti = ser.ReadObject(stream1) as AdminNotification;
+                        await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
                     }
                     await Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
                 }
@@ -145,7 +142,6 @@ namespace Enforcer5
                             await Redis.db.HashSetAsync(hash, "Solved", 1);
                             var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                             var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                            var repID = Redis.db.HashGetAsync(hash, "repID");
                             string text;
                             if (!reporter.HasValue)
                             {
@@ -161,13 +157,13 @@ namespace Enforcer5
                             {
                                 try
                                 {
-                                    var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
-                                    var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
-                                    if (id.HasValue && msgID.HasValue)
-                                    {
-                                        await Bot.Api.EditMessageTextAsync(id, msgid,
-                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
-                                    }
+                                    var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
+                                    AdminNotification noti = new AdminNotification();
+                                    MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                                    DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
+                                    noti = ser.ReadObject(stream1) as AdminNotification;
+                                        await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
                                 }
                                 catch (ApiRequestException e)
                                 {
@@ -310,8 +306,18 @@ namespace Enforcer5
                     if (result != null)
                     {
                         var nme = $"flagged:{chatId}:{msgId}";
-                        await Redis.db.HashSetAsync(nme, $"Message{count}", result.MessageId);
-                        await Redis.db.HashSetAsync(nme, $"adminID{count}", result.Chat.Id);
+                        var noti = new AdminNotification();
+                        noti.hash = nme;
+                        noti.chatId = chatId;
+                        noti.chatMsgId = msgId;
+                        noti.adminChatId = result.Chat.Id;
+                        noti.adminMsgId = result.MessageId;
+                        MemoryStream stream1 = new MemoryStream();
+                        DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(AdminNotification));
+                        ser.WriteObject(stream1, noti);
+                        byte[] json = stream1.ToArray();
+                        var text = Encoding.UTF8.GetString(json, 0, json.Length);
+                        await Redis.db.HashSetAsync(nme, $"messageObject{count}", text);
                         count++;
                     }
                 }
@@ -328,7 +334,7 @@ namespace Enforcer5
                     
                 }
             }
-            var hash = $"flagged:{chatId}:{msgId}";
+            var hash = $"flagged:{chatId}:{repId}";
             var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
             var alreadyReported = Redis.db.HashGetAsync(hash, "Solved");
             var ids = sendMessageIds.ToArray();
@@ -474,7 +480,7 @@ namespace Enforcer5
                 await Redis.db.HashSetAsync(hash, "Solved", 1);
                 var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                 var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                var repID = Redis.db.HashGetAsync(hash, "repID");
+                var repID = Redis.db.HashGetAsync(hash, "repID").Result;
                 string text;
                 if (!reporter.HasValue)
                 {
@@ -488,13 +494,13 @@ namespace Enforcer5
                 }
                 for (int i = 0; i < counter; i++)
                 {
-                    var id = Redis.db.HashGetAsync(hash, $"adminID{i}").Result;
-                    var msgID = Redis.db.HashGetAsync(hash, $"Message{i}").Result;
-                    if (id.HasValue && msgID.HasValue)
-                    {
-                        await Bot.Api.EditMessageTextAsync(id, msgid,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", repID)}");
-                    }
+                    var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
+                    AdminNotification noti = new AdminNotification();
+                    MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                    DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
+                    noti = ser.ReadObject(stream1) as AdminNotification;
+                    await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
                 }
                 await Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved",chatid, repID), chatid);
             }
