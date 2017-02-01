@@ -414,6 +414,21 @@
   <string key="videoButton">
     <value>Video</value>
   </string>
+  <string key="audioButton">
+    <value>Audio</value>
+  </string>
+  <string key="fileButton">
+    <value>File</value>
+  </string>
+  <string key="contactButton">
+    <value>Contact</value>
+  </string>
+  <string key="voiceButton">
+    <value>voice</value>
+  </string>
+  <string key="linkButton">
+    <value>Link</value>
+  </string>
   <string key="doNothing">
     <value>I do not do anything</value>
   </string>

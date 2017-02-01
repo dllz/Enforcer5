@@ -93,7 +93,7 @@ namespace Enforcer5
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
             warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader", $"openMediaMenu:{chatId}")));
+            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
             var editWarn = new Menu(3);
             editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
             editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}", $"menuActionWarn:{chatId}"));
@@ -148,20 +148,21 @@ namespace Enforcer5
         }
 
         public static InlineKeyboardMarkup genMediaMenu(long chatId, XDocument lang)
-        {
+            {
             var mediaList = Redis.db.HashGetAllAsync($"chat:{chatId}:media").Result;
             var menu = new Menu(2);
             foreach (var mem in mediaList)
             {
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                     $"mediasettings:{mem.Name}"));
-                if (mem.Value.Equals("yes"))
+                if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
                 {
-                    menu.Buttons.Add(new InlineButton("✅", $"media{mem.Name}:{chatId}"));
+                    menu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}",
+                        $"menu{mem.Name}:{chatId}"));
                 }
-                else
+                else if (mem.Value.Equals("allowed"))
                 {
-                    menu.Buttons.Add(new InlineButton("❌", $"media{mem.Name}:{chatId}"));
+                    menu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
                 }
             }
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;

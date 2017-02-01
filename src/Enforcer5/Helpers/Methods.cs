@@ -577,7 +577,8 @@ namespace Enforcer5.Helpers
 
         public static bool IsLangAdmin(int id)
         {
-            return Redis.db.SetContainsAsync($"langAdmins", id).Result;
+            var res = Redis.db.SetContainsAsync($"langAdmins", id).Result;
+            return res;
         }
 
         public static bool IsGroupAdmin(CallbackQuery update)

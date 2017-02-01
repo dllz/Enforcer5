@@ -147,18 +147,20 @@ namespace Enforcer5
             Methods.CheckTempBans();
         }
 
-        [Command(Trigger = "makelangadmin", RequiresReply = true, GlobalAdminOnly = true, UploadAdmin = true)]
-        public static async Task MakeLangAdmin(Update update, string[] args)
+        [Command(Trigger = "makelangadmin", RequiresReply = true, UploadAdmin = true)]
+       public static async Task MakeLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            await Redis.db.SetAddAsync("langAdmins", id);
+            var res =  Redis.db.SetAddAsync("langAdmins", id).Result;
+            await Bot.SendReply("Done", update);
         }
 
-        [Command(Trigger = "removelangadmin", RequiresReply = true, GlobalAdminOnly = true, UploadAdmin = true)]
+        [Command(Trigger = "removelangadmin", RequiresReply = true, UploadAdmin = true)]
         public static async Task RemoveLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            await Redis.db.SetRemoveAsync("langAdmins", id);
+            var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
+            await Bot.SendReply("Done", update);
         }
     }
 
@@ -184,7 +186,7 @@ namespace Enforcer5
                 return null;
             }
 
-            var vlang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).GetEnumerator().Current;
+            var vlang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
 
             //var menu = new ReplyKeyboardHide { HideKeyboard = true, Selective = true };
             //Bot.SendTextMessage(id, "", replyToMessageId: update.Message.MessageId, replyMarkup: menu);
@@ -213,7 +215,7 @@ namespace Enforcer5
                 return null;
             }
 
-            var glang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).GetEnumerator().Current;
+            var glang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
             Bot.ReplyToCallback(query, "One moment...");
             LanguageHelper.SendFile(query.Message.Chat.Id, glang.Name);
             return null;
