@@ -185,5 +185,11 @@ namespace Enforcer5
             Redis.db.SetAddAsync($"bot:groupsid", chatId);
             Redis.db.SetAddAsync("bot:e5groupsid", chatId); 
         }
+
+        public static async Task ResetUser(Message message)
+        {
+            var lang = Methods.GetGroupLanguage(message).Doc;
+            Methods.UnbanUser(message.Chat.Id, message.NewChatMember.Id, lang);
+        }
     }
 }

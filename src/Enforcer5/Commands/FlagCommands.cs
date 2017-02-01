@@ -445,7 +445,8 @@ namespace Enforcer5
                     var name = Methods.GetNick(call.Message, args);
                     await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxKick", name), call.Message);
                 }
-            }
+                await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
+        }
             else
             {
                 var diff = max - num;
