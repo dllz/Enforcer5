@@ -547,7 +547,7 @@ namespace Enforcer5.Helpers
                 if (variants.Count() > 1)
                 {
                     var buttons = new List<InlineKeyboardButton>();
-                    buttons.AddRange(variants.Select(x => new InlineKeyboardButton(x.Variant, $"{command}:{args[1]}:{x.Base}:{x.Variant}:v")));
+                    buttons.AddRange(variants.Select(x => new InlineKeyboardButton(x.Base, $"{command}:{args[1]}:{x.Base}:{x.Base}:v")));
                     if (addAllbutton)
                         buttons.Insert(0, new InlineKeyboardButton("All", $"{command}:{args[1]}:{args[2]}:All:v"));
 
@@ -571,7 +571,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                return langs.First(x => x.Base == args[2] && x.Variant == args[3]);
+                return langs.First(x => x.Base == args[2]);
             }
         }
 

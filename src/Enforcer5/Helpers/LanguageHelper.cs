@@ -144,15 +144,15 @@ namespace Enforcer5.Handlers
             //check uniqueness
             var error = langs.FirstOrDefault(x =>
                     (x.FileName == newFile.FileName && x.Name != newFile.Name) //check for matching filename and mismatching name
-                    || (x.Name == newFile.Name && (x.Base != newFile.Base || x.Variant != newFile.Variant)) //check for same name and mismatching base-variant
-                    || (x.Base == newFile.Base && x.Variant == newFile.Variant && x.FileName != newFile.FileName) //check for same base-variant and mismatching filename
+                    || (x.Name == newFile.Name && (x.Base != newFile.Base)) //check for same name and mismatching base-variant
+                    || (x.Base == newFile.Base && x.FileName != newFile.FileName) //check for same base-variant and mismatching filename
                                                                                                                   //if we want to have the possibility to rename the file, change previous line with FileName -> Name
                     );
             if (error != null)
             {
                 //problem....
                 newFileErrors.Add(new LanguageError(newFile.FileName, "*Language Node*",
-                    $"ERROR: The following file partially matches the same language node. Please check the file name, and the language name, base and variant. Aborting.\n\n*{error.FileName}.xml*\n_Name:_{error.Name}\n_Base:_{error.Base}\n_Variant:_{error.Variant}", ErrorLevel.Error));
+                    $"ERROR: The following file partially matches the same language node. Please check the file name, and the language name, base and variant. Aborting.\n\n*{error.FileName}.xml*\n_Name:_{error.Name}\n_Base:_{error.Base}", ErrorLevel.Error));
             }
 
             //get the errors in it
@@ -239,7 +239,7 @@ namespace Enforcer5.Handlers
             }
             else
             {
-                lang = langs.FirstOrDefault(x => x.Base == newFileLang.Base && x.Variant == newFileLang.Variant && x.Name != newFileLang.Name);
+                lang = langs.FirstOrDefault(x => x.Base == newFileLang.Base && x.Name != newFileLang.Name);
                 if (lang != null)
                 {
                     msg += $"Found duplicate language (matching base and variant) with filename {Path.GetFileNameWithoutExtension(lang.FilePath)}\n";
@@ -340,8 +340,6 @@ namespace Enforcer5.Handlers
                 errors.Add(new LanguageError(langfile.FileName, "*Language Node*", "Language name is missing", ErrorLevel.Error));
             if (langfile.Base == null)
                 errors.Add(new LanguageError(langfile.FileName, "*Language Node*", "Base is missing", ErrorLevel.Error));
-            if (langfile.Variant == null)
-                errors.Add(new LanguageError(langfile.FileName, "*Language Node*", "Variant is missing", ErrorLevel.Error));
         }
 
         private static string OutputResult(Language newFile, List<LanguageError> newFileErrors, Language curFile, List<LanguageError> curFileErrors)
@@ -383,7 +381,6 @@ namespace Enforcer5.Handlers
                 result += $"\n_Base:_ {newFile.Base ?? ""}";
                 if (Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).All(x => x.Base != newFile.Base))
                     result += " *(NEW)*";
-                result += $"\n_Variant:_ {newFile.Variant ?? ""}";
             }
 
             return result;
@@ -391,7 +388,7 @@ namespace Enforcer5.Handlers
 
         private static void TestLength(Language file, List<LanguageError> fileErrors)
         {
-            var test = $"setlang|-1001049529775|{file.Base ?? ""}|{file.Variant ?? ""}|v";
+            var test = $"setlang|-1001049529775|{file.Base ?? ""}|v";
             var count = Encoding.UTF8.GetByteCount(test);
             if (count > 64)
                 fileErrors.Add(new LanguageError(file.FileName, "*Language Node*", "Base and variant are too long. (*38 utf8 byte max*)", ErrorLevel.Error));

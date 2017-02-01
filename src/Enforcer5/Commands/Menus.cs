@@ -8,6 +8,7 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
@@ -505,7 +506,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "mediaMenu");
             var keys = Commands.genMediaMenu(chatId, lang);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Markdown);
         }
 
         [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
@@ -515,7 +516,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Markdown);
         }
 
         [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
@@ -527,7 +528,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Markdown);
         }
 
         [Callback(Trigger = "floodSettings")]
