@@ -146,6 +146,20 @@ namespace Enforcer5
         {
             Methods.CheckTempBans();
         }
+
+        [Command(Trigger = "makelangadmin", RequiresReply = true, GlobalAdminOnly = true, UploadAdmin = true)]
+        public static async Task MakeLangAdmin(Update update, string[] args)
+        {
+            var id = update.Message.ReplyToMessage.From.Id;
+            await Redis.db.SetAddAsync("langAdmins", id);
+        }
+
+        [Command(Trigger = "removelangadmin", RequiresReply = true, GlobalAdminOnly = true, UploadAdmin = true)]
+        public static async Task RemoveLangAdmin(Update update, string[] args)
+        {
+            var id = update.Message.ReplyToMessage.From.Id;
+            await Redis.db.SetRemoveAsync("langAdmins", id);
+        }
     }
 
     public static partial class CallBacks
@@ -219,8 +233,6 @@ namespace Enforcer5
             }
             LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
             return null;
-        }
-
-        
+        }       
     }
 }

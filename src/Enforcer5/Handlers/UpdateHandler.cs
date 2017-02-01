@@ -240,10 +240,6 @@ namespace Enforcer5.Handlers
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
-                if (Methods.IsRekt(update))
-                {
-                    return;
-                }
                 
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try
@@ -292,7 +288,7 @@ namespace Enforcer5.Handlers
                                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
-                                    if (command.UploadAdmin & (update.Message.From.Id != 9375804 || update.Message.From.Id != Constants.Devs[0]))
+                                    if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
@@ -583,24 +579,26 @@ namespace Enforcer5.Handlers
                         {
                             return;
                         }
-                    if (callbacks.UploadAdmin & (update.Message.From.Id != 9375804 || update.Message.From.Id != Constants.Devs[0]))
+                    if (callbacks.UploadAdmin & !Methods.IsLangAdmin(update.From.Id))
                     {
                         return;
                     }
-                    //if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(args[1]) & !Methods.IsGlobalAdmin(args[1]))
-                    //{
-                    //    Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
-                    //    return;
-                    //}
-                    if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-                        {
-                            return;
-                        }
-                        Bot.CommandsReceived++;
-                        callbacks.Method.Invoke(update, args);
+                    if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update) & !Methods.IsGlobalAdmin(update.From.Id))
+                    {
+                        Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
+                        return;
                     }
+                    if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                    {
+                        return;
+                    }
+                    Bot.CommandsReceived++;
+                    callbacks.Method.Invoke(update, args);
                 }
+            }
         }
     }
 }
+
+
 

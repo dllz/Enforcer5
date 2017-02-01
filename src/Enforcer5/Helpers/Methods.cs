@@ -574,5 +574,15 @@ namespace Enforcer5.Helpers
                 return langs.First(x => x.Base == args[2] && x.Variant == args[3]);
             }
         }
+
+        public static bool IsLangAdmin(int id)
+        {
+            return Redis.db.SetContainsAsync($"langAdmins", id).Result;
+        }
+
+        public static bool IsGroupAdmin(CallbackQuery update)
+        {
+            return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
+        }
     }
 }
