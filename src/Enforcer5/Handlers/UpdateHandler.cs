@@ -499,7 +499,8 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
-                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001094155678);
+
+                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
 
         }

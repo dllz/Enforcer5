@@ -528,12 +528,14 @@ namespace Enforcer5
                     await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
                 }
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id,
+                    Methods.GetLocaleString(lang, "markedAsSolved", chatid, repID));
                 await Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved",chatid, repID), chatid);
             }
             else if (isReported.TryParse(out isReport) && isReport == 1)
             {
-                var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt");
-                var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy");
+                var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt").Result;
+                var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
             }
         }
