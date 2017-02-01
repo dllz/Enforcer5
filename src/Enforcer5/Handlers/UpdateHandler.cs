@@ -344,7 +344,7 @@ namespace Enforcer5.Handlers
                                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
-                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    if (command.GlobalAdminOnly & update.Message.From.Id != 125311351)
                                     {
                                         return;
                                     }
