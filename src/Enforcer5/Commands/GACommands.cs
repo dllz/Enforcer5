@@ -162,6 +162,13 @@ namespace Enforcer5
             var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
             await Bot.SendReply("Done", update);
         }
+        [Command(Trigger = "reloadLang", RequiresReply = true, UploadAdmin = true)]
+        public static async Task reloadLang(Update update, string[] args)
+        {
+            Methods.IntialiseLanguages();
+            await Bot.SendReply("Done", update);
+        }
+
     }
 
     public static partial class CallBacks
