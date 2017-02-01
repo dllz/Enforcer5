@@ -172,10 +172,6 @@ namespace Enforcer5.Helpers
             {
                 return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
             }
-            else if (args[1] != null)
-            {
-                return args[1];
-            }
             else
             {
                 return "";

@@ -107,7 +107,7 @@ namespace Enforcer5
         }
             else
             {
-                var diff = max - num;
+                var diff = max - num;                
                 var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message.ReplyToMessage, args), num, max);
                 var solvedMenu = new Menu(2)
                 {
