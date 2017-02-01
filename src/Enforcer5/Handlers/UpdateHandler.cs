@@ -389,7 +389,7 @@ namespace Enforcer5.Handlers
                 catch (ApiRequestException e)
                 {
                     try
-                    {
+                    {                        
                         if (e.ErrorCode == 112)
                         {
                             if (update.Message != null && update.Message.Chat.Title != null)
@@ -439,7 +439,14 @@ namespace Enforcer5.Handlers
                 {
                     try
                     {
-                        await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
+                        if (ex.Message.Equals("UnableToResolveUsername"))
+                        {
+                            await Bot.Send($"an error occured:\n{ex.Message}", update);
+                        }
+                        else
+                        {
+                            await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
+                        }
                     }
                     catch (Exception e)
                     {
