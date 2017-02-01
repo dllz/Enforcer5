@@ -340,15 +340,6 @@ namespace Enforcer5.Helpers
             completedList.Add(text);
             completedList = banInfo.
                 Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
-            var listArray = completedList.ToArray();
-            for (int i = 0; i < listArray.Length; i++)
-            {
-                if (listArray[i].Contains(Methods.GetLocaleString(lang, "getwarn")))
-                {
-                    listArray = RemoveAt(listArray, i);
-                }
-            }
-            completedList = listArray.ToList();
             if (chatId != null)
             {
                 string warns;
@@ -360,7 +351,7 @@ namespace Enforcer5.Helpers
                 {
                     warns = "0";
                 }
-                completedList.Add(GetLocaleString(lang, "getwarn", warns));
+                completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
                 if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result.HasValue)
                 {
                     warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;

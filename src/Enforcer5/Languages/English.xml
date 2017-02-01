@@ -32,6 +32,9 @@
     <value>Tempban: {0}</value>
   </string>
   <string key="getwarn">
+    <value>Removed for to many Warns: {0}</value>
+  </string>
+  <string key="getgroupwarn">
     <value>Warns: {0}</value>
   </string>
   <string key="getMediaWarn">

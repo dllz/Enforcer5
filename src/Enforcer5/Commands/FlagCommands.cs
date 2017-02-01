@@ -396,7 +396,7 @@ namespace Enforcer5
         public static async Task BanFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var chatId = int.Parse(args[1]);
+            var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
             var res = Methods.BanUser(chatId, userId, lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
@@ -423,7 +423,7 @@ namespace Enforcer5
         public static async Task KickFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var chatId = int.Parse(args[1]);
+            var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
             await Methods.KickUser(chatId, userId, lang);
             Methods.SaveBan(userId, "kick");
@@ -441,7 +441,7 @@ namespace Enforcer5
         public static async Task WarnFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var chatId = int.Parse(args[1]);
+            var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             var max = 3;
@@ -485,7 +485,7 @@ namespace Enforcer5
         public static async Task SolveFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var chatid = int.Parse(args[1]);
+            var chatid = long.Parse(args[1]);
             var msgid = int.Parse(args[2]);
             var hash = $"flagged:{chatid}:{msgid}";
             var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;

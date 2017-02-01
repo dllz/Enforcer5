@@ -523,14 +523,14 @@ namespace Enforcer5
             {
                 if (!string.IsNullOrEmpty(args[1]))
                 {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", false);
+                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "false");
                     if (update.Message.ReplyToMessage != null)
                     {
-                        var repliedTo = Methods.GetMediaType(update.Message);
+                        var repliedTo = Methods.GetMediaType(update.Message.ReplyToMessage);
                         if (repliedTo.Equals("gif"))
                         {
-                            var fileId = Methods.GetMediaId(update.Message);
-                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
+                            var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
+                            await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "true");
                             await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileId);
                         }
                     }
@@ -591,24 +591,24 @@ namespace Enforcer5
                         }
                     }
                 }
-            }
-            else if (update.Message.ReplyToMessage != null)
-            {
-                var repliedTo = Methods.GetMediaType(update.Message);
-                if (repliedTo.Equals("gif"))
+                else if (update.Message.ReplyToMessage != null)
                 {
-                    var fileID = Methods.GetMediaId(update.Message);
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "media");
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileID);
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
-                    await Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update);
+                    var repliedTo = Methods.GetMediaType(update.Message.ReplyToMessage);
+                    if (repliedTo.Equals("gif"))
+                    {
+                        var fileID = Methods.GetMediaId(update.Message.ReplyToMessage);
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "media");
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileID);
+                        await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update);
+                    }
                 }
-            }
-            else
-            {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-            }
+                else
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                }
+            }            
         }
 
         public static async Task SendExtra(Update update, string[] args)
