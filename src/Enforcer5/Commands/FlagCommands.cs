@@ -26,6 +26,10 @@ namespace Enforcer5
             {
                 return;
             }
+            var blocked =
+                Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:reportblocked", update.Message.From.Id).Result;
+            if (blocked)
+                return; 
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null)
             {
@@ -36,6 +40,10 @@ namespace Enforcer5
                     return;
                 }
                 if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)
+                {
+                    return;
+                }
+                if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id))
                 {
                     return;
                 }
@@ -195,6 +203,23 @@ namespace Enforcer5
             }
             else
                 await Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
+        }
+
+        [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async Task ReportOff(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
+            await Redis.db.SetRemoveAsync(hash, update.Message.ReplyToMessage.From.Id);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
+        }
+        [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async Task ReportOn(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
+            await Redis.db.SetAddAsync(hash, update.Message.ReplyToMessage.From.Id);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
         }
 
         private static async Task SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)

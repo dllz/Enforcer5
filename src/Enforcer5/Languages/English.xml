@@ -425,4 +425,10 @@
 <string key="langMenu">
   <value>Here you can set your group language.\nYour current language is set to: *{0}*</value>
 </string>
+<string key="userUnblocked">
+  <value>User unblocked</value>
+</string>
+<string key="userBlocked">
+  <value>User blocked</value>
+</string>
 </strings>

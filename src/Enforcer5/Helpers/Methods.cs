@@ -319,7 +319,7 @@ namespace Enforcer5.Helpers
             return enabled.Equals("yes");
         }
 
-        public static T[] RemoveAt<T>(this T[] source, int index)
+        public static T[] RemoveAt<T>(T[] source, int index)
         {
             T[] dest = new T[source.Length - 1];
             if (index > 0)
