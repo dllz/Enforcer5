@@ -18,8 +18,7 @@ namespace Enforcer5
             {                
                 var ts = DateTime.UtcNow - update.Message.Date;
                 var send = DateTime.UtcNow;
-                var message = Methods.GetLocaleString(lang.Doc, "PingInfo", $"{ts:mm\\:ss\\.ff}",
-                    $"\n{Program.MessagePxPerSecond.ToString("F0")} MAX IN | {Program.MessageTxPerSecond.ToString("F0")} MAX OUT");
+                var message = Methods.GetLocaleString(lang.Doc, "PingInfo", $"{ts:mm\\:ss\\.ff}\n{Program.MessagePxPerSecond} MAX IN | {Program.MessageTxPerSecond} MAX OUT");
                 var result = Bot.Send(message, update.Message.Chat.Id).Result;
                 var second  = DateTime.UtcNow - send;
                 message += "\n" + Methods.GetLocaleString(lang.Doc, "Ping2", $"{second:mm\\:ss\\.ff}");
