@@ -127,13 +127,17 @@ namespace Enforcer5.Helpers
         /// <returns></returns>
         public static string GetLocaleString(XDocument file, string key, params object[] args)
         {
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = args[i].ToString().FormatHTML();
+            }
             try
             {
                 var strings = file.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
                 if (strings != null)
                 {
                     var values = strings.Descendants("value");
-                    var step1 = String.Format(values.FirstOrDefault().Value.FormatHTML(), args);
+                    var step1 = String.Format(values.FirstOrDefault().Value, args);
                     step1 = step1.Replace("\\n", Environment.NewLine);
                     return step1;
                 }
@@ -153,7 +157,7 @@ namespace Enforcer5.Helpers
                     if (values != null)
                     {
                         // ReSharper disable once AssignNullToNotNullAttribute
-                        var step1 = String.Format(values.FirstOrDefault().Value.FormatHTML(), args);
+                        var step1 = String.Format(values.FirstOrDefault().Value, args);
                         step1 = step1.Replace("\\n", Environment.NewLine);
                         return step1;
                     }
