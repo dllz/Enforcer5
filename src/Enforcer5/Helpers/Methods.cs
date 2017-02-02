@@ -257,9 +257,15 @@ namespace Enforcer5.Helpers
         public static bool IsGroupAdmin(int user, long group)
         {
             //fire off admin request
+            var isAdmin = Redis.db.StringGetAsync($"chat:{group}:admins:{user}").Result;
+            if (isAdmin.Equals("true"))
+            {
+                return true;
+            }
             try
             {
                 var admin = Bot.Api.GetChatMemberAsync(group, user).Result;
+                var set = Redis.db.StringSetAsync($"chat:{group}:admins:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                 return admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator;
             }
             catch

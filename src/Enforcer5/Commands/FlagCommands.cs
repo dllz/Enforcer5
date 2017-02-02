@@ -530,7 +530,7 @@ namespace Enforcer5
                 }
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id,
                     Methods.GetLocaleString(lang, "markedAsSolved", chatid, repID));
-                await Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved",chatid, repID), chatid);
+                await Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, repID), chatid);
             }
             else if (isReported.TryParse(out isReport) && isReport == 1)
             {
