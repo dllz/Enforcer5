@@ -408,7 +408,7 @@ namespace Enforcer5
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var commands = Redis.db.HashKeysAsync(hash).Result;
 
-            if (!commands[0].HasValue)
+            if (commands.Length == 0)
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);
             }
