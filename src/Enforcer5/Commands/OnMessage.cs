@@ -28,8 +28,8 @@ namespace Enforcer5
                     var maxSpam = 8;
                     if (update.Message.Chat.Type == ChatType.Private) maxSpam = 12;
                     var floodSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
-                    var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();                   
-                    var maxTime = new TimeSpan(0, 0, 0, 5);
+                    var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
+                    var maxTime = TimeSpan.FromSeconds(5);
                     int maxmsgs;
                     if ((DateTime.Now.ToUnixTime() - update.Message.Date.ToUnixTime()) < 30)
                     {
