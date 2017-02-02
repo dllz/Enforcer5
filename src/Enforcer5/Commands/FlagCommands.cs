@@ -143,7 +143,7 @@ namespace Enforcer5
                         {
                             var solvedBy = update.Message.From.FirstName;
                             if (update.Message.From.Username != null)
-                                solvedBy = $"{solvedBy} (@{update.Message.From.Username}";
+                                solvedBy = $"{solvedBy} (@{update.Message.From.Username})";
                             var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
                             await Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                             await Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
@@ -499,7 +499,7 @@ namespace Enforcer5
             {
                 var solvedBy = call.From.FirstName;
                 if (call.From.Username != null)
-                    solvedBy = $"{solvedBy} (@{call.From.Username}";
+                    solvedBy = $"{solvedBy} (@{call.From.Username})";
                 var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
                 await Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                 await Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
