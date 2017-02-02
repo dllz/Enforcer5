@@ -91,6 +91,7 @@ namespace Enforcer5
             var keys = Key.CreateMarkupFromMenus(mainMenu, editWarn, close);
             var text = Methods.GetLocaleString(lang, "dashboardMenu");
             await Bot.Send(text, update.Message.From.Id, customMenu: keys);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
         }
 
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
