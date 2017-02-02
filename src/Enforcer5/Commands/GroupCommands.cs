@@ -450,7 +450,7 @@ namespace Enforcer5
             }
             else
             {
-                await Bot.SendReply($"<a href={link}>{update.Message.Chat.Title}</a>", update);
+                await Bot.SendReply($"<a href=\"{link}\">{update.Message.Chat.Title}</a>", update);
             }
         }
 
