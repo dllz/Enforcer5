@@ -274,7 +274,7 @@ namespace Enforcer5.Handlers
                                     Log(update, "text", command);
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
-                                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
                                     {
                                         return;;
@@ -321,7 +321,7 @@ namespace Enforcer5.Handlers
                                 {
                                     return;
                                 }
-                                var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                 if (blocked.HasValue)
                                 {
                                     return; ;
@@ -344,7 +344,7 @@ namespace Enforcer5.Handlers
                                     Log(update, "text", command);
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
-                                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
                                     {
                                         return; ;
@@ -685,7 +685,7 @@ namespace Enforcer5.Handlers
                 {
                     //Log(update, "callback", command);
                     AddCount(update.Message.From.Id, update.Message.Text);
-                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                     if (blocked.HasValue)
                     {
                         return; ;
