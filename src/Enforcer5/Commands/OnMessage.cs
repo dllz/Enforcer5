@@ -120,7 +120,7 @@ namespace Enforcer5
                 if (!string.IsNullOrEmpty(res.ToString()))
                 {
                     var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-                    if (!string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
+                    if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
                     if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
                     {
                         var name = update.Message.From.FirstName;
