@@ -243,7 +243,7 @@ namespace Enforcer5.Helpers
         }
         internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
-            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Markdown);
+            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Html);
         }
     }
 

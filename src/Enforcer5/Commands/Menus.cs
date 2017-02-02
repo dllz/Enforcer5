@@ -506,7 +506,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "mediaMenu");
             var keys = Commands.genMediaMenu(chatId, lang);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Markdown);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
 
         [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
@@ -516,7 +516,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Markdown);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Html);
         }
 
         [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
@@ -528,7 +528,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Markdown);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
 
         [Callback(Trigger = "floodSettings")]
