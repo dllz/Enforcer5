@@ -105,13 +105,36 @@ namespace Enforcer5.Helpers
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;
             Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
-
+            Api.OnReceiveError += ApiOnReceiveError;
+            Api.OnReceiveGeneralError += ApiOnReceiveGenError;
             Me = Api.GetMeAsync().Result;
 
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
             //now we can start receiving
             Api.StartReceiving();
+        }
+
+        private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
+        {
+            if (!Api.IsReceiving)
+            {
+                Api.StartReceiving();
+            }
+            var e = receiveErrorEventArgs.ApiRequestException;
+                Console.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}");
+
+        }
+
+        private static void ApiOnReceiveGenError(object sender, ReceiveGeneralErrorEventArgs receiveErrorEventArgs)
+        {
+            if (!Api.IsReceiving)
+            {
+                Api.StartReceiving();
+            }
+            var e = receiveErrorEventArgs.Exception;
+            Console.WriteLine($"{DateTime.Now} {e.Source} - {e.Message}\n{e.Source}");
+
         }
 
         internal static void ReplyToCallback(CallbackQuery query, string text = null, bool edit = true, bool showAlert = false, InlineKeyboardMarkup replyMarkup = null)
