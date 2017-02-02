@@ -602,11 +602,14 @@ namespace Enforcer5.Handlers
                     }
                     if (args.Length >= 1)
                     {
-                        if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) & !Methods.IsGlobalAdmin(update.From.Id))
+                        if (!string.IsNullOrEmpty(args[1]))
                         {
-                            Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id).Wait();
-                            return;
-                        }
+                            if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) & !Methods.IsGlobalAdmin(update.From.Id))
+                            {
+                                Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id).Wait();
+                                return;
+                            }
+                        }                        
                     }
                     if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                     {
