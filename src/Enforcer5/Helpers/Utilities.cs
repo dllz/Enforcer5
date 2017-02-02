@@ -242,6 +242,7 @@ namespace Enforcer5.Helpers
                 if (e.ErrorCode == 400 && e.Message.Contains("Can't parse message text: Unsupported start tag sendwebrequestasync"))
                 {
                     Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    return null;
                 }
                 else
                 {
@@ -283,6 +284,12 @@ namespace Enforcer5.Helpers
         public static void SaveRedis()
         {
             redis.GetServer($"138.201.172.150:6379").Save(SaveType.BackgroundSave);
+        }
+
+        public static bool Start()
+        {
+            var res = db.StringSet("testWrite", "trying");
+            return res;
         }
     }
 }
