@@ -109,7 +109,7 @@ namespace Enforcer5.Helpers
             Api.OnReceiveError += ApiOnReceiveError;
             Api.OnReceiveGeneralError += ApiOnReceiveGenError;
             Me = Api.GetMeAsync().Result;
-
+            Api.PollingTimeout = TimeSpan.FromSeconds(1);
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
             //now we can start receiving
