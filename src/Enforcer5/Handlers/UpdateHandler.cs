@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
@@ -18,6 +19,13 @@ namespace Enforcer5.Handlers
 
     internal static class UpdateHandler
     {
+
+        internal static Dictionary<int, SpamDetector> UserMessages = new Dictionary<int, SpamDetector>();
+
+        internal static HashSet<int> SpamBanList = new HashSet<int>
+        {
+
+        };
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             new Task(() => { HandleUpdate(e.Update); }).Start();
@@ -231,7 +239,7 @@ namespace Enforcer5.Handlers
         internal static async void HandleUpdate(Update update)
         {
             {
-                //CollectStats(update.Message);
+                CollectStats(update.Message);
                 Bot.MessagesProcessed++;               
                 //ignore previous messages
 
@@ -264,8 +272,13 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {
                                     Log(update, "text", command);
-
+                                    AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
+                                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                    if (blocked.HasValue)
+                                    {
+                                        return;;
+                                    }
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         return;
@@ -308,6 +321,11 @@ namespace Enforcer5.Handlers
                                 {
                                     return;
                                 }
+                                var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                if (blocked.HasValue)
+                                {
+                                    return; ;
+                                }
                                 Log(update, "extra");
                                 await Task.Run(() => Commands.SendExtra(update, args));
                             }
@@ -324,8 +342,13 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {
                                     Log(update, "text", command);
-
+                                    AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
+                                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                                    if (blocked.HasValue)
+                                    {
+                                        return; ;
+                                    }
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         return;
@@ -479,6 +502,20 @@ namespace Enforcer5.Handlers
             }
         }
 
+        private static void AddCount(int id, string command)
+        {
+            try
+            {
+                if (!UserMessages.ContainsKey(id))
+                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+                UserMessages[id].Messages.Add(new UserMessage(command));
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
         private static async void CollectStats(Message updateMessage)
         {
             try
@@ -522,7 +559,61 @@ namespace Enforcer5.Handlers
             return input.Split(':');
         }
 
+         internal static void SpamDetection()
+        {
+            while (true)
+            {
+                try
+                {
+                    var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    //clone the dictionary
+                    foreach (var key in temp.Keys.ToList())
+                    {
+                        try
+                        {
+                            //drop older messages (1 minute)
+                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
 
+                            //comment this out - if we remove it, it doesn't keep the warns
+                            //if (temp[key].Messages.Count == 0)
+                            //{
+                            //    temp.Remove(key);
+                            //    continue;
+                            //}
+                            //now count, notify if limit hit
+                            if (temp[key].Messages.Count() >= 5) // 20 in a minute
+                            {
+                                temp[key].Warns++;
+                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 10)
+                                {
+                                    Send($"Please do not spam me. Next time is automated ban.", key);
+                                    //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
+                                    //    Para);
+                                    continue;
+                                }
+                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count >= 15) & !temp[key].NotifiedAdmin)
+                                {
+                                    Redis.db.StringSet($"spammers{key}", key, TimeSpan.FromMinutes(10));
+                                    Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                }
+
+                                temp[key].Messages.Clear();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            //Console.WriteLine(e.Message);
+                        }
+                    }
+                    UserMessages = temp;
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine(e.Message);
+                }
+                Thread.Sleep(2000);
+            }
+        }
         internal static Task<Message> Send(string message, long id, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
@@ -577,25 +668,32 @@ namespace Enforcer5.Handlers
 
         public static void HandleCallback(CallbackQuery update)
         {
-                var callback = update.Data;
-                if (!string.IsNullOrEmpty(callback))
+            var callback = update.Data;
+            if (!string.IsNullOrEmpty(callback))
+            {
+                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-60))
+                    return; //toss it
+                var args = GetCallbackParameters(update.Data);
+                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                //check for the command
+                Console.WriteLine("Looking for command");
+                var callbacks = Bot.CallBacks.FirstOrDefault(
+                        x =>
+                            String.Equals(x.Trigger, args[0],
+                                StringComparison.CurrentCultureIgnoreCase));
+                if (callbacks != null)
                 {
-                    var args = GetCallbackParameters(update.Data);
-                    args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                    //check for the command
-                    Console.WriteLine("Looking for command");
-                    var callbacks = Bot.CallBacks.FirstOrDefault(
-                            x =>
-                                String.Equals(x.Trigger, args[0],
-                                    StringComparison.CurrentCultureIgnoreCase));
-                    if (callbacks != null)
+                    //Log(update, "callback", command);
+                    AddCount(update.Message.From.Id, update.Message.Text);
+                    var blocked = Redis.db.StringGet($"spammers{update.Message.From.Id}");
+                    if (blocked.HasValue)
                     {
-                        //Log(update, "callback", command);
-
-                        if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
-                        {
-                            return;
-                        }
+                        return; ;
+                    }
+                    if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
+                    {
+                        return;
+                    }
                     if (callbacks.UploadAdmin & !Methods.IsLangAdmin(update.From.Id))
                     {
                         return;

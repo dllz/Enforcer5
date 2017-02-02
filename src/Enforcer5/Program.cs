@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5;
+using Enforcer5.Handlers;
 
 namespace Enforcer5
 {
@@ -55,6 +56,7 @@ namespace Enforcer5
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             new Task(Methods.IntialiseLanguages).Start();
             var wait = TimeSpan.FromSeconds(30);
+            new Thread(UpdateHandler.SpamDetection).Start();
             _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);

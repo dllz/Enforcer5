@@ -59,7 +59,7 @@ namespace Enforcer5
                                 if (msgs == (int.Parse(maxMsgs.Value) + 1) || msgs == int.Parse(maxMsgs.Value) + 5)
                                 {
                                     await Bot.Send(
-                                        Methods.GetLocaleString(lang, "bannedForFlood", $"{update.Message.From.FirstName}, {update.Message.From.Id}"),
+                                        Methods.GetLocaleString(lang, "bannedForFlood", $"{name}, {update.Message.From.Id}"),
                                         update);
                                 }
                             }
