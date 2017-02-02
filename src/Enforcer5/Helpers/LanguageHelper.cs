@@ -211,7 +211,7 @@ namespace Enforcer5.Handlers
         {
             var msg = "Moving file to production..\n";
             msg += "Checking paths for duplicate language file...\n";
-            Bot.Api.EditMessageText(id, msgId, msg);
+            Bot.Api.EditMessageTextAsync(id, msgId, msg);
             fileName += ".xml";
             var tempPath = Bot.TempLanguageDirectory;
             var langPath = Bot.LanguageDirectory;

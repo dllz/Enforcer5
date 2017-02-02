@@ -208,9 +208,40 @@ namespace Enforcer5.Helpers
                     Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return null;
                 }
-                else
+                try
                 {
-                    throw;
+                    if (e.ErrorCode == 112)
+                    {
+                            return await Bot.Send("The markdown in this text is broken", id);
+                    }
+                    else if (e.ErrorCode == 403)
+                    {
+                        var lang = Methods.GetGroupLanguage(id).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                        };
+                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), id, customMenu:Key.CreateMarkupFromMenu(startMe));
+                    }
+                    else
+                    {
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}", id);
+                        return await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit 
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                    return null;
                 }
             }
             catch (AggregateException e)
@@ -251,10 +282,50 @@ namespace Enforcer5.Helpers
                     Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return null;
                 }
-                else
-                {
-                    throw;
-                }
+                try
+                    {                        
+                        if (e.ErrorCode == 112)
+                        {
+                            if (chatUpdate.Message != null && chatUpdate.Message.Chat.Title != null)
+                            {
+                                var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
+                                return await Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "markdownBroken"), chatUpdate);
+                            }
+                            else
+                            {
+                                return await Bot.SendReply("The markdown in this text is broken", chatUpdate);
+                            }
+                        }
+                        else if (e.ErrorCode == 403)
+                        {
+                            var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
+                            var startMe = new Menu(1)
+                            {
+                                Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                            };
+                            return await Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatUpdate, Key.CreateMarkupFromMenu(startMe));
+                        }
+                        else
+                        {
+                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", chatUpdate);
+                            return await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        }                        
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        //fuckit 
+                        return null;
+                    }
+                    catch (Exception exception)
+                    {
+                        //fuckit
+                        return null;
+                    }
             }
             catch (AggregateException e)
             {

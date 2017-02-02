@@ -604,7 +604,7 @@ namespace Enforcer5.Handlers
                     {
                         if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) & !Methods.IsGlobalAdmin(update.From.Id))
                         {
-                            Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id);
+                            Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id).Wait();
                             return;
                         }
                     }
