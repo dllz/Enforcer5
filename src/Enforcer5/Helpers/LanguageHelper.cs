@@ -183,7 +183,7 @@ namespace Enforcer5.Handlers
             }
 
             //send the validation result
-            Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
+            await Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
             Thread.Sleep(500);
 
 
@@ -192,16 +192,16 @@ namespace Enforcer5.Handlers
                 //load up each file and get the names
                 var buttons = new[]
                 {
-                new InlineKeyboardButton($"New", $"upload|{id}|{newFile.FileName}"),
-                new InlineKeyboardButton($"Old", $"upload|{id}|current")
+                new InlineKeyboardButton($"New", $"upload:{id}:{newFile.FileName}"),
+                new InlineKeyboardButton($"Old", $"upload:{id}:current")
             };
                 var menu = new InlineKeyboardMarkup(buttons.ToArray());
-                Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
+                await Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
                     replyMarkup: menu);
             }
             else
             {
-                Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
+                await Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
             }
         }
 
