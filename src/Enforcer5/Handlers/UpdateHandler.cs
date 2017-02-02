@@ -600,7 +600,7 @@ namespace Enforcer5.Handlers
                     {
                         return;
                     }
-                    if (args.Length >= 1)
+                    if (args.Length >= 2)
                     {
                         if (!string.IsNullOrEmpty(args[1]))
                         {
