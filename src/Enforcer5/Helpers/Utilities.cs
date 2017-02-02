@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -185,6 +186,43 @@ namespace Enforcer5.Helpers
                 //message = message.Replace("`",@"\`");
                 if (clearKeyboard)
                 {
+                    var menu = new ReplyKeyboardHide {HideKeyboard = true};
+                    return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
+                        parseMode: parseMode);
+                }
+                else if (customMenu != null)
+                {
+                    return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
+                        disableWebPagePreview: true,
+                        parseMode: parseMode);
+                }
+                else
+                {
+                    return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                }
+            }
+            catch (ApiRequestException e)
+            {
+                Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                return null;
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
+                return null;
+            }
+
+        }
+        internal static async Task<Message> Send(string message, Update chatUpdate, bool clearKeyboard = false,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+        {
+            try
+            {
+                MessagesSent++;
+                var id = chatUpdate.Message.Chat.Id;
+                //message = message.Replace("`",@"\`");
+                if (clearKeyboard)
+                {
                     var menu = new ReplyKeyboardHide { HideKeyboard = true };
                     return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
                         parseMode: parseMode);
@@ -199,32 +237,15 @@ namespace Enforcer5.Helpers
                     return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
                 }
             }
-            catch (AggregateException e)
+            catch (ApiRequestException e)
             {
+                Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                 return null;
             }
-
-        }
-        internal static async Task<Message> Send(string message, Update chatUpdate, bool clearKeyboard = false,
-            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
-        {
-            MessagesSent++;
-            var id = chatUpdate.Message.Chat.Id;
-            //message = message.Replace("`",@"\`");
-            if (clearKeyboard)
+            catch (AggregateException e)
             {
-                var menu = new ReplyKeyboardHide { HideKeyboard = true };
-                return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                    parseMode: parseMode);
-            }
-            else if (customMenu != null)
-            {
-                return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
-                    parseMode: parseMode);
-            }
-            else
-            {
-                return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
+                return null;
             }
 
         }
