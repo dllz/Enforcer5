@@ -137,7 +137,7 @@ namespace Enforcer5.Helpers
                 if (strings != null)
                 {
                     var values = strings.Descendants("value");
-                    var step1 = String.Format(values.FirstOrDefault().Value, args);
+                    var step1 = String.Format(values.FirstOrDefault().FirstNode.ToString(), args);
                     step1 = step1.Replace("\\n", Environment.NewLine);
                     return step1;
                 }
