@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
-using Enforcer5.Languages;
+using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -225,7 +225,6 @@ namespace Enforcer5.Handlers
             {
                 Name = doc.Descendants("language").First().Attribute("name").Value,
                 Base = doc.Descendants("language").First().Attribute("base").Value,
-                Variant = doc.Descendants("language").First().Attribute("variant").Value
             };
 
 
@@ -264,8 +263,8 @@ namespace Enforcer5.Handlers
             //            msg += $"File copied to bot 2\n";
             //            Bot.Api.EditMessageText(id, msgId, msg);
             //#endif
-            var gitPath = Path.Combine(@"C:\Werewolf Source\Werewolf\Werewolf for Telegram\Languages", Path.GetFileName(copyToPath));
-            File.Copy(newFilePath, gitPath, true);
+            //var gitPath = Path.Combine(@"C:\Werewolf Source\Werewolf\Werewolf for Telegram\Languages", Path.GetFileName(copyToPath));
+            //File.Copy(newFilePath, gitPath, true);
             System.IO.File.Delete(newFilePath);
             msg += $"File copied to git directory\n";
             msg += "* Operation complete.*";

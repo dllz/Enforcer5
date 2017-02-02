@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
-using Enforcer5.Languages;
 using Enforcer5.Models;
 using StackExchange.Redis;
 using Telegram.Bot.Helpers;
@@ -168,7 +167,7 @@ namespace Enforcer5.Helpers
             {
                 return $"{msg.From.FirstName} ({msg.From.Id})";
             }
-            else if (msg.ReplyToMessage != null)
+            if (msg.ReplyToMessage != null)
             {
                 return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
             }

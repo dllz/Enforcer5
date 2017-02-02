@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <strings>
   <language name="English" base="English" owner="BladeZero"/>
   <string key="statusKicked">
@@ -20,7 +20,7 @@
     <value>{0} is a chat member.</value>
   </string>
   <string key="userinfoGlobal">
-    <value>*Global ban info*:\n</value>
+    <value><b>Global ban info</b>:\n</value>
   </string>
   <string key="getkick">
     <value>Kick: {0}</value>
@@ -41,7 +41,7 @@
     <value>Media Warns: {0}</value>
   </string>
   <string key="userinfoGroup">
-    <value>*Info for group {0}*:</value>
+    <value><b>Info for group {0}</b>:</value>
   </string>
   <string key="getrtl">
     <value>Removed for Right to left characters: {0}</value>
@@ -77,7 +77,7 @@
     <value>Start me</value>
   </string>
   <string key="userNotAdmin">
-    <value>You are *not* an admin in this chat</value>
+    <value>You are <b>not</b> an admin in this chat</value>
   </string>
   <string key="markdownBroken">
     <value>The markdown in this text is broken</value>
@@ -92,7 +92,7 @@
     <value>The link has been set</value>
   </string>
   <string key="adminList">
-    <value>*Creator*: {0}\n*Admins*:{1}</value>
+    <value><b>Creator</b>: {0}\n<b>Admins</b>:{1}</value>
   </string>
   <string key="defaultWelcome">
     <value>Hi {0} welcome to {1}</value>
@@ -104,10 +104,10 @@
     <value>There are no rules, burn it to the ground</value>
   </string>
   <string key="rules">
-    <value>\n*Rules*:\n{0}</value>
+    <value>\n<b>Rules</b>:\n{0}</value>
   </string>
   <string key="about">
-    <value>\n*Description*:\n{0}</value>
+    <value>\n<b>Description</b>:\n{0}</value>
   </string>
   <string key="RulesSet">
     <value>New rules has been set</value>
@@ -122,7 +122,7 @@
     <value>No command set</value>
   </string>
   <string key="extraList">
-    <value>List of *custom commands*:\n{0}</value>
+    <value>List of <b>custom commands</b>:\n{0}</value>
   </string>
   <string key="extraDeleted">
     <value>Command has been deleted</value>
@@ -152,10 +152,10 @@
     <value>Your group has been banned from using Werewolf Enforcer</value>
   </string>
   <string key="warnMaxKick">
-    <value>User {0} *kicked*: as they reached the max number of warns</value>
+    <value>User {0} <b>kicked</b>: as they reached the max number of warns</value>
   </string>
   <string key="warnMaxBan">
-    <value>User {0} *banned*: as they reached the max number of warns</value>
+    <value>User {0} <b>banned</b>: as they reached the max number of warns</value>
   </string>
   <string key="resetWarn">
     <value>Reset Warn</value>
@@ -164,10 +164,10 @@
     <value>Remove Warn</value>
   </string>
   <string key="warn">
-    <value>{0} *has been warned.*\n_Number of warns_   *{1}*\n_Max allowed_   *{2}*</value>
+    <value>{0} <b>has been warned.</b>\n<i>Number of warns</i>   <b>{1}</b>\n<i>Max allowed</i>   <b>{2}</b></value>
   </string>
   <string key="warnFlag">
-    <value>{0} *has been warned by {1}.*\n_Number of warns_   *{2}*\n_Max allowed_   *{3}*</value>
+    <value>{0} <b>has been warned by {1}.</b>\n<i>Number of warns</i>   <b>{2}</b>\n<i>Max allowed</i>   <b>{3}</b></value>
   </string>
   <string key="alreadyFlagged">
     <value>Message already reported</value>
@@ -218,7 +218,7 @@
     <value>No input with command</value>
   </string>
   <string key="Support">
-    <value>[Click here to get help from the support group](https://telegram.me/werewolfsupport)</value>
+    <value><a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a></value>
   </string>
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
@@ -273,9 +273,6 @@
   </string>
   <string key="botNotStarted">
     <value>You need to start the bot first. Click below, then click start</value>
-  </string>
-  <string key="startMe">
-    <value>You need to start me first</value>
   </string>
   <string key="bannedFor">
     <value>Banned for: {0}</value>
@@ -428,7 +425,7 @@
   <value>Group Language</value>
 </string>
 <string key="langMenu">
-  <value>Here you can set your group language.\nYour current language is set to: *{0}*</value>
+  <value>Here you can set your group language.\nYour current language is set to: <b>{0}</b></value>
 </string>
 <string key="userUnblocked">
   <value>User unblocked</value>
@@ -436,6 +433,9 @@
 <string key="userBlocked">
   <value>User blocked</value>
 </string>
+<string key="startMe">
+    <value>You need to start me first</value>
+  </string>
   <string key="dashboardMenu">
     <value>Here are what the settings in the group are set too:</value>
   </string>

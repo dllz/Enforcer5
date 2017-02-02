@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
-using Enforcer5.Languages;
+using Enforcer5;
 
 namespace Enforcer5
 {

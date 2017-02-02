@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Enforcer5.Languages
+namespace Enforcer5
 {
     public class Language
     {
