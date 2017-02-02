@@ -274,6 +274,9 @@
   <string key="botNotStarted">
     <value>You need to start the bot first. Click below, then click start</value>
   </string>
+  <string key="startMe">
+    <value>You need to start me first</value>
+  </string>
   <string key="bannedFor">
     <value>Banned for: {0}</value>
   </string>
