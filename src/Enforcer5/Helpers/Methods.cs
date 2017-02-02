@@ -186,8 +186,14 @@ namespace Enforcer5.Helpers
             }
             if (args.Length == 2)
             {
+                
                 if (!string.IsNullOrEmpty(args[1]))
                 {
+                    int id;
+                    if (int.TryParse(args[1], out id))
+                    {
+                        return id;
+                    }
                     return ResolveIdFromusername(args[1], update.Message.Chat.Id);
                 }
                 else
