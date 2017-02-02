@@ -147,7 +147,9 @@ namespace Enforcer5.Helpers
                     if (values != null)
                     {
                         // ReSharper disable once AssignNullToNotNullAttribute
-                        return String.Format(values.FirstOrDefault().Value, args).Replace("\\n", Environment.NewLine);
+                        var step1 = String.Format(values.FirstOrDefault().Value, args);
+                        step1 = step1.Replace("\\n", Environment.NewLine);
+                        return step1;
                     }
                     else
                         throw new Exception("Cannot load english string for fallback");

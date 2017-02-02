@@ -32,7 +32,7 @@
     <value>Tempban: {0}</value>
   </string>
   <string key="getwarn">
-    <value>Removed for to many Warns: {0}</value>
+    <value>Removed for too many Warns: {0}</value>
   </string>
   <string key="getgroupwarn">
     <value>Warns: {0}</value>
@@ -53,7 +53,7 @@
     <value>Removed for persian characters: {0}</value>
   </string>
   <string key="getmedia">
-    <value>Remvoed for forbidden media: {0}</value>
+    <value>Removed for forbidden media: {0}</value>
   </string>
   <string key="getNothing">
     <value>Nothing to display</value>
@@ -65,7 +65,7 @@
     <value>I do not know who this user is</value>
   </string>
   <string key="botNotAdmin">
-    <value>I am not admin of this chat, I need to be an admin can run that command</value>
+    <value>I am not admin of this chat, I need to be an admin to run that command</value>
   </string>
   <string key="noReply">
     <value>Please reply to someone to use this command</value>
@@ -239,13 +239,13 @@
     <value>This media has been saved as response to {0}</value>
   </string>
   <string key="tooLong">
-    <value>{0} is to long</value>
+    <value>{0} is too long</value>
   </string>
   <string key="extra">
     <value>Extra</value>
   </string>
   <string key="tempbanZero">
-    <value>Tempban can not be zero</value>
+    <value>Tempban cannot be zero</value>
   </string>
   <string key="tempbanned">
     <value>{1} has been banned for {0} (days:hours:minutes)\nID: {2}</value>
@@ -330,7 +330,7 @@
     <value>Done</value>
   </string>
   <string key="warnToLow">
-    <value>Number of warnings can not be below 1</value>
+    <value>Number of warnings cannot be below 1</value>
   </string>
   <string key="settingChanged">
     <value>Setting has been changed</value>
@@ -352,7 +352,7 @@
       You can set some exceptions for the anti-flood:
       • ✅: the media will be ignored by the anti-flood
       • ❌: the media won't be ignored by the anti-flood
-      • Note: in "texts" are included all the other types of media (file, audio...)
+      • Note: in "texts", all the other types of media (file, audio...) are included
     </value>
   </string>
   <string key="on">
@@ -401,7 +401,7 @@
     <value>{0} has been Banned for Right to left characters</value>
   </string>
   <string key="bannedForNoEnglishScript">
-    <value>{0} has been Banned for using none Latin characters</value>
+    <value>{0} has been Banned for using non-Latin characters</value>
   </string>
   <string key ="globalBanNotif">
     <value>{0} has been automatically banned as they have a history of: {1)
@@ -437,6 +437,6 @@
     <value>You need to start me first</value>
   </string>
   <string key="dashboardMenu">
-    <value>Here are what the settings in the group are set too:</value>
+    <value>Here are what the settings in the group are set to:</value>
   </string>
 </strings>

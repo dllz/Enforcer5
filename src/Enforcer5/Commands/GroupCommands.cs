@@ -204,7 +204,8 @@ namespace Enforcer5
                 msgToReplyTo = update.Message.MessageId;
             }
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            await Bot.SendReply(Methods.GetLocaleString(lang, "Support"), update.Message.Chat.Id, msgToReplyTo);
+            var text = Methods.GetLocaleString(lang, "Support");
+            await Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);
         }
 
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
@@ -646,74 +647,82 @@ namespace Enforcer5
             }
             else
             {
-                if (!string.IsNullOrEmpty(specialMethod))
+                try
                 {
-                    var caption = Redis.db.HashGetAsync($"{hash}:{args[0]}", "caption").Result;
-                    switch (specialMethod)
+                    if (!string.IsNullOrEmpty(specialMethod))
                     {
-                        case "voice":
-                            await Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
-                                replyToMessageId: repId);
-                            break;
-                        case "video":
-                            if (!string.IsNullOrEmpty(caption))
-                            {
-                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
+                        var caption = Redis.db.HashGetAsync($"{hash}:{args[0]}", "caption").Result;
+                        switch (specialMethod)
+                        {
+                            case "voice":
+                                await Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
                                     replyToMessageId: repId);
-                            }
-                            else
-                            {
-                                await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
-                                    replyToMessageId: repId);
-                            }
-                            break;
-                        case "photo":
-                            if (!string.IsNullOrEmpty(caption))
-                            {
-                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
-                                    replyToMessageId: repId);
-                            }
-                            else
-                            {
-                                await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
-                                    replyToMessageId: repId);
-                            }
-                            break;
-                        case "gif":
-                            if (!string.IsNullOrEmpty(hasMedia))
-                            {
-                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
-                                    replyToMessageId: repId);
-                            }
-                            else
-                            {
-                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
-                                    replyToMessageId: repId);
-                            }
-                            break;
-                        default:
-                            if (!string.IsNullOrEmpty(hasMedia))
-                            {
-                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
-                                    replyToMessageId: repId);
-                            }
-                            else
-                            {
-                                await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
-                                    replyToMessageId: repId);
-                            }
-                            break;
+                                break;
+                            case "video":
+                                if (!string.IsNullOrEmpty(caption))
+                                {
+                                    await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
+                                        replyToMessageId: repId);
+                                }
+                                else
+                                {
+                                    await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
+                                        replyToMessageId: repId);
+                                }
+                                break;
+                            case "photo":
+                                if (!string.IsNullOrEmpty(caption))
+                                {
+                                    await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
+                                        replyToMessageId: repId);
+                                }
+                                else
+                                {
+                                    await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
+                                        replyToMessageId: repId);
+                                }
+                                break;
+                            case "gif":
+                                if (!string.IsNullOrEmpty(hasMedia))
+                                {
+                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
+                                        replyToMessageId: repId);
+                                }
+                                else
+                                {
+                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                        replyToMessageId: repId);
+                                }
+                                break;
+                            default:
+                                if (!string.IsNullOrEmpty(hasMedia))
+                                {
+                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                        replyToMessageId: repId);
+                                }
+                                else
+                                {
+                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                        replyToMessageId: repId);
+                                }
+                                break;
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(hasMedia))
+                    {
+                        await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
+                            replyToMessageId: repId);
+                    }
+                    else
+                    {
+                        await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
+                            replyToMessageId: repId);
                     }
                 }
-                else if (!string.IsNullOrEmpty(hasMedia))
+                catch (ApiRequestException e)
                 {
-                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
-                        replyToMessageId: repId);
-                }
-                else
-                {
-                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
-                        replyToMessageId: repId);
+                    Methods.SendError($"{e.ErrorCode}\n{e.Message}", update.Message, lang);
+                    await Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                 }
             }
         }
