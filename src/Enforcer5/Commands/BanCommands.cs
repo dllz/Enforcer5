@@ -114,9 +114,9 @@ namespace Enforcer5
                     Buttons = new List<InlineButton>
                     {
                         new InlineButton(Methods.GetLocaleString(lang.Doc, "resetWarn"),
-                            $"resetwarns:{update.Message.ReplyToMessage.From.Id}"),
+                            $"resetwarns:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.From.Id}"),
                         new InlineButton(Methods.GetLocaleString(lang.Doc, "removeWarn"),
-                            $"removewarn:{update.Message.ReplyToMessage.From.Id}"),
+                            $"removewarn:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.From.Id}"),
                     }
                 };
                 await Bot.Send(text, update.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
@@ -256,7 +256,7 @@ namespace Enforcer5
         public static async Task ResetWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var userId = args[1];
+            var userId = args[2];
             await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
             await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
             await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
@@ -267,7 +267,7 @@ namespace Enforcer5
         public static async Task RemoveWarn(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
-            var userId = args[1];
+            var userId = args[2];
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
             var text = "";            
                 text = Methods.GetLocaleString(lang, "warnRemoved");
