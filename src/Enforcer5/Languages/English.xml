@@ -436,4 +436,7 @@
 <string key="userBlocked">
   <value>User blocked</value>
 </string>
+  <string key="dashboardMenu">
+    <value>Here are what the settings in the group are set too:</value>
+  </string>
 </strings>

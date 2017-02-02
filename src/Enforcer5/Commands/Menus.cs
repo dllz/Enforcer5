@@ -26,10 +26,72 @@ namespace Enforcer5
             await Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
         }
 
-        //[Command(Trigger = "dashboard", GroupAdminOnly = true, InGroupOnly = true)]
-        //public static async Task Dashboard(Update update, string[] args)
-        //{            
-        //}
+        [Command(Trigger = "dashboard", InGroupOnly = true)]
+        public static async Task Dashboard(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var settings = Redis.db.HashGetAllAsync($"chat:{update.Message.Chat.Id}:settings").Result;
+            var mainMenu = new Menu();
+            mainMenu.Columns = 2;
+            mainMenu.Buttons = new List<InlineButton>();
+            foreach (var mem in settings)
+            {
+                if (mem.Name.Equals("Flood") || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
+                {
+                    if (mem.Name.Equals("Flood"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button")));
+                    }
+                    else
+                    {
+                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button")));
+                    }
+                    if (mem.Value.Equals("yes"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton("🚫"));
+                    }
+                    else if (mem.Value.Equals("no"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton("✅"));
+                    }
+                }
+                else if (mem.Name.Equals("Modlist") || mem.Name.Equals("About") || mem.Name.Equals("Rules") ||
+                         mem.Name.Equals("Extra"))
+                {
+                    mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button")));
+                    if (mem.Value.Equals("yes"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton("👤"));
+                    }
+                    else if (mem.Value.Equals("no"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton("👥"));
+                    }
+                }
+            }
+            settings = Redis.db.HashGetAllAsync($"chat:{update.Message.Chat.Id}:char").Result;
+            foreach (var mem in settings)
+            {
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button")));
+                if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
+                {
+                    mainMenu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}"));
+                }
+                else if (mem.Value.Equals("allowed"))
+                {
+                    mainMenu.Buttons.Add(new InlineButton("✅"));
+                }
+            }
+            var max = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result;
+            var action = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").Result;
+            var editWarn = new Menu(2);
+            editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}"));
+            var close = new Menu(1);
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            var keys = Key.CreateMarkupFromMenus(mainMenu, editWarn, close);
+            var text = Methods.GetLocaleString(lang, "dashboardMenu");
+            await Bot.Send(text, update.Message.From.Id, customMenu: keys);
+        }
 
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
