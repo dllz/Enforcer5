@@ -239,8 +239,14 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");                
-                throw;
+                if (e.ErrorCode == 400 && e.Message.Contains("Can't parse message text: Unsupported start tag sendwebrequestasync"))
+                {
+                    Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                }
+                else
+                {
+                    throw;
+                }
             }
             catch (AggregateException e)
             {
