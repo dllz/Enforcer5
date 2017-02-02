@@ -117,42 +117,42 @@ namespace Enforcer5
                     e =>
                         (int.Parse(e.ToString()) >= 216 && int.Parse(e.ToString()) <= 219) ||
                         (int.Parse(e.ToString()) >= 128 && int.Parse(e.ToString()) <= 191)).FirstOrDefault();
-                if (!string.IsNullOrEmpty(res.ToString()))
-                {
-                    var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-                    if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
-                    if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
-                    {
-                        var name = update.Message.From.FirstName;
-                        var rtl = "‮";
-                        var lastName = "x";
-                        if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                        if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
-                        try
-                        {
-                            if (status.Equals("kick"))
-                            {
-                                await Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                Methods.SaveBan(update.Message.From.Id, "arab");
-                            }
-                            else
-                            {
-                                await Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                Methods.SaveBan(update.Message.From.Id, "rtl");
-                                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", ""));
-                            }
-                            await Bot.Send(
-                                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
-                                    update);
-                        }
-                        catch (Exception e)
-                        {
+                //if (!string.IsNullOrEmpty(res.ToString()))
+                //{
+                //    var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
+                //    if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
+                //    if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
+                //    {
+                //        var name = update.Message.From.FirstName;
+                //        var rtl = "‮";
+                //        var lastName = "x";
+                //        if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+                //        if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
+                //        try
+                //        {
+                //            if (status.Equals("kick"))
+                //            {
+                //                await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                //                Methods.SaveBan(update.Message.From.Id, "arab");
+                //            }
+                //            else
+                //            {
+                //                await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                //                Methods.SaveBan(update.Message.From.Id, "rtl");
+                //                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", ""));
+                //            }
+                //            await Bot.Send(
+                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
+                //                    update);
+                //        }
+                //        catch (Exception e)
+                //        {
 
-                        }
-                    }
+                //        }
+                //    }
 
-                }
+                //}
                 var banDetails = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
                 var isBanned = banDetails.Where(e => e.Name.Equals("banned")).FirstOrDefault();
                 var seenSupport = banDetails.Where(e => e.Name.Equals("seen")).FirstOrDefault();
