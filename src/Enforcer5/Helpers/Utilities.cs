@@ -204,7 +204,7 @@ namespace Enforcer5.Helpers
             catch (ApiRequestException e)
             {
                 Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                return null;
+                throw;
             }
             catch (AggregateException e)
             {
@@ -239,8 +239,8 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                return null;
+                Console.WriteLine($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");                
+                throw;
             }
             catch (AggregateException e)
             {
