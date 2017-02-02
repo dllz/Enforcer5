@@ -15,7 +15,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5.Helpers
 {
-    public class Methods
+    public static class Methods
     {
         public static async Task<bool> KickUser(long chatId, int userId, XDocument doc)
         {
@@ -80,6 +80,10 @@ namespace Enforcer5.Helpers
                 };
             await Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
         }
+        public static string FormatHTML(this string str)
+        {
+            return str?.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
+        }
 
         public static Language GetGroupLanguage(Message uMessage)
         {
@@ -129,7 +133,7 @@ namespace Enforcer5.Helpers
                 if (strings != null)
                 {
                     var values = strings.Descendants("value");
-                    var step1 = String.Format(values.FirstOrDefault().Value, args);
+                    var step1 = String.Format(values.FirstOrDefault().Value.FormatHTML(), args);
                     step1 = step1.Replace("\\n", Environment.NewLine);
                     return step1;
                 }
@@ -149,7 +153,7 @@ namespace Enforcer5.Helpers
                     if (values != null)
                     {
                         // ReSharper disable once AssignNullToNotNullAttribute
-                        var step1 = String.Format(values.FirstOrDefault().Value, args);
+                        var step1 = String.Format(values.FirstOrDefault().Value.FormatHTML(), args);
                         step1 = step1.Replace("\\n", Environment.NewLine);
                         return step1;
                     }
@@ -164,6 +168,8 @@ namespace Enforcer5.Helpers
                 }
             }
         }
+
+        
 
         public static string GetNick(Message msg, string[] args, bool sender = false)
         {
