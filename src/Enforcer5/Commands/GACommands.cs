@@ -30,9 +30,18 @@ namespace Enforcer5
                 }
                 var fileid = update.Message.ReplyToMessage.Document?.FileId;
                 if (fileid != null)
-                    LanguageHelper.UploadFile(fileid, id,
-                        update.Message.ReplyToMessage.Document.FileName,
-                        update.Message.MessageId);
+                {
+                    try
+                    {
+                        LanguageHelper.UploadFile(fileid, id,
+                            update.Message.ReplyToMessage.Document.FileName,
+                            update.Message.MessageId);
+                    }
+                    catch (Exception e)
+                    {
+                        Bot.SendReply(e.ToString(), update);
+                    }
+                }
             }
             catch (Exception e)
             {

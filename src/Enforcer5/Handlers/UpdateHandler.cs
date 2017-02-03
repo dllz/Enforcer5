@@ -463,7 +463,15 @@ namespace Enforcer5.Handlers
                                 {
                                     if (temp[key].NotifiedAdmin == false)
                                     {
-                                        Bot.Send($"Please do not spam me. Next time is automated ban.", key);
+                                        try
+                                        {
+                                            Bot.Send($"Please do not spam me. Next time is automated ban.", key);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine(e);
+                                            
+                                        }
                                         temp[key].NotifiedAdmin = true;
                                     }
                                     //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
@@ -477,7 +485,15 @@ namespace Enforcer5.Handlers
                                     Console.WriteLine($"{key} - Banned for 10 minutes");
                                     temp[key].Warns = 1;
                                     temp[key].NotifiedAdmin = false;
-                                    Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                    try
+                                    {
+                                        Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                      
+                                    }
                                 }
 
                                 temp[key].Messages.Clear();
