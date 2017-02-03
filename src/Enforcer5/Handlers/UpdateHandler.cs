@@ -29,6 +29,11 @@ namespace Enforcer5.Handlers
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             new Task(() => { HandleUpdate(e.Update); }).Start();
+            if (e.Update.Message == null) return;
+            if (e.Update.Message.Type == MessageType.TextMessage)
+            {
+                new Task(() => { OnMessage.OnChatMessage(e.Update); }).Start();
+            }
         }
 
         //        private static void AddCount(int id, string command)
@@ -253,12 +258,12 @@ namespace Enforcer5.Handlers
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
+                    if (update.Message == null) return;
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
                             break;
-                        case MessageType.TextMessage:
-                            new Task(() => { OnMessage.OnChatMessage(update); }).Start();
+                        case MessageType.TextMessage:                            
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
@@ -335,7 +340,7 @@ namespace Enforcer5.Handlers
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                                 //check for the command
                                 //Console.WriteLine("Looking for command");
-                                    var command = Bot.Commands.FirstOrDefault(
+                                var command = Bot.Commands.FirstOrDefault(
                                     x =>
                                         String.Equals(x.Trigger, args[0],
                                             StringComparison.CurrentCultureIgnoreCase));
@@ -671,7 +676,7 @@ namespace Enforcer5.Handlers
             var callback = update.Data;
             if (!string.IsNullOrEmpty(callback))
             {
-                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-60))
+                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-20))
                     return; //toss it
                 var args = GetCallbackParameters(update.Data);
                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
