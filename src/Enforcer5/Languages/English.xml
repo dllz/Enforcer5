@@ -397,8 +397,14 @@
   <string key="bannedForFlood">
     <value>{0} has been Banned for Flood</value>
   </string>
+  <string key="kickedForFlood">
+    <value>{0} has been kicked for Flood</value>
+  </string>
   <string key="bannedForRtl">
     <value>{0} has been Banned for Right to left characters</value>
+  </string>
+  <string key="kickedForRtl">
+    <value>{0} has been kicked for Right to left characters</value>
   </string>
   <string key="bannedForNoEnglishScript">
     <value>{0} has been Banned for using non-Latin characters</value>

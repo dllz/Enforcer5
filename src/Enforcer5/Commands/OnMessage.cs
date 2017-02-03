@@ -53,11 +53,8 @@ namespace Enforcer5
                                 {
                                     await Methods.KickUser(chatId, update.Message.From.Id, lang);
                                     Methods.SaveBan(update.Message.From.Id, "flood");
-                                }
-                                if (msgs == (int.Parse(maxMsgs.Value) + 1) || msgs == int.Parse(maxMsgs.Value) + 5)
-                                {
                                     await Bot.Send(
-                                        Methods.GetLocaleString(lang, "bannedForFlood", $"{name}, {update.Message.From.Id}"),
+                                        Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
                                         update);
                                 }
                             }
@@ -91,6 +88,9 @@ namespace Enforcer5
                             {
                                 await Methods.KickUser(chatId, update.Message.From.Id, lang);
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
+                                await Bot.Send(
+                                    Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {update.Message.From.Id}"),
+                                    update);
                             }
                             else
                             {
@@ -98,10 +98,7 @@ namespace Enforcer5
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
                                 Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedForRtl", ""));
-                            }
-                            await Bot.Send(
-                                    Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {update.Message.From.Id}"),
-                                    update);
+                            }                            
                         }
                     }
                     catch (Exception e)
