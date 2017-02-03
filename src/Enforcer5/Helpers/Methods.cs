@@ -359,7 +359,7 @@ namespace Enforcer5.Helpers
 
         public static bool SendInPm(Message updateMessage, string rules)
         {
-            var enabled = Redis.db.HashGetAsync($"chat:{updateMessage.Chat.Id}:settings", "Admin_mode");
+            var enabled = Redis.db.HashGetAsync($"chat:{updateMessage.Chat.Id}:settings", rules);
             return enabled.Equals("yes");
         }
 
