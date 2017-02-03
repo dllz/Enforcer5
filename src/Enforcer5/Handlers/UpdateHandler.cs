@@ -45,17 +45,9 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(command.Method.GetMethodInfo().Name);
+                if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-            }else if (text.Equals("callback"))
-            {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(command.Method.GetMethodInfo().Name);
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.CallbackQuery.From.FirstName} {update.CallbackQuery.From.Id}]");
             }else if (text.Equals("chatMember"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
@@ -69,6 +61,15 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }     
+        }
+        private static void Log(CallbackQuery update, Models.CallBacks command = null)
+        {
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");      
         }
 
         internal static async void HandleUpdate(Update update)
@@ -529,66 +530,71 @@ namespace Enforcer5.Handlers
             var callback = update.Data;
             if (!string.IsNullOrEmpty(callback))
             {
-                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-20))
-                    return; //toss it
-                var args = GetCallbackParameters(update.Data);
-                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                //check for the command
-                Console.WriteLine("Looking for command");
-                var callbacks = Bot.CallBacks.FirstOrDefault(
+
+                try
+                {
+                    if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-20))
+                        return; //toss it
+                    var args = GetCallbackParameters(update.Data);
+                    args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                    //check for the command
+                    // Console.WriteLine("Looking for command");
+                    var callbacks = Bot.CallBacks.FirstOrDefault(
                         x =>
                             String.Equals(x.Trigger, args[0],
                                 StringComparison.CurrentCultureIgnoreCase));
-                if (callbacks != null)
-                {
-                    //Log(update, "callback", command);
-                    AddCount(update.Message.From.Id, update.Message.Text);
-                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                    if (blocked.HasValue)
+                    if (callbacks != null)
                     {
-                        return; ;
-                    }
-                    if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
-                    {
-                        return;
-                    }
-                    if (callbacks.UploadAdmin & !Methods.IsLangAdmin(update.From.Id))
-                    {
-                        return;
-                    }
-                    if (args.Length >= 2)
-                    {
-                        if (!string.IsNullOrEmpty(args[1]))
+                        Log(update, callbacks);
+                        AddCount(update.Message.From.Id, update.Message.Text);
+                        var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
+                        if (blocked.HasValue)
                         {
-                            if (callbacks.GroupAdminOnly & !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) & !Methods.IsGlobalAdmin(update.From.Id))
+                            return;
+                            ;
+                        }
+                        if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
+                        {
+                            return;
+                        }
+                        if (callbacks.UploadAdmin & !Methods.IsLangAdmin(update.From.Id))
+                        {
+                            return;
+                        }
+                        if (args.Length >= 2)
+                        {
+                            if (!string.IsNullOrEmpty(args[1]))
                             {
-                                Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc, "userNotAdmin"), update.From.Id).Wait();
-                                return;
+                                if (callbacks.GroupAdminOnly &
+                                    !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) &
+                                    !Methods.IsGlobalAdmin(update.From.Id))
+                                {
+                                    Bot.Send(
+                                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc,
+                                            "userNotAdmin"), update.From.Id).Wait();
+                                    return;
+                                }
                             }
-                        }                        
-                    }
-                    if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-                    {
-                        return;
-                    }
-                    Bot.CommandsReceived++;
-                    try
-                    {
+                        }
+                        if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                        {
+                            return;
+                        }
+                        Bot.CommandsReceived++;
                         await callbacks.Method.Invoke(update, args);
                     }
-                    catch (ApiRequestException e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                    catch (AggregateException e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-
+                }
+                catch (ApiRequestException e)
+                {
+                    Console.WriteLine(e);
+                }
+                catch (AggregateException e)
+                {
+                    Console.WriteLine(e);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
             }
         }
