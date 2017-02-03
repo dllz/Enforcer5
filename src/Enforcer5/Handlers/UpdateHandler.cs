@@ -26,6 +26,7 @@ namespace Enforcer5.Handlers
         {
 
         };
+
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             new Task(() => { HandleUpdate(e.Update); }).Start();
@@ -35,177 +36,6 @@ namespace Enforcer5.Handlers
                 new Task(() => { OnMessage.OnChatMessage(e.Update); }).Start();
             }
         }
-
-        //        private static void AddCount(int id, string command)
-        //        {
-        //            try
-        //            {
-        //                if (!UserMessages.ContainsKey(id))
-        //                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
-        //                UserMessages[id].Messages.Add(new UserMessage(command));
-        //            }
-        //            catch
-        //            {
-        //                // ignored
-        //            }
-        //        }
-
-        //        internal static void BanMonitor()
-        //        {
-        //            while (true)
-        //            {
-        //                try
-        //                {
-        //                    //first load up the ban list
-        //                    using (var db = new WWContext())
-        //                    {
-        //                        foreach (var id in SpamBanList)
-        //                        {
-        //                            var p = db.Players.FirstOrDefault(x => x.TelegramId == id);
-        //                            var name = p?.Name;
-        //                            var count = p?.TempBanCount ?? 0;
-        //                            count++;
-        //                            if (p != null)
-        //                                p.TempBanCount = count; //update the count
-
-        //                            var expireTime = DateTime.Now;
-        //                            switch (count)
-        //                            {
-        //                                case 1:
-        //                                    expireTime = expireTime.AddHours(12);
-        //                                    break;
-        //                                case 2:
-        //                                    expireTime = expireTime.AddDays(1);
-        //                                    break;
-        //                                case 3:
-        //                                    expireTime = expireTime.AddDays(3);
-        //                                    break;
-        //                                default: //perm ban
-        //                                    expireTime = (DateTime)SqlDateTime.MaxValue;
-        //                                    break;
-
-        //                            }
-        //                            db.GlobalBans.Add(new GlobalBan
-        //                            {
-        //                                BannedBy = "Moderator",
-        //                                Expires = expireTime,
-        //                                TelegramId = id,
-        //                                Reason = "Spam / Flood",
-        //                                BanDate = DateTime.Now,
-        //                                Name = name
-        //                            });
-        //                        }
-        //                        SpamBanList.Clear();
-        //                        db.SaveChanges();
-
-        //                        //now refresh the list
-        //                        var list = db.GlobalBans.ToList();
-        //#if RELEASE2
-        //                        for (var i = list.Count - 1; i >= 0; i--)
-        //                        {
-        //                            if (list[i].Expires > DateTime.Now) continue;
-        //                            db.GlobalBans.Remove(db.GlobalBans.Find(list[i].Id));
-        //                            list.RemoveAt(i);
-        //                        }
-        //                        db.SaveChanges();
-        //#endif
-
-        //                        BanList = list;
-        //                    }
-        //                }
-        //                catch
-        //                {
-        //                    // ignored
-        //                }
-
-        //                //refresh every 20 minutes
-        //                Thread.Sleep(TimeSpan.FromMinutes(1));
-        //            }
-        //        }
-
-        //        internal static void SpamDetection()
-        //        {
-        //            while (true)
-        //            {
-        //                try
-        //                {
-        //                    var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
-        //                    //clone the dictionary
-        //                    foreach (var key in temp.Keys.ToList())
-        //                    {
-        //                        try
-        //                        {
-        //                            //drop older messages (1 minute)
-        //                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
-
-        //                            //comment this out - if we remove it, it doesn't keep the warns
-        //                            //if (temp[key].Messages.Count == 0)
-        //                            //{
-        //                            //    temp.Remove(key);
-        //                            //    continue;
-        //                            //}
-        //                            //now count, notify if limit hit
-        //                            if (temp[key].Messages.Count() >= 20) // 20 in a minute
-        //                            {
-        //                                temp[key].Warns++;
-        //                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 40)
-        //                                {
-        //                                    Send($"Please do not spam me. Next time is automated ban.", key);
-        //                                    //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-        //                                    //    Para);
-        //                                    continue;
-        //                                }
-        //                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count >= 40) & !temp[key].NotifiedAdmin)
-        //                                {
-        //                                    //Send(
-        //                                    //    $"User {key} has been banned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-        //                                    //    Para);
-        //                                    temp[key].NotifiedAdmin = true;
-        //                                    //ban
-        //                                    SpamBanList.Add(key);
-        //                                    var count = 0;
-        //                                    using (var db = new WWContext())
-        //                                    {
-        //                                        count = db.Players.FirstOrDefault(x => x.TelegramId == key).TempBanCount ?? 0;
-        //                                    }
-        //                                    var unban = "";
-        //                                    switch (count)
-        //                                    {
-        //                                        case 0:
-        //                                            unban = "12 hours";
-        //                                            break;
-        //                                        case 1:
-        //                                            unban = "24 hours";
-        //                                            break;
-        //                                        case 2:
-        //                                            unban = "3 days";
-        //                                            break;
-        //                                        default:
-        //                                            unban =
-        //                                                "Permanent. You have reached the max limit of temp bans for spamming.";
-        //                                            break;
-        //                                    }
-        //                                    Send("You have been banned for spamming.  Your ban period is: " + unban,
-        //                                        key);
-        //                                }
-
-        //                                temp[key].Messages.Clear();
-        //                            }
-        //                        }
-        //                        catch (Exception e)
-        //                        {
-        //                            //Console.WriteLine(e.Message);
-        //                        }
-        //                    }
-        //                    UserMessages = temp;
-        //                }
-        //                catch (Exception e)
-        //                {
-        //                    //Console.WriteLine(e.Message);
-        //                }
-        //                Thread.Sleep(2000);
-        //            }
-        //        }
 
 
         private static void Log(Update update, string text, Models.Commands command = null)
@@ -404,15 +234,30 @@ namespace Enforcer5.Handlers
                         case MessageType.ServiceMessage:
                             if (update.Message.NewChatMember != null)
                             {
-                                Log(update, "chatMember");
-                                if (update.Message.NewChatMember.Id == Bot.Me.Id)
+                                try
                                 {
-                                    await Service.BotAdded(update.Message);
+                                    Log(update, "chatMember");
+                                    if (update.Message.NewChatMember.Id == Bot.Me.Id)
+                                    {
+                                        await Service.BotAdded(update.Message);
+                                    }
+                                    else
+                                    {
+                                        await Service.Welcome(update.Message);
+                                        await Service.ResetUser(update.Message);
+                                    }
                                 }
-                                else
+                                catch (ApiRequestException e)
                                 {
-                                    await Service.Welcome(update.Message);
-                                    await Service.ResetUser(update.Message);
+                                    Console.WriteLine(e);
+                                }
+                                catch (AggregateException e)
+                                {
+                                    Console.WriteLine(e);
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e);
                                 }
                             }
                             break;

@@ -19,7 +19,7 @@ namespace Enforcer5
             var defSpamValue = 3;
             var maxTime = TimeSpan.FromSeconds(30);
             int msg = 0;            
-            if (msgs.HasValue)
+            if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
                 {
@@ -47,7 +47,7 @@ namespace Enforcer5
             var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
             defSpamValue = 3;
             maxTime = TimeSpan.FromMinutes(5);
-            if (msgs.HasValue)
+            if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
                 {
@@ -76,7 +76,7 @@ namespace Enforcer5
             joinSpam = Redis.db.StringGetAsync($"spam:added:{message.NewChatMember.Id}").Result;
             defSpamValue = 3;
             maxTime = TimeSpan.FromMinutes(5);
-            if (msgs.HasValue)
+            if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
                 {
