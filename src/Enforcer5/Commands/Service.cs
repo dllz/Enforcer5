@@ -24,15 +24,16 @@ namespace Enforcer5
                 try
                 {
                     msg = int.Parse(msgs);
+                    if (msg == 0)
+                    {
+                        msg = 1;
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }
-                if (msg == 0)
-                {
-                    msg = 1;
-                }
+                
             }
             else
             {
@@ -51,16 +52,17 @@ namespace Enforcer5
                 try
                 {
                     msg = int.Parse(joinSpam);
+                    if (msg == 0)
+                    {
+                        msg = 1;
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                     
                 }
-                if (msg == 0)
-                {
-                    msg = 1;
-                }
+                
             }
             else
             {
@@ -79,15 +81,15 @@ namespace Enforcer5
                 try
                 {
                     msg = int.Parse(joinSpam);
+                    if (msg == 0)
+                    {
+                        msg = 1;
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
 
-                }
-                if (msg == 0)
-                {
-                    msg = 1;
                 }
             }
             else

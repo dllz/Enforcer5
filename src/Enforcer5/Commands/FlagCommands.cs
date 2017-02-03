@@ -526,8 +526,15 @@ namespace Enforcer5
                     MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
                     DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                     noti = ser.ReadObject(stream1) as AdminNotification;
-                    await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                    try
+                    {
+                        await Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id,
                     Methods.GetLocaleString(lang, "markedAsSolved", chatid, repID));
