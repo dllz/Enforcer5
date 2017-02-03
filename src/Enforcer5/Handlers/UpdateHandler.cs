@@ -445,14 +445,16 @@ namespace Enforcer5.Handlers
                                 temp[key].Warns++;
                                 if (temp[key].Warns < 2 && temp[key].Messages.Count < 10)
                                 {
-                                    Send($"Please do not spam me. Next time is automated ban.", key);
+                                    Bot.Send($"Please do not spam me. Next time is automated ban.", key);
                                     //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
                                     //    Para);
                                     continue;
                                 }
                                 if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 10) & !temp[key].NotifiedAdmin)
                                 {
-                                    Redis.db.StringSet($"spammers{key}", key, TimeSpan.FromMinutes(10));
+                                    Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine($"{key} - Banned for 10 minutes");
                                     Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
                                 }
 
