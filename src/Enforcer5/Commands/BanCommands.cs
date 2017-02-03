@@ -89,7 +89,7 @@ namespace Enforcer5
                     try
                     {
                         await Bot.Api.KickChatMemberAsync(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id);
-                        var name = Methods.GetNick(update.Message, args, true);
+                        var name = Methods.GetNick(update.Message, args);
                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
                     }
                     catch (AggregateException e)
@@ -100,7 +100,7 @@ namespace Enforcer5
                 else
                 {
                     await Methods.KickUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
-                    var name = Methods.GetNick(update.Message, args, true);
+                    var name = Methods.GetNick(update.Message, args);
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                 }
                 await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);            
@@ -108,7 +108,7 @@ namespace Enforcer5
             else
             {
                 var diff = max - num;                
-                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args, true), num, max);
+                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args), num, max);
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
