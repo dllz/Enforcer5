@@ -463,6 +463,7 @@ namespace Enforcer5.Handlers
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Console.ForegroundColor = ConsoleColor.Green;
                                     Console.WriteLine($"{key} - Banned for 10 minutes");
+                                    temp[key].Warns = 1;
                                     Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
                                 }
 
