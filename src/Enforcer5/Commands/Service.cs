@@ -18,7 +18,7 @@ namespace Enforcer5
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
             var defSpamValue = 3;
             var maxTime = TimeSpan.FromSeconds(30);
-            int msg;            
+            int msg = 0;            
             if (msgs.HasValue)
             {
                 try
