@@ -448,7 +448,7 @@ namespace Enforcer5.Handlers
                             //    continue;
                             //}
                             //now count, notify if limit hit
-                            if (temp[key].Messages.Count() >= 8) // 20 in a minute
+                            if (temp[key].Messages.Count() >= 5) // 20 in a minute
                             {
                                 if (temp[key].Messages.Count < 10)
                                 {
@@ -480,7 +480,7 @@ namespace Enforcer5.Handlers
                 {
                     //Console.WriteLine(e.Message);
                 }
-                Thread.Sleep(2000);
+                Thread.Sleep(1000);
             }
         }
         internal static Task<Message> Send(string message, long id, bool clearKeyboard = false,
