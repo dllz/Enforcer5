@@ -30,6 +30,7 @@ namespace Enforcer5.Helpers
         public static long TotalPlayers = 0;
         public static long TotalGames = 0;
         public static Random R = new Random();
+        private static System.Threading.Timer _apiWatch;
         public static int MessagesSent = 0;
         public static string CurrentStatus = "";
         internal static string RootDirectory
@@ -114,6 +115,8 @@ namespace Enforcer5.Helpers
             StartTime = DateTime.UtcNow;
             //now we can start receiving
             Api.StartReceiving();
+            var wait = TimeSpan.FromSeconds(30);
+            _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
         }
 
         private static void ApiOnUpdate(object sender, UpdateEventArgs e)
@@ -365,6 +368,16 @@ namespace Enforcer5.Helpers
         {
             MessagesSent++;
             return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true);
+        }
+
+        private static void WatchAPI(object state)
+        {
+            while (!Api.IsReceiving)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("--Not getting updates--");
+                Api.StartReceiving();
+            }
         }
     }
 
