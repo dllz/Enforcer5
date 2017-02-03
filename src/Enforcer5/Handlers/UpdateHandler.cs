@@ -560,25 +560,30 @@ namespace Enforcer5.Handlers
                         var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                         if (blocked.HasValue)
                         {
+                            Console.WriteLine("1");
                             return;
                             ;
                         }
                         if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
                         {
+                            Console.WriteLine("2");
                             return;
                         }
                         if (callbacks.UploadAdmin & !Methods.IsLangAdmin(update.From.Id))
                         {
+                            Console.WriteLine("3");
                             return;
                         }
                         if (args.Length >= 2)
                         {
                             if (!string.IsNullOrEmpty(args[1]))
                             {
+                                Console.WriteLine("4");
                                 if (callbacks.GroupAdminOnly &
                                     !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) &
                                     !Methods.IsGlobalAdmin(update.From.Id))
                                 {
+                                    Console.WriteLine("5");
                                     Bot.Send(
                                         Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc,
                                             "userNotAdmin"), update.From.Id).Wait();
@@ -588,6 +593,7 @@ namespace Enforcer5.Handlers
                         }
                         if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                         {
+                            Console.WriteLine("6");
                             return;
                         }
                         Bot.CommandsReceived++;
