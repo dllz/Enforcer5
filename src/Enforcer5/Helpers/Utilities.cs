@@ -115,7 +115,7 @@ namespace Enforcer5.Helpers
             StartTime = DateTime.UtcNow;
             //now we can start receiving
             Api.StartReceiving();
-            var wait = TimeSpan.FromSeconds(10);
+            var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
         }
 
