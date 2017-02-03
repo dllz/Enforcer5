@@ -424,6 +424,7 @@ namespace Enforcer5.Handlers
                 }
                 catch (ApiRequestException e)
                 {
+                    Console.WriteLine(e);
                     try
                     {                        
                         if (e.ErrorCode == 112)
@@ -469,10 +470,12 @@ namespace Enforcer5.Handlers
                 }
                 catch (AggregateException e)
                 {
+                    Console.WriteLine(e);
                     await Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(ex);
                     try
                     {
                         if (ex.Message.Equals("UnableToResolveUsername"))
@@ -671,7 +674,7 @@ namespace Enforcer5.Handlers
             
         }
 
-        public static void HandleCallback(CallbackQuery update)
+        public static async void HandleCallback(CallbackQuery update)
         {
             var callback = update.Data;
             if (!string.IsNullOrEmpty(callback))
@@ -719,7 +722,23 @@ namespace Enforcer5.Handlers
                         return;
                     }
                     Bot.CommandsReceived++;
-                    callbacks.Method.Invoke(update, args);
+                    try
+                    {
+                        await callbacks.Method.Invoke(update, args);
+                    }
+                    catch (ApiRequestException e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                    catch (AggregateException e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
                 }
             }
         }
