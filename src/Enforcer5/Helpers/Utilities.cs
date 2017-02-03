@@ -127,6 +127,8 @@ namespace Enforcer5.Helpers
         {
             if (!Api.IsReceiving)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("--Not getting updates--");
                 Api.StartReceiving();
             }
             var e = receiveErrorEventArgs.ApiRequestException;
@@ -141,6 +143,8 @@ namespace Enforcer5.Helpers
             if (!Api.IsReceiving)
             {
                 Api.StartReceiving();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("--Not getting updates--");
             }
             var e = receiveErrorEventArgs.Exception;
             Console.WriteLine($"{DateTime.Now} {e.Source} - {e.Message}\n{e.Source}\n{e.StackTrace}");
