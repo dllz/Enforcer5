@@ -104,16 +104,8 @@ namespace Enforcer5
             {
                 if (mem.Name.Equals("Flood") || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
                 {
-                    if (mem.Name.Equals("Flood"))
-                    {
-                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                            $"openFloodMenu:{chatId}"));
-                    }
-                    else
-                    {
                         mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                             $"menusettings:{mem.Name}"));
-                    }
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
@@ -156,6 +148,9 @@ namespace Enforcer5
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
+
+            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                $"openFloodMenu:{chatId}"));
             warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupLanguage"), $"openLangMenu:{chatId}"));
