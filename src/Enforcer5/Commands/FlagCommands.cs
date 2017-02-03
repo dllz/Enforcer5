@@ -39,6 +39,7 @@ namespace Enforcer5
                     await Bot.SendReply(Methods.GetLocaleString(lang, "alreadyFlagged"), update.Message);
                     return;
                 }
+                await Redis.db.HashSetAsync($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported", "true");
                 if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)
                 {
                     return;

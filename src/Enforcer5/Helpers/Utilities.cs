@@ -337,18 +337,22 @@ namespace Enforcer5.Helpers
 
         internal static async Task<Message> SendReply(string message, Message msg)
         {
+            MessagesSent++;
             return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview:true);
         }
         internal static async Task<Message> SendReply(string message, long chatid, int msgid)
         {
+            MessagesSent++;
             return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true);
         }
         internal static async Task<Message> SendReply(string message, Update msg)
         {
+            MessagesSent++;
             return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
         }
         internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
+            MessagesSent++;
             return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true);
         }
     }
