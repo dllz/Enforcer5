@@ -404,7 +404,7 @@
     <value>{0} has been Banned for using non-Latin characters</value>
   </string>
   <string key ="globalBanNotif">
-    <value>{0} has been automatically banned as they have a history of: {1)
+    <value>{0} has been automatically banned as they have a history of: {1}
             They can appeal this ban in @werewolfsupport
     </value>
   </string>

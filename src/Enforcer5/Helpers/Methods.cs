@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using StackExchange.Redis;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -78,7 +79,22 @@ namespace Enforcer5.Helpers
                 {
                     exceptionInnerException.Message
                 };
-            await Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
+            try
+            {
+                await Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
+            }
+            catch (ApiRequestException e)
+            {
+                Console.WriteLine(e);
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine(e);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
         public static string FormatHTML(this string str)
         {

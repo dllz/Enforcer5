@@ -15,6 +15,90 @@ namespace Enforcer5
     {
         public static async Task Welcome(Message message)
         {
+            var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
+            var defSpamValue = 3;
+            var maxTime = TimeSpan.FromSeconds(30);
+            int msg;            
+            if (msgs.HasValue)
+            {
+                try
+                {
+                    msg = int.Parse(msgs);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                if (msg == 0)
+                {
+                    msg = 1;
+                }
+            }
+            else
+            {
+                msg = 1;
+            }
+            await Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
+            if (msg >= defSpamValue+1)
+            {
+               return; 
+            }
+            var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
+            defSpamValue = 3;
+            maxTime = TimeSpan.FromMinutes(5);
+            if (msgs.HasValue)
+            {
+                try
+                {
+                    msg = int.Parse(joinSpam);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    
+                }
+                if (msg == 0)
+                {
+                    msg = 1;
+                }
+            }
+            else
+            {
+                msg = 1;
+            }
+            await Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}", msg + 1, maxTime);
+            if (msg >= defSpamValue + 1)
+            {
+                return;
+            }
+            joinSpam = Redis.db.StringGetAsync($"spam:added:{message.NewChatMember.Id}").Result;
+            defSpamValue = 3;
+            maxTime = TimeSpan.FromMinutes(5);
+            if (msgs.HasValue)
+            {
+                try
+                {
+                    msg = int.Parse(joinSpam);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+
+                }
+                if (msg == 0)
+                {
+                    msg = 1;
+                }
+            }
+            else
+            {
+                msg = 1;
+            }
+            await Redis.db.StringSetAsync($"spam:added:{message.NewChatMember.Id}", msg + 1, maxTime);
+            if (msg >= defSpamValue + 1)
+            {
+                return;
+            }
             var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
             var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
             if (!string.IsNullOrEmpty(type) && type.Equals("media"))

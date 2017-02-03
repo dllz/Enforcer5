@@ -461,11 +461,13 @@ namespace Enforcer5.Handlers
                     }
                     catch (ApiRequestException ex)
                     {
-                        //fuckit   
+                        //fuckit  
+                        Console.WriteLine(ex);
                     }
-                    catch (Exception exception)
+                    catch (Exception ex)
                     {
                         //fuckit
+                        Console.WriteLine(ex);
                     }
                 }
                 catch (AggregateException e)
@@ -490,20 +492,23 @@ namespace Enforcer5.Handlers
                     catch (Exception e)
                     {
                         //fuckit
+                        Console.WriteLine(e);
                     }
                     try
                     {
                         await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
                     }
-                    catch (Exception e)
+                    catch (Exception et)
                     {
+                        Console.WriteLine(et);
                         try
                         {
                             await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
                         }
-                        catch (Exception exception)
+                        catch (Exception e)
                         {
                             //fuckit
+                            Console.WriteLine(e);
                         }
                     }
                 }
@@ -589,17 +594,17 @@ namespace Enforcer5.Handlers
                             //    continue;
                             //}
                             //now count, notify if limit hit
-                            if (temp[key].Messages.Count() >= 10) // 20 in a minute
+                            if (temp[key].Messages.Count() >= 5) // 20 in a minute
                             {
                                 temp[key].Warns++;
-                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 15)
+                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 10)
                                 {
                                     Send($"Please do not spam me. Next time is automated ban.", key);
                                     //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
                                     //    Para);
                                     continue;
                                 }
-                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 15) & !temp[key].NotifiedAdmin)
+                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 10) & !temp[key].NotifiedAdmin)
                                 {
                                     Redis.db.StringSet($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
