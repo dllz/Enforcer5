@@ -448,17 +448,16 @@ namespace Enforcer5.Handlers
                             //    continue;
                             //}
                             //now count, notify if limit hit
-                            if (temp[key].Messages.Count() >= 5) // 20 in a minute
+                            if (temp[key].Messages.Count() >= 8) // 20 in a minute
                             {
-                                temp[key].Warns++;
-                                if (temp[key].Warns < 2 && temp[key].Messages.Count < 10)
+                                if (temp[key].Messages.Count < 10)
                                 {
                                     Bot.Send($"Please do not spam me. Next time is automated ban.", key);
                                     //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
                                     //    Para);
                                     continue;
                                 }
-                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 10) & !temp[key].NotifiedAdmin)
+                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 13) & !temp[key].NotifiedAdmin)
                                 {
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Console.ForegroundColor = ConsoleColor.Green;
