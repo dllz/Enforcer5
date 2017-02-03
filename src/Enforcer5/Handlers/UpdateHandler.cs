@@ -46,18 +46,24 @@ namespace Enforcer5.Handlers
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
                 Console.ForegroundColor = ConsoleColor.Red;
                 if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }else if (text.Equals("chatMember"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
             }else if (text.Equals("extra"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }     
@@ -66,7 +72,9 @@ namespace Enforcer5.Handlers
         {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+            Console.ForegroundColor = ConsoleColor.Red;
                 if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");      
