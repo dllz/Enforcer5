@@ -73,7 +73,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+            //Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
             Console.ForegroundColor = ConsoleColor.Red;
                 if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -544,8 +544,8 @@ namespace Enforcer5.Handlers
 
                 try
                 {
-                    if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-20))
-                        return; //toss it
+                    //if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-20))
+                    //    return; //toss it
                     var args = GetCallbackParameters(update.Data);
                     args[0] = args[0].Replace("@" + Bot.Me.Username, "");
                     //check for the command
