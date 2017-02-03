@@ -813,8 +813,7 @@ namespace Enforcer5
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"),
                     $"removewarn:{chatId}:{userId}"));
                 var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                await Bot.Send(text, chatId, customMenu: menu);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup:menu);
             }
         }
     }
