@@ -108,12 +108,19 @@ namespace Enforcer5.Helpers
             Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
             Api.OnReceiveError += ApiOnReceiveError;
             Api.OnReceiveGeneralError += ApiOnReceiveGenError;
+            Api.OnUpdate += ApiOnUpdate;            
             Me = Api.GetMeAsync().Result;
             Api.PollingTimeout = TimeSpan.FromSeconds(1);
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
             //now we can start receiving
             Api.StartReceiving();
+        }
+
+        private static void ApiOnUpdate(object sender, UpdateEventArgs e)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("--Recieved Update--");
         }
 
         private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
