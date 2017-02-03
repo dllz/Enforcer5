@@ -36,7 +36,6 @@ namespace Enforcer5.Helpers
                     catch (Exception e)
                     {
                         //isNull
-                        Console.WriteLine(e);
                     }       
                     i++;
                     if (i == menu.Buttons.Count) break;
@@ -79,8 +78,6 @@ namespace Enforcer5.Helpers
                         catch (Exception e)
                         {
                             //isNull
-                            Console.WriteLine(e);
-
                         }
                         i++;
                         if (i == menus[j].Buttons.Count) break;

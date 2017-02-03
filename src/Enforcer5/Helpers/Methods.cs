@@ -70,8 +70,6 @@ namespace Enforcer5.Helpers
             catch (Exception e)
             {
                 //fucked
-                Console.WriteLine(e);
-
             }
         }
 
@@ -450,8 +448,6 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-
                 return false;
             }
         }

@@ -176,15 +176,15 @@ namespace Enforcer5
                                 }
                                 catch (ApiRequestException e)
                                 {
-                                    Console.WriteLine(e);
+
                                 }
                                 catch (AggregateException e)
                                 {
-                                    Console.WriteLine(e);
+
                                 }
                                 catch (Exception e)
                                 {
-                                    Console.WriteLine(e);
+
                                 }
                             }
                             await Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
@@ -349,18 +349,15 @@ namespace Enforcer5
                 }
                 catch (ApiRequestException e)
                 {
-                    Console.WriteLine(e);
 
                 }
                 catch (AggregateException e)
                 {
-                    Console.WriteLine(e);
 
                 }
                 catch (Exception e)
                 {
-                                    Console.WriteLine(e);
-
+                    
                 }
             }
             var hash = $"flagged:{chatId}:{repId}";

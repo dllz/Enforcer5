@@ -180,15 +180,15 @@ namespace Enforcer5
                     }
                     catch (ApiRequestException e)
                     {
-                        Console.WriteLine(e);
+
                     }
                     catch (AggregateException e)
                     {
-                        Console.WriteLine(e);
+
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+
                     }
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                 }

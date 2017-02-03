@@ -104,8 +104,16 @@ namespace Enforcer5
             {
                 if (mem.Name.Equals("Flood") || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
                 {
+                    if (mem.Name.Equals("Flood"))
+                    {
+                        mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                            $"openFloodMenu:{chatId}"));
+                    }
+                    else
+                    {
                         mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                             $"menusettings:{mem.Name}"));
+                    }
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
@@ -148,8 +156,6 @@ namespace Enforcer5
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"FloodButton"),
-                            $"openFloodMenu:{chatId}"));
             warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupLanguage"), $"openLangMenu:{chatId}"));
@@ -283,14 +289,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -306,14 +312,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -329,14 +335,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -352,14 +358,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -375,14 +381,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -398,14 +404,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -421,14 +427,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("no"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -444,21 +450,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -502,7 +508,7 @@ namespace Enforcer5
             if (num > 0)
             {
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
@@ -519,7 +525,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             await Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
             var keys = Commands.genMenu(chatId, lang);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
@@ -534,14 +540,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -563,7 +569,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "mediaMenu");
             var keys = Commands.genMediaMenu(chatId, lang);
-            await Bot.Send(text, call.From.Id, customMenu: keys, parseMode: ParseMode.Html);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
 
         [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
@@ -573,7 +579,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Send(text,call.From.Id, customMenu: keys, parseMode:ParseMode.Html);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Html);
         }
 
         [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
@@ -585,7 +591,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-            await Bot.Send(text, call.From.Id, customMenu: keys, parseMode: ParseMode.Html);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
 
         [Callback(Trigger = "floodSettings")]
@@ -605,7 +611,7 @@ namespace Enforcer5
             if (num > 0)
             {
                 var keys = Commands.genFlood(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
@@ -622,7 +628,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             await Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
             var keys = Commands.genFlood(chatId, lang);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
@@ -637,14 +643,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "kick");
                 var keys = Commands.genFlood(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
                 var keys = Commands.genFlood(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -660,14 +666,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else 
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(call.From.Id, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -682,14 +688,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -705,14 +711,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -728,14 +734,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -751,14 +757,14 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -772,7 +778,7 @@ namespace Enforcer5
             if (num > 0)
             {
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
@@ -789,7 +795,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             await Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "mediamax");
             var keys = Commands.genMenu(chatId, lang);
-            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
@@ -804,21 +810,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -833,21 +839,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -863,21 +869,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -893,21 +899,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -923,21 +929,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -953,21 +959,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -983,21 +989,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -1013,21 +1019,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -1043,21 +1049,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
@@ -1073,21 +1079,21 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, $"{call.Message.Text} {1}", replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
