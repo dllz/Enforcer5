@@ -245,6 +245,11 @@ namespace Enforcer5.Handlers
                             {
                                 try
                                 {
+                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.NewChatMember.Id}").Result;
+                                    if (blocked.HasValue)
+                                    {
+                                        return; ;
+                                    }
                                     new Task(() => { Log(update, "chatMember"); }).Start();
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
@@ -452,17 +457,22 @@ namespace Enforcer5.Handlers
                             {
                                 if (temp[key].Messages.Count < 10)
                                 {
-                                    Bot.Send($"Please do not spam me. Next time is automated ban.", key);
+                                    if (temp[key].NotifiedAdmin == false)
+                                    {
+                                        Bot.Send($"Please do not spam me. Next time is automated ban.", key);
+                                        temp[key].NotifiedAdmin = true;
+                                    }
                                     //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-                                    //    Para);
+                                    //    Para);                                    
                                     continue;
                                 }
-                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 13) & !temp[key].NotifiedAdmin)
+                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 11))
                                 {
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Console.ForegroundColor = ConsoleColor.Green;
                                     Console.WriteLine($"{key} - Banned for 10 minutes");
                                     temp[key].Warns = 1;
+                                    temp[key].NotifiedAdmin = false;
                                     Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
                                 }
 
