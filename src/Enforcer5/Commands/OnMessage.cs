@@ -25,8 +25,6 @@ namespace Enforcer5
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
                     int num = msgs.IsInteger ? int.Parse(msgs) : 0;
                     if (num == 0) num = 1;
-                    var maxSpam = 8;
-                    if (update.Message.Chat.Type == ChatType.Private) maxSpam = 12;
                     var floodSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
                     var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
                     var maxTime = TimeSpan.FromSeconds(5);
@@ -65,6 +63,7 @@ namespace Enforcer5
                             }
                             catch (Exception e)
                             {
+                                Console.WriteLine(e);
 
                             }
                         }
@@ -107,6 +106,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        Console.WriteLine(e);
 
                     }
 
@@ -171,6 +171,7 @@ namespace Enforcer5
                         }
                         catch (Exception e)
                         {
+                            Console.WriteLine(e);
 
                         }
                         await Bot.Send(

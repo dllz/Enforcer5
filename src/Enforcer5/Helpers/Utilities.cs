@@ -236,11 +236,13 @@ namespace Enforcer5.Helpers
                 catch (ApiRequestException ex)
                 {
                     //fuckit 
+                    Console.WriteLine(ex);
                     return null;
                 }
                 catch (Exception exception)
                 {
                     //fuckit
+                    Console.WriteLine(exception);
                     return null;
                 }
             }
@@ -318,13 +320,13 @@ namespace Enforcer5.Helpers
                     }
                     catch (ApiRequestException ex)
                     {
-                        //fuckit 
-                        return null;
+                    Console.WriteLine(ex);
+                    return null;
                     }
                     catch (Exception exception)
                     {
-                        //fuckit
-                        return null;
+                    Console.WriteLine(exception);
+                    return null;
                     }
             }
             catch (AggregateException e)
@@ -377,6 +379,8 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                Console.WriteLine(e);
+
                 return false;
             }
             

@@ -615,14 +615,14 @@ namespace Enforcer5.Handlers
                         }
                         catch (Exception e)
                         {
-                            //Console.WriteLine(e.Message);
+                            Console.WriteLine(e.Message);
                         }
                     }
                     UserMessages = temp;
                 }
                 catch (Exception e)
                 {
-                    //Console.WriteLine(e.Message);
+                    Console.WriteLine(e.Message);
                 }
                 Thread.Sleep(2000);
             }

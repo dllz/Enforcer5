@@ -257,10 +257,14 @@ namespace Enforcer5
             }
             catch (ApiRequestException e)
             {
+                Console.WriteLine(e);
+
                 await Bot.SendReply(Methods.GetLocaleString(lang, "startMe"), update);
             }
             catch (AggregateException e)
             {
+                Console.WriteLine(e);
+
                 Methods.SendError($"{e.InnerExceptions[0].Message}\n{e.StackTrace}", update.Message, lang);
             }
         }
