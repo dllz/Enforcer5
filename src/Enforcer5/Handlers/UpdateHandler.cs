@@ -38,7 +38,7 @@ namespace Enforcer5.Handlers
         }
 
 
-        private static void Log(Update update, string text, Models.Commands command = null)
+        private static async Task Log(Update update, string text, Models.Commands command = null)
         {
             if (text.Equals("text"))
             {
@@ -62,7 +62,7 @@ namespace Enforcer5.Handlers
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }     
         }
-        private static void Log(CallbackQuery update, Models.CallBacks command = null)
+        private static async Task Log(CallbackQuery update, Models.CallBacks command = null)
         {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -107,7 +107,7 @@ namespace Enforcer5.Handlers
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {
-                                    Log(update, "text", command);
+                                    new Task(() => { Log(update, "text", command); }).Start(); 
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
@@ -162,7 +162,7 @@ namespace Enforcer5.Handlers
                                 {
                                     return; ;
                                 }
-                                Log(update, "extra");
+                                new Task(() => { Log(update, "extra"); }).Start();
                                 await Task.Run(() => Commands.SendExtra(update, args));
                             }
                             else if (update.Message.Text.StartsWith("@admin"))
@@ -177,7 +177,7 @@ namespace Enforcer5.Handlers
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {
-                                    Log(update, "text", command);
+                                    new Task(() => { Log(update, "text", command); }).Start();
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
@@ -237,7 +237,7 @@ namespace Enforcer5.Handlers
                             {
                                 try
                                 {
-                                    Log(update, "chatMember");
+                                    new Task(() => { Log(update, "chatMember"); }).Start();
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
                                         await Service.BotAdded(update.Message);
@@ -545,7 +545,7 @@ namespace Enforcer5.Handlers
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
                     {
-                        Log(update, callbacks);
+                        new Task(() => { Log(update, callbacks); }).Start(); 
                         AddCount(update.Message.From.Id, update.Message.Text);
                         var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                         if (blocked.HasValue)
