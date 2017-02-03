@@ -484,39 +484,25 @@ namespace Enforcer5.Helpers
             await Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
             await Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
         }
-        public static void CheckTempBans(object state)
-        {
-            var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
-            foreach (var mem in tempbans)
-            {
-                if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
-                {
-                    var subStrings = mem.Value.ToString().Split(':');
-                    var chatId = long.Parse(subStrings[0]);
-                    var userId = int.Parse(subStrings[1]);
-                    UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
-                    Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                    Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
-                }
-
-            }
-        }
         public static void CheckTempBans()
         {
-            var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
-            foreach (var mem in tempbans)
+            while (true)
             {
-                var now = System.DateTime.UtcNow.AddHours(2).ToUnixTime();
-                if (now >= long.Parse(mem.Name))
+                var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
+                foreach (var mem in tempbans)
                 {
-                    var subStrings = mem.Value.ToString().Split(':');
-                    var chatId = long.Parse(subStrings[0]);
-                    var userId = int.Parse(subStrings[1]);
-                    UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
-                    Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                    Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
-                }
+                    if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                    {
+                        var subStrings = mem.Value.ToString().Split(':');
+                        var chatId = long.Parse(subStrings[0]);
+                        var userId = int.Parse(subStrings[1]);
+                        UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                        Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                        Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
+                    }
 
+                }
+                Thread.Sleep(TimeSpan.FromMinutes(1));
             }
         }
 
