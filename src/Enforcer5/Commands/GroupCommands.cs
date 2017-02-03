@@ -205,7 +205,7 @@ namespace Enforcer5
             }
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetLocaleString(lang, "Support");
-            await Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);
+            await Bot.SendReply("https://t.me/werewolfsupport", update.Message.Chat.Id, msgToReplyTo);
         }
 
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
