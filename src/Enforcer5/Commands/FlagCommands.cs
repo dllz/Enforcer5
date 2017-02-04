@@ -97,12 +97,12 @@ namespace Enforcer5
                     string text;
                     if (!reporter.HasValue)
                     {
-                        text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
+                        text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {update.Message.From.Id}", solvedAt,
                             update.Message.Chat.Title, reporter);
                     }
                     else
                     {
-                        text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
+                        text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {update.Message.From.Id}", solvedAt,
                             update.Message.Chat.Title);
                     }
                     for (int i = 0; i < counter; i++)
@@ -507,12 +507,12 @@ namespace Enforcer5
                 string text;
                 if (!reporter.HasValue)
                 {
-                    text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
+                    text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {call.From.Id}", solvedAt,
                         chatid, reporter);
                 }
                 else
                 {
-                    text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
+                    text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {call.From.Id}", solvedAt,
                         chatid);
                 }
                 for (int i = 0; i < counter; i++)
