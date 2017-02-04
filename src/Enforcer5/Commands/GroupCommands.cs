@@ -785,7 +785,7 @@ namespace Enforcer5
         [Callback(Trigger = "userbuttonwarnuser", GroupAdminOnly = true)]
         public static async Task UserButtonsWarnUser(CallbackQuery call, string[] args)
         {
-            var userId = args[2];
+            var userId = int.Parse(args[2]);
             var chatId = long.Parse(args[1]);
             if (Methods.IsGroupAdmin(userId, chatId))
             {

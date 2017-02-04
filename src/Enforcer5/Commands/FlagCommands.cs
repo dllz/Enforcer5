@@ -67,6 +67,33 @@ namespace Enforcer5
             await SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
         }
 
+        [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task AdminOff(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userId = update.Message.From.Id;
+            var chatId = update.Message.Chat.Id;
+            if (update.Message.ReplyToMessage != null)
+            {
+                userId = update.Message.ReplyToMessage.From.Id;
+            }
+            await Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "Off"), update);
+        }
+        [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task AdminOn(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userId = update.Message.From.Id;
+            var chatId = update.Message.Chat.Id;
+            if (update.Message.ReplyToMessage != null)
+            {
+                userId = update.Message.ReplyToMessage.From.Id;
+            }
+            await Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "On"), update);
+        }
+
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
         public static async Task Solved(Update update, string[] args)
         {
@@ -231,6 +258,11 @@ namespace Enforcer5
             var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
             foreach (var mod in mods)
             {
+                var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
+                if (allowed.Result)
+                {
+                    continue;
+                }
                 try
                 {
                     await Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
