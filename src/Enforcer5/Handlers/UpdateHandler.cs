@@ -92,7 +92,8 @@ namespace Enforcer5.Handlers
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
-                
+                if (update.Message?.Date < System.DateTime.Now.AddSeconds(-30))
+                    return;
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
                 try
                 {
