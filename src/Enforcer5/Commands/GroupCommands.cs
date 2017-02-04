@@ -806,7 +806,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        await Bot.Api.KickChatMemberAsync(call.Message.Chat.Id, int.Parse(userId));
+                        await Bot.Api.KickChatMemberAsync(call.Message.Chat.Id, userId);
                         await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId));
                     }
                     catch (AggregateException e)
@@ -816,7 +816,7 @@ namespace Enforcer5
                 }
                 else
                 {
-                    await Methods.KickUser(call.Message.Chat.Id, int.Parse(userId), lang);
+                    await Methods.KickUser(call.Message.Chat.Id, userId, lang);
                     await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId));
                 }
                 await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
