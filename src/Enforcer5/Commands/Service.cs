@@ -16,8 +16,8 @@ namespace Enforcer5
         public static async Task Welcome(Message message)
         {
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
-            var defSpamValue = 3;
-            var maxTime = TimeSpan.FromSeconds(30);
+            var defSpamValue = 1;
+            var maxTime = TimeSpan.FromMinutes(1);
             int msg = 0;            
             if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
