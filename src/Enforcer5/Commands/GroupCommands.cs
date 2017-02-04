@@ -802,9 +802,7 @@ namespace Enforcer5
                     try
                     {
                         await Bot.Api.KickChatMemberAsync(call.Message.Chat.Id, int.Parse(userId));
-                        var name = Methods.GetNick(call.Message, args);
-                        await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxBan", name), call.Message);
-                        await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
+                        await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId));
                     }
                     catch (AggregateException e)
                     {
@@ -814,16 +812,13 @@ namespace Enforcer5
                 else
                 {
                     await Methods.KickUser(call.Message.Chat.Id, int.Parse(userId), lang);
-                    var name = Methods.GetNick(call.Message, args);
-                    await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxKick", name), call.Message);
-                    await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, "");
+                    await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId));
                 }
                 await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
             }
             else
             {
-                var diff = max - num;
-                var text = Methods.GetLocaleString(lang, "warn", Methods.GetNick(call.Message, args), num, max);
+                var text = Methods.GetLocaleString(lang, "warn", userId, num, max);
                 var baseMenu = new List<InlineKeyboardButton>();
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "resetWarn"),
                     $"resetwarns:{chatId}:{userId}"));
