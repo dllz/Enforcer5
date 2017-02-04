@@ -517,6 +517,23 @@ namespace Enforcer5
                     await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
                 }
             }
+            else if (update.Message.ReplyToMessage != null)
+            {
+                userId = update.Message.ReplyToMessage.From.Id;
+                var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                var status = user.Status;
+                var name = user.User.FirstName;
+                if (user.User.Username != null)
+                    name = $"{name} - @{user.User.Username}";
+                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                    status = ChatMemberStatus.Kicked;
+                var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
+                if (!reason.IsNullOrEmpty)
+                {
+                    name = $"{name}   {Methods.GetLocaleString(lang, "bannedFor", reason)}";
+                }
+                await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
+            }
 
         }
 
