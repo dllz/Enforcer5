@@ -417,6 +417,7 @@ namespace Enforcer5
             var why = Methods.GetLocaleString(lang, "inlineBan");
             Methods.AddBanList(chatId, userId, userId.ToString(), why);
             await Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
+            await Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
         }
 
@@ -429,12 +430,7 @@ namespace Enforcer5
             await Methods.KickUser(chatId, userId, lang);
             Methods.SaveBan(userId, "kick");
 
-            object[] arguments =
-            {
-                            Methods.GetNick(call.Message, args),
-                            Methods.GetNick(call.Message, args, true)
-                        };
-            await Bot.SendReply(Methods.GetLocaleString(lang, "SuccesfulKick", arguments), call.Message);
+            await Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
             await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
         }
 
