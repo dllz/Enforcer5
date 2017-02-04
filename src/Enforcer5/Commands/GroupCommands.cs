@@ -787,6 +787,11 @@ namespace Enforcer5
         {
             var userId = args[2];
             var chatId = long.Parse(args[1]);
+            if (Methods.IsGroupAdmin(userId, chatId))
+            {
+                return;
+                
+            }
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             var max = 3;
