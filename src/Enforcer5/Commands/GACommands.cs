@@ -150,12 +150,6 @@ namespace Enforcer5
             Environment.Exit(0);
         }
 
-        [Command(Trigger = "checktempbans", GlobalAdminOnly = true)]
-        public static async Task ManuallyCheckTempban(Update update, string[] args)
-        {
-            Methods.CheckTempBans();
-        }
-
         [Command(Trigger = "makelangadmin", RequiresReply = true, UploadAdmin = true)]
        public static async Task MakeLangAdmin(Update update, string[] args)
         {
