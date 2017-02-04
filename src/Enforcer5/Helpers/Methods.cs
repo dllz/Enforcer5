@@ -381,7 +381,7 @@ namespace Enforcer5.Helpers
 
         public static string GetUserInfo(int userid, long? chatId, string chatTitle, XDocument lang)
         {
-            var text = GetLocaleString(lang, "userinfoGroup", chatTitle);
+            var text = GetLocaleString(lang, "userinfoGroup");
             var hash = $"ban:{userid}";
             var banInfo = Redis.db.HashGetAllAsync(hash).Result;
             var completedList = new List<string>();
@@ -390,6 +390,7 @@ namespace Enforcer5.Helpers
                 Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
             if (chatId != null)
             {
+                completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
                 string warns;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
                 {

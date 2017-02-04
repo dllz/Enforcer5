@@ -43,6 +43,9 @@
   <string key="userinfoGroup">
     <value><b>Info for group {0}</b>:</value>
   </string>
+  <string key="userInfoGlobal">
+    <value>Global user info</value>
+  </string>
   <string key="getrtl">
     <value>Removed for Right to left characters: {0}</value>
   </string>
