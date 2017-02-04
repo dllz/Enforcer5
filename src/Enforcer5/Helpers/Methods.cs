@@ -210,6 +210,10 @@ namespace Enforcer5.Helpers
         public static int GetUserId(Update update, string[] args)
         {
             var lang = GetGroupLanguage(update.Message).Doc;
+            if (update.Message.NewChatMember != null)
+            {
+                return update.Message.NewChatMember.Id;
+            }
             if (update.Message.ReplyToMessage != null)
             {
                 return update.Message.ReplyToMessage.From.Id;
