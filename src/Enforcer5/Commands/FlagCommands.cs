@@ -78,7 +78,7 @@ namespace Enforcer5
                 userId = update.Message.ReplyToMessage.From.Id;
             }
             await Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
-            await Bot.SendReply(Methods.GetLocaleString(lang, "Off"), update);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
         public static async Task AdminOn(Update update, string[] args)
@@ -91,7 +91,7 @@ namespace Enforcer5
                 userId = update.Message.ReplyToMessage.From.Id;
             }
             await Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
-            await Bot.SendReply(Methods.GetLocaleString(lang, "On"), update);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }
 
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]

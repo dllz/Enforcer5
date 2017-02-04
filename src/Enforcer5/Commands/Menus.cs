@@ -189,10 +189,13 @@ namespace Enforcer5
             twoRow.Buttons.Add(new InlineButton("➕", $"floodraise:{chatId}"));
             var exceptions = Redis.db.HashGetAllAsync($"chat:{chatId}:floodexceptions").Result;
             var exeMenu = new Menu(2);
+            var textFound = false;
             foreach (var mem in exceptions)
             {
                 exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                     $"floodSettings:{mem.Name}"));
+                if (mem.Name.Equals("text"))
+                    textFound = true;
                 if (mem.Value.Equals("yes"))
                 {
                     exeMenu.Buttons.Add(new InlineButton("✅", $"flood{mem.Name}:{chatId}"));
@@ -201,6 +204,12 @@ namespace Enforcer5
                 {
                     exeMenu.Buttons.Add(new InlineButton("❌", $"flood{mem.Name}:{chatId}"));
                 }
+            }
+            if (!textFound)
+            {
+                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"textButton"),
+                   $"floodSettings:text"));
+                exeMenu.Buttons.Add(new InlineButton("❌", $"floodtext:{chatId}"));
             }
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));

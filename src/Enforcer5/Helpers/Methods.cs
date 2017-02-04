@@ -602,6 +602,10 @@ namespace Enforcer5.Helpers
             {
                 return "sticker";
             }
+            if (msg.Text != null)
+            {
+                return "text";
+            }
             else
             {
                 return "unknown";

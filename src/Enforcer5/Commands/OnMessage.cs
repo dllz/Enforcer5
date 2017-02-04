@@ -20,7 +20,7 @@ namespace Enforcer5
                 var msgType = Methods.GetMediaType(update.Message);
                 var chatId = update.Message.Chat.Id;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                if (!isIgnored(chatId, msgType))
+                if (isIgnored(chatId, msgType))
                 {
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
                     int num = msgs.IsInteger ? int.Parse(msgs) : 0;
@@ -193,7 +193,14 @@ namespace Enforcer5
         public static bool isIgnored(long chatId, string msgType)
         {
             var status = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", msgType).Result;
-            return status.Equals("yes");
+            if (status.HasValue)
+            {
+                return status.Equals("no");
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }
