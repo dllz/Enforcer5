@@ -206,16 +206,16 @@ namespace Enforcer5
                 await Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
         }
 
-        [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async Task ReportOff(Update update, string[] args)
+        [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async Task ReportOn(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             await Redis.db.SetRemoveAsync(hash, update.Message.ReplyToMessage.From.Id);
             await Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
         }
-        [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async Task ReportOn(Update update, string[] args)
+        [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static async Task ReportOff(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
