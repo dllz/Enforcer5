@@ -672,5 +672,19 @@ namespace Enforcer5.Helpers
         {
             Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
         }
+
+        public static void Restart()
+        {
+            while (true)
+            {
+                var runningTime = DateTime.UtcNow - Bot.StartTime;
+                if (runningTime >= TimeSpan.FromHours(1))
+                {
+                    Environment.Exit(0);
+                }
+                Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
+                Thread.Sleep(TimeSpan.FromMinutes(10));
+            }
+        }
     }
 }

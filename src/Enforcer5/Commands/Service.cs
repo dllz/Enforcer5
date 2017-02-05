@@ -79,7 +79,7 @@ namespace Enforcer5
             }
             joinSpam = Redis.db.StringGetAsync($"spam:added:{message.NewChatMember.Id}").Result;
             defSpamValue = 3;
-            maxTime = TimeSpan.FromMinutes(5);
+            maxTime = TimeSpan.FromMinutes(30);
             if (joinSpam.HasValue && !string.IsNullOrEmpty(joinSpam))
             {
                 try
