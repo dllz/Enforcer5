@@ -738,7 +738,7 @@ namespace Enforcer5
                 }
                 catch (ApiRequestException e)
                 {
-                    Methods.SendError($"{e.ErrorCode}\n{e.Message}", update.Message, lang);
+                    Methods.SendError($"{e.ErrorCode}\n{e.Message}, 12321", update.Message, lang);
                     await Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                 }
             }

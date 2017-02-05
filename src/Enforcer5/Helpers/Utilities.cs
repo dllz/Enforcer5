@@ -241,7 +241,7 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}", id);
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", id);
                         return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
@@ -324,7 +324,7 @@ namespace Enforcer5.Helpers
                         }
                         else
                         {
-                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", chatUpdate);
+                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}\n 12", chatUpdate);
                             return await Bot.Send($"3\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
