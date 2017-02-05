@@ -677,13 +677,20 @@ namespace Enforcer5.Helpers
         {
             while (true)
             {
-                var runningTime = DateTime.UtcNow - Bot.StartTime;
-                if (runningTime >= TimeSpan.FromHours(1))
+                try
                 {
-                    Environment.Exit(0);
+                    var runningTime = DateTime.UtcNow - Bot.StartTime;
+                    if (runningTime >= TimeSpan.FromHours(1))
+                    {
+                        Environment.Exit(0);
+                    }
+                    Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
+                    Thread.Sleep(TimeSpan.FromMinutes(10));
                 }
-                Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
-                Thread.Sleep(TimeSpan.FromMinutes(10));
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
         }
     }
