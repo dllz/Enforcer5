@@ -215,7 +215,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Can't parse message text: Unsupported start tag"))
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
                 {
                     Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return null;
