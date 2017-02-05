@@ -57,8 +57,8 @@ namespace Enforcer5
             new Task(Methods.IntialiseLanguages).Start();
             var wait = TimeSpan.FromSeconds(30);
             new Thread(UpdateHandler.SpamDetection).Start();
-            new Thread(Methods.CheckTempBans).Start();
-            new Thread(Methods.Restart).Start();
+            //new Thread(Methods.CheckTempBans).Start();
+            //new Thread(Methods.Restart).Start();
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
         }

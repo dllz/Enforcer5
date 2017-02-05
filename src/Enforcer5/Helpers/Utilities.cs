@@ -242,7 +242,7 @@ namespace Enforcer5.Helpers
                     else
                     {
                         await Bot.Send($"{e.ErrorCode}\n{e.Message}", id);
-                        return await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)
@@ -325,7 +325,7 @@ namespace Enforcer5.Helpers
                         else
                         {
                             await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", chatUpdate);
-                            return await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                            return await Bot.Send($"3\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)

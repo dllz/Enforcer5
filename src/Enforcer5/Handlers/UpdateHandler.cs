@@ -316,7 +316,7 @@ namespace Enforcer5.Handlers
                         else
                         {
                             await Bot.SendReply($"{e.ErrorCode}\n{e.Message}", update);
-                            await Bot.Send($"\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                            await Bot.Send($"1\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)
