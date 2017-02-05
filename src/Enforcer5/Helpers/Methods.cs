@@ -489,7 +489,7 @@ namespace Enforcer5.Helpers
             await Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
             await Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
         }
-        public static void CheckTempBans(object obj)
+        internal static void CheckTempBans(object obj)
         {
             while (true)
             {
@@ -673,7 +673,7 @@ namespace Enforcer5.Helpers
             Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
         }
 
-        public static void Restart(object obj)
+        internal static void Restart(object obj)
         {
             while (true)
             {
