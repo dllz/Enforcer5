@@ -176,7 +176,7 @@ namespace Enforcer5
         public static async Task GlobalBan(Update update, string[] args)
         {
             int userId = 0;
-            string moti;
+            string moti = "";
             if (update.Message.ReplyToMessage != null)
             {
                 if (update.Message.ReplyToMessage.ForwardFrom != null)
@@ -201,6 +201,10 @@ namespace Enforcer5
                 {
                     moti = args[1];
                 }                
+            }
+            else
+            {
+                return;
             }
             if (userId != 0)
             {
