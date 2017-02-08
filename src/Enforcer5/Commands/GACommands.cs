@@ -172,6 +172,44 @@ namespace Enforcer5
             await Bot.SendReply("Done", update);
         }
 
+        [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
+        public static async Task GlobalBan(Update update, string[] args)
+        {
+            int userId = 0;
+            string moti;
+            if (update.Message.ReplyToMessage != null)
+            {
+                if (update.Message.ReplyToMessage.ForwardFrom != null)
+                {
+                    userId = update.Message.ReplyToMessage.ForwardFrom.Id;
+                }
+                else
+                {
+                    userId = update.Message.ReplyToMessage.From.Id;
+                }
+                moti = args[1];
+            }
+            int temp;
+            if (args.Length == 2)
+            {
+                var spilt = args[1].Split(':');
+                if (int.TryParse(spilt[0], out temp))
+                {
+                    userId = temp;
+                }
+                else
+                {
+                    moti = args[1];
+                }                
+            }
+            if (userId != 0)
+            {
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+            }
+        }
+
     }
 
     public static partial class CallBacks
