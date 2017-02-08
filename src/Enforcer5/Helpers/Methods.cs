@@ -491,30 +491,26 @@ namespace Enforcer5.Helpers
         }
         internal static void CheckTempBans(object obj)
         {
-            while (true)
+            try
             {
-                try
+                var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
+                foreach (var mem in tempbans)
                 {
-                    var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
-                    foreach (var mem in tempbans)
+                    if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
                     {
-                        if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
-                        {
-                            var subStrings = mem.Value.ToString().Split(':');
-                            var chatId = long.Parse(subStrings[0]);
-                            var userId = int.Parse(subStrings[1]);
-                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
-                            Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                            Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
-                        }
-
+                        var subStrings = mem.Value.ToString().Split(':');
+                        var chatId = long.Parse(subStrings[0]);
+                        var userId = int.Parse(subStrings[1]);
+                        UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                        Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                        Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
                     }
+
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-                Thread.Sleep(TimeSpan.FromMinutes(1));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
 
@@ -684,13 +680,13 @@ namespace Enforcer5.Helpers
                     {
                         Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
                         Environment.Exit(0);
-                    }                    
-                    Thread.Sleep(TimeSpan.FromMinutes(10));
+                    }                                        
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }
+                Thread.Sleep(TimeSpan.FromMinutes(10));
             }
         }
     }

@@ -22,6 +22,7 @@ namespace Enforcer5
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
         private static System.Threading.Timer _tempbanJob;
+        private static System.Threading.Timer _restartBot;
         internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
@@ -57,8 +58,8 @@ namespace Enforcer5
             new Task(Methods.IntialiseLanguages).Start();
             var wait = TimeSpan.FromSeconds(30);
             new Thread(UpdateHandler.SpamDetection).Start();
-            //new Thread(Methods.CheckTempBans).Start();
-            //new Thread(Methods.Restart).Start();
+            _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
+            _restartBot = new Timer(Methods.Restart, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
         }
