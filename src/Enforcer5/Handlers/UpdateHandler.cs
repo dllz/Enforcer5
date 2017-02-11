@@ -103,7 +103,8 @@ namespace Enforcer5.Handlers
                     {
                         case MessageType.UnknownMessage:
                             break;
-                        case MessageType.TextMessage:                            
+                        case MessageType.TextMessage:
+                            Methods.IsRekt(update);
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);

@@ -415,7 +415,7 @@ namespace Enforcer5.Helpers
             return string.Join("\n", completedList);
         }
 
-        public static bool IsRekt(Update update)
+        public static async void IsRekt(Update update)
         {
             var isBanned = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
             try
@@ -429,31 +429,31 @@ namespace Enforcer5.Helpers
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
                     try
                     {
-
+                        await Bot.Send($"{banned} for {reason} notified in {update.Message.Chat.Id}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
                         SaveBan(update.Message.From.Id, "ban");
-                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);
+                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
                     }
                     catch (AggregateException e)
                     {
                         if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                         {
                             var temp = Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
-                            return false;
+                            return;
                         }
                         Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
-                        return false;
+                        return;
                     }
-                    return true;
+                    return;
                 }
                 else
                 {
-                    return false;
+                    return;
                 }
             }
             catch (Exception e)
             {
-                return false;
+                return;
             }
         }
 
@@ -676,7 +676,7 @@ namespace Enforcer5.Helpers
                 try
                 {
                     var runningTime = DateTime.UtcNow - Bot.StartTime;
-                    if (runningTime >= TimeSpan.FromHours(1))
+                    if (runningTime >= TimeSpan.FromMinutes(45))
                     {
                         Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
                         Environment.Exit(0);

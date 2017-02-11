@@ -150,38 +150,38 @@ namespace Enforcer5
                 //    }
 
                 //}
-                var banDetails = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
-                var isBanned = banDetails.Where(e => e.Name.Equals("banned")).FirstOrDefault();
-                var seenSupport = banDetails.Where(e => e.Name.Equals("seen")).FirstOrDefault();
-                if (isBanned.Value.Equals("1"))
-                {
-                    if (update.Message.Chat.Id != Constants.SupportId)
-                    {
-                        try
-                        {
-                            await Methods.BanUser(chatId, update.Message.From.Id, lang);
-                            var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
-                            Methods.AddBanList(chatId, update.Message.From.Id, $"{update.Message.From.FirstName} ({update.Message.From.Id})", $"Global banned for: {motivation}");
-                            await Bot.Send(
-                                Methods.GetLocaleString(lang, "globalBanNotif",
-                                    $"{update.Message.From.FirstName}, {update.Message.From.Id}", motivation), update);
-                        }
-                        catch (Exception e)
-                        {
+                //var banDetails = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
+                //var isBanned = banDetails.Where(e => e.Name.Equals("banned")).FirstOrDefault();
+                //var seenSupport = banDetails.Where(e => e.Name.Equals("seen")).FirstOrDefault();
+                //if (isBanned.Value.Equals("1"))
+                //{
+                //    if (update.Message.Chat.Id != Constants.SupportId)
+                //    {
+                //        try
+                //        {
+                //            await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                //            var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
+                //            Methods.AddBanList(chatId, update.Message.From.Id, $"{update.Message.From.FirstName} ({update.Message.From.Id})", $"Global banned for: {motivation}");
+                //            await Bot.Send(
+                //                Methods.GetLocaleString(lang, "globalBanNotif",
+                //                    $"{update.Message.From.FirstName}, {update.Message.From.Id}", motivation), update);
+                //        }
+                //        catch (Exception e)
+                //        {
 
-                        }
-                        await Bot.Send(
-                                $"{update.Message.From.FirstName}, {update.Message.From.Id} has been notified of ban in {chatId} {update.Message.Chat.Title}",
-                                Constants.Devs[0]);
-                    }
-                }
-                else if (seenSupport.Name.Equals("1"))
-                {
-                    var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
-                    await Redis.db.HashSetAsync($"globalBan:{update.Message.From.Id}", "seen", 1);
-                    await Bot.Send(
-                        $"{update.Message.From.FirstName} has a history of {motivation} and has joined @werewolfsupport to appeal there global ban", update);
-                }
+                //        }
+                //        await Bot.Send(
+                //                $"{update.Message.From.FirstName}, {update.Message.From.Id} has been notified of ban in {chatId} {update.Message.Chat.Title}",
+                //                Constants.Devs[0]);
+                //    }
+                //}
+                //else if (seenSupport.Name.Equals("1"))
+                //{
+                //    var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
+                //    await Redis.db.HashSetAsync($"globalBan:{update.Message.From.Id}", "seen", 1);
+                //    await Bot.Send(
+                //        $"{update.Message.From.FirstName} has a history of {motivation} and has joined @werewolfsupport to appeal there global ban", update);
+                //}
             }
             catch (Exception e)
             {
