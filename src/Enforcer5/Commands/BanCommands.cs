@@ -88,7 +88,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        await Bot.Api.KickChatMemberAsync(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id);
+                        await Methods.BanUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
                         var name = Methods.GetNick(update.Message, args);
                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
                     }
