@@ -227,11 +227,11 @@ namespace Enforcer5
                 if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
                 {
                     menu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}",
-                        $"menu{mem.Name}:{chatId}"));
+                        $"media{mem.Name}:{chatId}"));
                 }
                 else if (mem.Value.Equals("allowed"))
                 {
-                    menu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
+                    menu.Buttons.Add(new InlineButton("✅", $"media{mem.Name}:{chatId}"));
                 }
             }
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
@@ -242,7 +242,7 @@ namespace Enforcer5
             editWarn.Buttons.Add(new InlineButton($"📍 {max}", $"mediaActionWarn:{chatId}"));
             editWarn.Buttons.Add(new InlineButton("➕", $"mediaRaiseWarn:{chatId}"));
             var close = new Menu(1);
-            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             return Key.CreateMarkupFromMenus(menu, editWarn, close);
         }
 
@@ -250,7 +250,7 @@ namespace Enforcer5
         {
             var langs = Program.LangaugeList;
             List<InlineKeyboardButton> buttons = langs.Select(x => x.Name).Distinct().OrderBy(x => x).Select(x => new InlineKeyboardButton(x, $"changeLang:{chatId}:{x}")).ToList();
-            buttons.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            buttons.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             var baseMenu = new List<InlineKeyboardButton[]>();
             for (var i = 0; i < buttons.Count; i++)
             {
@@ -269,11 +269,21 @@ namespace Enforcer5
     }
 
     public static partial class CallBacks
-    {
+    { 
         [Callback(Trigger = "close")]
         public static async Task CloseButton(CallbackQuery call, string[] args)
         {
             await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, "Good Bye");
+        }
+
+        [Callback(Trigger = "back")]
+        public static async Task BackTaskButton(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var keys = Commands.genMenu(chatId, lang);
+            var menuText = Methods.GetLocaleString(lang, "mainMenu", "");
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, replyMarkup:keys, text:menuText);
         }
 
         [Callback(Trigger = "menusettings")]
