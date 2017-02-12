@@ -30,12 +30,7 @@ namespace Enforcer5.Handlers
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
-            new Task(() => { HandleUpdate(e.Update); }).Start();            
-            if (e.Update.Message.Type == MessageType.TextMessage)
-            {
-                new Task(() => { OnMessage.AntiFlood(e.Update); }).Start();
-                new Task(() => { OnMessage.RightToLeft(e.Update); }).Start();
-            }
+            new Task(() => { HandleUpdate(e.Update); }).Start();
         }
 
 
@@ -81,13 +76,12 @@ namespace Enforcer5.Handlers
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");      
         }
 
-        internal static async void HandleUpdate(Update update)
+        private static async void HandleUpdate(Update update)
         {
             {
                 CollectStats(update.Message);
-                Bot.MessagesProcessed++;               
+                Bot.MessagesProcessed++;
                 //ignore previous messages
-
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
@@ -106,6 +100,8 @@ namespace Enforcer5.Handlers
                             break;
                         case MessageType.TextMessage:
                             Methods.IsRekt(update);
+                            new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                            new Task(() => { OnMessage.RightToLeft(update); }).Start();
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
