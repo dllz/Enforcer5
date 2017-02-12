@@ -211,6 +211,11 @@ namespace Enforcer5
                 await Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
                 await Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
                 await Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                await Bot.SendReply($"{userId} has been rekt for {moti}", update);
+            }
+            else
+            {
+                await Bot.SendReply("Nopes", update);
             }
         }
 
