@@ -32,7 +32,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true, RequiresReply = true)]
+        [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task Kick(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
@@ -40,19 +40,26 @@ namespace Enforcer5
             {
                 try
                 {
-                    var userid = Methods.GetUserId(update, args);
-                    var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc).Result;
-
-                    if (res)
+                    try
                     {
-                        Methods.SaveBan(userid, "kick");
+                        var userid = Methods.GetUserId(update, args);
+                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc).Result;
 
-                        object[] arguments =
+                        if (res)
                         {
+                            Methods.SaveBan(userid, "kick");
+
+                            object[] arguments =
+                            {
                             Methods.GetNick(update.Message, args),
                             Methods.GetNick(update.Message, args, true)
                         };
-                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                            await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Methods.SendError(e.Message, update.Message, lang.Doc);
                     }
                 }
                 catch (AggregateException e)
@@ -123,76 +130,83 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "ban", GroupAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "ban", GroupAdminOnly = true)]
         public static async Task Ban(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             try
             {
-                var userid = Methods.GetUserId(update, args);
-                var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc).Result;
-
-                if (res)
+                try
                 {
-                    var chatId = update.Message.Chat.Id;
-                    var userId = update.Message.Chat.Id;
-                    var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
-                    if (isAlreadyTempbanned)
+                    var userid = Methods.GetUserId(update, args);
+
+                    var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc).Result;
+                    if (res)
                     {
-                        var all = Redis.db.HashGetAllAsync("tempbanned").Result;
-                        foreach (var mem in all)
+                        var chatId = update.Message.Chat.Id;
+                        var userId = update.Message.Chat.Id;
+                        var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
+                        if (isAlreadyTempbanned)
                         {
-                            if ($"{chatId}:{userId}".Equals(mem.Value))
+                            var all = Redis.db.HashGetAllAsync("tempbanned").Result;
+                            foreach (var mem in all)
                             {
-                                await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                                if ($"{chatId}:{userId}".Equals(mem.Value))
+                                {
+                                    await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                                }
                             }
+                            await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
                         }
-                        await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
-                    }
-                    Methods.SaveBan(userid, "ban");
-                    object[] arguments =
-                    {
-                        Methods.GetNick(update.Message, args),
-                        Methods.GetNick(update.Message, args, true)
-                    };
-                    string why;
-                    if (!string.IsNullOrEmpty(args[1]))
-                    {
-                        why = args[1];
-                    }
-                    else
-                    {
-                        why = $"\"update.Message.ReplyToMessage.Text\"";
-                    }
-                    Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
-                    await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
-                    try
-                    {
-                        if (update.Message.ReplyToMessage.Type == MessageType.ServiceMessage)
+                        Methods.SaveBan(userid, "ban");
+                        object[] arguments =
                         {
-                            
+                            Methods.GetNick(update.Message, args),
+                            Methods.GetNick(update.Message, args, true)
+                        };
+                        string why;
+                        if (!string.IsNullOrEmpty(args[1]))
+                        {
+                            why = args[1];
                         }
                         else
                         {
-                            await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
-                            update.Message.ReplyToMessage.MessageId, disableNotification: true);
-                        }                        
-                    }
-                    catch (ApiRequestException e)
-                    {
+                            why = $"\"update.Message.ReplyToMessage.Text\"";
+                        }
+                        Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
+                        await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
+                        try
+                        {
+                            if (update.Message.ReplyToMessage.Type == MessageType.ServiceMessage)
+                            {
 
-                    }
-                    catch (AggregateException e)
-                    {
+                            }
+                            else
+                            {
+                                await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
+                                    update.Message.ReplyToMessage.MessageId, disableNotification: true);
+                            }
+                        }
+                        catch (ApiRequestException e)
+                        {
 
-                    }
-                    catch (Exception e)
-                    {
+                        }
+                        catch (AggregateException e)
+                        {
 
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                     }
-                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                 }
-            }
+                catch (Exception e)
+                {
+                    Methods.SendError(e.Message, update.Message, lang.Doc);
+                }
+            }                         
             catch (AggregateException e)
             {
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
