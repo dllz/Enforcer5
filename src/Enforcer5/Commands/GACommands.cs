@@ -196,6 +196,7 @@ namespace Enforcer5
                 if (int.TryParse(spilt[0], out temp))
                 {
                     userId = temp;
+                    moti = spilt[1];
                 }
                 else
                 {
