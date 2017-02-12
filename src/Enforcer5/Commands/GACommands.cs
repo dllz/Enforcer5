@@ -188,10 +188,10 @@ namespace Enforcer5
                     userId = update.Message.ReplyToMessage.From.Id;
                 }
                 moti = args[1];
-            }
-            int temp;
+            }            
             if (args.Length == 2)
             {
+                int temp;
                 var spilt = args[1].Split(':');
                 if (int.TryParse(spilt[0], out temp))
                 {

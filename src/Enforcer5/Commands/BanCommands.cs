@@ -67,7 +67,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async Task Warn(Update update, string[] args)
+        public static async Task  Warn(Update update, string[] args)
         {
             if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id)) 
                 return;            
@@ -82,7 +82,7 @@ namespace Enforcer5
             if (num >= max)
             {
                 var type = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").ToString()
+                    ? Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "type").Result.ToString()
                     : "kick";
                 if (type.Equals("ban"))
                 {
