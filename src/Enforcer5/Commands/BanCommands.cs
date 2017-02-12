@@ -48,7 +48,7 @@ namespace Enforcer5
                         if (res)
                         {
                             Methods.SaveBan(userid, "kick");
-
+                                
                             object[] arguments =
                             {
                             Methods.GetNick(update.Message, args),
