@@ -13,7 +13,7 @@ namespace Enforcer5
 {
     public static class OnMessage
     {
-        public static async Task OnChatMessage(Update update)
+        public static async Task AntiFlood(Update update)
         {
             try
             {
@@ -50,6 +50,7 @@ namespace Enforcer5
                                     Methods.SaveBan(update.Message.From.Id, "flood");
                                     Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                         Methods.GetLocaleString(lang, "bannedForFlood", ""));
+                                    await Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
                                 }
                                 else
                                 {
@@ -62,11 +63,24 @@ namespace Enforcer5
                             }
                             catch (Exception e)
                             {
-
+                                throw;
                             }
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+            }
+        }
+        public static async Task RightToLeft(Update update)
+        {
+            try
+            {
+                var msgType = Methods.GetMediaType(update.Message);
+                var chatId = update.Message.Chat.Id;
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
                 var rtlStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Rtl").Result;
                 var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
                 if (status.Equals("ban") || status.Equals("kick"))
@@ -77,10 +91,7 @@ namespace Enforcer5
                     if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
                     if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
                     var text = update.Message.Text;
-                    bool check = false;
-                    if (text.Contains(rtl)) check = true;
-                    if (name.Contains(rtl)) check = true;
-                    if (lastName.Contains(rtl)) check = true;
+                    bool check = text.Contains(rtl) || name.Contains(rtl) || lastName.Contains(rtl);
                     try
                     {
                         if (check)
@@ -104,7 +115,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
-
+                        await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
 
                 }
@@ -186,7 +197,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                
+                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
 

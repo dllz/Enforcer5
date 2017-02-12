@@ -29,11 +29,12 @@ namespace Enforcer5.Handlers
 
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
-            new Task(() => { HandleUpdate(e.Update); }).Start();
             if (e.Update.Message == null) return;
+            new Task(() => { HandleUpdate(e.Update); }).Start();            
             if (e.Update.Message.Type == MessageType.TextMessage)
             {
-                new Task(() => { OnMessage.OnChatMessage(e.Update); }).Start();
+                new Task(() => { OnMessage.AntiFlood(e.Update); }).Start();
+                new Task(() => { OnMessage.RightToLeft(e.Update); }).Start();
             }
         }
 
