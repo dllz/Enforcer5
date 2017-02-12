@@ -36,8 +36,6 @@ namespace Enforcer5
         public static async Task Kick(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
-            if (update.Message.ReplyToMessage != null)
-            {
                 try
                 {
                     try
@@ -66,11 +64,7 @@ namespace Enforcer5
                 {
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
                 }
-            }
-            else
-            {
-                await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update.Message);
-            }
+            
         }
 
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
@@ -130,7 +124,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "ban", GroupAdminOnly = true)]
+        [Command(Trigger = "ban", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task Ban(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
