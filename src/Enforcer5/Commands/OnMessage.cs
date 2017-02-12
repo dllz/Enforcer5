@@ -110,6 +110,9 @@ namespace Enforcer5
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
                                 Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedForRtl", ""));
+                                await Bot.Send(
+                                        Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {update.Message.From.Id}"),
+                                        update);
                             }                            
                         }
                     }
