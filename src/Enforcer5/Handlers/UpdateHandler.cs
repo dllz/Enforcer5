@@ -80,8 +80,8 @@ namespace Enforcer5.Handlers
         {
             {
                 new Task(() => { CollectStats(update.Message); }).Start();
-                //new Task(() => { OnMessage.AntiFlood(update); }).Start();
-                //new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                new Task(() => { OnMessage.CheckMedia(update); }).Start();
                 Bot.MessagesProcessed++;
                 Methods.IsRekt(update);
                 //ignore previous messages
