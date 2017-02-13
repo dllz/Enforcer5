@@ -17,6 +17,8 @@ namespace Enforcer5
         {
             try
             {
+                var time = (DateTime.UtcNow - update.Message.Date);
+                if (time.TotalSeconds > 5) return;
                 var msgType = Methods.GetMediaType(update.Message);
                 var chatId = update.Message.Chat.Id;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
