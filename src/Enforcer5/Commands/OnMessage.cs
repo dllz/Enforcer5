@@ -51,7 +51,7 @@ namespace Enforcer5
                                     await Methods.BanUser(chatId, update.Message.From.Id, lang);
                                     Methods.SaveBan(update.Message.From.Id, "flood");
                                     Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedForFlood", ""));
+                                        Methods.GetLocaleString(lang, "bannedForFlood", ".."));
                                     await Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
                                 }
                                 else
