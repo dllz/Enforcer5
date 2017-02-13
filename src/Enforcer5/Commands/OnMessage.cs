@@ -74,6 +74,57 @@ namespace Enforcer5
                 await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
+
+        public static async Task CheckMedia(Update update)
+        {
+            try
+            {
+                var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
+                if (update.Message.From.Username != null)
+                    name = $"{name} (@{update.Message.From.Username})";
+                var chatId = update.Message.Chat.Id;
+                var media = Methods.GetMediaType(update.Message);
+                var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                if (!status.Equals("allowed"))
+                {
+                    var max = Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result.HasValue
+                        ? Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result
+                        : 2;
+                    var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", update.Message.From.Id, 1).Result;
+                    if (current >= int.Parse(max))
+                    {
+                        if (status.Equals("ban"))
+                        {
+                            await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                            Methods.SaveBan(update.Message.From.Id, "media");
+                            Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                Methods.GetLocaleString(lang, "bannedformedia", ""));
+                            await Bot.SendReply(Methods.GetLocaleString(lang, "bannedformedia", name), update);
+                        }
+                        else
+                        {
+                            await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                            Methods.SaveBan(update.Message.From.Id, "media");
+                            await Bot.SendReply(
+                                Methods.GetLocaleString(lang, "kickedformedia", $"{name}"),
+                                update);
+                        }
+                    }
+                    else
+                    {
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
+                            update);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+            }
+        }
         public static async Task RightToLeft(Update update)
         {
             try

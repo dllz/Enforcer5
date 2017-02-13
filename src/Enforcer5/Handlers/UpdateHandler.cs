@@ -80,6 +80,8 @@ namespace Enforcer5.Handlers
         {
             {
                 new Task(() => { CollectStats(update.Message); }).Start();
+                new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                new Task(() => { OnMessage.CheckMedia(update); }).Start();
                 Bot.MessagesProcessed++;
                 Methods.IsRekt(update);
                 //ignore previous messages
@@ -99,9 +101,7 @@ namespace Enforcer5.Handlers
                     {
                         case MessageType.UnknownMessage:
                             break;
-                        case MessageType.TextMessage:
-                            
-                            new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                        case MessageType.TextMessage:                                                       
                             new Task(() => { OnMessage.RightToLeft(update); }).Start();
                             if (update.Message.Text.StartsWith("/"))
                             {
