@@ -79,8 +79,9 @@ namespace Enforcer5.Handlers
         private static async void HandleUpdate(Update update)
         {
             {
-                CollectStats(update.Message);
+                new Task(() => { CollectStats(update.Message); }).Start();
                 Bot.MessagesProcessed++;
+                Methods.IsRekt(update);
                 //ignore previous messages
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
@@ -99,7 +100,7 @@ namespace Enforcer5.Handlers
                         case MessageType.UnknownMessage:
                             break;
                         case MessageType.TextMessage:
-                            Methods.IsRekt(update);
+                            
                             new Task(() => { OnMessage.AntiFlood(update); }).Start();
                             new Task(() => { OnMessage.RightToLeft(update); }).Start();
                             if (update.Message.Text.StartsWith("/"))
