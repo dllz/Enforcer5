@@ -79,9 +79,7 @@ namespace Enforcer5.Handlers
         private static async void HandleUpdate(Update update)
         {
             {
-                new Task(() => { CollectStats(update.Message); }).Start();
-                new Task(() => { OnMessage.AntiFlood(update); }).Start();
-               //new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                new Task(() => { CollectStats(update.Message); }).Start();                
                 Bot.MessagesProcessed++;
                 Methods.IsRekt(update);
                 //ignore previous messages
@@ -92,11 +90,14 @@ namespace Enforcer5.Handlers
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30))
                     return;
-                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;             
+                //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;  
+                           
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
                     if (update.Message == null) return;
+                    new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                    //new Task(() => { OnMessage.CheckMedia(update); }).Start();
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:

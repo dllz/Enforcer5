@@ -20,7 +20,7 @@
     <value>{0} is a chat member.</value>
   </string>
   <string key="userinfoGlobal">
-    <value><b>Global ban info</b>:\n</value>
+    <value><![CDATA[<b>Global ban info</b>:\n]]></value>
   </string>
   <string key="getkick">
     <value>Kick: {0}</value>
@@ -41,10 +41,7 @@
     <value>Media Warns: {0}</value>
   </string>
   <string key="userinfoGroup">
-    <value><b>Info for group {0}</b>:</value>
-  </string>
-  <string key="userInfoGlobal">
-    <value>Global user info</value>
+    <value><![CDATA[<b>Info for group: {0}</b>:]]></value>
   </string>
   <string key="getrtl">
     <value>Removed for Right to left characters: {0}</value>
@@ -80,7 +77,9 @@
     <value>Start me</value>
   </string>
   <string key="userNotAdmin">
-    <value>You are <b>not</b> an admin in this chat</value>
+    <value>
+      You are <b>not</b> an admin in this chat
+    </value>
   </string>
   <string key="markdownBroken">
     <value>The markdown in this text is broken</value>
@@ -95,7 +94,7 @@
     <value>The link has been set</value>
   </string>
   <string key="adminList">
-    <value><b>Creator</b>: {0}\n<b>Admins</b>:{1}</value>
+    <value><![CDATA[<b>Creator</b>: {0}\n<b>Admins</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
     <value>Hi {0} welcome to {1}</value>
@@ -107,10 +106,10 @@
     <value>There are no rules, burn it to the ground</value>
   </string>
   <string key="rules">
-    <value>\n<b>Rules</b>:\n{0}</value>
+    <value><![CDATA[\n<b>Rules</b>:\n{0}]]></value>
   </string>
   <string key="about">
-    <value>\n<b>Description</b>:\n{0}</value>
+    <value><![CDATA[\n<b>Description</b>:\n{0}]]></value>
   </string>
   <string key="RulesSet">
     <value>New rules has been set</value>
@@ -125,7 +124,7 @@
     <value>No command set</value>
   </string>
   <string key="extraList">
-    <value>List of <b>custom commands</b>:\n{0}</value>
+    <value><![CDATA[List of <b>custom commands</b>:\n{0}]]></value>
   </string>
   <string key="extraDeleted">
     <value>Command has been deleted</value>
@@ -155,10 +154,10 @@
     <value>Your group has been banned from using Werewolf Enforcer</value>
   </string>
   <string key="warnMaxKick">
-    <value>User {0} <b>kicked</b>: as they reached the max number of warns</value>
+    <value><![CDATA[User {0} <b>kicked</b>: as they reached the max number of warns]]></value>
   </string>
   <string key="warnMaxBan">
-    <value>User {0} <b>banned</b>: as they reached the max number of warns</value>
+    <value><![CDATA[User {0} <b>banned</b>: as they reached the max number of warns]]></value>
   </string>
   <string key="resetWarn">
     <value>Reset Warn</value>
@@ -167,10 +166,10 @@
     <value>Remove Warn</value>
   </string>
   <string key="warn">
-    <value>{0} <b>has been warned.</b>\n<i>Number of warns</i>   <b>{1}</b>\n<i>Max allowed</i>   <b>{2}</b></value>
+    <value><![CDATA[{0} <b>has been warned.</b>\n<i>Number of warns</i>   <b>{1}</b>\n<i>Max allowed</i>   <b>{2}</b>]]></value>
   </string>
   <string key="warnFlag">
-    <value>{0} <b>has been warned by {1}.</b>\n<i>Number of warns</i>   <b>{2}</b>\n<i>Max allowed</i>   <b>{3}</b></value>
+    <value><![CDATA[{0} <b>has been warned by {1}.</b>\n<i>Number of warns</i>   <b>{2}</b>\n<i>Max allowed</i>   <b>{3}</b>]]></value>
   </string>
   <string key="alreadyFlagged">
     <value>Message already reported</value>
@@ -221,7 +220,7 @@
     <value>No input with command</value>
   </string>
   <string key="Support">
-    <value><a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a></value>
+    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
@@ -394,6 +393,9 @@
   <string key="linkButton">
     <value>Link</value>
   </string>
+  <string key="textButton">
+    <value>Text</value>
+  </string>
   <string key="doNothing">
     <value>I do not do anything</value>
   </string>
@@ -413,8 +415,9 @@
     <value>{0} has been Banned for using non-Latin characters</value>
   </string>
   <string key ="globalBanNotif">
-    <value>{0} has been automatically banned as they have a history of: {1}
-            They can appeal this ban in @werewolfsupport
+    <value>
+      {0} has been automatically banned as they have a history of: {1}
+      They can appeal this ban in @werewolfsupport
     </value>
   </string>
   <string key="GetLang">
@@ -430,22 +433,39 @@
       The number is not related to the normal /warn command
     </value>
   </string>
-<string key="groupLanguage">
-  <value>Group Language</value>
-</string>
-<string key="langMenu">
-  <value>Here you can set your group language.\nYour current language is set to: <b>{0}</b></value>
-</string>
-<string key="userUnblocked">
-  <value>User unblocked</value>
-</string>
-<string key="userBlocked">
-  <value>User blocked</value>
-</string>
-<string key="startMe">
+  <string key="groupLanguage">
+    <value>Group Language</value>
+  </string>
+  <string key="langMenu">
+    <value>
+      Here you can set your group language.\nYour current language is set to: <b>{0}</b>
+    </value>
+  </string>
+  <string key="userUnblocked">
+    <value>User unblocked</value>
+  </string>
+  <string key="userBlocked">
+    <value>User blocked</value>
+  </string>
+  <string key="startMe">
     <value>You need to start me first</value>
   </string>
   <string key="dashboardMenu">
     <value>Here are what the settings in the group are set to:</value>
+  </string>
+  <string key="userInfoGlobal">
+    <value>Global user info</value>
+  </string>
+  <string key="backButton">
+    <value>Back</value>
+  </string>
+  <string key="mediaNotAllowed">
+    <value>This type of media is not allowed. You have been warned. {0} of {1} warnings given</value>
+  </string>
+  <string key="kickedformedia">
+    <value>{0} has been kicked for sending illegal media</value>
+  </string>
+  <string key="bannedformedia">
+    <value>{0} has been banned for sending illegal media</value>
   </string>
 </strings>
