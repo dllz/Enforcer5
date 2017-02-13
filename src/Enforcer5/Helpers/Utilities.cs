@@ -133,7 +133,7 @@ namespace Enforcer5.Helpers
                 Api.StartReceiving();
             }
             var e = receiveErrorEventArgs.ApiRequestException;
-                Console.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}\n{e.StackTrace}");
+                Console.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}\n{e.StackTrace}\\n{{sender.ToString()}}");
             var offset = Api.MessageOffset;
             Api.MessageOffset = offset + 1;
 
@@ -148,7 +148,7 @@ namespace Enforcer5.Helpers
                 Console.WriteLine("--Not getting updates--");
             }
             var e = receiveErrorEventArgs.Exception;
-            Console.WriteLine($"{DateTime.Now} {e.Source} - {e.Message}\n{e.Source}\n{e.StackTrace}");
+            Console.WriteLine($"{DateTime.Now} {e.Source} - {e.Message}\n{e.Source}\n{e.StackTrace}\n{sender.ToString()}");
             var offset = Api.MessageOffset;
             Api.MessageOffset = offset + 1;
 
