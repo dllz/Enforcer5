@@ -459,24 +459,24 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "Rtl";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
             if (current.Equals("ban"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "kick");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "allowed");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "ban");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -489,24 +489,24 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "Arab";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
             if (current.Equals("ban"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "kick");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "kick");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "allowed");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "allowed");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "ban");
+                await Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
