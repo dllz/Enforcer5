@@ -218,26 +218,26 @@ namespace Enforcer5
 
         public static async Task ArabDetection (Update update)
         {
-            var arabicChars = "ساینبتسیکبدثصکبثحصخبدوزطئظضچج";
-            var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom.FirstName} {update.Message.ForwardFrom.LastName}";
-            var found = false;
-            for (int i = 0; i < text.Length; i++)
+            var chatId = update.Message.Chat.Id;
+            var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
+            if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
+            if (!arabStatus.Equals("allowed"))
             {
-                found = Regex.IsMatch(text[i].ToString(), arabicChars);
-                if (found)
+                var arabicChars = "ساینبتسیکبدثصکبثحصخبدوزطئظضچج";
+                var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom?.FirstName} {update.Message.ForwardFrom?.LastName} {update.Message.From.Username} {update.Message.ForwardFrom?.Username}";
+                var found = false;
+                for (int i = 0; i < text.Length; i++)
                 {
-                    break;
+                    found = Regex.IsMatch(text[i].ToString(), arabicChars);
+                    if (found)
+                    {
+                        break;
+                    }
                 }
-            }
 
-            if (found)
-            {
-                var chatId = update.Message.Chat.Id;         
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-                if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
-                if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
-                {
+                if (found)
+                {                   
+                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
                     var name = update.Message.From.FirstName;
                     var lastName = "x";
                     if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
@@ -263,9 +263,9 @@ namespace Enforcer5
                     catch (Exception e)
                     {
 
-                    }
-                }
+                    }                    
 
+                }
             }
         }
 
