@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Helpers;
@@ -199,7 +201,19 @@ namespace Enforcer5.Helpers
             }
         }
 
-        
+        //public static bool IsNSFWImage(long chatId, Message msg)
+        //{
+        //    //var token = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
+        //    var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+        //    using (var wc = new WebClient())
+        //    {
+        //        wc.Headers[HttpRequestHeader.ContentType] = "application/json";
+        //        wc.Headers.Add("Authorization", $"Bearer {groupToken}");
+        //        var response = wc.UploadString("https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs", "POST", JsonConvert.SerializeObject(new ClarifaiInputs(url)));
+        //        var result = JsonConvert.DeserializeObject<ClarifaiOutput>(response);
+        //        return (int)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
+        //    }
+        //}
 
         public static string GetNick(Message msg, string[] args, bool sender = false)
         {
