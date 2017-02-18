@@ -100,15 +100,18 @@ namespace Enforcer5.Handlers
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
                         new Task(() => { OnMessage.CheckMedia(update);  }).Start();
-                        new Task(() => { OnMessage.RightToLeft(update); }).Start();
-                        new Task(() => { OnMessage.ArabDetection(update);  }).Start();
                     }
                     //new Task(() => { OnMessage.CheckMedia(update); }).Start();
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
                             break;
-                        case MessageType.TextMessage:                           
+                        case MessageType.TextMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.RightToLeft(update); }).Start();
+                                new Task(() => { OnMessage.ArabDetection(update); }).Start();
+                            }
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
