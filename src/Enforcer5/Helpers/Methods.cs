@@ -591,6 +591,10 @@ namespace Enforcer5.Helpers
 
         public static string GetMediaType(Message msg)
         {
+            if (msg.Text != null)
+            {
+                return "text";
+            }
             if (msg.Photo != null)
             {
                 return "photo";
@@ -606,14 +610,6 @@ namespace Enforcer5.Helpers
                     return "file";
                 }
             }
-            if (msg.Video != null)
-            {
-                return "video";
-            }
-            if (msg.Audio != null)
-            {
-                return "audio";
-            }
             if (msg.Voice != null)
             {
                 return "voice";
@@ -622,13 +618,55 @@ namespace Enforcer5.Helpers
             {
                 return "sticker";
             }
-            if (msg.Text != null)
+            if (msg.Video != null)
             {
-                return "text";
+                return "video";
             }
+            if (msg.Audio != null)
+            {
+                return "audio";
+            }                
             else
             {
                 return "unknown";
+            }
+        }
+
+        public static string GetContentType(Message msg)
+        {
+            switch (msg.Type)
+            {
+                case MessageType.TextMessage:
+                    return "text";
+                    break;
+                case MessageType.PhotoMessage:
+                    return "photo";
+                    break;
+                case MessageType.DocumentMessage:
+                    if (msg.Document.MimeType.Equals("video/mp4"))
+                    {
+                        return "gif";
+                    }
+                    else
+                    {
+                        return "file";
+                    }
+                    break;
+                case MessageType.VoiceMessage:
+                    return "voice";
+                    break;
+                case MessageType.StickerMessage:
+                    return "sticker";
+                    break;
+                case MessageType.VideoMessage:
+                    return "video";
+                    break;
+                case MessageType.AudioMessage:
+                    return "audio";
+                    break;
+                default:
+                    return "unknown";
+                    break;
             }
         }
 

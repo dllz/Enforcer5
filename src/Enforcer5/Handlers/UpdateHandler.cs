@@ -86,7 +86,7 @@ namespace Enforcer5.Handlers
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
-                    return; //toss it
+                    //return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30))
                    return;
@@ -96,14 +96,17 @@ namespace Enforcer5.Handlers
                 {
                     //Console.WriteLine("Checking Message");                    
                     if (update.Message == null) return;
-                    new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                    if (update.Message.Chat.Type == ChatType.Supergroup)
+                    {
+                        new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                        new Task(() => { OnMessage.RightToLeft(update); }).Start();
+                    }
                     //new Task(() => { OnMessage.CheckMedia(update); }).Start();
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
                             break;
-                        case MessageType.TextMessage:                                                       
-                            new Task(() => { OnMessage.RightToLeft(update); }).Start();
+                        case MessageType.TextMessage:                           
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);

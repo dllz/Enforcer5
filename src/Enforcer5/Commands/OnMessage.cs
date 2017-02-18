@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using System.Text.RegularExpressions;
 
 namespace Enforcer5
 {
@@ -20,13 +20,16 @@ namespace Enforcer5
             {
                 var time = (DateTime.UtcNow - update.Message.Date);
                 if (time.TotalSeconds > 5) return;
-                var msgType = Methods.GetMediaType(update.Message);
                 var chatId = update.Message.Chat.Id;
+                var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+                if (flood.Equals("yes")) return;
+                var msgType = Methods.GetContentType(update.Message);               
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                if (isIgnored(chatId, msgType))
+                var ignored = isIgnored(chatId, msgType);
+                if (!ignored)
                 {
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
-                    int num = msgs.IsInteger ? int.Parse(msgs) : 0;
+                    int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;
                     if (num == 0) num = 1;
                     var maxSpam = 8;
                     if (update.Message.Chat.Type == ChatType.Private) maxSpam = 12;
@@ -34,12 +37,10 @@ namespace Enforcer5
                     var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
                     var maxTime = TimeSpan.FromSeconds(5);
                     int maxmsgs;
-                    if ((DateTime.Now.ToUnixTime() - update.Message.Date.ToUnixTime()) < 30)
+                    Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
+                    if (int.TryParse(maxMsgs.Value, out maxmsgs))
                     {
-                        await Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
-                    }
-                    if (int.TryParse(maxMsgs.Value, out maxmsgs))   
-                    {
+                       // Bot.Send($"{num} of {maxmsgs}", update);
                         if (num == (int.Parse(maxMsgs.Value) + 1))
                         {
                             var action = floodSettings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
@@ -163,7 +164,7 @@ namespace Enforcer5
                                 await Methods.BanUser(chatId, update.Message.From.Id, lang);
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
                                 Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                    Methods.GetLocaleString(lang, "bannedForRtl", "."));
+                                    Methods.GetLocaleString(lang, "bannedForRtl", ""));
                                 await Bot.Send(
                                         Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {update.Message.From.Id}"),
                                         update);
@@ -175,7 +176,49 @@ namespace Enforcer5
                         await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
 
-                }               
+                }
+
+                var encode = Encoding.ASCII.GetBytes(update.Message.Text);
+                var res = encode.Where(
+                    e =>
+                        (int.Parse(e.ToString()) >= 216 && int.Parse(e.ToString()) <= 219) ||
+                        (int.Parse(e.ToString()) >= 128 && int.Parse(e.ToString()) <= 191)).FirstOrDefault();
+                //if (!string.IsNullOrEmpty(res.ToString()))
+                //{
+                //    var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
+                //    if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
+                //    if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
+                //    {
+                //        var name = update.Message.From.FirstName;
+                //        var rtl = "‮";
+                //        var lastName = "x";
+                //        if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+                //        if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
+                //        try
+                //        {
+                //            if (status.Equals("kick"))
+                //            {
+                //                await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                //                Methods.SaveBan(update.Message.From.Id, "arab");
+                //            }
+                //            else
+                //            {
+                //                await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                //                Methods.SaveBan(update.Message.From.Id, "rtl");
+                //                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", ""));
+                //            }
+                //            await Bot.Send(
+                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
+                //                    update);
+                //        }
+                //        catch (Exception e)
+                //        {
+
+                //        }
+                //    }
+
+                //}
                 //var banDetails = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
                 //var isBanned = banDetails.Where(e => e.Name.Equals("banned")).FirstOrDefault();
                 //var seenSupport = banDetails.Where(e => e.Name.Equals("seen")).FirstOrDefault();
