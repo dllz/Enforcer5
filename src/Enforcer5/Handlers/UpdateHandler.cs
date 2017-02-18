@@ -99,6 +99,7 @@ namespace Enforcer5.Handlers
                     if (update.Message.Chat.Type == ChatType.Supergroup)
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                        new Task(() => { OnMessage.CheckMedia(update);  }).Start();
                         new Task(() => { OnMessage.RightToLeft(update); }).Start();
                     }
                     //new Task(() => { OnMessage.CheckMedia(update); }).Start();

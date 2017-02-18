@@ -82,16 +82,17 @@ namespace Enforcer5
         public static async Task CheckMedia(Update update)
         {
             try
-            {
-                var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
-                if (update.Message.From.Username != null)
-                    name = $"{name} (@{update.Message.From.Username})";
+            {                
                 var chatId = update.Message.Chat.Id;
-                var media = Methods.GetMediaType(update.Message);
+                var media = Methods.GetContentType(update.Message);
                 var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                if (!status.Equals("allowed"))
+                var allowed = status.Equals("allowed");
+                if (allowed == false && status.HasValue)
                 {
+                    var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
+                    if (update.Message.From.Username != null)
+                        name = $"{name} (@{update.Message.From.Username})";
                     var max = Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result.HasValue
                         ? Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result
                         : 2;
@@ -176,81 +177,7 @@ namespace Enforcer5
                         await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
 
-                }
-
-                var encode = Encoding.ASCII.GetBytes(update.Message.Text);
-                var res = encode.Where(
-                    e =>
-                        (int.Parse(e.ToString()) >= 216 && int.Parse(e.ToString()) <= 219) ||
-                        (int.Parse(e.ToString()) >= 128 && int.Parse(e.ToString()) <= 191)).FirstOrDefault();
-                //if (!string.IsNullOrEmpty(res.ToString()))
-                //{
-                //    var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-                //    if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
-                //    if (arabStatus.Equals("kick") || arabStatus.Equals("ban"))
-                //    {
-                //        var name = update.Message.From.FirstName;
-                //        var rtl = "‮";
-                //        var lastName = "x";
-                //        if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                //        if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
-                //        try
-                //        {
-                //            if (status.Equals("kick"))
-                //            {
-                //                await Methods.KickUser(chatId, update.Message.From.Id, lang);
-                //                Methods.SaveBan(update.Message.From.Id, "arab");
-                //            }
-                //            else
-                //            {
-                //                await Methods.BanUser(chatId, update.Message.From.Id, lang);
-                //                Methods.SaveBan(update.Message.From.Id, "rtl");
-                //                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", ""));
-                //            }
-                //            await Bot.Send(
-                //                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
-                //                    update);
-                //        }
-                //        catch (Exception e)
-                //        {
-
-                //        }
-                //    }
-
-                //}
-                //var banDetails = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
-                //var isBanned = banDetails.Where(e => e.Name.Equals("banned")).FirstOrDefault();
-                //var seenSupport = banDetails.Where(e => e.Name.Equals("seen")).FirstOrDefault();
-                //if (isBanned.Value.Equals("1"))
-                //{
-                //    if (update.Message.Chat.Id != Constants.SupportId)
-                //    {
-                //        try
-                //        {
-                //            await Methods.BanUser(chatId, update.Message.From.Id, lang);
-                //            var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
-                //            Methods.AddBanList(chatId, update.Message.From.Id, $"{update.Message.From.FirstName} ({update.Message.From.Id})", $"Global banned for: {motivation}");
-                //            await Bot.Send(
-                //                Methods.GetLocaleString(lang, "globalBanNotif",
-                //                    $"{update.Message.From.FirstName}, {update.Message.From.Id}", motivation), update);
-                //        }
-                //        catch (Exception e)
-                //        {
-
-                //        }
-                //        await Bot.Send(
-                //                $"{update.Message.From.FirstName}, {update.Message.From.Id} has been notified of ban in {chatId} {update.Message.Chat.Title}",
-                //                Constants.Devs[0]);
-                //    }
-                //}
-                //else if (seenSupport.Name.Equals("1"))
-                //{
-                //    var motivation = banDetails.Where(e => e.Name.Equals("motivation")).FirstOrDefault();
-                //    await Redis.db.HashSetAsync($"globalBan:{update.Message.From.Id}", "seen", 1);
-                //    await Bot.Send(
-                //        $"{update.Message.From.FirstName} has a history of {motivation} and has joined @werewolfsupport to appeal there global ban", update);
-                //}
+                }               
             }
             catch (Exception e)
             {
