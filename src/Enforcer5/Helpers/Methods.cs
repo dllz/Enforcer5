@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -201,19 +203,21 @@ namespace Enforcer5.Helpers
             }
         }
 
-        //public static bool IsNSFWImage(long chatId, Message msg)
-        //{
-        //    //var token = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
-        //    var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-        //    using (var wc = new WebClient())
-        //    {
-        //        wc.Headers[HttpRequestHeader.ContentType] = "application/json";
-        //        wc.Headers.Add("Authorization", $"Bearer {groupToken}");
-        //        var response = wc.UploadString("https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs", "POST", JsonConvert.SerializeObject(new ClarifaiInputs(url)));
-        //        var result = JsonConvert.DeserializeObject<ClarifaiOutput>(response);
-        //        return (int)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
-        //    }
-        //}
+        public static async Task IsNSFWImage(long chatId, Message msg)
+        {
+            var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
+            var photo = msg.Photo.Last().FileId;
+           // photo = $""
+           //// var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+           // using (var client = new HttpClient())
+           // {
+           //     url = "http://api.clarifai.com/v1/tag/?" +"&access_token=" + groupToken;
+           //     var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photo)), Encoding.UTF8, "application/json");
+           //     var response = client.PostAsync(url, content);
+           //     Bot.SendReply(response.ToString(), msg);
+           //     //return (int)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
+           // }
+        }
 
         public static string GetNick(Message msg, string[] args, bool sender = false)
         {
