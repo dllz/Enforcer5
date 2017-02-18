@@ -101,6 +101,7 @@ namespace Enforcer5.Handlers
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
                         new Task(() => { OnMessage.CheckMedia(update);  }).Start();
                         new Task(() => { OnMessage.RightToLeft(update); }).Start();
+                        new Task(() => { OnMessage.ArabDetection(update);  }).Start();
                     }
                     //new Task(() => { OnMessage.CheckMedia(update); }).Start();
                     switch (update.Message.Type)
@@ -263,7 +264,7 @@ namespace Enforcer5.Handlers
                                     else
                                     {
                                         await Service.Welcome(update.Message);
-                                        await Service.ResetUser(update.Message);
+                                        //await Service.ResetUser(update.Message);
                                     }
                                 }
                                 catch (ApiRequestException e)

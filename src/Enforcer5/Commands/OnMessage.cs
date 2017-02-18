@@ -193,16 +193,19 @@ namespace Enforcer5
             if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
             if (!arabStatus.Equals("allowed"))
             {
-                var arabicChars = "ساینبتسیکبدثصکبثحصخبدوزطئظضچج";
+                var arabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
                 var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom?.FirstName} {update.Message.ForwardFrom?.LastName} {update.Message.From.Username} {update.Message.ForwardFrom?.Username}";
                 var found = false;
                 for (int i = 0; i < text.Length; i++)
                 {
-                    found = Regex.IsMatch(text[i].ToString(), arabicChars);
-                    if (found)
-                    {
-                        break;
-                    }
+                   
+                        //var letter = char.ConvertToUtf32(text[i], text[i + 1]);
+                        found = Regex.IsMatch(text[i].ToString(), arabicChars);
+                        if (found)
+                        {
+                            break;
+                        }
+                                        
                 }
 
                 if (found)
