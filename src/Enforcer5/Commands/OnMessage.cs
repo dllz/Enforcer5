@@ -229,17 +229,21 @@ namespace Enforcer5
                         {
                             await Methods.KickUser(chatId, update.Message.From.Id, lang);
                             Methods.SaveBan(update.Message.From.Id, "arab");
+                            await Bot.Send(
+                                Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
+                                update);
                         }
                         else
                         {
                             await Methods.BanUser(chatId, update.Message.From.Id, lang);
-                            Methods.SaveBan(update.Message.From.Id, "rtl");
+                            Methods.SaveBan(update.Message.From.Id, "arab");
                             Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                 Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
-                        }
-                        await Bot.Send(
+                            await Bot.Send(
                                 Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
                                 update);
+                        }
+                        
                     }
                     catch (Exception e)
                     {
