@@ -634,6 +634,33 @@ namespace Enforcer5
             }            
         }
 
+        [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task DisbleMediaExcempt(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userId = update.Message.From.Id;
+            var chatId = update.Message.Chat.Id;
+            if (update.Message.ReplyToMessage != null)
+            {
+                userId = update.Message.ReplyToMessage.From.Id;
+            }
+            await Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
+        }
+        [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task EnableMediaExcempt(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userId = update.Message.From.Id;
+            var chatId = update.Message.Chat.Id;
+            if (update.Message.ReplyToMessage != null)
+            {
+                userId = update.Message.ReplyToMessage.From.Id;
+            }
+            await Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
+        }
+
         public static async Task SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;

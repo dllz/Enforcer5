@@ -206,17 +206,18 @@ namespace Enforcer5.Helpers
         public static async Task IsNSFWImage(long chatId, Message msg)
         {
             var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
-            var photo = msg.Photo.Last().FileId;
-           // photo = $""
-           //// var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-           // using (var client = new HttpClient())
-           // {
-           //     url = "http://api.clarifai.com/v1/tag/?" +"&access_token=" + groupToken;
-           //     var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photo)), Encoding.UTF8, "application/json");
-           //     var response = client.PostAsync(url, content);
-           //     Bot.SendReply(response.ToString(), msg);
-           //     //return (int)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
-           // }
+            var photo = msg.Photo.OrderByDescending(x => x.Height).FirstOrDefault(x => x.FileId != null);
+            var pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
+            var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+            using (var client = new HttpClient())
+            {
+                var url = "http://api.clarifai.com/v1/tag/?" + "&access_token=" + groupToken;
+                var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
+                var response = client.PostAsync(url, content);
+                Bot.SendReply(response.Result.Content.ToString(), msg);
+                //return (int)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
+            }
         }
 
         public static string GetNick(Message msg, string[] args, bool sender = false)

@@ -23,6 +23,8 @@ namespace Enforcer5
                 var chatId = update.Message.Chat.Id;
                 var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
                 if (flood.Equals("yes")) return;
+                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+                if (watch) return;
                 var msgType = Methods.GetContentType(update.Message);               
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
                 var ignored = isIgnored(chatId, msgType);
@@ -84,6 +86,8 @@ namespace Enforcer5
             try
             {                
                 var chatId = update.Message.Chat.Id;
+                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+                if (watch) return;
                 var media = Methods.GetContentType(update.Message);
                 var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -136,6 +140,8 @@ namespace Enforcer5
             {
                 var msgType = Methods.GetMediaType(update.Message);
                 var chatId = update.Message.Chat.Id;
+                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+                if (watch) return;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
                 var rtlStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Rtl").Result;
                 var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
@@ -189,6 +195,8 @@ namespace Enforcer5
         public static async Task ArabDetection (Update update)
         {
             var chatId = update.Message.Chat.Id;
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+            if (watch) return;
             var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
             if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
             if (!arabStatus.Equals("allowed"))
