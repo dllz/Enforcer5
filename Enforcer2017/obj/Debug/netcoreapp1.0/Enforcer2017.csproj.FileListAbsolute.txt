@@ -4,3 +4,6 @@ c:\users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\b
 c:\users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\bin\Debug\netcoreapp1.0\Enforcer2017.dll
 c:\users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\obj\Debug\netcoreapp1.0\Enforcer2017.csprojResolveAssemblyReference.cache
 c:\users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\obj\Debug\netcoreapp1.0\Enforcer2017.AssemblyInfo.cs
+C:\Users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\bin\Debug\netcoreapp1.0\Enforcer2017.pdb
+C:\Users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\obj\Debug\netcoreapp1.0\Enforcer2017.dll
+C:\Users\danie\documents\visual studio 2017\Projects\Enforcer2017\Enforcer2017\obj\Debug\netcoreapp1.0\Enforcer2017.pdb

@@ -46,16 +46,14 @@ namespace Enforcer5.Helpers
         internal delegate Task ChatCallbackMethod(CallbackQuery u, string[] args);
         internal static List<Models.Commands> Commands = new List<Models.Commands>();
         internal static List<Models.CallBacks> CallBacks = new List<Models.CallBacks>();
-        internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
+        internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Enforcer2017\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
         {
 
             //get api token from registry
-            var key =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\Werewolf");
-            TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
+            TelegramAPIKey = "218011713:AAG6U9IEBBiy3LF8KYGCYiq4J8MQGJfu6_A";//ENFORCER
+            //TelegramAPIKey = "279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY";//BETA BOT
             Api = new TelegramBotClient(TelegramAPIKey);
             await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 
@@ -381,7 +379,7 @@ namespace Enforcer5.Helpers
 
     internal static class Redis
     {
-        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
+        private static string key = "QZfq0G7ddRvwSeFTwQnSA18GvAfOB7q3bo";
         static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"138.201.172.150:6379, password={key}, allowAdmin=true");        
         public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
 
