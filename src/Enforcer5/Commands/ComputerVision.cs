@@ -48,7 +48,8 @@ namespace Enforcer5
                             var chance = (double)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
                             //Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
                             if (chance > 95.0)
-                            {                              
+                            {
+                                var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;               
                                 var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
                                 if (action.Value.Equals("ban"))
                                 {
@@ -56,14 +57,14 @@ namespace Enforcer5
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
                                     await Methods.BanUser(chatId, msg.From.Id, lang);
                                     Methods.SaveBan(msg.From.Id, "NSFWImage");
-                                    await Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", name, chance.ToString()), msg);
+                                    await Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
                                 }
                                 else
                                 {
                                     var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
                                     await Methods.KickUser(chatId, msg.From.Id, lang);
-                                    await Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", name, chance.ToString()), msg);
+                                    await Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
                                 }
                             }
                         }
@@ -103,6 +104,23 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", args[1]);
                 await Bot.SendReply("API key updated", update);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "nsfwalert", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task NSFWAdminAlert(Update update, string[] args)
+        {
+            var chatId = update.Message.Chat.Id;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "adminAlert", args[1]);
+                await Bot.SendReply("Admin alert updated", update);
             }
             catch (Exception e)
             {
