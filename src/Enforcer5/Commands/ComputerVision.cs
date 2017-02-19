@@ -46,7 +46,7 @@ namespace Enforcer5
                             var data = response.Content.ReadAsStringAsync().Result;
                             var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);
                             var chance = (double)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
-                            Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
+                            //Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
                             if (chance > 95.0)
                             {                              
                                 var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();

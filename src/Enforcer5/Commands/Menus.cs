@@ -260,12 +260,12 @@ namespace Enforcer5
                 if (mem.Value.Equals("on"))
                 {
                     menu.Buttons.Add(new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}",
-                        $"floodstatus:{chatId}"));
+                        $"nsfwsettings:{chatId}"));
                 }
                 else if (mem.Value.Equals("off"))
                 {
                     menu.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
-                        $"floodstatus:{chatId}"));
+                        $"nsfwsettings:{chatId}"));
                 }
                 if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
                 {
