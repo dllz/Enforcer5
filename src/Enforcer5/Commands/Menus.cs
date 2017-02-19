@@ -1118,7 +1118,7 @@ namespace Enforcer5
         public static async Task mediaaudio(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
-            var option = "gif";
+            var option = "audio";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
             if (current.Equals("ban"))
