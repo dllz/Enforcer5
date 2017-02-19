@@ -400,7 +400,7 @@ namespace Enforcer5.Helpers
             var completedList = new List<string>();
             completedList.Add(text);
             completedList = banInfo.
-                Select(member => GetLocaleString(lang, $"get{member.Name}", member.Value)).ToList();
+                Select(member => GetLocaleString(lang, $"get{member.Name.ToString().ToLower()}", member.Value)).ToList();
             if (chatId != null)
             {
                 completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
