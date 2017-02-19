@@ -17,6 +17,8 @@ namespace Enforcer5
     {
         public static async Task IsNSFWImage(long chatId, Message msg)
         {
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
+            if (watch) return;
             var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
             var auth = nsfwSettings.Where(e => e.Name.Equals("autherised")).FirstOrDefault();
             var on = nsfwSettings.Where(e => e.Name.Equals("activated")).FirstOrDefault();

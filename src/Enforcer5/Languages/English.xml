@@ -77,9 +77,7 @@
     <value>Start me</value>
   </string>
   <string key="userNotAdmin">
-    <value>
-      You are <b>not</b> an admin in this chat
-    </value>
+    <value>You are <b>not</b> an admin in this chat</value>
   </string>
   <string key="markdownBroken">
     <value>The markdown in this text is broken</value>
@@ -286,14 +284,12 @@
     <value>
       Manage the settings of {0}.
 
-      Some commands (/rules, /about, /adminlist, #extra commands) can be disabled for non-admin users
-      What happens if a command is disabled for non-admins:
-      • If the command is triggered by an admin, the bot will reply in the group
-      • If the command is triggered by a normal user, the bot will reply in the private chat with the user (only if the user has already started the bot)
-
+      Some commands (/rules, /about, /adminlist, #extra commands) can be disabled to be sent in group.
+      What happens if a command is disabled, is, that the bot will simply pm the message to the user who requested it.
+      
       The icons near the command will show the current status:
-      • 👥: the bot will reply in the group, with everyone
-      • 👤: the bot will reply in private with normal users and in the group with admins
+      • 👥: The bot will reply in the group.
+      • 👤: The bot will reply in private.
 
       Other settings: for the other settings, icons are self explanatory
     </value>
@@ -352,8 +348,8 @@
 
       3rd row and below
       You can set some exceptions for the anti-flood:
-      • ✅: the media will be ignored by the anti-flood
-      • ❌: the media won't be ignored by the anti-flood
+      • ✅: the media will not be ignored by the anti-flood
+      • ❌: the media will be ignored by the anti-flood
       • Note: in "texts", all the other types of media (file, audio...) are included
     </value>
   </string>
@@ -394,7 +390,7 @@
     <value>Link</value>
   </string>
   <string key="textButton">
-    <value>Text</value>
+	<value>Text</value>
   </string>
   <string key="doNothing">
     <value>I do not do anything</value>
@@ -415,9 +411,8 @@
     <value>{0} has been Banned for using non-Latin characters</value>
   </string>
   <string key ="globalBanNotif">
-    <value>
-      {0} has been automatically banned as they have a history of: {1}
-      They can appeal this ban in @werewolfsupport
+    <value>{0} has been automatically banned as they have a history of: {1}
+            They can appeal this ban in @werewolfsupport
     </value>
   </string>
   <string key="GetLang">
@@ -433,39 +428,59 @@
       The number is not related to the normal /warn command
     </value>
   </string>
-  <string key="groupLanguage">
-    <value>Group Language</value>
-  </string>
-  <string key="langMenu">
-    <value>
-      Here you can set your group language.\nYour current language is set to: <b>{0}</b>
-    </value>
-  </string>
-  <string key="userUnblocked">
-    <value>User unblocked</value>
-  </string>
-  <string key="userBlocked">
-    <value>User blocked</value>
-  </string>
-  <string key="startMe">
+<string key="groupLanguage">
+  <value>Group Language</value>
+</string>
+<string key="langMenu">
+  <value>Here you can set your group language.\nYour current language is set to: <b>{0}</b></value>
+</string>
+<string key="userUnblocked">
+  <value>User unblocked</value>
+</string>
+<string key="userBlocked">
+  <value>User blocked</value>
+</string>
+<string key="startMe">
     <value>You need to start me first</value>
   </string>
   <string key="dashboardMenu">
     <value>Here are what the settings in the group are set to:</value>
   </string>
-  <string key="userInfoGlobal">
+    <string key="userInfoGlobal">
     <value>Global user info</value>
   </string>
   <string key="backButton">
-    <value>Back</value>
+	<value>Back</value>
   </string>
-  <string key="mediaNotAllowed">
-    <value>This type of media is not allowed. You have been warned. {0} of {1} warnings given</value>
+    <string key="mediaNotAllowed">
+  <value>This type of media is not allowed. You have been warned. {0} of {1} warnings given</value>
   </string>
   <string key="kickedformedia">
-    <value>{0} has been kicked for sending illegal media</value>
+  <value>{0} has been kicked for sending illegal media</value>
   </string>
   <string key="bannedformedia">
-    <value>{0} has been banned for sending illegal media</value>
+  <value>{0} has been banned for sending illegal media</value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value>{0} has been kicked for using non-Latin characters</value>
+  </string>
+  <string key="bannedfornsfwimage">
+	<value>{0} has been banned for posting a not safe for work image.\nThe image had a {1}% chance of being NSFW</value>
+  </string>
+  <string key="kickedfornsfwimage">
+	<value>{0} has been banned for posting a not safe for work image.\nThe image had a {1}% chance of being NSFW</value>
+  </string>
+  <string key="nsfwMenu">
+	<value>Set whether or not the user is kicked or banned.
+			Turn the detection system on or off.
+			Please note that each api key is limited to 5000 images a month, it is your responsability to change your groups api key when it is used up
+			
+			This system works by only banning images with a 95% or higher chance of being NSFW. It uses the latest in computer vision technology but as this field is still young it is not perfect.
+			
+			Your options are below:
+	</value>
+  </string>
+  <string key="nsfwButton">
+	<value>NSFW Detection</value>
   </string>
 </strings>
