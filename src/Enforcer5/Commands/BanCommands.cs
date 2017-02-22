@@ -240,20 +240,23 @@ namespace Enforcer5
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "tempbanZero"), update);
             }
-            var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
-            var hash = $"{update.Message.Chat.Id}:{userId}";
-            var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
-            if (res.Result.Equals(true))
+            else
             {
-                Methods.SaveBan(userId, "tempban");
-                await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
-                await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
-                var timeBanned = TimeSpan.FromMinutes(time);
-                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                await Bot.SendReply(
-                    Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
-                    update);
-                await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
+                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
+                var hash = $"{update.Message.Chat.Id}:{userId}";
+                var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
+                if (res.Result.Equals(true))
+                {
+                    Methods.SaveBan(userId, "tempban");
+                    await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
+                    await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+                    var timeBanned = TimeSpan.FromMinutes(time);
+                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                    await Bot.SendReply(
+                        Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
+                        update);
+                    await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
+                }
             }
         }          
     }

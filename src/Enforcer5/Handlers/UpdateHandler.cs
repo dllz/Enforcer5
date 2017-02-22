@@ -236,7 +236,7 @@ namespace Enforcer5.Handlers
                         case MessageType.PhotoMessage:
                             if (update.Message.Chat.Type == ChatType.Supergroup)
                             {
-                                await Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
+                                Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
                             }
                             break;
                         case MessageType.AudioMessage:
