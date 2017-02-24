@@ -31,7 +31,7 @@ namespace Enforcer5
                 if (!ignored)
                 {
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
-                    int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;
+                    int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;   
                     if (num == 0) num = 1;
                     var maxSpam = 8;
                     if (update.Message.Chat.Type == ChatType.Private) maxSpam = 12;
