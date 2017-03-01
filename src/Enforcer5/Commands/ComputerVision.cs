@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -72,9 +73,56 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
+                    if (e.Message.Equals("Response status code does not indicate success: 401 (Unauthorized)."))
+                    {
+                        await genNewToken(chatId);
+                    }
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
                 }
+            }
+        }
+
+        public static async Task genNewToken(long chatId, bool sendOutput = false)
+        {
+            var data = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+            var appId = data.Where(e => e.Name.Equals("appId")).FirstOrDefault();
+            var appSecret = data.Where(e => e.Name.Equals("appSecret")).FirstOrDefault();
+
+            using (var client = new HttpClient())
+            {
+                var url = "https://api.clarifai.com/v2/token";
+                var content = new StringContent(JsonConvert.SerializeObject("\"grant_type\":\"client_credentials\""), Encoding.UTF8, "application/json");
+                String encoded = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(appId.Value + ":" + appSecret.Value));
+                client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Basic {encoded}");
+                var response = client.PostAsync(url, content).Result;
+                response.EnsureSuccessStatusCode();
+                var res = response.Content.ReadAsStringAsync().Result;
+                Bot.Send(res, chatId);
+                //var result = JsonConvert.DeserializeObject<ClarifaiOutput>(res);
+
+                if (sendOutput)
+                {
+                    Bot.Send("New Api generated", chatId);
+                }
+            }
+
+            
+
+        }
+
+        [Command(Trigger = "genapi", GroupAdminOnly = true, InGroupOnly = true)]
+        public static async Task GenerateNewApi(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                await genNewToken(update.Message.Chat.Id);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, update.Message, lang);
             }
         }
 
