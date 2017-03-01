@@ -366,7 +366,7 @@ namespace Enforcer5.Helpers
             var rules = Redis.db.StringGetAsync($"chat:{chatId}:rules").Result;
             if (rules.HasValue)
             {
-                return GetLocaleString(lang, "rules", rules);
+                return GetLocaleString(lang, "rules", $"<![CDATA[{rules}]]>");
             }
             else
             {
