@@ -84,7 +84,7 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                        return;
+                        await Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 }                
 #endif             
                 new Task(() => { CollectStats(update.Message); }).Start();                
