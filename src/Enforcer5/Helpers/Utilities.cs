@@ -52,10 +52,19 @@ namespace Enforcer5.Helpers
         {
 
             //get api token from registry
+#if normal
             var key =
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
+#endif
+#if premium
+            var key =
+                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+                        .OpenSubKey("SOFTWARE\\Werewolf");
+            TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
+#endif
+
             Api = new TelegramBotClient(TelegramAPIKey);
             await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 

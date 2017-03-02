@@ -61,7 +61,7 @@ namespace Enforcer5
 #if premium
              _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
 #endif
-#if debug
+#if normal
             _restartBot = new Timer(Methods.Restart, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 #endif
             //now pause the main thread to let everything else run

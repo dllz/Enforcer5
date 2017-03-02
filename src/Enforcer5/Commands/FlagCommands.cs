@@ -489,7 +489,7 @@ namespace Enforcer5
                     {
                         await Bot.Api.KickChatMemberAsync(chatId, userId);
                         var name = Methods.GetNick(call.Message, args);
-                        await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxBan", name), call.Message);
+                        await Bot.Send(Methods.GetLocaleString(lang, "warnMaxBan", name), chatId);
                     }
                     catch (AggregateException e)
                     {
@@ -500,7 +500,7 @@ namespace Enforcer5
                 {
                     await Methods.KickUser(chatId, userId, lang);
                     var name = Methods.GetNick(call.Message, args);
-                    await Bot.SendReply(Methods.GetLocaleString(lang, "warnMaxKick", name), call.Message);
+                    await Bot.Send(Methods.GetLocaleString(lang, "warnMaxKick", name), chatId);
                 }
                 await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
         }

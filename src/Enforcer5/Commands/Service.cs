@@ -116,6 +116,9 @@ namespace Enforcer5
                 case 23776848://Melisa
                     await Bot.Send("Banhammer is ready for use milady. Feel free to strike them down", chatId);
                     break;
+                case 9375804:
+                    await Bot.Send("Insert words here", chatId);
+                    break;
                 default:
                     var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
                     var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;

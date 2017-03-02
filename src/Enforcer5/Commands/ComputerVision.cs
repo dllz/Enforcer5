@@ -73,10 +73,11 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    //if (e.Message.Equals("Response status code does not indicate success: 401 (Unauthorized)."))
-                    //{
-                    //    await genNewToken(chatId);
-                    //}
+                    if (e.Message.Contains("401"))
+                    {
+                        await genNewToken(chatId);
+                        await Bot.SendReply("Your api key expired, a new one has been auto generated", msg);
+                    }
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
                 }
@@ -89,25 +90,41 @@ namespace Enforcer5
             var appId = data.Where(e => e.Name.Equals("appId")).FirstOrDefault();
             var appSecret = data.Where(e => e.Name.Equals("appSecret")).FirstOrDefault();
 
-            using (var client = new HttpClient())
+            try
             {
-                var url = "https://api.clarifai.com/v2/token";
-                var content = new StringContent(JsonConvert.SerializeObject("\"grant_type\":\"client_credentials\""), Encoding.UTF8, "application/json");
-                String encoded = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(appId.Value + ":" + appSecret.Value));
-                client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Basic {encoded}");
-                var response = client.PostAsync(url, content).Result;
-                response.EnsureSuccessStatusCode();
-                var res = response.Content.ReadAsStringAsync().Result;
-                Bot.Send(res, chatId);
-                //var result = JsonConvert.DeserializeObject<ClarifaiOutput>(res);
-
-                if (sendOutput)
+                using (var client = new HttpClient())
                 {
-                    Bot.Send("New Api generated", chatId);
+                    var url = "https://api.clarifai.com/v2/token";
+                    var content = new StringContent(JsonConvert.SerializeObject("\"grant_type\":\"client_credentials\""), Encoding.UTF8, "application/json");
+                    String encoded = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(appId.Value + ":" + appSecret.Value));
+                    client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Basic {encoded}");
+                    var response = client.PostAsync(url, content).Result;
+                    response.EnsureSuccessStatusCode();
+                    var res = response.Content.ReadAsStringAsync().Result;
+                    var result = JsonConvert.DeserializeObject<ClarifaiAPIKey>(res);
+
+                    //var result = JsonConvert.DeserializeObject<ClarifaiOutput>(res);
+                    try
+                    {
+                        await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                    if (sendOutput)
+                    {
+                        Bot.Send("New Api generated", chatId);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Bot.Send(e.Message, chatId);
+            }
 
-            
+
 
         }
 
@@ -117,7 +134,41 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                await genNewToken(update.Message.Chat.Id);
+                await genNewToken(update.Message.Chat.Id, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "setAppId", GroupAdminOnly = true, InGroupOnly = true)]
+        public static async Task SetClient(Update update, string[] args)
+        {
+            var chatId = update.Message.Chat.Id;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", args[1]);
+                await Bot.SendReply("App ID key updated", update);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "setSecret", GroupAdminOnly = true, InGroupOnly = true)]
+        public static async Task SetSecret(Update update, string[] args)
+        {
+            var chatId = update.Message.Chat.Id;
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", args[1]);
+                await Bot.SendReply("App secret key updated", update);
             }
             catch (Exception e)
             {

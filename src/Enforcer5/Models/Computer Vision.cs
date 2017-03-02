@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Enforcer5.Models
@@ -15,6 +16,14 @@ namespace Enforcer5.Models
     {
         public int code { get; set; }
         public string description { get; set; }
+    }
+
+    public class ClarifaiAPIKey
+    {
+        public Status status { get; set; }
+        public string access_token { get; set; }
+        public string expires_in { get; set; }
+        public string scope { get; set; }
     }
 
     public class Output
