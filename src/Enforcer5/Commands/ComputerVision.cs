@@ -194,22 +194,6 @@ namespace Enforcer5
             await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
             await Bot.SendReply("Deactivated", update);
         }
-        [Command(Trigger = "setApiKey", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task SetNSFWApiKey(Update update, string[] args)
-        {
-            var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            try
-            {
-                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", args[1]);
-                await Bot.SendReply("API key updated", update);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Methods.SendError(e.Message, update.Message, lang);
-            }
-        }
 
         [Command(Trigger = "nsfwalert", InGroupOnly = true, GroupAdminOnly = true)]
         public static async Task NSFWAdminAlert(Update update, string[] args)
