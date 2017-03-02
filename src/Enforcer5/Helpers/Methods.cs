@@ -506,7 +506,12 @@ namespace Enforcer5.Helpers
         {
             try
             {
+#if normal
                 var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
+#endif
+#if premium
+                var tempbans = Redis.db.HashGetAllAsync("tempbannedPremium").Result;
+#endif
                 foreach (var mem in tempbans)
                 {
                     if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))

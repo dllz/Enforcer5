@@ -255,7 +255,12 @@ namespace Enforcer5
                     await Bot.SendReply(
                         Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
                         update);
+#if normal
                     await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
+#endif
+#if premium
+                    await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
+#endif
                 }
             }
         }          

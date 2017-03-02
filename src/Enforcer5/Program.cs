@@ -60,9 +60,10 @@ namespace Enforcer5
             new Thread(UpdateHandler.SpamDetection).Start();
 #if normal
              _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
-#endif
-#if normal
             _restartBot = new Timer(Methods.Restart, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+#endif
+#if premium
+            _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
 #endif
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);
