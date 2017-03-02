@@ -105,68 +105,82 @@ namespace Enforcer5
             {
                 return;
             }
-            var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
-            var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
-            if (!string.IsNullOrEmpty(type) && type.Equals("media"))
+            switch (message.NewChatMember.Id)
             {
-                var file_id = content;
-                await Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
-            }
-            else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
-            {
-                var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
-                if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
-                {
-                    var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
-                    var text = GetCustomWelcome(message, content);
-                    await Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
-                }
-                else
-                {
-                    var text = GetCustomWelcome(message, content);
-                    await Bot.Send(text, message.Chat.Id);
-                }
-            }
-            else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
-            {
-                var lang = Methods.GetGroupLanguage(message).Doc;
-                if (!content.Equals("no"))
-                {                                       
-                    var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
-                        message.Chat.Title);
-                    switch (content)
+                case 286670453://Phyto
+                    await Bot.Send("Error 404", chatId);
+                    break;
+                case 106665913://Jeff
+                    await Bot.Send("This is a known bug. No need to report", chatId);
+                    break;
+                case 23776848://Melisa
+                    await Bot.Send("Something about a banhammer", chatId);
+                    break;
+                default:
+                    var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
+                    var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
+                    if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
-                        case "a":
-                            text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}";
-                            break;
-                        case "r":
-                            text = $"{text}\n\n{Methods.GetRules(message.Chat.Id, lang)}";
-                            break;
-                        case "m":
-                            text = $"{text}\n\n{Methods.GetAdminList(message, lang)}";
-                            break;
-                        case "ra":
-                            text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}";
-                            break;
-                        case "am":
-                            text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
-                            break;
-                        case "rm":
-                            text = $"{text}\n\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
-                            break;
-                        case "ram":
-                            text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
-                            break;
+                        var file_id = content;
+                        await Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
                     }
-                    await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
-                }
-                else
-                {
-                    var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
-                        message.Chat.Title);
-                    await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
-                }
-            }
+                    else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
+                    {
+                        var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
+                        if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
+                        {
+                            var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
+                            var text = GetCustomWelcome(message, content);
+                            await Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
+                        }
+                        else
+                        {
+                            var text = GetCustomWelcome(message, content);
+                            await Bot.Send(text, message.Chat.Id);
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
+                    {
+                        var lang = Methods.GetGroupLanguage(message).Doc;
+                        if (!content.Equals("no"))
+                        {
+                            var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
+                                message.Chat.Title);
+                            switch (content)
+                            {
+                                case "a":
+                                    text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}";
+                                    break;
+                                case "r":
+                                    text = $"{text}\n\n{Methods.GetRules(message.Chat.Id, lang)}";
+                                    break;
+                                case "m":
+                                    text = $"{text}\n\n{Methods.GetAdminList(message, lang)}";
+                                    break;
+                                case "ra":
+                                    text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}";
+                                    break;
+                                case "am":
+                                    text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
+                                    break;
+                                case "rm":
+                                    text = $"{text}\n\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
+                                    break;
+                                case "ram":
+                                    text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
+                                    break;
+                            }
+                            await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                        }
+                        else
+                        {
+                            var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
+                                message.Chat.Title);
+                            await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                        }
+                    }
+                    break;
+            }            
         }
 
         private static string GetCustomWelcome(Message message, RedisValue content)
