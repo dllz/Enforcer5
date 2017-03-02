@@ -490,6 +490,7 @@ namespace Enforcer5
                         await Bot.Api.KickChatMemberAsync(chatId, userId);
                         var name = Methods.GetNick(call.Message, args);
                         await Bot.Send(Methods.GetLocaleString(lang, "warnMaxBan", name), chatId);
+                        Methods.SaveBan(userId, "maxWarn");
                     }
                     catch (AggregateException e)
                     {

@@ -92,6 +92,8 @@ namespace Enforcer5
                         await Methods.BanUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
                         var name = Methods.GetNick(update.Message, args);
                         await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                        var userId = update.Message.ReplyToMessage.From.Id;                  
+                        Methods.SaveBan(userId, "maxWarn");
                     }
                     catch (AggregateException e)
                     {
