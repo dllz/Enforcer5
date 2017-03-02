@@ -73,10 +73,10 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    if (e.Message.Equals("Response status code does not indicate success: 401 (Unauthorized)."))
-                    {
-                        await genNewToken(chatId);
-                    }
+                    //if (e.Message.Equals("Response status code does not indicate success: 401 (Unauthorized)."))
+                    //{
+                    //    await genNewToken(chatId);
+                    //}
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
                 }
