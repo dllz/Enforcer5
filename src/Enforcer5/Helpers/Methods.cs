@@ -148,7 +148,7 @@ namespace Enforcer5.Helpers
         /// <returns></returns>
         public static string GetLocaleString(XDocument file, string key, params object[] args)
         {
-            if (args.Length > 0 && !skipFormat)
+            if (args.Length > 0)
             {
                 try
                 {
