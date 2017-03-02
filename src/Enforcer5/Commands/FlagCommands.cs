@@ -29,7 +29,10 @@ namespace Enforcer5
             var blocked =
                 Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:reportblocked", update.Message.From.Id).Result;
             if (blocked)
-                return; 
+                return;
+            var ReportOn = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Flagged").Result;
+            if (ReportOn.Equals("yes"))
+                return;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null)
             {
