@@ -58,7 +58,7 @@ namespace Enforcer5
             new Task(Methods.IntialiseLanguages).Start();
             var wait = TimeSpan.FromSeconds(30);
             new Thread(UpdateHandler.SpamDetection).Start();
-#if premium
+#if normal
              _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
 #endif
 #if normal
