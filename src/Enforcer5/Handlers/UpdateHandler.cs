@@ -79,11 +79,14 @@ namespace Enforcer5.Handlers
         private static async void HandleUpdate(Update update)
         {
             {
-//#if premium
-//                var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
-//                if (!allowed)
-//                    return;
-//#endif
+#if premium
+                if (update.Message.Chat.Type != ChatType.Private)
+                {
+                    var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
+                    if (!allowed)
+                        return;
+                }                
+#endif             
                 new Task(() => { CollectStats(update.Message); }).Start();                
                 Bot.MessagesProcessed++;
                 Methods.IsRekt(update);
