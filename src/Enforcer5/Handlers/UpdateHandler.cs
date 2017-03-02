@@ -132,8 +132,10 @@ namespace Enforcer5.Handlers
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {
-                                    new Task(() => { Log(update, "text", command); }).Start(); 
+                                    new Task(() => { Log(update, "text", command); }).Start();
+#if normal
                                     AddCount(update.Message.From.Id, update.Message.Text);
+#endif
                                     //check that we should run the command
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
@@ -605,8 +607,10 @@ namespace Enforcer5.Handlers
                             String.Equals(x.Trigger, args[0],
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
-                    {                        
-                        AddCount(update.From.Id, update.Message.Text);
+                    {
+#if normal
+                        AddCount(update.Message.From.Id, update.Message.Text);
+#endif
                         var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
                         if (blocked.HasValue)
                         {
