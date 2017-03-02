@@ -97,7 +97,7 @@ namespace Enforcer5.Handlers
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30))
-                   return;
+                  // return;
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;  
                            
                 try

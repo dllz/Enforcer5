@@ -148,7 +148,7 @@ namespace Enforcer5.Helpers
         /// <returns></returns>
         public static string GetLocaleString(XDocument file, string key, params object[] args)
         {
-            if (args.Length > 0)
+            if (args.Length > 0 && !skipFormat)
             {
                 try
                 {
@@ -202,7 +202,51 @@ namespace Enforcer5.Helpers
                         e);
                 }
             }
-        }       
+        }
+
+        public static string GetLocaleStringNoFormat(XDocument file, string key, params object[] args)
+        {
+            try
+            {
+                var strings = file.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
+                if (strings != null)
+                {
+                    var values = strings.Descendants("value");
+                    var step1 = String.Format(values.FirstOrDefault().Value, args);
+                    step1 = step1.Replace("\\n", Environment.NewLine);
+                    return step1;
+                }
+                else
+                {
+                    throw new Exception($"Error getting string {key} with parameters {(args != null && args.Length > 0 ? args.Aggregate((a, b) => a + "," + b.ToString()) : "none")}");
+                }
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    //try the english string to be sure
+                    var strings =
+                        Program.LangaugeList.FirstOrDefault(x => x.Name == "English").Doc.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
+                    var values = strings?.Descendants("value");
+                    if (values != null)
+                    {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        var step1 = String.Format(values.FirstOrDefault().Value, args);
+                        step1 = step1.Replace("\\n", Environment.NewLine);
+                        return step1;
+                    }
+                    else
+                        throw new Exception("Cannot load english string for fallback");
+                }
+                catch
+                {
+                    throw new Exception(
+                        $"Error getting string {key} with parameters {(args != null && args.Length > 0 ? args.Aggregate((a, b) => a + "," + b.ToString()) : "none")}",
+                        e);
+                }
+            }
+        }
 
         public static string GetNick(Message msg, string[] args, bool sender = false)
         {
@@ -353,7 +397,7 @@ namespace Enforcer5.Helpers
             var about = Redis.db.StringGetAsync($"chat:{chatId}:about").Result;
             if (about.HasValue)
             {
-                return GetLocaleString(lang, "about", about);
+                return GetLocaleStringNoFormat(lang, "about", about);
             }
             else
             {
@@ -366,7 +410,7 @@ namespace Enforcer5.Helpers
             var rules = Redis.db.StringGetAsync($"chat:{chatId}:rules").Result;
             if (rules.HasValue)
             {
-                return GetLocaleString(lang, "rules", rules);
+                return GetLocaleStringNoFormat(lang, "rules", rules);
             }
             else
             {
