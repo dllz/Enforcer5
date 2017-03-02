@@ -220,6 +220,19 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
+        public static async Task AllowPremiumBot(Update update, string[] args)
+        {
+            await Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
+            await Bot.SendReply("Activated", update);
+        }
+
+        [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true)]
+        public static async Task BlockPremiumBot(Update update, string[] args)
+        {
+            await Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
+            await Bot.SendReply("Deactivated", update);
+        }
     }
 
     public static partial class CallBacks
