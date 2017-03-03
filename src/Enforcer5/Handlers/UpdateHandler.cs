@@ -133,9 +133,7 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {
                                     new Task(() => { Log(update, "text", command); }).Start();
-#if normal
                                     AddCount(update.Message.From.Id, update.Message.Text);
-#endif
                                     //check that we should run the command
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
@@ -476,14 +474,34 @@ namespace Enforcer5.Handlers
                             //    continue;
                             //}
                             //now count, notify if limit hit
+#if normal
                             if (temp[key].Messages.Count() < 5)
                             {
                                 temp[key].NotifiedAdmin = false;
                             }
+#endif
+#if premium
+                            if (temp[key].Messages.Count() < 10)
+                            {
+                                temp[key].NotifiedAdmin = false;
+                            }
+#endif
+#if normal
                             if (temp[key].Messages.Count() >= 5) // 20 in a minute
                             {
+#endif
+#if premium
+                            if (temp[key].Messages.Count() >= 15) // 20 in a minute
+                            {
+#endif
+#if normal
                                 if (temp[key].Messages.Count < 10)
                                 {
+#endif
+#if premium
+                                if (temp[key].Messages.Count < 20)
+                                {
+#endif
                                     if (temp[key].NotifiedAdmin == false)
                                     {
                                         try
@@ -608,9 +626,7 @@ namespace Enforcer5.Handlers
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
                     {
-#if normal
                         AddCount(update.Message.From.Id, update.Message.Text);
-#endif
                         var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
                         if (blocked.HasValue)
                         {
