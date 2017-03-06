@@ -696,7 +696,7 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "ban");
                 var keys = Commands.genFlood(chatId, lang);
-                await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
