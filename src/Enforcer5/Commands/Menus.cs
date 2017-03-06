@@ -654,7 +654,7 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var num = Redis.db.HashDecrementAsync($"chat:{chatId}:flood", "MaxFlood").Result;
-            if (num > 0)
+            if (num > 4)
             {
                 var keys = Commands.genFlood(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
@@ -694,7 +694,7 @@ namespace Enforcer5
             }
             else if (current.Equals("kick"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
+                await Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "ban");
                 var keys = Commands.genFlood(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
