@@ -141,18 +141,38 @@ namespace Enforcer5
                     {
                         var chatId = update.Message.Chat.Id;
                         var userId = update.Message.Chat.Id;
+#if normal
                         var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
+#endif
+#if premium
+                        var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbannedPremium", userId).Result;
+#endif
                         if (isAlreadyTempbanned)
                         {
+#if normal
                             var all = Redis.db.HashGetAllAsync("tempbanned").Result;
+#endif
+#if premium
+                            var all = Redis.db.HashGetAllAsync("tempbannedPremium").Result;
+#endif
                             foreach (var mem in all)
                             {
                                 if ($"{chatId}:{userId}".Equals(mem.Value))
                                 {
+#if normal
                                     await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+#endif
+#if premium
+                                    await Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
+#endif
                                 }
                             }
+#if normal
                             await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+#endif
+#if premium
+                            await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
+#endif
                         }
                         Methods.SaveBan(userid, "ban");
                         object[] arguments =
