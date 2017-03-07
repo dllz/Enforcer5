@@ -251,7 +251,12 @@ namespace Enforcer5
                 {
                     Methods.SaveBan(userId, "tempban");
                     await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
+#if normal
                     await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+#endif
+#if premium
+                     await Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
+#endif
                     var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                     await Bot.SendReply(
