@@ -518,7 +518,6 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.WriteLine();
                 return;
             }
         }
