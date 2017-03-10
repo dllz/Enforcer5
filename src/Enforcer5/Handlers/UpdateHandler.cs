@@ -491,7 +491,7 @@ namespace Enforcer5.Handlers
                             {
 #endif
 #if premium
-                            if (temp[key].Messages.Count() >= 15) // 20 in a minute
+                            if (temp[key].Messages.Count() >= 10) // 20 in a minute
                             {
 #endif
 #if normal
@@ -499,7 +499,7 @@ namespace Enforcer5.Handlers
                                 {
 #endif
 #if premium
-                                if (temp[key].Messages.Count < 20)
+                                if (temp[key].Messages.Count < 15)
                                 {
 #endif
                                     if (temp[key].NotifiedAdmin == false)
@@ -519,7 +519,11 @@ namespace Enforcer5.Handlers
                                     //    Para);                                    
                                     continue;
                                 }
-                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > 11))
+                                var number = 11;
+#if premuim
+                                number = 15;
+#endif
+                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > number))
                                 {
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Console.ForegroundColor = ConsoleColor.Green;
