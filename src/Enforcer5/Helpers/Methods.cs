@@ -485,12 +485,12 @@ namespace Enforcer5.Helpers
             }                
             try
             {
-                int banned = int.Parse(isBanned[0].Value);
-                var reason = isBanned[1].Value;
-                var time = isBanned[2].Value;
-                Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
+                int banned = int.Parse(isBanned[0].Value);                
                 if (banned == 1)
                 {
+                    var reason = isBanned[1].Value;
+                    var time = isBanned[2].Value;
+                    Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
                     try
                     {
