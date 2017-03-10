@@ -233,6 +233,54 @@ namespace Enforcer5
             await Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
             await Bot.SendReply("Deactivated", update);
         }
+
+        [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
+        public static async Task Unrekt(Update update, string[] args)
+        {
+            int userId = 0;
+            string moti = "";
+            if (update.Message.ReplyToMessage != null)
+            {
+                if (update.Message.ReplyToMessage.ForwardFrom != null)
+                {
+                    userId = update.Message.ReplyToMessage.ForwardFrom.Id;
+                }
+                else
+                {
+                    userId = update.Message.ReplyToMessage.From.Id;
+                }
+                moti = args[1];
+            }
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                if (int.TryParse(spilt[0], out temp))
+                {
+                    userId = temp;
+                    moti = spilt[1];
+                }
+                else
+                {
+                    moti = args[1];
+                }
+            }
+            else
+            {
+                return;
+            }
+            if (userId != 0)
+            {
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 0);
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "unbanMotivation", moti);
+                await Redis.db.HashSetAsync($"globalBan:{userId}", "unbanTime", System.DateTime.UtcNow.ToString());
+                await Bot.SendReply($"{userId} has been unrekt for {moti}", update);
+            }
+            else
+            {
+                await Bot.SendReply("Nopes", update);
+            }
+        }
     }
 
     public static partial class CallBacks

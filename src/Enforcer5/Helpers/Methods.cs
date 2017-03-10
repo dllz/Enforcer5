@@ -474,19 +474,27 @@ namespace Enforcer5.Helpers
 
         public static async void IsRekt(Update update)
         {
-            var isBanned = Redis.db.HashGetAllAsync($"globanBan:{update.Message.From.Id}").Result;
+            if (update.Message.Chat.Type != ChatType.Supergroup)
+                return;
+            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
+            var name = update.Message.From.FirstName;
+            if (update.Message.Type == MessageType.ServiceMessage && update.Message.NewChatMember != null)
+            {
+                isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.NewChatMember.Id}").Result;
+                name = update.Message.NewChatMember.FirstName;
+            }                
             try
             {
                 int banned = int.Parse(isBanned[0].Value);
                 var reason = isBanned[1].Value;
                 var time = isBanned[2].Value;
-                Console.WriteLine($"banned:{banned} reason:{reason}");
+                Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
                 if (banned == 1)
                 {
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
                     try
                     {
-                        await Bot.Send($"{banned} for {reason} notified in {update.Message.Chat.Id}", Constants.Devs[0]);
+                        await Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
                         SaveBan(update.Message.From.Id, "ban");
                         var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
@@ -510,6 +518,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                Console.WriteLine();
                 return;
             }
         }
