@@ -281,6 +281,21 @@ namespace Enforcer5
                 await Bot.SendReply("Nopes", update);
             }
         }
+
+        [Command(Trigger = "leave", GlobalAdminOnly = true)]
+        public static async Task LeaveChat(Update update, string[] args)
+        {
+            try
+            {
+                var chatId = args[1];
+                await Bot.Api.LeaveChatAsync(chatId);
+                await Bot.SendReply("The chat has been left", update);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);                
+            }
+        }
     }
 
     public static partial class CallBacks
