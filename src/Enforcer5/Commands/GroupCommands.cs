@@ -670,7 +670,7 @@ namespace Enforcer5
                 try
                 {
                     var userid = Methods.GetUserId(update, args);
-                    var exists = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{update.Message.From.Id}", "msgs").Result;
+                    var exists = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
                     if (exists.HasValue)
                     {
                         await Bot.SendReply(Methods.GetLocaleString(lang, "usergroupstatus", userid, exists), update);
