@@ -32,6 +32,7 @@ namespace Enforcer5.Helpers
         public static Random R = new Random();
         private static System.Threading.Timer _apiWatch;
         public static int MessagesSent = 0;
+        public static bool testing = false;
         public static string CurrentStatus = "";
         internal static string RootDirectory
         {
@@ -57,6 +58,10 @@ namespace Enforcer5.Helpers
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
+            if (Bot.TelegramAPIKey.Equals("279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY"))
+            {
+                testing = true;
+            }
 #endif
 #if premium
             var key =

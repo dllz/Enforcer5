@@ -303,31 +303,15 @@ namespace Enforcer5.Helpers
             if (!s.StartsWith("@"))
                 throw new Exception("UnableToResolveUsername");
             s = s.ToLower();
-            if (chatId != 0)
+            var userid = Redis.db.HashGetAsync($"bot:usernames", s).Result;
+            var id = 0;
+            if (int.TryParse(userid.ToString(), out id))
             {
-                var userid = Redis.db.HashGetAsync($"bot:usernames:{chatId}", s).Result;
-                var id = 0;
-                if (int.TryParse(userid.ToString(), out id))
-                {
-                    return id;
-                }
-                else
-                {
-                    throw new Exception("UnableToResolveUsername");
-                }
+                return id;
             }
             else
             {
-                var userid = Redis.db.HashGetAsync($"bot:usernames", s).Result;
-                var id = 0;
-                if (int.TryParse(userid.ToString(), out id))
-                {
-                    return id;
-                }
-                else
-                {
-                    throw new Exception("UnableToResolveUsername");
-                }
+                throw new Exception("UnableToResolveUsername");
             }
         }
 

@@ -93,7 +93,8 @@ namespace Enforcer5.Handlers
                 //ignore previous messages
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
-                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10))
+                
+                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == true)
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30))
