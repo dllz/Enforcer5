@@ -494,7 +494,7 @@ namespace Enforcer5.Helpers
                     var lang = Methods.GetGroupLanguage(update.Message).Doc;
                     try
                     {
-                        await Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id}", Constants.Devs[0]);
+                        await Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
                         SaveBan(update.Message.From.Id, "ban");
                         var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
