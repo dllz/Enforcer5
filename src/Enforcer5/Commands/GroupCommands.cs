@@ -661,6 +661,37 @@ namespace Enforcer5
             await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }
 
+        [Command(Trigger = "check", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task CheckGroupUser(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                try
+                {
+                    var userid = Methods.GetUserId(update, args);
+                    var exists = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
+                    if (exists.HasValue)
+                    {
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "usergroupstatus", userid, exists), update);
+                    }
+                    else
+                    {
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "usergroupstatusnotseen", userid, exists), update);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Methods.SendError(e.Message, update.Message, lang);
+                }
+            }
+            catch (AggregateException e)
+            {
+                Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+            }
+        }
+
+
         public static async Task SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
