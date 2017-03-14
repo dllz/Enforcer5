@@ -663,7 +663,7 @@ namespace Enforcer5
             else
             {
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                await Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+                await Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
             }
         }
 
