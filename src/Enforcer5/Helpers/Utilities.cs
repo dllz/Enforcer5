@@ -127,6 +127,7 @@ namespace Enforcer5.Helpers
             Api.PollingTimeout = TimeSpan.FromSeconds(1);
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
+
             if (!testing)
             {
 #if premium
@@ -137,6 +138,7 @@ namespace Enforcer5.Helpers
 #endif
                 if (offset.HasValue && offset.IsInteger)
                     Api.MessageOffset = (int)offset + 1;
+                Console.WriteLine($" database offset is {offset}");
                 //now we can start receiving   
 
             }           
