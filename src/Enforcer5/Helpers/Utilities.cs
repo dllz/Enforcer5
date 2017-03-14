@@ -135,10 +135,10 @@ namespace Enforcer5.Helpers
 #if normal
                 var offset = Redis.db.StringGetAsync("bot:last_update").Result;
 #endif
-                if (!offset.HasValue || !offset.IsInteger)
-                    offset = 0;
+                if (offset.HasValue && offset.IsInteger)
+                    Api.MessageOffset = (int)offset + 1;
                 //now we can start receiving   
-                Api.MessageOffset = (int)offset + 1;
+
             }
            
             Api.StartReceiving();
