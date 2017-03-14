@@ -139,11 +139,12 @@ namespace Enforcer5.Helpers
                     Api.MessageOffset = (int)offset + 1;
                 //now we can start receiving   
 
-            }
-           
+            }           
             Api.StartReceiving();
+            Console.WriteLine($"Starting ID = {Api.MessageOffset}");
             var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
+
         }
 
         private static void ApiOnUpdate(object sender, UpdateEventArgs e)
