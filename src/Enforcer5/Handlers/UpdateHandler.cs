@@ -31,6 +31,12 @@ namespace Enforcer5.Handlers
         {
             if (e.Update.Message == null) return;
             new Task(() => { HandleUpdate(e.Update); }).Start();
+#if premium
+            Redis.db.StringSetAsync("bot:last_Premium_update", Bot.Api.MessageOffset);
+#endif
+#if normal
+            Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
+#endif
         }
 
 

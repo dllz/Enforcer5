@@ -127,7 +127,20 @@ namespace Enforcer5.Helpers
             Api.PollingTimeout = TimeSpan.FromSeconds(1);
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
-            //now we can start receiving
+            if (!testing)
+            {
+#if premium
+                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
+#endif
+#if normal
+                var offset = Redis.db.StringGetAsync("bot:last_update").Result;
+#endif
+                if (!offset.HasValue || !offset.IsInteger)
+                    offset = 0;
+                //now we can start receiving   
+                Api.MessageOffset = (int)offset + 1;
+            }
+           
             Api.StartReceiving();
             var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
