@@ -68,7 +68,7 @@ namespace Enforcer5.Helpers
             TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
 #endif
 
-            Api = new TelegramBotClient("218011713:AAHFY0IHT4RI1jla5mWvt-mBAx7hqNfKPac");
+            Api = new TelegramBotClient("279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY");
             await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 
             //load the commands list
