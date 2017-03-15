@@ -54,14 +54,12 @@ namespace Enforcer5.Helpers
 
             //get api token from registry
 #if normal
-            var key =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\Werewolf");
-            TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
-            if (Bot.TelegramAPIKey.Equals("279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY"))
-            {
-                testing = true;
-            }
+            
+                    
+            //if (Bot.TelegramAPIKey.Equals("279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY"))
+            //{
+            //    testing = true;
+            //}
 #endif
 #if premium
             var key =
@@ -70,7 +68,7 @@ namespace Enforcer5.Helpers
             TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
 #endif
 
-            Api = new TelegramBotClient(TelegramAPIKey);
+            Api = new TelegramBotClient("218011713:AAHFY0IHT4RI1jla5mWvt-mBAx7hqNfKPac");
             await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 
             //load the commands list
