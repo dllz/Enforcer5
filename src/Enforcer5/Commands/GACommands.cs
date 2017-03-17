@@ -296,6 +296,30 @@ namespace Enforcer5
                 Console.WriteLine(e);                
             }
         }
+
+        [Command(Trigger = "rektlist", GlobalAdminOnly = true)]
+        public static async Task GlobalBanList(Update update, string[] args)
+        {
+            var bans = Redis.db.HashGetAllAsync("globalBan").Result;
+            var ids = bans.Select(id => id.Name).ToList();
+            var basicID = new List<int>();
+            foreach (var id in ids)
+            {
+                basicID.Add(int.Parse(id.ToString().Split(':')[1])); 
+            }
+            var banInfo = new List<string>();
+            foreach (var user in basicID)
+            {
+                var entry = Redis.db.HashGetAllAsync($"globalBan:{user}").Result;
+                if (entry.Where(i => i.Name.Equals("banned")).Select(e => e.Name).Equals(1))
+                {
+                    var motivation = entry.Where(e => e.Name.Equals("motivation")).Select(i => i.Value);
+                    var time = entry.Where(i => i.Name.Equals("time")).Select(e => e.Value);
+                    banInfo.Add($"User: {user} for {motivation} at {time}");
+                }
+            }
+            await Bot.SendReply(String.Join("\n", banInfo), update);
+        }
     }
 
     public static partial class CallBacks
