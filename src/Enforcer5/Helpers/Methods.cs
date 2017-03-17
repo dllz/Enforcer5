@@ -432,23 +432,20 @@ namespace Enforcer5.Helpers
             if (chatId != null)
             {
                 completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
-                string warns;
+                int warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
                 {
-                    warns = Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
-                }
-                else
-                {
-                    warns = "0";
+                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
                 }
                 completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
+                warns = 0;
+                if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
+                {
+                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+                }
                 if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result.HasValue)
                 {
-                    warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
-                }
-                else
-                {
-                    warns = "0";
+                    warns = warns + (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
                 }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
