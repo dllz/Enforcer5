@@ -657,8 +657,8 @@ namespace Enforcer5
             {
                 userId = update.Message.ReplyToMessage.From.Id;
             }
-            await Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
-            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
+            await Redis.db.SetRemoveAsync($"chat:{chatId}:watch", userId);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
 
         [Command(Trigger = "check", InGroupOnly = true, GroupAdminOnly = true)]
