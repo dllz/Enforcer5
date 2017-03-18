@@ -457,6 +457,8 @@ namespace Enforcer5.Helpers
         {
             if (update.Message.Chat.Type != ChatType.Supergroup)
                 return;
+            if (update.Message.Chat.Id == Constants.SupportId)
+                return;
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
             var name = update.Message.From.FirstName;
             if (update.Message.Type == MessageType.ServiceMessage && update.Message.NewChatMember != null)
