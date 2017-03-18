@@ -456,15 +456,15 @@ namespace Enforcer5.Helpers
         public static async void IsRekt(Update update)
         {
             if (update.Message.Chat.Type != ChatType.Supergroup)
-                return;
-            if (update.Message.Chat.Id == Constants.SupportId)
-                return;
+                return;                            
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
             var name = update.Message.From.FirstName;
+            var id = update.Message.From.Id;
             if (update.Message.Type == MessageType.ServiceMessage && update.Message.NewChatMember != null)
             {
                 isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.NewChatMember.Id}").Result;
                 name = update.Message.NewChatMember.FirstName;
+                id = update.Message.NewChatMember.Id;
             }                
             try
             {
@@ -473,8 +473,20 @@ namespace Enforcer5.Helpers
                 {
                     var reason = isBanned[1].Value;
                     var time = isBanned[2].Value;
+                    if (update.Message.Chat.Id == Constants.SupportId)
+                    {
+                        var notified = isBanned[3].Value;
+                        if (notified.HasValue)
+                        {
+                            await Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
+                            await Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
+
+                        }
+                        return;
+                    }
                     Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message).Doc;                    
+                    
                     try
                     {
                         await Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
