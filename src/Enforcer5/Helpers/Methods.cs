@@ -476,7 +476,7 @@ namespace Enforcer5.Helpers
                     if (update.Message.Chat.Id == Constants.SupportId)
                     {
                         var notified = isBanned[3].Value;
-                        if (notified.HasValue)
+                        if (!notified.HasValue)
                         {
                             await Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
                             await Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
