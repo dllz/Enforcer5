@@ -8,6 +8,8 @@ using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using StackExchange.Redis;
+using StackExchange.Redis.KeyspaceIsolation;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -300,12 +302,12 @@ namespace Enforcer5
         [Command(Trigger = "rektlist", GlobalAdminOnly = true)]
         public static async Task GlobalBanList(Update update, string[] args)
         {
-            var bans = Redis.db.HashGetAllAsync("globalBan").Result;
+            var bans = Redis.db.HashScan("globalBan", default(RedisValue), Int32.MaxValue, 1L);
             var ids = bans.Select(id => id.Name).ToList();
             var basicID = new List<int>();
             foreach (var id in ids)
             {
-                basicID.Add(int.Parse(id.ToString().Split(':')[1])); 
+                basicID.Add(int.Parse(id.ToString().Split(':')[1]));
             }
             var banInfo = new List<string>();
             foreach (var user in basicID)
@@ -340,6 +342,7 @@ namespace Enforcer5
             }
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
+            await Bot.SendReply(text, update);
         }
     }
 

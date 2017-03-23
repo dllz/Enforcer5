@@ -97,13 +97,18 @@ namespace Enforcer5.Handlers
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
                 //ignore previous messages
-                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001077134233)
-                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001076212715)
+                //{
+                //    await Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //    Console.WriteLine("LEaving chat");
+                //    return;
+                //}
+                    
                 
-                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == true)
+                if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == false)
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
-                if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30))
+                if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30) && Bot.testing == false)
                    return;
                 //Settings.Main.LogText += update?.Message?.Text + Environment.NewLine;  
                            
