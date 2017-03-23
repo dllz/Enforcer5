@@ -613,6 +613,11 @@ namespace Enforcer5.Helpers
 
         public static string GetMediaId(Message msg)
         {
+
+            if (msg.Text != null)
+            {
+                return msg.MessageId.ToString();
+            }
             if (msg.Photo != null)
             {
                 return msg.Photo.Last().FileId;
@@ -620,6 +625,15 @@ namespace Enforcer5.Helpers
             if (msg.Document != null)
             {
                 return msg.Document.FileId;
+            }
+        
+            if (msg.Voice != null)
+            {
+                return msg.Voice.FileId;
+            }
+            if (msg.Sticker != null)
+            {
+                return msg.Sticker?.FileId;
             }
             if (msg.Video != null)
             {
@@ -629,11 +643,11 @@ namespace Enforcer5.Helpers
             {
                 return msg.Audio.FileId;
             }
-            if (msg.Voice != null)
+            else
             {
-                return msg.Voice.FileId;
+                return "unknown";
             }
-            return msg.Sticker?.FileId;
+           
         }
 
         public static string GetMediaType(Message msg)
