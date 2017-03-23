@@ -613,49 +613,84 @@ namespace Enforcer5.Helpers
 
         public static string GetMediaId(Message msg)
         {
+            if (msg.ReplyToMessage != null)
+            {
+                if (msg.ReplyToMessage.Photo != null)
+                {
+                    return msg.ReplyToMessage.Photo.Last().FileId;
+                }
+                if (msg.ReplyToMessage.Document != null)
+                {
+                    return msg.ReplyToMessage.Document.FileId;
+                }
 
-            if (msg.Text != null)
-            {
-                return msg.MessageId.ToString();
-            }
-            if (msg.Photo != null)
-            {
-                return msg.Photo.Last().FileId;
-            }
-            if (msg.Document != null)
-            {
-                return msg.Document.FileId;
-            }
-        
-            if (msg.Voice != null)
-            {
-                return msg.Voice.FileId;
-            }
-            if (msg.Sticker != null)
-            {
-                return msg.Sticker?.FileId;
-            }
-            if (msg.Video != null)
-            {
-                return msg.Video.FileId;
-            }
-            if (msg.Audio != null)
-            {
-                return msg.Audio.FileId;
+                if (msg.ReplyToMessage.Voice != null)
+                {
+                    return msg.ReplyToMessage.Voice.FileId;
+                }
+                if (msg.ReplyToMessage.Sticker != null)
+                {
+                    return msg.ReplyToMessage.Sticker?.FileId;
+                }
+                if (msg.ReplyToMessage.Video != null)
+                {
+                    return msg.ReplyToMessage.Video.FileId;
+                }
+                if (msg.ReplyToMessage.Audio != null)
+                {
+                    return msg.ReplyToMessage.Audio.FileId;
+                }
+                if (msg.ReplyToMessage.Text != null)
+                {
+                    return msg.ReplyToMessage.MessageId.ToString();
+                }
+                else
+                {
+                    return "unknown";
+                }
+
             }
             else
             {
-                return "unknown";
+                if (msg.Photo != null)
+                {
+                    return msg.Photo.Last().FileId;
+                }
+                if (msg.Document != null)
+                {
+                    return msg.Document.FileId;
+                }
+
+                if (msg.Voice != null)
+                {
+                    return msg.Voice.FileId;
+                }
+                if (msg.Sticker != null)
+                {
+                    return msg.Sticker?.FileId;
+                }
+                if (msg.Video != null)
+                {
+                    return msg.Video.FileId;
+                }
+                if (msg.Audio != null)
+                {
+                    return msg.Audio.FileId;
+                }
+                if (msg.Text != null)
+                {
+                    return msg.MessageId.ToString();
+                }
+                else
+                {
+                    return "unknown";
+                }
+
             }
-           
         }
 
         public static string GetMediaType(Message msg)
-        {
-            if (msg.Text != null)
-            {
-                return "text";
-            }
+        {            
             if (msg.Photo != null)
             {
                 return "photo";
@@ -686,7 +721,11 @@ namespace Enforcer5.Helpers
             if (msg.Audio != null)
             {
                 return "audio";
-            }                
+            }
+            if (msg.Text != null)
+            {
+                return "text";
+            }
             else
             {
                 return "unknown";
