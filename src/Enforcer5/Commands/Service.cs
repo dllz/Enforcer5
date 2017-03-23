@@ -122,6 +122,26 @@ namespace Enforcer5
                 case 125311351:
                     await Bot.Send("401 Not authorised", chatId);
                     break;
+                case 223494929:
+#if premium
+                    await Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAfnHwfv4ufK6wI");
+#endif
+#if normal
+                    await Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
+#endif
+                    break;
+                case 263451571:
+                    await Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
+                    break;
+                case 295152997:
+                    await Bot.Send("Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.", chatId);
+                    break;
+                case 81772130:
+                    await Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
+                    break;
+                case 221962247:
+                    await Bot.Send("Uhm, who are you again? I may not remember for sure, but feel free to spread terror with your kagune here.", chatId);
+                    break;
                 default:
                     var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
                     var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
