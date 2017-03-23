@@ -320,6 +320,27 @@ namespace Enforcer5
             }
             await Bot.SendReply(String.Join("\n", banInfo), update);
         }
+
+        [Command(Trigger = "mediaid", GlobalAdminOnly = true, RequiresReply = true)]
+        public static async Task GetMediaId(Update update, string[] args)
+        {
+            await Bot.SendReply(Methods.GetMediaId(update.Message), update);
+        }
+
+        [Command(Trigger = "getuser", GlobalAdminOnly = true)]
+        public static async Task GetUserDetails(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var userid = Methods.GetUserId(update, args);
+            var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
+            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{userid}").Result;
+            foreach (var mem in isBanned)
+            {
+                text = $"{text}\n{mem.Name}: {mem.Value}";
+            }
+            var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
+            text = $"{text}\nUser has said {msgs} ever";
+        }
     }
 
     public static partial class CallBacks
