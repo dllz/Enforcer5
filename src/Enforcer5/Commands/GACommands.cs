@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
@@ -326,7 +327,9 @@ namespace Enforcer5
         [Command(Trigger = "mediaid", GlobalAdminOnly = true, RequiresReply = true)]
         public static async Task GetMediaId(Update update, string[] args)
         {
-            await Bot.SendReply(Methods.GetMediaId(update.Message), update);
+            var mediaID = Methods.GetMediaId(update.Message);
+            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(mediaID));
+            await Bot.SendReply($"Media: {mediaID}\nDecoded: {decoded}", update);
         }
 
         [Command(Trigger = "getuser", GlobalAdminOnly = true)]
