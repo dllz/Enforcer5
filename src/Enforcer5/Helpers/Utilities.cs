@@ -405,22 +405,115 @@ namespace Enforcer5.Helpers
         internal static async Task<Message> SendReply(string message, Message msg)
         {
             MessagesSent++;
-            return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview:true);
+            try
+            {
+                return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            }
+            catch (ApiRequestException e)
+            {
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        return await Api.SendTextMessageAsync(msg.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+                    
+                }
+                return null;
+            }
         }
         internal static async Task<Message> SendReply(string message, long chatid, int msgid)
         {
             MessagesSent++;
-            return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            try
+            {
+                return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            }
+            catch (ApiRequestException e)
+            {
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        return await Api.SendTextMessageAsync(chatid, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+                    
+                }
+                return null;
+            }
         }
         internal static async Task<Message> SendReply(string message, Update msg)
         {
             MessagesSent++;
-            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            try
+            {
+                return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            }
+            catch (ApiRequestException e)
+            {
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+                   
+                }
+                return null;
+            }
         }
         internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
             MessagesSent++;
-            return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup:keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            try
+            {
+                return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup: keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true);
+            }
+            catch (ApiRequestException e)
+            {
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                        return null;
+                    }
+                   
+                }
+                return null;
+            }
         }
 
         private static void WatchAPI(object state)
