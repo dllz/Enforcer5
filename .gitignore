@@ -254,3 +254,8 @@ ModelManifest.xml
 /Werewolf for Telegram/Werewolf Node/Languages
 .vs/Enforcer5/v14/.suo
 *.dtp
+src/PerspectiveAPI/AnalyzeCommentRequest.cs
+*.cs
+src/PerspectiveAPI/PerspectiveAPI.xproj
+*.json
+/src/PrespectiveAPI/

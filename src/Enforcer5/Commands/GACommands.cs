@@ -328,8 +328,14 @@ namespace Enforcer5
         public static async Task GetMediaId(Update update, string[] args)
         {
             var mediaID = Methods.GetMediaId(update.Message);
-            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(mediaID));
-            await Bot.SendReply($"Media: {mediaID}\nDecoded: {decoded}", update);
+            
+            var decoded = Convert.FromBase64String(mediaID);
+            var acsi = System.Text.Encoding.ASCII.GetString(decoded);
+            var rle = Methods.RLEDecode(acsi);
+
+            var reverse = Methods.RLEDecode(mediaID);
+            var acsii = System.Text.Encoding.ASCII.GetString(Convert.FromBase64String(reverse));
+            await Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
         }
 
         [Command(Trigger = "getuser", GlobalAdminOnly = true)]
@@ -346,6 +352,28 @@ namespace Enforcer5
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
             await Bot.SendReply(text, update);
+        }
+
+        [Command(Trigger = "look", GlobalAdminOnly = true)]
+        public static async Task Look(Update update, string[] args)
+        {
+            var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
+            StringBuilder res = new StringBuilder();
+            foreach (var mem in data)
+            {
+                res.Append("\n");
+                res.Append(mem.ToString());
+            }
+            await Bot.SendReply(res.ToString(), update);
+        }
+        [Command(Trigger = "unlook", GlobalAdminOnly = true)]
+        public static async Task unLook(Update update, string[] args)
+        {
+            var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
+            foreach (var mem in data)
+            {
+                await Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
+            }
         }
     }
 

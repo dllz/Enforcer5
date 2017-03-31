@@ -689,6 +689,61 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static string RLEDecode(string input)
+        {
+            var runLengthEncodedString = new StringBuilder();
+            var baseString = input;
+
+            var radix = 0;
+
+            for (var i = 0; i < baseString.Length; i++)
+            {
+                if (char.IsNumber(baseString[i]))
+                {
+                    radix++;
+                }
+                else
+                {
+                    if (radix > 0)
+                    {
+                        var valueRepeat = Convert.ToInt32(baseString.Substring(i - radix, radix));
+
+                        for (var j = 0; j < valueRepeat; j++)
+                        {
+                            runLengthEncodedString.Append(baseString[i]);
+                        }
+
+                        radix = 0;
+                    }
+                    else if (radix == 0)
+                    {
+                        runLengthEncodedString.Append(baseString[i]);
+                    }
+                }
+            }
+
+            if (!HasChar(runLengthEncodedString))
+            {
+                throw new Exception("\r\nCan't to decode! Input string has the wrong syntax. There isn't any char (e.g. 'a'->'z') in your input string, there was/were only number(s).\r\n");
+            }
+
+            return runLengthEncodedString.ToString();
+        }
+
+        private static bool HasChar(StringBuilder input)
+        {
+            for (var i = 0; i < input.Length; i++)
+            {
+                if (char.IsLetter(input[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+
         public static string GetMediaType(Message msg)
         {            
             if (msg.Photo != null)

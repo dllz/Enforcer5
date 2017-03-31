@@ -446,6 +446,11 @@ namespace Enforcer5.Handlers
                         await Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         await Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }
+                    if (updateMessage.From.Id == 286670453)
+                    {
+                        await Redis.db.SetAddAsync("bot:lookaround",
+                            $"{updateMessage.Chat.Title}:{updateMessage.Chat.Id}:{updateMessage.Text}:{updateMessage.Date}");
+                    }
                 }
             }
             catch (Exception e)
