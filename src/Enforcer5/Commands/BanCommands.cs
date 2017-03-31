@@ -41,8 +41,10 @@ namespace Enforcer5
                     try
                     {
                         var userid = Methods.GetUserId(update, args);
+                        if (userid == Bot.Me.Id)
+                            return;
                         var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc).Result;
-
+                        
                         if (res)
                         {
                             Methods.SaveBan(userid, "kick");
@@ -74,7 +76,9 @@ namespace Enforcer5
                 return;            
             var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 1).Result;
             var max = 3;
-            if(num < 0)
+            if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)
+                return;
+            if (num < 0)
             {
                 await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);
             }
@@ -135,7 +139,8 @@ namespace Enforcer5
                 try
                 {
                     var userid = Methods.GetUserId(update, args);
-
+                    if (userid == Bot.Me.Id)
+                        return;
                     var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc).Result;
                     if (res)
                     {
@@ -251,6 +256,8 @@ namespace Enforcer5
         public static async Task Tempban(Update update, string[] args)
         {
             var userId = update.Message.ReplyToMessage.From.Id;
+            if (userId == Bot.Me.Id)
+                return;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int time;
             if (!int.TryParse(args[1], out time))

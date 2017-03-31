@@ -215,6 +215,8 @@ namespace Enforcer5
             try
             {
                 var userid = Methods.GetUserId(update, args);
+                if (userid == Bot.Me.Id)
+                    return;
                 var userMenu = new Menu(2);
                 userMenu.Buttons = new List<InlineButton>
                 {

@@ -374,6 +374,7 @@ namespace Enforcer5
             {
                 await Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
             }
+            await Bot.SendReply("done", update);
         }
     }
 
