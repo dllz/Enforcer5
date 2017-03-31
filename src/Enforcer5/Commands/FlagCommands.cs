@@ -292,7 +292,7 @@ namespace Enforcer5
                                     }
                                 }
                             };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
                                 false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
                         }
@@ -339,7 +339,7 @@ namespace Enforcer5
                                         : null
                                 }
                             };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
                                 false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
                         }
