@@ -247,16 +247,20 @@ namespace Enforcer5.Helpers
             {
                 if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
                 {
-                    Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true);
+                        return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode:ParseMode.Default);
                     }
                     catch (ApiRequestException ex)
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                        return null;
                     }
+                    finally
+                    {
+                        
+                    }
+                    return null;
                 }
                 try
                 {
