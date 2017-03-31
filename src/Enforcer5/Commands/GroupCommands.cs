@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -106,7 +107,7 @@ namespace Enforcer5
             var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
             if (mods.Count > 0)
             {
-                text = $"\n{string.Join("\n", mods)}";
+                text = $"\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";
             }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
@@ -698,7 +699,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "elavate", GroupAdminOnly = true)]
+        [Command(Trigger = "elevate", GroupAdminOnly = true)]
         public static async Task ElevateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -709,15 +710,19 @@ namespace Enforcer5
                     return;
                 var chat = update.Message.Chat.Id;
                 var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
-                if (role.Result.Status == ChatMemberStatus.Creator)
+                var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+                var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
+                if (role.Result.Status == ChatMemberStatus.Creator | priv)
                 {
                     await Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
                 }                    
-                else
+                else if (!upriv)
                 {
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
-                }                
+                    await Redis.db.SetAddAsync($"chat:{chat}:modlog",
+                        $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
+                }               
                 await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
             }
             catch (Exception e)
@@ -733,7 +738,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deelavate", GroupAdminOnly = true)]
+        [Command(Trigger = "deelevate", GroupAdminOnly = true)]
         public static async Task deElavateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -744,7 +749,8 @@ namespace Enforcer5
                     return;
                 var chat = update.Message.Chat.Id;
                 var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
-                if (role.Result.Status == ChatMemberStatus.Creator)
+                var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+                if (role.Result.Status == ChatMemberStatus.Creator | priv)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "false").Result;
                     await Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
@@ -761,6 +767,66 @@ namespace Enforcer5
                 {
                     Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
                 }
+            }
+        }
+
+        [Command(Trigger = "elevatelog", GroupAdminOnly = true)]
+        public static async Task ElevateLog(Update update, string[] args)
+        {
+                var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
+                await Bot.SendReply(string.Join("\n", log), update);      
+        }
+
+        [Command(Trigger = "auth", GroupAdminOnly = true)]
+        public static async Task AuthUser(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var userid = Methods.GetUserId(update, args);
+            if (userid == Bot.Me.Id)
+                return;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator | priv)
+            {
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+
+                await Redis.db.SetAddAsync($"chat:{chat}:auth", userid);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
+            }
+        }
+
+        [Command(Trigger = "blockelevate", GroupAdminOnly = true)]
+        public static async Task Blockelevate(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var userid = Methods.GetUserId(update, args);
+            if (userid == Bot.Me.Id)
+                return;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator | priv)
+            {
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+
+                await Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
+            }
+        }
+
+        [Command(Trigger = "deauth", GroupAdminOnly = true)]
+        public static async Task deAuthUser(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var userid = Methods.GetUserId(update, args);
+            if (userid == Bot.Me.Id)
+                return;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator | priv)
+            {
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                await Redis.db.SetRemoveAsync($"chat:{chat}:auth", userid);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "dauth", userid, update.Message.From.Id), update);
             }
         }
 
