@@ -699,7 +699,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "elevate", GroupAdminOnly = true)]
+        [Command(Trigger = "elevate", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task ElevateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -738,7 +738,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deelevate", GroupAdminOnly = true)]
+        [Command(Trigger = "deelevate", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task deElavateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -770,14 +770,15 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "elevatelog", GroupAdminOnly = true)]
+        [Command(Trigger = "elevatelog", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task ElevateLog(Update update, string[] args)
         {
-                var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
-                await Bot.SendReply(string.Join("\n", log), update);      
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
+                await Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", log)}", update);      
         }
 
-        [Command(Trigger = "auth", GroupAdminOnly = true)]
+        [Command(Trigger = "auth", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task AuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -795,7 +796,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "blockelevate", GroupAdminOnly = true)]
+        [Command(Trigger = "blockelevate", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task Blockelevate(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -813,7 +814,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deauth", GroupAdminOnly = true)]
+        [Command(Trigger = "deauth", GroupAdminOnly = true, InGroupOnly = true)]
         public static async Task deAuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
