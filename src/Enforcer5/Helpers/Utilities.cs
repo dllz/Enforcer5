@@ -308,10 +308,11 @@ namespace Enforcer5.Helpers
         internal static async Task<Message> Send(string message, Update chatUpdate, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
+            var id = chatUpdate.Message.Chat.Id;
             try
             {
                 MessagesSent++;
-                var id = chatUpdate.Message.Chat.Id;
+                
                 //message = message.Replace("`",@"\`");
                 if (clearKeyboard)
                 {
@@ -331,9 +332,21 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Can't parse message text: Unsupported start tag"))
+                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
                 {
-                    Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
                     return null;
                 }
                 try

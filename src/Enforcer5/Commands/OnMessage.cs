@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Helpers;
@@ -90,7 +91,23 @@ namespace Enforcer5
                 if (watch) return;
                 var media = Methods.GetContentType(update.Message);
                 var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                XDocument lang;
+                try
+                {
+                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                }
+                catch (NullReferenceException e)
+                {
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                    }
+                    catch (NullReferenceException exception)
+                    {
+                        Console.WriteLine(exception);
+                        return;
+                    }
+                }
                 var allowed = status.Equals("allowed");
                 if (allowed == false && status.HasValue)
                 {
@@ -142,7 +159,23 @@ namespace Enforcer5
                 var chatId = update.Message.Chat.Id;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
                 if (watch) return;
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                XDocument lang;
+                try
+                {
+                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                }
+                catch (NullReferenceException e)
+                {
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                    }
+                    catch (NullReferenceException exception)
+                    {
+                        Console.WriteLine(exception);
+                        return;
+                    }
+                }
                 var rtlStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Rtl").Result;
                 var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
                 if (status.Equals("ban") || status.Equals("kick"))
