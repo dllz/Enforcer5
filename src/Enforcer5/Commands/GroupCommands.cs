@@ -748,8 +748,8 @@ namespace Enforcer5
                 {
                     var set = Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "false").Result;
                     await Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
-                }
-                await Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
+                }              
             }
             catch (Exception e)
             {
