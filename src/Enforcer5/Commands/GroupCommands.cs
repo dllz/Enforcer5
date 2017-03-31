@@ -103,6 +103,11 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
+            var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
+            if (mods.Count > 0)
+            {
+                text = $"\n{string.Join("\n", mods)}";
+            }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
                 await Bot.Send(text, update.Message.From.Id);
@@ -439,7 +444,7 @@ namespace Enforcer5
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);
             }
-        }
+        } 
 
         [Command(Trigger = "link", InGroupOnly = true)]
         public static async Task Link(Update update, string[] args)
@@ -693,6 +698,71 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "elavate", GroupAdminOnly = true)]
+        public static async Task ElevateUser(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                var userid = Methods.GetUserId(update, args);
+                if (userid == Bot.Me.Id)
+                    return;
+                var chat = update.Message.Chat.Id;
+                var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+                if (role.Result.Status == ChatMemberStatus.Creator)
+                {
+                    await Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
+                    await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
+                }                    
+                else
+                {
+                    await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
+                }                
+                await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Equals("UnableToResolveId"))
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+                }
+                else
+                {
+                    Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
+                }
+            }
+        }
+
+        [Command(Trigger = "deelavate", GroupAdminOnly = true)]
+        public static async Task deElavateUser(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            try
+            {
+                var userid = Methods.GetUserId(update, args);
+                if (userid == Bot.Me.Id)
+                    return;
+                var chat = update.Message.Chat.Id;
+                var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+                if (role.Result.Status == ChatMemberStatus.Creator)
+                {
+                    var set = Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "false").Result;
+                    await Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
+                }
+                await Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Equals("UnableToResolveId"))
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+                }
+                else
+                {
+                    Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
+                }
+            }
+        }
 
         public static async Task SendExtra(Update update, string[] args)
         {

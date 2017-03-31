@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -167,7 +168,23 @@ namespace Enforcer5
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
                     {
-                        var lang = Methods.GetGroupLanguage(message).Doc;
+                        XDocument lang;
+                        try
+                        {
+                            lang = Methods.GetGroupLanguage(message).Doc;
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            try
+                            {
+                                lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                            }
+                            catch (NullReferenceException exception)
+                            {
+                                Console.WriteLine(exception);
+                                return;
+                            }
+                        }
                         if (!content.Equals("no"))
                         {
                             var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
