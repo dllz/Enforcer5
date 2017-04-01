@@ -26,8 +26,24 @@ namespace Enforcer5
                 if (flood.Equals("yes")) return;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
                 if (watch) return;
-                var msgType = Methods.GetContentType(update.Message);               
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var msgType = Methods.GetContentType(update.Message);
+                XDocument lang;
+                try
+                {
+                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                }
+                catch (NullReferenceException e)
+                {
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                    }
+                    catch (NullReferenceException exception)
+                    {
+                        Console.WriteLine(exception);
+                        return;
+                    }
+                }
                 var ignored = isIgnored(chatId, msgType);
                 if (!ignored)
                 {

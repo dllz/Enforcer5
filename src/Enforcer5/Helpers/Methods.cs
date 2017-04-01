@@ -111,7 +111,22 @@ namespace Enforcer5.Helpers
             var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
             if (lang.HasValue)
             {
-                return Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                try
+                {
+                    if (res != null)
+                    {
+                        return res;
+                    }
+                    else
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
             }
             else
             {
@@ -123,7 +138,22 @@ namespace Enforcer5.Helpers
             var lang = Redis.db.StringGetAsync($"chat:{chatId}:language").Result;
             if (lang.HasValue)
             {
-                return Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                try
+                {
+                    if (res != null)
+                    {
+                        return res;
+                    }
+                    else
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
             }
             else
             {
