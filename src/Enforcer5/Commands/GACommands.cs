@@ -364,8 +364,14 @@ namespace Enforcer5
                 res.Append("\n");
                 res.Append(mem.ToString());
             }
-            await Bot.SendReply(res.ToString(), update);
+            if(!string.IsNullOrEmpty(res.ToString()))
+                await Bot.SendReply(res.ToString(), update);
+            else
+            {
+                await Bot.SendReply("Nothing to see", update);
+            }
         }
+
         [Command(Trigger = "unlook", GlobalAdminOnly = true)]
         public static async Task unLook(Update update, string[] args)
         {

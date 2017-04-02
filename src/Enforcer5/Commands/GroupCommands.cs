@@ -699,7 +699,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "elevate", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "elevate", InGroupOnly = true)]
         public static async Task ElevateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -722,7 +722,7 @@ namespace Enforcer5
                     if (blocked)
                         await Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
                 }                    
-                else if (!upriv && !blocked)
+                else if (!upriv && !blocked && Methods.IsGroupAdmin(update))
                 {
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
                     await Redis.db.SetAddAsync($"chat:{chat}:modlog",
@@ -744,7 +744,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deelevate", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "deelevate", InGroupOnly = true)]
         public static async Task deElavateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
@@ -784,7 +784,7 @@ namespace Enforcer5
                 await Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", log)}", update);      
         }
 
-        [Command(Trigger = "auth", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "auth", InGroupOnly = true)]
         public static async Task AuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -820,7 +820,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deauth", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "deauth", InGroupOnly = true)]
         public static async Task deAuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
