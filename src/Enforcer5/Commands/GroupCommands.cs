@@ -723,7 +723,7 @@ namespace Enforcer5
                         await Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
                     await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
                 }                    
-                else if (!upriv && !blocked && Methods.IsGroupAdmin(update))
+                else if (!upriv && !blocked & Methods.IsGroupAdmin(update))
                 {
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
                     await Redis.db.SetAddAsync($"chat:{chat}:modlog",
