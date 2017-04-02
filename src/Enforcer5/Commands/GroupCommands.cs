@@ -721,6 +721,7 @@ namespace Enforcer5
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
                     if (blocked)
                         await Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
                 }                    
                 else if (!upriv && !blocked && Methods.IsGroupAdmin(update))
                 {
@@ -728,8 +729,9 @@ namespace Enforcer5
                     await Redis.db.SetAddAsync($"chat:{chat}:modlog",
                         $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
                     await Redis.db.SetAddAsync($"chat:{chat}:blockList", userid);
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
                 }               
-                await Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+                
             }
             catch (Exception e)
             {
