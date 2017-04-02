@@ -715,7 +715,7 @@ namespace Enforcer5
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
                 var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
                 var blocked = Redis.db.SetContainsAsync($"chat:{chat}:blockList", userid).Result;
-                if ((role.Result.Status == ChatMemberStatus.Creator || priv) || update.Message.From.Id == Constants.Devs[0])
+                if ((role.Result.Status == ChatMemberStatus.Creator || priv))
                 {
                     await Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
                     await Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
@@ -795,7 +795,7 @@ namespace Enforcer5
                 return;
             var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
-            if (role.Result.Status == ChatMemberStatus.Creator || priv)
+            if ((role.Result.Status == ChatMemberStatus.Creator || priv) || update.Message.From.Id == Constants.Devs[0])
             {
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
 
