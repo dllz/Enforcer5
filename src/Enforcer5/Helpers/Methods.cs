@@ -324,7 +324,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                throw new Exception("UnableToResolveId");
+                return update.Message.From.Id;
             }
         }
 

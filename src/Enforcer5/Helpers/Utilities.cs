@@ -428,6 +428,45 @@ namespace Enforcer5.Helpers
                     }
                     
                 }
+                try
+                {
+                    if (e.ErrorCode == 112)
+                    {
+                        return await Bot.Send("The markdown in this text is broken", msg.Chat.Id);
+                    }
+                    else if (e.ErrorCode == 403)
+                    {
+                        var lang = Methods.GetGroupLanguage(msg.Chat.Id).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                        };
+                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                    }
+                    else
+                    {
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Chat.Id);
+                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit 
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                    return null;
+                }
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
                 return null;
             }
         }
@@ -457,6 +496,45 @@ namespace Enforcer5.Helpers
                     }
                     
                 }
+                try
+                {
+                    if (e.ErrorCode == 112)
+                    {
+                        return await Bot.Send("The markdown in this text is broken", chatid);
+                    }
+                    else if (e.ErrorCode == 403)
+                    {
+                        var lang = Methods.GetGroupLanguage(chatid).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                        };
+                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatid, customMenu: Key.CreateMarkupFromMenu(startMe));
+                    }
+                    else
+                    {
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", chatid);
+                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit 
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                    return null;
+                }
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
                 return null;
             }
         }
@@ -486,6 +564,45 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
+                try
+                {
+                    if (e.ErrorCode == 112)
+                    {
+                        return await Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
+                    }
+                    else if (e.ErrorCode == 403)
+                    {
+                        var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                        };
+                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                    }
+                    else
+                    {
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
+                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit 
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                    return null;
+                }
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
                 return null;
             }
         }
@@ -512,6 +629,45 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
+                try
+                {
+                    if (e.ErrorCode == 112)
+                    {
+                        return await Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
+                    }
+                    else if (e.ErrorCode == 403)
+                    {
+                        var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                                {
+                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                        url: $"https://t.me/{Bot.Me.Username}")
+                                }
+                        };
+                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                    }
+                    else
+                    {
+                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
+                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    }
+                }
+                catch (ApiRequestException ex)
+                {
+                    //fuckit 
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    //fuckit
+                    return null;
+                }
+            }
+            catch (AggregateException e)
+            {
+                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
                 return null;
             }
         }
