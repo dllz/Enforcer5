@@ -107,7 +107,7 @@ namespace Enforcer5
             var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
             if (mods.Count > 0)
             {
-                text = $"\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";
+                text = $"{text}\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";
             }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
