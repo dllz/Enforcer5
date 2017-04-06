@@ -62,7 +62,7 @@ namespace Enforcer5
                 {
                     foreach (var mem in Bot.Commands)
                     {
-                        if (args[1].Contains(mem.Trigger))
+                        if (args[1].Equals(mem.Trigger))
                         {
                             command = true;
                             request = mem.Trigger.ToLower();

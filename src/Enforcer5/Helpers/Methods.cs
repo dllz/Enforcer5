@@ -194,7 +194,15 @@ namespace Enforcer5.Helpers
             }
             try
             {
-                var strings = file.Descendants("string").FirstOrDefault(x => x.Attribute("key")?.Value == key);
+                var stringsers = file.Descendants("string");
+                XElement strings = null;
+                foreach (var entry in stringsers)
+                {
+                    if (entry.Attribute("key").Value.Equals(key))
+                    {
+                        strings = entry;
+                    }
+                }
                 if (strings != null)
                 {
                     var values = strings.Descendants("value");
