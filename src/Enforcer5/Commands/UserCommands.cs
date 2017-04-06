@@ -56,7 +56,7 @@ namespace Enforcer5
             var command = false;
             var request = "";
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            if (args.Length > 0)
+            if (args.Length > 1)
             {
                 foreach (var mem in Bot.Commands)
                 {
