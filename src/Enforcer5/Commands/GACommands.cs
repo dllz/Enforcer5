@@ -36,7 +36,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        LanguageHelper.UploadFile(fileid, id,
+                        await LanguageHelper.UploadFile(fileid, id,
                             update.Message.ReplyToMessage.Document.FileName,
                             update.Message.MessageId);
                     }

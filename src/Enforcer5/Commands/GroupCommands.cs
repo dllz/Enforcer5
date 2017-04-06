@@ -283,9 +283,7 @@ namespace Enforcer5
             var words = args[1].Contains(" ")
                 ? new[] {args[1].Substring(1, args[1].IndexOf(" ")).Trim(), args[1].Substring(args[1].IndexOf(" ") + 1)}
                 : new[] {args[1].Substring(1).Trim(), null};
-            words[0] = $"#{words[0]}";
-            if (words[1] == null && update.Message.ReplyToMessage == null)
-                return;
+            words[0] = $"#{words[0]}";            
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null && words[1] == null)
             {
@@ -301,6 +299,38 @@ namespace Enforcer5
                         return;
                     }
                     return;
+                }
+                else
+                {
+                    string text = update.Message.ReplyToMessage.Text;
+                    try
+                    {
+                        var res = Bot.SendReply(text, update);
+                        var result = res.Result;
+                        var hash = $"chat:{update.Message.Chat.Id}:extra";
+                        await Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
+                        await Redis.db.HashSetAsync(hash, words[0], text);
+                        await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                            Methods.GetLocaleString(lang, "extraSaved", words[0]));
+                    }
+                    catch (ApiRequestException e)
+                    {
+                        if (e.ErrorCode.Equals(118))
+                        {
+                            await Bot.SendReply(
+                                Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
+                                update);
+                        }
+                        else if (e.ErrorCode.Equals(112))
+                        {
+                            await Bot.SendReply(
+                                Methods.GetLocaleString(lang, "markdownBroken"), update);
+                        }
+                        else
+                        {
+                            Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                        }
+                    }
                 }
                 return;
             }

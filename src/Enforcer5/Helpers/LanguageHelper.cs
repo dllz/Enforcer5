@@ -121,7 +121,7 @@ namespace Enforcer5.Handlers
 
         }
 
-        internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
+        internal static async Task UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
             
             var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
