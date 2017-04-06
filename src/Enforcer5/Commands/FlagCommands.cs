@@ -474,15 +474,15 @@ namespace Enforcer5
             int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
             if (num >= max)
             {
-                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").ToString()
+               var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
+                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
                     : "kick";
                 if (type.Equals("ban"))
                 {
                     try
                     {
                         await Bot.Api.KickChatMemberAsync(chatId, userId);
-                        var name = Methods.GetNick(call.Message, args);
+                        var name = Methods.GetNick(call.Message, args, userId);
                         await Bot.Send(Methods.GetLocaleString(lang, "warnMaxBan", name), chatId);
                         Methods.SaveBan(userId, "maxWarn");
                     }
@@ -494,7 +494,7 @@ namespace Enforcer5
                 else
                 {
                     await Methods.KickUser(chatId, userId, lang);
-                    var name = Methods.GetNick(call.Message, args);
+                    var name = Methods.GetNick(call.Message, args, userId);
                     await Bot.Send(Methods.GetLocaleString(lang, "warnMaxKick", name), chatId);
                 }
                 await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
