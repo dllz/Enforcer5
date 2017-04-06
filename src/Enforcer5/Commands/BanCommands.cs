@@ -51,7 +51,7 @@ namespace Enforcer5
                                 
                             object[] arguments =
                             {
-                            Methods.GetNick(update.Message, args),
+                            Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
                             await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
@@ -115,7 +115,7 @@ namespace Enforcer5
             else
             {
                 var diff = max - num;                
-                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args), num, max);
+                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args, false), num, max);
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
@@ -182,7 +182,7 @@ namespace Enforcer5
                         Methods.SaveBan(userid, "ban");
                         object[] arguments =
                         {
-                            Methods.GetNick(update.Message, args),
+                            Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
                         string why;

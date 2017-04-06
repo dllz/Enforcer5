@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
@@ -262,6 +263,22 @@ namespace Enforcer5.Helpers
                     }
                     return null;
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                    var amount = messages.Length / 4;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        var word = "";
+                        for (int i = 0; i < amount; i++)
+                        {
+                            word = $"{word}\n{messages[i]}";
+                        }
+                        await Send(word, id);
+                    }
+
+                }
                 try
                 {
                     if (e.ErrorCode == 112)
@@ -349,6 +366,22 @@ namespace Enforcer5.Helpers
                     }
                     return null;
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                    var amount = messages.Length / 4;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        var word = "";
+                        for (int i = 0; i < amount; i++)
+                        {
+                            word = $"{word}\n{messages[i]}";
+                        }
+                        await Send(word, chatUpdate);
+                    }
+
+                }
                 try
                     {                        
                         if (e.ErrorCode == 112)
@@ -428,6 +461,22 @@ namespace Enforcer5.Helpers
                     }
                     
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                        var amount = messages.Length / 4;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            var word = "";
+                            for (int i = 0; i < amount; i++)
+                            {
+                                word = $"{word}\n{messages[i]}";
+                            }
+                            await SendReply(word, msg);
+                        }
+
+                }
                 try
                 {
                     if (e.ErrorCode == 112)
@@ -495,6 +544,34 @@ namespace Enforcer5.Helpers
 
                     }
                     
+                }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                        var amount = messages.Length / 4;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            var word = "";
+                            for (int i = 0; i < amount; i++)
+                            {
+                                word = $"{word}\n{messages[i]}";
+                            }
+                            await SendReply(word, chatid, msgid);
+                        }
+
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+
                 }
                 try
                 {
@@ -564,6 +641,34 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                        var amount = messages.Length / 4;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            var word = "";
+                            for (int i = 0; i < amount; i++)
+                            {
+                                word = $"{word}\n{messages[i]}";
+                            }
+                            await SendReply(word, msg);
+                        }
+
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+
+                }
                 try
                 {
                     if (e.ErrorCode == 112)
@@ -628,6 +733,34 @@ namespace Enforcer5.Helpers
                         return null;
                     }
                    
+                }
+                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    try
+                    {
+                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
+                        var amount = messages.Length / 4;
+                        for (int j = 0; j < 4; j++)
+                        {
+                            var word = "";
+                            for (int i = 0; i < amount; i++)
+                            {
+                                word = $"{word}\n{messages[i]}";
+                            }
+                            await SendReply(word, msg);
+                        }
+
+                    }
+                    catch (ApiRequestException ex)
+                    {
+                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
+                    }
+                    finally
+                    {
+
+                    }
+
                 }
                 try
                 {
