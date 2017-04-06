@@ -343,7 +343,7 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    throw new Exception(GetLocaleString(lang, "incorrectArgument"));
+                    return update.Message.From.Id;
                 }
             }
             else
