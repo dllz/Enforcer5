@@ -82,6 +82,7 @@ namespace Enforcer5
             {
                 await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);
             }
+            var id = Methods.GetUserId(update, args);
             int.TryParse(Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result, out max);
             var lang = Methods.GetGroupLanguage(update.Message);
             if (num >= max)
@@ -93,11 +94,10 @@ namespace Enforcer5
                 {
                     try
                     {
-                        await Methods.BanUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
-                        var name = Methods.GetNick(update.Message, args);
-                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
-                        var userId = update.Message.ReplyToMessage.From.Id;                  
-                        Methods.SaveBan(userId, "maxWarn");
+                        await Methods.BanUser(update.Message.Chat.Id, id, lang.Doc);
+                        var name = Methods.GetNick(update.Message, args, id);
+                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);              
+                        Methods.SaveBan(id, "maxWarn");
                     }
                     catch (AggregateException e)
                     {
@@ -106,11 +106,11 @@ namespace Enforcer5
                 }
                 else
                 {
-                    await Methods.KickUser(update.Message.Chat.Id, update.Message.ReplyToMessage.From.Id, lang.Doc);
-                    var name = Methods.GetNick(update.Message, args);
+                    await Methods.KickUser(update.Message.Chat.Id, id, lang.Doc);
+                    var name = Methods.GetNick(update.Message, args, id);
                     await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                 }
-                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);            
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", id, 0);            
         }
             else
             {

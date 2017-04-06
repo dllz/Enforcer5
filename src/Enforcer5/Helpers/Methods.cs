@@ -278,7 +278,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static string GetNick(Message msg, string[] args, bool sender = false)
+        public static string GetNick(Message msg, string[] args, bool sender = false, int userid = 0)
         {
             if (sender)
             {
@@ -287,6 +287,30 @@ namespace Enforcer5.Helpers
             if (msg.ReplyToMessage != null)
             {
                 return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
+            }
+            if (userid != 0)
+            {
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name")} ({userid})";
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static string GetNick(Message msg, string[] args, int userid = 0, bool sender = false)
+        {
+            if (sender)
+            {
+                return $"{msg.From.FirstName} ({msg.From.Id})";
+            }
+            if (msg.ReplyToMessage != null)
+            {
+                return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
+            }
+            if (userid != 0)
+            {
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name")} ({userid})";
             }
             else
             {

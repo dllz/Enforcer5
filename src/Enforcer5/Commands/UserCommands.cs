@@ -38,7 +38,7 @@ namespace Enforcer5
             await Bot.SendReply(comList, update);
         }
 
-        [Command(Trigger = "Start")]
+        [Command(Trigger = "start")]
         public static async Task BotStarted(Update update, string[] args)
         {
             if (update.Message.Chat.Type == ChatType.Private)
@@ -49,6 +49,44 @@ namespace Enforcer5
                 await Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
             }
         }
-            
+
+        [Command(Trigger = "help")]
+        public static async Task Help(Update update, string[] args)
+        {
+            var command = false;
+            var request = "";
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (args.Length > 0)
+            {
+                foreach (var mem in Bot.Commands)
+                {
+                    if (args[0].Contains(mem.Trigger))
+                    {
+                        command = true;
+                        request = mem.Trigger;
+                    }
+                }
+            }
+            if (command == false)
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+            }
+            else
+            {
+                switch (request.ToLower())
+                {
+                    case "kickme":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "kick":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    default:
+                        await Bot.SendReply(Methods.GetLocaleString(lang, "helpOptionNotImplemented", request), update);
+                        break;
+                }
+            }
+        }
+
     }
 }
