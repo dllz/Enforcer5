@@ -233,7 +233,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
-            await Redis.db.SetRemoveAsync(hash, update.Message.ReplyToMessage.From.Id);
+            var userId = Methods.GetUserId(update, args);
+            await Redis.db.SetRemoveAsync(hash, userId);
             await Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
         }
         [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
@@ -241,7 +242,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
-            await Redis.db.SetAddAsync(hash, update.Message.ReplyToMessage.From.Id);
+            var userId = Methods.GetUserId(update, args);
+            await Redis.db.SetAddAsync(hash, userId);
             await Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
         }
 

@@ -60,7 +60,7 @@ namespace Enforcer5
             {
                 foreach (var mem in Bot.Commands)
                 {
-                    if (args[0].Contains(mem.Trigger))
+                    if (args[1].Contains(mem.Trigger))
                     {
                         command = true;
                         request = mem.Trigger;
@@ -94,6 +94,15 @@ namespace Enforcer5
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
                     case "adminoff":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "adminon":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "solved":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "reporton":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
                     default:
