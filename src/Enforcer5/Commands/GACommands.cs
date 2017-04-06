@@ -149,7 +149,14 @@ namespace Enforcer5
                 await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
                     Constants.Devs[0]);
             }
-            Redis.SaveRedis();
+            try
+            {
+                Redis.SaveRedis();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             Environment.Exit(0);
         }
 
