@@ -74,12 +74,8 @@ namespace Enforcer5
         public static async Task AdminOff(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            var userId = update.Message.From.Id;
+            var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-            if (update.Message.ReplyToMessage != null)
-            {
-                userId = update.Message.ReplyToMessage.From.Id;
-            }
             await Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
             await Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
@@ -87,12 +83,8 @@ namespace Enforcer5
         public static async Task AdminOn(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            var userId = update.Message.From.Id;
+            var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-            if (update.Message.ReplyToMessage != null)
-            {
-                userId = update.Message.ReplyToMessage.From.Id;
-            }
             await Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
             await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }

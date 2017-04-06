@@ -90,6 +90,12 @@ namespace Enforcer5
                     case "tempban":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
+                    case "admin":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "adminoff":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
                     default:
                         await Bot.SendReply(Methods.GetLocaleString(lang, "helpOptionNotImplemented", request), update);
                         break;
