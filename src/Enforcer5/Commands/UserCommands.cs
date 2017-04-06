@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Enforcer5
 {
@@ -35,6 +36,18 @@ namespace Enforcer5
         {
             var comList = string.Join("\n", Bot.Commands.Select(e => e.Trigger));
             await Bot.SendReply(comList, update);
+        }
+
+        [Command(Trigger = "Start")]
+        public static async Task BotStarted(Update update, string[] args)
+        {
+            if (update.Message.Chat.Type == ChatType.Private)
+            {
+                await Redis.db.HashIncrementAsync("bot:general", "users");
+                await Bot.Send(
+                    "Welcome to Enforcer.\nPlease send /getCommands to get a command list.\n/help for more information", update);
+                await Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
+            }
         }
             
     }
