@@ -81,6 +81,15 @@ namespace Enforcer5
                     case "kick":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
+                    case "ban":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "unban":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
+                    case "tempban":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
                     default:
                         await Bot.SendReply(Methods.GetLocaleString(lang, "helpOptionNotImplemented", request), update);
                         break;

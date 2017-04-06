@@ -262,8 +262,7 @@ namespace Enforcer5
             int time;
             if (!int.TryParse(args[1], out time))
             {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                return;
+                time = 60;
             }
             if (time == 0)
             {
