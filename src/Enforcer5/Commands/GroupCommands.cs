@@ -288,19 +288,7 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null && words[1] == null)
             {
                 var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
-                if (!string.IsNullOrEmpty(fileId))
-                {
-                    var type = Methods.GetMediaType(update.Message.ReplyToMessage);
-                    if (!string.IsNullOrEmpty(type))
-                    {
-                        var toSave = $"###file_id!{type}###:{fileId}";
-                        await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
-                        await Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
-                        return;
-                    }
-                    return;
-                }
-                else
+                    if (!string.IsNullOrEmpty(update.Message.ReplyToMessage.Text))
                 {
                     string text = update.Message.ReplyToMessage.Text;
                     try
@@ -331,6 +319,18 @@ namespace Enforcer5
                             Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
                         }
                     }
+                }
+                else
+                {
+                    var type = Methods.GetMediaType(update.Message.ReplyToMessage);
+                    if (!string.IsNullOrEmpty(type))
+                    {
+                        var toSave = $"###file_id!{type}###:{fileId}";
+                        await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
+                        await Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
+                        return;
+                    }
+                    return;
                 }
                 return;
             }
