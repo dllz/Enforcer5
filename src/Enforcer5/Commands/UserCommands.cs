@@ -58,12 +58,16 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (args.Length > 1)
             {
-                foreach (var mem in Bot.Commands)
+                if (!string.IsNullOrEmpty(args[1]))
                 {
-                    if (args[1].Contains(mem.Trigger))
+                    foreach (var mem in Bot.Commands)
                     {
-                        command = true;
-                        request = mem.Trigger;
+                        if (args[1].Contains(mem.Trigger))
+                        {
+                            command = true;
+                            request = mem.Trigger.ToLower();
+                            break;
+                        }
                     }
                 }
             }
@@ -73,7 +77,7 @@ namespace Enforcer5
             }
             else
             {
-                switch (request.ToLower())
+                switch (request)
                 {
                     case "kickme":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
@@ -136,7 +140,7 @@ namespace Enforcer5
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
                     case "me":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}BIGCONFUSEION", request), update);
                         break;
                     case "extra":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);

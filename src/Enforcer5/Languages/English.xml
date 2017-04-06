@@ -55,6 +55,9 @@
   <string key="getmedia">
     <value>Removed for forbidden media: {0}</value>
   </string>
+  <string key="getnsfwimage">
+	<value>Removed for NSFW images: {0}</value>
+  </string>
   <string key="getNothing">
     <value>Nothing to display</value>
   </string>
@@ -184,8 +187,11 @@
   <string key="reportAdmin">
     <value>{0}\n\n{1}\nReport ID: #r{2}\n#Unsolved</value>
   </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nOriginal Message {3}\nReport ID: #r{2}\n#Unsolved</value>
+  </string>
   <string key="reported">
-    <value>Reported!\n#Report ID: {0}</value>
+    <value>Reported!\n#Report ID: #r{0}</value>
   </string>
   <string key="reportNotFound">
     <value>Report not found</value>
@@ -203,7 +209,7 @@
     <value>Marked as solved</value>
   </string>
   <string key="markedAsSolved">
-    <value>Report {1} has been solved by {0}</value>
+    <value>Report #r{1} has been solved by {0}</value>
   </string>
   <string key="alreadySolved">
     <value>This was solved at {0} by {1}</value>
@@ -468,7 +474,7 @@
 	<value>{0} has been banned for posting a not safe for work image.\nThe image had a {1}% chance of being NSFW</value>
   </string>
   <string key="kickedfornsfwimage">
-	<value>{0} has been banned for posting a not safe for work image.\nThe image had a {1}% chance of being NSFW</value>
+	<value>{0} has been kicked for posting a not safe for work image.\nThe image had a {1}% chance of being NSFW</value>
   </string>
   <string key="nsfwMenu">
 	<value>Set whether or not the user is kicked or banned.
@@ -483,4 +489,413 @@
   <string key="nsfwButton">
 	<value>NSFW Detection</value>
   </string>
+  <string key="getmaxwarn">
+	<value>Removed for max warn: {0}</value>
+  </string>
+  <string key="usergroupstatus">
+  <value>User: {0} has sent {1} msgs in this chat since this command was made.</value>
+  </string>
+  <string key="usergroupstatusnotseen">
+  <value>User: {0} has not been seen in this chat since this command was made.</value>
+  </string>
+  <string key="evlavated">
+  <value>User: {0} has been granted #elevated rights by {1}</value>
+  </string>
+  <string key="auth">
+  <value>User: {0} has been granted #auth rights by {1}</value>
+  </string>
+  <string key="dauth">
+  <value>User: {0} has been revoked #auth rights by {1}</value>
+  </string>
+  <string key="devlavated">
+  <value>User: {0} has been revoked #elavated rights by {1}</value>
+  </string>
+  <string key="currentMods">
+  <value>Current Elavated users</value>
+  </string>
+  <string key="prevMods">
+  <value>Users temp elavated by users</value>
+  </string>
+  <string key="helpNoRequest">
+  <value>Enforcer is a bot designed to help make managing your groups easier. For updates go to https://t.me/greywolfdev.
+		It does this by implementing antispam, anti media, tempbans, warnings, allowing you to set responses to hashtags etc.
+		* This bot needs to be an admin of the group chat to function properly.
+		* This bot functions best in supergroups.
+		* It can be configured by sending it /menu.
+		* This bot has many commands, to find out more information about a specific command send /help [command] EG: /help menu. To get a list of commands send /getcommands.
+		* If you still need help click /support to join our support group.
+	</value>
+	</string>
+	<string key="helpOptionNotImplemented">
+  <value>
+		The information for /{0} has not yet been written, please join the /support group to find out more about it if the bot replies to you when send it. If the bot ignores you then it is a developer command.
+	</value>
+  </string>
+  <string key="hcommandkickme">
+  <value>
+		/{0} can be used to make the bot remove you from a group without having to select leave group. For groups that you cannot join when you leave this will allow you to join again.
+		It has no other arguments.
+	</value>
+  </string>
+  <string key="hcommandkick">
+  <value>
+		/{0} can be used to remove a user from a group but allows them to come back. 
+		It can be used with an id, username or by replying to the person you want kicked. 
+		Example: 
+		/kick [targets username] : /kick @greywolfdev 
+		/kick [targets id] : /kick 12313
+		or by replying to the targeted user when sending it.
+	</value>
+  </string>
+  <string key="hcommandwarn">
+  <value>
+		/{0} can be used to add a warning to a user, you can set the action taken on max warns and the number of warns a user can get in the /menu.
+		Example: 
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+		or by replying to the targeted user when sending it.
+	</value>
+  </string>
+  <string key="hcommandban">
+  <value>
+		/{0} can be used to ban a user from a group (they cannot come back).
+		Example: 
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+		or by replying to the targeted user when sending it. If you reply to a user you can state a ban reason:
+		/{0} [reason] : /{0} upsets members of the group.
+	</value>
+  </string>
+  <string key="hcommandunban">
+  <value>
+		/{0} can be used to unban a user from a group which will allow them back.
+		Example: 
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+		or by replying to the targeted user when sending it.
+	</value>
+  </string>
+  <string key="hcommandtempban">
+  <value>
+		/{0} can be used to temporary ban a user from a group, they will only be able to come back after the time is passed. The command works by banning the user from the group and then unbanning them after the stipulated time.		
+		Usage: 
+		You need to reply to the user you want banned. Then when using the command put the number of minutes after the command is sent. If no time is stipulated the bot will ban the user for an hour. 
+		Example:
+		/{0} 123 (While replying to the target)
+	</value>
+  </string>
+  <string key="hcommandadmin">
+  <value>
+		@{0} can be used to flag a message or call the group admins. If you reply to a message it is forwarded to the group admins along with the text inside your message. If there is no reply just your message is sent. 
+		The admins are presented with an inline menu of actions to take. In supergroups you can go to the message. 
+		Example: 
+		@admin
+	</value>
+  </string>
+  <string key="hcommandadminoff">
+  <value>
+		Stops the bot from sending you flagged messages.
+		Example: 
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+		or by replying to the targeted user when sending it.
+		If you just send it by itself it will turn it off for the user who sends it.
+	</value>
+  </string>
+  <string key="hcommandadminon">
+  <value>
+		Makes the bot from send you flagged messages again.
+		Example: 
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+		or by replying to the targeted user when sending it.
+		If you just send it by itself it will turn it on for the user who sends it.
+	</value>
+  </string>
+  <string key="hcommandsolved">
+  <value>
+		Marks a flagged message as solved so that other admins know it has been sorted out
+		Example: 
+		/{0} while replying to the target.
+		/{0} [report ID] : /{0} 123123
+	</value>
+  </string>
+  <string key="hcommandreporton">
+  <value>
+		Allows a user to report message if they were previously blocked
+		Example: 
+		/{0} while replying to the target.
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+	</value>
+  </string>
+  <string key="hcommandreportoff">
+  <value>
+		Blocks a user from using @admin.
+		Example: 
+		/{0} while replying to the targer.
+		/{0} [targets username] : /{0} @greywolfdev 
+		/{0} [targets id] : /{0} 12313
+	</value>
+  </string>
+  <string key="hcommandrules">
+  <value>
+		Gets the rules for the group. If you reply to someone the bot will reply to that user when it replies instead of the person who sent it.
+		Example: 
+		/{0} while replying to the target.
+		/{0} 
+	</value>
+  </string>
+  <string key="hcommandsetrules">
+  <value>
+		Sets the rules for the group.
+		Example: 
+		/{0} [Rules] : /{0} Do not be a horrible mean person
+	</value>
+  </string>
+  <string key="hcommandabout">
+  <value>
+		Gets the about for the group. If you reply to someone the bot will reply to that user when it replies instead of the person who sent it.
+		Example: 
+		/{0} while replying to the target.
+		/{0} 
+	</value>
+  </string>
+  <string key="hcommandsetabout">
+  <value>
+		Sets the about for the group.
+		Example: 
+		/{0} [about] : /{0} A group for trolololololols
+	</value>
+  </string>
+    <string key="hcommandadminlist">
+  <value>
+		Returns a list of admins and elevated users of the group.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommands">
+  <value>
+		Saves a message you reply to to your private chat with the bot.
+		
+		Example:
+		/{0} while replying to a message you want to save
+	</value>
+  </string>	
+  <string key="hcommandid">
+  <value>
+		Returns the Chat ID of the group, or the ID of a user you reply to.
+		
+		Example:
+		/{0} while replying to a user's message
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandsupport">
+  <value>
+		Gives out link to GreyWolf support group.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommanduser">
+  <value>
+		Returns information about a user in a group, like, how many warns, kicks and bans did they get globally, and how many in this group.
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandmeBIGCONFUSEION">
+  <value>
+		Gives you information, how often you were ever warned, kicked, banned etc. globally. Will send you in private.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandextra">
+  <value>
+		Saves an extra command. Extra commands are custom commands with custom reply, triggered by single words starting with a #. Everyone can send the trigger afterwards and the bot will reply the custom answer.
+		
+		Example:
+		/{0} #blabla while replying to some text or media
+		/{0} #blabla This is an extra
+	</value>
+  </string>	
+  <string key="hcommandextralist">
+  <value>
+		Returns a list of all extra commands of that group.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandextradel">
+  <value>
+		Deletes an extra command that was defined before.
+		
+		Example:
+		/{0} #blabla
+	</value>
+  </string>	
+  <string key="hcommandlink">
+  <value>
+		Returns the link of the group. Only works if an admin set the link with setlink command before.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandsetlink">
+  <value>
+		Sets the link of this group, necessary for using the link command. Must be followed by the group link of it is a private group.
+		
+		Example:
+		/{0} [Group Link] (private group)
+		/{0} (public group)
+	</value>
+  </string>	
+  <string key="hcommandstatus">
+  <value>
+		Returns the current staus of the user in that group - member, admin, creator, kicked, banned, never seen.
+		
+		Example:
+		/{0} while replying to a message
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandwelcome">
+  <value>
+		Defines a welcome message for a group, that is sent whenever a new user joins or is added to the group.
+		Example:
+		
+		/{0} Trolololo! This is a troll group!
+	</value>
+  </string>	
+  <string key="hcommanddisablewatch">
+  <value>
+		Disables AntiFlood and persian detection for a user, Admins should use it in a group so it will ignore them.
+		
+		Example:
+		/{0}
+		/{0} while replying to a user
+	</value>
+  </string>	
+  <string key="hcommandenablewatch">
+  <value>
+		 Enables AntiFlood and persian detection for a user, only necessary if that user was disablewatched before.
+		 
+		Example:
+		/{0}
+		/{0} while replying to a user
+	</value>
+  </string>	
+  <string key="hcommandcheck">
+  <value>
+		See how many messages a certain user sent in this group yet.
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandelevate">
+  <value>
+		Elevates that user to be an admin of that group. If run by admin or elevated, only 30 minutes, if run by creator or auth, permanently. Elevated users have access to all admin commands, for example warn, kick, ban and tempban.
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommanddeelevate">
+  <value>
+		Deelevates a currently elevated user, only for creator and auth. They can no longer use admin commands then.
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandelevatelog">
+  <value>
+		Returns a log of users that were temporarily elevated by non-auths. It shows the time, elevated user, and the admin who elevated.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandauth">
+  <value>
+		Auths a user. This means, the bot will see them as group creator, they can auth and deauth, and permanently elevate users.
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandblockelevate">
+  <value>
+		Blocks an admin from temporarily elevating other users. Auth and creator only command. Usually, every group admin can elevate users for 30 minutes, admins can avoid them with this command.
+		
+		Example:
+		/{0} while replying to an admin
+		/{0} [Admin's User ID]
+		/{0} [Admin's Username]
+	</value>
+  </string>	
+  <string key="hcommanddeauth">
+  <value>
+		Deauths a user, so they can no longer auth, deauth and permanently elevate others. Auth only command.
+		
+		Example:
+		/{0} while replying to an auth
+		/{0} [Auth's User ID]
+		/{0} [Auth's Username]
+	</value>
+  </string>	
+  <string key="hcommandmenu">
+  <value>
+		Sends you a menu to change all settings of the group in private.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommanddashboard">
+  <value>
+		Sends you a dashboard of all current group settings in private.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandping">
+  <value>
+		Pings the bot to see how long it takes it to respond.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandgetcommands">
+  <value>
+		Get a list of all bot commands. Note that some of them are only for global bot admins so you can't use them.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  
 </strings>
