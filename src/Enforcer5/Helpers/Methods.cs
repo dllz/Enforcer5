@@ -298,7 +298,7 @@ namespace Enforcer5.Helpers
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name")} ({userid})";
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
             }
             else
             {
@@ -318,7 +318,7 @@ namespace Enforcer5.Helpers
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name")} ({userid})";
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
             }
             else
             {

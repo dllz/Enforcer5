@@ -79,6 +79,9 @@ namespace Enforcer5
             {
                 switch (request)
                 {
+                    case "warn":
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
+                        break;
                     case "kickme":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
