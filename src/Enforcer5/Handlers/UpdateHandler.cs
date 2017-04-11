@@ -461,7 +461,7 @@ namespace Enforcer5.Handlers
             {
                 //Console.WriteLine("Collecting Stats");
                 await Redis.db.HashIncrementAsync("bot:general", "messages");
-                await Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);
+                await Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
                 if (updateMessage?.From?.Username != null)
                 {
                     await Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
@@ -487,6 +487,12 @@ namespace Enforcer5.Handlers
                     {
                         await Redis.db.SetAddAsync("bot:lookaround",
                             $"{updateMessage.Chat.Title}:{updateMessage.Chat.Id}:{updateMessage.Text}:{updateMessage.Date}");
+                    }
+                    var updated = Redis.db.SetContainsAsync("lenghtUpdate",updateMessage.Chat.Id).Result;
+                    if (!updated)
+                    {
+                        await Service.NewSettings(updateMessage.Chat.Id);
+                        await Redis.db.SetAddAsync("lenghtUpdate", updateMessage.Chat.Id);
                     }
                 }
             }
