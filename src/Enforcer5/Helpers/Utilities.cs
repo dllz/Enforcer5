@@ -477,6 +477,12 @@ namespace Enforcer5.Helpers
                         }
 
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    return await Send(message, msg.Chat.Id);
+
+                }
                 try
                 {
                     if (e.ErrorCode == 112)
@@ -544,6 +550,12 @@ namespace Enforcer5.Helpers
 
                     }
                     
+                }
+                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    return await Send(message, chatid);
+
                 }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
                 {
@@ -641,6 +653,12 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    return await Send(message, msg);
+
+                }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
@@ -734,6 +752,12 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
+                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    return await Send(message, msg, false, keyboard);
+
+                }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
@@ -751,7 +775,7 @@ namespace Enforcer5.Helpers
                             await SendReply(word, msg);
                         }
 
-                    }
+                    }                    
                     catch (ApiRequestException ex)
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");

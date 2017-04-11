@@ -21,12 +21,6 @@ namespace Enforcer5.Handlers
     {
 
         internal static Dictionary<int, SpamDetector> UserMessages = new Dictionary<int, SpamDetector>();
-
-        internal static HashSet<int> SpamBanList = new HashSet<int>
-        {
-
-        };
-
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
@@ -38,8 +32,6 @@ namespace Enforcer5.Handlers
             Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
 #endif
         }
-
-
         private static async Task Log(Update update, string text, Models.Commands command = null)
         {
             if (text.Equals("text"))
