@@ -105,9 +105,9 @@ namespace Enforcer5
                 catch (Exception e)
                 {
                     text = Methods.GetLocaleString(lang, "helpNoRequest");
+                    await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                 }
-                await Bot.SendReply(text, update);
-                await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                await Bot.SendReply(text, update);                
             }           
         }
 

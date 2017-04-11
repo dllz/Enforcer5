@@ -97,6 +97,32 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "addrule", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task AddRule(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            if (!string.IsNullOrWhiteSpace(args[1]))
+            {
+                var input = args[1];
+                try
+                {
+                    var rules = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:rules").Result;
+                    var result = Bot.SendReply(input, update);
+                    await Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", $"{rules}\n{input}");
+                    await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
+                        Methods.GetLocaleString(lang, "RulesSet"));
+                }
+                catch (AggregateException e)
+                {
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                }
+            }
+            else
+            {
+                await Bot.SendReply(Methods.GetLocaleString(lang, "NoInput"), update);
+            }
+        }
+
         [Command(Trigger = "about", InGroupOnly = true)]
         public static async Task About(Update update, string[] args)
         {
