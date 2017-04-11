@@ -98,6 +98,11 @@ namespace Enforcer5
             }
         }
 
+        public static async Task AntiLenght(Update update)
+        {
+            
+        }
+
         public static async Task CheckMedia(Update update)
         {
             try
@@ -167,7 +172,8 @@ namespace Enforcer5
                 await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
-        public static async Task RightToLeft(Update update)
+
+        public static void RightToLeft(Update update)
         {
             try
             {
@@ -301,6 +307,7 @@ namespace Enforcer5
 
                 }
             }
+            RightToLeft(update);
         }
 
         public static bool isIgnored(long chatId, string msgType)

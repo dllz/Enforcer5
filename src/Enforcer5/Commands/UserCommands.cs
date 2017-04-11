@@ -202,7 +202,7 @@ namespace Enforcer5
                     case "ping":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
-                    case "getCommands":
+                    case "getcommands":
                         await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
                         break;
                     default:

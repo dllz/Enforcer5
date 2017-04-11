@@ -178,7 +178,12 @@ namespace Enforcer5
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
         public static async Task reloadLang(Update update, string[] args)
         {
-            Methods.IntialiseLanguages();
+            Program.LangaugeList = null;
+            foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
+            {
+
+                Program.LangaugeList.Add(new Language(language));
+            }
             await Bot.SendReply("Done", update);
         }
 

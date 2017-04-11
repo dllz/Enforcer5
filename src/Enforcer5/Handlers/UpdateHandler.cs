@@ -119,7 +119,6 @@ namespace Enforcer5.Handlers
                     if (update.Message.Chat.Type == ChatType.Supergroup)
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
-                        new Task(() => { OnMessage.CheckMedia(update);  }).Start();
                     }
                     //new Task(() => { OnMessage.CheckMedia(update); }).Start();
                     switch (update.Message.Type)
@@ -129,7 +128,6 @@ namespace Enforcer5.Handlers
                         case MessageType.TextMessage:
                             if (update.Message.Chat.Type == ChatType.Supergroup)
                             {
-                                new Task(() => { OnMessage.RightToLeft(update); }).Start();
                                 new Task(() => { OnMessage.ArabDetection(update); }).Start();
                             }
                             if (update.Message.Text.StartsWith("/"))
@@ -256,22 +254,54 @@ namespace Enforcer5.Handlers
                         case MessageType.PhotoMessage:
                             if (update.Message.Chat.Type == ChatType.Supergroup)
                             {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
                                 Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
                             }
                             break;
                         case MessageType.AudioMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.VideoMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.VoiceMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.DocumentMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.StickerMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.LocationMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.ContactMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         case MessageType.ServiceMessage:
                             if (update.Message.NewChatMember != null)
@@ -309,6 +339,10 @@ namespace Enforcer5.Handlers
                             }
                             break;
                         case MessageType.VenueMessage:
+                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
