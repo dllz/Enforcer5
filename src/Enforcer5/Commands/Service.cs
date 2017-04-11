@@ -313,8 +313,8 @@ namespace Enforcer5
                     {"antitextlengthsettings", "action", "ban" },
 
                     {"antinamelengthsettings", "enabled", "yes" },
-                    {"antinamelengthsettings", "maxlength", 40 },
-                    {"antinamelengthsettings", "action", "ban" },
+                    {"antinamelengthsettings", "maxlength", 50 },
+                    {"antinamelengthsettings", "action", "kick" },
                 }
             };
 
@@ -358,8 +358,8 @@ namespace Enforcer5
                     {"antitextlengthsettings", "action", "ban" },
 
                     {"antinamelengthsettings", "enabled", "yes" },
-                    {"antinamelengthsettings", "maxlength", 40 },
-                    {"antinamelengthsettings", "action", "ban" },
+                    {"antinamelengthsettings", "maxlength", 50 },
+                    {"antinamelengthsettings", "action", "kick" },
                 }
             };
 

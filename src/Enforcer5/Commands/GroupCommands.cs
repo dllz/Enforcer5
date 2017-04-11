@@ -723,7 +723,7 @@ namespace Enforcer5
                 userId = update.Message.ReplyToMessage.From.Id;
             }
             await Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
-            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
         public static async Task EnableMediaExcempt(Update update, string[] args)
@@ -736,7 +736,7 @@ namespace Enforcer5
                 userId = update.Message.ReplyToMessage.From.Id;
             }
             await Redis.db.SetRemoveAsync($"chat:{chatId}:watch", userId);
-            await Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
+            await Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }
 
         [Command(Trigger = "check", InGroupOnly = true, GroupAdminOnly = true)]
