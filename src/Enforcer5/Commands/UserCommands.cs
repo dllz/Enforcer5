@@ -65,6 +65,8 @@ namespace Enforcer5
                     {
                         if (args[1].Equals(mem.Trigger))
                         {
+                            request = mem.Trigger;
+                            command = 1;
                             string text;
                             try
                             {
@@ -75,6 +77,7 @@ namespace Enforcer5
                                 text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
                             }
                             await Bot.SendReply(text, update);
+                            return;
                         }
                     }
                 }
@@ -85,6 +88,7 @@ namespace Enforcer5
             }
             else if (command == 0)
             {
+                request = args[1];
                 string text;
                 try
                 {
