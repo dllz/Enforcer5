@@ -106,8 +106,11 @@ namespace Enforcer5
             {                
                 var text = update.Message.Text;
                 int intml;
+                int intmline;
                 settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
-                if (text.Length >= intml)
+                settings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value.TryParse(out intmline);
+                var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
+                if (text.Length >= intml || lines.Length >= intmline)
                 {
                     var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
                     XDocument lang;
@@ -133,21 +136,23 @@ namespace Enforcer5
                         case "kick":
                             Methods.KickUser(groupId, userid, lang);
                             Bot.SendReply(Methods.GetLocaleString(lang, "kickformesslength", userid), update);
+                            return;
                             break;
                         case "ban":
                             Methods.BanUser(groupId, userid, lang);
                             Methods.SaveBan(userid, "longmessages");
                             Bot.SendReply(Methods.GetLocaleString(lang, "banformesslength", userid), update);
+                            return;
                             break;
-                        case "warn":
+                        case "Warn":
                             Commands.Warn(update, null);
+                            return;
                             break;
                         case "default":
                             Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
                             break;
                     }
                 }
-
             }
         }
 
@@ -193,7 +198,7 @@ namespace Enforcer5
                             Methods.SaveBan(userid, "namelength");
                             Bot.SendReply(Methods.GetLocaleString(lang, "banfornamelength", userid), update);
                             break;
-                        case "warn":
+                        case "Warn":
                             Commands.Warn(update, null);
                             break;
                         case "default":
@@ -218,7 +223,8 @@ namespace Enforcer5
             }
             try
             {
-                AntiTextLenght(update);
+                if(update.Message.Type == MessageType.TextMessage)
+                    AntiTextLenght(update);
             }
             catch (Exception e)
             {

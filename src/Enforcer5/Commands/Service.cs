@@ -307,6 +307,14 @@ namespace Enforcer5
                     {"media", "contact", "allowed"},
                     {"media", "file", "allowed"},
                     {"media", "link", "allowed"},
+                    {"antitextlengthsettings", "enabled", "yes" },
+                    {"antitextlengthsettings", "maxlength", "1024" },
+                    {"antitextlengthsettings", "maxlines", "50" },
+                    {"antitextlengthsettings", "action", "ban" },
+
+                    {"antinamelengthsettings", "enabled", "yes" },
+                    {"antinamelengthsettings", "maxlength", "40" },
+                    {"antinamelengthsettings", "action", "ban" },
                 }
             };
 

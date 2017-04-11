@@ -149,8 +149,9 @@ namespace Enforcer5
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var warnTitle = new Menu(1);
 
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"FloodButton"),
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"FloodButton"),
                 $"openFloodMenu:{chatId}"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "lengthButton"), $"openLengthMenu:{chatId}"));
             var nsfw = Redis.db.HashGetAsync($"chat:{chatId}:nsfwDetection", "autherised").Result;
             if (nsfw.HasValue && nsfw.ToString().Equals("yes"))
             {
@@ -217,7 +218,7 @@ namespace Enforcer5
                 exeMenu.Buttons.Add(new InlineButton("❌", $"floodtext:{chatId}"));
             }
             var close = new Menu(1);
-            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             return Key.CreateMarkupFromMenus(oneRow, twoRow, exeMenu, close);
         }
 
@@ -298,10 +299,177 @@ namespace Enforcer5
             var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
             return menu;
         }
+
+        public static InlineKeyboardMarkup genAntiLengthMenu(long chatId, XDocument lang)
+        {
+            var nameSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:antinamelengthsettings").Result;
+            var textSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:antitextlengthsettings").Result;
+
+            var menu = new Menu(2);
+            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nameSettingsHeader")));
+            menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, "maxLength")} {nameSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value}"));
+            foreach (var mem in nameSettings)
+            {
+                if (mem.Value.Equals("yes"))
+                {
+                    menu.Buttons.Add(new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}",
+                        $"namesettings:{chatId}"));
+                }
+                else if (mem.Value.Equals("no"))
+                {
+                    menu.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
+                        $"namesettings:{chatId}"));
+                }
+                if (mem.Value.Equals("kick") || mem.Value.Equals("ban") || mem.Value.Equals("Warn"))
+                {
+                    menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, mem.Value)}",
+                        $"namesettings{mem.Name}:{chatId}"));
+                }
+            }
+            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "textSettingsHeader")));
+            menu.Buttons.Add(new InlineButton($"{textSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value} : {textSettings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value}"));
+            foreach (var mem in textSettings)
+            {
+                if (mem.Value.Equals("yes"))
+                {
+                    menu.Buttons.Add(new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}",
+                        $"textsettings:{chatId}"));
+                }
+                else if (mem.Value.Equals("no"))
+                {
+                    menu.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
+                        $"textsettings:{chatId}"));
+                }
+                else if (mem.Value.Equals("kick") || mem.Value.Equals("ban") || mem.Value.Equals("Warn"))
+                {
+                    menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, mem.Value)}",
+                        $"textsettings{mem.Name}:{chatId}"));
+                }
+            }
+            var close = new Menu(1);
+            close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
+            return Key.CreateMarkupFromMenus(menu, close);
+        }
     }
 
     public static partial class CallBacks
-    { 
+    {
+        [Callback(Trigger = "openLengthMenu", GroupAdminOnly = true)]
+        public static async Task openLengthMenu(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId);
+            var text = Methods.GetLocaleString(lang.Doc, "lengthMenu", lang.Base);
+            var keys = Commands.genAntiLengthMenu(chatId, lang.Doc);
+            await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
+        }
+
+        [Callback(Trigger = "namesettingsaction")]
+        public static async Task NameSettingsAction(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "action";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:antinamelengthsettings", option).Result;
+            if (current.Equals("ban"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "kick");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("kick"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "Warn");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("Warn"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "kick");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "namesettings")]
+        public static async Task NameSettings(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "enabled";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:antinamelengthsettings", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "ni");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("no"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "yes");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "textsettingsaction")]
+        public static async Task TextSettingsAction(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "action";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:antitextlengthsettings", option).Result;
+            if (current.Equals("ban"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "kick");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("kick"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "Warn");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("Warn"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "kick");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "textsettings")]
+        public static async Task TextSettings(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "enabled";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:antitextlengthsettings", option).Result;
+            if (current.Equals("yes"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "no");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("no"))
+            {
+                await Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "yes");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
         [Callback(Trigger = "close")]
         public static async Task CloseButton(CallbackQuery call, string[] args)
         {

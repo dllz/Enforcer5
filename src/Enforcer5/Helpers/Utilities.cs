@@ -273,7 +273,7 @@ namespace Enforcer5.Helpers
                         var word = "";
                         for (int i = 0; i < amount; i++)
                         {
-                            word = $"{word}\n{messages[i]}";
+                            word = $"{word}{messages[i]}";
                         }
                         await Send(word, id);
                     }
@@ -376,7 +376,7 @@ namespace Enforcer5.Helpers
                         var word = "";
                         for (int i = 0; i < amount; i++)
                         {
-                            word = $"{word}\n{messages[i]}";
+                            word = $"{word}{messages[i]}";
                         }
                         await Send(word, chatUpdate);
                     }
@@ -471,7 +471,7 @@ namespace Enforcer5.Helpers
                             var word = "";
                             for (int i = 0; i < amount; i++)
                             {
-                                word = $"{word}\n{messages[i]}";
+                                word = $"{word}{messages[i]}";
                             }
                             await SendReply(word, msg);
                         }
@@ -557,7 +557,7 @@ namespace Enforcer5.Helpers
                             var word = "";
                             for (int i = 0; i < amount; i++)
                             {
-                                word = $"{word}\n{messages[i]}";
+                                word = $"{word}{messages[i]}";
                             }
                             await SendReply(word, chatid, msgid);
                         }
@@ -653,7 +653,7 @@ namespace Enforcer5.Helpers
                             var word = "";
                             for (int i = 0; i < amount; i++)
                             {
-                                word = $"{word}\n{messages[i]}";
+                                word = $"{word}{messages[i]}";
                             }
                             await SendReply(word, msg);
                         }
@@ -746,7 +746,7 @@ namespace Enforcer5.Helpers
                             var word = "";
                             for (int i = 0; i < amount; i++)
                             {
-                                word = $"{word}\n{messages[i]}";
+                                word = $"{word}{messages[i]}";
                             }
                             await SendReply(word, msg);
                         }
