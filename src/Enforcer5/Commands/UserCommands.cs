@@ -85,6 +85,7 @@ namespace Enforcer5
             if (command == -1)
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
             }
             else if (command == 0)
             {
@@ -99,6 +100,7 @@ namespace Enforcer5
                     text = Methods.GetLocaleString(lang, "helpNoRequest");
                 }
                 await Bot.SendReply(text, update);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
             }           
         }
 

@@ -993,4 +993,7 @@
   <string key="failed">
   <value>Failed</value>
   </string>
+  <string key="gethelplist">
+    <value>The current support help queries are:\n{0}</value>
+  </string>
 </strings>

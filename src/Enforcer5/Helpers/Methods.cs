@@ -133,6 +133,18 @@ namespace Enforcer5.Helpers
                 return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
             }
         }
+
+        internal static string GetHelpList(XDocument file)
+        {
+            var strings = file.Descendants("string").Where(x => x.Attribute("key").Value.Contains("hcommand"));
+            var list = new List<string>();
+            foreach (var mem in strings)
+            {
+               list.Add(mem.Attribute("key").Value.Substring("hcommand".Length));
+            }
+            return string.Join("\n", list);
+        }
+
         public static Language GetGroupLanguage(long chatId)
         {
             var lang = Redis.db.StringGetAsync($"chat:{chatId}:language").Result;
