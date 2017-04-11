@@ -307,7 +307,7 @@ namespace Enforcer5
 
             var menu = new Menu(2);
             menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nameSettingsHeader")));
-            menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, "maxLength")} {nameSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value}"));
+            menu.Buttons.Add(new InlineButton($"{nameSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value}"));
             foreach (var mem in nameSettings)
             {
                 if (mem.Value.Equals("yes"))

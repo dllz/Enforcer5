@@ -179,6 +179,7 @@ namespace Enforcer5
         public static async Task reloadLang(Update update, string[] args)
         {
             Program.LangaugeList = null;
+            Program.LangaugeList = new List<Language>();
             foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
             {
 
