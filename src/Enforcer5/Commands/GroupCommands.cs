@@ -16,6 +16,46 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
+        [Command(Trigger = "maxnl",  InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task MaxNameLength(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            int chars;
+            if (Int32.TryParse(args[1], out chars))
+            {
+                await Redis.db.HashSetAsync("antinamelengthsettings", "maxlength", chars);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                return;
+            }
+            await Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+        }
+        [Command(Trigger = "maxtl", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task MaxTextLength(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            int chars;
+            if (Int32.TryParse(args[1], out chars))
+            {
+                await Redis.db.HashSetAsync("antitextlengthsettings", "maxlength", chars);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                return;
+            }
+            await Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+        }
+        [Command(Trigger = "maxl", InGroupOnly = true, GroupAdminOnly = true)]
+        public static async Task MaxLines(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            int chars;
+            if (Int32.TryParse(args[1], out chars))
+            {
+                await Redis.db.HashSetAsync("antitextlengthsettings", "maxlines", chars);
+                await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                return;
+            }
+            await Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+        }
+
         [Command(Trigger = "rules", InGroupOnly = true)]
         public static async Task Rules(Update update, string[] args)
         {
