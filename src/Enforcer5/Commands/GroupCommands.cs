@@ -23,7 +23,7 @@ namespace Enforcer5
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {
-                await Redis.db.HashSetAsync("antinamelengthsettings", "maxlength", chars);
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antinamelengthsettings", "maxlength", chars);
                 await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }
@@ -36,7 +36,7 @@ namespace Enforcer5
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {
-                await Redis.db.HashSetAsync("antitextlengthsettings", "maxlength", chars);
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlength", chars);
                 await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }
@@ -49,7 +49,7 @@ namespace Enforcer5
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {
-                await Redis.db.HashSetAsync("antitextlengthsettings", "maxlines", chars);
+                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlines", chars);
                 await Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }
