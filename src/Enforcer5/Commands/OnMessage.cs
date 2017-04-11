@@ -26,6 +26,7 @@ namespace Enforcer5
                 if (flood.Equals("yes")) return;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
                 if (watch) return;
+                new Task(() => { AntiLength(update); }).Start();
                 var msgType = Methods.GetContentType(update.Message);
                 XDocument lang;
                 try
@@ -44,9 +45,7 @@ namespace Enforcer5
                         return;
                     }
                 }
-                var ignored = isIgnored(chatId, msgType);
-                if (!ignored)
-                {
+
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
                     int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;   
                     if (num == 0) num = 1;
@@ -90,7 +89,7 @@ namespace Enforcer5
                             }
                         }
                     }
-                }
+                
             }
             catch (Exception e)
             {
@@ -98,9 +97,134 @@ namespace Enforcer5
             }
         }
 
-        public static async Task AntiLenght(Update update)
+        private static void AntiTextLenght(Update update)
         {
-            
+            var groupId = update.Message.Chat.Id;
+            var settings = Redis.db.HashGetAllAsync($"chat:{groupId}:antitextlengthsettings").Result;
+            var enabled = settings.Where(e => e.Name.Equals("enabled")).FirstOrDefault();
+            if (enabled.Value.Equals("yes"))
+            {                
+                var text = update.Message.Text;
+                int intml;
+                settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
+                if (text.Length >= intml)
+                {
+                    var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
+                    XDocument lang;
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        try
+                        {
+                            lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        }   
+                        catch (NullReferenceException exception)
+                        {
+                            Console.WriteLine(exception);
+                            return;
+                        }
+                    }
+                    var userid = update.Message.From.Id;
+                    switch (action.Value)
+                    {
+                        case "kick":
+                            Methods.KickUser(groupId, userid, lang);
+                            Bot.SendReply(Methods.GetLocaleString(lang, "kickformesslength", userid), update);
+                            break;
+                        case "ban":
+                            Methods.BanUser(groupId, userid, lang);
+                            Methods.SaveBan(userid, "longmessages");
+                            Bot.SendReply(Methods.GetLocaleString(lang, "banformesslength", userid), update);
+                            break;
+                        case "warn":
+                            Commands.Warn(update, null);
+                            break;
+                        case "default":
+                            Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
+                            break;
+                    }
+                }
+
+            }
+        }
+
+        private static void AntiNameLength(Update update)
+        {
+            var groupId = update.Message.Chat.Id;
+            var settings = Redis.db.HashGetAllAsync($"chat:{groupId}:antinamelengthsettings").Result;
+            var enabled = settings.Where(e => e.Name.Equals("enabled")).FirstOrDefault();
+            if (enabled.Value.Equals("yes"))
+            {
+                var text = $"{update.Message.From.FirstName}{update.Message.From.LastName}";
+                int intml;
+                settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
+                if (text.Length >= intml)
+                {
+                    var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
+                    XDocument lang;
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        try
+                        {
+                            lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        }
+                        catch (NullReferenceException exception)
+                        {
+                            Console.WriteLine(exception);
+                            return;
+                        }
+                    }
+                    var userid = update.Message.From.Id;
+                    switch (action.Value)
+                    {
+                        case "kick":
+                            Methods.KickUser(groupId, userid, lang);
+                            Bot.SendReply(Methods.GetLocaleString(lang, "kickfornamelength", userid), update);
+                            break;
+                        case "ban":
+                            Methods.BanUser(groupId, userid, lang);
+                            Methods.SaveBan(userid, "namelength");
+                            Bot.SendReply(Methods.GetLocaleString(lang, "banfornamelength", userid), update);
+                            break;
+                        case "warn":
+                            Commands.Warn(update, null);
+                            break;
+                        case "default":
+                            Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
+                            break;
+                    }
+                }
+
+            }
+        }
+
+        public static async Task AntiLength(Update update)
+        {
+            try
+            {
+                AntiNameLength(update);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+            }
+            try
+            {
+                AntiTextLenght(update);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+            }
         }
 
         public static async Task CheckMedia(Update update)
@@ -215,19 +339,19 @@ namespace Enforcer5
                         {
                             if (status.Equals("kick"))
                             {
-                                await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                Methods.KickUser(chatId, update.Message.From.Id, lang);
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
-                                await Bot.Send(
+                                Bot.Send(
                                     Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {update.Message.From.Id}"),
                                     update);
                             }
                             else
                             {
-                                await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                Methods.BanUser(chatId, update.Message.From.Id, lang);
                                 Methods.SaveBan(update.Message.From.Id, "rtl");
                                 Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedForRtl", ""));
-                                await Bot.Send(
+                                Bot.Send(
                                         Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {update.Message.From.Id}"),
                                         update);
                             }                            
@@ -235,7 +359,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
-                        await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
 
                 }               
@@ -243,7 +367,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
 

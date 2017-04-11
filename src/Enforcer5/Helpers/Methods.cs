@@ -176,6 +176,7 @@ namespace Enforcer5.Helpers
         /// <param name="key">The XML Key of the string needed</param>
         /// <param name="args">Any arguments to fill the strings {0} {n}</param>
         /// <returns></returns>
+
         public static string GetLocaleString(XDocument file, string key, params object[] args)
         {
             if (args.Length > 0)
@@ -302,7 +303,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                return "";
+                return "Enforcer";
             }
         }
 
@@ -322,7 +323,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                return "";
+                return "Enforcer";
             }
         }
 
