@@ -979,8 +979,9 @@
 	/maxnl [number of characters] - to change the max length of a name;
 	/maxtl [number of characters] - to change the maximum number of characters in a message;
 	/maxl [number of lines] - to change the maximum number of lines allowed in a message. 
-	
+  
 	The reason you can set lines and characters is that some spammers send blank messages containing many lines. These messages will be below the character count but will still be spammy. 	
+  --[Characters : lines]-- shown in button
   </value>
   </string>
   <string key="maxLength">
