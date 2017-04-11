@@ -734,7 +734,7 @@
 		/{0} [Username]
 	</value>
   </string>	
-  <string key="hcommandmeBIGCONFUSEION">
+  <string key="hcommandme">
   <value>
 		Gives you information, how often you were ever warned, kicked, banned etc. globally. Will send you in private.
 		
@@ -742,14 +742,6 @@
 		/{0}
 	</value>
   </string>
-  <string key="hcommandmeBIGCONFUSION">
-  <value>
-		Gives you information, how often you were ever warned, kicked, banned etc. globally. Will send you in private.
-		
-		Example:
-		/{0}
-	</value>
-  </string> 	
   <string key="hcommandextra">
   <value>
 		Saves an extra command. Extra commands are custom commands with custom reply, triggered by single words starting with a #. Everyone can send the trigger afterwards and the bot will reply the custom answer.

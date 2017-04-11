@@ -65,9 +65,16 @@ namespace Enforcer5
                     {
                         if (args[1].Equals(mem.Trigger))
                         {
-                            command = 1;
-                            request = mem.Trigger.ToLower();
-                            break;
+                            string text;
+                            try
+                            {
+                                text = Methods.GetLocaleString(lang, $"hcommand{request}", request);                                
+                            }
+                            catch (Exception e)
+                            {
+                                text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
+                            }
+                            await Bot.SendReply(text, update);
                         }
                     }
                 }
@@ -78,146 +85,17 @@ namespace Enforcer5
             }
             else if (command == 0)
             {
-                if (args[1].Contains("markdown"))
+                string text;
+                try
                 {
-                    await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommandmarkdown"), update);
+                    text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                 }
-            }
-            else
-            {
-                switch (request)
+                catch (Exception e)
                 {
-                    case "warn":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "kickme":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "kick":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "ban":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "unban":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "tempban":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "admin":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "adminoff":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "adminon":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "solved":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "reporton":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "reportoff":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "rules":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "setrules":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "about":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "setabout":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "adminlist":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "s":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "id":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "support":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "user":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "me":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}BIGCONFUSEION", request), update);
-                        break;
-                    case "extra":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "extralist":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "extradel":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "link":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "setlink":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "status":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "welcome":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "disablewatch":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "enablewatch":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "check":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "elevate":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "deelevate":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "elevatelog":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "auth":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "blockelevate":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "deauth":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "menu":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "dashboard":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "ping":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    case "getcommands":
-                        await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommand{request}", request), update);
-                        break;
-                    default:
-                        await Bot.SendReply(Methods.GetLocaleString(lang, "helpOptionNotImplemented", request), update);
-                        break;
+                    text = Methods.GetLocaleString(lang, "helpNoRequest");
                 }
-            }
+                await Bot.SendReply(text, update);
+            }           
         }
 
     }
