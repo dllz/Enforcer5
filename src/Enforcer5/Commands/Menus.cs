@@ -403,7 +403,7 @@ namespace Enforcer5
             var current = Redis.db.HashGetAsync($"chat:{chatId}:antinamelengthsettings", option).Result;
             if (current.Equals("yes"))
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "ni");
+                await Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "no");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);
                 await Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 await Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));

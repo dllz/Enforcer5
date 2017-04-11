@@ -50,6 +50,13 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "helplist")]
+        public static async Task HelpList(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+        }
+
         [Command(Trigger = "help")]
         public static async Task Help(Update update, string[] args)
         {

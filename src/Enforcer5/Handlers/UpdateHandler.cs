@@ -480,11 +480,11 @@ namespace Enforcer5.Handlers
                         await Redis.db.SetAddAsync("bot:lookaround",
                             $"{updateMessage.Chat.Title}:{updateMessage.Chat.Id}:{updateMessage.Text}:{updateMessage.Date}");
                     }
-                    var updated = Redis.db.SetContainsAsync("lenghtUpdate",updateMessage.Chat.Id).Result;
+                    var updated = Redis.db.SetContainsAsync("lenghtUpdate2",updateMessage.Chat.Id).Result;
                     if (!updated)
                     {
                         await Service.NewSettings(updateMessage.Chat.Id);
-                        await Redis.db.SetAddAsync("lenghtUpdate", updateMessage.Chat.Id);
+                        await Redis.db.SetAddAsync("lenghtUpdate2", updateMessage.Chat.Id);
                     }
                 }
             }
