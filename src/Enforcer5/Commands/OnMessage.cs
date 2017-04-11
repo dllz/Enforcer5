@@ -164,11 +164,7 @@ namespace Enforcer5
             if (enabled.Value.Equals("yes"))
             {
                 var text = update.Message.From.FirstName;
-                var len = text.Length;
-                var chars = text.ToCharArray();
-                var charlenght = chars.Length;
                 text = $"{text}{update.Message.From.LastName}";
-                var len2 = text.Length;
                 int intml;
                 settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
                 if (text.Length >= intml)
