@@ -53,27 +53,35 @@ namespace Enforcer5
         [Command(Trigger = "help")]
         public static async Task Help(Update update, string[] args)
         {
-            var command = false;
+            var command = -1;
             var request = "";
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (args.Length > 1)
             {
                 if (!string.IsNullOrEmpty(args[1]))
                 {
+                    command = 0;
                     foreach (var mem in Bot.Commands)
                     {
                         if (args[1].Equals(mem.Trigger))
                         {
-                            command = true;
+                            command = 1;
                             request = mem.Trigger.ToLower();
                             break;
                         }
                     }
                 }
-            }
-            if (command == false)
+            }           
+            if (command == -1)
             {
                 await Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+            }
+            else if (command == 0)
+            {
+                if (args[1].Contains("markdown"))
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, $"hcommandmarkdown"), update);
+                }
             }
             else
             {
