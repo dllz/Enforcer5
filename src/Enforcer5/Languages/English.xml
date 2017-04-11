@@ -2,7 +2,7 @@
 <strings>
   <language name="English" base="English" owner="BladeZero"/>
   <string key="statusKicked">
-    <value>{0} is kicked from this group.</value>
+    <value>{0} is banned from this group. {1}</value>
   </string>
   <string key="statusLeft">
     <value>{0} left the group or has been kicked.</value>

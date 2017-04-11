@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
@@ -614,11 +615,15 @@ namespace Enforcer5
                     if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                         status = ChatMemberStatus.Kicked;
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
-                    if (!reason.IsNullOrEmpty)
+                    if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
                     {
-                        name = $"{name}   {Methods.GetLocaleString(lang, "bannedFor", reason)}";
+                        
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, Methods.GetLocaleString(lang, "bannedFor", reason)), update);
                     }
-                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
+                    else
+                    {
+                        await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name,""), update);
+                    }
                 }
             }
             else if (update.Message.ReplyToMessage != null)
@@ -632,11 +637,15 @@ namespace Enforcer5
                 if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                     status = ChatMemberStatus.Kicked;
                 var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
-                if (!reason.IsNullOrEmpty)
+                if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
                 {
-                    name = $"{name}   {Methods.GetLocaleString(lang, "bannedFor", reason)}";
+
+                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, Methods.GetLocaleString(lang, "bannedFor", reason)), update);
                 }
-                await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name), update);
+                else
+                {
+                    await Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, ""), update);
+                }
             }
 
         }
