@@ -73,7 +73,7 @@ namespace Enforcer5
             {
                 msg = 1;
             }
-            await Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}", msg + 1, maxTime);
+            Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue + 1)
             {
                 return;
@@ -101,7 +101,7 @@ namespace Enforcer5
             {
                 msg = 1;
             }
-            await Redis.db.StringSetAsync($"spam:added:{message.NewChatMember.Id}", msg + 1, maxTime);
+             Redis.db.StringSetAsync($"spam:added:{message.NewChatMember.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue + 1)
             {
                 return;
@@ -109,39 +109,39 @@ namespace Enforcer5
             switch (message.NewChatMember.Id)
             {
                 case 286670453://Phyto
-                    await Bot.Send("Error 404", chatId);
+                    Bot.Send("Error 404", chatId);
                     break;
                 case 106665913://Jeff
-                    await Bot.Send("This is a known bug. No need to report", chatId);
+                    Bot.Send("This is a known bug. No need to report", chatId);
                     break;
                 case 23776848://Melisa
-                    await Bot.Send("Banhammer is ready for use milady. Feel free to strike them down", chatId);
+                    Bot.Send("Banhammer is ready for use milady. Feel free to strike them down", chatId);
                     break;
                 case 9375804://jhen
-                    await Bot.Send("Or else I'll kick your butt", chatId);
+                    Bot.Send("Or else I'll kick your butt", chatId);
                     break;
                 case 125311351:
-                    await Bot.Send("401 Not authorised", chatId);
+                    Bot.Send("401 Not authorised", chatId);
                     break;
                 case 223494929:
 #if premium
-                    await Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAfnHwfv4ufK6wI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAfnHwfv4ufK6wI");
 #endif
 #if normal
-                    await Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
 #endif
                     break;
                 case 263451571:
-                    await Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
+                    Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
                     break;
                 case 295152997:
-                    await Bot.Send("Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.", chatId);
+                    Bot.Send("Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.", chatId);
                     break;
                 case 81772130:
-                    await Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
+                    Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
                     break;
                 case 221962247:
-                    await Bot.Send("Uhm, who are you again? I may not remember for sure, but feel free to spread terror with your kagune here.", chatId);
+                    Bot.Send("Uhm, who are you again? I may not remember for sure, but feel free to spread terror with your kagune here.", chatId);
                     break;
                 default:
                     var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
@@ -149,7 +149,7 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        await Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
+                        Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
@@ -158,12 +158,12 @@ namespace Enforcer5
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            await Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
+                            Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
                         }
                         else
                         {
                             var text = GetCustomWelcome(message, content);
-                            await Bot.Send(text, message.Chat.Id);
+                            Bot.Send(text, message.Chat.Id);
                         }
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
@@ -219,7 +219,7 @@ namespace Enforcer5
                         {
                             var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
                                 message.Chat.Title);
-                            await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
                         }
                     }
                     break;
@@ -252,20 +252,20 @@ namespace Enforcer5
             if (groupBan.Equals("1"))
             {
                 var lang = Methods.GetGroupLanguage(updateMessage).Doc;
-                await Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
+                Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
                 await Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
                 return;
             }
             var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;
             if (alreadyExists)
             {
-                await Bot.Send(
+                Bot.Send(
                     "Welcome back to Enforcer. Your settings are still intack",
                     updateMessage.Chat.Id);
             }
             else
             {
-                await Bot.Send(
+                Bot.Send(
                     "Welcome to Enforcer. Default settings have been loaded, please use /menu to configure them or /help for more information",
                     updateMessage.Chat.Id);
                 IntiliseSettings(updateMessage.Chat.Id);

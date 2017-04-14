@@ -13,7 +13,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-//#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 namespace Enforcer5.Handlers
 {
 
@@ -149,7 +149,7 @@ namespace Enforcer5.Handlers
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
-                                        await Bot.SendReply(
+                                        Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
@@ -161,7 +161,7 @@ namespace Enforcer5.Handlers
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message);
-                                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
                                     if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
@@ -219,7 +219,7 @@ namespace Enforcer5.Handlers
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
-                                        await Bot.SendReply(
+                                        Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
@@ -231,7 +231,7 @@ namespace Enforcer5.Handlers
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message);
-                                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
                                     if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
@@ -350,12 +350,12 @@ namespace Enforcer5.Handlers
                             if (update.Message != null && update.Message.Chat.Title != null)
                             {
                                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                                await Bot.SendReply(
+                                Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
                             else
                             {
-                                await Bot.SendReply("The markdown in this text is broken", update);
+                                Bot.SendReply("The markdown in this text is broken", update);
                             }
                         }
                         else if (e.ErrorCode == 403)
@@ -369,12 +369,12 @@ namespace Enforcer5.Handlers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                             };
-                            await Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), update, Key.CreateMarkupFromMenu(startMe));
+                            Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), update, Key.CreateMarkupFromMenu(startMe));
                         }
                         else
                         {
-                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}, 1231", update);
-                            await Bot.Send($"1\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}, 1231", update);
+                            Bot.Send($"1\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)
@@ -391,7 +391,7 @@ namespace Enforcer5.Handlers
                 catch (AggregateException e)
                 {
                     Console.WriteLine(e);
-                    await Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
+                    Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)
                 {
@@ -400,11 +400,11 @@ namespace Enforcer5.Handlers
                     {
                         if (ex.Message.Equals("UnableToResolveUsername"))
                         {
-                            await Bot.Send($"an error occured:\n{ex.Message}", update);
+                            Bot.Send($"an error occured:\n{ex.Message}", update);
                         }
                         else
                         {
-                            await Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
+                            Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
                         }
                     }
                     catch (Exception e)
@@ -452,46 +452,46 @@ namespace Enforcer5.Handlers
             try
             {
                 //Console.WriteLine("Collecting Stats");
-                await Redis.db.HashIncrementAsync("bot:general", "messages");
-                await Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
+                Redis.db.HashIncrementAsync("bot:general", "messages");
+                Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
                 if (updateMessage?.From?.Username != null)
                 {
-                    await Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-                    await Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                    
-                    await Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.From.Username.ToLower()}");
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
+                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                    
+                    Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.From.Username.ToLower()}");
                 }
                 if (updateMessage?.ForwardFrom?.Username != null)
                 {
-                    await Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    await Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    await Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
+                    Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
                 }
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {
                     if (updateMessage?.From != null)
                     {
-                        await Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
-                        await Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
-                        await Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
-                        await Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
+                        Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
+                        Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
+                        Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
+                        Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }
                     if (updateMessage.From.Id == 286670453)
                     {
-                        await Redis.db.SetAddAsync("bot:lookaround",
+                        Redis.db.SetAddAsync("bot:lookaround",
                             $"{updateMessage.Chat.Title}:{updateMessage.Chat.Id}:{updateMessage.Text}:{updateMessage.Date}");
                     }
                     var updated = Redis.db.SetContainsAsync("lenghtUpdate2",updateMessage.Chat.Id).Result;
                     if (!updated)
                     {
-                        await Service.NewSettings(updateMessage.Chat.Id);
-                        await Redis.db.SetAddAsync("lenghtUpdate2", updateMessage.Chat.Id);
+                        Service.NewSettings(updateMessage.Chat.Id);
+                        Redis.db.SetAddAsync("lenghtUpdate2", updateMessage.Chat.Id);
                     }
                 }
             }
             catch (Exception e)
             {
 
-                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
 
         }
