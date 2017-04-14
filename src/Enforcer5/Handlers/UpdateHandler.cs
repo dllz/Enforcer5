@@ -573,10 +573,10 @@ namespace Enforcer5.Handlers
                                     continue;
                                 }
                                 var number = 11;
-#if premuim
+#if premium
                                 number = 15;
 #endif
-                                if ((temp[key].Warns >= 3 || temp[key].Messages.Count > number))
+                        if ((temp[key].Warns >= 3 || temp[key].Messages.Count > number))
                                 {
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
                                     Console.ForegroundColor = ConsoleColor.Green;

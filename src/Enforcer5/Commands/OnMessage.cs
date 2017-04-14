@@ -105,6 +105,7 @@ namespace Enforcer5
             if (enabled.Value.Equals("yes"))
             {                
                 var text = update.Message.Text;
+                var chartext = text.ToCharArray();
                 int intml;
                 int intmline;
                 settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
