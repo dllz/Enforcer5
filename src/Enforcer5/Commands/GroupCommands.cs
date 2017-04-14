@@ -12,7 +12,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-#pragma warning disable 4014
+#pragma warning disable CS4014
 namespace Enforcer5
 {
     public static partial class Commands
@@ -1140,7 +1140,7 @@ namespace Enforcer5
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"),
                     $"removewarn:{chatId}:{userId}"));
                 var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
+                 Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
             }
         }
     }

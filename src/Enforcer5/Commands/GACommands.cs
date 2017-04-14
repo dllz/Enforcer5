@@ -15,7 +15,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-
+#pragma warning disable CS4014
 namespace Enforcer5
 {
     public static partial class Commands
@@ -28,7 +28,7 @@ namespace Enforcer5
                 var id = update.Message.Chat.Id;
                 if (update.Message.ReplyToMessage?.Type != MessageType.DocumentMessage)
                 {
-                    await Bot.Send("Please reply to the file with /uploadlanguage", id);
+                     Bot.Send("Please reply to the file with /uploadlanguage", id);
                     return;
                 }
                 var fileid = update.Message.ReplyToMessage.Document?.FileId;
@@ -36,7 +36,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        await LanguageHelper.UploadFile(fileid, id,
+                          LanguageHelper.UploadFile(fileid, id,
                             update.Message.ReplyToMessage.Document.FileName,
                             update.Message.MessageId);
                     }
@@ -48,7 +48,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                await Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, e.Message, parseMode: ParseMode.Default);
+                Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, e.Message, parseMode: ParseMode.Default);
             }
         }
 
@@ -81,7 +81,7 @@ namespace Enforcer5
             var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
             try
             {
-                await Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Validate which language?",
+                 Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Validate which language?",
                     replyToMessageId: update.Message.MessageId, replyMarkup: menu);
             }
             catch (AggregateException e)
@@ -90,12 +90,12 @@ namespace Enforcer5
                 {
                     var x = ex as ApiRequestException;
 
-                    await Bot.Send(x.Message, update.Message.Chat.Id);
+                     Bot.Send(x.Message, update.Message.Chat.Id);
                 }
             }
             catch (ApiRequestException ex)
             {
-                await Bot.Send(ex.Message, update.Message.Chat.Id);
+                 Bot.Send(ex.Message, update.Message.Chat.Id);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Enforcer5
             var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
             try
             {
-               await Bot.SendReply(Methods.GetLocaleString(langs.FirstOrDefault(e => e.Name.Equals("English")).Doc, "GetLang"), update, keyboard:menu);
+                Bot.SendReply(Methods.GetLocaleString(langs.FirstOrDefault(e => e.Name.Equals("English")).Doc, "GetLang"), update, keyboard:menu);
             }
             catch (AggregateException e)
             {
@@ -131,22 +131,22 @@ namespace Enforcer5
                 {
                     var x = ex as ApiRequestException;
 
-                    await Bot.Send(x.Message, update.Message.Chat.Id);
+                     Bot.Send(x.Message, update.Message.Chat.Id);
                 }
             }
             catch (ApiRequestException ex)
             {
-                await Bot.Send(ex.Message, update.Message.Chat.Id);
+                 Bot.Send(ex.Message, update.Message.Chat.Id);
             }
         }
 
         [Command(Trigger = "halt", GlobalAdminOnly = true)]
         public static async Task StopBot(Update update, string[] args)
         {
-            await Bot.SendReply("Stopping bot", update);
+             Bot.SendReply("Stopping bot", update);
             if (update.Message.From.Id != Constants.Devs[0])
             {
-                await Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
+                 Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
                     Constants.Devs[0]);
             }
             try
@@ -165,7 +165,7 @@ namespace Enforcer5
         {
             var id = update.Message.ReplyToMessage.From.Id;
             var res =  Redis.db.SetAddAsync("langAdmins", id).Result;
-            await Bot.SendReply("Done", update);
+             Bot.SendReply("Done", update);
         }
 
         [Command(Trigger = "removelangadmin", RequiresReply = true, UploadAdmin = true)]
@@ -173,7 +173,7 @@ namespace Enforcer5
         {
             var id = update.Message.ReplyToMessage.From.Id;
             var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
-            await Bot.SendReply("Done", update);
+             Bot.SendReply("Done", update);
         }
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
         public static async Task reloadLang(Update update, string[] args)
@@ -185,7 +185,7 @@ namespace Enforcer5
 
                 Program.LangaugeList.Add(new Language(language));
             }
-            await Bot.SendReply("Done", update);
+             Bot.SendReply("Done", update);
         }
 
         [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
@@ -225,29 +225,29 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                await Bot.SendReply($"{userId} has been rekt for {moti}", update);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                 Bot.SendReply($"{userId} has been rekt for {moti}", update);
             }
             else
             {
-                await Bot.SendReply("Nopes", update);
+                 Bot.SendReply("Nopes", update);
             }
         }
 
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static async Task AllowPremiumBot(Update update, string[] args)
         {
-            await Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
-            await Bot.SendReply("Activated", update);
+             Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
+             Bot.SendReply("Activated", update);
         }
 
         [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static async Task BlockPremiumBot(Update update, string[] args)
         {
-            await Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
-            await Bot.SendReply("Deactivated", update);
+             Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
+             Bot.SendReply("Deactivated", update);
         }
 
         [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
@@ -287,14 +287,14 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 0);
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "unbanMotivation", moti);
-                await Redis.db.HashSetAsync($"globalBan:{userId}", "unbanTime", System.DateTime.UtcNow.ToString());
-                await Bot.SendReply($"{userId} has been unrekt for {moti}", update);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 0);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanMotivation", moti);
+                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanTime", System.DateTime.UtcNow.ToString());
+                 Bot.SendReply($"{userId} has been unrekt for {moti}", update);
             }
             else
             {
-                await Bot.SendReply("Nopes", update);
+                 Bot.SendReply("Nopes", update);
             }
         }
 
@@ -304,8 +304,8 @@ namespace Enforcer5
             try
             {
                 var chatId = args[1];
-                await Bot.Api.LeaveChatAsync(chatId);
-                await Bot.SendReply("The chat has been left", update);
+                 Bot.Api.LeaveChatAsync(chatId);
+                 Bot.SendReply("The chat has been left", update);
             }
             catch (Exception e)
             {
@@ -334,7 +334,7 @@ namespace Enforcer5
                     banInfo.Add($"User: {user} for {motivation} at {time}");
                 }
             }
-            await Bot.SendReply(String.Join("\n", banInfo), update);
+             Bot.SendReply(String.Join("\n", banInfo), update);
         }
 
         [Command(Trigger = "mediaid", GlobalAdminOnly = true, RequiresReply = true)]
@@ -348,7 +348,7 @@ namespace Enforcer5
 
             var reverse = Methods.RLEDecode(mediaID);
             var acsii = System.Text.Encoding.ASCII.GetString(Convert.FromBase64String(reverse));
-            await Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
+             Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
         }
 
         [Command(Trigger = "getuser", GlobalAdminOnly = true)]
@@ -364,7 +364,7 @@ namespace Enforcer5
             }
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
-            await Bot.SendReply(text, update);
+             Bot.SendReply(text, update);
         }
 
         [Command(Trigger = "look", GlobalAdminOnly = true)]
@@ -378,10 +378,10 @@ namespace Enforcer5
                 res.Append(mem.ToString());
             }
             if(!string.IsNullOrEmpty(res.ToString()))
-                await Bot.SendReply(res.ToString(), update);
+                 Bot.SendReply(res.ToString(), update);
             else
             {
-                await Bot.SendReply("Nothing to see", update);
+                 Bot.SendReply("Nothing to see", update);
             }
         }
 
@@ -391,9 +391,9 @@ namespace Enforcer5
             var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
             foreach (var mem in data)
             {
-                await Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
+                 Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
             }
-            await Bot.SendReply("done", update);
+             Bot.SendReply("done", update);
         }
     }
 

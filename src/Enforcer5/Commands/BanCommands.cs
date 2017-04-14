@@ -11,7 +11,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-
+#pragma warning disable CS4014
 namespace Enforcer5
 {
     public static partial class Commands
@@ -54,7 +54,7 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
-                            await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
                         }
                     }
                     catch (Exception e)
@@ -80,7 +80,7 @@ namespace Enforcer5
                 return;
             if (num < 0)
             {
-                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);
+                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 0);
             }
             var id = Methods.GetUserId(update, args);
             int.TryParse(Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:warnsettings", "max").Result, out max);
@@ -94,9 +94,9 @@ namespace Enforcer5
                 {
                     try
                     {
-                        await Methods.BanUser(update.Message.Chat.Id, id, lang.Doc);
+                         Methods.BanUser(update.Message.Chat.Id, id, lang.Doc);
                         var name = Methods.GetNick(update.Message, args, id);
-                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);              
+                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);              
                         Methods.SaveBan(id, "maxWarn");
                     }
                     catch (AggregateException e)
@@ -106,11 +106,11 @@ namespace Enforcer5
                 }
                 else
                 {
-                    await Methods.KickUser(update.Message.Chat.Id, id, lang.Doc);
+                     Methods.KickUser(update.Message.Chat.Id, id, lang.Doc);
                     var name = Methods.GetNick(update.Message, args, id);
-                    await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
+                     Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                 }
-                await Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", id, 0);            
+                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:warns", id, 0);            
         }
             else
             {
@@ -126,7 +126,7 @@ namespace Enforcer5
                             $"removewarn:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.From.Id}"),
                     }
                 };
-                await Bot.Send(text, update.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                 Bot.Send(text, update.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
             }
         }
 
@@ -165,18 +165,18 @@ namespace Enforcer5
                                 if ($"{chatId}:{userId}".Equals(mem.Value))
                                 {
 #if normal
-                                    await Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                                     Redis.db.HashDeleteAsync("tempbanned", mem.Name);
 #endif
 #if premium
-                                    await Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
+                                     Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
 #endif
                                 }
                             }
 #if normal
-                            await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+                             Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
 #endif
 #if premium
-                            await Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
+                             Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
 #endif
                         }
                         Methods.SaveBan(userid, "ban");
@@ -195,7 +195,7 @@ namespace Enforcer5
                             why = $"{update.Message.ReplyToMessage.Text}";
                         }
                         Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
-                        await Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
+                         Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                         try
                         {
                             if (update.Message.ReplyToMessage.Type == MessageType.ServiceMessage)
@@ -204,7 +204,7 @@ namespace Enforcer5
                             }
                             else
                             {
-                                await Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
+                                 Bot.Api.ForwardMessageAsync(update.Message.From.Id, update.Message.Chat.Id,
                                     update.Message.ReplyToMessage.MessageId, disableNotification: true);
                             }
                         }
@@ -220,7 +220,7 @@ namespace Enforcer5
                         {
 
                         }
-                        await Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
+                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                     }
                 }
                 catch (Exception e)
@@ -246,7 +246,7 @@ namespace Enforcer5
                 var res = Methods.UnbanUser(chatId, userId, lang);
                 if (res)
                 {
-                    await Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
+                     Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
                 }
             }
 
@@ -266,7 +266,7 @@ namespace Enforcer5
             }
             if (time == 0)
             {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "tempbanZero"), update);
+                 Bot.SendReply(Methods.GetLocaleString(lang, "tempbanZero"), update);
             }
             else
             {
@@ -276,23 +276,23 @@ namespace Enforcer5
                 if (res.Result.Equals(true))
                 {
                     Methods.SaveBan(userId, "tempban");
-                    await Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
+                     Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
 #if normal
-                    await Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+                     Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
 #endif
 #if premium
-                     await Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
+                      Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
 #endif
                     var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                    await Bot.SendReply(
+                     Bot.SendReply(
                         Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
                         update);
 #if normal
-                    await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
+                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
 #endif
 #if premium
-                    await Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
+                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
 #endif
                 }
             }
@@ -306,9 +306,9 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
-            await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
-            await Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
-            await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
+             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));            
         }
 
@@ -322,9 +322,9 @@ namespace Enforcer5
                 text = Methods.GetLocaleString(lang, "warnRemoved");
             if (res < 0)
             {
-                await Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
+                 Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
             }
-            await Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                text);
         }
     }

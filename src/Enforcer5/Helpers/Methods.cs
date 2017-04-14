@@ -18,7 +18,7 @@ using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-
+#pragma warning disable CS4014
 namespace Enforcer5.Helpers
 {
     public static class Methods
@@ -31,22 +31,22 @@ namespace Enforcer5.Helpers
                 var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None).Result;
                 if (res)
                 {
-                    await Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                    var check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                     Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
+                    var check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
                     var status = check.Status;
                     var count = 0;
 
                     while (status == ChatMemberStatus.Member && count < 10)
                     {
-                        check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
                         status = check.Status;
                         count++;
                     }
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
-                        await Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                        check = await Bot.Api.GetChatMemberAsync(chatId, userId);
+                         Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
                         status = check.Status;
                         count++;
                     }
@@ -57,7 +57,7 @@ namespace Enforcer5.Helpers
             {
                 if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                 {
-                    await Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
@@ -70,7 +70,7 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                await Bot.SendReply(GetLocaleString(doc, "Error", exception), updateMessage);
+                 Bot.SendReply(GetLocaleString(doc, "Error", exception), updateMessage);
             }
             catch (Exception e)
             {
@@ -86,7 +86,7 @@ namespace Enforcer5.Helpers
                 };
             try
             {
-                await Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
+                 Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
             }
             catch (ApiRequestException e)
             {
@@ -553,8 +553,8 @@ namespace Enforcer5.Helpers
                         var notified = isBanned[3].Value;
                         if (!notified.HasValue)
                         {
-                            await Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
-                            await Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
+                             Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
+                             Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
 
                         }
                         return;
@@ -564,7 +564,7 @@ namespace Enforcer5.Helpers
                     
                     try
                     {
-                        await Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                         Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
                         SaveBan(update.Message.From.Id, "ban");
                         var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
@@ -599,7 +599,7 @@ namespace Enforcer5.Helpers
                 var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
                 if (res)
                 {
-                    await Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
+                     Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
                 }
                 return res;
             }
@@ -607,7 +607,7 @@ namespace Enforcer5.Helpers
             {
                 if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                 {
-                    await Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
@@ -620,9 +620,9 @@ namespace Enforcer5.Helpers
             var hash = $"chat:{chatId}:bannedlist";
             var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
             kvp.Add(new KeyValuePair<RedisKey, RedisValue>(hash, userId.ToString()));
-            await Redis.db.StringSetAsync(kvp.ToArray());
-            await Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
-            await Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
+             Redis.db.StringSetAsync(kvp.ToArray());
+             Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
+             Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
         }
         internal static void CheckTempBans(object obj)
         {

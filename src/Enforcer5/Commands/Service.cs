@@ -44,7 +44,7 @@ namespace Enforcer5
             {
                 msg = 1;
             }
-            await Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
+            Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue+1)
             {
                return; 
@@ -213,7 +213,7 @@ namespace Enforcer5
                                     text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
                                     break;
                             }
-                            await Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
                         }
                         else
                         {
@@ -253,7 +253,7 @@ namespace Enforcer5
             {
                 var lang = Methods.GetGroupLanguage(updateMessage).Doc;
                 Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
-                await Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
+                Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
                 return;
             }
             var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;
