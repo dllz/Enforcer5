@@ -10,7 +10,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
+#pragma warning disable CS4014
 namespace Enforcer5
 {
     public static class OnMessage

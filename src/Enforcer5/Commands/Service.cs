@@ -9,7 +9,7 @@ using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
+#pragma warning disable CS4014
 namespace Enforcer5
 {
     public static class Service
