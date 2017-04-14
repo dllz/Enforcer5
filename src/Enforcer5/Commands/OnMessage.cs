@@ -68,17 +68,17 @@ namespace Enforcer5
                             {
                                 if (action.Value.Equals("ban"))
                                 {
-                                    await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                    Methods.BanUser(chatId, update.Message.From.Id, lang);
                                     Methods.SaveBan(update.Message.From.Id, "flood");
                                     Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                         Methods.GetLocaleString(lang, "bannedForFlood", ".."));
-                                    await Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
+                                    Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
                                 }
                                 else
                                 {
-                                    await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                    Methods.KickUser(chatId, update.Message.From.Id, lang);
                                     Methods.SaveBan(update.Message.From.Id, "flood");
-                                    await Bot.Send(
+                                    Bot.Send(
                                         Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
                                         update);
                                 }
@@ -93,7 +93,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
 
@@ -221,7 +221,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
             try
             {
@@ -231,7 +231,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                await Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
 
@@ -275,24 +275,24 @@ namespace Enforcer5
                     {
                         if (status.Equals("ban"))
                         {
-                            await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                            Methods.BanUser(chatId, update.Message.From.Id, lang);
                             Methods.SaveBan(update.Message.From.Id, "media");
                             Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                 Methods.GetLocaleString(lang, "bannedformedia", ""));
-                            await Bot.SendReply(Methods.GetLocaleString(lang, "bannedformedia", name), update);
+                            Bot.SendReply(Methods.GetLocaleString(lang, "bannedformedia", name), update);
                         }
                         else
                         {
-                            await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                            Methods.KickUser(chatId, update.Message.From.Id, lang);
                             Methods.SaveBan(update.Message.From.Id, "media");
-                            await Bot.SendReply(
+                            Bot.SendReply(
                                 Methods.GetLocaleString(lang, "kickedformedia", $"{name}"),
                                 update);
                         }
                     }
                     else
                     {
-                        await Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
+                        Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
                             update);
                     }
 
@@ -301,7 +301,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                await Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
         }
 
@@ -414,19 +414,19 @@ namespace Enforcer5
                     {
                         if (arabStatus.Equals("kick"))
                         {
-                            await Methods.KickUser(chatId, update.Message.From.Id, lang);
+                            Methods.KickUser(chatId, update.Message.From.Id, lang);
                             Methods.SaveBan(update.Message.From.Id, "arab");
-                            await Bot.Send(
+                            Bot.Send(
                                 Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
                                 update);
                         }
                         else
                         {
-                            await Methods.BanUser(chatId, update.Message.From.Id, lang);
+                            Methods.BanUser(chatId, update.Message.From.Id, lang);
                             Methods.SaveBan(update.Message.From.Id, "arab");
                             Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
                                 Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
-                            await Bot.Send(
+                            Bot.Send(
                                 Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {update.Message.From.Id}"),
                                 update);
                         }
