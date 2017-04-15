@@ -45,7 +45,7 @@ namespace Enforcer5.Helpers
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
 
-        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);
+        internal delegate Task ChatCallbackMethod(CallbackQuery u, string[] args);
         internal static List<Models.Commands> Commands = new List<Models.Commands>();
         internal static List<Models.CallBacks> CallBacks = new List<Models.CallBacks>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
