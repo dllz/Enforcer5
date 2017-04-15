@@ -16,7 +16,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "menu", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task Menu(Update update, string[] args)
+        public static void Menu(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var chatId = update.Message.Chat.Id;
@@ -27,7 +27,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "dashboard", InGroupOnly = true)]
-        public static async Task Dashboard(Update update, string[] args)
+        public static void Dashboard(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var settings = Redis.db.HashGetAllAsync($"chat:{update.Message.Chat.Id}:settings").Result;
@@ -355,7 +355,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "openLengthMenu", GroupAdminOnly = true)]
-        public static async Task openLengthMenu(CallbackQuery call, string[] args)
+        public static void openLengthMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId);
@@ -365,7 +365,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "namesettingsaction")]
-        public static async Task NameSettingsAction(CallbackQuery call, string[] args)
+        public static void NameSettingsAction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "action";
@@ -395,7 +395,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "namesettings")]
-        public static async Task NameSettings(CallbackQuery call, string[] args)
+        public static void NameSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "enabled";
@@ -418,7 +418,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "textsettingsaction")]
-        public static async Task TextSettingsAction(CallbackQuery call, string[] args)
+        public static void TextSettingsAction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "action";
@@ -448,7 +448,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "textsettings")]
-        public static async Task TextSettings(CallbackQuery call, string[] args)
+        public static void TextSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "enabled";
@@ -471,13 +471,13 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "close")]
-        public static async Task CloseButton(CallbackQuery call, string[] args)
+        public static void CloseButton(CallbackQuery call, string[] args)
         {
              Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, "Good Bye");
         }
 
         [Callback(Trigger = "back")]
-        public static async Task BackTaskButton(CallbackQuery call, string[] args)
+        public static void BackTaskButton(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -487,13 +487,13 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menusettings")]
-        public static async Task MenuChanges(CallbackQuery call, string[] args)
+        public static void MenuChanges(CallbackQuery call, string[] args)
         {
              Bot.Api.AnswerCallbackQueryAsync(call.Id, "Still coming");
         }
 
         [Callback(Trigger = "menuFlood")]
-        public static async Task MenuFlood(CallbackQuery call, string[] args)
+        public static void MenuFlood(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Flood";
@@ -516,7 +516,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuReport")]
-        public static async Task MenuReport(CallbackQuery call, string[] args)
+        public static void MenuReport(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Report";
@@ -539,7 +539,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuWelcome")]
-        public static async Task MenuWelcome(CallbackQuery call, string[] args)
+        public static void MenuWelcome(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Welcome";
@@ -562,7 +562,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuModlist")]
-        public static async Task MenuModlist(CallbackQuery call, string[] args)
+        public static void MenuModlist(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Modlist";
@@ -585,7 +585,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuRules")]
-        public static async Task MenuRules(CallbackQuery call, string[] args)
+        public static void MenuRules(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Rules";
@@ -608,7 +608,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuExtra")]
-        public static async Task MenuExtra(CallbackQuery call, string[] args)
+        public static void MenuExtra(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Extra";
@@ -631,7 +631,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuAbout")]
-        public static async Task MenuAbout(CallbackQuery call, string[] args)
+        public static void MenuAbout(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "About";
@@ -654,7 +654,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuRtl")]
-        public static async Task MenuRtl(CallbackQuery call, string[] args)
+        public static void MenuRtl(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Rtl";
@@ -684,7 +684,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuArab")]
-        public static async Task MenuArab(CallbackQuery call, string[] args)
+        public static void MenuArab(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "Arab";
@@ -714,7 +714,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuDimWarn")]
-        public static async Task menuDimWarn(CallbackQuery call, string[] args)
+        public static void menuDimWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -733,7 +733,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuRaiseWarn")]
-        public static async Task menuRaiseWarn(CallbackQuery call, string[] args)
+        public static void menuRaiseWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -744,7 +744,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "menuActionWarn")]
-        public static async Task menuActionWarn(CallbackQuery call, string[] args)
+        public static void menuActionWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "type";
@@ -767,7 +767,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "openFloodMenu", GroupAdminOnly = true)]
-        public static async Task openFloodMenu(CallbackQuery call, string[] args)
+        public static void openFloodMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -777,7 +777,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "openMediaMenu", GroupAdminOnly = true)]
-        public static async Task openMediaMenu(CallbackQuery call, string[] args)
+        public static void openMediaMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -787,7 +787,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
-        public static async Task openLangMenu(CallbackQuery call, string[] args)
+        public static void openLangMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId);
@@ -797,7 +797,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
-        public static async Task changeLang(CallbackQuery call, string[] args)
+        public static void changeLang(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var newLang = args[2];
@@ -809,7 +809,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodSettings")]
-        public static async Task floodSettings(CallbackQuery call, string[] args)
+        public static void floodSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -817,7 +817,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "flooddim")]
-        public static async Task flooddim(CallbackQuery call, string[] args)
+        public static void flooddim(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -836,7 +836,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodraise")]
-        public static async Task floodraise(CallbackQuery call, string[] args)
+        public static void floodraise(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -847,7 +847,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodaction")]
-        public static async Task floodaction(CallbackQuery call, string[] args)
+        public static void floodaction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "ActionFlood";
@@ -870,7 +870,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodtext")]
-        public static async Task floodtext(CallbackQuery call, string[] args)
+        public static void floodtext(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "text";
@@ -892,7 +892,7 @@ namespace Enforcer5
             }
         }
         [Callback(Trigger = "floodsticker")]
-        public static async Task floodsticker(CallbackQuery call, string[] args)
+        public static void floodsticker(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "sticker";
@@ -915,7 +915,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodimage")]
-        public static async Task floodimage(CallbackQuery call, string[] args)
+        public static void floodimage(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "image";
@@ -938,7 +938,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodvideo")]
-        public static async Task floodvideo(CallbackQuery call, string[] args)
+        public static void floodvideo(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "video";
@@ -961,7 +961,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "floodgif")]
-        public static async Task floodgif(CallbackQuery call, string[] args)
+        public static void floodgif(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "gif";
@@ -984,7 +984,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediaDimWarn")]
-        public static async Task mediaDimWarn(CallbackQuery call, string[] args)
+        public static void mediaDimWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -1003,7 +1003,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediaRaiseWarn")]
-        public static async Task mediaRaiseWarn(CallbackQuery call, string[] args)
+        public static void mediaRaiseWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -1014,7 +1014,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediatext")]
-        public static async Task mediatext(CallbackQuery call, string[] args)
+        public static void mediatext(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "text";
@@ -1043,7 +1043,7 @@ namespace Enforcer5
             }
         }
         [Callback(Trigger = "mediasticker")]
-        public static async Task mediasticker(CallbackQuery call, string[] args)
+        public static void mediasticker(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "sticker";
@@ -1073,7 +1073,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediaimage")]
-        public static async Task mediaimage(CallbackQuery call, string[] args)
+        public static void mediaimage(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "image";
@@ -1103,7 +1103,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediavideo")]
-        public static async Task mediavideo(CallbackQuery call, string[] args)
+        public static void mediavideo(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "video";
@@ -1133,7 +1133,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediagif")]
-        public static async Task mediagif(CallbackQuery call, string[] args)
+        public static void mediagif(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "gif";
@@ -1163,7 +1163,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediacontact")]
-        public static async Task mediacontact(CallbackQuery call, string[] args)
+        public static void mediacontact(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "contact";
@@ -1193,7 +1193,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediafile")]
-        public static async Task mediafile(CallbackQuery call, string[] args)
+        public static void mediafile(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "file";
@@ -1223,7 +1223,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "medialink")]
-        public static async Task medialink(CallbackQuery call, string[] args)
+        public static void medialink(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "link";
@@ -1253,7 +1253,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediavoice")]
-        public static async Task mediavoice(CallbackQuery call, string[] args)
+        public static void mediavoice(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "voice";
@@ -1283,7 +1283,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "mediaaudio")]
-        public static async Task mediaaudio(CallbackQuery call, string[] args)
+        public static void mediaaudio(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "audio";
@@ -1313,7 +1313,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "opennsfwmenu")]
-        public static async Task openNSFWMenu(CallbackQuery call, string[] args)
+        public static void openNSFWMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -1322,7 +1322,7 @@ namespace Enforcer5
              Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
         [Callback(Trigger = "nsfwaction")]
-        public static async Task nsfwAction(CallbackQuery call, string[] args)
+        public static void nsfwAction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "action";
@@ -1345,7 +1345,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "nsfwsettings")]
-        public static async Task nsfwsettings(CallbackQuery call, string[] args)
+        public static void nsfwsettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var option = "activated";

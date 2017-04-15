@@ -16,7 +16,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        public static async Task IsNSFWImage(long chatId, Message msg)
+        public static void IsNSFWImage(long chatId, Message msg)
         {
             var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
             if (watch) return;
@@ -56,16 +56,16 @@ namespace Enforcer5
                                 {
                                     var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
-                                    await Methods.BanUser(chatId, msg.From.Id, lang);
+                                    Methods.BanUser(chatId, msg.From.Id, lang);
                                     Methods.SaveBan(msg.From.Id, "NSFWImage");
-                                    await Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                    Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
                                 }
                                 else
                                 {
                                     var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
-                                    await Methods.KickUser(chatId, msg.From.Id, lang);
-                                    await Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                    Methods.KickUser(chatId, msg.From.Id, lang);
+                                    Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
                                 }
                             }
                         }
@@ -75,8 +75,8 @@ namespace Enforcer5
                 {
                     if (e.Message.Contains("401"))
                     {
-                        await genNewToken(chatId);
-                        await Bot.SendReply("Your api key expired, a new one has been auto generated", msg);
+                        genNewToken(chatId);
+                        Bot.SendReply("Your api key expired, a new one has been auto generated", msg);
                     }
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
@@ -84,7 +84,7 @@ namespace Enforcer5
             }
         }
 
-        public static async Task genNewToken(long chatId, bool sendOutput = false)
+        public static void genNewToken(long chatId, bool sendOutput = false)
         {
             var data = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
             var appId = data.Where(e => e.Name.Equals("appId")).FirstOrDefault();
@@ -106,7 +106,7 @@ namespace Enforcer5
                     //var result = JsonConvert.DeserializeObject<ClarifaiOutput>(res);
                     try
                     {
-                        await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
+                        Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
                     }
                     catch (Exception e)
                     {
@@ -129,12 +129,12 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "genapi", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task GenerateNewApi(Update update, string[] args)
+        public static void GenerateNewApi(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                await genNewToken(update.Message.Chat.Id, true);
+                genNewToken(update.Message.Chat.Id, true);
             }
             catch (Exception e)
             {
@@ -144,14 +144,14 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setAppId", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task SetClient(Update update, string[] args)
+        public static void SetClient(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", args[1]);
-                await Bot.SendReply("App ID key updated", update);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", args[1]);
+                Bot.SendReply("App ID key updated", update);
             }
             catch (Exception e)
             {
@@ -161,14 +161,14 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setSecret", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task SetSecret(Update update, string[] args)
+        public static void SetSecret(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", args[1]);
-                await Bot.SendReply("App secret key updated", update);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", args[1]);
+                Bot.SendReply("App secret key updated", update);
             }
             catch (Exception e)
             {
@@ -178,32 +178,32 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "authnsfw", InGroupOnly = true, GlobalAdminOnly = true)]
-        public static async Task autherisensfwgroup(Update update, string[] args)
+        public static void autherisensfwgroup(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "yes");
-            await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
-            await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
-            await Bot.SendReply("Activated: make sure api key is set", update);
+            Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "yes");
+            Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
+            Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
+            Bot.SendReply("Activated: make sure api key is set", update);
         }
         [Command(Trigger = "deauthnsfw", InGroupOnly = true, GlobalAdminOnly = true)]
-        public static async Task Deautherisensfwgroup(Update update, string[] args)
+        public static void Deautherisensfwgroup(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "no");
-            await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
-            await Bot.SendReply("Deactivated", update);
+            Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "no");
+            Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
+            Bot.SendReply("Deactivated", update);
         }
 
         [Command(Trigger = "nsfwalert", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task NSFWAdminAlert(Update update, string[] args)
+        public static void NSFWAdminAlert(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                await Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "adminAlert", args[1]);
-                await Bot.SendReply("Admin alert updated", update);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "adminAlert", args[1]);
+                Bot.SendReply("Admin alert updated", update);
             }
             catch (Exception e)
             {

@@ -72,7 +72,7 @@ namespace Enforcer5.Helpers
 #endif
 
             Api = new TelegramBotClient(TelegramAPIKey);
-            await Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
+             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);
 
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
@@ -220,7 +220,7 @@ namespace Enforcer5.Helpers
                 
         //}
 
-        internal static async Task<Message> Send(string message, long id, bool clearKeyboard = false,
+        internal static Message Send(string message, long id, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             try
@@ -230,18 +230,18 @@ namespace Enforcer5.Helpers
                 if (clearKeyboard)
                 {
                     var menu = new ReplyKeyboardHide {HideKeyboard = true};
-                    return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode);
+                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
+                        parseMode: parseMode).Result;
                 }
                 else if (customMenu != null)
                 {
-                    return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
+                    return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
                         disableWebPagePreview: true,
-                        parseMode: parseMode);
+                        parseMode: parseMode).Result;
                 }
                 else
                 {
-                    return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                    return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
                 }
             }
             catch (ApiRequestException e)
@@ -251,7 +251,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode:ParseMode.Default);
+                        return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode:ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -275,7 +275,7 @@ namespace Enforcer5.Helpers
                         {
                             word = $"{word}{messages[i]}";
                         }
-                        await Send(word, id);
+                        Send(word, id);
                     }
 
                 }
@@ -283,7 +283,7 @@ namespace Enforcer5.Helpers
                 {
                     if (e.ErrorCode == 112)
                     {
-                            return await Bot.Send("The markdown in this text is broken", id);
+                            return Bot.Send("The markdown in this text is broken", id);
                     }
                     else if (e.ErrorCode == 403)
                     {
@@ -296,12 +296,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                         };
-                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), id, customMenu:Key.CreateMarkupFromMenu(startMe));
+                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), id, customMenu:Key.CreateMarkupFromMenu(startMe));
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", id);
-                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", id);
+                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)
@@ -322,7 +322,7 @@ namespace Enforcer5.Helpers
             }
 
         }
-        internal static async Task<Message> Send(string message, Update chatUpdate, bool clearKeyboard = false,
+        internal static Message Send(string message, Update chatUpdate, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             var id = chatUpdate.Message.Chat.Id;
@@ -334,17 +334,17 @@ namespace Enforcer5.Helpers
                 if (clearKeyboard)
                 {
                     var menu = new ReplyKeyboardHide { HideKeyboard = true };
-                    return await Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode);
+                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
+                        parseMode: parseMode).Result;
                 }
                 else if (customMenu != null)
                 {
-                    return await Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
-                        parseMode: parseMode);
+                    return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
+                        parseMode: parseMode).Result;
                 }
                 else
                 {
-                    return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode);
+                    return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
                 }
             }
             catch (ApiRequestException e)
@@ -354,7 +354,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                        return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -378,7 +378,7 @@ namespace Enforcer5.Helpers
                         {
                             word = $"{word}{messages[i]}";
                         }
-                        await Send(word, chatUpdate);
+                        Send(word, chatUpdate);
                     }
 
                 }
@@ -389,12 +389,12 @@ namespace Enforcer5.Helpers
                             if (chatUpdate.Message != null && chatUpdate.Message.Chat.Title != null)
                             {
                                 var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
-                                return await Bot.SendReply(
+                                return Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), chatUpdate);
                             }
                             else
                             {
-                                return await Bot.SendReply("The markdown in this text is broken", chatUpdate);
+                                return Bot.SendReply("The markdown in this text is broken", chatUpdate);
                             }
                         }
                         else if (e.ErrorCode == 403)
@@ -408,12 +408,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                             };
-                            return await Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatUpdate, Key.CreateMarkupFromMenu(startMe));
+                            return Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatUpdate, Key.CreateMarkupFromMenu(startMe));
                         }
                         else
                         {
-                            await Bot.SendReply($"{e.ErrorCode}\n{e.Message}\n 12", chatUpdate);
-                            return await Bot.Send($"3\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}\n 12", chatUpdate);
+                            return  Bot.Send($"3\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                         }                        
                     }
                     catch (ApiRequestException ex)
@@ -435,12 +435,12 @@ namespace Enforcer5.Helpers
 
         }
 
-        internal static async Task<Message> SendReply(string message, Message msg)
+        internal static Message SendReply(string message, Message msg)
         {
             MessagesSent++;
             try
             {
-                return await Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
+                return Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
             }
             catch (ApiRequestException e)
             {
@@ -449,7 +449,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(msg.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                        return Api.SendTextMessageAsync(msg.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -473,21 +473,21 @@ namespace Enforcer5.Helpers
                             {
                                 word = $"{word}{messages[i]}";
                             }
-                            await SendReply(word, msg);
+                            SendReply(word, msg);
                         }
 
                 }
                 if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return await Send(message, msg.Chat.Id);
+                    return Send(message, msg.Chat.Id);
 
                 }
                 try
                 {
                     if (e.ErrorCode == 112)
                     {
-                        return await Bot.Send("The markdown in this text is broken", msg.Chat.Id);
+                        return Bot.Send("The markdown in this text is broken", msg.Chat.Id);
                     }
                     else if (e.ErrorCode == 403)
                     {
@@ -500,12 +500,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                         };
-                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Chat.Id);
-                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Chat.Id);
+                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)
@@ -525,12 +525,12 @@ namespace Enforcer5.Helpers
                 return null;
             }
         }
-        internal static async Task<Message> SendReply(string message, long chatid, int msgid)
+        internal static Message SendReply(string message, long chatid, int msgid)
         {
             MessagesSent++;
             try
             {
-                return await Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true);
+                return Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
             }
             catch (ApiRequestException e)
             {
@@ -539,7 +539,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(chatid, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                        return Api.SendTextMessageAsync(chatid, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -554,7 +554,7 @@ namespace Enforcer5.Helpers
                 if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return await Send(message, chatid);
+                    return Send(message, chatid);
 
                 }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
@@ -571,7 +571,7 @@ namespace Enforcer5.Helpers
                             {
                                 word = $"{word}{messages[i]}";
                             }
-                            await SendReply(word, chatid, msgid);
+                            SendReply(word, chatid, msgid);
                         }
 
                     }
@@ -589,7 +589,7 @@ namespace Enforcer5.Helpers
                 {
                     if (e.ErrorCode == 112)
                     {
-                        return await Bot.Send("The markdown in this text is broken", chatid);
+                        return Bot.Send("The markdown in this text is broken", chatid);
                     }
                     else if (e.ErrorCode == 403)
                     {
@@ -602,12 +602,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                         };
-                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatid, customMenu: Key.CreateMarkupFromMenu(startMe));
+                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatid, customMenu: Key.CreateMarkupFromMenu(startMe));
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", chatid);
-                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", chatid);
+                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)
@@ -627,12 +627,12 @@ namespace Enforcer5.Helpers
                 return null;
             }
         }
-        internal static async Task<Message> SendReply(string message, Update msg)
+        internal static Message SendReply(string message, Update msg)
         {
             MessagesSent++;
             try
             {
-                return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true);
+                return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
             }
             catch (ApiRequestException e)
             {
@@ -641,7 +641,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                        return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -656,7 +656,7 @@ namespace Enforcer5.Helpers
                 if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return await Send(message, msg);
+                    return Send(message, msg);
 
                 }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
@@ -673,7 +673,7 @@ namespace Enforcer5.Helpers
                             {
                                 word = $"{word}{messages[i]}";
                             }
-                            await SendReply(word, msg);
+                            SendReply(word, msg);
                         }
 
                     }
@@ -691,7 +691,7 @@ namespace Enforcer5.Helpers
                 {
                     if (e.ErrorCode == 112)
                     {
-                        return await Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
+                        return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
                     }
                     else if (e.ErrorCode == 403)
                     {
@@ -704,12 +704,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                         };
-                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
-                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
+                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)
@@ -729,12 +729,12 @@ namespace Enforcer5.Helpers
                 return null;
             }
         }
-        internal static async Task<Message> SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
+        internal static Message SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
             MessagesSent++;
             try
             {
-                return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup: keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true);
+                return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup: keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
             }
             catch (ApiRequestException e)
             {
@@ -743,7 +743,7 @@ namespace Enforcer5.Helpers
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
                     {
-                        return await Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default);
+                        return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
                     }
                     catch (ApiRequestException ex)
                     {
@@ -755,7 +755,7 @@ namespace Enforcer5.Helpers
                 if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return await Send(message, msg, false, keyboard);
+                    return Send(message, msg, false, keyboard);
 
                 }
                 if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
@@ -772,7 +772,7 @@ namespace Enforcer5.Helpers
                             {
                                 word = $"{word}{messages[i]}";
                             }
-                            await SendReply(word, msg);
+                            SendReply(word, msg);
                         }
 
                     }                    
@@ -790,7 +790,7 @@ namespace Enforcer5.Helpers
                 {
                     if (e.ErrorCode == 112)
                     {
-                        return await Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
+                        return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
                     }
                     else if (e.ErrorCode == 403)
                     {
@@ -803,12 +803,12 @@ namespace Enforcer5.Helpers
                                         url: $"https://t.me/{Bot.Me.Username}")
                                 }
                         };
-                        return await Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
                     }
                     else
                     {
-                        await Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
-                        return await Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
+                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
                 catch (ApiRequestException ex)

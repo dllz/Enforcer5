@@ -121,13 +121,13 @@ namespace Enforcer5.Handlers
 
         }
 
-        internal static async Task UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
+        internal static void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
             
             var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
             var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
             using (var fs = new FileStream(newFilePath, FileMode.Create))
-                await Bot.Api.GetFileAsync(fileid, fs);
+                 Bot.Api.GetFileAsync(fileid, fs);
             //ok, we have the file.  Now we need to determine the language, scan it and the original file.
             var newFileErrors = new List<LanguageError>();
             //first, let's load up the English file, which is our master file
@@ -183,7 +183,7 @@ namespace Enforcer5.Handlers
             }
 
             //send the validation result
-            await Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
+             Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
             Thread.Sleep(500);
 
 
@@ -196,12 +196,12 @@ namespace Enforcer5.Handlers
                 new InlineKeyboardButton($"Old", $"upload:{id}:current")
             };
                 var menu = new InlineKeyboardMarkup(buttons.ToArray());
-                await Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
+                 Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
                     replyMarkup: menu);
             }
             else
             {
-                await Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
+                 Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
             }
         }
 

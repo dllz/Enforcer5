@@ -12,7 +12,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "ping")]
-        public static async Task Ping(Update update, string[] args)
+        public static void Ping(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message);
             try
@@ -20,10 +20,10 @@ namespace Enforcer5
                 var ts = DateTime.UtcNow - update.Message.Date;
                 var send = DateTime.UtcNow;
                 var message = Methods.GetLocaleString(lang.Doc, "PingInfo", $"{ts:mm\\:ss\\.ff}\n{Program.MessagePxPerSecond} MAX IN | {Program.MessageTxPerSecond} MAX OUT");
-                var result = Bot.Send(message, update.Message.Chat.Id).Result;
+                var result = Bot.Send(message, update.Message.Chat.Id);
                 var second  = DateTime.UtcNow - send;
                 message += "\n" + Methods.GetLocaleString(lang.Doc, "Ping2", $"{second:mm\\:ss\\.ff}");
-                await Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId, message);
+                 Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId, message);
             }
             catch (Exception e)
             {
@@ -32,33 +32,33 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "getCommands")]
-        public static async Task GetCommands(Update update, string[] args)
+        public static void GetCommands(Update update, string[] args)
         {
             var comList = string.Join("\n", Bot.Commands.Select(e => e.Trigger));
-            await Bot.SendReply(comList, update);
+             Bot.SendReply(comList, update);
         }
 
         [Command(Trigger = "start")]
-        public static async Task BotStarted(Update update, string[] args)
+        public static void BotStarted(Update update, string[] args)
         {
             if (update.Message.Chat.Type == ChatType.Private)
             {
-                await Redis.db.HashIncrementAsync("bot:general", "users");
-                await Bot.Send(
+                 Redis.db.HashIncrementAsync("bot:general", "users");
+                 Bot.Send(
                     "Welcome to Enforcer.\nPlease send /getCommands to get a command list.\n/help for more information", update);
-                await Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
+                 Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
             }
         }
 
         [Command(Trigger = "helplist")]
-        public static async Task HelpList(Update update, string[] args)
+        public static void HelpList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+             Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
         }
 
         [Command(Trigger = "help")]
-        public static async Task Help(Update update, string[] args)
+        public static void Help(Update update, string[] args)
         {
             var command = -1;
             var request = "";
@@ -83,7 +83,7 @@ namespace Enforcer5
                             {
                                 text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
                             }
-                            await Bot.SendReply(text, update);
+                             Bot.SendReply(text, update);
                             return;
                         }
                     }
@@ -91,8 +91,8 @@ namespace Enforcer5
             }           
             if (command == -1)
             {
-                await Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
-                await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                 Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                 Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
             }
             else if (command == 0)
             {
@@ -105,9 +105,9 @@ namespace Enforcer5
                 catch (Exception e)
                 {
                     text = Methods.GetLocaleString(lang, "helpNoRequest");
-                    await Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                     Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                 }
-                await Bot.SendReply(text, update);                
+                 Bot.SendReply(text, update);                
             }           
         }
 

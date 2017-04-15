@@ -20,7 +20,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "admin", InGroupOnly = true)]
-        public static async Task Admin(Update update, string[] args)
+        public static void Admin(Update update, string[] args)
         {
             if (Methods.IsGroupAdmin(update))
             {
@@ -71,7 +71,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task AdminOff(Update update, string[] args)
+        public static void AdminOff(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userId = Methods.GetUserId(update, args);
@@ -80,7 +80,7 @@ namespace Enforcer5
              Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task AdminOn(Update update, string[] args)
+        public static void AdminOn(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userId = Methods.GetUserId(update, args);
@@ -90,7 +90,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task Solved(Update update, string[] args)
+        public static void Solved(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (update.Message.ReplyToMessage != null)
@@ -229,7 +229,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async Task ReportOn(Update update, string[] args)
+        public static void ReportOn(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
@@ -238,7 +238,7 @@ namespace Enforcer5
              Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
         }
         [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
-        public static async Task ReportOff(Update update, string[] args)
+        public static void ReportOff(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
@@ -247,7 +247,7 @@ namespace Enforcer5
              Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
         }
 
-        private static async Task SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
+        private static void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
@@ -288,7 +288,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
+                                false, Key.CreateMarkupFromMenu(solvedMenu));
                         }
                         else
                         {
@@ -306,7 +306,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
+                                false, Key.CreateMarkupFromMenu(solvedMenu));
                         }
                     }
                     else
@@ -335,7 +335,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
+                                false, Key.CreateMarkupFromMenu(solvedMenu));
                         }
                         else
                         {
@@ -355,7 +355,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu)).Result;
+                                false, Key.CreateMarkupFromMenu(solvedMenu));
                         }
                     }
                     if (result != null)
@@ -423,7 +423,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "banflag", GroupAdminOnly = true)]
-        public static async Task BanFlag(CallbackQuery call, string[] args)
+        public static void BanFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
@@ -451,7 +451,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
-        public static async Task KickFlag(CallbackQuery call, string[] args)
+        public static void KickFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
@@ -464,7 +464,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]
-        public static async Task WarnFlag(CallbackQuery call, string[] args)
+        public static void WarnFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
@@ -509,7 +509,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
-        public static async Task SolveFlag(CallbackQuery call, string[] args)
+        public static void SolveFlag(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatid = long.Parse(args[1]);

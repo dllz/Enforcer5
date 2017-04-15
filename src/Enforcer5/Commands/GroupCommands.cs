@@ -18,7 +18,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "maxnl",  InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task MaxNameLength(Update update, string[] args)
+        public static void MaxNameLength(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int chars;
@@ -31,7 +31,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
         }
         [Command(Trigger = "maxtl", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task MaxTextLength(Update update, string[] args)
+        public static void MaxTextLength(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int chars;
@@ -44,7 +44,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
         }
         [Command(Trigger = "maxl", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task MaxLines(Update update, string[] args)
+        public static void MaxLines(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int chars;
@@ -58,7 +58,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "rules", InGroupOnly = true)]
-        public static async Task Rules(Update update, string[] args)
+        public static void Rules(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetRules(update.Message.Chat.Id, lang);
@@ -74,7 +74,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setrules", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task SetRules(Update update, string[] args)
+        public static void SetRules(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
@@ -84,7 +84,7 @@ namespace Enforcer5
                 {
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", input);
-                   var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
+                   var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "RulesSet"));
                 }
                 catch (AggregateException e)
@@ -99,7 +99,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "addrule", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task AddRule(Update update, string[] args)
+        public static void AddRule(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
@@ -110,7 +110,7 @@ namespace Enforcer5
                     var rules = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:rules").Result;
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", $"{rules}\n{input}");
-                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
+                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "RulesSet"));
                 }
                 catch (AggregateException e)
@@ -125,7 +125,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "about", InGroupOnly = true)]
-        public static async Task About(Update update, string[] args)
+        public static void About(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var chatId = update.Message.Chat.Id;
@@ -142,7 +142,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setabout", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task SetAbout(Update update, string[] args)
+        public static void SetAbout(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
@@ -152,7 +152,7 @@ namespace Enforcer5
                 {
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:about", input);
-                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.Result.MessageId,
+                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "AboutSet"));
                 }
                 catch (AggregateException e)
@@ -167,7 +167,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "adminlist", InGroupOnly = true)]
-        public static async Task AdminList(Update update, string[] args)
+        public static void AdminList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
@@ -188,7 +188,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]
-        public static async Task SaveMessage(Update update, string[] args)
+        public static void SaveMessage(Update update, string[] args)
         {
             var msgID = update.Message.ReplyToMessage.MessageId;
             var saveTo = update.Message.From.Id;
@@ -205,7 +205,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "id")]
-        public static async Task GetId(Update update, string[] args)
+        public static void GetId(Update update, string[] args)
         {
             long id;
             string user = "";
@@ -265,7 +265,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "support")]
-        public static async Task Support(Update update, string[] args)
+        public static void Support(Update update, string[] args)
         {
             int msgToReplyTo;
             if (update.Message.ReplyToMessage != null)
@@ -282,7 +282,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task User(Update update, string[] args)
+        public static void User(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -317,14 +317,14 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "me")]
-        public static async Task Me(Update update, string[] args)
+        public static void Me(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
                 var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-                await Bot.Send(text, update.Message.From.Id);
+                Bot.Send(text, update.Message.From.Id);
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
@@ -341,7 +341,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extra", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task Extra(Update update, string[] args)
+        public static void Extra(Update update, string[] args)
         {
             if (args[1] == null)
                 return;
@@ -361,7 +361,7 @@ namespace Enforcer5
                     try
                     {
                         var res = Bot.SendReply(text, update);
-                        var result = res.Result;
+                        var result = res;
                         var hash = $"chat:{update.Message.Chat.Id}:extra";
                         Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                         Redis.db.HashSetAsync(hash, words[0], text);
@@ -413,7 +413,7 @@ namespace Enforcer5
                         try
                         {
                             var res = Bot.SendReply(text, update);
-                            var result = res.Result;
+                            var result = res;
                             var hash = $"chat:{update.Message.Chat.Id}:extra";
                             Redis.db.HashSetAsync($"{hash}:{words[0]}", "mediaid", toSave);
                             Redis.db.HashSetAsync(hash, words[0], text);
@@ -478,7 +478,7 @@ namespace Enforcer5
                 try
                 {
                     var res = Bot.SendReply(text, update);
-                    var result = res.Result;
+                    var result = res;
                     var hash = $"chat:{update.Message.Chat.Id}:extra";
                     Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                     Redis.db.HashSetAsync(hash, words[0], text);
@@ -508,7 +508,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extralist", InGroupOnly = true)]
-        public static async Task ExtraList(Update update, string[] args)
+        public static void ExtraList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
@@ -526,7 +526,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "extradel", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task ExtraDelete(Update update, string[] args)
+        public static void ExtraDelete(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             if (args[1] != null)
@@ -545,7 +545,7 @@ namespace Enforcer5
         } 
 
         [Command(Trigger = "link", InGroupOnly = true)]
-        public static async Task Link(Update update, string[] args)
+        public static void Link(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
@@ -560,7 +560,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "setlink", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task SetLink(Update update, string[] args)
+        public static void SetLink(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var link = "";
@@ -586,7 +586,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "status", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task Status(Update update, string[] args)
+        public static void Status(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userId = 0;
@@ -651,7 +651,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "welcome", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task SetWelcome(Update update, string[] args)
+        public static void SetWelcome(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var chatId = update.Message.Chat.Id;
@@ -659,7 +659,7 @@ namespace Enforcer5
             {
                 if (!string.IsNullOrEmpty(args[1]))
                 {
-                    await Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "false");
+                    Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "false");
                     if (update.Message.ReplyToMessage != null)
                     {
                         var repliedTo = Methods.GetMediaType(update.Message.ReplyToMessage);
@@ -717,7 +717,7 @@ namespace Enforcer5
                         try
                         {
                             var res = Bot.SendReply(args[1], update);
-                            var result =  Bot.Api.EditMessageTextAsync(chatId, res.Result.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                            var result =  Bot.Api.EditMessageTextAsync(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
                         }
                         catch (AggregateException e)
                         {
@@ -748,7 +748,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task DisbleMediaExcempt(Update update, string[] args)
+        public static void DisbleMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userId = update.Message.From.Id;
@@ -761,7 +761,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task EnableMediaExcempt(Update update, string[] args)
+        public static void EnableMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userId = update.Message.From.Id;
@@ -775,7 +775,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "check", InGroupOnly = true, GroupAdminOnly = true)]
-        public static async Task CheckGroupUser(Update update, string[] args)
+        public static void CheckGroupUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -805,7 +805,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "elevate", InGroupOnly = true)]
-        public static async Task ElevateUser(Update update, string[] args)
+        public static void ElevateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -852,7 +852,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "deelevate", InGroupOnly = true)]
-        public static async Task deElavateUser(Update update, string[] args)
+        public static void deElavateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
@@ -884,7 +884,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "elevatelog", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task ElevateLog(Update update, string[] args)
+        public static void ElevateLog(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
@@ -892,7 +892,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "auth", InGroupOnly = true)]
-        public static async Task AuthUser(Update update, string[] args)
+        public static void AuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
             var userid = Methods.GetUserId(update, args);
@@ -910,7 +910,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "blockelevate", GroupAdminOnly = true, InGroupOnly = true)]
-        public static async Task Blockelevate(Update update, string[] args)
+        public static void Blockelevate(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
             var userid = Methods.GetUserId(update, args);
@@ -928,7 +928,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "deauth", InGroupOnly = true)]
-        public static async Task deAuthUser(Update update, string[] args)
+        public static void deAuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
             var userid = Methods.GetUserId(update, args);
@@ -944,7 +944,7 @@ namespace Enforcer5
             }
         }
 
-        public static async Task SendExtra(Update update, string[] args)
+        public static void SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
@@ -982,54 +982,54 @@ namespace Enforcer5
                         switch (specialMethod)
                         {
                             case "voice":
-                                await Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
+                                Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
                                     replyToMessageId: repId);
                                 break;
                             case "video":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
+                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    await Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
+                                     Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
                                         replyToMessageId: repId);
                                 }
                                 break;
                             case "photo":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
+                                     Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    await Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
+                                     Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
                                         replyToMessageId: repId);
                                 }
                                 break;
                             case "gif":
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
+                                     Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                     Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
                                         replyToMessageId: repId);
                                 }
                                 break;
                             default:
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                     Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                     Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
                                         replyToMessageId: repId);
                                 }
                                 break;
@@ -1037,19 +1037,19 @@ namespace Enforcer5
                     }
                     else if (!string.IsNullOrEmpty(hasMedia))
                     {
-                        await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
+                         Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
                             replyToMessageId: repId);
                     }
                     else
                     {
-                        await Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
+                         Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
                             replyToMessageId: repId);
                     }
                 }
                 catch (ApiRequestException e)
                 {
                     Methods.SendError($"Extra corrupted please recreate it, Error message for dev: {e.Message}", update.Message, lang);
-                    //await Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    // Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                 }
             }
         }
@@ -1058,7 +1058,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "userbuttonremwarns", GroupAdminOnly = true)]
-        public static async Task UserButtonRemWarns(CallbackQuery call, string[] args)
+        public static void UserButtonRemWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
@@ -1069,7 +1069,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "userbuttonbanuser", GroupAdminOnly = true)]
-        public static async Task UserButtonsBanUser(CallbackQuery call, string[] args)
+        public static void UserButtonsBanUser(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
@@ -1093,7 +1093,7 @@ namespace Enforcer5
         }
 
         [Callback(Trigger = "userbuttonwarnuser", GroupAdminOnly = true)]
-        public static async Task UserButtonsWarnUser(CallbackQuery call, string[] args)
+        public static void UserButtonsWarnUser(CallbackQuery call, string[] args)
         {
             var userId = int.Parse(args[2]);
             var chatId = long.Parse(args[1]);
@@ -1129,7 +1129,7 @@ namespace Enforcer5
                     Methods.KickUser(call.Message.Chat.Id, userId, lang);
                     Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
                 }
-                await Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
+                 Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
             }
             else
             {

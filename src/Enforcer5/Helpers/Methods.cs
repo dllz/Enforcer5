@@ -23,7 +23,7 @@ namespace Enforcer5.Helpers
 {
     public static class Methods
     {
-        public static async Task<bool> KickUser(long chatId, int userId, XDocument doc)
+        public static bool KickUser(long chatId, int userId, XDocument doc)
         {
 
             try
@@ -592,7 +592,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static async Task<bool> BanUser(long chatId, int userId, XDocument doc)
+        public static bool BanUser(long chatId, int userId, XDocument doc)
         {
             try
             {
@@ -615,7 +615,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static async void AddBanList(long chatId, int userId, string name, string why)
+        public static void AddBanList(long chatId, int userId, string name, string why)
         {
             var hash = $"chat:{chatId}:bannedlist";
             var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();

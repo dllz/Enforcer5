@@ -15,7 +15,7 @@ namespace Enforcer5
 {
     public static class OnMessage
     {
-        public static async Task AntiFlood(Update update)
+        public static void AntiFlood(Update update)
         {
             try
             {
@@ -212,7 +212,7 @@ namespace Enforcer5
             }
         }
 
-        public static async Task AntiLength(Update update)
+        public static void AntiLength(Update update)
         {
             try
             {
@@ -235,7 +235,7 @@ namespace Enforcer5
             }
         }
 
-        public static async Task CheckMedia(Update update)
+        public static void CheckMedia(Update update)
         {
             try
             {                
@@ -379,7 +379,7 @@ namespace Enforcer5
             }
         }
 
-        public static async Task ArabDetection (Update update)
+        public static void ArabDetection (Update update)
         {
             var chatId = update.Message.Chat.Id;
             var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;

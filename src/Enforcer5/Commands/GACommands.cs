@@ -21,7 +21,7 @@ namespace Enforcer5
     public static partial class Commands
     {
         [Command(Trigger = "uploadlanguage", UploadAdmin = true)]
-        public static async Task UploadLang(Update update, string[] args)
+        public static void UploadLang(Update update, string[] args)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "validatelanguages", UploadAdmin = true)]
-        public static async Task ValidateLangs(Update update, string[] args)
+        public static void ValidateLangs(Update update, string[] args)
         {
             var langs = Program.LangaugeList;
 
@@ -100,7 +100,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "getlanguage", UploadAdmin = true)]
-        public static async Task GetLang(Update update, string[] args)
+        public static void GetLang(Update update, string[] args)
         {
             var langs = Program.LangaugeList;
 
@@ -141,7 +141,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "halt", GlobalAdminOnly = true)]
-        public static async Task StopBot(Update update, string[] args)
+        public static void StopBot(Update update, string[] args)
         {
              Bot.SendReply("Stopping bot", update);
             if (update.Message.From.Id != Constants.Devs[0])
@@ -161,7 +161,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "makelangadmin", RequiresReply = true, UploadAdmin = true)]
-       public static async Task MakeLangAdmin(Update update, string[] args)
+       public static void MakeLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
             var res =  Redis.db.SetAddAsync("langAdmins", id).Result;
@@ -169,14 +169,14 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "removelangadmin", RequiresReply = true, UploadAdmin = true)]
-        public static async Task RemoveLangAdmin(Update update, string[] args)
+        public static void RemoveLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
             var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
              Bot.SendReply("Done", update);
         }
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
-        public static async Task reloadLang(Update update, string[] args)
+        public static void reloadLang(Update update, string[] args)
         {
             Program.LangaugeList = null;
             Program.LangaugeList = new List<Language>();
@@ -189,7 +189,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
-        public static async Task GlobalBan(Update update, string[] args)
+        public static void GlobalBan(Update update, string[] args)
         {
             int userId = 0;
             string moti = "";
@@ -237,21 +237,21 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
-        public static async Task AllowPremiumBot(Update update, string[] args)
+        public static void AllowPremiumBot(Update update, string[] args)
         {
              Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
              Bot.SendReply("Activated", update);
         }
 
         [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true)]
-        public static async Task BlockPremiumBot(Update update, string[] args)
+        public static void BlockPremiumBot(Update update, string[] args)
         {
              Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
              Bot.SendReply("Deactivated", update);
         }
 
         [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
-        public static async Task Unrekt(Update update, string[] args)
+        public static void Unrekt(Update update, string[] args)
         {
             int userId = 0;
             string moti = "";
@@ -299,7 +299,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "leave", GlobalAdminOnly = true)]
-        public static async Task LeaveChat(Update update, string[] args)
+        public static void LeaveChat(Update update, string[] args)
         {
             try
             {
@@ -314,7 +314,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "rektlist", GlobalAdminOnly = true)]
-        public static async Task GlobalBanList(Update update, string[] args)
+        public static void GlobalBanList(Update update, string[] args)
         {
             var bans = Redis.db.HashScan("globalBan", default(RedisValue), Int32.MaxValue, 1L);
             var ids = bans.Select(id => id.Name).ToList();
@@ -338,7 +338,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "mediaid", GlobalAdminOnly = true, RequiresReply = true)]
-        public static async Task GetMediaId(Update update, string[] args)
+        public static void GetMediaId(Update update, string[] args)
         {
             var mediaID = Methods.GetMediaId(update.Message);
             
@@ -352,7 +352,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "getuser", GlobalAdminOnly = true)]
-        public static async Task GetUserDetails(Update update, string[] args)
+        public static void GetUserDetails(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             var userid = Methods.GetUserId(update, args);
@@ -368,7 +368,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "look", GlobalAdminOnly = true)]
-        public static async Task Look(Update update, string[] args)
+        public static void Look(Update update, string[] args)
         {
             var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
             StringBuilder res = new StringBuilder();
@@ -386,7 +386,7 @@ namespace Enforcer5
         }
 
         [Command(Trigger = "unlook", GlobalAdminOnly = true)]
-        public static async Task unLook(Update update, string[] args)
+        public static void unLook(Update update, string[] args)
         {
             var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
             foreach (var mem in data)

@@ -14,7 +14,7 @@ namespace Enforcer5
 {
     public static class Service
     {
-        public static async Task Welcome(Message message)
+        public static void Welcome(Message message)
         {
             var chatId = message.Chat.Id;
             var welcomeOn = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Welcome").Result;
@@ -246,7 +246,7 @@ namespace Enforcer5
             return welcome;
         }
 
-        public static async Task BotAdded(Message updateMessage)
+        public static void BotAdded(Message updateMessage)
         {
             var groupBan = Redis.db.HashGetAsync($"groupBan:{updateMessage.Chat.Id}", "banned").Result;
             if (groupBan.Equals("1"))
@@ -341,13 +341,13 @@ namespace Enforcer5
             Redis.db.SetAddAsync("bot:e5groupsid", chatId); 
         }
 
-        public static async Task ResetUser(Message message)
+        public static void ResetUser(Message message)
         {
             var lang = Methods.GetGroupLanguage(message).Doc;
             Methods.UnbanUser(message.Chat.Id, message.NewChatMember.Id, lang);
         }
 
-        public static async Task NewSettings(long chatid)
+        public static void NewSettings(long chatid)
         {
             object[,,] defaultSettings =
             {

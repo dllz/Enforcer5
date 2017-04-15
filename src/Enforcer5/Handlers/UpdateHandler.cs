@@ -13,7 +13,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+#pragma warning disable CS4014 // Because this call is not ed, execution of the current method continues before the call is completed
 namespace Enforcer5.Handlers
 {
 
@@ -32,7 +32,7 @@ namespace Enforcer5.Handlers
             Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
 #endif
         }
-        private static async Task Log(Update update, string text, Models.Commands command = null)
+        private static void Log(Update update, string text, Models.Commands command = null)
         {
             if (text.Equals("text"))
             {
@@ -62,7 +62,7 @@ namespace Enforcer5.Handlers
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }     
         }
-        private static async Task Log(CallbackQuery update, Models.CallBacks command = null)
+        private static void Log(CallbackQuery update, Models.CallBacks command = null)
         {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -82,7 +82,7 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                        await Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 }                
 #endif             
                 new Task(() => { CollectStats(update.Message); }).Start();                
@@ -91,7 +91,7 @@ namespace Enforcer5.Handlers
                 //ignore previous messages
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001076212715)
                 //{
-                //    await Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //     Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 //    Console.WriteLine("LEaving chat");
                 //    return;
                 //}
@@ -173,7 +173,7 @@ namespace Enforcer5.Handlers
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    await command.Method.Invoke(update, args);
+                                     command.Method.Invoke(update, args);
                                 }
                             }
                             else if (update.Message.Text.StartsWith("#"))
@@ -190,7 +190,7 @@ namespace Enforcer5.Handlers
                                     return; ;
                                 }
                                 new Task(() => { Log(update, "extra"); }).Start();
-                                await Task.Run(() => Commands.SendExtra(update, args));
+                                 Task.Run(() => Commands.SendExtra(update, args));
                             }
                             else if (update.Message.Text.StartsWith("@admin"))
                             {
@@ -239,7 +239,7 @@ namespace Enforcer5.Handlers
                                         return;
                                     }
                                     Bot.CommandsReceived++;
-                                    await command.Method.Invoke(update, args);
+                                     command.Method.Invoke(update, args);
                                 }
                             }
                             break;
@@ -308,12 +308,12 @@ namespace Enforcer5.Handlers
                                     new Task(() => { Log(update, "chatMember"); }).Start();
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
-                                        await Service.BotAdded(update.Message);
+                                         Service.BotAdded(update.Message);
                                     }
                                     else
                                     {
-                                        await Service.Welcome(update.Message);
-                                        //await Service.ResetUser(update.Message);
+                                         Service.Welcome(update.Message);
+                                        // Service.ResetUser(update.Message);
                                     }
                                 }
                                 catch (ApiRequestException e)
@@ -414,14 +414,14 @@ namespace Enforcer5.Handlers
                     }
                     try
                     {
-                        await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
+                         Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
                     }
                     catch (Exception et)
                     {
                         Console.WriteLine(et);
                         try
                         {
-                            await Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
+                             Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
                         }
                         catch (Exception e)
                         {
@@ -611,7 +611,7 @@ namespace Enforcer5.Handlers
                 Thread.Sleep(1000);
             }
         }
-        internal static Task<Message> Send(string message, long id, bool clearKeyboard = false,
+        internal static Message Send(string message, long id, bool clearKeyboard = false,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             return Bot.Send(message, id, clearKeyboard, customMenu, parseMode);
@@ -708,7 +708,7 @@ namespace Enforcer5.Handlers
                                 {
                                     Bot.Send(
                                         Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc,
-                                            "userNotAdmin"), update.From.Id).Wait();
+                                            "userNotAdmin"), update.From.Id);
                                     return;
                                 }
                             }
@@ -719,7 +719,7 @@ namespace Enforcer5.Handlers
                         }
                         Bot.CommandsReceived++;
                         new Task(() => { Log(update, callbacks); }).Start();
-                        await callbacks.Method.Invoke(update, args);
+                         callbacks.Method.Invoke(update, args);
                     }
                 }
                 catch (ApiRequestException e)
