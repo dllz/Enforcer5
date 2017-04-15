@@ -15,7 +15,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-#pragma warning disable CS4014
+#pragma warning disable 4014
 namespace Enforcer5
 {
     public static partial class Commands

@@ -262,7 +262,7 @@ namespace Enforcer5
                 }
                 try
                 {
-                     Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
+                    var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
                     Message result;
                     if (!string.IsNullOrEmpty(username))
                     {
@@ -378,15 +378,15 @@ namespace Enforcer5
                 }
                 catch (ApiRequestException e)
                 {
-
+                    Console.WriteLine(e.Message + e.StackTrace);
                 }
                 catch (AggregateException e)
                 {
-
+                    Console.WriteLine(e.Message + e.StackTrace);
                 }
                 catch (Exception e)
                 {
-                    
+                    Console.WriteLine(e.Message + e.StackTrace);
                 }
             }
             var hash = $"flagged:{chatId}:{repId}";
