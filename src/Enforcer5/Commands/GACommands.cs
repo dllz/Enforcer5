@@ -400,7 +400,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         [Callback(Trigger = "validate", UploadAdmin = true)]
-        public static Task validateLang(CallbackQuery query, string[] args)
+        public static void validateLang(CallbackQuery query, string[] args)
         {
             var command = args[0];
             var choice = "";
@@ -410,13 +410,11 @@ namespace Enforcer5
             if (choice == "All")
             {
                 LanguageHelper.ValidateFiles(query.Message.Chat.Id, query.Message.MessageId);
-                return null;
             }
 
             if (args[4] != "base" && args[3] == "All")
             {
                 LanguageHelper.ValidateFiles(query.Message.Chat.Id, query.Message.MessageId, choice);
-                return null;
             }
 
             var vlang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
@@ -424,11 +422,10 @@ namespace Enforcer5
             //var menu = new ReplyKeyboardHide { HideKeyboard = true, Selective = true };
             //Bot.SendTextMessage(id, "", replyToMessageId: update.Message.MessageId, replyMarkup: menu);
             LanguageHelper.ValidateLanguageFile(query.Message.Chat.Id, vlang.FilePath, query.Message.MessageId);
-            return null;
         }
 
         [Callback(Trigger = "getlang", UploadAdmin = true)]
-        public static Task getLang(CallbackQuery query, string[] args)
+        public static void getLang(CallbackQuery query, string[] args)
         {
             var command = args[0];
             var choice = "";
@@ -438,24 +435,21 @@ namespace Enforcer5
             {
                 Bot.ReplyToCallback(query, "One moment...");
                 LanguageHelper.SendAllFiles(query.Message.Chat.Id);
-                return null;
             }
 
             if (args[4] != "base" && args[3] == "All")
             {
                 Bot.ReplyToCallback(query, "One moment...");
                 LanguageHelper.SendBase(choice, query.Message.Chat.Id);
-                return null;
             }
 
             var glang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
             Bot.ReplyToCallback(query, "One moment...");
             LanguageHelper.SendFile(query.Message.Chat.Id, glang.Name);
-            return null;
         }
 
         [Callback(Trigger = "upload", UploadAdmin = true)]
-        public static Task uploadLang(CallbackQuery query, string[] args)
+        public static void uploadLang(CallbackQuery query, string[] args)
         {
             var command = args[0];
             var choice = "";
@@ -464,10 +458,8 @@ namespace Enforcer5
             if (choice == "current")
             {
                 Bot.ReplyToCallback(query, "No action taken.");
-                return null;
             }
             LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
-            return null;
         }       
     }
 }
