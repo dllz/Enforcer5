@@ -12,6 +12,7 @@ using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 #pragma warning disable CS4014
+#pragma warning disable CS0168
 namespace Enforcer5
 {
     public static partial class Commands
@@ -67,8 +68,15 @@ namespace Enforcer5
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void  Warn(Update update, string[] args)
         {
-            if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id)) 
-                return;            
+            try
+            {
+                if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id))
+                    return;
+            }
+            catch (Exception e)
+            {
+                
+            }      
             var num = Redis.db.HashIncrementAsync($"chat:{update.Message.Chat.Id}:warns", update.Message.ReplyToMessage.From.Id, 1).Result;
             var max = 3;
             if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)

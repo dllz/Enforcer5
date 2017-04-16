@@ -16,7 +16,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
-
+#pragma warning disable CS0168
+#pragma warning disable CS0618
 namespace Enforcer5.Handlers
 {
     public static class LanguageHelper
@@ -127,7 +128,7 @@ namespace Enforcer5.Handlers
             var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
             var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
             using (var fs = new FileStream(newFilePath, FileMode.Create))
-                 Bot.Api.GetFileAsync(fileid, fs);
+                  Bot.Api.GetFile(fileid, fs);
             //ok, we have the file.  Now we need to determine the language, scan it and the original file.
             var newFileErrors = new List<LanguageError>();
             //first, let's load up the English file, which is our master file

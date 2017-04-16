@@ -443,7 +443,7 @@ namespace Enforcer5
                 LanguageHelper.SendBase(choice, query.Message.Chat.Id);
             }
 
-            var glang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
+            var glang = Program.LangaugeList.FirstOrDefault(e => e.Name.Equals(choice));
             Bot.ReplyToCallback(query, "One moment...");
             LanguageHelper.SendFile(query.Message.Chat.Id, glang.Name);
         }
