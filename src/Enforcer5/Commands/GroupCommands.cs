@@ -819,7 +819,7 @@ namespace Enforcer5
                 var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
                 var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
-                    var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{userid}").Result;
+                    var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{update.Message.From.Id}").Result;
                 if ((role.Result.Status == ChatMemberStatus.Creator || priv))
                 {
                     Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
@@ -828,7 +828,7 @@ namespace Enforcer5
                         Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
                     Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
                 }                    
-                else if ((!upriv & !blocked.HasValue) & Methods.IsGroupAdmin(update))
+                else if (!upriv & blocked.HasValue == false & Methods.IsGroupAdmin(update))
                 {
                      Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
                      Redis.db.SetAddAsync($"chat:{chat}:modlog",

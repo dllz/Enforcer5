@@ -68,7 +68,7 @@ namespace Enforcer5
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void  Warn(Update update, string[] args)
         {
-           Warn(update.Message.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
+           Warn(update.Message.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id), donenick:Methods.GetNick(update.Message, args, false));
         }
 
         public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string donenick = null)
@@ -123,7 +123,7 @@ namespace Enforcer5
             else
             {
                 var diff = max - num;
-                var text = Methods.GetLocaleString(lang.Doc, "warn", Methods.GetNick(update.Message, args, false), num, max);
+                var text = Methods.GetLocaleString(lang.Doc, "warn", donenick, num, max);
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
