@@ -387,7 +387,7 @@ namespace Enforcer5
             }
             else if (current.Equals("Warn"))
             {
-                 Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "kick");
+                 Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "ban");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);
                  Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                  Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -440,7 +440,7 @@ namespace Enforcer5
             }
             else if (current.Equals("Warn"))
             {
-                 Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "kick");
+                 Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "ban");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);
                  Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                  Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
