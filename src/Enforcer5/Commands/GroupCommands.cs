@@ -819,7 +819,7 @@ namespace Enforcer5
                 var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
                 var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
-                var blocked = Redis.db.SetContainsAsync($"chat:{chat}:blockList", update.Message.From.Id).Result;
+                var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{userid}").Result.HasValue;
                 if ((role.Result.Status == ChatMemberStatus.Creator || priv))
                 {
                     Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
@@ -833,7 +833,7 @@ namespace Enforcer5
                      Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true", TimeSpan.FromMinutes(30));
                      Redis.db.SetAddAsync($"chat:{chat}:modlog",
                         $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
-                     Redis.db.SetAddAsync($"chat:{chat}:blockList", userid);
+                     Redis.db.StringSetAsync($"chat:{chat}:blockList:{userid}", userid, TimeSpan.FromMinutes(31));
                      Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
                 }               
                 
@@ -922,7 +922,7 @@ namespace Enforcer5
             {
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
 
-                 Redis.db.SetAddAsync($"chat:{chat}:blockList", userid);
+                 Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
                  Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
             }
         }
