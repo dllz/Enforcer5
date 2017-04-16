@@ -91,12 +91,12 @@ namespace Enforcer5.Handlers
                 //ignore previous messages
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001076212715)
                 //{
-                //     Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 //    Console.WriteLine("LEaving chat");
                 //    return;
                 //}
-                    
-                
+
+
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == false)
                     return; //toss it
                 //Console.WriteLine("Checking Global Ban");
