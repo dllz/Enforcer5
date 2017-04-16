@@ -122,13 +122,13 @@ namespace Enforcer5.Handlers
 
         }
 
-        internal static void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
+        internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
             
             var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
             var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
             using (var fs = new FileStream(newFilePath, FileMode.Create))
-                  Bot.Api.GetFile(fileid, fs);
+                  await Bot.Api.GetFileAsync(fileid, fs);
             //ok, we have the file.  Now we need to determine the language, scan it and the original file.
             var newFileErrors = new List<LanguageError>();
             //first, let's load up the English file, which is our master file

@@ -129,12 +129,12 @@ namespace Enforcer5
                     Buttons = new List<InlineButton>
                     {
                         new InlineButton(Methods.GetLocaleString(lang.Doc, "resetWarn"),
-                            $"resetwarns:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.From.Id}"),
+                            $"resetwarns:{chatId}:{warnedId}"),
                         new InlineButton(Methods.GetLocaleString(lang.Doc, "removeWarn"),
-                            $"removewarn:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.From.Id}"),
+                            $"removewarn:{chatId}:{warnedId}"),
                     }
                 };
-                Bot.Send(text, update.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                Bot.Send(text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
             }
         }
 
