@@ -147,7 +147,7 @@ namespace Enforcer5
                             return;
                             break;
                         case "Warn":
-                            Commands.Warn(update, null);
+                            Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
                             return;
                             break;
                         case "default":
@@ -202,7 +202,7 @@ namespace Enforcer5
                             Bot.SendReply(Methods.GetLocaleString(lang, "banfornamelength", userid), update);
                             break;
                         case "Warn":
-                            Commands.Warn(update, null);
+                            Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
                             break;
                         case "default":
                             Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
