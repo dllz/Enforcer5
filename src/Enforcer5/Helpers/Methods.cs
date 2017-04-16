@@ -531,7 +531,9 @@ namespace Enforcer5.Helpers
         public static async void IsRekt(Update update)
         {
             if (update.Message.Chat.Type != ChatType.Supergroup)
-                return;                            
+                return;
+            var watch = Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:watch", update.Message.From.Id).Result;
+            if (watch) return;
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
             var name = update.Message.From.FirstName;
             var id = update.Message.From.Id;
@@ -550,8 +552,8 @@ namespace Enforcer5.Helpers
                     var time = isBanned[2].Value;
                     if (update.Message.Chat.Id == Constants.SupportId)
                     {
-                        var notified = isBanned[3].Value;
-                        if (!notified.HasValue)
+                        var notified =  isBanned.Where(e => e.Name.Equals("notified")).FirstOrDefault().Value;
+                        if (!notified.Equals("value"))
                         {
                              Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
                              Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
