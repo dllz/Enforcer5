@@ -347,8 +347,26 @@ namespace Enforcer5
                 return;
             if (!args[1].StartsWith("#"))
                 return;
-            var words = args[1].Contains(" ")
-                ? new[] {args[1].Substring(1, args[1].IndexOf(" ")).Trim(), args[1].Substring(args[1].IndexOf(" ") + 1)}
+			
+			int splitindex = 0;
+			if (args[1].Contains(" ") && args[1].Contains("\n"))
+			{
+				splitindex = args[1].IndexOf(" ") < args[1].IndexOf("\n")
+					? args[1].IndexOf(" ")
+					: args[1].IndexOf("\n");
+			}
+			else if (args[1].Contains(" "))
+			{
+				splitindex = args[1].IndexOf(" ");
+			}
+			else if (args[1].Contains("\n"))
+			{
+				splitindex = args[1].IndexOf("\n");
+			}
+			else if (update.Message.ReplyToMessage == null) return;
+			
+            var words = splitindex != 0
+                ? new[] {args[1].Substring(1, splitindex).Trim(), args[1].Substring(splitindex + 1)}
                 : new[] {args[1].Substring(1).Trim(), null};
             words[0] = $"#{words[0]}";            
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
