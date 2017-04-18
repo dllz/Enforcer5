@@ -866,6 +866,7 @@ namespace Enforcer5.Helpers
 
         public static string GetContentType(Message msg)
         {
+            if (msg.Type == null) return "unknown";
             switch (msg.Type)
             {
                 case MessageType.TextMessage:
@@ -875,6 +876,7 @@ namespace Enforcer5.Helpers
                     return "photo";
                     break;
                 case MessageType.DocumentMessage:
+                    if (msg.Document.MimeType == null) return "unknown";
                     if (msg.Document.MimeType.Equals("video/mp4"))
                     {
                         return "gif";
