@@ -474,12 +474,7 @@ namespace Enforcer5.Handlers
                         Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
-                    }
-                    if (updateMessage.From.Id == 286670453)
-                    {
-                        Redis.db.SetAddAsync("bot:lookaround",
-                            $"{updateMessage.Chat.Title}:{updateMessage.Chat.Id}:{updateMessage.Text}:{updateMessage.Date}");
-                    }
+                    }                  
                     var updated = Redis.db.SetContainsAsync("lenghtUpdate2",updateMessage.Chat.Id).Result;
                     if (!updated)
                     {
