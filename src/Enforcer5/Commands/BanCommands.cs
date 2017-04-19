@@ -68,10 +68,10 @@ namespace Enforcer5
         [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void  Warn(Update update, string[] args)
         {
-           Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id), donenick:Methods.GetNick(update.Message, args, false));
+           Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
         }
 
-        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string donenick = null)
+        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace Enforcer5
             }
             var id = warnedId;
             int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(chatId);
             if (num >= max)
             {
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
@@ -104,26 +104,26 @@ namespace Enforcer5
                     {
                         Methods.BanUser(chatId, id, lang.Doc);
                         var name = targetnick;
-                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                        Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
                         Methods.SaveBan(id, "maxWarn");
                     }
                     catch (AggregateException e)
                     {
-                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
+                        Methods.SendError(e.InnerExceptions[0], chatId, lang.Doc);
                     }
                 }
                 else
                 {
                     Methods.KickUser(chatId, id, lang.Doc);
                     var name = targetnick;
-                    Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
+                    Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
                 }
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
             }
             else
             {
                 var diff = max - num;
-                var text = Methods.GetLocaleString(lang.Doc, "warn", donenick, num, max);
+                var text = Methods.GetLocaleString(lang.Doc, "warn", targetnick, num, max);
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
