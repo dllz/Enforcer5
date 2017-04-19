@@ -208,6 +208,10 @@ namespace Enforcer5.Handlers
                      Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
                 }
             }
+            catch(System.Xml.XmlException XmlExc)
+            {
+                Bot.Api.SendTextMessageAsync(id, "XML error occured!\n\n" + XmlExc, replyToMessageId: msgID);
+            }
             catch(Exception exc)
             {
                 Bot.Api.SendTextMessageAsync(id, "Error occured! Exception:\n\n" + exc, replyToMessageId: msgID);
