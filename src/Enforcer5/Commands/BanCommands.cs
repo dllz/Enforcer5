@@ -98,51 +98,52 @@ namespace Enforcer5
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
                     ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
                     : "kick";
-                if (type.Equals("ban"))
+                switch(type)
                 {
-                    try
-                    {
-                        Methods.BanUser(chatId, id, lang.Doc);
+                    case "ban":
+                        try
+                        {
+                            Methods.BanUser(chatId, id, lang.Doc);
+                            var name = targetnick;
+                            if (update != null)
+                            {
+                                Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                            }
+                            else if (callbackid != 0)
+                            {
+                                var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
+                                Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
+                                Bot.Send(bantext, chatId);
+                            }
+                            else //How should it be possible that there is neither an update nor a callback query?
+                            {
+                                Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                            }
+                            Methods.SaveBan(id, "maxWarn");
+                        }
+                        catch (AggregateException e)
+                        {
+                            Methods.SendError(e.InnerExceptions[0], chatId, lang.Doc);
+                        }
+                        break;
+                        
+                    case "kick":
+                        Methods.KickUser(chatId, id, lang.Doc);
                         var name = targetnick;
                         if (update != null)
                         {
-                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                         }
                         else if (callbackid != 0)
                         {
-                            var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
-                            Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
-                            Bot.Send(bantext, chatId);
+                            var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
+                            Bot.Api.AnswerCallbackQueryAsync(callbackid, kicktext, true);
+                            Bot.Send(kicktext, chatId);
                         }
                         else //How should it be possible that there is neither an update nor a callback query?
                         {
-                            Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                            Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
                         }
-                        Methods.SaveBan(id, "maxWarn");
-                    }
-                    catch (AggregateException e)
-                    {
-                        Methods.SendError(e.InnerExceptions[0], chatId, lang.Doc);
-                    }
-                }
-                else
-                {
-                    Methods.KickUser(chatId, id, lang.Doc);
-                    var name = targetnick;
-                    if (update != null)
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
-                    }
-                    else if (callbackid != 0)
-                    {
-                        var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
-                        Bot.Api.AnswerCallbackQueryAsync(callbackid, kicktext, true);
-                        Bot.Send(kicktext, chatId);
-                    }
-                    else //How should it be possible that there is neither an update nor a callback query?
-                    {
-                        Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
-                    }
                 }
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
             }
