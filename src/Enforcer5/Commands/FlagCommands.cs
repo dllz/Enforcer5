@@ -468,7 +468,10 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
-            BanCommands.Warn(userId, chatId, targetnick: /*more to be added later, I make a break now XD*/);
+            var callId = call.Id;
+            var callFromId = call.From.Id;
+            var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userid})";
+            BanCommands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId);
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
