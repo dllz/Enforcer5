@@ -71,7 +71,7 @@ namespace Enforcer5
            Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
         }
 
-        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null)
+        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, int callbackid = 0, int callbackfromid = 0)
         {
             try
             {
@@ -108,7 +108,13 @@ namespace Enforcer5
                         {
                             Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
                         }
-                        else
+                        else if (callbackid != 0)
+                        {
+                            var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
+                            Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
+                            Bot.Send(bantext, chatId);
+                        }
+                        else //How should it be possible that there is neither an update nor a callback query?
                         {
                             Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
                         }
@@ -127,7 +133,13 @@ namespace Enforcer5
                     {
                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                     }
-                    else
+                    else if (callbackid != 0)
+                    {
+                        var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
+                        Bot.Api.AnswerCallbackQueryAsync(callbackid, kicktext, true);
+                        Bot.Send(kicktext, chatId);
+                    }
+                    else //How should it be possible that there is neither an update nor a callback query?
                     {
                         Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
                     }
@@ -148,7 +160,20 @@ namespace Enforcer5
                             $"removewarn:{chatId}:{warnedId}"),
                     }
                 };
-                Bot.Send(text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                if (update != null)
+                {
+                    Bot.SendReply(text, update.Message, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                }
+                else if (callbackid != 0)
+                {
+                    text = Methods.GetLocaleString(lang, "warnFlag", warnedId, callbackfromid, num, max);
+                    Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
+                    Bot.Send(text, chatId);
+                }
+                else //How should it be possible that there is neither an update nor a callback query?
+                {
+                    Bot.Send(text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                }
             }
         }
 
