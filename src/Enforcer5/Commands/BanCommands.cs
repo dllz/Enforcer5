@@ -144,6 +144,7 @@ namespace Enforcer5
                         {
                             Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
                         }
+                        break;
                 }
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
             }
