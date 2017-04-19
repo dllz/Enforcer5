@@ -104,7 +104,14 @@ namespace Enforcer5
                     {
                         Methods.BanUser(chatId, id, lang.Doc);
                         var name = targetnick;
-                        Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                        if (update != null)
+                        {
+                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                        }
+                        else
+                        {
+                            Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                        }
                         Methods.SaveBan(id, "maxWarn");
                     }
                     catch (AggregateException e)
@@ -116,7 +123,14 @@ namespace Enforcer5
                 {
                     Methods.KickUser(chatId, id, lang.Doc);
                     var name = targetnick;
-                    Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
+                    if (update != null)
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
+                    }
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
+                    }
                 }
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
             }
