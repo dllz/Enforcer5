@@ -127,6 +127,8 @@ namespace Enforcer5.Handlers
         
             try
             {
+            try
+            {
             
                 var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
                 var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
