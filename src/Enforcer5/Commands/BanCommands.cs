@@ -65,10 +65,28 @@ namespace Enforcer5
             
         }
 
-        [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+       [Command(Trigger = "warn", InGroupOnly = true, GroupAdminOnly = true)]
         public static void  Warn(Update update, string[] args)
         {
-           Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
+           if (update.Message.ReplyToMessage != null)
+           {
+                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
+           }
+           else 
+           {
+               try
+               {
+                   var warnedid = Methods.GetUserId(update, args);
+                   var chatid = update.Message.Chat.Id;
+                   
+                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})");
+               }
+               catch (Exception e)
+               {
+                   var lang = Methods.GetGroupLanguage(update.Message);
+                   Methods.SendError(e.Message, update.Message, lang.Doc);
+               }
+           }
         }
 
         public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, int callbackid = 0, int callbackfromid = 0)
