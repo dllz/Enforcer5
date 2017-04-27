@@ -89,7 +89,7 @@ namespace Enforcer5
            }
         }
 
-        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, int callbackid = 0, int callbackfromid = 0)
+        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", int callbackfromid = 0)
         {
             try
             {
@@ -116,18 +116,19 @@ namespace Enforcer5
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
                     ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
                     : "kick";
+                var name = "";
                 switch(type)
                 {
                     case "ban":
                         try
                         {
                             Methods.BanUser(chatId, id, lang.Doc);
-                            var name = targetnick;
+                            name = targetnick;
                             if (update != null)
                             {
                                 Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
                             }
-                            else if (callbackid != 0)
+                            else if (!string.IsNullOrEmpty(callbackid))
                             {
                                 var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
                                 Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
@@ -147,12 +148,12 @@ namespace Enforcer5
                         
                     case "kick":
                         Methods.KickUser(chatId, id, lang.Doc);
-                        var name = targetnick;
+                        name = targetnick;
                         if (update != null)
                         {
                             Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                         }
-                        else if (callbackid != 0)
+                        else if (!string.IsNullOrEmpty(callbackid))
                         {
                             var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
                             Bot.Api.AnswerCallbackQueryAsync(callbackid, kicktext, true);
@@ -182,11 +183,11 @@ namespace Enforcer5
                 };
                 if (update != null)
                 {
-                    Bot.SendReply(text, update.Message, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                    Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
                 }
-                else if (callbackid != 0)
+                else if (!string.IsNullOrEmpty(callbackid))
                 {
-                    text = Methods.GetLocaleString(lang, "warnFlag", warnedId, callbackfromid, num, max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, num, max);
                     Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
                     Bot.Send(text, chatId);
                 }
