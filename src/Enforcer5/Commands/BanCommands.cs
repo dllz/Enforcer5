@@ -320,15 +320,49 @@ namespace Enforcer5
 
         }
 
-        [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Tempban(Update update, string[] args)
         {
-            var userId = update.Message.ReplyToMessage.From.Id;
-            if (userId == Bot.Me.Id || userId == update.Message.From.Id)
-                return;
+            int userId, time;
+            string length;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            int time;
-            if (!int.TryParse(args[1], out time))
+
+            if (update.Message.ReplyToMessage != null) // by reply
+            {
+                userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
+
+                length = args[1].Contains(' ') // length is the first argument after the command
+                    ? args[1].Split(' ')[0]    // so admins can add a reason for the tempban after the time
+                    : args[1];
+
+            }
+            else if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
+            {
+                var user = args[1].Split(' ')[0]; // either username or ID
+                length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
+
+                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                else if (!int.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                    return;
+                }
+                if (userId == Bot.Me.Id) return;
+            }
+            else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
+            {
+                var user = args[1];
+                length = "60"; // Length is 60 since there is definitely no length specified.
+
+                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                    return;
+                }
+            }
+
+            if (!int.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
                 time = 60;
             }
@@ -364,7 +398,7 @@ namespace Enforcer5
 #endif
                 }
             }
-        }          
+        }
     }
 
     public static partial class CallBacks
