@@ -281,7 +281,7 @@ namespace Enforcer5
                 var user = args[1].Split(' ')[0]; // either username or ID
                 length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
 
-                if (user.StartsWith('@')) userId = Methods.ResolveIdFromusername(user);
+                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
                 else if (!int.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
@@ -294,7 +294,7 @@ namespace Enforcer5
                 var user = args[1];
                 length = "60"; // Length is 60 since there is definitely no length specified.
 
-                if (user.StartsWith('@')) userId = Methods.ResolveIdFromusername(user);
+                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
                 else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
