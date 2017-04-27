@@ -373,7 +373,7 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null && words[1] == null)
             {
                 var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
-                    if (!string.IsNullOrEmpty(update.Message.ReplyToMessage.Text))
+                if (!string.IsNullOrEmpty(update.Message.ReplyToMessage.Text))
                 {
                     string text = update.Message.ReplyToMessage.Text;
                     try
@@ -384,7 +384,7 @@ namespace Enforcer5
                         Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                         Redis.db.HashSetAsync(hash, words[0], text);
                         var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
-                            Methods.GetLocaleString(lang, "extraSaved", words[0]));
+                            Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                     }
                     catch (ApiRequestException e)
                     {
@@ -412,14 +412,14 @@ namespace Enforcer5
                     {
                         var toSave = $"###file_id!{type}###:{fileId}";
                         Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
-                        Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
+                        Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                         return;
                     }
                     return;
                 }
                 return;
             }
-            if (update.Message.ReplyToMessage != null && words[1] != null)
+            else if (update.Message.ReplyToMessage != null && words[1] != null)
             {
                 var type = Methods.GetMediaType(update.Message.ReplyToMessage);
                 if (!string.IsNullOrEmpty(type))
@@ -436,7 +436,7 @@ namespace Enforcer5
                             Redis.db.HashSetAsync($"{hash}:{words[0]}", "mediaid", toSave);
                             Redis.db.HashSetAsync(hash, words[0], text);
                             var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
-                                Methods.GetLocaleString(lang, "extraSaved", words[0]));
+                                Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                         }
                         catch (ApiRequestException e)
                         {
@@ -467,7 +467,7 @@ namespace Enforcer5
                             Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
                             var hash = $"chat:{update.Message.Chat.Id}:extra";
                             Redis.db.HashSetAsync($"{hash}:{words[0]}", "caption", words[1]);
-                            Bot.Send(Methods.GetLocaleString(lang, "extraSaved", words[0]), update);
+                            Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                         }
                         catch (ApiRequestException e)
                         {

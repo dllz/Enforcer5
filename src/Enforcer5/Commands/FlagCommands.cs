@@ -476,10 +476,10 @@ namespace Enforcer5
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
         public static void SolveFlag(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+        {            
             var chatid = long.Parse(args[1]);
             var msgid = int.Parse(args[2]);
+            var lang = Methods.GetGroupLanguage(chatid).Doc;
             var hash = $"flagged:{chatid}:{msgid}";
             var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
             if (!isReported.HasValue)

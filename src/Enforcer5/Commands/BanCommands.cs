@@ -37,7 +37,7 @@ namespace Enforcer5
                     try
                     {
                         var userid = Methods.GetUserId(update, args);
-                        if (userid == Bot.Me.Id)
+                        if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                             return;
                         var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc);
                         
@@ -207,7 +207,7 @@ namespace Enforcer5
                 try
                 {
                     var userid = Methods.GetUserId(update, args);
-                    if (userid == Bot.Me.Id)
+                    if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                         return;
                     var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc);
                     if (res)
@@ -324,7 +324,7 @@ namespace Enforcer5
         public static void Tempban(Update update, string[] args)
         {
             var userId = update.Message.ReplyToMessage.From.Id;
-            if (userId == Bot.Me.Id)
+            if (userId == Bot.Me.Id || userId == update.Message.From.Id)
                 return;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             int time;
