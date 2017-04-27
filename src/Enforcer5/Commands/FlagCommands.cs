@@ -466,46 +466,12 @@ namespace Enforcer5
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]
         public static void WarnFlag(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
-            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
-            var max = 3;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
-            if (num >= max)
-            {
-               var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
-                    : "kick";
-                if (type.Equals("ban"))
-                {
-                    try
-                    {
-                         Bot.Api.KickChatMemberAsync(chatId, userId);
-                        var name = Methods.GetNick(call.Message, args, userId);
-                         Bot.Send(Methods.GetLocaleString(lang, "warnMaxBan", name), chatId);
-                        Methods.SaveBan(userId, "maxWarn");
-                    }
-                    catch (AggregateException e)
-                    {
-                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", call.Message, lang);
-                    }
-                }
-                else
-                {
-                     Methods.KickUser(chatId, userId, lang);
-                    var name = Methods.GetNick(call.Message, args, userId);
-                     Bot.Send(Methods.GetLocaleString(lang, "warnMaxKick", name), chatId);
-                }
-                 Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
-        }
-            else
-            {
-                var diff = max - num;
-                var text = Methods.GetLocaleString(lang, "warnFlag", userId, call.From.Id, num, max);               
-                 Bot.Send(text, chatId);
-                 Bot.Api.AnswerCallbackQueryAsync(call.Id, text, true);
-            }
+            var callId = call.Id;
+            var callFromId = call.From.Id;
+            var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userid})";
+            BanCommands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId);
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]

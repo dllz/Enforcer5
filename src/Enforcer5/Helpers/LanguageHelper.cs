@@ -124,85 +124,97 @@ namespace Enforcer5.Handlers
 
         internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
+        
+            try
+            {
             
-            var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
-            var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
-            using (var fs = new FileStream(newFilePath, FileMode.Create))
-                  await Bot.Api.GetFileAsync(fileid, fs);
-            //ok, we have the file.  Now we need to determine the language, scan it and the original file.
-            var newFileErrors = new List<LanguageError>();
-            //first, let's load up the English file, which is our master file
-            var langs = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
-            var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
-            var newFile = new Language(newFilePath);
+                var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
+                var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
+                using (var fs = new FileStream(newFilePath, FileMode.Create))
+                      await Bot.Api.GetFileAsync(fileid, fs);
+                //ok, we have the file.  Now we need to determine the language, scan it and the original file.
+                var newFileErrors = new List<LanguageError>();
+                //first, let's load up the English file, which is our master file
+                var langs = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
+                var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
+                var newFile = new Language(newFilePath);
 
-            //make sure it has a complete langnode
-            CheckLanguageNode(newFile, newFileErrors);
-
-            //test the length
-            TestLength(newFile, newFileErrors);
-
-            //check uniqueness
-            var error = langs.FirstOrDefault(x =>
-                    (x.FileName == newFile.FileName && x.Name != newFile.Name) //check for matching filename and mismatching name
-                    || (x.Name == newFile.Name && (x.Base != newFile.Base)) //check for same name and mismatching base-variant
-                    || (x.Base == newFile.Base && x.FileName != newFile.FileName) //check for same base-variant and mismatching filename
-                                                                                                                  //if we want to have the possibility to rename the file, change previous line with FileName -> Name
-                    );
-            if (error != null)
-            {
-                //problem....
-                newFileErrors.Add(new LanguageError(newFile.FileName, "*Language Node*",
-                    $"ERROR: The following file partially matches the same language node. Please check the file name, and the language name, base and variant. Aborting.\n\n*{error.FileName}.xml*\n_Name:_{error.Name}\n_Base:_{error.Base}", ErrorLevel.Error));
-            }
-
-            //get the errors in it
-            GetFileErrors(newFile, newFileErrors, master);
-
-
-            //need to get the current file
-            var curFile = langs.FirstOrDefault(x => x.Name == newFile.Name);
-            var curFileErrors = new List<LanguageError>();
-
-            if (curFile != null)
-            {
+                //make sure it has a complete langnode
+                CheckLanguageNode(newFile, newFileErrors);
+    
                 //test the length
-                TestLength(curFile, curFileErrors);
-
-                ////validate current file name / base / variants match
-                //if (newFile.Base != lang.Base)
-                //{
-                //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Base! {newFile.Base} - {lang.Base}", ErrorLevel.Error));
-                //}
-                //if (newFile.Variant != lang.Variant)
-                //{
-                //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Variant! {newFile.Variant} - {lang.Variant}", ErrorLevel.Error));
-                //}
+                TestLength(newFile, newFileErrors);
+    
+                //check uniqueness
+                var error = langs.FirstOrDefault(x =>
+                        (x.FileName == newFile.FileName && x.Name != newFile.Name) //check for matching filename and mismatching name
+                        || (x.Name == newFile.Name && (x.Base != newFile.Base)) //check for same name and mismatching base-variant
+                        || (x.Base == newFile.Base && x.FileName != newFile.FileName) //check for same base-variant and mismatching filename
+                                                                                                                      //if we want to have the possibility to rename the file, change previous line with FileName -> Name
+                        );
+                if (error != null)
+                {
+                    //problem....
+                    newFileErrors.Add(new LanguageError(newFile.FileName, "*Language Node*",
+                        $"ERROR: The following file partially matches the same language node. Please check the file name, and the language name, base and variant. Aborting.\n\n*{error.FileName}.xml*\n_Name:_{error.Name}\n_Base:_{error.Base}", ErrorLevel.Error));
+                }
 
                 //get the errors in it
-                GetFileErrors(curFile, curFileErrors, master);
-            }
-
-            //send the validation result
-             Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
-            Thread.Sleep(500);
+                GetFileErrors(newFile, newFileErrors, master);
 
 
-            if (newFileErrors.All(x => x.Level != ErrorLevel.Error))
-            {
-                //load up each file and get the names
-                var buttons = new[]
+                //need to get the current file
+                var curFile = langs.FirstOrDefault(x => x.Name == newFile.Name);
+                var curFileErrors = new List<LanguageError>();
+
+                if (curFile != null)
                 {
-                new InlineKeyboardButton($"New", $"upload:{id}:{newFile.FileName}"),
-                new InlineKeyboardButton($"Old", $"upload:{id}:current")
-            };
-                var menu = new InlineKeyboardMarkup(buttons.ToArray());
-                 Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
-                    replyMarkup: menu);
+                    //test the length
+                    TestLength(curFile, curFileErrors);
+
+                    ////validate current file name / base / variants match
+                    //if (newFile.Base != lang.Base)
+                    //{
+                    //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Base! {newFile.Base} - {lang.Base}", ErrorLevel.Error));
+                    //}
+                    //if (newFile.Variant != lang.Variant)
+                    //{
+                    //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Variant! {newFile.Variant} - {lang.Variant}", ErrorLevel.Error));
+                    //}
+
+                    //get the errors in it
+                    GetFileErrors(curFile, curFileErrors, master);
+                }
+
+                //send the validation result
+                Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
+                Thread.Sleep(500);
+
+
+                if (newFileErrors.All(x => x.Level != ErrorLevel.Error))
+                {
+                    //load up each file and get the names
+                    var buttons = new[]
+                    {
+                    new InlineKeyboardButton($"New", $"upload:{id}:{newFile.FileName}"),
+                    new InlineKeyboardButton($"Old", $"upload:{id}:current")
+                };
+                    var menu = new InlineKeyboardMarkup(buttons.ToArray());
+                    Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
+                        replyMarkup: menu);
+                }
+                else
+                {
+                     Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
+                }
             }
-            else
+            catch(System.Xml.XmlException XmlExc)
             {
-                 Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
+                Bot.Api.SendTextMessageAsync(id, "XML error occured!\n\n" + XmlExc, replyToMessageId: msgID);
+            }
+            catch(Exception exc)
+            {
+                Bot.Api.SendTextMessageAsync(id, "Error occured! Exception:\n\n" + exc, replyToMessageId: msgID);
             }
         }
 
