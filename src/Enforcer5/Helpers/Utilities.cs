@@ -59,10 +59,6 @@ namespace Enforcer5.Helpers
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                         .OpenSubKey("SOFTWARE\\Werewolf");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
-            if (Bot.TelegramAPIKey.Equals("279558316:AAGl5Nu_PNSGfDWLYEiC6Qt9VRSt1xLUIzY"))
-            {
-                testing = true;
-            }
 #endif
 #if premium
             var key =
@@ -359,7 +355,7 @@ namespace Enforcer5.Helpers
                     catch (ApiRequestException ex)
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
+                    }   
                     finally
                     {
 

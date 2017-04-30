@@ -111,5 +111,28 @@ namespace Enforcer5
             }           
         }
 
+        [Command(Trigger = "donate")]
+        public static void Donate(Update update, string[] args)
+        {
+            System.Xml.Linq.XDocument lang;
+            try
+            {
+                lang = Methods.GetGroupLanguage(update.Message).Doc;
+            }
+            catch (NullReferenceException e)
+            {
+                try
+                {
+                    lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                }
+                catch (NullReferenceException exception)
+                {
+                    Console.WriteLine(exception);
+                    return;
+                }
+            }
+            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot"), update);
+        }
+
     }
 }
