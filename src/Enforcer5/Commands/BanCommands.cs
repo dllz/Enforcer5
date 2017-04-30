@@ -11,6 +11,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using System.Net.Http;
 #pragma warning disable CS4014
 #pragma warning disable CS0168
 namespace Enforcer5
@@ -388,7 +389,7 @@ namespace Enforcer5
                     var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                      Bot.SendReply(
-                        Methods.GetLocaleString(lang, "tempbanned", timeText, update.Message.ReplyToMessage.From.FirstName, userId),
+                        Methods.GetLocaleString(lang, "tempbanned", timeText, Methods.GetNick(update.Message, args, userId), userId),
                         update);
 #if normal
                      Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
@@ -398,6 +399,27 @@ namespace Enforcer5
 #endif
                 }
             }
+        }
+
+        [Command(Trigger = "delmsg", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static void DeleteMessageInGroup(Update update, string[] args)
+        {
+            DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
+        }
+
+        public static bool DeleteMessage(long chatId, int msgid)
+        {
+            var jsonid = $"'ids=[{msgid}]'";
+            var client = new HttpClient();
+            var values = $"-F chat_id={chatId} -F {jsonid}";
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("chat_id", $"{chatId}"),
+                new KeyValuePair<string, string>("ids", jsonid)
+            });
+            var response =  client.PostAsync($"https://api.pwrtelegram.xyz/{Bot.TelegramAPIKey}/deleteMessages", formContent).Result;
+            Bot.Send(response.ToString(), chatId);
+            return true;
         }
     }
 
