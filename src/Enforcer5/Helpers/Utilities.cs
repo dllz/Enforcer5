@@ -69,7 +69,7 @@ namespace Enforcer5.Helpers
 
             Api = new TelegramBotClient(TelegramAPIKey);
              Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
-[]            //load the commands list
+            //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
             {
                 var c = new Models.Commands();
