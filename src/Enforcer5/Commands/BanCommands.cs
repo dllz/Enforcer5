@@ -12,6 +12,8 @@ using Telegram.Bot.Helpers;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Net.Http;
+using Newtonsoft.Json;
+
 #pragma warning disable CS4014
 #pragma warning disable CS0168
 namespace Enforcer5
@@ -401,7 +403,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "delmsg", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "delmsg", InGroupOnly = true, GlobalAdminOnly = true, RequiresReply = true)]
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
             DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
@@ -409,7 +411,9 @@ namespace Enforcer5
 
         public static bool DeleteMessage(long chatId, int msgid)
         {
-            var jsonid = $"'ids=[{msgid}]'";
+            var id = new int[1];
+            id[0] = msgid;
+            var jsonid = JsonConvert.SerializeObject(id);
             var client = new HttpClient();
             var values = $"-F chat_id={chatId} -F {jsonid}";
             var formContent = new FormUrlEncodedContent(new[]
@@ -417,7 +421,7 @@ namespace Enforcer5
                 new KeyValuePair<string, string>("chat_id", $"{chatId}"),
                 new KeyValuePair<string, string>("ids", jsonid)
             });
-            var response =  client.PostAsync($"https://api.pwrtelegram.xyz/{Bot.TelegramAPIKey}/deleteMessages", formContent).Result;
+            var response =  client.PostAsync($"https://api.pwrtelegram.xyz/bot{Bot.TelegramAPIKey}/deleteMessages", formContent).Result;
             Bot.Send(response.ToString(), chatId);
             return true;
         }

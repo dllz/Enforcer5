@@ -351,6 +351,14 @@ namespace Enforcer5
              Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
         }
 
+        [Command(Trigger = "msgid", GlobalAdminOnly = true, RequiresReply = true)]
+        public static void GetMessageID(Update update, string[] args)
+        {
+           
+            Bot.SendReply($"Media: {update.Message.ReplyToMessage.MessageId}", update);
+        }
+
+
         [Command(Trigger = "getuser", GlobalAdminOnly = true)]
         public static void GetUserDetails(Update update, string[] args)
         {
