@@ -108,7 +108,7 @@ namespace Enforcer5
             }
             switch (message.NewChatMember.Id)
             {
-                case 286670453://Phyto
+                case 352277339://Phyto
                     Bot.Send("Error 404", chatId);
                     break;
                 case 106665913://Jeff
@@ -120,7 +120,7 @@ namespace Enforcer5
                 case 9375804://jhen
                     Bot.Send("Or else I'll kick your butt", chatId);
                     break;
-                case 352277339:
+                case 125311351:
                     Bot.Send("401 Not authorised", chatId);
                     break;
                 case 223494929:
