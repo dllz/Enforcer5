@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using StackExchange.Redis;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -960,6 +961,13 @@ namespace Enforcer5
                  Redis.db.SetRemoveAsync($"chat:{chat}:auth", userid);
                  Bot.SendReply(Methods.GetLocaleString(lang, "dauth", userid, update.Message.From.Id), update);
             }
+        }
+
+        [Command(Trigger = "resetSettings", InGroupOnly = true, GroupAdminOnly = true)]
+        public static void resetSettings(Update update, string[] args)
+        {
+            Service.GenerateSettings(update.Message.Chat.Id);
+            Bot.SendReply("Settings have been reset", update);
         }
 
         public static void SendExtra(Update update, string[] args)
