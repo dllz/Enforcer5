@@ -274,7 +274,7 @@ namespace Enforcer5
 
         private static void IntiliseSettings(long chatId)
         {
-            
+            GenerateSettings(chatId);
             Redis.db.SetAddAsync($"bot:groupsid", chatId);
             Redis.db.SetAddAsync("bot:e5groupsid", chatId); 
         }
