@@ -411,17 +411,8 @@ namespace Enforcer5
 
         public static bool DeleteMessage(long chatId, int msgid)
         {
-            var id = new int[1];
-            id[0] = msgid;
-            var jsonid = JsonConvert.SerializeObject(id);
             var client = new HttpClient();
-            var values = $"-F chat_id={chatId} -F {jsonid}";
-            var formContent = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("chat_id", $"{chatId}"),
-                new KeyValuePair<string, string>("ids", jsonid)
-            });
-            var response =  client.PostAsync($"https://api.pwrtelegram.xyz/bot{Bot.TelegramAPIKey}/deleteMessages", formContent).Result;
+            var response =  client.GetAsync($"https://api.telegram.org/{Bot.TelegramAPIKey}/deleteMessage?chat_id={chatId}&message_id={msgid}").Result;
             Bot.Send(response.ToString(), chatId);
             return true;
         }
