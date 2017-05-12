@@ -390,26 +390,31 @@ namespace Enforcer5
         }
 
         public static void LogCommand(Update update, string command)
-        {
-            if (Redis.db.SetContainsAsync("logChatGroups", update.Message.Chat.Id).Result)
-            {
+        {          
                 var adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
-                var logChatID = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat").Result.ToString();
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);                                               
+        }
+
+        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command)
+        {
+            if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
+            {
+                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
+                var lang = Methods.GetGroupLanguage(chatId).Doc;
                 try
                 {
-                    Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminUserName, adminUserId, command, groupName),
+                    Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, groupname),
                         long.Parse(logChatID));
                 }
                 catch (Exception e)
                 {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "logSendError"), update);
+                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
                 }
             }
-            
-            
+
+
         }
     }
 }

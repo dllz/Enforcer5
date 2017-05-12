@@ -710,6 +710,10 @@ namespace Enforcer5.Handlers
                                             "userNotAdmin"), update.From.Id);
                                     return;
                                 }
+                                if (callbacks.GroupAdminOnly)
+                                {
+                                    Service.LogCommand(long.Parse(args[1]), update.From.Id, update.From.FirstName, update.Message.Chat.Title, callbacks.Trigger);
+                                }
                             }
                         }
                         if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
