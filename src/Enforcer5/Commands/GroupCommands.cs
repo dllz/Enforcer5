@@ -970,6 +970,30 @@ namespace Enforcer5
             Bot.SendReply("Settings have been reset", update);
         }
 
+        [Command(Trigger = "addlogchannel", InGroupOnly = true)]
+        public static void AddLogChat(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator || priv)
+            {
+                long channelId;
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                if (long.TryParse(args[0], out channelId))
+                {
+                    Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
+                    Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
+
+                    Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "notChannel"), update);
+                }
+            }
+        }
+
         public static void SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;

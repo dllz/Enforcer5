@@ -388,5 +388,28 @@ namespace Enforcer5
                 }
             }
         }
+
+        public static void LogCommand(Update update, string command)
+        {
+            if (Redis.db.SetContainsAsync("logChatGroups", update.Message.Chat.Id).Result)
+            {
+                var adminUserId = update.Message.From.Id;
+                var adminUserName = update.Message.From.FirstName;
+                var groupName = update.Message.Chat.Title;
+                var logChatID = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat").Result.ToString();
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                try
+                {
+                    Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminUserName, adminUserId, command, groupName),
+                        long.Parse(logChatID));
+                }
+                catch (Exception e)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "logSendError"), update);
+                }
+            }
+            
+            
+        }
     }
 }
