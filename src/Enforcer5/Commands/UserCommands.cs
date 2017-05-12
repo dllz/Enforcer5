@@ -81,7 +81,15 @@ namespace Enforcer5
                             }
                             catch (Exception e)
                             {
-                                text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
+                                try
+                                {
+                                    lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                                    text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
+                                }
+                                catch (Exception ep)
+                                {
+                                    text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
+                                }
                             }
                              Bot.SendReply(text, update);
                             return;
@@ -102,10 +110,20 @@ namespace Enforcer5
                 {
                     text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                 }
+
                 catch (Exception e)
                 {
-                    text = Methods.GetLocaleString(lang, "helpNoRequest");
-                     Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                    try
+                    {
+                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
+                    }
+                    catch (Exception ep)
+                    {
+
+                        text = Methods.GetLocaleString(lang, "helpNoRequest");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                    }
                 }
                  Bot.SendReply(text, update);                
             }           
