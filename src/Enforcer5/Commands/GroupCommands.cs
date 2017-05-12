@@ -987,10 +987,33 @@ namespace Enforcer5
 
                     Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);
                 }
+                else if (update.Message.ReplyToMessage != null)
+                {
+                    if (update.Message.ReplyToMessage.ForwardFromChat != null)
+                    {
+                        channelId = update.Message.ReplyToMessage.ForwardFromChat.Id;
+                        Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
+                        Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
+
+                        Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);                   
+                    }
+                }
                 else
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "notChannel"), update);
                 }
+            }
+        }
+
+        [Command(Trigger = "dellogchannel", InGroupOnly = true)]
+        public static void DeleteLogChannel(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator || priv)
+            {
+                Redis.db.SetRemoveAsync("logChatGroups", update.Message.Chat.Id);
             }
         }
 
