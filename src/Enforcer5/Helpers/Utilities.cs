@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 using Enforcer5.Handlers;
 using Enforcer5.Models;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -832,6 +834,16 @@ namespace Enforcer5.Helpers
                 Console.WriteLine("--Not getting updates--");
                 Api.StartReceiving();
             }
+        }
+
+        public static DeleteMessage DeleteMessage(long chatId, int msgid)
+        {
+            var client = new HttpClient();
+            var response = client.GetAsync($"https://api.telegram.org/bot{Bot.TelegramAPIKey}/deleteMessage?chat_id={chatId}&message_id={msgid}").Result;
+            var data = response.Content.ReadAsStringAsync().Result;
+            var result = JsonConvert.DeserializeObject<DeleteMessage>(data);
+
+            return result;
         }
     }
 

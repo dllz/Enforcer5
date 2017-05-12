@@ -403,19 +403,13 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "delmsg", InGroupOnly = true, GlobalAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "delmsg", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
-            DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
+            Bot.DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
         }
 
-        public static bool DeleteMessage(long chatId, int msgid)
-        {
-            var client = new HttpClient();
-            var response =  client.GetAsync($"https://api.telegram.org/{Bot.TelegramAPIKey}/deleteMessage?chat_id={chatId}&message_id={msgid}").Result;
-            Bot.Send(response.ToString(), chatId);
-            return true;
-        }
+       
     }
 
     public static partial class CallBacks
