@@ -405,8 +405,15 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(chatId).Doc;
                 try
                 {
-                    Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})"),
-                        long.Parse(logChatID));
+                    if (groupname != null)
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})"),
+                            long.Parse(logChatID));
+                    }
+                    else {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}"),
+                            long.Parse(logChatID));
+                    }
                 }
                 catch (Exception e)
                 {
