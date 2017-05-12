@@ -980,7 +980,7 @@ namespace Enforcer5
             {
                 long channelId;
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                if (long.TryParse(args[0], out channelId))
+                if (long.TryParse(args[1], out channelId))
                 {
                     Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
                     Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
