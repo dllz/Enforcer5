@@ -23,7 +23,7 @@ namespace Enforcer5
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
             var defSpamValue = 1;
             var maxTime = TimeSpan.FromMinutes(1);
-            int msg = 0;            
+            int msg = 0;
             if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
@@ -38,16 +38,16 @@ namespace Enforcer5
                 {
                     Console.WriteLine(e);
                 }
-                
+
             }
             else
             {
                 msg = 1;
             }
             Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
-            if (msg >= defSpamValue+1)
+            if (msg >= defSpamValue + 1)
             {
-               return; 
+                return;
             }
             var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
             defSpamValue = 3;
@@ -65,9 +65,9 @@ namespace Enforcer5
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    
+
                 }
-                
+
             }
             else
             {
@@ -101,7 +101,7 @@ namespace Enforcer5
             {
                 msg = 1;
             }
-             Redis.db.StringSetAsync($"spam:added:{message.NewChatMember.Id}", msg + 1, maxTime);
+            Redis.db.StringSetAsync($"spam:added:{message.NewChatMember.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue + 1)
             {
                 return;
@@ -223,7 +223,7 @@ namespace Enforcer5
                         }
                     }
                     break;
-            }            
+            }
         }
 
         private static string GetCustomWelcome(Message message, RedisValue content)
@@ -276,7 +276,7 @@ namespace Enforcer5
         {
             GenerateSettings(chatId);
             Redis.db.SetAddAsync($"bot:groupsid", chatId);
-            Redis.db.SetAddAsync("bot:e5groupsid", chatId); 
+            Redis.db.SetAddAsync("bot:e5groupsid", chatId);
         }
 
         public static void ResetUser(Message message)
@@ -289,7 +289,7 @@ namespace Enforcer5
         {
             object[,,] defaultSettings =
             {
-                {                  
+                {
                     {"antitextlengthsettings", "enabled", "yes" },
                     {"antitextlengthsettings", "maxlength", 1024 },
                     {"antitextlengthsettings", "maxlines", 50 },
@@ -389,61 +389,71 @@ namespace Enforcer5
             }
         }
 
-        public static void LogCommand(Update update, string command, bool isCallback = false, long chatid = 0, string replyto = "")
+        public static void LogCommand(Update update, string command, string replyto = "")
         {
-			int adminUserId;
-			string adminUserName;
-			string groupName;
-			long groupId;
-			if (!isCallback)
-			{
-				adminUserId = update.Message.From.Id;
-				adminUserName = update.Message.From.FirstName;
-				groupName = update.Message.Chat.Title;
-				groupId = update.Message.Chat.Id;
-				
-				if (string.isEmptyOrWhiteSpace(replyto))
-				{
-					var lang = Methods.GetGroupLanguage(groupId).Doc;
-					replyto = Methods.GetLocaleString(lang, "noone");
-				}
-			}
-			else
-			{
-				adminUserId = update.From.Id;
-				adminUserName = update.From.FirstName;
-				groupName = update.Message.Chat.Title;
-				groupId = chatId;
-			}
-			
-            LogCommand(groupId, adminUserId, adminUserName, groupName, command, replyto);                                               
-        }
+            int adminUserId = update.Message.From.Id;
+            string adminUserName = update.Message.From.FirstName;
+            string groupName = update.Message.Chat.Title;
+            long groupId = update.Message.Chat.Id;
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto)
-        {
-            if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
+            if (string.IsNullOrEmpty(replyto))
             {
-                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
-                var lang = Methods.GetGroupLanguage(chatId).Doc;
+                var lang = Methods.GetGroupLanguage(groupId).Doc;
+                replyto = Methods.GetLocaleString(lang, "noone");
+            }
+
+            if (Redis.db.SetContainsAsync("logChatGroups", groupId).Result)
+            {
+                var logChatID = Redis.db.HashGetAsync($"chat:{groupId}:settings", "logchat").Result.ToString();
+                var lang = Methods.GetGroupLanguage(groupId).Doc;
                 try
                 {
-                    if (groupname != null)
+                    if (groupName != null)
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminUserName, adminUserId, command, $"{groupName} ({groupId})", replyto),
                             long.Parse(logChatID));
                     }
-                    else {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}", replyto),
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminUserName, adminUserId, command, $"{groupId}", replyto),
                             long.Parse(logChatID));
                     }
                 }
                 catch (Exception e)
                 {
-                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
+                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), groupId);
                 }
             }
+        }
 
+        public static void LogCallback(CallbackQuery update, string trigger, long groupId)
+        {
+            int adminUserId = update.From.Id;
+            string adminUserName = update.From.FirstName;
+            string groupName = update.Message.Chat.Title;
 
+            if (Redis.db.SetContainsAsync("logChatGroups", groupId).Result)
+            {
+                var logChatID = Redis.db.HashGetAsync($"chat:{groupId}:settings", "logchat").Result.ToString();
+                var lang = Methods.GetGroupLanguage(groupId).Doc;
+                try
+                {
+                    if (groupName != null)
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminUserName, adminUserId, trigger, $"{groupName} ({groupId})"),
+                            long.Parse(logChatID));
+                    }
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminUserName, adminUserId, trigger, $"{groupId}"),
+                            long.Parse(logChatID));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), groupId);
+                }
+            }
         }
     }
 }

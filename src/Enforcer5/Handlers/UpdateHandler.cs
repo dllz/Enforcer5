@@ -156,7 +156,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.GroupAdminOnly)
                                     {
-                                        Service.LogCommand(update, update.Message.Text, replyto: update.Message.ReplyToMessage == null ? "" : $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
+                                        Service.LogCommand(update, update.Message.Text, update.Message.ReplyToMessage == null ? "" : $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
                                     }
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
@@ -712,7 +712,7 @@ namespace Enforcer5.Handlers
                                 }
                                 if (callbacks.GroupAdminOnly)
                                 {
-                                    Service.LogCommand(update, callbacks.Trigger, true, long.Parse(args[1]));
+                                    Service.LogCallback(update, callbacks.Trigger, long.Parse(args[1]));
                                 }
                             }
                         }
