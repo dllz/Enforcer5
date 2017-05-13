@@ -389,15 +389,37 @@ namespace Enforcer5
             }
         }
 
-        public static void LogCommand(Update update, string command)
-        {          
-                var adminUserId = update.Message.From.Id;
-                var adminUserName = update.Message.From.FirstName;
-                var groupName = update.Message.Chat.Title;
-                LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);                                               
+        public static void LogCommand(Update update, string command, bool isCallback = false, long chatid = 0, string replyto = "")
+        {
+			int adminUserId;
+			string adminUserName;
+			string groupName;
+			long groupId;
+			if (!isCallback)
+			{
+				adminUserId = update.Message.From.Id;
+				adminUserName = update.Message.From.FirstName;
+				groupName = update.Message.Chat.Title;
+				groupId = update.Message.Chat.Id;
+				
+				if (string.isEmptyOrWhiteSpace(replyto))
+				{
+					var lang = Methods.GetGroupLanguage(groupId).Doc;
+					replyto = Methods.GetLocaleString(lang, "noone");
+				}
+			}
+			else
+			{
+				adminUserId = update.From.Id;
+				adminUserName = update.From.FirstName;
+				groupName = update.Message.Chat.Title;
+				groupId = chatId;
+			}
+			
+            LogCommand(groupId, adminUserId, adminUserName, groupName, command, replyto);                                               
         }
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command)
+        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto)
         {
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
@@ -407,11 +429,11 @@ namespace Enforcer5
                 {
                     if (groupname != null)
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})"),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
                             long.Parse(logChatID));
                     }
                     else {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}"),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}", replyto),
                             long.Parse(logChatID));
                     }
                 }
