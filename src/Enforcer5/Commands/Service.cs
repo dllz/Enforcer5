@@ -11,7 +11,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
 namespace Enforcer5
-{
+{ 
     public static class Service
     {
         public static void Welcome(Message message)
@@ -394,10 +394,15 @@ namespace Enforcer5
                 var adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
-                LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);                                               
+                if(update.Message.ReplyToMessage != null)
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
+                else
+                {
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);
+                }                                           
         }
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command)
+        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
         {
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
@@ -405,15 +410,18 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(chatId).Doc;
                 try
                 {
+
                     if (groupname != null)
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})"),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
+                            long.Parse(logChatID));
+                    }                    
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}", replyto),
                             long.Parse(logChatID));
                     }
-                    else {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}"),
-                            long.Parse(logChatID));
-                    }
+               
                 }
                 catch (Exception e)
                 {
