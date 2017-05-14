@@ -855,6 +855,7 @@ namespace Enforcer5
                     if (blocked.HasValue)
                         Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
                     Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+                    Service.LogCommand(update, "elevate");
                 }                    
                 else if (!upriv & blocked.HasValue == false & Methods.IsGroupAdmin(update))
                 {
@@ -863,8 +864,9 @@ namespace Enforcer5
                         $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
                      Redis.db.StringSetAsync($"chat:{chat}:blockList:{userid}", userid, TimeSpan.FromMinutes(31));
                      Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+                    Service.LogCommand(update, "elevate");
                 }
-                Service.LogCommand(update, "elevate");
+                
 
             }
             catch (Exception e)
