@@ -687,47 +687,56 @@ namespace Enforcer5
                             var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
                             Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "true");
                             Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileId);
+                            Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                         }
                     }
-                    if (args[1].Equals("a"))
+                    else if (args[1].Equals("a"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("r"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "r");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("m"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "m");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("ar") || args[1].Equals("ra"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ra");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("mr") || args[1].Equals("rm"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "rm");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("am") || args[1].Equals("ma"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "am");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
                     {
                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet"), update.Message);
                     }
                     else if (args[1].Equals("no"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeReset"), update.Message);
                     }
                     else
                     {

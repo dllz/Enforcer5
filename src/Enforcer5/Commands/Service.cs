@@ -117,10 +117,10 @@ namespace Enforcer5
                 case 23776848://Melisa
                     Bot.Send("Banhammer is ready for use milady. Feel free to strike them down", chatId);
                     break;
-                case 9375804://jhen
+                case 9375804://Jhen
                     Bot.Send("Or else I'll kick your butt", chatId);
                     break;
-                case 125311351:
+                case 125311351://Daniel
                     Bot.Send("401 Not authorised", chatId);
                     break;
                 case 223494929:
@@ -131,16 +131,16 @@ namespace Enforcer5
                     Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
 #endif
                     break;
-                case 263451571:
+                case 263451571://Michelle
                     Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
                     break;
-                case 295152997:
+                case 295152997://Ludwig
                     Bot.Send("Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.", chatId);
                     break;
-                case 81772130:
+                case 81772130://Lordy
                     Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
                     break;
-                case 221962247:
+                case 221962247://Touka
                     Bot.Send("Uhm, who are you again? I may not remember for sure, but feel free to spread terror with your kagune here.", chatId);
                     break;
                 default:
