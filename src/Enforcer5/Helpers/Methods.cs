@@ -360,6 +360,10 @@ namespace Enforcer5.Helpers
                     {
                         return id;
                     }
+                    if (args[1].Contains(' ') && int.TryParse(args[1].Split(' ')[0], out id))
+                    {
+                        return id;
+                    }
                     return ResolveIdFromusername(args[1], update.Message.Chat.Id);
                 }
                 else
@@ -378,6 +382,7 @@ namespace Enforcer5.Helpers
             if (!s.StartsWith("@"))
                 throw new Exception("UnableToResolveUsername");
             s = s.ToLower();
+            if (s.Contains(' ')) s = s.Split(' ')[0];
             var userid = Redis.db.HashGetAsync($"bot:usernames", s).Result;
             var id = 0;
             if (int.TryParse(userid.ToString(), out id))
