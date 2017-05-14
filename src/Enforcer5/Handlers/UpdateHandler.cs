@@ -154,7 +154,7 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (command.GroupAdminOnly)
+                                    if (command.GroupAdminOnly || (new List<string>() { "elevate", "deelevate" }.Contains(command.Trigger) && Methods.IsGroupAdmin(update)))
                                     {
                                         Service.LogCommand(update, command.Trigger);
                                     }
