@@ -404,21 +404,26 @@ namespace Enforcer5
 
         public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
         {
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            if (string.IsNullOrEmpty(replyto))
+            {              
+                replyto = Methods.GetLocaleString(lang, "noone");
+            }
+
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
-                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
-                var lang = Methods.GetGroupLanguage(chatId).Doc;
+                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();              
                 try
                 {
 
                     if (groupname != null)
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
                             long.Parse(logChatID));
                     }                    
                     else
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessage", adminName, adminId, command, $"{chatId}", replyto),
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"),
                             long.Parse(logChatID));
                     }
                

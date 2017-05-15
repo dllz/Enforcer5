@@ -156,7 +156,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.GroupAdminOnly)
                                     {
-                                        Service.LogCommand(update, command.Trigger);
+                                        Service.LogCommand(update, update.Message.Text);
                                     }
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
