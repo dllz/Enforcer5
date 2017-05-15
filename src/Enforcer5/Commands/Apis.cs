@@ -158,6 +158,8 @@ namespace Enforcer5
                 if (genNewToken(chatId, true))
                 {
                     Redis.db.SetAddAsync("bot:nsfwgroups", chatId);
+                    Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
+                    Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
                     Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
                 }
                

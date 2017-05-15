@@ -479,11 +479,11 @@ namespace Enforcer5.Handlers
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }                  
-                    var updated = Redis.db.SetContainsAsync("lenghtUpdate2",updateMessage.Chat.Id).Result;
+                    var updated = Redis.db.SetContainsAsync("lenghtUpdate3",updateMessage.Chat.Id).Result;
                     if (!updated)
                     {
                         Service.NewSettings(updateMessage.Chat.Id);
-                        Redis.db.SetAddAsync("lenghtUpdate2", updateMessage.Chat.Id);
+                        Redis.db.SetAddAsync("lenghtUpdate3", updateMessage.Chat.Id);
                     }
                 }
             }
