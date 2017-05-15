@@ -152,11 +152,7 @@ namespace Enforcer5
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"FloodButton"),
                 $"openFloodMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "lengthButton"), $"openLengthMenu:{chatId}"));
-            var nsfw = Redis.db.HashGetAsync($"chat:{chatId}:nsfwDetection", "autherised").Result;
-            if (nsfw.HasValue && nsfw.ToString().Equals("yes"))
-            {
-                warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nsfwButton"), $"opennsfwmenu:{chatId}"));
-            }        
+            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nsfwButton"), $"opennsfwmenu:{chatId}"));                  
             warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"), $"openMediaMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupLanguage"), $"openLangMenu:{chatId}"));

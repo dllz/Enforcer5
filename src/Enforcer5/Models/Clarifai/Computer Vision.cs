@@ -22,7 +22,7 @@ namespace Enforcer5.Models
     {
         public Status status { get; set; }
         public string access_token { get; set; }
-        public string expires_in { get; set; }
+        public int expires_in { get; set; }
         public string scope { get; set; }
     }
 

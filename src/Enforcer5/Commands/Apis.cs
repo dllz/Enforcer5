@@ -20,16 +20,26 @@ namespace Enforcer5
         {
             var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
             if (watch) return;
-            var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
-            var auth = nsfwSettings.Where(e => e.Name.Equals("autherised")).FirstOrDefault();
-            var on = nsfwSettings.Where(e => e.Name.Equals("activated")).FirstOrDefault();
-            if (auth.Value.Equals("yes") && on.Value.Equals("on"))
+
+            var usingNSFW = Redis.db.SetContainsAsync("bot:nsfwgroups", chatId).Result;
+            if (usingNSFW)
             {
+                var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
                 //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
                 var lang = Methods.GetGroupLanguage(msg).Doc;
                 try
                 {
                     var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
+                    var expireTime = nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value;
+                    int tryGenCount = 0;
+                    if (DateTime.Now.Millisecond > int.Parse(expireTime) && tryGenCount < 5)
+                    {
+                        genNewToken(chatId);
+                        nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+                        groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
+                        expireTime = nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value;
+                        tryGenCount++;
+                    }
                     if (!string.IsNullOrEmpty(groupToken))
                     {
                         //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
@@ -59,6 +69,7 @@ namespace Enforcer5
                                     Methods.BanUser(chatId, msg.From.Id, lang);
                                     Methods.SaveBan(msg.From.Id, "NSFWImage");
                                     Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})");
                                 }
                                 else
                                 {
@@ -66,6 +77,7 @@ namespace Enforcer5
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
                                     Methods.KickUser(chatId, msg.From.Id, lang);
                                     Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})");
                                 }
                             }
                         }
@@ -75,8 +87,7 @@ namespace Enforcer5
                 {
                     if (e.Message.Contains("401"))
                     {
-                        genNewToken(chatId);
-                        Bot.SendReply("Your api key expired, a new one has been auto generated", msg);
+                        genNewToken(chatId);                       
                     }
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
@@ -84,12 +95,12 @@ namespace Enforcer5
             }
         }
 
-        public static void genNewToken(long chatId, bool sendOutput = false)
+        public static bool genNewToken(long chatId, bool sendOutput = false)
         {
             var data = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
             var appId = data.Where(e => e.Name.Equals("appId")).FirstOrDefault();
             var appSecret = data.Where(e => e.Name.Equals("appSecret")).FirstOrDefault();
-
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
             try
             {
                 using (var client = new HttpClient())
@@ -107,51 +118,49 @@ namespace Enforcer5
                     try
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
+                        Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "expireTime", System.DateTime.Now.Millisecond + (result.expires_in * 1000));
+                       
+
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                        return false;
                     }
                     if (sendOutput)
                     {
-                        Bot.Send("New Api generated", chatId);
+                        Bot.Send(Methods.GetLocaleString(lang, "apikeysucgen"), chatId);
                     }
+                    return true;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 Bot.Send(e.Message, chatId);
+                return false;
             }
 
 
 
         }
 
-        [Command(Trigger = "genapi", GroupAdminOnly = true, InGroupOnly = true)]
-        public static void GenerateNewApi(Update update, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            try
-            {
-                genNewToken(update.Message.Chat.Id, true);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Methods.SendError(e.Message, update.Message, lang);
-            }
-        }
-
-        [Command(Trigger = "setAppId", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "setnsfw", GroupAdminOnly = true, InGroupOnly = true)]
         public static void SetClient(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
             try
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", args[1]);
-                Bot.SendReply("App ID key updated", update);
+                var appInfo = args[1].Split(' ');
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", appInfo[0]);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", appInfo[1]);
+                if (genNewToken(chatId, true))
+                {
+                    Redis.db.SetAddAsync("bot:nsfwgroups", chatId);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
+                }
+               
             }
             catch (Exception e)
             {
@@ -160,22 +169,16 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "setSecret", GroupAdminOnly = true, InGroupOnly = true)]
-        public static void SetSecret(Update update, string[] args)
+        [Command(Trigger = "delnsfw", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void DeleteClient(Update update, string[] args)
         {
-            var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            try
+            var usingNSFW = Redis.db.SetContainsAsync("bot:nsfwgroups", update.Message.Chat.Id).Result;
+            if (usingNSFW)
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", args[1]);
-                Bot.SendReply("App secret key updated", update);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Methods.SendError(e.Message, update.Message, lang);
+                Redis.db.SetRemoveAsync("bot:nsfwgroups", update.Message.Chat.Id);
             }
         }
+
 
         [Command(Trigger = "authnsfw", InGroupOnly = true, GlobalAdminOnly = true)]
         public static void autherisensfwgroup(Update update, string[] args)
@@ -193,23 +196,6 @@ namespace Enforcer5
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "no");
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
             Bot.SendReply("Deactivated", update);
-        }
-
-        [Command(Trigger = "nsfwalert", InGroupOnly = true, GroupAdminOnly = true)]
-        public static void NSFWAdminAlert(Update update, string[] args)
-        {
-            var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            try
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "adminAlert", args[1]);
-                Bot.SendReply("Admin alert updated", update);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Methods.SendError(e.Message, update.Message, lang);
-            }
         }
     }
 }
