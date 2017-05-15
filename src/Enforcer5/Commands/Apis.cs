@@ -69,7 +69,7 @@ namespace Enforcer5
                                     Methods.BanUser(chatId, msg.From.Id, lang);
                                     Methods.SaveBan(msg.From.Id, "NSFWImage");
                                     Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
-                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})");
+                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
                                 }
                                 else
                                 {
@@ -77,7 +77,7 @@ namespace Enforcer5
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
                                     Methods.KickUser(chatId, msg.From.Id, lang);
                                     Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
-                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})");
+                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
                                 }
                             }
                         }
