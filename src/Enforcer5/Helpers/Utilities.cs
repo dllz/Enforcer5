@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
+using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Microsoft.Win32;
 using Newtonsoft.Json;
@@ -576,15 +577,8 @@ namespace Enforcer5.Helpers
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
                     }
-                    finally
-                    {
-
-                    }
-
                 }
-                try
-                {
-                    if (e.ErrorCode == 112)
+                if (e.ErrorCode == 112)
                     {
                         return Bot.Send("The markdown in this text is broken", chatid);
                     }
@@ -607,22 +601,11 @@ namespace Enforcer5.Helpers
                         return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
-                catch (ApiRequestException ex)
-                {
-                    //fuckit 
-                    return null;
-                }
                 catch (Exception exception)
                 {
                     //fuckit
                     return null;
                 }
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
         }
         internal static Message SendReply(string message, Update msg)
         {
@@ -678,14 +661,8 @@ namespace Enforcer5.Helpers
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
                     }
-                    finally
-                    {
-
-                    }
 
                 }
-                try
-                {
                     if (e.ErrorCode == 112)
                     {
                         return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
@@ -709,22 +686,12 @@ namespace Enforcer5.Helpers
                         return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
-                catch (ApiRequestException ex)
-                {
-                    //fuckit 
-                    return null;
-                }
                 catch (Exception exception)
                 {
                     //fuckit
                     return null;
                 }
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
+            
         }
         internal static Message SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
         {
@@ -772,19 +739,13 @@ namespace Enforcer5.Helpers
                             SendReply(word, msg);
                         }
 
-                    }                    
+                    }
                     catch (ApiRequestException ex)
                     {
                         Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
                     }
-                    finally
-                    {
-
-                    }
 
                 }
-                try
-                {
                     if (e.ErrorCode == 112)
                     {
                         return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
@@ -808,23 +769,13 @@ namespace Enforcer5.Helpers
                         return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
                     }
                 }
-                catch (ApiRequestException ex)
-                {
-                    //fuckit 
-                    return null;
-                }
                 catch (Exception exception)
                 {
                     //fuckit
                     return null;
                 }
             }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
-        }
+       
 
         private static void WatchAPI(object state)
         {
