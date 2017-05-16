@@ -712,7 +712,7 @@ namespace Enforcer5.Handlers
                                 }
                                 if (callbacks.GroupAdminOnly)
                                 {
-                                    Service.LogCommand(long.Parse(args[1]), update.From.Id, update.From.FirstName, update.Message.Chat.Title, callbacks.Trigger);
+                                    Service.LogCommand(long.Parse(args[1]), update.From.Id, update.From.FirstName, update.Message.Chat.Title, callbacks.Trigger, isCallback: true);
                                 }
                             }
                         }

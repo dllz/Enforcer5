@@ -371,7 +371,7 @@ namespace Enforcer5
                 }                                           
         }
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
+        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -385,7 +385,7 @@ namespace Enforcer5
                 try
                 {
 
-                    if (groupname != null)
+                    if (!isCallback)
                     {
                         Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
                             long.Parse(logChatID));
