@@ -154,10 +154,6 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (command.GroupAdminOnly)
-                                    {
-                                        Service.LogCommand(update, update.Message.Text);
-                                    }
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;
