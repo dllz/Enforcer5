@@ -259,3 +259,4 @@ src/PerspectiveAPI/AnalyzeCommentRequest.cs
 src/PerspectiveAPI/PerspectiveAPI.xproj
 *.json
 /src/PrespectiveAPI/
+.vs/restore.dg
