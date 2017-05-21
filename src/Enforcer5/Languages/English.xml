@@ -1250,4 +1250,11 @@ Example:
   <string key="welcomeBack">
     <value>Welcome back to Enforcer. Your settings are still intack</value>
   </string>
+
+  <string key="messageDeleted">
+    <value>Message was successfully deleted</value>
+  </string>
+  <string key="delete">
+    <value>Delete Message</value>
+  </string>
 </strings>

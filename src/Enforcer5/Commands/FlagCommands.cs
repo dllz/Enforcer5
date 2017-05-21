@@ -288,7 +288,9 @@ namespace Enforcer5
                                     new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                     {
                                         Url = $"http://t.me/{username}/{repId}"
-                                    }
+                                    },
+                                    new InlineButton(Methods.GetLocaleString(lang, "delete"),
+                                        $"delflag:{updateMessage.Chat.Id}:{msgId}")
                                 }
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
@@ -330,6 +332,7 @@ namespace Enforcer5
                                         $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                                     new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                         $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                                    new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{msgId}"),
                                     groupLink.Result.HasValue
                                         ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                         {
@@ -337,6 +340,7 @@ namespace Enforcer5
                                         }
                                         : null
                                 }
+
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
@@ -543,6 +547,16 @@ namespace Enforcer5
                 var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
                  Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
             }
+        }
+
+        [Callback(Trigger = "delflag", GroupAdminOnly = true)]
+        public static void DeleteFlag(CallbackQuery call, string[] args)
+        {
+            var chatid = long.Parse(args[1]);
+            var msgid = int.Parse(args[2]);
+            Bot.DeleteMessage(chatid, msgid);
+            var lang = Methods.GetGroupLanguage(chatid).Doc;
+            Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
         }
     }
 }

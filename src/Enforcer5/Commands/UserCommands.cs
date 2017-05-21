@@ -149,7 +149,7 @@ namespace Enforcer5
                     return;
                 }
             }
-            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot"), update);
+            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update);
         }
 
     }
