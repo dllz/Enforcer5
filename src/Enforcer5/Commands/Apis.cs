@@ -10,6 +10,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Newtonsoft.Json;
+using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 
 namespace Enforcer5
@@ -29,15 +30,15 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(msg).Doc;
                 try
                 {
-                    var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
-                    var expireTime = nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value;
+                    var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
+                    var expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value.ToString());
                     int tryGenCount = 0;
-                    if (DateTime.Now.Millisecond > int.Parse(expireTime) && tryGenCount < 5)
+                    if (System.DateTime.UtcNow.ToUnixTime() > expireTime && tryGenCount < 5)
                     {
                         genNewToken(chatId);
                         nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
                         groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
-                        expireTime = nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value;
+                        expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value);
                         tryGenCount++;
                     }
                     if (!string.IsNullOrEmpty(groupToken))
@@ -87,7 +88,8 @@ namespace Enforcer5
                 {
                     if (e.Message.Contains("401"))
                     {
-                        genNewToken(chatId);                       
+                        genNewToken(chatId, true);
+                        return;
                     }
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
@@ -118,7 +120,7 @@ namespace Enforcer5
                     try
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
-                        Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "expireTime", System.DateTime.Now.Millisecond + (result.expires_in * 1000));
+                       var temp = Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "expireTime", System.DateTime.UtcNow.ToUnixTime() + (result.expires_in)).Result;
                        
 
                     }
@@ -198,6 +200,48 @@ namespace Enforcer5
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "no");
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
             Bot.SendReply("Deactivated", update);
+        }
+
+        [Command(Trigger = "checknsfw", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        public static void CheckNSFWSettings(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;
+            Message msg = update.Message;
+            var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+            //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
+            var lang = Methods.GetGroupLanguage(msg).Doc;
+            try
+            {
+                var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
+                var expireTime = nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value.ToString();
+                int tryGenCount = 0;
+                if (!string.IsNullOrEmpty(groupToken))
+                {
+                    //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
+                    var photo = msg.ReplyToMessage.Photo.OrderByDescending(x => x.Height).FirstOrDefault(x => x.FileId != null);
+                    var pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
+                    var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                    // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                    using (var client = new HttpClient())
+                    {
+                        var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
+                        var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
+                        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
+                        var response = client.PostAsync(url, content).Result;
+                        response.EnsureSuccessStatusCode();
+                        var data = response.Content.ReadAsStringAsync().Result;
+                        var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);
+                        var chance = (double)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
+                        //Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
+                        Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, msg, lang);
+            }
         }
     }
 }

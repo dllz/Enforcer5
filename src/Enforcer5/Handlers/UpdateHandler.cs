@@ -147,7 +147,7 @@ namespace Enforcer5.Handlers
                                         return;
                                     }
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
