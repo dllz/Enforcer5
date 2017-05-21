@@ -140,7 +140,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "halt", GlobalAdminOnly = true)]
+        [Command(Trigger = "halt", DevOnly = true)]
         public static void StopBot(Update update, string[] args)
         {
              Bot.SendReply("Stopping bot", update);
@@ -188,7 +188,7 @@ namespace Enforcer5
              Bot.SendReply("Done", update);
         }
 
-        [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
+        [Command(Trigger = "getrekt", DevOnly = true)]
         public static void GlobalBan(Update update, string[] args)
         {
             int userId = 0;
@@ -337,7 +337,7 @@ namespace Enforcer5
              Bot.SendReply(String.Join("\n", banInfo), update);
         }
 
-        [Command(Trigger = "mediaid", GlobalAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "mediaid", DevOnly = true, RequiresReply = true)]
         public static void GetMediaId(Update update, string[] args)
         {
             var mediaID = Methods.GetMediaId(update.Message);
@@ -351,7 +351,7 @@ namespace Enforcer5
              Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
         }
 
-        [Command(Trigger = "msgid", GlobalAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "msgid", DevOnly = true, RequiresReply = true)]
         public static void GetMessageID(Update update, string[] args)
         {
            
@@ -359,7 +359,7 @@ namespace Enforcer5
         }
 
 
-        [Command(Trigger = "getuser", GlobalAdminOnly = true)]
+        [Command(Trigger = "getuser", DevOnly = true)]
         public static void GetUserDetails(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
