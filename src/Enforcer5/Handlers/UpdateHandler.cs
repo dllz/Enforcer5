@@ -143,7 +143,7 @@ namespace Enforcer5.Handlers
                                         return;;
                                     }
                                     if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {
+                                    {                                        
                                         return;
                                     }
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
@@ -153,6 +153,14 @@ namespace Enforcer5.Handlers
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
+                                    }
+                                    if (Constants.Devs.Contains(update.Message.From.Id) & !Methods.IsGroupAdmin(update))
+                                    {
+                                        Service.LogDevCommand(update, update.Message.Text);
+                                    }
+                                    if (Constants.Devs.Contains(update.Message.From.Id) & command.DevOnly)
+                                    {
+                                        Service.LogDevCommand(update, update.Message.Text);
                                     }
                                     if (command.GroupAdminOnly)
                                     {

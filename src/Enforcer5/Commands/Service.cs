@@ -371,6 +371,20 @@ namespace Enforcer5
                 }                                           
         }
 
+         public static void LogDevCommand(Update update, string command)
+        {          
+                var adminUserId = update.Message.From.Id;
+                var adminUserName = update.Message.From.FirstName;
+                var groupName = update.Message.Chat.Title;
+                if(update.Message.ReplyToMessage != null)
+                    LogDevCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
+                else
+                {
+                    LogDevCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);
+                }                                           
+        }
+
+
         public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -405,5 +419,37 @@ namespace Enforcer5
 
 
         }
+
+        public static void LogDevCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
+        {
+            var lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+            if (string.IsNullOrEmpty(replyto))
+            {
+                replyto = Methods.GetLocaleString(lang, "noone");
+            }
+              
+                try
+                {
+
+                    if (groupname != null)
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
+                            -1001076212715);
+                    }
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"),
+                           -1001076212715);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
+                }
+            }
+
+
+       
     }
 }
