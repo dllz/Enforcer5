@@ -1247,4 +1247,7 @@ Example:
   http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
   </value>
   </string>
+  <string key="welcomeBack">
+    <value>Welcome back to Enforcer. Your settings are still intack</value>
+  </string>
 </strings>

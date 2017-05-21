@@ -249,9 +249,10 @@ namespace Enforcer5
         public static void BotAdded(Message updateMessage)
         {
             var groupBan = Redis.db.HashGetAsync($"groupBan:{updateMessage.Chat.Id}", "banned").Result;
+            var lang = Methods.GetGroupLanguage(updateMessage).Doc;
             if (groupBan.Equals("1"))
             {
-                var lang = Methods.GetGroupLanguage(updateMessage).Doc;
+               
                 Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
                 Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
                 return;
@@ -260,7 +261,7 @@ namespace Enforcer5
             if (alreadyExists)
             {
                 Bot.Send(
-                    "Welcome back to Enforcer. Your settings are still intack",
+                    Methods.GetLocaleString(lang, "welcomeBack"),
                     updateMessage.Chat.Id);
             }
             else
