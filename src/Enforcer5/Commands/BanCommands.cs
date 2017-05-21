@@ -54,6 +54,7 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, true)
                         };
                             Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                        Service.LogCommand(update, update.Message.Text);
                         }
                     }
                     catch (Exception e)
@@ -83,6 +84,7 @@ namespace Enforcer5
                    var chatid = update.Message.Chat.Id;
                    
                    Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})");
+                    Service.LogCommand(update, update.Message.Text);
                }
                catch (Exception e)
                {
@@ -292,6 +294,7 @@ namespace Enforcer5
 
                         }
                          Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
+                        Service.LogCommand(update, update.Message.Text);
                     }
                 }
                 catch (Exception e)
@@ -318,6 +321,7 @@ namespace Enforcer5
                 if (res)
                 {
                      Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
+                    Service.LogCommand(update, update.Message.Text);
                 }
             }
 
@@ -393,6 +397,7 @@ namespace Enforcer5
                      Bot.SendReply(
                         Methods.GetLocaleString(lang, "tempbanned", timeText, Methods.GetNick(update.Message, args, userId), userId),
                         update);
+                    Service.LogCommand(update, update.Message.Text);
 #if normal
                      Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
 #endif
@@ -407,6 +412,7 @@ namespace Enforcer5
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
             Bot.DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
+            Service.LogCommand(update, update.Message.Text);
         }
 
        

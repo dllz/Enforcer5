@@ -68,6 +68,7 @@ namespace Enforcer5
                 reporter = $"{reporter} (@{update.Message.From.Username}";
             }
              SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
+            Service.LogCommand(update, update.Message.Text);
         }
 
         [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
@@ -138,6 +139,7 @@ namespace Enforcer5
                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
                     }
                      Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
+                    Service.LogCommand(update, update.Message.Text);
                 }
                 else if (isReported.TryParse(out isReport) && isReport == 1)
                 {
@@ -210,6 +212,7 @@ namespace Enforcer5
                                 }
                             }
                              Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
+                            Service.LogCommand(update, update.Message.Text);
                         }
                         else if (isReported.TryParse(out isReport) && isReport == 1)
                         {
@@ -236,6 +239,7 @@ namespace Enforcer5
             var userId = Methods.GetUserId(update, args);
              Redis.db.SetRemoveAsync(hash, userId);
              Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
+            Service.LogCommand(update, update.Message.Text);
         }
         [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void ReportOff(Update update, string[] args)
@@ -245,6 +249,7 @@ namespace Enforcer5
             var userId = Methods.GetUserId(update, args);
              Redis.db.SetAddAsync(hash, userId);
              Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
+            Service.LogCommand(update, update.Message.Text);
         }
 
         private static void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)

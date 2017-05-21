@@ -154,6 +154,7 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
+<<<<<<< HEAD
                                     if (Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
@@ -162,6 +163,8 @@ namespace Enforcer5.Handlers
                                     {
                                         Service.LogCommand(update, update.Message.Text);
                                     }
+=======
+>>>>>>> bugfixes
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;
@@ -716,7 +719,7 @@ namespace Enforcer5.Handlers
                                 }
                                 if (callbacks.GroupAdminOnly)
                                 {
-                                    Service.LogCommand(long.Parse(args[1]), update.From.Id, update.From.FirstName, update.Message.Chat.Title, callbacks.Trigger);
+                                    Service.LogCommand(long.Parse(args[1]), update.From.Id, update.From.FirstName, update.Message.Chat.Title, callbacks.Trigger, isCallback: true);
                                 }
                             }
                         }
