@@ -154,8 +154,7 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-<<<<<<< HEAD
-                                    if (Constants.Devs.Contains(update.Message.From.Id))
+                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
@@ -163,8 +162,6 @@ namespace Enforcer5.Handlers
                                     {
                                         Service.LogCommand(update, update.Message.Text);
                                     }
-=======
->>>>>>> bugfixes
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;

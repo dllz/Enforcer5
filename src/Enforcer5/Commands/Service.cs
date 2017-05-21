@@ -372,7 +372,6 @@ namespace Enforcer5
                 }                                           
         }
 
-<<<<<<< HEAD
          public static void LogDevCommand(Update update, string command)
         {          
                 var adminUserId = update.Message.From.Id;
@@ -387,10 +386,7 @@ namespace Enforcer5
         }
 
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
-=======
         public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
->>>>>>> bugfixes
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
