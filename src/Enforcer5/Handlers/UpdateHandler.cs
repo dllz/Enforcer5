@@ -154,11 +154,7 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (Constants.Devs.Contains(update.Message.From.Id) & !Methods.IsGroupAdmin(update))
-                                    {
-                                        Service.LogDevCommand(update, update.Message.Text);
-                                    }
-                                    if (Constants.Devs.Contains(update.Message.From.Id) & command.DevOnly)
+                                    if (Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }

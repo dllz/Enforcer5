@@ -435,12 +435,12 @@ namespace Enforcer5
                     if (groupname != null)
                     {
                         Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
-                            -1001076212715);
+                            -1001141798933);
                     }
                     else
                     {
                         Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"),
-                           -1001076212715);
+                           -1001141798933);
                     }
 
                 }
