@@ -690,7 +690,7 @@ namespace Enforcer5
                             Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
                         }
                     }
-                    else if (args[1].Equals("a"))
+                    if (args[1].Equals("a"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
