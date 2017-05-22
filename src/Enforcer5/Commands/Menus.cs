@@ -24,6 +24,7 @@ namespace Enforcer5
             var menu = genMenu(chatId, lang);
              Bot.Send(menuText, update.Message.From.Id, customMenu: menu);
              Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
+            Service.LogCommand(update, update.Message.Text);
         }
 
         [Command(Trigger = "dashboard", InGroupOnly = true)]
