@@ -158,10 +158,6 @@ namespace Enforcer5.Handlers
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
-                                    if (command.GroupAdminOnly)
-                                    {
-                                        Service.LogCommand(update, update.Message.Text);
-                                    }
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;
