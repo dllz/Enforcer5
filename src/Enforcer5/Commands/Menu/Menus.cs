@@ -66,9 +66,6 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-
-       
-
         [Callback(Trigger = "openLangMenu", GroupAdminOnly = true)]
         public static void openLangMenu(CallbackQuery call, string[] args)
         {

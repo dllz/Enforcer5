@@ -67,26 +67,37 @@ namespace Enforcer5
                             if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
                             try
                             {
-                                if (action.Value.Equals("ban"))
+                                var userid = update.Message.From.Id;
+                                var groupId = update.Message.Chat.Id;
+                                switch (action.Value.ToString())
                                 {
+                                    case "kick":
+                                        Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                       
+                                        Bot.Send(
+                                            Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
+                                            update);
+                                    break;
+                                    case "ban":
                                     Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                    Methods.SaveBan(update.Message.From.Id, "flood");
-                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedForFlood", ".."));
-                                    Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
-                                }
-                                else
-                                {
-                                    Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                    Methods.SaveBan(update.Message.From.Id, "flood");
-                                    Bot.Send(
-                                        Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
-                                        update);
-                                }
+                                        Methods.SaveBan(update.Message.From.Id, "flood");
+                                        Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                            Methods.GetLocaleString(lang, "bannedForFlood", ".."));
+                                        Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
+                                    break;
+                                    case "warn":
+                                        Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
+                                    break;
+                                case "tempban":
+                                    
+                                    Commands.Tempban(userid, chatId, Methods.GetGroupTempbanTime(chatId),userid.ToString());
+                                    break;
+                             }
+
                             }
                             catch (Exception e)
                             {
-                                throw;
+                                
                             }
                         }
                     }

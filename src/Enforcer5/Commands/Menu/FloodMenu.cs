@@ -29,9 +29,22 @@ namespace Enforcer5
             }
             var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
             var action = settings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
-            oneRow.Buttons.Add(action.Value.Equals("kick")
-                ? new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"floodaction:{chatId}")
-                : new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"floodaction:{chatId}"));
+            switch (action.Value.ToString())
+            {
+                case "kick":
+                    oneRow.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"floodaction:{chatId}"));
+                    break;
+                case "ban":
+                    oneRow.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"floodaction:{chatId}"));
+                    break;
+                case "warn":
+                    oneRow.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"floodaction:{chatId}"));
+                    break;
+                case "tempban":
+                    oneRow.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"floodaction:{chatId}"));
+                    break;
+
+            }
             action = settings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
             var twoRow = new Menu(3);
             twoRow.Buttons.Add(new InlineButton("➖", $"flooddim:{chatId}"));
@@ -132,6 +145,18 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "warn");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            } else if (current.Equals("warn"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "tempban");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "ban");
                 var keys = Commands.genFlood(chatId, lang);
