@@ -141,7 +141,7 @@ namespace Enforcer5
            
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
-            return Key.CreateMarkupFromMenus(mainMenu,, close);
+            return Key.CreateMarkupFromMenus(mainMenu, close);
         }
 
     }
