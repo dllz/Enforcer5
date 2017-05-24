@@ -990,5 +990,15 @@ namespace Enforcer5.Helpers
                 Thread.Sleep(TimeSpan.FromMinutes(10));
             }
         }
+
+        public static int GetGroupTempbanTime(long chatId)
+        {
+            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;
+            if (time.IsInteger)
+            {
+                return int.Parse(time);
+            }
+            return 1440;
+        }
     }
 }

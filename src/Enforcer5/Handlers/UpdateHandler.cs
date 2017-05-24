@@ -75,9 +75,15 @@ namespace Enforcer5.Handlers
             Console.ForegroundColor = ConsoleColor.Cyan;
             //Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
             Console.ForegroundColor = ConsoleColor.Red;
-                if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
+            if (command != null)
+            {
+                Console.Write(command.Method.GetMethodInfo().Name);
+                Botan.log(update, command.Method.GetMethodInfo().Name);
+            }
+               
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");      
+                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");
+            
         }
 
         private static async void HandleUpdate(Update update)

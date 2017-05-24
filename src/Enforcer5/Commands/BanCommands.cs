@@ -327,13 +327,53 @@ namespace Enforcer5
 
         }
 
+        public static void Tempban(int userId, long chatId, int time,
+            string nick = null, Update update = null)
+        {           
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
+                var hash = $"{chatId}:{userId}";
+                var res = Methods.BanUser(chatId, userId, lang);
+                if (res.Equals(true))
+                {
+                    Methods.SaveBan(userId, "tempban");
+                    Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
+#if normal
+                    Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+#endif
+#if premium
+                      Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
+#endif
+                    var timeBanned = TimeSpan.FromMinutes(time);
+                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                    if (update != null)
+                    {
+                        Bot.SendReply(
+                            Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId),
+                            update);
+                    }
+                    else
+                    {
+                        Bot.Send(Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId), chatId);
+                    }
+                    
+                    
+#if normal
+                    Redis.db.SetAddAsync($"chat:{chatId}:tempbanned", userId);
+#endif
+#if premium
+                     Redis.db.SetAddAsync($"chat:{chatId}:tempbannedPremium", userId);
+#endif
+                }
+            }        
+
         [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Tempban(Update update, string[] args)
         {
+
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
             int userId, time;
             string length;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-
             if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
@@ -371,40 +411,17 @@ namespace Enforcer5
 
             if (!int.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
-                time = 60;
+                Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
             if (time == 0)
             {
-                 Bot.SendReply(Methods.GetLocaleString(lang, "tempbanZero"), update);
+                Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
             else
             {
-                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
-                var hash = $"{update.Message.Chat.Id}:{userId}";
-                var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
-                if (res.Equals(true))
-                {
-                    Methods.SaveBan(userId, "tempban");
-                     Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
-#if normal
-                     Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
-#endif
-#if premium
-                      Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
-#endif
-                    var timeBanned = TimeSpan.FromMinutes(time);
-                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                     Bot.SendReply(
-                        Methods.GetLocaleString(lang, "tempbanned", timeText, Methods.GetNick(update.Message, args, userId), userId),
-                        update);
-                    Service.LogCommand(update, update.Message.Text);
-#if normal
-                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
-#endif
-#if premium
-                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
-#endif
-                }
+                Tempban(userId, update.Message.Chat.Id, time, Methods.GetNick(update.Message, args, userId));
+                Service.LogCommand(update, update.Message.Text);
+            
             }
         }
 
