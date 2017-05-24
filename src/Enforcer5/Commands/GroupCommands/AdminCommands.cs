@@ -637,7 +637,7 @@ namespace Enforcer5
             if (elevated) return "elevated";
             if (status == ChatMemberStatus.Member) return "member";
             if (status == ChatMemberStatus.Left) return "left";
-            return "notseen";
+            return "neverseen";
         }
 
         [Command(Trigger = "addlogchannel", InGroupOnly = true)]
