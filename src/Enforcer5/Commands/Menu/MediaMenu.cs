@@ -22,14 +22,21 @@ namespace Enforcer5
             {
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                     $"mediasettings:{mem.Name}"));
-                if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
+                switch(mem.Value.ToString())
                 {
-                    menu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}",
-                        $"media{mem.Name}:{chatId}"));
-                }
-                else if (mem.Value.Equals("allowed"))
-                {
-                    menu.Buttons.Add(new InlineButton("✅", $"media{mem.Name}:{chatId}"));
+                    case "kick":
+                    menu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"media{mem.Name}:{chatId}"));
+                    break;
+                    case "ban":
+                        menu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"media{mem.Name}:{chatId}"));
+                    break;
+                    case "allowed":
+                        menu.Buttons.Add(new InlineButton("✅", $"media{mem.Name}:{chatId}"));
+                        break;
+                    case "tempban":
+                        menu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"media{mem.Name}:{chatId}"));
+                    break;
+
                 }
             }
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
