@@ -979,7 +979,7 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
 
                  Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
-                 Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
+                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }
