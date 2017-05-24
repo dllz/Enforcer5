@@ -1338,4 +1338,7 @@
   <string key="warnMenu">
     <value>Edit the maximum warns and the action taken in your group</value>
   </string>
+  <string key="groupSettingButton">
+    <value>Group</value>
+  </string>
 </strings>
