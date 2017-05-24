@@ -134,14 +134,21 @@ namespace Enforcer5
             {
                 mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                     $"menusettings:{mem.Name}"));
-                if (mem.Value.Equals("kick") || mem.Value.Equals("ban"))
+                switch (mem.Value.ToString())
                 {
-                    mainMenu.Buttons.Add(new InlineButton($"🔐 {Methods.GetLocaleString(lang, mem.Value)}",
-                        $"menu{mem.Name}:{chatId}"));
-                }
-                else if (mem.Value.Equals("allowed"))
-                {
-                    mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
+                    case "kick":
+                        mainMenu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"menu{mem.Name}:{chatId}"));
+                        break;
+                    case "ban":
+                        mainMenu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"menu{mem.Name}:{chatId}"));
+                        break;
+                    case "allowed":
+                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
+                        break;
+                    case "tempban":
+                        mainMenu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"menu{mem.Name}:{chatId}"));
+                        break;
+
                 }
             }
             var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
