@@ -292,13 +292,6 @@
     <value>
       Manage the settings of {0}.
 
-      Some commands (/rules, /about, /adminlist, #extra commands) can be disabled to be sent in group.
-      What happens if a command is disabled, is, that the bot will simply pm the message to the user who requested it.
-
-      The icons near the command will show the current status:
-      • 👥: The bot will reply in the group.
-      • 👤: The bot will reply in private.
-
       Other settings: for the other settings, icons are self explanatory
     </value>
   </string>
@@ -1331,5 +1324,18 @@
   </string>
   <string key="defaultTimeSet">
     <value>The default tempban time for this group has been updated.</value>
+  </string>
+  <string key="groupMenu">
+    <value>
+      Some commands (/rules, /about, /adminlist, #extra commands) can be disabled to be sent in group.
+      What happens if a command is disabled, is, that the bot will simply pm the message to the user who requested it.
+
+      The icons near the command will show the current status:
+      • 👥: The bot will reply in the group.
+      • 👤: The bot will reply in private.
+    </value>
+  </string>
+  <string key="warnMenu">
+    <value>Edit the maximum warns and the action taken in your group</value>
   </string>
 </strings>
