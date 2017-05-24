@@ -7,6 +7,7 @@ using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5
