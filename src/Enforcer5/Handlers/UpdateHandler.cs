@@ -60,7 +60,8 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-            }     
+            }
+            Botan.log(update.Message, text);
         }
         private static void Log(CallbackQuery update, Models.CallBacks command = null)
         {
@@ -133,7 +134,7 @@ namespace Enforcer5.Handlers
                                         String.Equals(x.Trigger, args[0],
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
-                                {
+                                {                                  
                                     new Task(() => { Log(update, "text", command); }).Start();
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command

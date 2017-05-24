@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -821,6 +823,34 @@ namespace Enforcer5.Helpers
                 return false;
             }
             
+        }
+    }
+
+    internal static class Botan
+    {
+#if normal
+        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EBotan").ToString();
+#endif
+#if premium
+        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EPBotan").ToString();
+#endif
+        public static BotanTrackResponse log(Message update, string eventId)
+        {
+            var url = $"https://api.botan.io/track?token={key}&uid={update.From.Id}&name={eventId}";
+            Object text = update;
+            var client = new HttpClient();
+            var content = new StringContent(JsonConvert.SerializeObject(text), Encoding.UTF8, "application/json");          
+            var response = client.PostAsync(url, content).Result;
+            response.EnsureSuccessStatusCode();
+            var data = response.Content.ReadAsStringAsync().Result;
+            var result = JsonConvert.DeserializeObject<BotanTrackResponse>(data);
+            return result;
+        }
+
+        public class BotanTrackResponse
+        {
+            public string Status { get; set; }
+            public string Information { get; set; }
         }
     }
 }
