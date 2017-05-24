@@ -430,7 +430,7 @@ namespace Enforcer5
                     }
                 }
             }
-            else if (update.Message.ReplyToMessage != null)
+            if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
                 var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
