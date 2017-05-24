@@ -133,7 +133,7 @@ namespace Enforcer5
             }
             else if (current.Equals("tempban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "ban");
+                Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "ban");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
