@@ -608,15 +608,10 @@ namespace Enforcer5
                 try
                 {
                     var userid = Methods.GetUserId(update, args);
-                    var exists = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
-                    if (exists.HasValue)
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "usergroupstatus", userid, exists), update);
-                    }
-                    else
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "usergroupstatusnotseen", userid, exists), update);
-                    }
+                    var status = Check(userid, update.Message.Chat.Id);
+                    var n= Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
+                    var number = n.HasValue ? int.Parse(n.ToString()) : 0;
+                    Bot.SendReply(Methods.GetLocaleString(lang, $"usergroupstatus{status}", userid, number), update.Message);
                 }
                 catch (Exception e)
                 {
@@ -628,6 +623,22 @@ namespace Enforcer5
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
             }
         }      
+
+        public static string Check(int userid, long chatid)
+        {
+            var status = Bot.Api.GetChatMemberAsync(chatid, userid).Result.Status;
+            var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
+            var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
+
+            if (status == ChatMemberStatus.Creator) return "creator";
+            if (status == ChatMemberStatus.Administrator) return "admin";
+            if (status == ChatMemberStatus.Kicked) return "banned";
+            if (priv) return "auth";
+            if (elevated) return "elevated";
+            if (status == ChatMemberStatus.Member) return "member";
+            if (status == ChatMemberStatus.Left) return "left";
+            return "neverseen";
+        }
 
         [Command(Trigger = "addlogchannel", InGroupOnly = true)]
         public static void AddLogChat(Update update, string[] args)
