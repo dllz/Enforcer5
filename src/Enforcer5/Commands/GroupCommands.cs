@@ -871,6 +871,9 @@ namespace Enforcer5
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
                 var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
                     var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{update.Message.From.Id}").Result;
+                var alreadyElevated = Redis.db.SetContainsAsync($"chat:{chat}:mod", userid).Result;
+                if(alreadyElevated)
+                    return;
                 if ((role.Result.Status == ChatMemberStatus.Creator || priv))
                 {
                     Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
