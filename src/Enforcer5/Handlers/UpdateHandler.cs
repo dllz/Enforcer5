@@ -88,7 +88,12 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                    {
+                        Bot.Send(
+                            "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
+                            update);
+                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                    }
                 }                
 #endif             
                 new Task(() => { CollectStats(update.Message); }).Start();                
