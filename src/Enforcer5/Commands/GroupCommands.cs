@@ -982,7 +982,26 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(update.Message).Doc;
 
                  Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
-                 Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
+                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", userid, update.Message.From.Id), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
+        }
+
+        [Command(Trigger = "unblockelevate", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void Unblockelevate(Update update, string[] args)
+        {
+            var chat = update.Message.Chat.Id;
+            var userid = Methods.GetUserId(update, args);
+            if (userid == Bot.Me.Id)
+                return;
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            if (role.Result.Status == ChatMemberStatus.Creator | priv)
+            {
+                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+
+                Redis.db.SetRemoveAsync($"chat:{chat}:deauth", userid);
+                Bot.SendReply(Methods.GetLocaleString(lang, "elevateUnblocked", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }
