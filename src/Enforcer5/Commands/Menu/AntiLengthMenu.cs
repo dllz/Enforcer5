@@ -42,7 +42,7 @@ namespace Enforcer5
                             menu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"namesettingsaction:{chatId}"));
                             break;
                         case "Warn":
-                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"namesettingsaction:{chatId}"));
+                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "Warn")}", $"namesettingsaction:{chatId}"));
                             break;
                         case "tempban":
                             menu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"namesettingsaction:{chatId}"));
@@ -76,7 +76,7 @@ namespace Enforcer5
                             menu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"textsettingsaction:{chatId}"));
                             break;
                         case "Warn":
-                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"textsettingsaction:{chatId}"));
+                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "Warn")}", $"textsettingsaction:{chatId}"));
                             break;
                         case "tempban":
                             menu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"textsettingsaction:{chatId}"));

@@ -38,7 +38,7 @@ namespace Enforcer5
                     oneRow.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"floodaction:{chatId}"));
                     break;
                 case "warn":
-                    oneRow.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"floodaction:{chatId}"));
+                    oneRow.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "Warn")}", $"floodaction:{chatId}"));
                     break;
                 case "tempban":
                     oneRow.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"floodaction:{chatId}"));
