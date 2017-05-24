@@ -44,7 +44,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-            }else if (text.Equals("chatMember"))
+                Botan.log(update.Message, command.Trigger);
+            }
+            else if (text.Equals("chatMember"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -52,7 +54,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
-            }else if (text.Equals("extra"))
+                Botan.log(update.Message, "welcome");
+            }
+            else if (text.Equals("extra"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -60,8 +64,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+                Botan.log(update.Message, "extra");
             }
-            Botan.log(update.Message, text);
+            
         }
         private static void Log(CallbackQuery update, Models.CallBacks command = null)
         {
@@ -99,7 +104,7 @@ namespace Enforcer5.Handlers
 
 
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == false)
-                    return; //toss it
+                   // return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30) && Bot.testing == false)
                    return;
