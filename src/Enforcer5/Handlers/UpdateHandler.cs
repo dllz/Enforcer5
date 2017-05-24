@@ -44,7 +44,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-            }else if (text.Equals("chatMember"))
+                Botan.log(update.Message, command.Trigger);
+            }
+            else if (text.Equals("chatMember"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -52,7 +54,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
-            }else if (text.Equals("extra"))
+                Botan.log(update.Message, "welcome");
+            }
+            else if (text.Equals("extra"))
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
@@ -60,7 +64,9 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-            }     
+                Botan.log(update.Message, "extra");
+            }
+            
         }
         private static void Log(CallbackQuery update, Models.CallBacks command = null)
         {
@@ -82,7 +88,12 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                    {
+                        Bot.Send(
+                            "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
+                            update);
+                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                    }
                 }                
 #endif             
                 new Task(() => { CollectStats(update.Message); }).Start();                
@@ -98,7 +109,7 @@ namespace Enforcer5.Handlers
 
 
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == false)
-                    return; //toss it
+                   return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30) && Bot.testing == false)
                    return;
@@ -133,7 +144,7 @@ namespace Enforcer5.Handlers
                                         String.Equals(x.Trigger, args[0],
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
-                                {
+                                {                                  
                                     new Task(() => { Log(update, "text", command); }).Start();
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command

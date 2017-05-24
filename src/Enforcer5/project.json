@@ -11,9 +11,9 @@
     "define": [ "normal" ]
   },
   "dependencies": {
-    "Microsoft.NETCore.App": "1.1.0",
-    "Microsoft.Win32.Registry": "4.0.0",
-    "StackExchange.Redis": "1.1.608",
+    "Microsoft.NETCore.App": "1.1.2",
+    "Microsoft.Win32.Registry": "4.3.0",
+    "StackExchange.Redis": "1.2.3",
     "Telegram.Bot": "10.4.0"
   },
   "runtimes": {
