@@ -394,6 +394,13 @@ namespace Enforcer5
             }
             else if (current.Equals("allowed"))
             {
+                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "tempban");
+                var keys = Commands.genMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
                 Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
@@ -425,6 +432,13 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "tempban");
+                var keys = Commands.genMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
                 var keys = Commands.genMenu(chatId, lang);

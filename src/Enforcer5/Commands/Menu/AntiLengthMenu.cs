@@ -33,12 +33,23 @@ namespace Enforcer5
                 {
                     menu.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
                         $"namesettings:{chatId}"));
-                }
-                if (mem.Value.Equals("kick") || mem.Value.Equals("ban") || mem.Value.Equals("Warn"))
-                {
-                    menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, mem.Value)}",
-                        $"namesettings{mem.Name}:{chatId}"));
-                }
+                }  switch (mem.Value.ToString())
+                    {
+                        case "kick":
+                            menu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"namesettingsaction:{chatId}"));
+                            break;
+                        case "ban":
+                            menu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"namesettingsaction:{chatId}"));
+                            break;
+                        case "Warn":
+                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"namesettingsaction:{chatId}"));
+                            break;
+                        case "tempban":
+                            menu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"namesettingsaction:{chatId}"));
+                            break;
+
+                    }
+                
             }
             menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "textSettingsHeader")));
             menu.Buttons.Add(new InlineButton($"{textSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value} : {textSettings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value}"));
@@ -54,10 +65,24 @@ namespace Enforcer5
                     menu.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
                         $"textsettings:{chatId}"));
                 }
-                else if (mem.Value.Equals("kick") || mem.Value.Equals("ban") || mem.Value.Equals("Warn"))
+                else
                 {
-                    menu.Buttons.Add(new InlineButton($"{Methods.GetLocaleString(lang, mem.Value)}",
-                        $"textsettings{mem.Name}:{chatId}"));
+                    switch (mem.Value.ToString())
+                    {
+                        case "kick":
+                            menu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"textsettingsaction:{chatId}"));
+                            break;
+                        case "ban":
+                            menu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"textsettingsaction:{chatId}"));
+                            break;
+                        case "Warn":
+                            menu.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"textsettingsaction:{chatId}"));
+                            break;
+                        case "tempban":
+                            menu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"textsettingsaction:{chatId}"));
+                            break;
+
+                    }
                 }
             }
             var close = new Menu(1);
@@ -101,7 +126,14 @@ namespace Enforcer5
             }
             else if (current.Equals("Warn"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "ban");
+                Redis.db.HashSetAsync($"chat:{chatId}:antinamelengthsettings", option, "tempban");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "ban");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -153,6 +185,12 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("Warn"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "tempban");
+                var keys = Commands.genAntiLengthMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            } else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:antitextlengthsettings", option, "ban");
                 var keys = Commands.genAntiLengthMenu(chatId, lang);

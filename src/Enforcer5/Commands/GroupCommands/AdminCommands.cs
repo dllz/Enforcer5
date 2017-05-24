@@ -679,7 +679,34 @@ namespace Enforcer5
             }
         }
 
-      
+        [Command(Trigger = "temptime", InGroupOnly = true)]
+        public static void SetDefaultTempban(Update update, string[] args)
+        {
+            int time;
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            if (!int.TryParse(args[1], out time))
+            {
+
+                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultTime", time), update);
+            }
+            else
+            {
+                if (!Methods.IsGroupAdmin(update) &
+                    !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
+                {
+                    Bot.SendReply(
+                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                            "userNotAdmin"), update.Message);
+                    return;
+                }
+                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempbanTime", time);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultTimeSet"), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
+        }
+
+
     }
 
     public static partial class CallBacks

@@ -328,7 +328,7 @@ namespace Enforcer5
         }
 
         public static void Tempban(int userId, long chatId, int time,
-            string nick = null, Update update = null)
+            string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
                 var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
@@ -346,15 +346,19 @@ namespace Enforcer5
 #endif
                     var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                    if (message == null)
+                    {
+                        Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
+                    }
                     if (update != null)
                     {
-                        Bot.SendReply(
-                            Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId),
+                        Bot.SendReply(message
+                            ,
                             update);
                     }
                     else
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId), chatId);
+                        Bot.Send(message, chatId);
                     }
                     
                     

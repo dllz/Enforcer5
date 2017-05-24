@@ -109,6 +109,13 @@ namespace Enforcer5
             }
             else if (current.Equals("allowed"))
             {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
@@ -137,6 +144,12 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            } else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
@@ -168,6 +181,13 @@ namespace Enforcer5
             }
             else if (current.Equals("allowed"))
             {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
@@ -197,6 +217,13 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
@@ -228,6 +255,13 @@ namespace Enforcer5
             }
             else if (current.Equals("allowed"))
             {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
@@ -257,6 +291,13 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("allowed"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
                 var keys = Commands.genMediaMenu(chatId, lang);
@@ -293,6 +334,13 @@ namespace Enforcer5
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
+            else if (current.Equals("tempban"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
         }
 
         [Callback(Trigger = "medialink")]
@@ -319,6 +367,13 @@ namespace Enforcer5
             else if (current.Equals("allowed"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -353,6 +408,13 @@ namespace Enforcer5
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
+            else if (current.Equals("tempban"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
         }
 
         [Callback(Trigger = "mediaaudio")]
@@ -379,6 +441,13 @@ namespace Enforcer5
             else if (current.Equals("allowed"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
+                var keys = Commands.genMediaMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("tempban"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
