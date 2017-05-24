@@ -133,8 +133,7 @@ namespace Enforcer5
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nsfwButton"),
                 $"opennsfwmenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"openWarnMenu:{chatId}"));
-            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupSettingButton"), $"openGroupMenu:{chatId}"));
-            warnTitle.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnsButton"), "menualert:warns"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupSettingButton"), $"openGroupMenu:{chatId}"));            
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"),
                 $"openMediaMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupLanguage"),
@@ -142,7 +141,7 @@ namespace Enforcer5
            
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "closeButton"), "close"));
-            return Key.CreateMarkupFromMenus(mainMenu, warnTitle, close);
+            return Key.CreateMarkupFromMenus(mainMenu,, close);
         }
 
     }
