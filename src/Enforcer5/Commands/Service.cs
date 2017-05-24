@@ -359,6 +359,11 @@ namespace Enforcer5
             }
         }
 
+        public static void LogBotAction(long chatId, string command)
+        {
+            LogCommand(chatId, -1, "Enforcer", Bot.Api.GetChatAsync(chatId).Result.Title, command);
+        }
+
         public static void LogCommand(Update update, string command)
         {          
                 var adminUserId = update.Message.From.Id;
