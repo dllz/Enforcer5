@@ -834,9 +834,9 @@ namespace Enforcer5.Helpers
 #if premium
         private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EPBotan").ToString();
 #endif
-        public static BotanTrackResponse log(Message update, string eventId)
+        public static BotanTrackResponse log(Object update, string eventId, int id)
         {
-            var url = $"https://api.botan.io/track?token={key}&uid={update.From.Id}&name={eventId}";
+            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";
             Object text = update;
             var client = new HttpClient();
             var content = new StringContent(JsonConvert.SerializeObject(text), Encoding.UTF8, "application/json");          
@@ -845,6 +845,16 @@ namespace Enforcer5.Helpers
             var data = response.Content.ReadAsStringAsync().Result;
             var result = JsonConvert.DeserializeObject<BotanTrackResponse>(data);
             return result;
+        }
+
+        public static BotanTrackResponse log(Message update, string eventId)
+        {        
+            return log(update, eventId, update.From.Id);
+        }
+
+        public static BotanTrackResponse log(CallbackQuery update, string eventId)
+        {
+            return log(update, eventId, update.From.Id);
         }
 
         public class BotanTrackResponse
