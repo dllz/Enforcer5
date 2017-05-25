@@ -21,10 +21,11 @@ namespace Enforcer5
             
             foreach (var mem in mediaList)
             {
-                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                    $"mediasettings:{mem.Name}"));
+                
                 if (!mem.Name.Equals("action"))
                 {
+                    menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
+                        $"mediasettings:{mem.Name}"));
                     switch (mem.Value.ToString())
                     {
                         case "allowed":
@@ -59,7 +60,7 @@ namespace Enforcer5
             editWarn.Buttons.Add(new InlineButton("➕", $"mediaRaiseWarn:{chatId}"));
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
-            return Key.CreateMarkupFromMenus(menu, editWarn, close);
+            return Key.CreateMarkupFromMenus(menu, warnTitle, editWarn, close);
         }      
     }
 
