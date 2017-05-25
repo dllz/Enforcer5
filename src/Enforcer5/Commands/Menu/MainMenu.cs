@@ -13,7 +13,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        [Command(Trigger = "menu", GroupAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "menu", InGroupOnly = true)]
         public static void Menu(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
