@@ -523,10 +523,6 @@ namespace Enforcer5.Helpers
                 {
                     warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
                 }
-                if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result.HasValue)
-                {
-                    warns = warns + (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarns", userid).Result;
-                }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
             
