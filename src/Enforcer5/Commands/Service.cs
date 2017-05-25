@@ -290,6 +290,47 @@ namespace Enforcer5
         {
             Redis.db.HashSetAsync($"chat:{chatid}:nsfwDetection", "activated", "on");
             Redis.db.HashSetAsync($"chat:{chatid}:nsfwDetection", "action", "ban");
+            
+        }
+
+        public static void NewSetting2(long chatid)
+        {
+           
+            object[,,] defaultSettings =
+            {
+                {
+                    { "media", "image", "allowed"},
+                    { "media", "audio", "allowed"},
+                    { "media", "video", "allowed"},
+                    { "media", "sticker", "allowed"},
+                    { "media", "gif", "allowed"},
+                    { "media", "voice", "allowed"},
+                    { "media", "contact", "allowed"},
+                    { "media", "file", "allowed"},
+                    { "media", "link", "allowed"},
+                    {"media", "action", "tempban" }
+                }
+            };
+
+
+            var num = 0;
+            for (int i = 0; i < defaultSettings.GetLength(0); i++)
+            {
+                for (int j = 0; j < defaultSettings.GetLength(1); j++)
+                {
+                    var hash = $"chat:{chatid}:{defaultSettings[i, j, 0]}";
+                    var value = defaultSettings[i, j, 1];
+                    var setting = defaultSettings[i, j, 2];
+                    if (int.TryParse(setting.ToString(), out num))
+                    {
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
+                    }
+                    else if (setting is string)
+                    {
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                    }
+                }
+            }
         }
 
         public static void GenerateSettings(long chatId)
@@ -327,6 +368,7 @@ namespace Enforcer5
                     {"media", "contact", "allowed"},
                     {"media", "file", "allowed"},
                     {"media", "link", "allowed"},
+                    {"media", "action", "tempban" },
                     {"antitextlengthsettings", "enabled", "yes" },
                     {"antitextlengthsettings", "maxlength", 1024 },
                     {"antitextlengthsettings", "maxlines", 50 },
@@ -335,6 +377,9 @@ namespace Enforcer5
                     {"antinamelengthsettings", "enabled", "yes" },
                     {"antinamelengthsettings", "maxlength", 50 },
                     {"antinamelengthsettings", "action", "kick" },
+                    {"nsfwDetection", "activated", "on"},
+                    {"nsfwDetection", "action", "ban" },
+
                 }
             };
 

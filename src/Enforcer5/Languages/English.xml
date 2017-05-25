@@ -323,7 +323,7 @@
     <value>Arab</value>
   </string>
   <string key="WarnsButton">
-    <value>Warns 👇🏼</value>
+    <value>Warn action: {0}</value>
   </string>
   <string key="closeButton">
     <value>Done</value>

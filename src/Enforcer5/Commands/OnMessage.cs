@@ -308,8 +308,8 @@ namespace Enforcer5
                         return;
                     }
                 }
-                var allowed = status.Equals("allowed");
-                if (allowed == false && status.HasValue)
+                var allowed = status.Equals("blocked");
+                if (allowed)
                 {
                     var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
                     if (update.Message.From.Username != null)
@@ -321,7 +321,8 @@ namespace Enforcer5
                     if (current >= int.Parse(max))
                     {
                         string reply;
-                        switch (status)
+                        var action = Redis.db.HashGetAsync($"chat:{chatId}:media", "action").Result;
+                        switch (action.ToString())
                         {
                             case "kick":
 
