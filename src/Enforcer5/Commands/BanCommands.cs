@@ -348,7 +348,7 @@ namespace Enforcer5
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                     if (message == null)
                     {
-                        Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
+                        message = Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
                     }
                     if (update != null)
                     {

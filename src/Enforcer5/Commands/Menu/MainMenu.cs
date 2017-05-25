@@ -100,32 +100,8 @@ namespace Enforcer5
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
             
-            settings = Redis.db.HashGetAllAsync($"chat:{chatId}:char").Result;
-            foreach (var mem in settings)
-            {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                    $"menusettings:{mem.Name}"));
-                switch (mem.Value.ToString())
-                {
-                    case "kick":
-                        mainMenu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"menu{mem.Name}:{chatId}"));
-                        break;
-                    case "ban":
-                        mainMenu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"menu{mem.Name}:{chatId}"));
-                        break;
-                    case "allowed":
-                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
-                        break;
-                    case "tempban":
-                        mainMenu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"menu{mem.Name}:{chatId}"));
-                        break;
-
-                }
-            }
-            var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
-            var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
-            var warnTitle = new Menu(1);
-
+           
+            
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"FloodButton"),
                 $"openFloodMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "lengthButton"),
@@ -168,88 +144,6 @@ namespace Enforcer5
         public static void MenuChanges(CallbackQuery call, string[] args)
         {
             Bot.Api.AnswerCallbackQueryAsync(call.Id, "Still coming");
-        }
-
-       
-
-        [Callback(Trigger = "menuRtl")]
-        public static void MenuRtl(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "Rtl";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
-            if (current.Equals("ban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "kick");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("kick"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "allowed");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("allowed"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "tempban");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("tempban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
-
-        [Callback(Trigger = "menuArab")]
-        public static void MenuArab(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "Arab";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
-            if (current.Equals("ban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "kick");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("kick"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "allowed");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("allowed"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "tempban");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("tempban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:char", option, "ban");
-                var keys = Commands.genMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
-
-       
+        }       
     }
 }

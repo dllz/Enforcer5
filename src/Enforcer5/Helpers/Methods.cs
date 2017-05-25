@@ -993,12 +993,13 @@ namespace Enforcer5.Helpers
 
         public static int GetGroupTempbanTime(long chatId)
         {
+            int res = 1440;
             var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;
-            if (time.IsInteger)
+            if (int.TryParse(time.ToString(), out res))
             {
-                return int.Parse(time);
+                return res;
             }
-            return 1440;
+            return res;
         }
     }
 }
