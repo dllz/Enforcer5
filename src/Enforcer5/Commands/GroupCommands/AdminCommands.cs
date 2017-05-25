@@ -722,10 +722,10 @@ namespace Enforcer5
         public static void MediaUserMenu(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            var warns = Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", update.Message.From.Id).Result;
-            var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);
             var userid = Methods.GetUserId(update, args);
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            var warns = (int)Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+            var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);            
             var userMenu = new Menu(2);
             userMenu.Buttons = new List<InlineButton>
             {
