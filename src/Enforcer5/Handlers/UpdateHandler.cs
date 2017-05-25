@@ -508,6 +508,12 @@ namespace Enforcer5.Handlers
                         Service.NewSetting2(updateMessage.Chat.Id);
                         Redis.db.SetAddAsync("lenghtUpdate", updateMessage.Chat.Id);
                     }
+                    updated = Redis.db.SetContainsAsync("dbUpdate:lenghtUpdat4", $"{updateMessage.Chat.Id}:{updateMessage.From.Id}").Result;
+                    if (!updated)
+                    {
+                        Service.removeWarn0(updateMessage.Chat.Id, updateMessage.From.Id);
+                        Redis.db.SetAddAsync("dbUpdate:lenghtUpdat4", $"{updateMessage.Chat.Id}:{updateMessage.From.Id}");
+                    }
                 }
             }
             catch (Exception e)

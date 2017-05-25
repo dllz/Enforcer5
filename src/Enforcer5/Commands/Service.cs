@@ -333,6 +333,20 @@ namespace Enforcer5
             }
         }
 
+        public static void removeWarn0(long chatid, int userId)
+        {
+            var currentMedia = (int)Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result;
+            var currentWarn = (int)Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result;
+
+            if (currentWarn < 0)
+            {
+                Redis.db.HashSetAsync($"chat:{chatid}:warns", userId, 0);
+
+            }
+            if(currentMedia < 0)
+                Redis.db.HashSetAsync($"chat:{chatid}:mediawarn", userId, 0);
+        }
+
         public static void GenerateSettings(long chatId)
         {
             object[,,] defaultSettings =
