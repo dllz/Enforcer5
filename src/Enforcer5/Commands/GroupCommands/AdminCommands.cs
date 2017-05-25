@@ -755,7 +755,9 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
-            Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId);
+            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
+            if (res < 0)
+                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
@@ -841,7 +843,9 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
-            Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId).Result;
+            if (res < 0)
+                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId, 0);
             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
