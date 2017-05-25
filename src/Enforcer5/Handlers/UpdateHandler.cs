@@ -704,8 +704,8 @@ namespace Enforcer5.Handlers
                             String.Equals(x.Trigger, args[0],
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
-                    {
-                        AddCount(update.Message.From.Id, update.Message.Text);
+                    {                       
+                        AddCount(update.From.Id, update.Message.Text);
                         var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
                         if (blocked.HasValue)
                         {
@@ -725,12 +725,9 @@ namespace Enforcer5.Handlers
                             if (!string.IsNullOrEmpty(args[1]))
                             {
                                 if (callbacks.GroupAdminOnly &
-                                    !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])) &
-                                    !Methods.IsGlobalAdmin(update.From.Id))
+                                    !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])))
                                 {
-                                    Bot.Send(
-                                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.From.Id).Doc,
-                                            "userNotAdmin"), update.From.Id);
+                                    
                                     return;
                                 }
                                 if (callbacks.GroupAdminOnly)

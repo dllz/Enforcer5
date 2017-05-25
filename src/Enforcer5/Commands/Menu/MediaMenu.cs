@@ -66,7 +66,7 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-        [Callback(Trigger = "openMediaMenu", GroupAdminOnly = true)]
+        [Callback(Trigger = "openMediaMenu")]
         public static void openMediaMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -76,7 +76,7 @@ namespace Enforcer5
             Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
 
-        [Callback(Trigger = "mediaaction")]
+        [Callback(Trigger = "mediaaction", GroupAdminOnly = true)]
         public static void mediaAction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -106,7 +106,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediaDimWarn")]
+        [Callback(Trigger = "mediaDimWarn", GroupAdminOnly = true)]
         public static void mediaDimWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -125,7 +125,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediaRaiseWarn")]
+        [Callback(Trigger = "mediaRaiseWarn", GroupAdminOnly = true)]
         public static void mediaRaiseWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -136,7 +136,7 @@ namespace Enforcer5
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
-        [Callback(Trigger = "mediatext")]
+        [Callback(Trigger = "mediatext", GroupAdminOnly = true)]
         public static void mediatext(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -158,7 +158,7 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
-        [Callback(Trigger = "mediasticker")]
+        [Callback(Trigger = "mediasticker", GroupAdminOnly = true)]
         public static void mediasticker(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -181,7 +181,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediaimage")]
+        [Callback(Trigger = "mediaimage", GroupAdminOnly = true)]
         public static void mediaimage(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -204,7 +204,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediavideo")]
+        [Callback(Trigger = "mediavideo", GroupAdminOnly = true)]
         public static void mediavideo(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -227,7 +227,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediagif")]
+        [Callback(Trigger = "mediagif", GroupAdminOnly = true)]
         public static void mediagif(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -250,7 +250,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediacontact")]
+        [Callback(Trigger = "mediacontact", GroupAdminOnly = true)]
         public static void mediacontact(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -273,7 +273,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediafile")]
+        [Callback(Trigger = "mediafile", GroupAdminOnly = true)]
         public static void mediafile(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -296,7 +296,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "medialink")]
+        [Callback(Trigger = "medialink", GroupAdminOnly = true)]
         public static void medialink(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -319,7 +319,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediavoice")]
+        [Callback(Trigger = "mediavoice", GroupAdminOnly = true)]
         public static void mediavoice(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -342,7 +342,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "mediaaudio")]
+        [Callback(Trigger = "mediaaudio", GroupAdminOnly = true)]
         public static void mediaaudio(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);

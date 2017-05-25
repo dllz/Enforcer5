@@ -80,7 +80,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
 
-        [Callback(Trigger = "openGroupMenu", GroupAdminOnly = true)]
+        [Callback(Trigger = "openGroupMenu")]
         public static void openGroupMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -89,7 +89,7 @@ namespace Enforcer5
             var keys = Commands.genGroupSettingsMenu(chatId, lang);
             Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
-        [Callback(Trigger = "menuFlood")]
+        [Callback(Trigger = "menuFlood", GroupAdminOnly = true)]
         public static void MenuFlood(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -114,7 +114,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuReport")]
+        [Callback(Trigger = "menuReport", GroupAdminOnly = true)]
         public static void MenuReport(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -139,7 +139,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuWelcome")]
+        [Callback(Trigger = "menuWelcome", GroupAdminOnly = true)]
         public static void MenuWelcome(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -164,7 +164,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuModlist")]
+        [Callback(Trigger = "menuModlist", GroupAdminOnly = true)]
         public static void MenuModlist(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -189,7 +189,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuRules")]
+        [Callback(Trigger = "menuRules", GroupAdminOnly = true)]
         public static void MenuRules(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -214,7 +214,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuExtra")]
+        [Callback(Trigger = "menuExtra", GroupAdminOnly = true)]
         public static void MenuExtra(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -239,7 +239,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuAbout")]
+        [Callback(Trigger = "menuAbout", GroupAdminOnly = true)]
         public static void MenuAbout(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -264,7 +264,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuRtl")]
+        [Callback(Trigger = "menuRtl", GroupAdminOnly = true)]
         public static void MenuRtl(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -303,7 +303,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuArab")]
+        [Callback(Trigger = "menuArab", GroupAdminOnly = true)]
         public static void MenuArab(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);

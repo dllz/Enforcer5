@@ -35,7 +35,7 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-        [Callback(Trigger = "openWarnMenu", GroupAdminOnly = true)]
+        [Callback(Trigger = "openWarnMenu")]
         public static void openWarnMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -45,7 +45,7 @@ namespace Enforcer5
             Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
 
-        [Callback(Trigger = "menuDimWarn")]
+        [Callback(Trigger = "menuDimWarn", GroupAdminOnly = true)]
         public static void menuDimWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -65,7 +65,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "menuRaiseWarn")]
+        [Callback(Trigger = "menuRaiseWarn", GroupAdminOnly = true)]
         public static void menuRaiseWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -76,7 +76,7 @@ namespace Enforcer5
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
-        [Callback(Trigger = "menuActionWarn")]
+        [Callback(Trigger = "menuActionWarn", GroupAdminOnly = true)]
         public static void menuActionWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);

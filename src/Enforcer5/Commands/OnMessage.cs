@@ -322,6 +322,7 @@ namespace Enforcer5
                     {
                         string reply;
                         var action = Redis.db.HashGetAsync($"chat:{chatId}:media", "action").Result;
+                        Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", update.Message.From.Id);
                         switch (action.ToString())
                         {
                             case "kick":
