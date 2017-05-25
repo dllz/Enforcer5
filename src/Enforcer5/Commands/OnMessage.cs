@@ -46,7 +46,8 @@ namespace Enforcer5
                         return;
                     }
                 }
-
+                if (isIgnored(chatId, msgType))
+                    return;
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
                     int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;   
                     if (num == 0) num = 1;
@@ -544,11 +545,18 @@ namespace Enforcer5
             var status = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", msgType).Result;
             if (status.HasValue)
             {
-                return status.Equals("no");
+                if (status.Equals("no"))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else
             {
-                return true;
+                return false;
             }
         }
     }

@@ -92,7 +92,29 @@ namespace Enforcer5
             Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
 
-        [Callback(Trigger = "floodSettings")]
+        [Callback(Trigger = "floodstatus")]
+        public static void floodStatus(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            if (flood.Equals("yes"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "no");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (flood.Equals("no"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "yes");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+    [Callback(Trigger = "floodSettings")]
         public static void floodSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
