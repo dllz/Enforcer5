@@ -125,19 +125,20 @@ namespace Enforcer5.Handlers
                 {
                     //Console.WriteLine("Checking Message");                    
                     if (update.Message == null) return;
-                    if (update.Message.Chat.Type == ChatType.Supergroup)
+                    if (update.Message.Chat.Type != ChatType.Private)
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
                     }
-                    //new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                    
                     switch (update.Message.Type)
                     {
                         case MessageType.UnknownMessage:
                             break;
                         case MessageType.TextMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.ArabDetection(update); }).Start();
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             if (update.Message.Text.StartsWith("/"))
                             {
