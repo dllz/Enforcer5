@@ -23,11 +23,12 @@ namespace Enforcer5
                 var time = (DateTime.UtcNow - update.Message.Date);
                 if (time.TotalSeconds > 5) return;
                 var chatId = update.Message.Chat.Id;
+                new Task(() => { AntiLength(update); }).Start();
                 var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
                 if (flood.Equals("yes")) return;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
                 if (watch) return;
-                new Task(() => { AntiLength(update); }).Start();
+                
                 var msgType = Methods.GetContentType(update.Message);
                 XDocument lang;
                 try
