@@ -75,7 +75,8 @@ namespace Enforcer5
            if (update.Message.ReplyToMessage != null)
            {
                 Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
-           }
+               Service.LogCommand(update, update.Message.Text);
+            }
            else 
            {
                try
