@@ -403,7 +403,7 @@ namespace Enforcer5
             else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
             {
                 var user = args[1];
-                length = "60"; // Length is 60 since there is definitely no length specified.
+                length = Methods.GetGroupTempbanTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
 
                 if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
                 else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
@@ -415,11 +415,11 @@ namespace Enforcer5
 
             if (!int.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
-                Methods.GetGroupTempbanTime(update.Message.Chat.Id);
+                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
             if (time == 0)
             {
-                Methods.GetGroupTempbanTime(update.Message.Chat.Id);
+                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
             else
             {
