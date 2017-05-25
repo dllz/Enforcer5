@@ -265,53 +265,53 @@ namespace Enforcer5.Handlers
                             }
                             break;
                         case MessageType.PhotoMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
                             }
                             break;
                         case MessageType.AudioMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.VideoMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.VoiceMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.DocumentMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.StickerMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.LocationMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
                         case MessageType.ContactMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
@@ -352,7 +352,7 @@ namespace Enforcer5.Handlers
                             }
                             break;
                         case MessageType.VenueMessage:
-                            if (update.Message.Chat.Type == ChatType.Supergroup)
+                            if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
