@@ -38,7 +38,7 @@ namespace Enforcer5
                     oneRow.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"floodaction:{chatId}"));
                     break;
                 case "warn":
-                    oneRow.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "warn")}", $"floodaction:{chatId}"));
+                    oneRow.Buttons.Add(new InlineButton($"⚠️ | {Methods.GetLocaleString(lang, "Warn")}", $"floodaction:{chatId}"));
                     break;
                 case "tempban":
                     oneRow.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"floodaction:{chatId}"));
@@ -82,7 +82,7 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-        [Callback(Trigger = "openFloodMenu", GroupAdminOnly = true)]
+        [Callback(Trigger = "openFloodMenu")]
         public static void openFloodMenu(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -92,7 +92,29 @@ namespace Enforcer5
             Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
 
-        [Callback(Trigger = "floodSettings")]
+        [Callback(Trigger = "floodstatus", GroupAdminOnly = true)]
+        public static void floodStatus(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            if (flood.Equals("yes"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "no");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (flood.Equals("no"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "yes");
+                var keys = Commands.genFlood(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+    [Callback(Trigger = "floodSettings", GroupAdminOnly = true)]
         public static void floodSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -100,7 +122,7 @@ namespace Enforcer5
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "doNothing"));
         }
 
-        [Callback(Trigger = "flooddim")]
+        [Callback(Trigger = "flooddim", GroupAdminOnly = true)]
         public static void flooddim(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -119,7 +141,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "floodraise")]
+        [Callback(Trigger = "floodraise", GroupAdminOnly = true)]
         public static void floodraise(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -130,7 +152,7 @@ namespace Enforcer5
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
-        [Callback(Trigger = "floodaction")]
+        [Callback(Trigger = "floodaction", GroupAdminOnly = true)]
         public static void floodaction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -165,7 +187,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "floodtext")]
+        [Callback(Trigger = "floodtext", GroupAdminOnly = true)]
         public static void floodtext(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -187,7 +209,7 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
-        [Callback(Trigger = "floodsticker")]
+        [Callback(Trigger = "floodsticker", GroupAdminOnly = true)]
         public static void floodsticker(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -210,7 +232,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "floodimage")]
+        [Callback(Trigger = "floodimage", GroupAdminOnly = true)]
         public static void floodimage(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -233,7 +255,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "floodvideo")]
+        [Callback(Trigger = "floodvideo", GroupAdminOnly = true)]
         public static void floodvideo(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -256,7 +278,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "floodgif")]
+        [Callback(Trigger = "floodgif", GroupAdminOnly = true)]
         public static void floodgif(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);

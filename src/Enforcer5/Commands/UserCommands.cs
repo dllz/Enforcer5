@@ -54,7 +54,7 @@ namespace Enforcer5
         public static void HelpList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message).Doc;
-             Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+             Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc)), update);
         }
 
         [Command(Trigger = "help")]

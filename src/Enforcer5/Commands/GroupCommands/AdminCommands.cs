@@ -110,9 +110,10 @@ namespace Enforcer5
                 var userMenu = new Menu(2);
                 userMenu.Buttons = new List<InlineButton>
                 {
-                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{update.Message.Chat.Id}:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{update.Message.Chat.Id}:{userid}"),                    
+                    new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"userbuttonresetwarn:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbuttonbanuser:{update.Message.Chat.Id}:{userid}"),
-                    new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}")
+                    new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}"),
                 };
 
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
@@ -430,7 +431,7 @@ namespace Enforcer5
                     }
                 }
             }
-            else if (update.Message.ReplyToMessage != null)
+            if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
                 var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
@@ -690,20 +691,75 @@ namespace Enforcer5
             }
         }
 
-      
+        [Command(Trigger = "temptime", InGroupOnly = true)]
+        public static void SetDefaultTempban(Update update, string[] args)
+        {
+            int time;
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            if (!int.TryParse(args[1], out time))
+            {
+
+                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultTime", time), update);
+            }
+            else
+            {
+                if (!Methods.IsGroupAdmin(update) &
+                    !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
+                {
+                    Bot.SendReply(
+                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                            "userNotAdmin"), update.Message);
+                    return;
+                }
+                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempbanTime", time);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultTimeSet"), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
+        }
+
+        [Command(Trigger = "media", InGroupOnly = true, GroupAdminOnly = true)]
+        public static void MediaUserMenu(Update update, string[] args)
+        {
+            var chatId = update.Message.Chat.Id;
+            var userid = Methods.GetUserId(update, args);
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            var warns = (int)Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+            var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);            
+            var userMenu = new Menu(2);
+            userMenu.Buttons = new List<InlineButton>
+            {
+                new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"usermediaremwarns:{update.Message.Chat.Id}:{userid}"),
+                new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"usermediaresetwarn:{update.Message.Chat.Id}:{userid}")
+                
+            };
+            Bot.SendReply(text, update, Key.CreateMarkupFromMenu(userMenu));
+        }
+
     }
 
     public static partial class CallBacks
     {
-        [Callback(Trigger = "userbuttonremwarns", GroupAdminOnly = true)]
+        [Callback(Trigger = "userbuttonresetwarn", GroupAdminOnly = true)]
         public static void UserButtonRemWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);            
              Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
+        }
+
+        [Callback(Trigger = "userbuttonremwarns", GroupAdminOnly = true)]
+        public static void removeWarn(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var userId = args[2];
+            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
+            if (res < 0)
+                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
+            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
 
         [Callback(Trigger = "userbuttonbanuser", GroupAdminOnly = true)]
@@ -780,6 +836,28 @@ namespace Enforcer5
                 var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
                  Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
             }
+        }
+
+        [Callback(Trigger = "usermediaremwarns", GroupAdminOnly = true)]
+        public static void removeMediaWarn(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var userId = args[2];
+            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId).Result;
+            if (res < 0)
+                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId, 0);
+            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
+        }
+
+        [Callback(Trigger = "usermediaresetwarn", GroupAdminOnly = true)]
+        public static void RESETmediawarn(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var userId = args[2];
+            Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
     }
 }

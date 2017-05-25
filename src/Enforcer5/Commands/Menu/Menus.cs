@@ -97,7 +97,7 @@ namespace Enforcer5
             var keys = Commands.genNSFWMenu(chatId, lang);
              Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
         }
-        [Callback(Trigger = "nsfwaction")]
+        [Callback(Trigger = "nsfwaction", GroupAdminOnly = true)]
         public static void nsfwAction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -120,7 +120,7 @@ namespace Enforcer5
             }
         }
 
-        [Callback(Trigger = "nsfwsettings")]
+        [Callback(Trigger = "nsfwsettings", GroupAdminOnly = true)]
         public static void nsfwsettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
