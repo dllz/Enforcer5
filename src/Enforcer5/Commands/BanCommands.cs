@@ -377,40 +377,46 @@ namespace Enforcer5
         {
 
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            int userId, time;
-            string length;
+            int userId = 0, time;
+            string length = "";
             if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
 
-                length = args[1].Contains(' ') // length is the first argument after the command
-                    ? args[1].Split(' ')[0]    // so admins can add a reason for the tempban after the time
-                    : args[1];
-
-            }
-            else if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
-            {
-                var user = args[1].Split(' ')[0]; // either username or ID
-                length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
-
-                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                else if (!int.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
+                if (args[1] != null)
                 {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                    return;
+                    length = args[1].Contains(' ') // length is the first argument after the command
+                        ? args[1].Split(' ')[0]    // so admins can add a reason for the tempban after the time
+                        : args[1];
                 }
-                if (userId == Bot.Me.Id) return;
-            }
-            else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
-            {
-                var user = args[1];
-                length = Methods.GetGroupTempbanTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
 
-                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
+            }
+            else if (args[1] != null)
+            {
+                if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
                 {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                    return;
+                    var user = args[1].Split(' ')[0]; // either username or ID
+                    length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
+
+                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                    else if (!int.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                        return;
+                    }
+                    if (userId == Bot.Me.Id) return;
+                }
+                else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
+                {
+                    var user = args[1];
+                    length = Methods.GetGroupTempbanTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
+
+                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                    else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                        return;
+                    }
                 }
             }
 
@@ -422,7 +428,7 @@ namespace Enforcer5
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
-            else
+            if (userId != 0)
             {
                 Tempban(userId, update.Message.Chat.Id, time, Methods.GetNick(update.Message, args, userId));
                 Service.LogCommand(update, update.Message.Text);
