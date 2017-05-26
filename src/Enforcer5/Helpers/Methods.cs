@@ -365,7 +365,15 @@ namespace Enforcer5.Helpers
                     {
                         return id;
                     }
-                    return ResolveIdFromusername(args[1], update.Message.Chat.Id);
+                    var username = update.Message.Entities.Where(x => x.Type == MessageEntityType.Mention).ToArray();
+                    if (username.Length > 0)
+                    {
+                        return username[0].User.Id;
+                    }
+                    else
+                    {
+                        throw new Exception("UnableToResolveUsername");
+                    }
                 }
                 else
                 {
