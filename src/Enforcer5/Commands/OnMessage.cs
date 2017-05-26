@@ -315,8 +315,8 @@ namespace Enforcer5
                     var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
                     if (update.Message.From.Username != null)
                         name = $"{name} (@{update.Message.From.Username})";
-                    var max = Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result.HasValue
-                        ? Redis.db.HashGetAsync($"chat:{chatId}:Warnsettings", "mediamax").Result
+                    var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result.HasValue
+                        ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result
                         : 2;
                     var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", update.Message.From.Id, 1).Result;
                     if (current >= int.Parse(max))
