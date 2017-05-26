@@ -370,6 +370,11 @@ namespace Enforcer5.Helpers
                     {
                         return username[0].User.Id;
                     }
+                    username = update.Message.Entities.Where(x => x.Type == MessageEntityType.TextMention).ToArray();
+                    if (username.Length > 0)
+                    {
+                        return username[0].User.Id;
+                    }
                     else
                     {
                         throw new Exception("UnableToResolveUsername");
@@ -882,6 +887,9 @@ namespace Enforcer5.Helpers
                 case MessageType.TextMessage:
                        var text = msg.Text;
                     var link = msg.Entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
+                    if (link.Length > 0)
+                        return "link";
+                    link = msg.Entities.Where(x => x.Type == MessageEntityType.TextLink).ToArray();
                     if (link.Length > 0)
                         return "link";
                     return "text";
