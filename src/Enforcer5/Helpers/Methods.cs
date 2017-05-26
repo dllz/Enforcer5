@@ -873,11 +873,9 @@ namespace Enforcer5.Helpers
             {
                 case MessageType.TextMessage:
                        var text = msg.Text;
-                    Uri uri;
-                    var isLink = Uri.TryCreate(text, UriKind.Absolute, out uri);
-                        if (isLink)
+                    var link = msg.Entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
+                    if (link.Length > 0)
                         return "link";
-                    //    return "link";
                     return "text";
                     break;
                 case MessageType.PhotoMessage:
@@ -908,7 +906,7 @@ namespace Enforcer5.Helpers
                     break;
                 case MessageType.ContactMessage:
                     return "contact";
-                    break;
+                    break;                
                 default:
                     return "unknown";
                     break;
