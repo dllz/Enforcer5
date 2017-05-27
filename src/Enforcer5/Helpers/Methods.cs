@@ -365,6 +365,12 @@ namespace Enforcer5.Helpers
                     {
                         return id;
                     }
+                    var username = update.Message.Entities.Where(x => x.Type == MessageEntityType.TextMention).ToArray();
+                    if (username.Length > 0)
+                    {
+                        return username[0].User.Id;
+                    }
+
                     return ResolveIdFromusername(args[1], update.Message.Chat.Id);
                 }
                 else
@@ -873,11 +879,12 @@ namespace Enforcer5.Helpers
             {
                 case MessageType.TextMessage:
                        var text = msg.Text;
-                    Uri uri;
-                    var isLink = Uri.TryCreate(text, UriKind.Absolute, out uri);
-                        if (isLink)
+                    var link = msg.Entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
+                    if (link.Length > 0)
                         return "link";
-                    //    return "link";
+                    link = msg.Entities.Where(x => x.Type == MessageEntityType.TextLink).ToArray();
+                    if (link.Length > 0)
+                        return "link";
                     return "text";
                     break;
                 case MessageType.PhotoMessage:
@@ -908,7 +915,7 @@ namespace Enforcer5.Helpers
                     break;
                 case MessageType.ContactMessage:
                     return "contact";
-                    break;
+                    break;                
                 default:
                     return "unknown";
                     break;
