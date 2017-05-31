@@ -115,7 +115,7 @@ namespace Enforcer5.Handlers
 
 
                 if ((update.Message?.Date ?? DateTime.MinValue) < Bot.StartTime.AddSeconds(-10) && Bot.testing == false)
-                   //return; //toss it
+                   return; //toss it
                 //Console.WriteLine("Checking Global Ban");
                 if (update.Message?.Date.ToUniversalTime() < System.DateTime.UtcNow.AddSeconds(-30) && Bot.testing == false)
                    return;
