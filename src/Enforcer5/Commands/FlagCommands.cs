@@ -451,12 +451,15 @@ namespace Enforcer5
                 }
                  Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
             }
-            Methods.SaveBan(userId, "ban");
-            var why = Methods.GetLocaleString(lang, "inlineBan");
-            Methods.AddBanList(chatId, userId, userId.ToString(), why);
-             Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
-             Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
-             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+            if (res)
+            {
+                Methods.SaveBan(userId, "ban");
+                var why = Methods.GetLocaleString(lang, "inlineBan");
+                Methods.AddBanList(chatId, userId, userId.ToString(), why);
+                Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
+                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+            }
         }
 
         [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
@@ -465,11 +468,14 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
-             Methods.KickUser(chatId, userId, lang);
-            Methods.SaveBan(userId, "kick");
+             var res = Methods.KickUser(chatId, userId, lang);
+            if (res)
+            {
+                Methods.SaveBan(userId, "kick");
 
-             Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
-             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+            }
         }
 
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]

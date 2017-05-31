@@ -53,9 +53,9 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
-                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                        }
+                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                            Service.LogCommand(update, update.Message.Text);
+                    }
                     }
                     catch (Exception e)
                     {
@@ -128,23 +128,28 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            Methods.BanUser(chatId, id, lang.Doc);
-                            name = targetnick;
-                            if (update != null)
+                            var res = Methods.BanUser(chatId, id, lang.Doc);
+
+                            if (res)
                             {
-                                Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                                name = targetnick;
+                                if (update != null)
+                                {
+                                    Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                                }
+                                else if (!string.IsNullOrEmpty(callbackid))
+                                {
+                                    var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
+                                    Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
+                                    Bot.Send(bantext, chatId);
+                                }
+                                else //How should it be possible that there is neither an update nor a callback query?
+                                {
+                                    Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                                }
+                                Methods.SaveBan(id, "maxWarn");
                             }
-                            else if (!string.IsNullOrEmpty(callbackid))
-                            {
-                                var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
-                                Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
-                                Bot.Send(bantext, chatId);
-                            }
-                            else //How should it be possible that there is neither an update nor a callback query?
-                            {
-                                Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
-                            }
-                            Methods.SaveBan(id, "maxWarn");
+                                
                         }
                         catch (AggregateException e)
                         {
