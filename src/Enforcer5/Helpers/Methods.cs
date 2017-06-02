@@ -673,6 +673,7 @@ namespace Enforcer5.Helpers
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                        Bot.Send($"{e.Message}", Constants.Devs[0]);
                     }
 
                 }
@@ -680,6 +681,7 @@ namespace Enforcer5.Helpers
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                Bot.Send($"{e.Message}", Constants.Devs[0]);
             }
         }
 
