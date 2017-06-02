@@ -12,5 +12,6 @@ namespace Enforcer5.Models
         public long chatId { get; set; }
         public long adminChatId { get; set; }
         public int adminMsgId { get; set; }
+        public int reportId { get; set; }
     }
 }

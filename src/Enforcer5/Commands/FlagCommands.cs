@@ -136,7 +136,7 @@ namespace Enforcer5
                         DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                         noti = ser.ReadObject(stream1) as AdminNotification;
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                     }
                      Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
                     Service.LogCommand(update, update.Message.Text);
@@ -196,7 +196,7 @@ namespace Enforcer5
                                     DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                                     noti = ser.ReadObject(stream1) as AdminNotification;
                                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                                 }
                                 catch (ApiRequestException e)
                                 {
@@ -211,8 +211,7 @@ namespace Enforcer5
 
                                 }
                             }
-                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
-                            Service.LogCommand(update, update.Message.Text);
+                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);                            
                         }
                         else if (isReported.TryParse(out isReport) && isReport == 1)
                         {
@@ -374,6 +373,7 @@ namespace Enforcer5
                         noti.hash = nme;
                         noti.chatId = chatId;
                         noti.chatMsgId = msgId;
+                        noti.reportId = repId;
                         noti.adminChatId = result.Chat.Id;
                         noti.adminMsgId = result.MessageId;
                         MemoryStream stream1 = new MemoryStream();
