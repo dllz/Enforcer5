@@ -652,20 +652,27 @@ namespace Enforcer5.Helpers
 #endif
                 foreach (var mem in tempbans)
                 {
-                    if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                    try
                     {
-                        var subStrings = mem.Value.ToString().Split(':');
-                        var chatId = long.Parse(subStrings[0]);
-                        var userId = int.Parse(subStrings[1]);
-                        UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                        if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                        {
+                            var subStrings = mem.Value.ToString().Split(':');
+                            var chatId = long.Parse(subStrings[0]);
+                            var userId = int.Parse(subStrings[1]);
+                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
 #if normal
-                        Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                        Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
+                            Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                            Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
 #endif
 #if premium
                         Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
                         Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbannedPremium", subStrings[1]);
 #endif
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                     }
 
                 }
