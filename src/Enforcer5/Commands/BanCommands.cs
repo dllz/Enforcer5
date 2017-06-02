@@ -337,20 +337,36 @@ namespace Enforcer5
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
+                var dataUnbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60);
+            var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}";
                 var res = Methods.BanUser(chatId, userId, lang);
                 if (res.Equals(true))
                 {
                     Methods.SaveBan(userId, "tempban");
                     Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
+
 #if normal
+                var entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
+                    while (entry.HasValue)
+                    {
+                            dataUnbanTime.AddSeconds(1);
+                        unbanTime = dataUnbanTime.ToUnixTime();
+                        entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
+                }
                     Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
 #endif
 #if premium
+                var entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
+                    while (entry.HasValue)
+                    {
+                            dataUnbanTime.AddSeconds(1);
+                        unbanTime = dataUnbanTime.ToUnixTime();
+                        entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
+                }
                       Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
 #endif
-                    var timeBanned = TimeSpan.FromMinutes(time);
+                var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                     if (message == null)
                     {
