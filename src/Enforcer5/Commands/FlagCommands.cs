@@ -536,7 +536,7 @@ namespace Enforcer5
                     try
                     {
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                     }
                     catch (Exception e)
                     {
