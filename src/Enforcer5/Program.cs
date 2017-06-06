@@ -34,9 +34,14 @@ namespace Enforcer5
                 Environment.Exit(2);
             }
             var redisReady = Redis.Start();
+            int count = 0;
             while (!redisReady)
             {
                 redisReady = Redis.Start();
+                if (count > 5)
+                {
+                    Environment.Exit(1);
+                }
             }
             new Thread(() => Bot.Initialize()).Start();
             //AppDomain.UnhandledException += (sender, eventArgs) =>

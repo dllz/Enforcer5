@@ -576,7 +576,8 @@ namespace Enforcer5.Helpers
                     {
                          Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
-                        SaveBan(update.Message.From.Id, "ban");
+                        if(temp)
+                            SaveBan(update.Message.From.Id, "ban");
                         var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
                     }
                     catch (AggregateException e)
@@ -620,6 +621,11 @@ namespace Enforcer5.Helpers
                      Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
+                if (e.InnerExceptions[0].Message.Contains("USER_ADMIN_INVALID"))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
+                    return false;
+                }
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
                 return false;
             }
@@ -646,20 +652,28 @@ namespace Enforcer5.Helpers
 #endif
                 foreach (var mem in tempbans)
                 {
-                    if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                    try
                     {
-                        var subStrings = mem.Value.ToString().Split(':');
-                        var chatId = long.Parse(subStrings[0]);
-                        var userId = int.Parse(subStrings[1]);
-                        UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                        if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                        {
+                            var subStrings = mem.Value.ToString().Split(':');
+                            var chatId = long.Parse(subStrings[0]);
+                            var userId = int.Parse(subStrings[1]);
+                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
 #if normal
-                        Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                        Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
+                            Redis.db.HashDeleteAsync("tempbanned", mem.Name);
+                            Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
 #endif
 #if premium
                         Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
                         Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbannedPremium", subStrings[1]);
 #endif
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        Bot.Send($"{e.Message}", Constants.Devs[0]);
                     }
 
                 }
@@ -667,6 +681,7 @@ namespace Enforcer5.Helpers
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                Bot.Send($"{e.Message}", Constants.Devs[0]);
             }
         }
 

@@ -1272,7 +1272,7 @@
   </string>
 
   <string key="usergroupstatusadmin">
-    <value>{0} is an admin in this group.\nThey sent {1} messages herr since this command was made.</value>
+    <value>{0} is an admin in this group.\nThey sent {1} messages here since this command was made.</value>
   </string>
 
   <string key="usergroupstatusbanned">
@@ -1340,5 +1340,8 @@
   </string>
   <string key="groupSettingButton">
     <value>Group</value>
+  </string>
+  <string key="cannotbanadmin">
+    <value>I can not kick or ban an admin</value>
   </string>
 </strings>

@@ -767,7 +767,7 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var userId = args[2];
-             Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
+            var res = Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {
@@ -781,9 +781,13 @@ namespace Enforcer5
                 }
                  Redis.db.SetRemoveAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId);
             }
-            Methods.SaveBan(int.Parse(userId), "ban");
-             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "userBanned"));
+            if (res)
+            {
+                Methods.SaveBan(int.Parse(userId), "ban");
+                Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                    Methods.GetLocaleString(lang, "userBanned"));
+            }
+             
         }
 
         [Callback(Trigger = "userbuttonwarnuser", GroupAdminOnly = true)]

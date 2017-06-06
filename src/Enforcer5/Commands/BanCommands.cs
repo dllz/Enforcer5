@@ -53,9 +53,9 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
-                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                        }
+                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
+                            Service.LogCommand(update, update.Message.Text);
+                    }
                     }
                     catch (Exception e)
                     {
@@ -128,23 +128,28 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            Methods.BanUser(chatId, id, lang.Doc);
-                            name = targetnick;
-                            if (update != null)
+                            var res = Methods.BanUser(chatId, id, lang.Doc);
+
+                            if (res)
                             {
-                                Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                                name = targetnick;
+                                if (update != null)
+                                {
+                                    Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                                }
+                                else if (!string.IsNullOrEmpty(callbackid))
+                                {
+                                    var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
+                                    Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
+                                    Bot.Send(bantext, chatId);
+                                }
+                                else //How should it be possible that there is neither an update nor a callback query?
+                                {
+                                    Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                                }
+                                Methods.SaveBan(id, "maxWarn");
                             }
-                            else if (!string.IsNullOrEmpty(callbackid))
-                            {
-                                var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
-                                Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
-                                Bot.Send(bantext, chatId);
-                            }
-                            else //How should it be possible that there is neither an update nor a callback query?
-                            {
-                                Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
-                            }
-                            Methods.SaveBan(id, "maxWarn");
+                                
                         }
                         catch (AggregateException e)
                         {
@@ -332,20 +337,36 @@ namespace Enforcer5
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
+                var dataUnbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60);
+            var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}";
                 var res = Methods.BanUser(chatId, userId, lang);
                 if (res.Equals(true))
                 {
                     Methods.SaveBan(userId, "tempban");
                     Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
+
 #if normal
+                var entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
+                    while (entry.HasValue)
+                    {
+                            dataUnbanTime.AddSeconds(1);
+                        unbanTime = dataUnbanTime.ToUnixTime();
+                        entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
+                }
                     Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
 #endif
 #if premium
+                var entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
+                    while (entry.HasValue)
+                    {
+                            dataUnbanTime.AddSeconds(1);
+                        unbanTime = dataUnbanTime.ToUnixTime();
+                        entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
+                }
                       Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
 #endif
-                    var timeBanned = TimeSpan.FromMinutes(time);
+                var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                     if (message == null)
                     {

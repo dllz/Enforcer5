@@ -136,7 +136,7 @@ namespace Enforcer5
                         DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                         noti = ser.ReadObject(stream1) as AdminNotification;
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                     }
                      Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
                     Service.LogCommand(update, update.Message.Text);
@@ -196,7 +196,7 @@ namespace Enforcer5
                                     DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                                     noti = ser.ReadObject(stream1) as AdminNotification;
                                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                                 }
                                 catch (ApiRequestException e)
                                 {
@@ -211,8 +211,7 @@ namespace Enforcer5
 
                                 }
                             }
-                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
-                            Service.LogCommand(update, update.Message.Text);
+                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);                            
                         }
                         else if (isReported.TryParse(out isReport) && isReport == 1)
                         {
@@ -374,6 +373,7 @@ namespace Enforcer5
                         noti.hash = nme;
                         noti.chatId = chatId;
                         noti.chatMsgId = msgId;
+                        noti.reportId = repId;
                         noti.adminChatId = result.Chat.Id;
                         noti.adminMsgId = result.MessageId;
                         MemoryStream stream1 = new MemoryStream();
@@ -451,12 +451,15 @@ namespace Enforcer5
                 }
                  Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
             }
-            Methods.SaveBan(userId, "ban");
-            var why = Methods.GetLocaleString(lang, "inlineBan");
-            Methods.AddBanList(chatId, userId, userId.ToString(), why);
-             Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
-             Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
-             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+            if (res)
+            {
+                Methods.SaveBan(userId, "ban");
+                var why = Methods.GetLocaleString(lang, "inlineBan");
+                Methods.AddBanList(chatId, userId, userId.ToString(), why);
+                Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
+                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+            }
         }
 
         [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
@@ -465,11 +468,14 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message).Doc;
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
-             Methods.KickUser(chatId, userId, lang);
-            Methods.SaveBan(userId, "kick");
+             var res = Methods.KickUser(chatId, userId, lang);
+            if (res)
+            {
+                Methods.SaveBan(userId, "kick");
 
-             Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
-             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+            }
         }
 
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]
@@ -530,7 +536,7 @@ namespace Enforcer5
                     try
                     {
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.chatMsgId)}");
+                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                     }
                     catch (Exception e)
                     {

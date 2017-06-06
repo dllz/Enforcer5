@@ -81,13 +81,17 @@ namespace Enforcer5
                                             update);
                                     break;
                                     case "ban":
-                                    Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                    var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                        if (res)
+                                        {
                                         Methods.SaveBan(update.Message.From.Id, "flood");
-                                        Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                            Methods.GetLocaleString(lang, "bannedForFlood", ".."));
-                                        Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
-                                    break;
-                                    case "warn":
+                                            Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                                Methods.GetLocaleString(lang, "bannedForFlood", ".."));
+                                            Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
+                                           
+                                    }
+                                        break;
+                                case "warn":
                                         Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
                                     break;
                                 case "tempban":
@@ -162,12 +166,15 @@ namespace Enforcer5
                             return;
                             break;
                         case "ban":
-                            Methods.BanUser(groupId, userid, lang);
-                            Methods.SaveBan(userid, "longmessages");
-                            reply = Methods.GetLocaleString(lang, "banformesslength", userid);
-                            Service.LogBotAction(groupId, reply);
-                            Bot.SendReply(Methods.GetLocaleString(lang, "banformesslength", userid), update);
-                            return;
+                            var res = Methods.BanUser(groupId, userid, lang);
+                            if (res)
+                            {
+                                Methods.SaveBan(userid, "longmessages");
+                                reply = Methods.GetLocaleString(lang, "banformesslength", userid);
+                                Service.LogBotAction(groupId, reply);
+                                Bot.SendReply(Methods.GetLocaleString(lang, "banformesslength", userid), update);
+                                return;
+                            }
                             break;
                         case "Warn":
                             Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
@@ -233,11 +240,14 @@ namespace Enforcer5
                             Bot.SendReply(reply, update);
                             break;
                         case "ban":
-                            Methods.BanUser(groupId, userid, lang);
-                            Methods.SaveBan(userid, "namelength");
-                            reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
-                            Service.LogBotAction(groupId, reply);
-                            Bot.SendReply(reply, update);
+                            var res = Methods.BanUser(groupId, userid, lang);
+                            if (res)
+                            {
+                                Methods.SaveBan(userid, "namelength");
+                                reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
+                                Service.LogBotAction(groupId, reply);
+                                Bot.SendReply(reply, update);
+                            }
                             break;
                         case "Warn":
                             Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
@@ -336,13 +346,16 @@ namespace Enforcer5
                                     update);
                                 break;
                             case "ban":
-                                Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                Methods.SaveBan(update.Message.From.Id, "media");
-                                reply = Methods.GetLocaleString(lang, "bannedformedia", name);
-                                Service.LogBotAction(chatId, reply);
-                                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                    Methods.GetLocaleString(lang, "bannedformedia", ""));
-                                Bot.SendReply(reply, update);
+                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                if (res)
+                                {
+                                    Methods.SaveBan(update.Message.From.Id, "media");
+                                    reply = Methods.GetLocaleString(lang, "bannedformedia", name);
+                                    Service.LogBotAction(chatId, reply);
+                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                        Methods.GetLocaleString(lang, "bannedformedia", ""));
+                                    Bot.SendReply(reply, update);
+                                }
                                 break;
 
                             case "tempban":
@@ -425,16 +438,19 @@ namespace Enforcer5
                                         update);
                                     break;
                                 case "ban":
-                                    Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                    Methods.SaveBan(update.Message.From.Id, "rtl");
-                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedForRtl", ""));
-                                    reply = Methods.GetLocaleString(lang, "bannedForRtl",
-                                        $"{name}, {update.Message.From.Id}");
-                                    Service.LogBotAction(chatId, reply);
-                                    Bot.Send(
-                                        reply,
-                                        update);
+                                    var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                    if (res)
+                                    {
+                                        Methods.SaveBan(update.Message.From.Id, "rtl");
+                                        Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                            Methods.GetLocaleString(lang, "bannedForRtl", ""));
+                                        reply = Methods.GetLocaleString(lang, "bannedForRtl",
+                                            $"{name}, {update.Message.From.Id}");
+                                        Service.LogBotAction(chatId, reply);
+                                        Bot.Send(
+                                            reply,
+                                            update);
+                                    }
                                     break;
 
                                 case "tempban":
@@ -509,17 +525,20 @@ namespace Enforcer5
                                     update);
                                 break;
                             case "ban":
-                                Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                Methods.SaveBan(update.Message.From.Id, "arab");
-                                Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
+                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                if (res)
+                                {
+                                    Methods.SaveBan(update.Message.From.Id, "arab");
+                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                        Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
 
-                                reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript",
-                                    $"{name}, {update.Message.From.Id}");
-                                Service.LogBotAction(chatId, reply);
-                                Bot.Send(
-                                    reply,
-                                    update);
+                                    reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript",
+                                        $"{name}, {update.Message.From.Id}");
+                                    Service.LogBotAction(chatId, reply);
+                                    Bot.Send(
+                                        reply,
+                                        update);
+                                }
                                 break;
 
                             case "tempban":

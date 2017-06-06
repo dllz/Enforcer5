@@ -67,10 +67,13 @@ namespace Enforcer5
                                 {
                                     var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
                                     if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
-                                    Methods.BanUser(chatId, msg.From.Id, lang);
-                                    Methods.SaveBan(msg.From.Id, "NSFWImage");
-                                    Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
-                                    Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                    var res = Methods.BanUser(chatId, msg.From.Id, lang);
+                                    if (res)
+                                    {
+                                        Methods.SaveBan(msg.From.Id, "NSFWImage");
+                                        Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                        Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                    }
                                 }
                                 else
                                 {

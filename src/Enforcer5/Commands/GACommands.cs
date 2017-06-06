@@ -341,21 +341,15 @@ namespace Enforcer5
         public static void GetMediaId(Update update, string[] args)
         {
             var mediaID = Methods.GetMediaId(update.Message);
-            
-            var decoded = Convert.FromBase64String(mediaID);
-            var acsi = System.Text.Encoding.ASCII.GetString(decoded);
-            var rle = Methods.RLEDecode(acsi);
-
-            var reverse = Methods.RLEDecode(mediaID);
-            var acsii = System.Text.Encoding.ASCII.GetString(Convert.FromBase64String(reverse));
-             Bot.SendReply($"Media: {mediaID}\nDecoded: {rle}\n {acsii}", update);
+           
+             Bot.SendReply($"Media: {mediaID}", update);
         }
 
         [Command(Trigger = "msgid", DevOnly = true, RequiresReply = true)]
         public static void GetMessageID(Update update, string[] args)
         {
            
-            Bot.SendReply($"Media: {update.Message.ReplyToMessage.MessageId}", update);
+            Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
         }
 
 
