@@ -494,6 +494,12 @@
   <string key="getmaxwarn">
     <value>Removed for max warn: {0}</value>
   </string>
+  <string key="usergroupstatus">
+    <value>User: {0} has sent {1} msgs in this chat since this command was made.</value>
+  </string>
+  <string key="usergroupstatusnotseen">
+    <value>User: {0} has not been seen in this chat since this command was made.</value>
+  </string>
   <string key="evlavated">
     <value>User: {0} has been granted #elevated rights by {1}</value>
   </string>
