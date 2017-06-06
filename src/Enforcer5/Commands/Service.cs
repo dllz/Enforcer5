@@ -121,7 +121,12 @@ namespace Enforcer5
                     Bot.Send("Or else I'll kick your butt", chatId);
                     break;
                 case 125311351://Daniel
-                    Bot.Send("401 Not authorised", chatId);
+#if premium
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfDe5MFy-IHCAI");
+#endif
+#if normal
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfmRkSuLkIV9AI");
+#endif
                     break;
                 case 223494929:
 #if premium
