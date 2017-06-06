@@ -23,11 +23,12 @@ namespace Enforcer5
                 var time = (DateTime.UtcNow - update.Message.Date);
                 if (time.TotalSeconds > 5) return;
                 var chatId = update.Message.Chat.Id;
+                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+                if (watch) return;
                 new Task(() => { AntiLength(update); }).Start();
                 var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
                 if (flood.Equals("yes")) return;
-                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-                if (watch) return;
+                
                 
                 var msgType = Methods.GetContentType(update.Message);
                 XDocument lang;
@@ -206,8 +207,9 @@ namespace Enforcer5
             if (enabled.Value.Equals("yes"))
             {
                 var text = update.Message.From.FirstName;
-                text = $"{text}{update.Message.From.LastName}";
-                int intml;
+                if(update.Message.From.LastName != null)
+                    text = $"{text}{update.Message.From.LastName}";
+                int intml = 40;
                 settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
                 if (text.Length >= intml)
                 {
