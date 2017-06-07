@@ -20,6 +20,22 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
+        [Command(Trigger = "missinghcommands", UploadAdmin = true)]
+        public static void MissingHcommands(Update update, string[] args)
+        {
+            var commands = Bot.Commands.Select(e => e.Trigger).ToList();
+            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').ToList();
+
+            string missing = "<b>Missing hcommand strings:</b>\n";
+
+            foreach (var s in commands.Where(x => !helplist.Contains(x)))
+            {
+                missing += s + "\n";
+            }
+
+            Bot.SendReply(missing, update.Message);
+        }
+
         [Command(Trigger = "uploadlanguage", UploadAdmin = true)]
         public static void UploadLang(Update update, string[] args)
         {
