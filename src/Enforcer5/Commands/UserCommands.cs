@@ -72,7 +72,7 @@ namespace Enforcer5
                     {
                         if (args[1].Equals(mem.Trigger))
                         {
-                            request = mem.Trigger;
+                            request = mem.Trigger.ToLower();
                             command = 1;
                             string text;
                             try
