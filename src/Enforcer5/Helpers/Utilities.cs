@@ -246,7 +246,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if ( e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -263,7 +263,7 @@ namespace Enforcer5.Helpers
                     }
                     return null;
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -285,7 +285,7 @@ namespace Enforcer5.Helpers
                     {
                             return Bot.Send("The markdown in this text is broken", id);
                     }
-                    else if (e.ErrorCode == 403)
+                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                     {
                         var lang = Methods.GetGroupLanguage(id).Doc;
                         var startMe = new Menu(1)
@@ -349,7 +349,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -366,7 +366,7 @@ namespace Enforcer5.Helpers
                     }
                     return null;
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -397,7 +397,7 @@ namespace Enforcer5.Helpers
                                 return Bot.SendReply("The markdown in this text is broken", chatUpdate);
                             }
                         }
-                        else if (e.ErrorCode == 403)
+                        else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                         {
                             var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
                             var startMe = new Menu(1)
@@ -444,7 +444,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -461,7 +461,7 @@ namespace Enforcer5.Helpers
                     }
                     
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                         var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -477,7 +477,7 @@ namespace Enforcer5.Helpers
                         }
 
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return Send(message, msg.Chat.Id);
@@ -489,7 +489,7 @@ namespace Enforcer5.Helpers
                     {
                         return Bot.Send("The markdown in this text is broken", msg.Chat.Id);
                     }
-                    else if (e.ErrorCode == 403)
+                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                     {
                         var lang = Methods.GetGroupLanguage(msg.Chat.Id).Doc;
                         var startMe = new Menu(1)
@@ -534,7 +534,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -551,13 +551,13 @@ namespace Enforcer5.Helpers
                     }
                     
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return Send(message, chatid);
 
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -584,7 +584,7 @@ namespace Enforcer5.Helpers
                     {
                         return Bot.Send("The markdown in this text is broken", chatid);
                     }
-                    else if (e.ErrorCode == 403)
+                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                     {
                         var lang = Methods.GetGroupLanguage(chatid).Doc;
                         var startMe = new Menu(1)
@@ -618,7 +618,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -635,13 +635,13 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return Send(message, msg);
 
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if ( e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -669,7 +669,7 @@ namespace Enforcer5.Helpers
                     {
                         return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
                     }
-                    else if (e.ErrorCode == 403)
+                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                     {
                         var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
                         var startMe = new Menu(1)
@@ -704,7 +704,7 @@ namespace Enforcer5.Helpers
             }
             catch (ApiRequestException e)
             {
-                if (e.ErrorCode == 400 && e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -718,13 +718,13 @@ namespace Enforcer5.Helpers
                     }
                    
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("reply message not found"))
+                if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     return Send(message, msg, false, keyboard);
 
                 }
-                if (e.ErrorCode == 400 && e.Message.Contains("message is too long"))
+                if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     try
@@ -752,7 +752,7 @@ namespace Enforcer5.Helpers
                     {
                         return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
                     }
-                    else if (e.ErrorCode == 403)
+                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                     {
                         var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
                         var startMe = new Menu(1)
