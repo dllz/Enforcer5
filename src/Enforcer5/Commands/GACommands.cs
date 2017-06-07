@@ -413,6 +413,15 @@ namespace Enforcer5
             }
              Bot.SendReply("done", update);
         }
+
+        [Command(Trigger = "whois", GlobalAdminOnly = true)]
+        public static void WhoIs(Update update, string[] args)
+        {
+            var id = Methods.GetUserId(update, args);
+            var username = Methods.GetUsername(id);           
+            Bot.SendReply($"ID: {id}\nUsername: {username}", update);
+
+        }
     }
 
     public static partial class CallBacks

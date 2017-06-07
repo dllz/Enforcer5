@@ -469,15 +469,13 @@ namespace Enforcer5.Handlers
                 Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
                 if (updateMessage?.From?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                    
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                                   
                     Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.From.Username.ToLower()}");
                 }
                 if (updateMessage?.ForwardFrom?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);                    
+                    Redis.db.HashSetAsync($"user:{updateMessage.ForwardFrom.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
                 }
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {

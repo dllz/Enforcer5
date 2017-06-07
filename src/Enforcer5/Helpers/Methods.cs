@@ -1029,5 +1029,13 @@ namespace Enforcer5.Helpers
             }
             return res;
         }
+
+        public static object GetUsername(int id)
+        {
+            var username = Redis.db.HashGetAsync($"user:{id}", "username").Result;
+            if (username.HasValue)
+                return username.ToString();
+            return "No username found";
+        }
     }
 }
