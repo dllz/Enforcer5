@@ -7812,15 +7812,15 @@
       ]
     },
     "Microsoft.NETCore.App/1.1.2": {
-      "sha512": "TUPK1xhef7WcbsIkhfZOz6J7DrG5aebjVRBswPfHe90eDhfnlWHaLiI1OtMB2O78bf5d37WO6ge+9nel2keKkA==",
+      "sha512": "fcN0Ob6rjY7Zu0770cA5l9wRJvj7+ltJPPdryUidejkkhao+y2AYrtezBTlP9nCSFXLmYR9BtaknORT17x8reA==",
       "type": "package",
       "path": "Microsoft.NETCore.App/1.1.2",
       "files": [
+        "Microsoft.NETCore.App.1.1.2.nupkg.sha512",
+        "Microsoft.NETCore.App.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
-        "lib/netcoreapp1.0/_._",
-        "microsoft.netcore.app.1.1.2.nupkg.sha512",
-        "microsoft.netcore.app.nuspec"
+        "lib/netcoreapp1.0/_._"
       ]
     },
     "Microsoft.NETCore.DotNetHost/1.0.1": {
@@ -7836,14 +7836,14 @@
       ]
     },
     "Microsoft.NETCore.DotNetHostPolicy/1.0.5": {
-      "sha512": "QcjJndYeHT97mB2K+N9q0aLk9wPxEwfFcmHR/Ku9ZbtH4RL+qB23wIxXHx74yQ569LRRt+K9WnHMpe5gPnghlA==",
+      "sha512": "KR8e8+lh/YnhD0wDCMBRUjn0/VnryxHbu6I61U6m7PAyz9HbRr+iX3BYL925OHMFuFmk1atc/RRGjGtVOVrvrg==",
       "type": "package",
       "path": "Microsoft.NETCore.DotNetHostPolicy/1.0.5",
       "files": [
+        "Microsoft.NETCore.DotNetHostPolicy.1.0.5.nupkg.sha512",
+        "Microsoft.NETCore.DotNetHostPolicy.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
-        "microsoft.netcore.dotnethostpolicy.1.0.5.nupkg.sha512",
-        "microsoft.netcore.dotnethostpolicy.nuspec",
         "runtime.json"
       ]
     },
@@ -7860,14 +7860,14 @@
       ]
     },
     "Microsoft.NETCore.Jit/1.0.7": {
-      "sha512": "LWc4iSE7Ggrzag9y5IXubX9UatQFFf93aOhmji9ynf2aoXlo+ztG6JFrht+F+9gEBxwKMSE//BAJECEBBBZpAQ==",
+      "sha512": "pNYSZFvX14x4ubToTLxj9O9xNIEg1kHaL6gkMr8urWKIY65cu8272KRlT3cgJCKLbzFO0XZDjvPlRBCFrbJm7Q==",
       "type": "package",
       "path": "Microsoft.NETCore.Jit/1.0.7",
       "files": [
+        "Microsoft.NETCore.Jit.1.0.7.nupkg.sha512",
+        "Microsoft.NETCore.Jit.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
-        "microsoft.netcore.jit.1.0.7.nupkg.sha512",
-        "microsoft.netcore.jit.nuspec",
         "runtime.json"
       ]
     },
@@ -7885,14 +7885,14 @@
       ]
     },
     "Microsoft.NETCore.Runtime.CoreCLR/1.0.7": {
-      "sha512": "a6qRE/LJEGYcAbmJ54KImwGNGDAyRhhLYrF+/uGRzuAQ3ODyggrv/huRHeT/f2zuBK/2ytFSmPjkxYduR/peFA==",
+      "sha512": "t81co+R1xDubSQDDYP+zddd1Eya7xGeN2XlJMSsNFUCKRm35/5u8knnXOQTdfE1nf6bYqPROt18WlhdZui1FLA==",
       "type": "package",
       "path": "Microsoft.NETCore.Runtime.CoreCLR/1.0.7",
       "files": [
+        "Microsoft.NETCore.Runtime.CoreCLR.1.0.7.nupkg.sha512",
+        "Microsoft.NETCore.Runtime.CoreCLR.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
-        "microsoft.netcore.runtime.coreclr.1.0.7.nupkg.sha512",
-        "microsoft.netcore.runtime.coreclr.nuspec",
         "runtime.json"
       ]
     },
@@ -8563,15 +8563,15 @@
       ]
     },
     "runtime.native.System.Security.Cryptography/4.0.1": {
-      "sha512": "2Rjry5DmjTz2F03dYEzjBLCP5cz3zbFTiCSbkAcv9YvnzWzKKR6RkbL85byaPAlSpPEPM0ULLynFccKbNhifEg==",
+      "sha512": "6Z4SIheH5ziCRoMnLBE+fmcAPfyewKbteJQGTT86+dsBRSYZNuUmLS3Qg+rzo1nPdiK19VmOBne54j9kI7sI4Q==",
       "type": "package",
       "path": "runtime.native.System.Security.Cryptography/4.0.1",
       "files": [
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
         "lib/netstandard1.0/_._",
-        "runtime.native.system.security.cryptography.4.0.1.nupkg.sha512",
-        "runtime.native.system.security.cryptography.nuspec"
+        "runtime.native.System.Security.Cryptography.4.0.1.nupkg.sha512",
+        "runtime.native.System.Security.Cryptography.nuspec"
       ]
     },
     "runtime.native.System.Security.Cryptography.Apple/4.3.0": {
