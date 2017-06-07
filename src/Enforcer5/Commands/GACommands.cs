@@ -23,8 +23,8 @@ namespace Enforcer5
         [Command(Trigger = "missinghcommands", UploadAdmin = true)]
         public static void MissingHcommands(Update update, string[] args)
         {
-            var commands = Bot.Commands.Select(e => e.Trigger).ToList();
-            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').ToList();
+            var commands = Bot.Commands.Select(e => e.Trigger.ToLower()).ToList();
+            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').Select(e => e.ToLower()).ToList();
 
             string missing = "<b>Missing hcommand strings:</b>\n";
 
