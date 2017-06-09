@@ -2483,7 +2483,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/12.0.5": {
+      "Telegram.Bot.Enforcer/12.0.6": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -5161,7 +5161,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/12.0.5": {
+      "Telegram.Bot.Enforcer/12.0.6": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -7817,7 +7817,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/12.0.5": {
+      "Telegram.Bot.Enforcer/12.0.6": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -13982,12 +13982,12 @@
         "ref/xamarinwatchos10/_._"
       ]
     },
-    "Telegram.Bot.Enforcer/12.0.5": {
-      "sha512": "zcCAAopnsZOVMh4TqSnR0VKJXcMiVt5kqWQ4/nN9F0fVMwrU3kcEV4okuU0jsw+vreKJEqqOZ+d8x7t86eiRag==",
+    "Telegram.Bot.Enforcer/12.0.6": {
+      "sha512": "7j4kcIBN6Cc2mhnlxwZ9wJ+8kIoWe415/5v/Wo8tBPIGBwXbVSW/i/OkiQ3zRRAkEooO1DvNGQh3Ibzu9kbvkQ==",
       "type": "package",
-      "path": "Telegram.Bot.Enforcer/12.0.5",
+      "path": "Telegram.Bot.Enforcer/12.0.6",
       "files": [
-        "Telegram.Bot.Enforcer.12.0.5.nupkg.sha512",
+        "Telegram.Bot.Enforcer.12.0.6.nupkg.sha512",
         "Telegram.Bot.Enforcer.nuspec",
         "lib/netstandard1.5/Telegram.Bot.dll",
         "lib/netstandard1.5/documentation.xml"
@@ -14000,7 +14000,7 @@
       "Microsoft.Win32.Registry >= 4.3.0",
       "StackExchange.Redis >= 1.2.3",
       "System.Runtime.Serialization.Json >= 4.0.2",
-      "Telegram.Bot.Enforcer >= 12.0.5"
+      "Telegram.Bot.Enforcer >= 12.0.6"
     ],
     ".NETCoreApp,Version=v1.0": []
   },
