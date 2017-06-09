@@ -177,6 +177,7 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
+                        language = language.Substring(0, 2);
                         res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
                         if (res != null)
                         {
