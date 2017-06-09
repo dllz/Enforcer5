@@ -259,146 +259,150 @@ namespace Enforcer5
             var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
             foreach (var user in mods)
             {
-                var lang = Methods.GetGroupLanguage(user.User).Doc;
-                var mod = user.User.Id;
-                var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
-                if (allowed.Result)
+                if (user != null)
                 {
-                    continue;
-                }
-                try
-                {
-                    var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
-                    Message result;
-                    if (!string.IsNullOrEmpty(username))
+                    var lang = Methods.GetGroupLanguage(user.User).Doc;
+                    var mod = user.User.Id;
+                    var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
+                    if (allowed.Result)
                     {
-                        if (updateMessage.ReplyToMessage != null)
+                        continue;
+                    }
+                    try
+                    {
+                        var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
+                        Message result;
+                        if (!string.IsNullOrEmpty(username))
                         {
-                            var solvedMenu = new Menu(2)
+                            if (updateMessage.ReplyToMessage != null)
                             {
-                                Buttons = new List<InlineButton>
+                                var solvedMenu = new Menu(2)
                                 {
-                                    new InlineButton(Methods.GetLocaleString(lang, "ban"),
-                                        $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "kick"),
-                                        $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "Warn"),
-                                        $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
-                                        $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
+                                    Buttons = new List<InlineButton>
                                     {
-                                        Url = $"http://t.me/{username}/{repId}"
-                                    },
-                                    new InlineButton(Methods.GetLocaleString(lang, "delete"),
-                                        $"delflag:{updateMessage.Chat.Id}:{msgId}")
-                                }
-                            };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
-                                mod,
-                                 Key.CreateMarkupFromMenu(solvedMenu));
-                        }
-                        else
-                        {
-                            var solvedMenu = new Menu(2)
-                            {
-                                Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
-                                        $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
-                                    {
-                                        Url = $"http://t.me/{username}/{repId}"
+                                        new InlineButton(Methods.GetLocaleString(lang, "ban"),
+                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "kick"),
+                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "Warn"),
+                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
+                                            $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
+                                        {
+                                            Url = $"http://t.me/{username}/{repId}"
+                                        },
+                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),
+                                            $"delflag:{updateMessage.Chat.Id}:{msgId}")
                                     }
-                                }
-                            };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
-                                mod
-                                , Key.CreateMarkupFromMenu(solvedMenu));
-                        }
-                    }
-                    else
-                    {
-                        if (updateMessage.ReplyToMessage != null)
-                        {
-                            var solvedMenu = new Menu(2)
+                                };
+                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
+                                    mod,
+                                    Key.CreateMarkupFromMenu(solvedMenu));
+                            }
+                            else
                             {
-                                Buttons = new List<InlineButton>
+                                var solvedMenu = new Menu(2)
                                 {
-                                    new InlineButton(Methods.GetLocaleString(lang, "ban"),
-                                        $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "kick"),
-                                        $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "Warn"),
-                                        $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
-                                        $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                    new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{msgId}"),
-                                    groupLink.Result.HasValue
-                                        ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
+                                    Buttons = new List<InlineButton>
+                                    {
+                                        new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
+                                            $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                         {
-                                            Url = groupLink.Result.ToString()
+                                            Url = $"http://t.me/{username}/{repId}"
                                         }
-                                        : null
-                                }
-
-                            };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
-                                mod,
-                                 Key.CreateMarkupFromMenu(solvedMenu));
+                                    }
+                                };
+                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                                    mod
+                                    , Key.CreateMarkupFromMenu(solvedMenu));
+                            }
                         }
                         else
                         {
-                            var solvedMenu = new Menu(2)
+                            if (updateMessage.ReplyToMessage != null)
                             {
-                                Buttons = new List<InlineButton>
+                                var solvedMenu = new Menu(2)
                                 {
-                                    new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
-                                        $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                    groupLink.Result.HasValue
-                                        ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
-                                        {
-                                            Url = groupLink.Result
-                                        }
-                                        : null
-                                }
-                            };
-                            result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
-                                mod,
-                                 Key.CreateMarkupFromMenu(solvedMenu));
+                                    Buttons = new List<InlineButton>
+                                    {
+                                        new InlineButton(Methods.GetLocaleString(lang, "ban"),
+                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "kick"),
+                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "Warn"),
+                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
+                                            $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{msgId}"),
+                                        groupLink.Result.HasValue
+                                            ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
+                                            {
+                                                Url = groupLink.Result.ToString()
+                                            }
+                                            : null
+                                    }
+
+                                };
+                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
+                                    mod,
+                                    Key.CreateMarkupFromMenu(solvedMenu));
+                            }
+                            else
+                            {
+                                var solvedMenu = new Menu(2)
+                                {
+                                    Buttons = new List<InlineButton>
+                                    {
+                                        new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
+                                            $"solveflag:{updateMessage.Chat.Id}:{repId}"),
+                                        groupLink.Result.HasValue
+                                            ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
+                                            {
+                                                Url = groupLink.Result
+                                            }
+                                            : null
+                                    }
+                                };
+                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                                    mod,
+                                    Key.CreateMarkupFromMenu(solvedMenu));
+                            }
+                        }
+                        if (result != null)
+                        {
+                            var nme = $"flagged:{chatId}:{repId}";
+                            var noti = new AdminNotification();
+                            noti.hash = nme;
+                            noti.chatId = chatId;
+                            noti.chatMsgId = msgId;
+                            noti.reportId = repId;
+                            noti.adminChatId = result.Chat.Id;
+                            noti.adminMsgId = result.MessageId;
+                            MemoryStream stream1 = new MemoryStream();
+                            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(AdminNotification));
+                            ser.WriteObject(stream1, noti);
+                            byte[] json = stream1.ToArray();
+                            var text = Encoding.UTF8.GetString(json, 0, json.Length);
+                            Redis.db.HashSetAsync(nme, $"messageObject{count}", text);
+                            count++;
                         }
                     }
-                    if (result != null)
+                    catch (ApiRequestException e)
                     {
-                        var nme = $"flagged:{chatId}:{repId}";
-                        var noti = new AdminNotification();
-                        noti.hash = nme;
-                        noti.chatId = chatId;
-                        noti.chatMsgId = msgId;
-                        noti.reportId = repId;
-                        noti.adminChatId = result.Chat.Id;
-                        noti.adminMsgId = result.MessageId;
-                        MemoryStream stream1 = new MemoryStream();
-                        DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(AdminNotification));
-                        ser.WriteObject(stream1, noti);
-                        byte[] json = stream1.ToArray();
-                        var text = Encoding.UTF8.GetString(json, 0, json.Length);
-                         Redis.db.HashSetAsync(nme, $"messageObject{count}", text);
-                        count++;
+                        Console.WriteLine(e.Message + e.StackTrace);
+                    }
+                    catch (AggregateException e)
+                    {
+                        Console.WriteLine(e.Message + e.StackTrace);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message + e.StackTrace);
                     }
                 }
-                catch (ApiRequestException e)
-                {
-                    Console.WriteLine(e.Message + e.StackTrace);
-                }
-                catch (AggregateException e)
-                {
-                    Console.WriteLine(e.Message + e.StackTrace);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message + e.StackTrace);
-                }
+                
             }
             var hash = $"flagged:{chatId}:{repId}";
             var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
