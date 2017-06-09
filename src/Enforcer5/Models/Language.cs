@@ -20,7 +20,7 @@ namespace Enforcer5
             Doc = XDocument.Load(path);
             Name = Doc.Descendants("language").First().Attribute("name")?.Value;
             Base = Doc.Descendants("language").First().Attribute("base")?.Value;
-            IEFT = Doc.Descendants("language").First().Attribute("IEFT")?.Value;
+            IEFT = Doc.Descendants("language").First().Attribute("IEFT")?.Value.ToLower();
             FilePath = path;
             FileName = Path.GetFileNameWithoutExtension(path);
             LatestUpdate = File.GetLastWriteTimeUtc(path);

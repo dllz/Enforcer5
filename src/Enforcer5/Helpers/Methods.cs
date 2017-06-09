@@ -109,7 +109,7 @@ namespace Enforcer5.Helpers
 
         public static Language GetGroupLanguage(User user)
         {
-            var language = user.LanguageCode;
+            var language = user.LanguageCode.ToLower();
             var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
             try
             {
@@ -119,7 +119,7 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    res = Program.LangaugeList.FirstOrDefault(x => language.Contains(x.IEFT));
+                    res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
                     if (res != null)
                     {
                         return res;
@@ -129,7 +129,6 @@ namespace Enforcer5.Helpers
                         return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
                     }
                 }
-                
             }
             catch (NullReferenceException e)
             {
@@ -168,7 +167,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                var language = uMessage.From.LanguageCode;
+                var language = uMessage.From.LanguageCode.ToLower();
                 var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
                 try
                 {
