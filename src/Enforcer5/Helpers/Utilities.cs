@@ -73,7 +73,27 @@ namespace Enforcer5.Helpers
 #endif
 
             Api = new TelegramBotClient(TelegramAPIKey);
-             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
+            //Api.Timeout = TimeSpan.FromSeconds(3);
+            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
+            Api.OnUpdate += UpdateHandler.UpdateReceived;
+            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
+            Api.OnReceiveError += ApiOnReceiveError;
+            Api.OnReceiveGeneralError += ApiOnReceiveGenError;
+            Me = Api.GetMeAsync().Result;
+            Console.Title += " " + Me.Username;
+            StartTime = DateTime.UtcNow;
+#if premium
+                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
+#endif
+#if normal
+            var offset = Redis.db.StringGetAsync("bot:last_update").Result;
+#endif
+            if (offset.HasValue)
+            {
+                Api.MessageOffset = (int)offset + 1;
+                Console.WriteLine($" database offset is {offset}");
+            }
+            Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
             {
@@ -119,32 +139,13 @@ namespace Enforcer5.Helpers
                 }
             }
 
-            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
-            Api.OnUpdate += UpdateHandler.UpdateReceived;
-            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
-            Api.OnReceiveError += ApiOnReceiveError;
-            Api.OnReceiveGeneralError += ApiOnReceiveGenError;          
-            Me = Api.GetMeAsync().Result;
-            Api.Timeout = TimeSpan.FromSeconds(1);
-            Console.Title += " " + Me.Username;
-            StartTime = DateTime.UtcNow;
-
-            if (!testing)
-            {
-#if premium
-                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
-#endif
-#if normal
-                var offset = Redis.db.StringGetAsync("bot:last_update").Result;
-#endif
-                if (offset.HasValue && offset.IsInteger)
-                    Api.MessageOffset = (int)offset + 1;
-                Console.WriteLine($" database offset is {offset}");
-                //now we can start receiving   
-
-            }           
+           
+                //now we can start receiving            
             Api.StartReceiving();
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
+            
+            if (offset.HasValue && offset.IsInteger)
+                Api.MessageOffset = (int)offset + 1;
             var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
 
