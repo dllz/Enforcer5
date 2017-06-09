@@ -778,14 +778,10 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static DeleteMessage DeleteMessage(long chatId, int msgid)
+        public static Boolean DeleteMessage(long chatId, int msgid)
         {
-            var client = new HttpClient();
-            var response = client.GetAsync($"https://api.telegram.org/bot{Bot.TelegramAPIKey}/deleteMessage?chat_id={chatId}&message_id={msgid}").Result;
-            var data = response.Content.ReadAsStringAsync().Result;
-            var result = JsonConvert.DeserializeObject<DeleteMessage>(data);
-
-            return result;
+            return Bot.Api.DeleteMessageAsync(chatId, msgid).Result;
+           
         }
     }
 

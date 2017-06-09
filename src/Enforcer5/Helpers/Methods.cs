@@ -744,6 +744,10 @@ namespace Enforcer5.Helpers
                 {
                     return msg.ReplyToMessage.MessageId.ToString();
                 }
+                if (msg.ReplyToMessage.VideoNote != null)
+                {
+                    return msg.ReplyToMessage.VideoNote.FileId;
+                }
                 else
                 {
                     return "unknown";
@@ -864,6 +868,10 @@ namespace Enforcer5.Helpers
             if (msg.Voice != null)
             {
                 return "voice";
+            }
+            if (msg.VideoNote != null)
+            {
+                return "videoNote";
             }
             if (msg.Sticker != null)
             {

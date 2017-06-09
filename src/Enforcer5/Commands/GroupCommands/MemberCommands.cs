@@ -263,6 +263,11 @@ namespace Enforcer5
                                         replyToMessageId: repId);
                                 }
                                 break;
+
+                            case "videoNote":
+                                    Bot.Api.SendVideoNoteAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                        replyToMessageId: repId);
+                                break;
                             case "gif":
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
