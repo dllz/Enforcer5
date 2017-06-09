@@ -23,7 +23,7 @@ namespace Enforcer5
         [Command(Trigger = "kickme", InGroupOnly = true)]
         public static void Kickme(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(update.Message,true);
             var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc);
             if (res)
             {
@@ -34,7 +34,7 @@ namespace Enforcer5
         [Command(Trigger = "kick", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Kick(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(update.Message,true);
                 try
                 {
                     try
@@ -89,7 +89,7 @@ namespace Enforcer5
                }
                catch (Exception e)
                {
-                   var lang = Methods.GetGroupLanguage(update.Message);
+                   var lang = Methods.GetGroupLanguage(update.Message,true);
                    Methods.SendError(e.Message, update.Message, lang.Doc);
                }
            }
@@ -212,7 +212,7 @@ namespace Enforcer5
         [Command(Trigger = "ban", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Ban(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(update.Message,true);
             try
             {
                 try
@@ -320,7 +320,7 @@ namespace Enforcer5
             var chatId = update.Message.Chat.Id;
             var userId = Methods.GetUserId(update, args);
             var status = Bot.Api.GetChatMemberAsync(chatId, userId).Result.Status;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (status == ChatMemberStatus.Kicked)
             {
                 var res = Methods.UnbanUser(chatId, userId, lang);
@@ -472,7 +472,7 @@ namespace Enforcer5
         [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
         public static void ResetWarns(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
              Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
              Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
@@ -483,7 +483,7 @@ namespace Enforcer5
         [Callback(Trigger = "removewarn", GroupAdminOnly = true)]
         public static void RemoveWarn(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, -1).Result;
             var text = "";            

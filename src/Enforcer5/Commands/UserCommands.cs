@@ -14,7 +14,7 @@ namespace Enforcer5
         [Command(Trigger = "ping")]
         public static void Ping(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(update.Message, false);
             try
             {                
                 var ts = DateTime.UtcNow - update.Message.Date;
@@ -53,7 +53,7 @@ namespace Enforcer5
         [Command(Trigger = "helplist")]
         public static void HelpList(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
              Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc)), update);
         }
 
@@ -62,7 +62,7 @@ namespace Enforcer5
         {
             var command = -1;
             var request = "";
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             if (args.Length > 1)
             {
                 if (!string.IsNullOrEmpty(args[1]))
@@ -135,7 +135,7 @@ namespace Enforcer5
             System.Xml.Linq.XDocument lang;
             try
             {
-                lang = Methods.GetGroupLanguage(update.Message).Doc;
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             }
             catch (NullReferenceException e)
             {

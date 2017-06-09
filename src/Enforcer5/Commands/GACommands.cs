@@ -368,22 +368,30 @@ namespace Enforcer5
             Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
         }
 
-        [Command(Trigger = "langcode", DevOnly = true)]
+        [Command(Trigger = "langcode")]
         public static void GetUserLangCode(Update update, string[] args)
         {
-            if (update.Message.ReplyToMessage != null)
+            try
             {
-                if (update.Message.ReplyToMessage.ForwardFrom != null)
+                if (update.Message.ReplyToMessage != null)
                 {
-                    Bot.SendReply($"{update.Message.ReplyToMessage.ForwardFrom.LanguageCode}", update);
+                    if (update.Message.ReplyToMessage.ForwardFrom != null)
+                    {
+                        Bot.Send($"{update.Message.ReplyToMessage.ForwardFrom.LanguageCode}", update.Message.Chat.Id);
+                    }
+                    else
+                    {
+                        Bot.Send($"{update.Message.ReplyToMessage.From.LanguageCode}", update.Message.Chat.Id);
+                    }
                 }
-                else{
-                    Bot.SendReply($"{update.Message.ReplyToMessage.From.LanguageCode}", update);
+                else
+                {
+                    Bot.Send($"{update.Message.From.LanguageCode}", update.Message.Chat.Id);
                 }
             }
-            else
+            catch (Exception e)
             {
-                Bot.SendReply($"{update.Message.From.LanguageCode}", update);
+                Bot.SendReply(e.Message, update);
             }
         }
 

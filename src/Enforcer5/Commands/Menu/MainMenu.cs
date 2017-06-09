@@ -16,7 +16,7 @@ namespace Enforcer5
         [Command(Trigger = "menu", InGroupOnly = true)]
         public static void Menu(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var chatId = update.Message.Chat.Id;
             var menuText = Methods.GetLocaleString(lang, "mainMenu", update.Message.Chat.Title);
             var menu = genMenu(chatId, lang);
@@ -29,7 +29,7 @@ namespace Enforcer5
         public static void Dashboard(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();

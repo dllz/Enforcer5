@@ -119,8 +119,17 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    res = Program.LangaugeList.FirstOrDefault(x => language.Contains(x.IEFT));
+                    if (res != null)
+                    {
+                        return res;
+                    }
+                    else
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
                 }
+                
             }
             catch (NullReferenceException e)
             {
@@ -169,7 +178,15 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
                     }
                 }
                 catch (NullReferenceException e)

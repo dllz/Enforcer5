@@ -15,7 +15,7 @@ namespace Enforcer5
         [Command(Trigger = "elevate", InGroupOnly = true)]
         public static void ElevateUser(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             try
             {
                 var userid = Methods.GetUserId(update, args);
@@ -68,7 +68,7 @@ namespace Enforcer5
         [Command(Trigger = "deelevate", InGroupOnly = true)]
         public static void deElavateUser(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             try
             {
                 var userid = Methods.GetUserId(update, args);
@@ -101,7 +101,7 @@ namespace Enforcer5
         [Command(Trigger = "elevatelog", GroupAdminOnly = true, InGroupOnly = true)]
         public static void ElevateLog(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
             Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", log)}", update);
         }
@@ -117,7 +117,7 @@ namespace Enforcer5
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if ((role.Result.Status == ChatMemberStatus.Creator || priv) || update.Message.From.Id == Constants.Devs[0])
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetAddAsync($"chat:{chat}:auth", userid);
                 Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
@@ -136,7 +136,7 @@ namespace Enforcer5
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", userid, update.Message.From.Id), update);
@@ -155,7 +155,7 @@ namespace Enforcer5
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetRemoveAsync($"chat:{chat}:deauth", userid);
                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateUnblocked", userid, update.Message.From.Id), update);
@@ -174,7 +174,7 @@ namespace Enforcer5
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 Redis.db.SetRemoveAsync($"chat:{chat}:auth", userid);
                 Bot.SendReply(Methods.GetLocaleString(lang, "dauth", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
