@@ -377,7 +377,7 @@ namespace Enforcer5.Helpers
                         {
                             if (chatUpdate.Message != null && chatUpdate.Message.Chat.Title != null)
                             {
-                                var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
+                                var lang = Methods.GetGroupLanguage(chatUpdate.Message,true).Doc;
                                 return Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), chatUpdate);
                             }
@@ -388,7 +388,7 @@ namespace Enforcer5.Helpers
                         }
                         else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                         {
-                            var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
+                            var lang = Methods.GetGroupLanguage(chatUpdate.Message,true).Doc;
                             var startMe = new Menu(1)
                             {
                                 Buttons = new List<InlineButton>

@@ -33,7 +33,7 @@ namespace Enforcer5
             var ReportOn = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Flagged").Result;
             if (ReportOn.Equals("yes"))
                 return;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (update.Message.ReplyToMessage != null)
             {
                 var alreadyFlagged = Redis.db.HashExistsAsync($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported").Result;
@@ -66,15 +66,15 @@ namespace Enforcer5
             if (update.Message.From.Username != null)
             {
                 reporter = $"{reporter} (@{update.Message.From.Username}";
-            }
+            }            
              SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
-            Service.LogCommand(update, update.Message.Text);
+            
         }
 
         [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
         public static void AdminOff(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
              Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
@@ -83,7 +83,7 @@ namespace Enforcer5
         [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
         public static void AdminOn(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
              Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
@@ -93,7 +93,7 @@ namespace Enforcer5
         [Command(Trigger = "solved", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Solved(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (update.Message.ReplyToMessage != null)
             {
                 var msgid = update.Message.ReplyToMessage.MessageId;
@@ -233,7 +233,7 @@ namespace Enforcer5
         [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void ReportOn(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
              Redis.db.SetRemoveAsync(hash, userId);
@@ -243,7 +243,7 @@ namespace Enforcer5
         [Command(Trigger = "reportoff", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void ReportOff(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
              Redis.db.SetAddAsync(hash, userId);
@@ -251,14 +251,16 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
-        private static void SendToAdmins(List<ChatId> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
+        private static void SendToAdmins(List<ChatMember> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument groupLang)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
             var count = 0;
             var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
-            foreach (var mod in mods)
+            foreach (var user in mods)
             {
+                var lang = Methods.GetGroupLanguage(user.User).Doc;
+                var mod = user.User.Id;
                 var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
                 if (allowed.Result)
                 {
@@ -418,14 +420,14 @@ namespace Enforcer5
             }
             if (count > 0)
             {
-                 Bot.Send(Methods.GetLocaleString(lang, "reported", repId), chatId);
+                 Bot.Send(Methods.GetLocaleString(groupLang, "reported", repId), chatId);
             }
         }
 
-        private static List<ChatId> GetModId(long id)
+        private static List<ChatMember> GetModId(long id)
         {
             var res = Bot.Api.GetChatAdministratorsAsync(id).Result;
-            return res.Select(member => member.User.Id).ToList();
+            return res.ToList();
         }
     }
 
@@ -434,10 +436,11 @@ namespace Enforcer5
         [Callback(Trigger = "banflag", GroupAdminOnly = true)]
         public static void BanFlag(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var grouplang = Methods.GetGroupLanguage(call.Message,true).Doc;
+            var userLang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
-            var res = Methods.BanUser(chatId, userId, lang);
+            var res = Methods.BanUser(chatId, userId, grouplang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {
@@ -454,18 +457,19 @@ namespace Enforcer5
             if (res)
             {
                 Methods.SaveBan(userId, "ban");
-                var why = Methods.GetLocaleString(lang, "inlineBan");
+                var why = Methods.GetLocaleString(grouplang, "inlineBan");
                 Methods.AddBanList(chatId, userId, userId.ToString(), why);
                 Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
-                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulBan", userId, call.From.Id), chatId);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userBanned"));
+                Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", userId, call.From.Id), chatId);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
             }
         }
 
         [Callback(Trigger = "kickflag", GroupAdminOnly = true)]
         public static void KickFlag(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
+            var userlang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = int.Parse(args[2]);
              var res = Methods.KickUser(chatId, userId, lang);
@@ -474,7 +478,7 @@ namespace Enforcer5
                 Methods.SaveBan(userId, "kick");
 
                 Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "userKicked"));
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
             }
         }
 

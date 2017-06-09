@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <strings>
-  <language name="English" base="English" owner="BladeZero"/>
+  <language name="English" base="English" owner="BladeZero" IEFT="en"/>
   <string key="statusKicked">
     <value>{0} is banned from this group. {1}</value>
   </string>

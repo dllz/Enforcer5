@@ -159,7 +159,7 @@ namespace Enforcer5.Handlers
                                         !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
@@ -173,7 +173,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
-                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        var lang = Methods.GetGroupLanguage(update.Message,true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
@@ -233,7 +233,7 @@ namespace Enforcer5.Handlers
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
@@ -243,7 +243,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
-                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        var lang = Methods.GetGroupLanguage(update.Message,true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
@@ -362,7 +362,7 @@ namespace Enforcer5.Handlers
                         {
                             if (update.Message != null && update.Message.Chat.Title != null)
                             {
-                                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
@@ -373,7 +373,7 @@ namespace Enforcer5.Handlers
                         }
                         else if (e.ErrorCode == 403)
                         {
-                            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                             var startMe = new Menu(1)
                             {
                                 Buttons = new List<InlineButton>

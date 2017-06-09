@@ -176,7 +176,7 @@ namespace Enforcer5
                         XDocument lang;
                         try
                         {
-                            lang = Methods.GetGroupLanguage(message).Doc;
+                            lang = Methods.GetGroupLanguage(message,true).Doc;
                         }
                         catch (NullReferenceException e)
                         {
@@ -254,7 +254,7 @@ namespace Enforcer5
         public static void BotAdded(Message updateMessage)
         {
             var groupBan = Redis.db.HashGetAsync($"groupBan:{updateMessage.Chat.Id}", "banned").Result;
-            var lang = Methods.GetGroupLanguage(updateMessage).Doc;
+            var lang = Methods.GetGroupLanguage(updateMessage,true).Doc;
             if (groupBan.Equals("1"))
             {
                
@@ -287,7 +287,7 @@ namespace Enforcer5
 
         public static void ResetUser(Message message)
         {
-            var lang = Methods.GetGroupLanguage(message).Doc;
+            var lang = Methods.GetGroupLanguage(message,true).Doc;
             Methods.UnbanUser(message.Chat.Id, message.NewChatMember.Id, lang);
         }   
 

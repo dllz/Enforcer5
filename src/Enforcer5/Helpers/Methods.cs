@@ -107,12 +107,60 @@ namespace Enforcer5.Helpers
             return str?.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
         }
 
-        public static Language GetGroupLanguage(Message uMessage)
+        public static Language GetGroupLanguage(User user)
         {
-            var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
-            if (lang.HasValue)
+            var language = user.LanguageCode;
+            var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
+            try
             {
-                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                if (res != null)
+                {
+                    return res;
+                }
+                else
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+            catch (NullReferenceException e)
+            {
+                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+            }
+        }
+
+        public static Language GetGroupLanguage(Message uMessage, bool InGroupOnly)
+        {
+            if (InGroupOnly)
+            {
+                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
+                if (lang.HasValue)
+                {
+                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                    try
+                    {
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                else
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+            else
+            {
+                var language = uMessage.From.LanguageCode;
+                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
                 try
                 {
                     if (res != null)
@@ -129,10 +177,8 @@ namespace Enforcer5.Helpers
                     return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
                 }
             }
-            else
-            {
-                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-            }
+            
+        
         }
 
         internal static string GetHelpList(XDocument file)
@@ -342,7 +388,7 @@ namespace Enforcer5.Helpers
 
         public static int GetUserId(Update update, string[] args)
         {
-            var lang = GetGroupLanguage(update.Message).Doc;
+            var lang = GetGroupLanguage(update.Message,true).Doc;
             if (update.Message.NewChatMember != null)
             {
                 return update.Message.NewChatMember.Id;
@@ -570,7 +616,7 @@ namespace Enforcer5.Helpers
                         return;
                     }
                     Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;                    
+                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;                    
                     
                     try
                     {

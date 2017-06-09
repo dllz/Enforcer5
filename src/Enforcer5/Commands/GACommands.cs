@@ -368,11 +368,30 @@ namespace Enforcer5
             Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
         }
 
+        [Command(Trigger = "langcode", DevOnly = true)]
+        public static void GetUserLangCode(Update update, string[] args)
+        {
+            if (update.Message.ReplyToMessage != null)
+            {
+                if (update.Message.ReplyToMessage.ForwardFrom != null)
+                {
+                    Bot.SendReply($"{update.Message.ReplyToMessage.ForwardFrom.LanguageCode}", update);
+                }
+                else{
+                    Bot.SendReply($"{update.Message.ReplyToMessage.From.LanguageCode}", update);
+                }
+            }
+            else
+            {
+                Bot.SendReply($"{update.Message.From.LanguageCode}", update);
+            }
+        }
+
 
         [Command(Trigger = "getuser", DevOnly = true)]
         public static void GetUserDetails(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var userid = Methods.GetUserId(update, args);
             var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{userid}").Result;

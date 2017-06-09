@@ -34,7 +34,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -141,7 +141,7 @@ namespace Enforcer5
                     XDocument lang;
                     try
                     {
-                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     }
                     catch (NullReferenceException e)
                     {
@@ -217,7 +217,7 @@ namespace Enforcer5
                     XDocument lang;
                     try
                     {
-                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     }
                     catch (NullReferenceException e)
                     {
@@ -307,7 +307,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -397,7 +397,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -507,7 +507,7 @@ namespace Enforcer5
 
                 if (found)
                 {                   
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     var name = update.Message.From.FirstName;
                     var lastName = "x";
                     if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";

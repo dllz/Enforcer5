@@ -16,11 +16,12 @@ namespace Enforcer5
         [Command(Trigger = "about", InGroupOnly = true)]
         public static void About(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var chatId = update.Message.Chat.Id;
             var text = Methods.GetAbout(chatId, lang);
             if (Methods.SendInPm(update.Message, "About"))
             {
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
                 Bot.Send(text, update.Message.From.Id);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
@@ -32,10 +33,11 @@ namespace Enforcer5
         [Command(Trigger = "rules", InGroupOnly = true)]
         public static void Rules(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetRules(update.Message.Chat.Id, lang);
             if (Methods.SendInPm(update.Message, "Rules"))
             {
+                lang = Methods.GetGroupLanguage(update.Message, true).Doc;
                 Bot.Send(text, update.Message.From.Id);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
@@ -47,7 +49,7 @@ namespace Enforcer5
         [Command(Trigger = "adminlist", InGroupOnly = true)]
         public static void AdminList(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
             var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
             if (mods.Count > 0)
@@ -56,6 +58,7 @@ namespace Enforcer5
             }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
+                lang = Methods.GetGroupLanguage(update.Message, true).Doc;
                 Bot.Send(text, update.Message.From.Id);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
@@ -77,7 +80,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
             }
         }
@@ -124,7 +127,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -136,7 +139,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -154,7 +157,7 @@ namespace Enforcer5
             {
                 msgToReplyTo = update.Message.MessageId;
             }
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
             var text = Methods.GetLocaleString(lang, "Support");
             Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);
         }
@@ -162,7 +165,7 @@ namespace Enforcer5
         [Command(Trigger = "me")]
         public static void Me(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
             try
             {
                 var userid = update.Message.From.Id;
@@ -186,7 +189,7 @@ namespace Enforcer5
         [Command(Trigger = "link", InGroupOnly = true)]
         public static void Link(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
             if (link.Equals("no") || link.IsNullOrEmpty)
             {
@@ -200,7 +203,7 @@ namespace Enforcer5
 
         public static void SendExtra(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var text = Redis.db.HashGetAsync(hash, args[0]).Result;
             if (!text.HasValue)
