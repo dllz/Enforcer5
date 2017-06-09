@@ -109,31 +109,39 @@ namespace Enforcer5.Helpers
 
         public static Language GetGroupLanguage(User user)
         {
-            var language = user.LanguageCode.ToLower();
-            var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
-            try
+            if (user.LanguageCode != null)
             {
-                if (res != null)
+                var language = user.LanguageCode.ToLower();
+                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
+                try
                 {
-                    return res;
-                }
-                else
-                {
-                    res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
                     if (res != null)
                     {
                         return res;
                     }
                     else
                     {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
                     }
                 }
+                catch (NullReferenceException e)
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
             }
-            catch (NullReferenceException e)
+            else
             {
                 return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
             }
+            
         }
 
         public static Language GetGroupLanguage(Message uMessage, bool InGroupOnly)
