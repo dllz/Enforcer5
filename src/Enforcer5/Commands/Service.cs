@@ -338,7 +338,7 @@ namespace Enforcer5
             }
         }
 
-        public static void removeWarn0(long chatid, int userId)
+        public static void removeWarn0(long chatid, long userId)
         {
             var currentMedia = (int)Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result;
             var currentWarn = (int)Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result;
@@ -443,7 +443,7 @@ namespace Enforcer5
 
          public static void LogDevCommand(Update update, string command)
         {          
-                var adminUserId = update.Message.From.Id;
+                long adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
                 if(update.Message.ReplyToMessage != null)
@@ -455,7 +455,7 @@ namespace Enforcer5
         }
 
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
+        public static void LogCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -490,7 +490,7 @@ namespace Enforcer5
 
         }
 
-        public static void LogDevCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
+        public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")
         {
             var lang = Methods.GetGroupLanguage(-1001076212715).Doc;
             if (string.IsNullOrEmpty(replyto))

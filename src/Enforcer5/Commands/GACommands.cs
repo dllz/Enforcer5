@@ -207,7 +207,7 @@ namespace Enforcer5
         [Command(Trigger = "getrekt", DevOnly = true)]
         public static void GlobalBan(Update update, string[] args)
         {
-            int userId = 0;
+            long userId = 0;
             string moti = "";
             if (update.Message.ReplyToMessage != null)
             {
@@ -269,7 +269,7 @@ namespace Enforcer5
         [Command(Trigger = "unrekt", DevOnly = true)]
         public static void Unrekt(Update update, string[] args)
         {
-            int userId = 0;
+            long userId = 0;
             string moti = "";
             if (update.Message.ReplyToMessage != null)
             {

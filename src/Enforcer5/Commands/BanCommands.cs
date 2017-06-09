@@ -95,7 +95,7 @@ namespace Enforcer5
            }
         }
 
-        public static void Warn(int warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", int callbackfromid = 0)
+        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0)
         {
             try
             {
@@ -319,7 +319,7 @@ namespace Enforcer5
         {
             var chatId = update.Message.Chat.Id;
             var userId = Methods.GetUserId(update, args);
-            var status = Bot.Api.GetChatMemberAsync(chatId, userId).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result.Status;
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (status == ChatMemberStatus.Kicked)
             {
@@ -333,7 +333,7 @@ namespace Enforcer5
 
         }
 
-        public static void Tempban(int userId, long chatId, int time,
+        public static void Tempban(long userId, long chatId, long time,
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -398,7 +398,7 @@ namespace Enforcer5
         {
 
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            int userId = 0, time;
+            long userId = 0, time;
             string length = "";
             if (update.Message.ReplyToMessage != null) // by reply
             {
@@ -420,7 +420,7 @@ namespace Enforcer5
                     length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
 
                     if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!int.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
+                    else if (!long.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
                     {
                         Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                         return;
@@ -433,7 +433,7 @@ namespace Enforcer5
                     length = Methods.GetGroupTempbanTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
 
                     if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!int.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
+                    else if (!long.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
                     {
                         Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                         return;
@@ -441,7 +441,7 @@ namespace Enforcer5
                 }
             }
 
-            if (!int.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
+            if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }

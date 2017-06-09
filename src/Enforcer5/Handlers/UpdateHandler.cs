@@ -20,7 +20,7 @@ namespace Enforcer5.Handlers
     internal static class UpdateHandler
     {
 
-        internal static Dictionary<int, SpamDetector> UserMessages = new Dictionary<int, SpamDetector>();
+        internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
@@ -446,7 +446,7 @@ namespace Enforcer5.Handlers
             }
         }
 
-        private static void AddCount(int id, string command)
+        private static void AddCount(long id, string command)
         {
             try
             {

@@ -24,30 +24,30 @@ namespace Enforcer5.Helpers
 {
     public static class Methods
     {
-        public static bool KickUser(long chatId, int userId, XDocument doc)
+        public static bool KickUser(long chatId, long userId, XDocument doc)
         {
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, (int)userId, CancellationToken.None).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                    var check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
                     var status = check.Status;
                     var count = 0;
 
                     while (status == ChatMemberStatus.Member && count < 10)
                     {
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                        check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
                         status = check.Status;
                         count++;
                     }
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
-                         Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                         Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
+                        check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
                         status = check.Status;
                         count++;
                     }
@@ -391,7 +391,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static string GetNick(Message msg, string[] args, int userid = 0, bool sender = false)
+        public static string GetNick(Message msg, string[] args, long userid = 0, bool sender = false)
         {
             if (sender)
             {
@@ -411,7 +411,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static int GetUserId(Update update, string[] args)
+        public static long GetUserId(Update update, string[] args)
         {
             var lang = GetGroupLanguage(update.Message,true).Doc;
             if (update.Message.NewChatMember != null)
@@ -473,7 +473,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static void SaveBan(int userId, string banType)
+        public static void SaveBan(long userId, string banType)
         {
             Redis.db.HashIncrementAsync($"ban:{userId}", banType);
         }
@@ -483,7 +483,7 @@ namespace Enforcer5.Helpers
             return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
         }
 
-        public static bool IsGroupAdmin(int user, long group)
+        public static bool IsGroupAdmin(long user, long group)
         {
             //fire off admin request
             var isAdmin = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
@@ -493,7 +493,7 @@ namespace Enforcer5.Helpers
             }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, user).Result;                
+                var admin = Bot.Api.GetChatMemberAsync(group, (int)user).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
@@ -510,7 +510,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool IsGlobalAdmin(int id)
+        public static bool IsGlobalAdmin(long id)
         {
             return Constants.GlobalAdmins.Contains(id);
         }
@@ -578,7 +578,7 @@ namespace Enforcer5.Helpers
             return dest;
         }
 
-        public static string GetUserInfo(int userid, long? chatId, string chatTitle, XDocument lang)
+        public static string GetUserInfo(long userid, long? chatId, string chatTitle, XDocument lang)
         {
             var text = GetLocaleString(lang, "userInfoGlobal");
             var hash = $"ban:{userid}";
@@ -674,11 +674,11 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool BanUser(long chatId, int userId, XDocument doc)
+        public static bool BanUser(long chatId, long userId, XDocument doc)
         {
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, (int)userId).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
@@ -702,7 +702,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static void AddBanList(long chatId, int userId, string name, string why)
+        public static void AddBanList(long chatId, long userId, string name, string why)
         {
             var hash = $"chat:{chatId}:bannedlist";
             var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
@@ -756,14 +756,14 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool UnbanUser(long chatId, int userId, XDocument doc)
+        public static bool UnbanUser(long chatId, long userId, XDocument doc)
         {
             try
             {
-                var res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                var res = Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
                 while (!res.Result)
                 {
-                    res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                    res = Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
                     
                 }
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
@@ -1061,7 +1061,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool IsLangAdmin(int id)
+        public static bool IsLangAdmin(long id)
         {
             var res = Redis.db.SetContainsAsync($"langAdmins", id).Result;
             return res;
@@ -1109,7 +1109,7 @@ namespace Enforcer5.Helpers
             return res;
         }
 
-        public static object GetUsername(int id)
+        public static object GetUsername(long id)
         {
             var username = Redis.db.HashGetAsync($"user:{id}", "username").Result;
             if (username.HasValue)

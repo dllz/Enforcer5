@@ -819,7 +819,7 @@ namespace Enforcer5.Helpers
 #if premium
         private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EPBotan").ToString();
 #endif
-        public static BotanTrackResponse log(Object update, string eventId, int id)
+        public static BotanTrackResponse log(Object update, string eventId, long id)
         {
             var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";
             Object text = update;

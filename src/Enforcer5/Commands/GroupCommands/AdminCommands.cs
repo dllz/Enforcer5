@@ -394,11 +394,11 @@ namespace Enforcer5
         public static void Status(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var userId = 0;
+            long userId = 0;
             var chatId = update.Message.Chat.Id;
             if (args.Length == 2)
             {
-                if (int.TryParse(args[1], out userId))
+                if (long.TryParse(args[1], out userId))
                 {
 
                 }
@@ -412,12 +412,12 @@ namespace Enforcer5
                 }
                 if (userId > 0)
                 {
-                    var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var user = Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
                     var status = user.Status;
                     var name = user.User.FirstName;
                     if (user.User.Username != null)
                         name = $"{name} - @{user.User.Username}";
-                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, (int)userId))
                         status = ChatMemberStatus.Kicked;
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                     if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -434,12 +434,12 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
-                var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                var user = Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
                 var status = user.Status;
                 var name = user.User.FirstName;
                 if (user.User.Username != null)
                     name = $"{name} - @{user.User.Username}";
-                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, (int)userId))
                     status = ChatMemberStatus.Kicked;
                 var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                 if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -625,9 +625,9 @@ namespace Enforcer5
             }
         }      
 
-        public static string Check(int userid, long chatid)
+        public static string Check(long userid, long chatid)
         {
-            var status = Bot.Api.GetChatMemberAsync(chatid, userid).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatid, (int)userid).Result.Status;
             var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
             var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
 
@@ -645,7 +645,7 @@ namespace Enforcer5
         public static void AddLogChat(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var role = Bot.Api.GetChatMemberAsync(chat, (int)update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
@@ -687,7 +687,7 @@ namespace Enforcer5
         public static void DeleteLogChannel(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var role = Bot.Api.GetChatMemberAsync(chat, (int)update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
