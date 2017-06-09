@@ -260,3 +260,4 @@ src/PerspectiveAPI/PerspectiveAPI.xproj
 *.json
 /src/PrespectiveAPI/
 .vs/restore.dg
+/src/telegram.bot/
