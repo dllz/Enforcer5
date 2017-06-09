@@ -106,7 +106,7 @@ namespace Enforcer5
             {
                 return;
             }
-            switch (message.NewChatMember.Id)
+            switch (int.Parse(message.NewChatMember.Id))
             {
                 case 352277339://Phyto
                     Bot.Send("Error 404", chatId);
@@ -122,18 +122,18 @@ namespace Enforcer5
                     break;
                 case 125311351://Daniel
 #if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfDe5MFy-IHCAI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfDe5MFy-IHCAI"));
 #endif
 #if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfmRkSuLkIV9AI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfmRkSuLkIV9AI"));
 #endif
                     break;
                 case 223494929:
 #if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAfnHwfv4ufK6wI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAfnHwfv4ufK6wI"));
 #endif
 #if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAePhP7wDwUKmgI"));
 #endif
                     break;
                 case 263451571://Michelle
@@ -154,7 +154,7 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
+                        Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id));
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
@@ -163,7 +163,7 @@ namespace Enforcer5
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
+                            Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text);
                         }
                         else
                         {

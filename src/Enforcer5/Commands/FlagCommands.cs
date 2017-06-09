@@ -251,7 +251,7 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
-        private static void SendToAdmins(List<int> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
+        private static void SendToAdmins(List<ChatId> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument lang)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
@@ -294,7 +294,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu));
+                                 Key.CreateMarkupFromMenu(solvedMenu));
                         }
                         else
                         {
@@ -311,8 +311,8 @@ namespace Enforcer5
                                 }
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
-                                mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu));
+                                mod
+                                , Key.CreateMarkupFromMenu(solvedMenu));
                         }
                     }
                     else
@@ -343,7 +343,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu));
+                                 Key.CreateMarkupFromMenu(solvedMenu));
                         }
                         else
                         {
@@ -363,7 +363,7 @@ namespace Enforcer5
                             };
                             result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
                                 mod,
-                                false, Key.CreateMarkupFromMenu(solvedMenu));
+                                 Key.CreateMarkupFromMenu(solvedMenu));
                         }
                     }
                     if (result != null)
@@ -422,10 +422,10 @@ namespace Enforcer5
             }
         }
 
-        private static List<int> GetModId(long id)
+        private static List<ChatId> GetModId(long id)
         {
-            var res = Bot.Api.GetChatAdministratorsAsync(id);
-            return res.Result.Select(member => member.User.Id).ToList();
+            var res = Bot.Api.GetChatAdministratorsAsync(id).Result;
+            return res.Select(member => member.User.Id).ToList();
         }
     }
 

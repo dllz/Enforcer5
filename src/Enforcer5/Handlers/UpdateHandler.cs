@@ -629,10 +629,10 @@ namespace Enforcer5.Handlers
                 Thread.Sleep(1000);
             }
         }
-        internal static Message Send(string message, long id, bool clearKeyboard = false,
+        internal static Message Send(string message, long id,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
-            return Bot.Send(message, id, clearKeyboard, customMenu, parseMode);
+            return Bot.Send(message, id, customMenu, parseMode);
         }
 
         public static void InlineQueryReceived(object sender, InlineQueryEventArgs e)

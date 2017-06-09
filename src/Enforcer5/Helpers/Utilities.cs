@@ -125,7 +125,7 @@ namespace Enforcer5.Helpers
             Api.OnReceiveError += ApiOnReceiveError;
             Api.OnReceiveGeneralError += ApiOnReceiveGenError;          
             Me = Api.GetMeAsync().Result;
-            Api.PollingTimeout = TimeSpan.FromSeconds(1);
+            Api.Timeout = TimeSpan.FromSeconds(1);
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
 
@@ -220,20 +220,14 @@ namespace Enforcer5.Helpers
                 
         //}
 
-        internal static Message Send(string message, long id, bool clearKeyboard = false,
+        internal static Message Send(string message, long id,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             try
             {
                 MessagesSent++;
                 //message = message.Replace("`",@"\`");
-                if (clearKeyboard)
-                {
-                    var menu = new ReplyKeyboardHide {HideKeyboard = true};
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
-                }
-                else if (customMenu != null)
+                if (customMenu != null)
                 {
                     return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
                         disableWebPagePreview: true,
@@ -322,7 +316,7 @@ namespace Enforcer5.Helpers
             }
 
         }
-        internal static Message Send(string message, Update chatUpdate, bool clearKeyboard = false,
+        internal static Message Send(string message, Update chatUpdate,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
             var id = chatUpdate.Message.Chat.Id;
@@ -331,13 +325,7 @@ namespace Enforcer5.Helpers
                 MessagesSent++;
                 
                 //message = message.Replace("`",@"\`");
-                if (clearKeyboard)
-                {
-                    var menu = new ReplyKeyboardHide { HideKeyboard = true };
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
-                }
-                else if (customMenu != null)
+                if (customMenu != null)
                 {
                     return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
                         parseMode: parseMode).Result;
@@ -721,7 +709,7 @@ namespace Enforcer5.Helpers
                 if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, msg, false, keyboard);
+                    return Send(message, msg, keyboard);
 
                 }
                 if (e.Message.Contains("message is too long"))

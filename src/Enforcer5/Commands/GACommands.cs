@@ -266,7 +266,7 @@ namespace Enforcer5
              Bot.SendReply("Deactivated", update);
         }
 
-        [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
+        [Command(Trigger = "unrekt", DevOnly = true)]
         public static void Unrekt(Update update, string[] args)
         {
             int userId = 0;
@@ -314,7 +314,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "leave", GlobalAdminOnly = true)]
+        [Command(Trigger = "leave", DevOnly = true)]
         public static void LeaveChat(Update update, string[] args)
         {
             try

@@ -70,7 +70,7 @@ namespace Enforcer5
                     command = 0;
                     foreach (var mem in Bot.Commands)
                     {
-                        if (args[1].Equals(mem.Trigger))
+                        if (args[1].ToLower().Equals(mem.Trigger.ToLower()))
                         {
                             request = mem.Trigger.ToLower();
                             command = 1;
@@ -104,7 +104,7 @@ namespace Enforcer5
             }
             else if (command == 0)
             {
-                request = args[1];
+                request = args[1].ToLower();
                 string text;
                 try
                 {
