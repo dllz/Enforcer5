@@ -817,14 +817,6 @@ namespace Enforcer5.Helpers
         {
             if (msg.ReplyToMessage != null)
             {
-                if (msg.ReplyToMessage.VideoNote != null)
-                {
-                    return msg.ReplyToMessage.VideoNote.FileId;
-                }
-                if (msg.ReplyToMessage.Photo != null)
-                {
-                    return msg.ReplyToMessage.Photo.Last().FileId;
-                }
                 if (msg.ReplyToMessage.Document != null)
                 {
                     return msg.ReplyToMessage.Document.FileId;
@@ -846,6 +838,10 @@ namespace Enforcer5.Helpers
                 {
                     return msg.ReplyToMessage.Audio.FileId;
                 }
+                if (msg.ReplyToMessage.VideoNote != null)
+                {
+                    return msg.ReplyToMessage.VideoNote.FileId;
+                }
                 if (msg.ReplyToMessage.Text != null)
                 {
                     return msg.ReplyToMessage.MessageId.ToString();
@@ -858,14 +854,6 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                if (msg.VideoNote != null)
-                {
-                    return msg.VideoNote.FileId;
-                }
-                if (msg.Photo != null)
-                {
-                    return msg.Photo.Last().FileId;
-                }
                 if (msg.Document != null)
                 {
                     return msg.Document.FileId;
@@ -890,7 +878,11 @@ namespace Enforcer5.Helpers
                 if (msg.Text != null)
                 {
                     return msg.MessageId.ToString();
-                }                
+                }
+                if (msg.VideoNote != null)
+                {
+                    return msg.VideoNote.FileId;
+                }              
                 else
                 {
                     return "unknown";
@@ -955,7 +947,7 @@ namespace Enforcer5.Helpers
 
 
         public static string GetMediaType(Message msg)
-        {            
+        {
             if (msg.Photo != null)
             {
                 return "photo";
@@ -974,11 +966,7 @@ namespace Enforcer5.Helpers
             if (msg.Voice != null)
             {
                 return "voice";
-            }
-            if (msg.VideoNote != null)
-            {
-                return "videoNote";
-            }
+            }           
             if (msg.Sticker != null)
             {
                 return "sticker";

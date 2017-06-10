@@ -44,6 +44,7 @@ namespace Enforcer5.Handlers
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+                update.Message.ReplyToMessage = null;
                 Botan.log(update.Message, command.Trigger);
             }
             else if (text.Equals("chatMember"))
@@ -106,7 +107,7 @@ namespace Enforcer5.Handlers
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
                 //ignore previous messages
-                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001076212715)
+                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
                 //{
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 //    Console.WriteLine("LEaving chat");
@@ -131,6 +132,7 @@ namespace Enforcer5.Handlers
                                 new Task(() => { OnMessage.ArabDetection(update); }).Start();
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
+                                
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
@@ -144,7 +146,7 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {                                  
                                     new Task(() => { Log(update, "text", command); }).Start();
-                                    AddCount(update.Message.From.Id, update.Message.Text);                                    
+                                    AddCount(update.Message.From.Id, update.Message.Text);
                                     var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
                                     if (blocked.HasValue)
                                     {
@@ -224,7 +226,7 @@ namespace Enforcer5.Handlers
                                     {
                                         return; ;
                                     }
-                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
+                                    if (command.DevOnly & !Constants.Devs.Contains((long)update.Message.From.Id))
                                     {
                                         return;
                                     }
@@ -355,95 +357,13 @@ namespace Enforcer5.Handlers
                             break;
                     }
                 }
-                catch (ApiRequestException e)
-                {
-                    Console.WriteLine(e);
-                    try
-                    {                        
-                        if (e.ErrorCode == 112)
-                        {
-                            if (update.Message != null && update.Message.Chat.Title != null)
-                            {
-                                var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                                Bot.SendReply(
-                                    Methods.GetLocaleString(lang, "markdownBroken"), update);
-                            }
-                            else
-                            {
-                                Bot.SendReply("The markdown in this text is broken", update);
-                            }
-                        }
-                        else if (e.ErrorCode == 403)
-                        {
-                            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                            var startMe = new Menu(1)
-                            {
-                                Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                            };
-                            Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), update, Key.CreateMarkupFromMenu(startMe));
-                        }
-                        else
-                        {
-                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}, 1231", update);
-                            Bot.Send($"1\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                        }                        
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        //fuckit  
-                        Console.WriteLine(ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        //fuckit
-                        Console.WriteLine(ex);
-                    }
-                }
                 catch (AggregateException e)
                 {
                     Console.WriteLine(e);
-                    Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
-                    try
-                    {
-                        if (ex.Message.Equals("UnableToResolveUsername"))
-                        {
-                            Bot.Send($"an error occured:\n{ex.Message}", update);
-                        }
-                        else
-                        {
-                            Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        //fuckit
-                        Console.WriteLine(e);
-                    }
-                    try
-                    {
-                         Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
-                    }
-                    catch (Exception et)
-                    {
-                        Console.WriteLine(et);
-                        try
-                        {
-                             Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            //fuckit
-                            Console.WriteLine(e);
-                        }
-                    }
+                    Console.WriteLine(ex);                    
                 }
             }
         }

@@ -519,12 +519,11 @@ namespace Enforcer5.Helpers
 #endif
         public static BotanTrackResponse log(Object update, string eventId, long id)
         {
-            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";
-            Object text = update;
+            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";            
             var client = new HttpClient();
-            var content = new StringContent(JsonConvert.SerializeObject(text), Encoding.UTF8, "application/json");          
-            var response = client.PostAsync(url, content).Result;
-            response.EnsureSuccessStatusCode();
+            var temp = JsonConvert.SerializeObject(update);
+            var content = new StringContent(temp, Encoding.UTF8, "application/json");          
+            var response = client.PostAsync(url, content).Result;            
             var data = response.Content.ReadAsStringAsync().Result;
             var result = JsonConvert.DeserializeObject<BotanTrackResponse>(data);
             return result;
