@@ -145,7 +145,7 @@ namespace Enforcer5.Handlers
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {                                  
-                                    new Task(() => { Log(update, "text", command); }).Start();
+                                    
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
                                     if (blocked.HasValue)
@@ -188,6 +188,7 @@ namespace Enforcer5.Handlers
                                     }
                                     Bot.CommandsReceived++;
                                      command.Method.Invoke(update, args);
+                                    new Task(() => { Log(update, "text", command); }).Start();
                                 }
                             }
                             else if (update.Message.Text.StartsWith("#"))

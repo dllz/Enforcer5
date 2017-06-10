@@ -441,6 +441,7 @@ namespace Enforcer5.Helpers
                     else
                     {
                         Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
+                        result = null;
                         
                     }
                 }
@@ -449,10 +450,6 @@ namespace Enforcer5.Helpers
                     Bot.CatchSend($"{e.Message}", chatid, messageId: msgid);
                     result =  Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
-            }
-            catch (Exception exception)
-            {
-                result = Bot.CatchSend($"2\n{exception.Message}\n\n{exception.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
             }
             return result;
         }

@@ -181,22 +181,24 @@ namespace Enforcer5
                             Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                         Service.LogCommand(update, update.Message.Text);
                     }
-                    catch (ApiRequestException e)
+                    catch (AggregateException e)
                     {
-                        if (e.ErrorCode.Equals(118))
+
+                        if (e.Message.Contains("message is too long"))
                         {
-                            Bot.SendReply(
+                      
+                        Bot.SendReply(
                                 Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                 update);
                         }
-                        else if (e.ErrorCode.Equals(112))
+                        else if (e.Message.Contains("Unsupported start tag"))
                         {
                             Bot.SendReply(
                                 Methods.GetLocaleString(lang, "markdownBroken"), update);
                         }
                         else
                         {
-                            Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                            Methods.SendError($"{e.Message}", update.Message, lang);
                         }
                     }
                 }
@@ -235,22 +237,24 @@ namespace Enforcer5
                                 Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                             Service.LogCommand(update, update.Message.Text);
                         }
-                        catch (ApiRequestException e)
+                        catch (AggregateException e)
                         {
-                            if (e.ErrorCode.Equals(118))
+
+                            if (e.Message.Contains("message is too long"))
                             {
+
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                     update);
                             }
-                            else if (e.ErrorCode.Equals(112))
+                            else if (e.Message.Contains("Unsupported start tag"))
                             {
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
                             else
                             {
-                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                                Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
                     }
@@ -267,22 +271,24 @@ namespace Enforcer5
                             Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                             Service.LogCommand(update, update.Message.Text);
                         }
-                        catch (ApiRequestException e)
+                        catch (AggregateException e)
                         {
-                            if (e.ErrorCode.Equals(118))
+
+                            if (e.Message.Contains("message is too long"))
                             {
+
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                     update);
                             }
-                            else if (e.ErrorCode.Equals(112))
+                            else if (e.Message.Contains("Unsupported start tag"))
                             {
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
                             else
                             {
-                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                                Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
                     }
@@ -302,22 +308,24 @@ namespace Enforcer5
                         Methods.GetLocaleString(lang, "extraSaved", words[0]));
                     Service.LogCommand(update, update.Message.Text);
                 }
-                catch (ApiRequestException e)
+                catch (AggregateException e)
                 {
-                    if (e.ErrorCode.Equals(118))
+
+                    if (e.Message.Contains("message is too long"))
                     {
+
                         Bot.SendReply(
                             Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                             update);
                     }
-                    else if (e.ErrorCode.Equals(112))
+                    else if (e.Message.Contains("Unsupported start tag"))
                     {
                         Bot.SendReply(
                             Methods.GetLocaleString(lang, "markdownBroken"), update);
                     }
                     else
                     {
-                        Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                        Methods.SendError($"{e.Message}", update.Message, lang);
                     }
                 }
 
