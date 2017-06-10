@@ -319,7 +319,7 @@ namespace Enforcer5
         {
             var chatId = update.Message.Chat.Id;
             var userId = Methods.GetUserId(update, args);
-            var status = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result.Status;
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (status == ChatMemberStatus.Kicked)
             {
