@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
@@ -149,7 +150,14 @@ namespace Enforcer5
                     return;
                 }
             }
-            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update);
+            var startMe = new Menu(1)
+            {
+                Buttons = new List<InlineButton>
+                {
+                    new InlineButton(Methods.GetLocaleString(lang, "donateWord"), url:$"https://paypal.me/stubbornrobot")
+                }
+            };
+            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update, keyboard:Key.CreateMarkupFromMenu(startMe));
         }
 
     }

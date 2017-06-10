@@ -1338,4 +1338,7 @@
   <string key="cannotbanadmin">
     <value>I can not kick or ban an admin</value>
   </string>
+  <string key="donateWord">
+  <value>Donate</value>
+  </string>
 </strings>
