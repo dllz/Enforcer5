@@ -360,8 +360,13 @@ namespace Enforcer5.Helpers
                     else
                     {
                         Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
-
+                        result = null;
                     }
+                }
+                if (e.Message.Contains("bots can't send messages to bots"))
+                {
+                    //skip
+                    result = null;
                 }
                 else
                 {

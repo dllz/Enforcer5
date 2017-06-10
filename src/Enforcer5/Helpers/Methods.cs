@@ -653,7 +653,9 @@ namespace Enforcer5.Helpers
             }                
             try
             {
-                int banned = int.Parse(isBanned[0].Value);                
+                int banned = 0;
+                    if(isBanned.Length > 0)
+                        banned = int.Parse(isBanned[0].Value);          
                 if (banned == 1)
                 {
                     var reason = isBanned[1].Value;

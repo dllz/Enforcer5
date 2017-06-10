@@ -349,8 +349,11 @@ namespace Enforcer5.Handlers
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
+                        case MessageType.GameMessage:
+                            break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            return;
+                            break;
                     }
                 }
                 catch (ApiRequestException e)
