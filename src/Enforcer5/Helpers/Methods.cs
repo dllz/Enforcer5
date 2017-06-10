@@ -300,7 +300,7 @@ namespace Enforcer5.Helpers
                     {
                         args[i] = args[i].ToString().FormatHTML();
                     }
-                }
+                }   
                 catch (Exception e)
                 {
                     Console.WriteLine(e);

@@ -23,7 +23,11 @@ namespace Enforcer5.Helpers
                         var cur = menu.Buttons[i];
                         if (!string.IsNullOrEmpty(cur.Url))
                         {
-                            row.Add(new InlineKeyboardButton(cur.Text, cur.Url));
+                            row.Add(new InlineKeyboardButton(cur.Text)
+                            {
+                                Url = cur.Url
+                            });
+
                         }
                         else
                         {
@@ -62,7 +66,10 @@ namespace Enforcer5.Helpers
                             var cur = menus[j].Buttons[i];
                             if (!string.IsNullOrEmpty(cur.Url))
                             {
-                                row.Add(new InlineKeyboardButton(cur.Text, cur.Url));
+                                row.Add(new InlineKeyboardButton(cur.Text)
+                                {
+                                    Url = cur.Url
+                                });
                                                             
                             }
                             else

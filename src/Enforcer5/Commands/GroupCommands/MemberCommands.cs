@@ -77,11 +77,11 @@ namespace Enforcer5
             var chat = update.Message.Chat.Id;
             try
             {
-                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true);
+                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
-                if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                 {
                     var lang = Methods.GetGroupLanguage(chat).Doc;
                     var startMe = new Menu(1)
@@ -95,11 +95,11 @@ namespace Enforcer5
                     Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
                     
                 }
-            }
-            catch (AggregateException e)
-            {
-                var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
-                Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                else
+                {
+                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                }
             }
         }
 
@@ -188,8 +188,8 @@ namespace Enforcer5
             {
                 var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-                Bot.SendToPm(text, update);
-                if (update.Message.Chat.Type != ChatType.Private)
+                var res = Bot.SendToPm(text, update);
+                if (update.Message.Chat.Type != ChatType.Private && res != null)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
                 }

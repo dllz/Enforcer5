@@ -223,77 +223,82 @@ namespace Enforcer5.Helpers
         //}
 
         private static Message CatchSend(string message, long id, InlineKeyboardMarkup customMenu = null,
-            ParseMode parsemode = ParseMode.Html, int messageId = -1)
+            ParseMode parsemode = ParseMode.Default, int messageId = -1)
         {
+            Message result = null;
             try
             {
                 MessagesSent++;
                 if ((customMenu == null) && (messageId != -1))
                 {
-                    return Bot.Api.SendTextMessageAsync(id, message, parsemode, replyToMessageId:messageId).Result;
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId:messageId).Result;
                 }
                 else if (messageId != -1 && customMenu != null)
                 {
-                    return Bot.Api.SendTextMessageAsync(id, message, parsemode, replyToMessageId: messageId, replyMarkup: customMenu).Result;
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId: messageId, replyMarkup: customMenu).Result;
                 }
                 else if (customMenu != null && messageId == -1)
                 {
-                    return Bot.Api.SendTextMessageAsync(id, message, parsemode, replyMarkup: customMenu).Result;
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyMarkup: customMenu).Result;
                 }                
                 else
                 {
-                    return Bot.Api.SendTextMessageAsync(id, message, parsemode).Result;
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default).Result;
                 }
                 
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
                 try
                 {
-                    return Bot.Api.SendTextMessageAsync(-125311351, $"{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}").Result;
+                    result = Bot.Api.SendTextMessageAsync(-125311351, $"{e.Message}\n\n{e.StackTrace}").Result;
                 }
                 catch (Exception exception)
                 {
                     Console.WriteLine(exception);
-                    return null;
+                    
                 }
             }
+            return result;
         }
 
         internal static Message SendToPm(string message, int pmId, long chatId, InlineKeyboardMarkup menu = null,
             ParseMode parseMode = ParseMode.Html, int messageId = -1)
         {
+            Message result = null;
             try
             {
-                return Send(message, pmId, menu, parseMode);
+                result = Send(message, pmId, menu, parseMode);
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
-                if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
                 {
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
                     var startMe = new Menu(1)
                     {
                         Buttons = new List<InlineButton>
                         {
-                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                url: $"https://t.me/{Bot.Me.Username}")
+                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"), url:$"https://t.me/{Bot.Me.Username}")
                         }
                     };
                     if (messageId == -1)
                     {
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatId, Key.CreateMarkupFromMenu(startMe));
+                       Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatId, Key.CreateMarkupFromMenu(startMe));
+                        result = null;
                     }
                     else
                     {
-                        return Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
+                        result = null;
                     }
                 }
                 else
                 {
-                    return CatchSend(message, chatId, menu, parseMode, messageId);
+                    result = CatchSend(message, chatId, menu, parseMode, messageId);
                 }
             }
+            return result;
         }
 
         internal static Message SendToPm(string message, Update update, InlineKeyboardMarkup menu = null,
@@ -306,26 +311,27 @@ namespace Enforcer5.Helpers
         internal static Message Send(string message, long id,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
         {
+            Message result = null;
             try
             {
                 MessagesSent++;
                 //message = message.Replace("`",@"\`");
                 if (customMenu != null)
                 {
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
+                    result = Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
                         disableWebPagePreview: true,
                         parseMode: parseMode).Result;
                 }
                 else
                 {
-                    return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
+                    result = Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
                 }
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
-                if ( e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Unsupported start tag"))
                 {
-                        return CatchSend(message, id, parsemode:ParseMode.Default);
+                    result = CatchSend(message, id, parsemode: ParseMode.Default);
                 }
                 if (e.Message.Contains("message is too long"))
                 {
@@ -343,11 +349,8 @@ namespace Enforcer5.Helpers
                     }
 
                 }
-                if (e.ErrorCode == 112)
-                {
-                        return CatchSend("The markdown in this text is broken", id);
-                }
-                if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") ||
+
+                if (e.Message.Contains("bot can't initiate") ||
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
@@ -356,22 +359,19 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
-                        Console.WriteLine($"{e.ErrorCode}\n\n{e.StackTrace}");
-                        return null;
+                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
+
                     }
                 }
                 else
                 {
-                    Bot.CatchSend($"{e.ErrorCode}\n{e.Message}", id);
-                    return Bot.CatchSend($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    Bot.CatchSend($"{e.Message}", id);
+                    result = Bot.CatchSend($"\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                        parsemode: ParseMode.Default);
                 }
-            }           
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return Bot.CatchSend($"2\n{e.InnerExceptions[0]}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
-
+            return result;
+            
         }
         internal static Message Send(string message, Update chatUpdate,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
@@ -387,30 +387,31 @@ namespace Enforcer5.Helpers
         internal static Message SendReply(string message, long chatid, int msgid, InlineKeyboardMarkup keyboard = null, [CallerMemberName]string parentMethod = "")
         {
             MessagesSent++;
+            Message result = null;
             try
             {
                 if (keyboard == null)
                 {
-                    return Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
+                    result =  Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
                         disableWebPagePreview: true).Result;
                 }
                 else
                 {
-                    return Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
+                    result = Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
                         disableWebPagePreview: true, replyMarkup: keyboard).Result;
                 }
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
                 if (e.Message.Contains("Unsupported start tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return CatchSend(message, chatid, parsemode: ParseMode.Default);
+                    result = CatchSend(message, chatid, parsemode: ParseMode.Default);
                 }
                 if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, chatid);
+                    result = Send(message, chatid);
 
                 }
                 if (e.Message.Contains("message is too long"))
@@ -428,11 +429,7 @@ namespace Enforcer5.Helpers
                         CatchSend(word, chatid, messageId: msgid);
                     }
                 }
-                if (e.ErrorCode == 112)
-                {
-                    return Bot.CatchSend("The markdown in this text is broken", chatid, messageId: msgid);
-                }
-                if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") ||
+                if (e.Message.Contains("bot can't initiate") ||
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
@@ -441,20 +438,21 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
-                        Console.WriteLine($"{e.ErrorCode}\n\n{e.StackTrace}");
-                        return null;
+                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
+                        
                     }
                 }
                 else
                 {
-                    Bot.CatchSend($"{e.ErrorCode}\n{e.Message}", chatid, messageId: msgid);
-                    return Bot.CatchSend($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    Bot.CatchSend($"{e.Message}", chatid, messageId: msgid);
+                    result =  Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
             }
             catch (Exception exception)
             {
-                return Bot.CatchSend($"2\n{exception.Message}\n\n{exception.StackTrace}", -1001076212715);
+                result = Bot.CatchSend($"2\n{exception.Message}\n\n{exception.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
             }
+            return result;
         }
         internal static Message SendReply(string message, Update msg,[CallerMemberName]string parentMethod = "")
         {            
