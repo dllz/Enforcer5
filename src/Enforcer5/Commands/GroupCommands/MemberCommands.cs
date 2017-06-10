@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -22,7 +23,7 @@ namespace Enforcer5
             if (Methods.SendInPm(update.Message, "About"))
             {
                 lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                Bot.Send(text, update.Message.From.Id);
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -77,6 +78,23 @@ namespace Enforcer5
             try
             {
                 var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true);
+            }
+            catch (ApiRequestException e)
+            {
+                if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                {
+                    var lang = Methods.GetGroupLanguage(chat).Doc;
+                    var startMe = new Menu(1)
+                    {
+                        Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                url: $"https://t.me/{Bot.Me.Username}")
+                        }
+                    };
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
+                    
+                }
             }
             catch (AggregateException e)
             {
@@ -170,7 +188,7 @@ namespace Enforcer5
             {
                 var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-                Bot.Send(text, update.Message.From.Id);
+                Bot.SendToPm(text, update);
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
