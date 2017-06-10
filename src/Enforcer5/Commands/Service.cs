@@ -340,8 +340,8 @@ namespace Enforcer5
 
         public static void removeWarn0(long chatid, long userId)
         {
-            var currentMedia = (int)Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result;
-            var currentWarn = (int)Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result;
+            var currentMedia = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result;
+            var currentWarn = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result;
 
             if (currentWarn < 0)
             {

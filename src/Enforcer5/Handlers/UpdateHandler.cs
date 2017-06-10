@@ -146,45 +146,45 @@ namespace Enforcer5.Handlers
                                     new Task(() => { Log(update, "text", command); }).Start();
                                     AddCount(update.Message.From.Id, update.Message.Text);
                                     //check that we should run the command
-                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue)
-                                    {
-                                        return;;
-                                    }
-                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {                                        
-                                        return;
-                                    }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {
-                                        Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
-                                                "userNotAdmin"), update.Message);
-                                        return;
-                                    }
-                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
-                                    {
-                                        Service.LogDevCommand(update, update.Message.Text);
-                                    }
-                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-                                    {
-                                        return;
-                                    }
-                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
-                                    {
-                                        var lang = Methods.GetGroupLanguage(update.Message,true);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
-                                        return;
-                                    }
-                                    if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
+                                    //var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
+                                    //if (blocked.HasValue)
+                                    //{
+                                    //    return;;
+                                    //}
+                                    //if (command.DevOnly & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    //{                                        
+                                    //    return;
+                                    //}
+                                    //if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
+                                    //    !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    //{
+                                    //    Bot.SendReply(
+                                    //        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
+                                    //            "userNotAdmin"), update.Message);
+                                    //    return;
+                                    //}
+                                    //if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
+                                    //{
+                                    //    Service.LogDevCommand(update, update.Message.Text);
+                                    //}
+                                    //if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                                    //{
+                                    //    return;
+                                    //}
+                                    //if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    //{
+                                    //    var lang = Methods.GetGroupLanguage(update.Message,true);
+                                    //    Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                                    //    return;
+                                    //}
+                                    //if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
+                                    //{
+                                    //    return;
+                                    //}
+                                    //if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    //{
+                                    //    return;
+                                    //}
                                     Bot.CommandsReceived++;
                                      command.Method.Invoke(update, args);
                                 }
@@ -457,7 +457,7 @@ namespace Enforcer5.Handlers
                     UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
                 UserMessages[id].Messages.Add(new UserMessage(command));
             }
-            catch
+            catch (Exception e)
             {
                 // ignored
             }

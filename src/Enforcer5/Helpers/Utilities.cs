@@ -91,7 +91,7 @@ namespace Enforcer5.Helpers
 #endif
             if (offset.HasValue)
             {
-                Api.MessageOffset = (int)offset + 1;
+                Api.MessageOffset = Convert.ToInt32(offset + 1);
                 Console.WriteLine($" database offset is {offset}");
             }
             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
@@ -146,7 +146,7 @@ namespace Enforcer5.Helpers
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
             
             if (offset.HasValue && offset.IsInteger)
-                Api.MessageOffset = (int)offset + 1;
+                Api.MessageOffset = Convert.ToInt32(offset + 1);
             var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
 
@@ -304,7 +304,7 @@ namespace Enforcer5.Helpers
         internal static Message SendToPm(string message, Update update, InlineKeyboardMarkup menu = null,
             ParseMode parseMode = ParseMode.Html)
         {
-            return SendToPm(message, (int)update.Message.From.Id, update.Message.Chat.Id, menu, parseMode,
+            return SendToPm(message, Convert.ToInt32((long)update.Message.From.Id), update.Message.Chat.Id, menu, parseMode,
                 update.Message.MessageId);
         }
 
@@ -363,7 +363,7 @@ namespace Enforcer5.Helpers
                         result = null;
                     }
                 }
-                if (e.Message.Contains("bots can't send messages to bots"))
+                if (e.Message.Contains("bot can't send messages to bots"))
                 {
                     //skip
                     result = null;

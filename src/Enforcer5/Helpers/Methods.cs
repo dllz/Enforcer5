@@ -29,25 +29,25 @@ namespace Enforcer5.Helpers
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, (int)userId, CancellationToken.None).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), CancellationToken.None).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                    var check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
+                    var check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                     var status = check.Status;
                     var count = 0;
 
                     while (status == ChatMemberStatus.Member && count < 10)
                     {
-                        check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
+                        check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
                         count++;
                     }
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
-                         Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
-                        check =  Bot.Api.GetChatMemberAsync(chatId, (int)userId).Result;
+                         Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
+                        check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
                         count++;
                     }
@@ -522,7 +522,7 @@ namespace Enforcer5.Helpers
             }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, (int)user).Result;                
+                var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
@@ -622,13 +622,13 @@ namespace Enforcer5.Helpers
                 int warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
                 {
-                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
+                    warns = Convert.ToInt32( Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
                 warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
                 {
-                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+                    warns = Convert.ToInt32( Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
@@ -709,7 +709,7 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, (int)userId).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
@@ -791,10 +791,10 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
+                var res = Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                 while (!res.Result)
                 {
-                    res = Bot.Api.UnbanChatMemberAsync(chatId, (int)userId);
+                    res = Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                     
                 }
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
@@ -817,6 +817,10 @@ namespace Enforcer5.Helpers
         {
             if (msg.ReplyToMessage != null)
             {
+                if (msg.ReplyToMessage.VideoNote != null)
+                {
+                    return msg.ReplyToMessage.VideoNote.FileId;
+                }
                 if (msg.ReplyToMessage.Photo != null)
                 {
                     return msg.ReplyToMessage.Photo.Last().FileId;
@@ -845,11 +849,7 @@ namespace Enforcer5.Helpers
                 if (msg.ReplyToMessage.Text != null)
                 {
                     return msg.ReplyToMessage.MessageId.ToString();
-                }
-                if (msg.ReplyToMessage.VideoNote != null)
-                {
-                    return msg.ReplyToMessage.VideoNote.FileId;
-                }
+                }                
                 else
                 {
                     return "unknown";
@@ -858,6 +858,10 @@ namespace Enforcer5.Helpers
             }
             else
             {
+                if (msg.VideoNote != null)
+                {
+                    return msg.VideoNote.FileId;
+                }
                 if (msg.Photo != null)
                 {
                     return msg.Photo.Last().FileId;
@@ -886,7 +890,7 @@ namespace Enforcer5.Helpers
                 if (msg.Text != null)
                 {
                     return msg.MessageId.ToString();
-                }
+                }                
                 else
                 {
                     return "unknown";
