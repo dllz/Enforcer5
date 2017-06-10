@@ -91,7 +91,7 @@ namespace Enforcer5.Helpers
 #endif
             if (offset.HasValue)
             {
-                Api.MessageOffset = Convert.ToInt32(offset + 1);
+                Api.MessageOffset = int.Parse(offset) + 1;
                 Console.WriteLine($" database offset is {offset}");
             }
             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
@@ -144,9 +144,6 @@ namespace Enforcer5.Helpers
                 //now we can start receiving            
             Api.StartReceiving();
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
-            
-            if (offset.HasValue && offset.IsInteger)
-                Api.MessageOffset = Convert.ToInt32(offset + 1);
             var wait = TimeSpan.FromSeconds(5);
             _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
 
