@@ -173,8 +173,9 @@ namespace Enforcer5.Helpers
                     return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
                 }
             }
-            else
+            else if (uMessage.From.LanguageCode != null)
             {
+
                 var language = uMessage.From.LanguageCode.ToLower();
                 var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
                 try
@@ -202,9 +203,37 @@ namespace Enforcer5.Helpers
                     return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
                 }
             }
-            
-        
+            else
+            {
+                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
+                if (lang.HasValue)
+                {
+                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                    try
+                    {
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                else
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+
         }
+
+
 
         internal static string GetHelpList(XDocument file)
         {
