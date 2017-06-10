@@ -817,6 +817,10 @@ namespace Enforcer5.Helpers
         {
             if (msg.ReplyToMessage != null)
             {
+                if (msg.ReplyToMessage.Photo != null)
+                {
+                    return msg.ReplyToMessage.Photo.Last().FileId;
+                }
                 if (msg.ReplyToMessage.Document != null)
                 {
                     return msg.ReplyToMessage.Document.FileId;
@@ -838,14 +842,14 @@ namespace Enforcer5.Helpers
                 {
                     return msg.ReplyToMessage.Audio.FileId;
                 }
-                if (msg.ReplyToMessage.VideoNote != null)
-                {
-                    return msg.ReplyToMessage.VideoNote.FileId;
-                }
                 if (msg.ReplyToMessage.Text != null)
                 {
                     return msg.ReplyToMessage.MessageId.ToString();
-                }                
+                }
+                if (msg.ReplyToMessage.VideoNote != null)
+                {
+                    return msg.ReplyToMessage.VideoNote.FileId;
+                }              
                 else
                 {
                     return "unknown";
@@ -854,6 +858,14 @@ namespace Enforcer5.Helpers
             }
             else
             {
+                if (msg.Photo != null)
+                {
+                    return msg.Photo.Last().FileId;
+                }
+                if (msg.VideoNote != null)
+                {
+                    return msg.VideoNote.FileId;
+                }
                 if (msg.Document != null)
                 {
                     return msg.Document.FileId;
@@ -878,11 +890,7 @@ namespace Enforcer5.Helpers
                 if (msg.Text != null)
                 {
                     return msg.MessageId.ToString();
-                }
-                if (msg.VideoNote != null)
-                {
-                    return msg.VideoNote.FileId;
-                }              
+                }                
                 else
                 {
                     return "unknown";
@@ -983,6 +991,10 @@ namespace Enforcer5.Helpers
             {
                 return "text";
             }
+            if (msg.VideoNote != null)
+            {
+                return "videoNote";
+            }
             else
             {
                 return "unknown";
@@ -1032,7 +1044,10 @@ namespace Enforcer5.Helpers
                     break;
                 case MessageType.ContactMessage:
                     return "contact";
-                    break;                
+                    break; 
+                    case MessageType.VideoNoteMessage:
+                        return "videoNote";
+                        break;               
                 default:
                     return "unknown";
                     break;
