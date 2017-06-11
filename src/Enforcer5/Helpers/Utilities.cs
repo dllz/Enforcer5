@@ -348,7 +348,7 @@ namespace Enforcer5.Helpers
                 {
                     result = CatchSend(message, id, parsemode: ParseMode.Default);
                 }
-                if (e.Message.Contains("message is too long"))
+                else if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -365,7 +365,7 @@ namespace Enforcer5.Helpers
 
                 }
 
-                if (e.Message.Contains("bot can't initiate conversation") ||
+                else if (e.Message.Contains("bot can't initiate conversation") ||
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
@@ -382,7 +382,7 @@ namespace Enforcer5.Helpers
                         result = null;
                     }
                 }
-                if (e.Message.Contains("bot can't send messages to bots"))
+                else if (e.Message.Contains("bot can't send messages to bots"))
                 {
                     //skip
                     result = null;
