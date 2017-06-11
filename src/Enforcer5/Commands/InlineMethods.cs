@@ -25,11 +25,10 @@ namespace Enforcer5
                 results = bitBan.Select(x => new TempbanUser()
                 {
                     userId = $"{x.Value.ToString().Split(':')[1]}",
-                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
-                        .FormatHTML(),
-                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
-                        .ToString()
-                        .FormatHTML(),
+                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.HasValue ? Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
+                        .FormatHTML() : "",
+                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result.HasValue ? Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
+                        .ToString().FormatHTML() : "",
                     unbanTime =
                         $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}"
                 }).Where(x => x.name.Contains(args) || x.groupName.Contains(args) || x.userId.Contains(args)).ToList();
