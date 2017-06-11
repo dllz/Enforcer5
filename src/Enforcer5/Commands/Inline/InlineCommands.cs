@@ -24,7 +24,7 @@ namespace Enforcer5
                 result.Add(new InlineQueryResultArticle()
                 {
                     Description = u.groupName,
-                    Id = u.unbanTime,
+                    Id = $"{u.unbanTime} + 1",
                     Title = $"{u.name} ({u.userId})",
                     InputMessageContent = new InputTextMessageContent()
                     {

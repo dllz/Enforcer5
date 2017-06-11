@@ -82,7 +82,9 @@ namespace Enforcer5
                 {
                     name = $"Nothing Found",
                     unbanTime = "",
-                    groupName = ""
+                    groupName = "",
+                    groupId = "",
+                    userId = ""
                 });
             }
             return results.ToArray();
@@ -168,6 +170,14 @@ namespace Enforcer5
 
                     }
                 }
+            if (results.Count == 0)
+            {
+                results.Add(new HelpArticle()
+                {
+                    name = $"Nothing Found",
+                    details = ""
+                });
+            }
             return results.ToArray();
         }
            
