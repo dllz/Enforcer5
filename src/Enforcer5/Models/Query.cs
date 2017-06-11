@@ -9,6 +9,9 @@ namespace Enforcer5.Models
     class Queries
     {
         public string Trigger { get; set; }
-        public string DefaultResponse { get; set; }
+        public string DefaultResponse { get; set; } = "";
+        public string Title { get; set; }
+        public string Description { get; set; } = "";
+        public Bot.InlineQuery Method { get; set; }
     }
 }

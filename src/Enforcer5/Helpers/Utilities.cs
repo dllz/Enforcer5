@@ -20,6 +20,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 #pragma warning disable CS0168
 namespace Enforcer5.Helpers
@@ -50,10 +51,11 @@ namespace Enforcer5.Helpers
             }
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
-        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);        
+        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);
+        internal delegate List<InlineQueryResultArticle> InlineQuery(User user, string[] args, XDocument lang);
         internal static HashSet<Models.Commands> Commands = new HashSet<Models.Commands>();
         internal static HashSet<Models.CallBacks> CallBacks = new HashSet<Models.CallBacks>();
-        internal static HashSet<Models.Queries> Queries = new HashSet<Queries>();
+        internal static HashSet<Models.Queries> Queries = new HashSet<Models.Queries>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
@@ -139,14 +141,24 @@ namespace Enforcer5.Helpers
                     }
                 }
             }
-            Queries.Add(new Queries()
+
+            foreach (var m in typeof(Queries).GetMethods())
             {
-                Trigger = "tempban",
-            });
-            Queries.Add(new Queries()
-            {
-                Trigger = "help",
-            });
+                var c = new Models.Queries();
+                foreach (var a in m.GetCustomAttributes(true))
+                {
+                    if (a is Attributes.Query)
+                    {
+                        var ca = a as Attributes.Query;
+                        c.Trigger = ca.Trigger;
+                        c.DefaultResponse = ca.DefaultResponse;
+                        c.Description = ca.Description;
+                        c.Title = ca.Title;
+                        c.Method = (InlineQuery) m.CreateDelegate(typeof(InlineQuery));
+                        Queries.Add(c);
+                    }
+                }
+            }
             //now we can start receiving            
             Api.StartReceiving();
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
@@ -545,6 +557,12 @@ namespace Enforcer5.Helpers
         {
             return log(update, eventId, update.From.Id);
         }
+
+        public static BotanTrackResponse log(InlineQuery update, string eventId)
+        {
+            return log(update, eventId, update.From.Id);
+        }
+
 
         public class BotanTrackResponse
         {

@@ -90,6 +90,27 @@ namespace Enforcer5.Handlers
             
         }
 
+        private static void Log(InlineQuery update, string text, Models.Queries command = null)
+        {
+            if (command != null)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                if (command.Method != null)
+                {
+                    Console.Write(command.Method.GetMethodInfo().Name);
+                    Botan.log(update, command.Method.GetMethodInfo().Name);
+                }
+                else
+                {
+                    Botan.log(update, text);
+                }
+            }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($" Query:  {text}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($" [{update.From.FirstName} {update.From.Id}]");
+        }
+
         private static async void HandleUpdate(Update update)
         {
             {
@@ -110,12 +131,13 @@ namespace Enforcer5.Handlers
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
                 //ignore previous messages
-                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
-                //{
-                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
-                //    Console.WriteLine("LEaving chat");
-                //    return;
-                //}
+                if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
+                {
+                    Bot.Send("please use @enforcerbot", update);
+                    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                    Console.WriteLine("LEaving chat");
+                    return;
+                }
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
@@ -587,100 +609,72 @@ namespace Enforcer5.Handlers
                 var com = GetInlineParameters(query);
                 var results = new List<InlineQueryResultArticle>();
                 var userLang = Methods.GetGroupLanguage(q.From).Doc;
-                var matchedTrigger = Bot.Queries.FirstOrDefault(x => String.Equals(x.Trigger.ToLower(), com[0].ToLower()));
+                
+                Models.Queries matchedTrigger = null;
+                if(!string.IsNullOrEmpty(com[0]))
+                {
+                    try
+                    {
+                        matchedTrigger = Bot.Queries.First(x => x.Trigger.Contains(com[0]));
+                    }
+                    catch (Exception e)
+                    {
+                        //nothing happens                        
+                    }                   
+                }
                 if (matchedTrigger == null)
-                    matchedTrigger = new Queries()
+                    matchedTrigger = new Models.Queries()
                     {
                         Trigger = ""
                     };
-                var optionDictionary = new Dictionary<string, string>();
-                Console.WriteLine($"Incoming query: {com[0]} {com[1]}" );
-                switch (matchedTrigger.Trigger.ToLower())
+               var optionDictionary = new Dictionary<string, string>();
+                new Task(() => { Log(q, query, matchedTrigger); }).Start();
+                if (string.IsNullOrEmpty(matchedTrigger.Trigger) && !string.IsNullOrEmpty(com[0]))
                 {
-                    case "tem":
-                    case "temp":
-                    case "tempb":
-                    case "tempba":
-                    case "tempban":
-                        var users = InlineMethods.GetTempbanUserDetails(q.From, com[1], userLang);
-                        int count = 0;
-                        foreach (var user in users)
+                    var helpArticles = InlineMethods.GetHelpArticles(com[0], userLang);
+                    foreach (var help in helpArticles)
+                    {
+                        var des = new string(help.details.Take(50).ToArray());
+                        results.Add(new InlineQueryResultArticle
                         {
-                            results.Add(new InlineQueryResultArticle
+                            Description = $"{des}...",
+                            Title = $"{help.name}",
+                            Id = help.name,
+                            InputMessageContent = new InputTextMessageContent
                             {
-                                Description = $"{user.groupName}",
-                                Title = $"{ user.name } ({user.userId}): {user.unbanTime}",
-                                Id = $"{count}",
-                                InputMessageContent = new InputTextMessageContent
-                                {
-                                    DisableWebPagePreview = true,
-                                    MessageText = $"{ user.name } ({user.userId})\n<b>{user.groupName}</b>\n<code>{ user.unbanTime }</code>",
-                                    ParseMode = ParseMode.Html
-                                }
-                            });
-                            count++;
-                        }
-                        break;
-                    case "help":
-                        var helpArticles = InlineMethods.GetHelpArticles(com[1], userLang);
-                        foreach (var help in helpArticles)
-                        {
-                            results.Add(new InlineQueryResultArticle
-                            {
-                                Description = $"{help.details.Substring(10)}...",
-                                Title = $"{help.name}",
-                                Id = help.name,
-                                InputMessageContent = new InputTextMessageContent
-                                {
-                                    DisableWebPagePreview = true,
-                                    MessageText = help.details,
-                                    ParseMode = ParseMode.Html
-                                }
-                            });
-                        }
-                        break;
-                    default:
-                        if (!string.IsNullOrEmpty(com[0]))
-                        {
-                            helpArticles = InlineMethods.GetHelpArticles(com[0], userLang);
-                            foreach (var help in helpArticles)
-                            {
-                                var des = new string(help.details.Take(50).ToArray());
-                                results.Add(new InlineQueryResultArticle
-                                {
-                                    Description = $"{des}...",
-                                    Title = $"{help.name}",
-                                    Id = help.name,
-                                    InputMessageContent = new InputTextMessageContent
-                                    {
-                                        DisableWebPagePreview = true,
-                                        MessageText = help.details,
-                                        ParseMode = ParseMode.Html
-                                    }
-                                });
+                                DisableWebPagePreview = true,
+                                MessageText = help.details,
+                                ParseMode = ParseMode.Html
                             }
-                        }
-                        else
-                        {                              
-                            var choices = Bot.Queries.Where(x => x.Trigger.ToLower().Contains(query.ToLower()));
-                            foreach (var choice in choices)
-                            {
-                                results.Add(new InlineQueryResultArticle()
-                                {
-                                    Description = Methods.GetLocaleString(userLang, $"{choice.Trigger}Description"),
-                                    Title = $"{choice.Trigger}".ToUpperInvariant(),
-                                    Id = choice.Trigger,
-                                    InputMessageContent = new InputTextMessageContent()
-                                    {                                        
-                                        DisableWebPagePreview = true,
-                                        MessageText = Methods.GetLocaleString(userLang, "typeMore"),
-                                        ParseMode = ParseMode.Default
-                                    }
-                                });
-                            }
-                        }
+                        });
+                    }
+                }
+                else
+                {
 
-                        break;
+                    if (!string.IsNullOrEmpty(matchedTrigger.Trigger))
+                    {
+                        results = matchedTrigger.Method.Invoke(q.From, com, userLang);
+                    }
+                    else
+                    {
+                        var choices = Bot.Queries.Where(x => x.Trigger.ToLower().Contains(query.ToLower()));
+                        foreach (var choice in choices)
+                        {
+                            results.Add(new InlineQueryResultArticle()
+                            {
+                                Description = Methods.GetLocaleString(userLang, $"{choice.Trigger}Description"),
+                                Title = $"{choice.Title}",
+                                Id = choice.Trigger,
+                                InputMessageContent = new InputTextMessageContent()
+                                {
+                                    DisableWebPagePreview = true,
+                                    MessageText = Methods.GetLocaleString(userLang, "typeMore"),
+                                    ParseMode = ParseMode.Default
+                                }
+                            });
+                        }
+                    }
                 }
                 var menu = results.Take(50).Cast<InlineQueryResult>().ToArray();
                 var res = Bot.Api.AnswerInlineQueryAsync(q.Id, menu, 0).Result;
