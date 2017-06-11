@@ -594,7 +594,7 @@ namespace Enforcer5.Handlers
                         Trigger = ""
                     };
                 var optionDictionary = new Dictionary<string, string>();
-                
+                Console.WriteLine($"Incoming query: {com[0]} {com[1]}" );
                 switch (matchedTrigger.Trigger.ToLower())
                 {
                     case "tem":
@@ -608,13 +608,13 @@ namespace Enforcer5.Handlers
                         {
                             results.Add(new InlineQueryResultArticle
                             {
-                                Description = $"{user.group}",
-                                Title = $"{user.name}: {user.unbanTime}",
+                                Description = $"{user.groupName}",
+                                Title = $"{ user.name } ({user.userId}): {user.unbanTime}",
                                 Id = $"{count}",
                                 InputMessageContent = new InputTextMessageContent
                                 {
                                     DisableWebPagePreview = true,
-                                    MessageText = $"{ user.name }\n<b>{user.group}</b>\n<code>{ user.unbanTime }</code>",
+                                    MessageText = $"{ user.name } ({user.userId})\n<b>{user.groupName}</b>\n<code>{ user.unbanTime }</code>",
                                     ParseMode = ParseMode.Html
                                 }
                             });

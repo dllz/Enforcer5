@@ -22,49 +22,41 @@ namespace Enforcer5
             var results = new List<TempbanUser>();            
             if (args != null)
             {
-                var tempbans = bitBan.ToImmutableHashSet();
-                foreach (var mem in tempbans)
+                results = bitBan.Select(x => new TempbanUser()
                 {
-                    var subStrings = mem.Value.ToString().Split(':');
-                    var chatId = long.Parse(subStrings[0]);
-                    var userId = int.Parse(subStrings[1]);
-                    var name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString().FormatHTML();
-                    var groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result.ToString()
-                        .FormatHTML();
-                    if (name.Contains(args) || userId.ToString().Contains(args) || groupName.Contains(args) ||
-                        chatId.ToString().Contains(args))
-                    {
-                        results.Add(new TempbanUser()
-                        {
-                            name = $"{name} ({userId})",
-                            unbanTime =
-                                $"{long.Parse(mem.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                            group = $"{groupName}"
-                        });
-                    }
-                }
+                    userId = $"{x.Value.ToString().Split(':')[1]}",
+                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
+                        .FormatHTML(),
+                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
+                        .ToString()
+                        .FormatHTML(),
+                    unbanTime =
+                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}"
+                }).Where(x => x.name.Contains(args) || x.groupName.Contains(args) || x.userId.Contains(args)).ToList();
             }
             else
             {
-                var tempbans = bitBan.Take(10).ToImmutableHashSet();
-                foreach (var mem in tempbans)
+                results = bitBan.Take(10).Select(x => new TempbanUser()
                 {
-                    var subStrings = mem.Value.ToString().Split(':');
-                    var chatId = long.Parse(subStrings[0]);
-                    var userId = int.Parse(subStrings[1]);
-                    var name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString().FormatHTML();
-                    var groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result.ToString()
-                        .FormatHTML();
-                    results.Add(new TempbanUser()
-                    {
-                        name = $"{name} ({userId})",
-                        unbanTime =
-                            $"{long.Parse(mem.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                        group = $"{groupName}"
-                    });
-                }
+                    userId = $"{x.Value.ToString().Split(':')[1]}",                    
+                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
+                        .FormatHTML(),
+                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
+                        .ToString()
+                        .FormatHTML(),
+                    unbanTime =
+                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}"
+                }).ToList();
             }
-
+            if (results.Count == 0)
+            {
+                results.Add(new TempbanUser()
+                {
+                    name = $"Nothing Found",
+                    unbanTime = "",
+                    groupName = ""
+                });
+            }
             return results.ToArray();
         }
 
