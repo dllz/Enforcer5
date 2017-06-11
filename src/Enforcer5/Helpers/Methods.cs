@@ -787,6 +787,64 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static DateTime FromUnixTime(this long unixTime)
+        {
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return epoch.AddSeconds(unixTime);
+        }
+
+        internal static TempbanUser[] GetTempbanUserDetails(User user, string args)
+        {
+            var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result.ToList();
+            tempbans.AddRange(Redis.db.HashGetAllAsync("tempbannedPremium").Result.ToList());
+            var results = new List<TempbanUser>(tempbans.Capacity);
+            
+                if (args != null)
+                {
+                    foreach (var mem in tempbans)
+                    {
+                        var subStrings = mem.Value.ToString().Split(':');
+                        var chatId = long.Parse(subStrings[0]);
+                        var userId = int.Parse(subStrings[1]);
+                        var name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString().FormatHTML();
+                        var groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result.ToString()
+                            .FormatHTML();
+                        if (name.Contains(args) || userId.ToString().Contains(args) || groupName.Contains(args) ||
+                            chatId.ToString().Contains(args))
+                        {
+                            results.Add(new TempbanUser()
+                            {
+                                name = $"{name} ({userId})",
+                                unbanTime =
+                                    $"{long.Parse(mem.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} UCT",
+                                group = $"<b>{groupName}</b>"
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var mem in tempbans)
+                    {
+                        var subStrings = mem.Value.ToString().Split(':');
+                        var chatId = long.Parse(subStrings[0]);
+                        var userId = int.Parse(subStrings[1]);
+                        var name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString().FormatHTML();
+                        var groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result.ToString()
+                            .FormatHTML();
+                        results.Add(new TempbanUser()
+                        {
+                            name = $"{name} ({userId})",
+                            unbanTime =
+                                $"{long.Parse(mem.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} UCT",
+                            group = $"<b>{groupName}</b>"
+                        });
+                    }
+                }
+            
+            return results.ToArray();
+        }
+
         public static bool UnbanUser(long chatId, long userId, XDocument doc)
         {
             try

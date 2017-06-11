@@ -1341,4 +1341,19 @@
   <string key="donateWord">
   <value>Donate</value>
   </string>
+  <string key="otherhelpList">
+    <value>nsfw</value>
+  </string>
+  <string key="typeMore">
+    <value>Please type more to get results</value>
+  </string>
+  <string key="tempbanDescription">
+    <value>Get information on group or user tempbans</value>
+  </string>
+  <string key="helpDescription">
+    <value>Get help with a command</value>
+  </string>
+  <string key="uct">
+    <value>UTC</value>
+  </string>
 </strings>

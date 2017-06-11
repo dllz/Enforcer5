@@ -50,10 +50,10 @@ namespace Enforcer5.Helpers
             }
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
-
-        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);
-        internal static List<Models.Commands> Commands = new List<Models.Commands>();
-        internal static List<Models.CallBacks> CallBacks = new List<Models.CallBacks>();
+        internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);        
+        internal static HashSet<Models.Commands> Commands = new HashSet<Models.Commands>();
+        internal static HashSet<Models.CallBacks> CallBacks = new HashSet<Models.CallBacks>();
+        internal static HashSet<Models.Queries> Queries = new HashSet<Queries>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
@@ -139,9 +139,15 @@ namespace Enforcer5.Helpers
                     }
                 }
             }
-
-           
-                //now we can start receiving            
+            Queries.Add(new Queries()
+            {
+                Trigger = "tempban",
+            });
+            Queries.Add(new Queries()
+            {
+                Trigger = "help",
+            });
+            //now we can start receiving            
             Api.StartReceiving();
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
             var wait = TimeSpan.FromSeconds(5);
@@ -347,12 +353,16 @@ namespace Enforcer5.Helpers
 
                 }
 
-                if (e.Message.Contains("bot can't initiate") ||
+                if (e.Message.Contains("bot can't initiate conversation") ||
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
                     {
                         throw;
+                    }
+                    if (parentMethod.Equals("SendToAdmins"))
+                    {
+                        result = null;
                     }
                     else
                     {

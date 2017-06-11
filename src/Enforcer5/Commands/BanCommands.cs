@@ -341,7 +341,17 @@ namespace Enforcer5
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}";
                 var res = Methods.BanUser(chatId, userId, lang);
-                if (res.Equals(true))
+                var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
+            if (isBanned.HasValue)
+            {
+#if normal
+                Redis.db.HashDeleteAsync("tempbanned", unbanTime);
+#endif
+#if premium
+                Redis.db.HashDeleteAsync("tempbannedPremium", unbanTime);
+#endif
+            }
+            if (res.Equals(true))
                 {
                     Methods.SaveBan(userId, "tempban");
                     Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
@@ -382,15 +392,15 @@ namespace Enforcer5
                     {
                         Bot.Send(message, chatId);
                     }
-                    
-                    
+
+                Redis.db.StringSetAsync($"chat:{chatId}:tempbanned:{userId}", unbanTime, TimeSpan.FromMinutes(time));
 #if normal
-                    Redis.db.SetAddAsync($"chat:{chatId}:tempbanned", userId);
+                Redis.db.SetAddAsync($"chat:{chatId}:tempbanned", userId);                    
 #endif
 #if premium
                      Redis.db.SetAddAsync($"chat:{chatId}:tempbannedPremium", userId);
 #endif
-                }
+            }
             }        
 
         [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true)]
