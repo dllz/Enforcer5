@@ -323,6 +323,16 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (status == ChatMemberStatus.Kicked)
             {
+                var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
+                if (isBanned.HasValue)
+                {
+#if normal
+                    Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
+#endif
+#if premium
+                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
+#endif
+                }
                 var res = Methods.UnbanUser(chatId, userId, lang);
                 if (res)
                 {
@@ -345,10 +355,10 @@ namespace Enforcer5
             if (isBanned.HasValue)
             {
 #if normal
-                Redis.db.HashDeleteAsync("tempbanned", unbanTime);
+                Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
 #endif
 #if premium
-                Redis.db.HashDeleteAsync("tempbannedPremium", unbanTime);
+                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
             }
             if (res.Equals(true))
