@@ -346,6 +346,16 @@ namespace Enforcer5.Handlers
                                         return; ;
                                     }
                                     new Task(() => { Log(update, "chatMember"); }).Start();
+                                    var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
+                                    if (isBanned.HasValue)
+                                    {
+#if normal
+                                        Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
+#endif
+#if premium
+                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
+#endif
+                                    }
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
                                          Service.BotAdded(update.Message);
