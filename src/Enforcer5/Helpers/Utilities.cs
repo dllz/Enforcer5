@@ -348,6 +348,10 @@ namespace Enforcer5.Helpers
                 {
                     result = CatchSend(message, id, parsemode: ParseMode.Default);
                 }
+                else if(e.Message.Contains("can't parse entities"))
+                {
+                    result = CatchSend(message, id, parsemode: ParseMode.Default);
+                }
                 else if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
