@@ -682,7 +682,7 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
             }
         }
 

@@ -32,7 +32,7 @@ namespace Enforcer5
                     unbanTime =
                         $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
                     groupId = x.Value.ToString().Split(':')[0]
-                }).Where(x => (Methods.IsGroupAdmin(int.Parse(x.userId), int.Parse(x.groupId)) || x.userId.Equals(user.Id)) && (x.name.Contains(args) || x.groupName.Contains(args) || x.userId.Contains(args))).ToList();
+                }).Where(x => (Methods.IsGroupAdmin(long.Parse(x.userId), long.Parse(x.groupId)) || x.userId.Equals(user.Id)) && (x.name.Contains(args) || x.groupName.Contains(args) || x.userId.Contains(args))).ToList();
             }
             else
             {
@@ -45,8 +45,9 @@ namespace Enforcer5
                         .ToString()
                         .FormatHTML(),
                     unbanTime =
-                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}"
-                }).Where(x => x.userId.Equals(user.Id)).ToList();
+                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
+                    groupId = x.Value.ToString().Split(':')[0]
+                }).Where(x => x.userId.Equals(user.Id) || Methods.IsGroupAdmin(long.Parse(x.userId), long.Parse(x.groupId))).ToList();
             }
             if (results.Count == 0)
             {
