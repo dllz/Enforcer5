@@ -38,8 +38,8 @@ namespace Enforcer5
             var text = Methods.GetRules(update.Message.Chat.Id, lang);
             if (Methods.SendInPm(update.Message, "Rules"))
             {
-                lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-                Bot.Send(text, update.Message.From.Id);
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -59,8 +59,8 @@ namespace Enforcer5
             }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
-                lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-                Bot.Send(text, update.Message.From.Id);
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -193,10 +193,6 @@ namespace Enforcer5
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
                 }
-            }
-            catch (ApiRequestException e)
-            {
-                Bot.SendReply(Methods.GetLocaleString(lang, "startMe"), update);
             }
             catch (AggregateException e)
             {
