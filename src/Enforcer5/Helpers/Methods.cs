@@ -520,21 +520,27 @@ namespace Enforcer5.Helpers
             {
                 return true;
             }
+            else if (isAdmin.Equals("false"))
+            {
+                return false;
+            }
             try
             {
                 var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
                 }
                 else
                 {
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(10)).Result;
                     return false;
                 }
             }
             catch
             {
+                var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(10)).Result;
                 return false;
             }
         }
