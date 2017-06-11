@@ -54,21 +54,24 @@ namespace Enforcer5
             }
             else
             {
-                string userId, chatId;
+                string userId, chatId, groupname = "Unknown Group Name";
                 foreach (var x in bitBan)
                 {
                     userId = x.Value.ToString().Split(':')[1];
                     chatId = x.Value.ToString().Split(':')[0];
                     if (user.Id.Equals(userId) || Methods.IsGroupAdmin(user.Id, long.Parse(chatId)))
                     {
+                        var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
+                        if (tempgroupname.HasValue)
+                        {
+                            groupname = tempgroupname.ToString().FormatHTML();
+                        }
                         results.Add(new TempbanUser()
                         {
                             userId = userId,
                             name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString()
                                 .FormatHTML(),
-                            groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result
-                                .ToString()
-                                .FormatHTML(),
+                            groupName = groupname,
                             unbanTime =
                                 $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
                             groupId = chatId
