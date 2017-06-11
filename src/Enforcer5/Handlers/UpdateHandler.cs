@@ -131,13 +131,13 @@ namespace Enforcer5.Handlers
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
                 //ignore previous messages
-                if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
-                {
-                    Bot.Send("please use @enforcerbot", update);
-                    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
-                    Console.WriteLine("LEaving chat");
-                    return;
-                }
+                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
+                //{
+                //    Bot.Send("please use @enforcerbot", update);
+                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //    Console.WriteLine("LEaving chat");
+                //    return;
+                //}
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
