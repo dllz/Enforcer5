@@ -22,21 +22,18 @@ namespace Enforcer5
             var results = new List<TempbanUser>();            
             if (args != null)
             {
-                string userId, chatId, name, groupname;
+                string userId, chatId, name = "", groupname = "";
                 foreach (var x in bitBan)
                 {
                     userId = x.Value.ToString().Split(':')[1];
                     chatId = x.Value.ToString().Split(':')[0];
-                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.HasValue
-                        ? Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
-                            .FormatHTML()
-                        : "";
-                    groupname = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
-                        .HasValue
-                        ? Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
-                            .ToString().FormatHTML()
-                        : "";
-                    if ((Methods.IsGroupAdmin(long.Parse(user.Id), long.Parse(chatId)) || user.Id.Equals(userId)) &&
+                    var tempname = Redis.db.HashGetAsync($"user:{userId}", "name").Result;
+                    if(tempname.HasValue)
+                        name = tempname.ToString().FormatHTML();
+                    var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
+                    if (tempgroupname.HasValue)
+                        groupname = tempgroupname.ToString().FormatHTML();
+                    if ((Methods.IsGroupAdmin(long.Parse(user.Id), long.Parse(chatId)) || userId.Equals(user.Id)) &&
                         (name.Contains(args) || groupname.Contains(args) || userId.Contains(args)))
                     {
                         results.Add(new TempbanUser()
