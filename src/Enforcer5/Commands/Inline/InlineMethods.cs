@@ -22,32 +22,58 @@ namespace Enforcer5
             var results = new List<TempbanUser>();            
             if (args != null)
             {
-                results = bitBan.Select(x => new TempbanUser()
+                string userId, chatId, name, groupname;
+                foreach (var x in bitBan)
                 {
-                    userId = $"{x.Value.ToString().Split(':')[1]}",
-                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.HasValue ? Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
-                        .FormatHTML() : "",
-                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result.HasValue ? Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
-                        .ToString().FormatHTML() : "",
-                    unbanTime =
-                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                    groupId = x.Value.ToString().Split(':')[0]
-                }).Where(x => (Methods.IsGroupAdmin(long.Parse(x.userId), long.Parse(x.groupId)) || x.userId.Equals(user.Id)) && (x.name.Contains(args) || x.groupName.Contains(args) || x.userId.Contains(args))).ToList();
+                    userId = x.Value.ToString().Split(':')[1];
+                    chatId = x.Value.ToString().Split(':')[0];
+                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.HasValue
+                        ? Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
+                            .FormatHTML()
+                        : "";
+                    groupname = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
+                        .HasValue
+                        ? Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
+                            .ToString().FormatHTML()
+                        : "";
+                    if ((Methods.IsGroupAdmin(long.Parse(user.Id), long.Parse(chatId)) || user.Id.Equals(userId)) &&
+                        (name.Contains(args) || groupname.Contains(args) || userId.Contains(args)))
+                    {
+                        results.Add(new TempbanUser()
+                        {
+                            userId = userId,
+                            name = name,
+                            groupName = groupname,
+                            unbanTime =
+                                $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
+                            groupId = chatId
+                        });
+                    }
+                }
             }
             else
             {
-                results = bitBan.Select(x => new TempbanUser()
+                string userId, chatId;
+                foreach (var x in bitBan)
                 {
-                    userId = $"{x.Value.ToString().Split(':')[1]}",                    
-                    name = Redis.db.HashGetAsync($"user:{x.Value.ToString().Split(':')[1]}", "name").Result.ToString()
-                        .FormatHTML(),
-                    groupName = Redis.db.HashGetAsync($"chat:{x.Value.ToString().Split(':')[0]}:details", "name").Result
-                        .ToString()
-                        .FormatHTML(),
-                    unbanTime =
-                        $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                    groupId = x.Value.ToString().Split(':')[0]
-                }).Where(x => x.userId.Equals(user.Id) || Methods.IsGroupAdmin(long.Parse(x.userId), long.Parse(x.groupId))).ToList();
+                    userId = x.Value.ToString().Split(':')[1];
+                    chatId = x.Value.ToString().Split(':')[0];
+                    if (user.Id.Equals(userId) || Methods.IsGroupAdmin(user.Id, long.Parse(chatId)))
+                    {
+                        results.Add(new TempbanUser()
+                        {
+                            userId = userId,
+                            name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString()
+                                .FormatHTML(),
+                            groupName = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result
+                                .ToString()
+                                .FormatHTML(),
+                            unbanTime =
+                                $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
+                            groupId = chatId
+                        });
+                    }
+                }
             }
             if (results.Count == 0)
             {
