@@ -539,8 +539,7 @@ namespace Enforcer5.Helpers
                 }
             }
             catch
-            {
-                var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(10)).Result;
+            {                
                 return false;
             }
         }

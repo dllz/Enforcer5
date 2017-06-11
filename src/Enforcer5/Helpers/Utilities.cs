@@ -370,7 +370,7 @@ namespace Enforcer5.Helpers
                 }
 
                 else if (e.Message.Contains("bot can't initiate conversation") ||
-                    e.Message.Contains("bot was blocked"))
+                    e.Message.Contains("bot was blocked") || e.Message.Contains(""))
                 {
                     if (parentMethod.Equals("SendToPm"))
                     {
