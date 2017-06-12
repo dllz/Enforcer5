@@ -361,13 +361,9 @@ namespace Enforcer5.Helpers
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
-                else if(e.Message.Contains("Unsupported start tag") || e.Message.Contains("Unmatched end tag"))
+                else if(e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
                 {
-                    result = CatchSend(message, id, parsemode: ParseMode.Default);
-                }
-                else if(e.Message.Contains("can't parse entities"))
-                {
-                    result = CatchSend(message, id, parsemode: ParseMode.Default);
+                    result = CatchSend($"MARKDOWN FAILED\n{message}", id, parsemode: ParseMode.Default);
                 }
                 else if (e.Message.Contains("message is too long"))
                 {
@@ -386,8 +382,8 @@ namespace Enforcer5.Helpers
 
                 }
 
-                else if (e.Message.Contains("bot can't initiate conversation") ||
-                    e.Message.Contains("bot was blocked") || e.Message.Contains(""))
+                else if (e.Message.Contains("bot can't initiate conversation") |
+                    e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
                     {
@@ -464,10 +460,10 @@ namespace Enforcer5.Helpers
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
-                else if (e.Message.Contains("Unsupported start tag") || e.Message.Contains("Unmatched end tag"))
+                else if (e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    result = CatchSend(message, chatid, parsemode: ParseMode.Default);
+                    result = CatchSend($"MARKDOWN FAILED\n{message}", chatid, parsemode: ParseMode.Default);
                 }
                 else if (e.Message.Contains("reply message not found"))
                 {

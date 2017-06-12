@@ -64,6 +64,7 @@ namespace Enforcer5
             var command = -1;
             var request = "";
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            var sendToPm = Methods.SendInPm(update.Message, "Help");
             if (args.Length > 1)
             {
                 if (!string.IsNullOrEmpty(args[1]))
@@ -92,7 +93,10 @@ namespace Enforcer5
                                     text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
                                 }
                             }
-                             Bot.SendReply(text, update);
+                            if (sendToPm)
+                                Bot.SendToPm(text, update);
+                            else
+                                Bot.SendReply(text, update);
                             return;
                         }
                     }
@@ -100,8 +104,17 @@ namespace Enforcer5
             }           
             if (command == -1)
             {
-                 Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
-                 Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                if (sendToPm)
+                {
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                }
+                 
             }
             else if (command == 0)
             {
@@ -123,9 +136,15 @@ namespace Enforcer5
                     {
 
                         text = Methods.GetLocaleString(lang, "helpNoRequest");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                        if(sendToPm)
+                            Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                        else
+                            Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                     }
                 }
+                if (sendToPm)
+                    Bot.SendToPm(text, update);
+                else
                  Bot.SendReply(text, update);                
             }           
         }

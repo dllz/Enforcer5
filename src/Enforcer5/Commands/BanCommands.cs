@@ -343,7 +343,7 @@ namespace Enforcer5
 
         }
 
-        public static void Tempban(long userId, long chatId, long time,
+        public static bool Tempban(long userId, long chatId, long time,
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -410,8 +410,10 @@ namespace Enforcer5
 #if premium
                      Redis.db.SetAddAsync($"chat:{chatId}:tempbannedPremium", userId);
 #endif
-            }
-            }        
+                    return true;
+                }
+            return false;
+        }        
 
         [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Tempban(Update update, string[] args)
