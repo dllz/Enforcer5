@@ -764,7 +764,14 @@ namespace Enforcer5.Handlers
                         }
                         Bot.CommandsReceived++;
                         new Task(() => { Log(update, callbacks); }).Start();
-                         callbacks.Method.Invoke(update, args);
+                        try
+                        {
+                            callbacks.Method.Invoke(update, args);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                        }                         
                     }
                 }
                 catch (ApiRequestException e)
