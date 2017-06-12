@@ -270,7 +270,7 @@ namespace Enforcer5
                     }
                     try
                     {
-                        var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId);
+                        var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId).Result;
                         Message result;
                         if (!string.IsNullOrEmpty(username))
                         {

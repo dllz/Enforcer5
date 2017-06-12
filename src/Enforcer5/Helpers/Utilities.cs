@@ -404,6 +404,10 @@ namespace Enforcer5.Helpers
                     //skip
                     result = null;
                 }
+                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
+                {
+                    result = null;
+                }
                 else
                 {
                     Bot.CatchSend($"{e.Message}", id);
@@ -488,7 +492,7 @@ namespace Enforcer5.Helpers
                         Thread.Sleep(numbeRandom.Next(5000, 30000));
                     }
                 }
-                else if (e.Message.Contains("bot can't initiate") ||
+                else if (e.Message.Contains("bot can't initiate") |
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
@@ -501,6 +505,10 @@ namespace Enforcer5.Helpers
                         result = null;
                         
                     }
+                }
+                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
+                {
+                    result = null;
                 }
                 else
                 {

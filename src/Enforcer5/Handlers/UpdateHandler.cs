@@ -46,8 +46,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-                update.Message.ReplyToMessage = null;
+                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");                
                 Botan.log(update.Message, command.Trigger);
             }
             else if (text.Equals("chatMember"))
