@@ -102,7 +102,7 @@ namespace Enforcer5.Handlers
                 }
                 else
                 {
-                    Botan.log(update, text);
+                    Botan.log(update, "Query");
                 }
             }
             Console.ForegroundColor = ConsoleColor.Green;

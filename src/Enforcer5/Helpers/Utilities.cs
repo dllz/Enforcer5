@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
@@ -344,7 +345,23 @@ namespace Enforcer5.Helpers
             }
             catch (AggregateException e)
             {
-                if (e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Too Many Requests"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("Request timed out"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if(e.Message.Contains("Unsupported start tag") || e.Message.Contains("Unmatched end tag"))
                 {
                     result = CatchSend(message, id, parsemode: ParseMode.Default);
                 }
@@ -431,18 +448,34 @@ namespace Enforcer5.Helpers
             }
             catch (AggregateException e)
             {
-                if (e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Too Many Requests"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("Request timed out"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("Unsupported start tag") || e.Message.Contains("Unmatched end tag"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     result = CatchSend(message, chatid, parsemode: ParseMode.Default);
                 }
-                if (e.Message.Contains("reply message not found"))
+                else if (e.Message.Contains("reply message not found"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     result = Send(message, chatid);
 
                 }
-                if (e.Message.Contains("message is too long"))
+                else if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -455,9 +488,11 @@ namespace Enforcer5.Helpers
                             word = $"{word}{messages[i]}";
                         }
                         CatchSend(word, chatid, messageId: msgid);
+                        Random numbeRandom = new Random();
+                        Thread.Sleep(numbeRandom.Next(5000, 30000));
                     }
                 }
-                if (e.Message.Contains("bot can't initiate") ||
+                else if (e.Message.Contains("bot can't initiate") ||
                     e.Message.Contains("bot was blocked"))
                 {
                     if (parentMethod.Equals("SendToPm"))
