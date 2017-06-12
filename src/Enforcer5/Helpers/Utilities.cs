@@ -589,11 +589,13 @@ namespace Enforcer5.Helpers
 
         public static BotanTrackResponse log(Message update, string eventId)
         {        
-            return log(update, eventId, update.From.Id);
+            //return log(update, eventId, update.From.Id);
+            return null;
         }
 
         public static BotanTrackResponse log(CallbackQuery update, string eventId)
         {
+            return null;
             return log(update, eventId, update.From.Id);
         }
 
