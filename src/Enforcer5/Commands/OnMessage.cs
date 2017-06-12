@@ -97,6 +97,7 @@ namespace Enforcer5
                                         break;
                                 case "warn":
                                         Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
+                                    Methods.SaveBan(update.Message.From.Id, "flood");
                                     break;
                                 case "tempban":
 
