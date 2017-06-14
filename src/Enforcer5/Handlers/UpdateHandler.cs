@@ -726,8 +726,7 @@ namespace Enforcer5.Handlers
                             String.Equals(x.Trigger, args[0],
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
-                    {                       
-                        AddCount(update.From.Id, update.Message.Text);
+                    {                                               
                         var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
                         if (blocked.HasValue)
                         {
