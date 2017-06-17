@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
@@ -19,6 +21,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 #pragma warning disable CS0168
 namespace Enforcer5.Helpers
@@ -49,10 +52,11 @@ namespace Enforcer5.Helpers
             }
         }
         internal delegate void ChatCommandMethod(Update u, string[] args);
-
         internal delegate void ChatCallbackMethod(CallbackQuery u, string[] args);
-        internal static List<Models.Commands> Commands = new List<Models.Commands>();
-        internal static List<Models.CallBacks> CallBacks = new List<Models.CallBacks>();
+        internal delegate List<InlineQueryResultArticle> InlineQuery(User user, string[] args, XDocument lang);
+        internal static HashSet<Models.Commands> Commands = new HashSet<Models.Commands>();
+        internal static HashSet<Models.CallBacks> CallBacks = new HashSet<Models.CallBacks>();
+        internal static HashSet<Models.Queries> Queries = new HashSet<Models.Queries>();
         internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
         internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
         public static async void Initialize(string updateid = null)
@@ -73,7 +77,27 @@ namespace Enforcer5.Helpers
 #endif
 
             Api = new TelegramBotClient(TelegramAPIKey);
-             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
+            //Api.Timeout = TimeSpan.FromSeconds(3);
+            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
+            Api.OnUpdate += UpdateHandler.UpdateReceived;
+            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
+            Api.OnReceiveError += ApiOnReceiveError;
+            Api.OnReceiveGeneralError += ApiOnReceiveGenError;
+            Me = Api.GetMeAsync().Result;
+            Console.Title += " " + Me.Username;
+            StartTime = DateTime.UtcNow;
+#if premium
+                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
+#endif
+#if normal
+            var offset = Redis.db.StringGetAsync("bot:last_update").Result;
+#endif
+            if (offset.HasValue)
+            {
+                Api.MessageOffset = int.Parse(offset) + 1;
+                Console.WriteLine($" database offset is {offset}");
+            }
+            Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
             {
@@ -119,30 +143,24 @@ namespace Enforcer5.Helpers
                 }
             }
 
-            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
-            Api.OnUpdate += UpdateHandler.UpdateReceived;
-            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
-            Api.OnReceiveError += ApiOnReceiveError;
-            Api.OnReceiveGeneralError += ApiOnReceiveGenError;          
-            Me = Api.GetMeAsync().Result;
-            Api.PollingTimeout = TimeSpan.FromSeconds(1);
-            Console.Title += " " + Me.Username;
-            StartTime = DateTime.UtcNow;
-
-            if (!testing)
+            foreach (var m in typeof(Queries).GetMethods())
             {
-#if premium
-                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
-#endif
-#if normal
-                var offset = Redis.db.StringGetAsync("bot:last_update").Result;
-#endif
-                if (offset.HasValue && offset.IsInteger)
-                    Api.MessageOffset = (int)offset + 1;
-                Console.WriteLine($" database offset is {offset}");
-                //now we can start receiving   
-
-            }           
+                var c = new Models.Queries();
+                foreach (var a in m.GetCustomAttributes(true))
+                {
+                    if (a is Attributes.Query)
+                    {
+                        var ca = a as Attributes.Query;
+                        c.Trigger = ca.Trigger;
+                        c.DefaultResponse = ca.DefaultResponse;
+                        c.Description = ca.Description;
+                        c.Title = ca.Title;
+                        c.Method = (InlineQuery) m.CreateDelegate(typeof(InlineQuery));
+                        Queries.Add(c);
+                    }
+                }
+            }
+            //now we can start receiving            
             Api.StartReceiving();
             Console.WriteLine($"Starting ID = {Api.MessageOffset}");
             var wait = TimeSpan.FromSeconds(5);
@@ -220,50 +238,134 @@ namespace Enforcer5.Helpers
                 
         //}
 
-        internal static Message Send(string message, long id, bool clearKeyboard = false,
-            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+        private static Message CatchSend(string message, long id, InlineKeyboardMarkup customMenu = null,
+            ParseMode parsemode = ParseMode.Default, int messageId = -1)
         {
+            Message result = null;
+            try
+            {
+                MessagesSent++;
+                if ((customMenu == null) && (messageId != -1))
+                {
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId:messageId).Result;
+                }
+                else if (messageId != -1 && customMenu != null)
+                {
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId: messageId, replyMarkup: customMenu).Result;
+                }
+                else if (customMenu != null && messageId == -1)
+                {
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyMarkup: customMenu).Result;
+                }                
+                else
+                {
+                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default).Result;
+                }
+                
+            }
+            catch (AggregateException e)
+            {
+                try
+                {
+                    result = Bot.Api.SendTextMessageAsync(-125311351, $"{e.Message}\n\n{e.StackTrace}").Result;
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(exception);
+                    
+                }
+            }
+            return result;
+        }
+
+        internal static Message SendToPm(string message, int pmId, long chatId, InlineKeyboardMarkup menu = null,
+            ParseMode parseMode = ParseMode.Html, int messageId = -1)
+        {
+            Message result = null;
+            try
+            {
+                result = Send(message, pmId, menu, parseMode);
+            }
+            catch (AggregateException e)
+            {
+                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                {
+                    var lang = Methods.GetGroupLanguage(chatId).Doc;
+                    var startMe = new Menu(1)
+                    {
+                        Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"), url:$"https://t.me/{Bot.Me.Username}")
+                        }
+                    };
+                    if (messageId == -1)
+                    {
+                       Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatId, Key.CreateMarkupFromMenu(startMe));
+                        result = null;
+                    }
+                    else
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
+                        result = null;
+                    }
+                }
+                else
+                {
+                    result = CatchSend(message, chatId, menu, parseMode, messageId);
+                }
+            }
+            return result;
+        }
+
+        internal static Message SendToPm(string message, Update update, InlineKeyboardMarkup menu = null,
+            ParseMode parseMode = ParseMode.Html)
+        {
+            return SendToPm(message, Convert.ToInt32((long)update.Message.From.Id), update.Message.Chat.Id, menu, parseMode,
+                update.Message.MessageId);
+        }
+
+        internal static Message Send(string message, long id,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
+        {
+            Message result = null;
             try
             {
                 MessagesSent++;
                 //message = message.Replace("`",@"\`");
-                if (clearKeyboard)
+                if (customMenu != null)
                 {
-                    var menu = new ReplyKeyboardHide {HideKeyboard = true};
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
-                }
-                else if (customMenu != null)
-                {
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
+                    result = Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
                         disableWebPagePreview: true,
                         parseMode: parseMode).Result;
                 }
                 else
                 {
-                    return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
+                    result = Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
                 }
             }
-            catch (ApiRequestException e)
+            catch (AggregateException e)
             {
-                if ( e.Message.Contains("Unsupported start tag"))
+                if (e.Message.Contains("Too Many Requests"))
                 {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode:ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-                    finally
-                    {
-                        
-                    }
-                    return null;
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
-                if (e.Message.Contains("message is too long"))
+                else if (e.Message.Contains("Request timed out"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if(e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
+                {
+                    result = CatchSend($"MARKDOWN FAILED\n{message}", id, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -275,98 +377,105 @@ namespace Enforcer5.Helpers
                         {
                             word = $"{word}{messages[i]}";
                         }
-                        Send(word, id);
+                        CatchSend(word, id);
                     }
 
                 }
-                try
+
+                else if (e.Message.Contains("bot can't initiate conversation") |
+                    e.Message.Contains("bot was blocked"))
                 {
-                    if (e.ErrorCode == 112)
+                    if (parentMethod.Equals("SendToPm"))
                     {
-                            return Bot.Send("The markdown in this text is broken", id);
+                        throw;
                     }
-                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                    if (parentMethod.Equals("SendToAdmins"))
                     {
-                        var lang = Methods.GetGroupLanguage(id).Doc;
-                        var startMe = new Menu(1)
-                        {
-                            Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                        };
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), id, customMenu:Key.CreateMarkupFromMenu(startMe));
+                        result = null;
                     }
                     else
                     {
-                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", id);
-                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
+                        result = null;
                     }
                 }
-                catch (ApiRequestException ex)
+                else if (e.Message.Contains("bot can't send messages to bots"))
                 {
-                    //fuckit 
-                    return null;
+                    //skip
+                    result = null;
                 }
-                catch (Exception exception)
+                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
                 {
-                    //fuckit
-                    return null;
-                }
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
-
-        }
-        internal static Message Send(string message, Update chatUpdate, bool clearKeyboard = false,
-            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
-        {
-            var id = chatUpdate.Message.Chat.Id;
-            try
-            {
-                MessagesSent++;
-                
-                //message = message.Replace("`",@"\`");
-                if (clearKeyboard)
-                {
-                    var menu = new ReplyKeyboardHide { HideKeyboard = true };
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: menu, disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
-                }
-                else if (customMenu != null)
-                {
-                    return Api.SendTextMessageAsync(id, message, replyMarkup: customMenu, disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
+                    result = null;
                 }
                 else
                 {
-                    return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
+                    Bot.CatchSend($"{e.Message}", id);
+                    result = Bot.CatchSend($"\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                        parsemode: ParseMode.Default);
                 }
             }
-            catch (ApiRequestException e)
+            return result;
+            
+        }
+        internal static Message Send(string message, Update chatUpdate,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
+        {
+            var id = chatUpdate.Message.Chat.Id;
+            return Send(message, id, customMenu, parseMode, parentMethod);
+        }
+
+        internal static Message SendReply(string message, Message msg, [CallerMemberName]string parentMethod = "")
+        {
+            return SendReply(message, msg.Chat.Id, msg.MessageId, parentMethod: parentMethod);
+        }
+        internal static Message SendReply(string message, long chatid, int msgid, InlineKeyboardMarkup keyboard = null, [CallerMemberName]string parentMethod = "")
+        {
+            MessagesSent++;
+            Message result = null;
+            try
             {
-                if (e.Message.Contains("Unsupported start tag"))
+                if (keyboard == null)
+                {
+                    result =  Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
+                        disableWebPagePreview: true).Result;
+                }
+                else
+                {
+                    result = Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
+                        disableWebPagePreview: true, replyMarkup: keyboard).Result;
+                }
+            }
+            catch (AggregateException e)
+            {
+                if (e.Message.Contains("Too Many Requests"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("Request timed out"))
+                {
+                    Random numbeRandom = new Random();
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
+                    Thread.Sleep(numbeRandom.Next(5000, 30000));
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                }
+                else if (e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        return Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }   
-                    finally
-                    {
-
-                    }
-                    return null;
+                    result = CatchSend($"MARKDOWN FAILED\n{message}", chatid, parsemode: ParseMode.Default);
                 }
-                if (e.Message.Contains("message is too long"))
+                else if (e.Message.Contains("reply message not found"))
+                {
+                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
+                    result = Send(message, chatid);
+
+                }
+                else if (e.Message.Contains("message is too long"))
                 {
                     //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
                     var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
@@ -378,405 +487,45 @@ namespace Enforcer5.Helpers
                         {
                             word = $"{word}{messages[i]}";
                         }
-                        Send(word, chatUpdate);
+                        CatchSend(word, chatid, messageId: msgid);
+                        Random numbeRandom = new Random();
+                        Thread.Sleep(numbeRandom.Next(5000, 30000));
                     }
-
                 }
-                try
-                    {                        
-                        if (e.ErrorCode == 112)
-                        {
-                            if (chatUpdate.Message != null && chatUpdate.Message.Chat.Title != null)
-                            {
-                                var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
-                                return Bot.SendReply(
-                                    Methods.GetLocaleString(lang, "markdownBroken"), chatUpdate);
-                            }
-                            else
-                            {
-                                return Bot.SendReply("The markdown in this text is broken", chatUpdate);
-                            }
-                        }
-                        else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
-                        {
-                            var lang = Methods.GetGroupLanguage(chatUpdate.Message).Doc;
-                            var startMe = new Menu(1)
-                            {
-                                Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                            };
-                            return Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatUpdate, Key.CreateMarkupFromMenu(startMe));
-                        }
-                        else
-                        {
-                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}\n 12", chatUpdate);
-                            return  Bot.Send($"3\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                        }                        
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        //fuckit 
-                        return null;
-                    }
-                    catch (Exception exception)
-                    {
-                        //fuckit
-                        return null;
-                    }
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
-
-        }
-
-        internal static Message SendReply(string message, Message msg)
-        {
-            MessagesSent++;
-            try
-            {
-                return Api.SendTextMessageAsync(msg.Chat.Id, message, replyToMessageId: msg.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
-            }
-            catch (ApiRequestException e)
-            {
-                if (e.Message.Contains("Unsupported start tag"))
+                else if (e.Message.Contains("bot can't initiate") |
+                    e.Message.Contains("bot was blocked"))
                 {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
+                    if (parentMethod.Equals("SendToPm"))
                     {
-                        return Api.SendTextMessageAsync(msg.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-                    finally
-                    {
-
-                    }
-                    
-                }
-                if (e.Message.Contains("message is too long"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                        var amount = messages.Length / 4;
-                        for (int j = 0; j < 4; j++)
-                        {
-                            var word = "";
-                            for (int i = 0; i < amount; i++)
-                            {
-                                word = $"{word}{messages[i]}";
-                            }
-                            SendReply(word, msg);
-                        }
-
-                }
-                if (e.Message.Contains("reply message not found"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, msg.Chat.Id);
-
-                }
-                try
-                {
-                    if (e.ErrorCode == 112)
-                    {
-                        return Bot.Send("The markdown in this text is broken", msg.Chat.Id);
-                    }
-                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
-                    {
-                        var lang = Methods.GetGroupLanguage(msg.Chat.Id).Doc;
-                        var startMe = new Menu(1)
-                        {
-                            Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                        };
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
+                        throw;
                     }
                     else
                     {
-                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Chat.Id);
-                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
+                        result = null;
+                        
                     }
                 }
-                catch (ApiRequestException ex)
+                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
                 {
-                    //fuckit 
-                    return null;
+                    result = null;
                 }
-                catch (Exception exception)
+                else
                 {
-                    //fuckit
-                    return null;
+                    Bot.CatchSend($"{e.Message}", chatid, messageId: msgid);
+                    result =  Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
             }
-            catch (AggregateException e)
-            {
-                Console.WriteLine($"{e.InnerExceptions[0]}\n{e.StackTrace}");
-                return null;
-            }
+            return result;
         }
-        internal static Message SendReply(string message, long chatid, int msgid)
-        {
-            MessagesSent++;
-            try
-            {
-                return Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
-            }
-            catch (ApiRequestException e)
-            {
-                if (e.Message.Contains("Unsupported start tag"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        return Api.SendTextMessageAsync(chatid, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-                    finally
-                    {
-
-                    }
-                    
-                }
-                if (e.Message.Contains("reply message not found"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, chatid);
-
-                }
-                if (e.Message.Contains("message is too long"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                        var amount = messages.Length / 4;
-                        for (int j = 0; j < 4; j++)
-                        {
-                            var word = "";
-                            for (int i = 0; i < amount; i++)
-                            {
-                                word = $"{word}{messages[i]}";
-                            }
-                            SendReply(word, chatid, msgid);
-                        }
-
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-                }
-                if (e.ErrorCode == 112)
-                    {
-                        return Bot.Send("The markdown in this text is broken", chatid);
-                    }
-                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
-                    {
-                        var lang = Methods.GetGroupLanguage(chatid).Doc;
-                        var startMe = new Menu(1)
-                        {
-                            Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                        };
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatid, customMenu: Key.CreateMarkupFromMenu(startMe));
-                    }
-                    else
-                    {
-                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", chatid);
-                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    //fuckit
-                    return null;
-                }
+        internal static Message SendReply(string message, Update msg,[CallerMemberName]string parentMethod = "")
+        {            
+            return SendReply(message, msg.Message.Chat.Id, msg.Message.MessageId, parentMethod:parentMethod);
         }
-        internal static Message SendReply(string message, Update msg)
-        {
-            MessagesSent++;
-            try
-            {
-                return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
-            }
-            catch (ApiRequestException e)
-            {
-                if (e.Message.Contains("Unsupported start tag"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-                    finally
-                    {
-
-                    }
-                   
-                }
-                if (e.Message.Contains("reply message not found"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, msg);
-
-                }
-                if ( e.Message.Contains("message is too long"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                        var amount = messages.Length / 4;
-                        for (int j = 0; j < 4; j++)
-                        {
-                            var word = "";
-                            for (int i = 0; i < amount; i++)
-                            {
-                                word = $"{word}{messages[i]}";
-                            }
-                            SendReply(word, msg);
-                        }
-
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-
-                }
-                    if (e.ErrorCode == 112)
-                    {
-                        return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
-                    }
-                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
-                    {
-                        var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
-                        var startMe = new Menu(1)
-                        {
-                            Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                        };
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
-                    }
-                    else
-                    {
-                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
-                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    //fuckit
-                    return null;
-                }
-            
+        internal static Message SendReply(string message, Update msg, InlineKeyboardMarkup keyboard, [CallerMemberName]string parentMethod = "")
+        {            
+            return SendReply(message, msg.Message.Chat.Id, msg.Message.MessageId, keyboard, parentMethod);
         }
-        internal static Message SendReply(string message, Update msg, InlineKeyboardMarkup keyboard)
-        {
-            MessagesSent++;
-            try
-            {
-                return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, replyToMessageId: msg.Message.MessageId, replyMarkup: keyboard, parseMode: ParseMode.Html, disableWebPagePreview: true).Result;
-            }
-            catch (ApiRequestException e)
-            {
-                if (e.Message.Contains("Unsupported start tag"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        return Api.SendTextMessageAsync(msg.Message.Chat.Id, message, disableWebPagePreview: true, parseMode: ParseMode.Default).Result;
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                        return null;
-                    }
-                   
-                }
-                if (e.Message.Contains("reply message not found"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    return Send(message, msg, false, keyboard);
-
-                }
-                if (e.Message.Contains("message is too long"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    try
-                    {
-                        var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                        var amount = messages.Length / 4;
-                        for (int j = 0; j < 4; j++)
-                        {
-                            var word = "";
-                            for (int i = 0; i < amount; i++)
-                            {
-                                word = $"{word}{messages[i]}";
-                            }
-                            SendReply(word, msg);
-                        }
-
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        Console.WriteLine($"HANDLED\n{ex.ErrorCode}\n\n{ex.Message}\n\n{ex.StackTrace}");
-                    }
-
-                }
-                    if (e.ErrorCode == 112)
-                    {
-                        return Bot.Send("The markdown in this text is broken", msg.Message.Chat.Id);
-                    }
-                    else if (e.ErrorCode == 403 || e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
-                    {
-                        var lang = Methods.GetGroupLanguage(msg.Message.Chat.Id).Doc;
-                        var startMe = new Menu(1)
-                        {
-                            Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                        };
-                        return Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), msg.Message.Chat.Id, customMenu: Key.CreateMarkupFromMenu(startMe));
-                    }
-                    else
-                    {
-                        Bot.Send($"{e.ErrorCode}\n{e.Message}, 1231231", msg.Message.Chat.Id);
-                        return Bot.Send($"2\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    //fuckit
-                    return null;
-                }
-            }
        
 
         private static void WatchAPI(object state)
@@ -789,14 +538,10 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static DeleteMessage DeleteMessage(long chatId, int msgid)
+        public static Boolean DeleteMessage(long chatId, int msgid)
         {
-            var client = new HttpClient();
-            var response = client.GetAsync($"https://api.telegram.org/bot{Bot.TelegramAPIKey}/deleteMessage?chat_id={chatId}&message_id={msgid}").Result;
-            var data = response.Content.ReadAsStringAsync().Result;
-            var result = JsonConvert.DeserializeObject<DeleteMessage>(data);
-
-            return result;
+            return Bot.Api.DeleteMessageAsync(chatId, msgid).Result;
+           
         }
     }
 
@@ -834,14 +579,13 @@ namespace Enforcer5.Helpers
 #if premium
         private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EPBotan").ToString();
 #endif
-        public static BotanTrackResponse log(Object update, string eventId, int id)
+        public static BotanTrackResponse log(Object update, string eventId, long id)
         {
-            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";
-            Object text = update;
+            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";            
             var client = new HttpClient();
-            var content = new StringContent(JsonConvert.SerializeObject(text), Encoding.UTF8, "application/json");          
-            var response = client.PostAsync(url, content).Result;
-            response.EnsureSuccessStatusCode();
+            var temp = JsonConvert.SerializeObject(update);
+            var content = new StringContent(temp, Encoding.UTF8, "application/json");          
+            var response = client.PostAsync(url, content).Result;            
             var data = response.Content.ReadAsStringAsync().Result;
             var result = JsonConvert.DeserializeObject<BotanTrackResponse>(data);
             return result;
@@ -849,13 +593,21 @@ namespace Enforcer5.Helpers
 
         public static BotanTrackResponse log(Message update, string eventId)
         {        
-            return log(update, eventId, update.From.Id);
+            //return log(update, eventId, update.From.Id);
+            return null;
         }
 
         public static BotanTrackResponse log(CallbackQuery update, string eventId)
         {
+            return null;
             return log(update, eventId, update.From.Id);
         }
+
+        public static BotanTrackResponse log(InlineQuery update, string eventId)
+        {
+            return log(update, eventId, update.From.Id);
+        }
+
 
         public class BotanTrackResponse
         {

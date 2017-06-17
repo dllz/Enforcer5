@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
@@ -14,7 +15,7 @@ namespace Enforcer5
         [Command(Trigger = "ping")]
         public static void Ping(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message);
+            var lang = Methods.GetGroupLanguage(update.Message, false);
             try
             {                
                 var ts = DateTime.UtcNow - update.Message.Date;
@@ -53,7 +54,7 @@ namespace Enforcer5
         [Command(Trigger = "helplist")]
         public static void HelpList(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
              Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc)), update);
         }
 
@@ -62,7 +63,8 @@ namespace Enforcer5
         {
             var command = -1;
             var request = "";
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            var sendToPm = Methods.SendInPm(update.Message, "Help");
             if (args.Length > 1)
             {
                 if (!string.IsNullOrEmpty(args[1]))
@@ -70,9 +72,9 @@ namespace Enforcer5
                     command = 0;
                     foreach (var mem in Bot.Commands)
                     {
-                        if (args[1].Equals(mem.Trigger))
+                        if (args[1].ToLower().Equals(mem.Trigger.ToLower()))
                         {
-                            request = mem.Trigger;
+                            request = mem.Trigger.ToLower();
                             command = 1;
                             string text;
                             try
@@ -91,7 +93,10 @@ namespace Enforcer5
                                     text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
                                 }
                             }
-                             Bot.SendReply(text, update);
+                            if (sendToPm)
+                                Bot.SendToPm(text, update);
+                            else
+                                Bot.SendReply(text, update);
                             return;
                         }
                     }
@@ -99,12 +104,21 @@ namespace Enforcer5
             }           
             if (command == -1)
             {
-                 Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
-                 Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                if (sendToPm)
+                {
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                }
+                 
             }
             else if (command == 0)
             {
-                request = args[1];
+                request = args[1].ToLower();
                 string text;
                 try
                 {
@@ -122,9 +136,15 @@ namespace Enforcer5
                     {
 
                         text = Methods.GetLocaleString(lang, "helpNoRequest");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                        if(sendToPm)
+                            Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
+                        else
+                            Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                     }
                 }
+                if (sendToPm)
+                    Bot.SendToPm(text, update);
+                else
                  Bot.SendReply(text, update);                
             }           
         }
@@ -135,7 +155,7 @@ namespace Enforcer5
             System.Xml.Linq.XDocument lang;
             try
             {
-                lang = Methods.GetGroupLanguage(update.Message).Doc;
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             }
             catch (NullReferenceException e)
             {
@@ -149,7 +169,14 @@ namespace Enforcer5
                     return;
                 }
             }
-            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update);
+            var startMe = new Menu(1)
+            {
+                Buttons = new List<InlineButton>
+                {
+                    new InlineButton(Methods.GetLocaleString(lang, "donateWord"), url:$"https://paypal.me/stubbornrobot")
+                }
+            };
+            Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update, keyboard:Key.CreateMarkupFromMenu(startMe));
         }
 
     }

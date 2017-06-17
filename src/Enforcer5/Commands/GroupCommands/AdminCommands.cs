@@ -22,7 +22,7 @@ namespace Enforcer5
         [Command(Trigger = "setrules", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetRules(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
             {
                 var input = args[1];
@@ -48,7 +48,7 @@ namespace Enforcer5
         [Command(Trigger = "addrule", InGroupOnly = true, GroupAdminOnly = true)]
         public static void AddRule(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
             {
                 var input = args[1];
@@ -75,7 +75,7 @@ namespace Enforcer5
         [Command(Trigger = "setabout", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetAbout(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (!string.IsNullOrWhiteSpace(args[1]))
             {
                 var input = args[1];
@@ -101,7 +101,7 @@ namespace Enforcer5
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
         public static void User(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             try
             {
                 var userid = Methods.GetUserId(update, args);
@@ -163,7 +163,7 @@ namespace Enforcer5
                 ? new[] {args[1].Substring(1, splitindex).Trim(), args[1].Substring(splitindex + 1)}
                 : new[] {args[1].Substring(1).Trim(), null};
             words[0] = $"#{words[0]}";            
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (update.Message.ReplyToMessage != null && words[1] == null)
             {
                 var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
@@ -181,22 +181,24 @@ namespace Enforcer5
                             Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                         Service.LogCommand(update, update.Message.Text);
                     }
-                    catch (ApiRequestException e)
+                    catch (AggregateException e)
                     {
-                        if (e.ErrorCode.Equals(118))
+
+                        if (e.Message.Contains("message is too long"))
                         {
-                            Bot.SendReply(
+                      
+                        Bot.SendReply(
                                 Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                 update);
                         }
-                        else if (e.ErrorCode.Equals(112))
+                        else if (e.Message.Contains("Unsupported start tag"))
                         {
                             Bot.SendReply(
                                 Methods.GetLocaleString(lang, "markdownBroken"), update);
                         }
                         else
                         {
-                            Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                            Methods.SendError($"{e.Message}", update.Message, lang);
                         }
                     }
                 }
@@ -235,22 +237,24 @@ namespace Enforcer5
                                 Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                             Service.LogCommand(update, update.Message.Text);
                         }
-                        catch (ApiRequestException e)
+                        catch (AggregateException e)
                         {
-                            if (e.ErrorCode.Equals(118))
+
+                            if (e.Message.Contains("message is too long"))
                             {
+
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                     update);
                             }
-                            else if (e.ErrorCode.Equals(112))
+                            else if (e.Message.Contains("Unsupported start tag"))
                             {
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
                             else
                             {
-                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                                Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
                     }
@@ -267,22 +271,24 @@ namespace Enforcer5
                             Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                             Service.LogCommand(update, update.Message.Text);
                         }
-                        catch (ApiRequestException e)
+                        catch (AggregateException e)
                         {
-                            if (e.ErrorCode.Equals(118))
+
+                            if (e.Message.Contains("message is too long"))
                             {
+
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                                     update);
                             }
-                            else if (e.ErrorCode.Equals(112))
+                            else if (e.Message.Contains("Unsupported start tag"))
                             {
                                 Bot.SendReply(
                                     Methods.GetLocaleString(lang, "markdownBroken"), update);
                             }
                             else
                             {
-                                Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                                Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
                     }
@@ -302,22 +308,24 @@ namespace Enforcer5
                         Methods.GetLocaleString(lang, "extraSaved", words[0]));
                     Service.LogCommand(update, update.Message.Text);
                 }
-                catch (ApiRequestException e)
+                catch (AggregateException e)
                 {
-                    if (e.ErrorCode.Equals(118))
+
+                    if (e.Message.Contains("message is too long"))
                     {
+
                         Bot.SendReply(
                             Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
                             update);
                     }
-                    else if (e.ErrorCode.Equals(112))
+                    else if (e.Message.Contains("Unsupported start tag"))
                     {
                         Bot.SendReply(
                             Methods.GetLocaleString(lang, "markdownBroken"), update);
                     }
                     else
                     {
-                        Methods.SendError($"{e.ErrorCode}\n\n{e.Message}", update.Message, lang);
+                        Methods.SendError($"{e.Message}", update.Message, lang);
                     }
                 }
 
@@ -327,7 +335,7 @@ namespace Enforcer5
         [Command(Trigger = "extralist", InGroupOnly = true)]
         public static void ExtraList(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var commands = Redis.db.HashKeysAsync(hash).Result;
 
@@ -345,7 +353,7 @@ namespace Enforcer5
         [Command(Trigger = "extradel", InGroupOnly = true, GroupAdminOnly = true)]
         public static void ExtraDelete(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (args[1] != null)
             {
                 var hash = $"chat:{update.Message.Chat.Id}:extra";
@@ -365,7 +373,7 @@ namespace Enforcer5
         [Command(Trigger = "setlink", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetLink(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var link = "";
             if (update.Message.Chat.Username != null)
             {
@@ -393,12 +401,12 @@ namespace Enforcer5
         [Command(Trigger = "status", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Status(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-            var userId = 0;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            long userId = 0;
             var chatId = update.Message.Chat.Id;
             if (args.Length == 2)
             {
-                if (int.TryParse(args[1], out userId))
+                if (long.TryParse(args[1], out userId))
                 {
 
                 }
@@ -412,12 +420,12 @@ namespace Enforcer5
                 }
                 if (userId > 0)
                 {
-                    var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var user = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                     var status = user.Status;
                     var name = user.User.FirstName;
                     if (user.User.Username != null)
                         name = $"{name} - @{user.User.Username}";
-                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, Convert.ToInt32(userId)))
                         status = ChatMemberStatus.Kicked;
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                     if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -434,12 +442,12 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
-                var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                var user = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                 var status = user.Status;
                 var name = user.User.FirstName;
                 if (user.User.Username != null)
                     name = $"{name} - @{user.User.Username}";
-                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
+                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, Convert.ToInt32(userId)))
                     status = ChatMemberStatus.Kicked;
                 var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                 if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -458,7 +466,7 @@ namespace Enforcer5
         [Command(Trigger = "welcome", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetWelcome(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var chatId = update.Message.Chat.Id;
             if (args.Length == 2)
             {
@@ -574,7 +582,7 @@ namespace Enforcer5
         [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
         public static void DisbleMediaExcempt(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var userId = update.Message.From.Id;
             var chatId = update.Message.Chat.Id;
             if (update.Message.ReplyToMessage != null)
@@ -588,7 +596,7 @@ namespace Enforcer5
         [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
         public static void EnableMediaExcempt(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var userId = update.Message.From.Id;
             var chatId = update.Message.Chat.Id;
             if (update.Message.ReplyToMessage != null)
@@ -603,7 +611,7 @@ namespace Enforcer5
         [Command(Trigger = "check", InGroupOnly = true, GroupAdminOnly = true)]
         public static void CheckGroupUser(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             try
             {
                 try
@@ -625,9 +633,9 @@ namespace Enforcer5
             }
         }      
 
-        public static string Check(int userid, long chatid)
+        public static string Check(long userid, long chatid)
         {
-            var status = Bot.Api.GetChatMemberAsync(chatid, userid).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatid, Convert.ToInt32(userid)).Result.Status;
             var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
             var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
 
@@ -645,14 +653,17 @@ namespace Enforcer5
         public static void AddLogChat(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
                 long channelId;
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                
+                var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
                 if (long.TryParse(args[1], out channelId))
                 {
+                    if (channelId == chat)
+                        return;
                     Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
                     Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
                     Service.LogCommand(update, update.Message.Text);
@@ -664,6 +675,8 @@ namespace Enforcer5
                     if (update.Message.ReplyToMessage.ForwardFromChat != null)
                     {
                         channelId = update.Message.ReplyToMessage.ForwardFromChat.Id;
+                        if (channelId == chat)
+                            return;
                         Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
                         Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
                         Service.LogCommand(update, update.Message.Text);
@@ -682,7 +695,7 @@ namespace Enforcer5
         public static void DeleteLogChannel(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
@@ -708,7 +721,7 @@ namespace Enforcer5
                     !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                 {
                     Bot.SendReply(
-                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
                             "userNotAdmin"), update.Message);
                     return;
                 }
@@ -724,7 +737,7 @@ namespace Enforcer5
             var chatId = update.Message.Chat.Id;
             var userid = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            var warns = (int)Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+            var warns = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
             var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);            
             var userMenu = new Menu(2);
             userMenu.Buttons = new List<InlineButton>
@@ -743,7 +756,7 @@ namespace Enforcer5
         [Callback(Trigger = "userbuttonresetwarn", GroupAdminOnly = true)]
         public static void UserButtonRemWarns(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
              Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);            
              Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
@@ -753,7 +766,7 @@ namespace Enforcer5
         [Callback(Trigger = "userbuttonremwarns", GroupAdminOnly = true)]
         public static void removeWarn(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
             if (res < 0)
@@ -765,7 +778,7 @@ namespace Enforcer5
         [Callback(Trigger = "userbuttonbanuser", GroupAdminOnly = true)]
         public static void UserButtonsBanUser(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var res = Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
@@ -800,11 +813,11 @@ namespace Enforcer5
                 return;
                 
             }
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             var max = 3;
             int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
-            lang = Methods.GetGroupLanguage(call.Message).Doc;
+            
             if (num >= max)
             {
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
@@ -845,7 +858,7 @@ namespace Enforcer5
         [Callback(Trigger = "usermediaremwarns", GroupAdminOnly = true)]
         public static void removeMediaWarn(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId).Result;
             if (res < 0)
@@ -857,7 +870,7 @@ namespace Enforcer5
         [Callback(Trigger = "usermediaresetwarn", GroupAdminOnly = true)]
         public static void RESETmediawarn(CallbackQuery call, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(call.Message).Doc;
+            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,

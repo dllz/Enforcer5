@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
 
 #pragma warning disable CS4014 // Because this call is not ed, execution of the current method continues before the call is completed
@@ -20,7 +23,7 @@ namespace Enforcer5.Handlers
     internal static class UpdateHandler
     {
 
-        internal static Dictionary<int, SpamDetector> UserMessages = new Dictionary<int, SpamDetector>();
+        internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
@@ -43,7 +46,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
+                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");                
                 Botan.log(update.Message, command.Trigger);
             }
             else if (text.Equals("chatMember"))
@@ -86,6 +89,27 @@ namespace Enforcer5.Handlers
             
         }
 
+        private static void Log(InlineQuery update, string text, Models.Queries command = null)
+        {
+            if (command != null)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                if (command.Method != null)
+                {
+                    Console.Write(command.Method.GetMethodInfo().Name);
+                    Botan.log(update, command.Method.GetMethodInfo().Name);
+                }
+                else
+                {
+                    Botan.log(update, "Query");
+                }
+            }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($" Query:  {text}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($" [{update.From.FirstName} {update.From.Id}]");
+        }
+
         private static async void HandleUpdate(Update update)
         {
             {
@@ -106,8 +130,9 @@ namespace Enforcer5.Handlers
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
                 //ignore previous messages
-                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001076212715)
+                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
                 //{
+                //    Bot.Send("please use @enforcerbot", update);
                 //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                 //    Console.WriteLine("LEaving chat");
                 //    return;
@@ -131,6 +156,7 @@ namespace Enforcer5.Handlers
                                 new Task(() => { OnMessage.ArabDetection(update); }).Start();
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
+                                
                             if (update.Message.Text.StartsWith("/"))
                             {
                                 var args = GetParameters(update.Message.Text);
@@ -143,27 +169,26 @@ namespace Enforcer5.Handlers
                                             StringComparison.CurrentCultureIgnoreCase));
                                 if (command != null)
                                 {                                  
-                                    new Task(() => { Log(update, "text", command); }).Start();
+                                    
                                     AddCount(update.Message.From.Id, update.Message.Text);
-                                    //check that we should run the command
-                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
+                                    var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
                                     if (blocked.HasValue)
                                     {
-                                        return;;
+                                        return; ;
                                     }
-                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {                                        
+                                    if (command.DevOnly & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    {
                                         return;
                                     }
                                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
                                     {
                                         Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
+                                    if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
@@ -173,7 +198,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
-                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        var lang = Methods.GetGroupLanguage(update.Message, true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
@@ -187,6 +212,7 @@ namespace Enforcer5.Handlers
                                     }
                                     Bot.CommandsReceived++;
                                      command.Method.Invoke(update, args);
+                                    new Task(() => { Log(update, "text", command); }).Start();
                                 }
                             }
                             else if (update.Message.Text.StartsWith("#"))
@@ -225,7 +251,7 @@ namespace Enforcer5.Handlers
                                     {
                                         return; ;
                                     }
-                                    if (command.DevOnly & !Constants.Devs.Contains(update.Message.From.Id))
+                                    if (command.DevOnly & !Constants.Devs.Contains((long)update.Message.From.Id))
                                     {
                                         return;
                                     }
@@ -233,7 +259,7 @@ namespace Enforcer5.Handlers
                                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message).Doc,
+                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
@@ -243,7 +269,7 @@ namespace Enforcer5.Handlers
                                     }
                                     if (command.RequiresReply & update.Message.ReplyToMessage == null)
                                     {
-                                        var lang = Methods.GetGroupLanguage(update.Message);
+                                        var lang = Methods.GetGroupLanguage(update.Message,true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
@@ -319,6 +345,16 @@ namespace Enforcer5.Handlers
                                         return; ;
                                     }
                                     new Task(() => { Log(update, "chatMember"); }).Start();
+                                    var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
+                                    if (isBanned.HasValue)
+                                    {
+#if normal
+                                        Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
+#endif
+#if premium
+                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
+#endif
+                                    }
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
                                          Service.BotAdded(update.Message);
@@ -349,104 +385,25 @@ namespace Enforcer5.Handlers
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
+                        case MessageType.GameMessage:
+                            break;
                         default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                catch (ApiRequestException e)
-                {
-                    Console.WriteLine(e);
-                    try
-                    {                        
-                        if (e.ErrorCode == 112)
-                        {
-                            if (update.Message != null && update.Message.Chat.Title != null)
-                            {
-                                var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                                Bot.SendReply(
-                                    Methods.GetLocaleString(lang, "markdownBroken"), update);
-                            }
-                            else
-                            {
-                                Bot.SendReply("The markdown in this text is broken", update);
-                            }
-                        }
-                        else if (e.ErrorCode == 403)
-                        {
-                            var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                            var startMe = new Menu(1)
-                            {
-                                Buttons = new List<InlineButton>
-                                {
-                                    new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                        url: $"https://t.me/{Bot.Me.Username}")
-                                }
-                            };
-                            Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), update, Key.CreateMarkupFromMenu(startMe));
-                        }
-                        else
-                        {
-                            Bot.SendReply($"{e.ErrorCode}\n{e.Message}, 1231", update);
-                            Bot.Send($"1\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
-                        }                        
-                    }
-                    catch (ApiRequestException ex)
-                    {
-                        //fuckit  
-                        Console.WriteLine(ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        //fuckit
-                        Console.WriteLine(ex);
+                            return;
+                            break;
                     }
                 }
                 catch (AggregateException e)
                 {
                     Console.WriteLine(e);
-                    Bot.Send($"{e.InnerExceptions[0]}\n{e.StackTrace}", update);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
-                    try
-                    {
-                        if (ex.Message.Equals("UnableToResolveUsername"))
-                        {
-                            Bot.Send($"an error occured:\n{ex.Message}", update);
-                        }
-                        else
-                        {
-                            Bot.Send($"Please contact @werewolfsupport, an error occured:\n{ex.Message}", update);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        //fuckit
-                        Console.WriteLine(e);
-                    }
-                    try
-                    {
-                         Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", -1001076212715);
-                    }
-                    catch (Exception et)
-                    {
-                        Console.WriteLine(et);
-                        try
-                        {
-                             Bot.Send($"@falconza shit happened\n{ex.Message}\n\n{ex.StackTrace}", Constants.Devs[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            //fuckit
-                            Console.WriteLine(e);
-                        }
-                    }
+                    Console.WriteLine(ex);                    
                 }
             }
         }
 
-        private static void AddCount(int id, string command)
+        private static void AddCount(long id, string command)
         {
             try
             {
@@ -454,7 +411,7 @@ namespace Enforcer5.Handlers
                     UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
                 UserMessages[id].Messages.Add(new UserMessage(command));
             }
-            catch
+            catch (Exception e)
             {
                 // ignored
             }
@@ -469,18 +426,17 @@ namespace Enforcer5.Handlers
                 Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
                 if (updateMessage?.From?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                    
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                                   
                     Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.From.Username.ToLower()}");
                 }
                 if (updateMessage?.ForwardFrom?.Username != null)
                 {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    Redis.db.HashSetAsync($"bot:usernames:{updateMessage.Chat.Id}", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);
-                    Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
+                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);                    
+                    Redis.db.HashSetAsync($"user:{updateMessage.ForwardFrom.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
                 }
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {
+                    Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:details", "name", updateMessage.Chat.Title);
                     if (updateMessage?.From != null)
                     {
                         Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
@@ -500,6 +456,12 @@ namespace Enforcer5.Handlers
                         Service.NewSetting2(updateMessage.Chat.Id);
                         Redis.db.SetAddAsync("lenghtUpdate", updateMessage.Chat.Id);
                     }
+                    updated = Redis.db.SetContainsAsync("dbUpdate:lenghtUpdate", updateMessage.Chat.Id).Result;
+                    if (!updated)
+                    {
+                        Service.NewSetting3(updateMessage.Chat.Id);
+                        Redis.db.SetAddAsync("dbUpdate:lenghtUpdate", updateMessage.Chat.Id);
+                    }
                     updated = Redis.db.SetContainsAsync("dbUpdate:lenghtUpdat4", $"{updateMessage.Chat.Id}:{updateMessage.From.Id}").Result;
                     if (!updated)
                     {
@@ -518,7 +480,19 @@ namespace Enforcer5.Handlers
            
         private static string[] GetParameters(string input)
         {
+            if (input.Length == 0)
+            {
+                return new string[] {"", null};
+            }
             return input.Contains(" ") ? new[] { input.Substring(1, input.IndexOf(" ")).Trim(), input.Substring(input.IndexOf(" ") + 1) } : new[] { input.Substring(1).Trim(), null };
+        }
+        private static string[] GetInlineParameters(string input)
+        {
+            if (input.Length == 0)
+            {
+                return new string[] { "", null };
+            }
+            return input.Contains(" ") ? new[] { input.Substring(0, input.IndexOf(" ")).Trim(), input.Substring(input.IndexOf(" ") + 1) } : new[] { input, null };
         }
         private static string[] GetCallbackParameters(string input)
         {
@@ -631,10 +605,10 @@ namespace Enforcer5.Handlers
                 Thread.Sleep(1000);
             }
         }
-        internal static Message Send(string message, long id, bool clearKeyboard = false,
+        internal static Message Send(string message, long id,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
-            return Bot.Send(message, id, clearKeyboard, customMenu, parseMode);
+            return Bot.Send(message, id, customMenu, parseMode);
         }
 
         public static void InlineQueryReceived(object sender, InlineQueryEventArgs e)
@@ -644,37 +618,87 @@ namespace Enforcer5.Handlers
         
         internal static void HandleInlineQuery(InlineQuery q)
         {
+            try
+            {
+                var query = q.Query;
+                var com = GetInlineParameters(query);
+                var results = new List<InlineQueryResultArticle>();
+                var userLang = Methods.GetGroupLanguage(q.From).Doc;
+                
+                Models.Queries matchedTrigger = null;
+                if(!string.IsNullOrEmpty(com[0]))
+                {
+                    try
+                    {
+                        matchedTrigger = Bot.Queries.First(x => x.Trigger.Contains(com[0]));
+                    }
+                    catch (Exception e)
+                    {
+                        //nothing happens                        
+                    }                   
+                }
+                if (matchedTrigger == null)
+                    matchedTrigger = new Models.Queries()
+                    {
+                        Trigger = ""
+                    };
+               var optionDictionary = new Dictionary<string, string>();
+                new Task(() => { Log(q, query, matchedTrigger); }).Start();
+                if (string.IsNullOrEmpty(matchedTrigger.Trigger) && !string.IsNullOrEmpty(com[0]))
+                {
+                    var helpArticles = InlineMethods.GetHelpArticles(com[0], userLang);
+                    foreach (var help in helpArticles)
+                    {
+                        var des = new string(help.details.Take(50).ToArray());
+                        results.Add(new InlineQueryResultArticle
+                        {
+                            Description = $"{des}...",
+                            Title = $"{help.name}",
+                            Id = help.name,
+                            InputMessageContent = new InputTextMessageContent
+                            {
+                                DisableWebPagePreview = true,
+                                MessageText = help.details,
+                                ParseMode = ParseMode.Html
+                            }
+                        });
+                    }
+                }
+                else
+                {
 
-            //var commands = new InlineCommand[]
-            //{
-            //    new StatsInlineCommand(q.From),
-            //};
-            
-            //List<InlineCommand> choices;
-            //if (String.IsNullOrWhiteSpace(q.Query))
-            //{
-            //    //show all commands available
-            //    choices = commands.ToList();
-            //}
-            //else
-            //{
-            //    //let's figure out what they wanted
-            //    var com = q.Query;
-            //    choices = commands.Where(command => command.Command.StartsWith(com) || Commands.ComputeLevenshtein(com, command.Command) < 3).ToList();
-            //}
+                    if (!string.IsNullOrEmpty(matchedTrigger.Trigger))
+                    {
+                        results = matchedTrigger.Method.Invoke(q.From, com, userLang);
+                    }
+                    else
+                    {
+                        var choices = Bot.Queries.Where(x => x.Trigger.ToLower().Contains(query.ToLower()));
+                        foreach (var choice in choices)
+                        {
+                            results.Add(new InlineQueryResultArticle()
+                            {
+                                Description = Methods.GetLocaleString(userLang, $"{choice.Trigger}Description"),
+                                Title = $"{choice.Title}",
+                                Id = choice.Trigger,
+                                InputMessageContent = new InputTextMessageContent()
+                                {
+                                    DisableWebPagePreview = true,
+                                    MessageText = Methods.GetLocaleString(userLang, "typeMore"),
+                                    ParseMode = ParseMode.Default
+                                }
+                            });
+                        }
+                    }
+                }
+                var menu = results.Take(50).Cast<InlineQueryResult>().ToArray();
+                var res = Bot.Api.AnswerInlineQueryAsync(q.Id, menu, 0).Result;
 
-            //Bot.Api.AnswerInlineQuery(q.Id, choices.Select(c => new InlineQueryResultArticle()
-            //{
-            //    Description = c.Description,
-            //    Id = c.Command,
-            //    Title = c.Command,
-            //    InputMessageContent = new InputTextMessageContent
-            //    {
-            //        DisableWebPagePreview = true,
-            //        MessageText = c.Content,
-            //        ParseMode = ParseMode.Html
-            //    }
-            //}).Cast<InlineQueryResult>().ToArray(), 0, true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+            }
         }
 
         public static void CallbackHandler(object sender, CallbackQueryEventArgs e)
@@ -740,7 +764,14 @@ namespace Enforcer5.Handlers
                         }
                         Bot.CommandsReceived++;
                         new Task(() => { Log(update, callbacks); }).Start();
-                         callbacks.Method.Invoke(update, args);
+                        try
+                        {
+                            callbacks.Method.Invoke(update, args);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                        }                         
                     }
                 }
                 catch (ApiRequestException e)

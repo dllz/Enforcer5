@@ -34,7 +34,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -75,14 +75,17 @@ namespace Enforcer5
                                 switch (action.Value.ToString())
                                 {
                                     case "kick":
-                                        Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                       
-                                        Bot.Send(
-                                            Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
-                                            update);
+                                        var res = Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                        if (res)
+                                        {
+                                        Methods.SaveBan(update.Message.From.Id, "flood");
+                                            Bot.Send(
+                                                Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
+                                                update);
+                                    }
                                     break;
                                     case "ban":
-                                    var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                     res = Methods.BanUser(chatId, update.Message.From.Id, lang);
                                         if (res)
                                         {
                                         Methods.SaveBan(update.Message.From.Id, "flood");
@@ -94,6 +97,7 @@ namespace Enforcer5
                                         break;
                                 case "warn":
                                         Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
+                                    Methods.SaveBan(update.Message.From.Id, "flood");
                                     break;
                                 case "tempban":
 
@@ -102,7 +106,11 @@ namespace Enforcer5
                                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                                     var message = Methods.GetLocaleString(lang, "tempbannedForFlood",
                                         $"{update.Message.From.Id}", timeText);
-                                    Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message);
+                                    res = Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message);
+                                    if (res)
+                                    {
+                                        Methods.SaveBan(update.Message.From.Id, "flood");
+                                    }
                                     break;
                              }
 
@@ -141,7 +149,7 @@ namespace Enforcer5
                     XDocument lang;
                     try
                     {
-                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     }
                     catch (NullReferenceException e)
                     {
@@ -217,7 +225,7 @@ namespace Enforcer5
                     XDocument lang;
                     try
                     {
-                        lang = Methods.GetGroupLanguage(update.Message).Doc;
+                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     }
                     catch (NullReferenceException e)
                     {
@@ -307,7 +315,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -397,7 +405,7 @@ namespace Enforcer5
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -507,7 +515,7 @@ namespace Enforcer5
 
                 if (found)
                 {                   
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                     var name = update.Message.From.FirstName;
                     var lastName = "x";
                     if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";

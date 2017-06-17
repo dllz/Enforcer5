@@ -20,8 +20,8 @@ namespace Enforcer5
             var textSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:antitextlengthsettings").Result;
 
             var menu = new Menu(2);
-            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nameSettingsHeader")));
-            menu.Buttons.Add(new InlineButton($"{nameSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value}"));
+            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nameSettingsHeader"), "null"));
+            menu.Buttons.Add(new InlineButton($"{nameSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value}", "null"));
             foreach (var mem in nameSettings)
             {
                 if (mem.Value.Equals("yes"))
@@ -51,8 +51,8 @@ namespace Enforcer5
                     }
                 
             }
-            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "textSettingsHeader")));
-            menu.Buttons.Add(new InlineButton($"{textSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value} : {textSettings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value}"));
+            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "textSettingsHeader"), "null"));
+            menu.Buttons.Add(new InlineButton($"{textSettings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value} : {textSettings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value}", "null"));
             foreach (var mem in textSettings)
             {
                 if (mem.Value.Equals("yes"))
@@ -100,7 +100,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "lengthMenu", lang.Base);
             var keys = Commands.genAntiLengthMenu(chatId, lang.Doc);
-            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
+            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup:keys);
         }
 
         [Callback(Trigger = "namesettingsaction", GroupAdminOnly = true)]

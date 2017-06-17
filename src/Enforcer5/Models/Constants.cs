@@ -7,9 +7,9 @@ namespace Enforcer5.Models
 {
     public class Constants
     {
-        public static int[] Devs = {125311351, 295152997, 129046388};
+        public static long[] Devs = {125311351, 295152997, 129046388};
         public const int EnforcerDb = 0;
-        public static int[] GlobalAdmins = {125311351};
+        public static long[] GlobalAdmins = {125311351};
         private const string aPIKey = "";
         public static long SupportId = -1001060486754;
 

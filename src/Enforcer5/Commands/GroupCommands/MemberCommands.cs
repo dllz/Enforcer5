@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,12 +17,13 @@ namespace Enforcer5
         [Command(Trigger = "about", InGroupOnly = true)]
         public static void About(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var chatId = update.Message.Chat.Id;
             var text = Methods.GetAbout(chatId, lang);
             if (Methods.SendInPm(update.Message, "About"))
             {
-                Bot.Send(text, update.Message.From.Id);
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -32,11 +34,12 @@ namespace Enforcer5
         [Command(Trigger = "rules", InGroupOnly = true)]
         public static void Rules(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetRules(update.Message.Chat.Id, lang);
             if (Methods.SendInPm(update.Message, "Rules"))
             {
-                Bot.Send(text, update.Message.From.Id);
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -47,7 +50,7 @@ namespace Enforcer5
         [Command(Trigger = "adminlist", InGroupOnly = true)]
         public static void AdminList(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
             var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
             if (mods.Count > 0)
@@ -56,7 +59,8 @@ namespace Enforcer5
             }
             if (Methods.SendInPm(update.Message, "Modlist"))
             {
-                Bot.Send(text, update.Message.From.Id);
+                lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                Bot.SendToPm(text, update);
                 Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
             }
             else
@@ -73,12 +77,29 @@ namespace Enforcer5
             var chat = update.Message.Chat.Id;
             try
             {
-                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true);
+                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
             }
             catch (AggregateException e)
             {
-                var lang = Methods.GetGroupLanguage(update.Message).Doc;
-                Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                {
+                    var lang = Methods.GetGroupLanguage(chat).Doc;
+                    var startMe = new Menu(1)
+                    {
+                        Buttons = new List<InlineButton>
+                        {
+                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                url: $"https://t.me/{Bot.Me.Username}")
+                        }
+                    };
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
+                    
+                }
+                else
+                {
+                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                }
             }
         }
 
@@ -124,7 +145,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -136,7 +157,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;
+                    var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -154,7 +175,7 @@ namespace Enforcer5
             {
                 msgToReplyTo = update.Message.MessageId;
             }
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
             var text = Methods.GetLocaleString(lang, "Support");
             Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);
         }
@@ -162,20 +183,16 @@ namespace Enforcer5
         [Command(Trigger = "me")]
         public static void Me(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
             try
             {
                 var userid = update.Message.From.Id;
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-                Bot.Send(text, update.Message.From.Id);
-                if (update.Message.Chat.Type != ChatType.Private)
+                var res = Bot.SendToPm(text, update);
+                if (update.Message.Chat.Type != ChatType.Private && res != null)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
                 }
-            }
-            catch (ApiRequestException e)
-            {
-                Bot.SendReply(Methods.GetLocaleString(lang, "startMe"), update);
             }
             catch (AggregateException e)
             {
@@ -186,7 +203,7 @@ namespace Enforcer5
         [Command(Trigger = "link", InGroupOnly = true)]
         public static void Link(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
             if (link.Equals("no") || link.IsNullOrEmpty)
             {
@@ -200,7 +217,7 @@ namespace Enforcer5
 
         public static void SendExtra(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var text = Redis.db.HashGetAsync(hash, args[0]).Result;
             if (!text.HasValue)
@@ -236,54 +253,59 @@ namespace Enforcer5
                         switch (specialMethod)
                         {
                             case "voice":
-                                Bot.Api.SendVoiceAsync(update.Message.Chat.Id, fileId,
+                                Bot.Api.SendVoiceAsync(update.Message.Chat.Id, new FileToSend(fileId),
                                     replyToMessageId: repId);
                                 break;
                             case "video":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId, caption: caption,
+                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, new FileToSend(fileId), caption: caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, fileId,
+                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
                             case "photo":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId, caption,
+                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, new FileToSend(fileId), caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, fileId,
+                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
+                                break;
+
+                            case "videoNote":
+                                    Bot.Api.SendVideoNoteAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                        replyToMessageId: repId);
                                 break;
                             case "gif":
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, caption,
+                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId), caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
                             default:
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId, text,
+                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId), text,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, fileId,
+                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
@@ -291,12 +313,12 @@ namespace Enforcer5
                     }
                     else if (!string.IsNullOrEmpty(hasMedia))
                     {
-                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia, text,
+                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(hasMedia), text,
                             replyToMessageId: repId);
                     }
                     else
                     {
-                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, hasMedia,
+                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(hasMedia),
                             replyToMessageId: repId);
                     }
                 }

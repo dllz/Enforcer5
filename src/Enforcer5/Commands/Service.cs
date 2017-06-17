@@ -106,7 +106,7 @@ namespace Enforcer5
             {
                 return;
             }
-            switch (message.NewChatMember.Id)
+            switch (int.Parse(message.NewChatMember.Id))
             {
                 case 352277339://Phyto
                     Bot.Send("Error 404", chatId);
@@ -122,18 +122,18 @@ namespace Enforcer5
                     break;
                 case 125311351://Daniel
 #if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfDe5MFy-IHCAI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfDe5MFy-IHCAI"));
 #endif
 #if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADZCgAApwaZAfmRkSuLkIV9AI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfmRkSuLkIV9AI"));
 #endif
                     break;
                 case 223494929:
 #if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAfnHwfv4ufK6wI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAfnHwfv4ufK6wI"));
 #endif
 #if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, "CgADBAADOCEAAhsXZAePhP7wDwUKmgI");
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAePhP7wDwUKmgI"));
 #endif
                     break;
                 case 263451571://Michelle
@@ -154,7 +154,7 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        Bot.Api.SendDocumentAsync(message.Chat.Id, file_id);
+                        Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id));
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
@@ -163,7 +163,7 @@ namespace Enforcer5
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            Bot.Api.SendDocumentAsync(message.Chat.Id, file, text);
+                            Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text);
                         }
                         else
                         {
@@ -176,7 +176,7 @@ namespace Enforcer5
                         XDocument lang;
                         try
                         {
-                            lang = Methods.GetGroupLanguage(message).Doc;
+                            lang = Methods.GetGroupLanguage(message,true).Doc;
                         }
                         catch (NullReferenceException e)
                         {
@@ -254,7 +254,7 @@ namespace Enforcer5
         public static void BotAdded(Message updateMessage)
         {
             var groupBan = Redis.db.HashGetAsync($"groupBan:{updateMessage.Chat.Id}", "banned").Result;
-            var lang = Methods.GetGroupLanguage(updateMessage).Doc;
+            var lang = Methods.GetGroupLanguage(updateMessage,true).Doc;
             if (groupBan.Equals("1"))
             {
                
@@ -287,7 +287,7 @@ namespace Enforcer5
 
         public static void ResetUser(Message message)
         {
-            var lang = Methods.GetGroupLanguage(message).Doc;
+            var lang = Methods.GetGroupLanguage(message,true).Doc;
             Methods.UnbanUser(message.Chat.Id, message.NewChatMember.Id, lang);
         }   
 
@@ -338,10 +338,10 @@ namespace Enforcer5
             }
         }
 
-        public static void removeWarn0(long chatid, int userId)
+        public static void removeWarn0(long chatid, long userId)
         {
-            var currentMedia = (int)Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result;
-            var currentWarn = (int)Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result;
+            var currentMedia = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result);
+            var currentWarn = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result);
 
             if (currentWarn < 0)
             {
@@ -443,7 +443,7 @@ namespace Enforcer5
 
          public static void LogDevCommand(Update update, string command)
         {          
-                var adminUserId = update.Message.From.Id;
+                long adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
                 if(update.Message.ReplyToMessage != null)
@@ -455,7 +455,7 @@ namespace Enforcer5
         }
 
 
-        public static void LogCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
+        public static void LogCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -490,7 +490,7 @@ namespace Enforcer5
 
         }
 
-        public static void LogDevCommand(long chatId, int adminId, string adminName, string groupname, string command, string replyto = "")
+        public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")
         {
             var lang = Methods.GetGroupLanguage(-1001076212715).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -520,6 +520,34 @@ namespace Enforcer5
             }
 
 
-       
+        public static void NewSetting3(ChatId chatid)
+        {
+            object[,,] defaultSettings =
+            {
+                {
+                    { "settings", "Help", "yes"},                   
+                }
+            };
+
+
+            var num = 0;
+            for (int i = 0; i < defaultSettings.GetLength(0); i++)
+            {
+                for (int j = 0; j < defaultSettings.GetLength(1); j++)
+                {
+                    var hash = $"chat:{chatid}:{defaultSettings[i, j, 0]}";
+                    var value = defaultSettings[i, j, 1];
+                    var setting = defaultSettings[i, j, 2];
+                    if (int.TryParse(setting.ToString(), out num))
+                    {
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
+                    }
+                    else if (setting is string)
+                    {
+                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                    }
+                }
+            }
+        }
     }
 }

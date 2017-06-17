@@ -27,6 +27,7 @@ namespace Enforcer5.Helpers
                             {
                                 Url = cur.Url
                             });
+
                         }
                         else
                         {
@@ -69,6 +70,7 @@ namespace Enforcer5.Helpers
                                 {
                                     Url = cur.Url
                                 });
+                                                            
                             }
                             else
                             {

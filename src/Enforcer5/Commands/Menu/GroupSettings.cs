@@ -21,7 +21,7 @@ namespace Enforcer5
             mainMenu.Buttons = new List<InlineButton>();
             foreach (var mem in settings)
             {
-                if (mem.Name.Equals("Flood") || mem.Name.Equals("Report") || mem.Name.Equals("Welcome"))
+                if (mem.Name.Equals("Flood") | mem.Name.Equals("Report") | mem.Name.Equals("Welcome"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                         $"menusettings:{mem.Name}"));
@@ -34,8 +34,8 @@ namespace Enforcer5
                         mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
                     }
                 }
-                else if (mem.Name.Equals("Modlist") || mem.Name.Equals("About") || mem.Name.Equals("Rules") ||
-                         mem.Name.Equals("Extra"))
+                else if (mem.Name.Equals("Modlist") | mem.Name.Equals("About") | mem.Name.Equals("Rules") |
+                         mem.Name.Equals("Extra") | mem.Name.Equals("Help"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                         $"menusettings:{mem.Name}"));
@@ -194,6 +194,31 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var option = "Rules";
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
+            if (current.Equals("yes"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
+                var keys = Commands.genGroupSettingsMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
+                    replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+            else if (current.Equals("no"))
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
+                var keys = Commands.genGroupSettingsMenu(chatId, lang);
+                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
+                    replyMarkup: keys);
+                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            }
+        }
+
+        [Callback(Trigger = "menuHelp", GroupAdminOnly = true)]
+        public static void MenuHelp(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var option = "Help";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
             if (current.Equals("yes"))

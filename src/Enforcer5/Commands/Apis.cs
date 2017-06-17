@@ -27,7 +27,7 @@ namespace Enforcer5
             {
                 var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
                 //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
-                var lang = Methods.GetGroupLanguage(msg).Doc;
+                var lang = Methods.GetGroupLanguage(msg, true).Doc;
                 try
                 {
                     var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
@@ -154,7 +154,7 @@ namespace Enforcer5
         public static void SetClient(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             try
             {
                 var appInfo = args[1].Split(' ');
@@ -212,7 +212,7 @@ namespace Enforcer5
             Message msg = update.Message;
             var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
             //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
-            var lang = Methods.GetGroupLanguage(msg).Doc;
+            var lang = Methods.GetGroupLanguage(msg, true).Doc;
             try
             {
                 var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();

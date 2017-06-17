@@ -23,8 +23,8 @@ namespace Enforcer5
         [Command(Trigger = "missinghcommands", UploadAdmin = true)]
         public static void MissingHcommands(Update update, string[] args)
         {
-            var commands = Bot.Commands.Select(e => e.Trigger).ToList();
-            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').ToList();
+            var commands = Bot.Commands.Select(e => e.Trigger.ToLower()).ToList();
+            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').Select(e => e.ToLower()).ToList();
 
             string missing = "<b>Missing hcommand strings:</b>\n";
 
@@ -207,7 +207,7 @@ namespace Enforcer5
         [Command(Trigger = "getrekt", DevOnly = true)]
         public static void GlobalBan(Update update, string[] args)
         {
-            int userId = 0;
+            long userId = 0;
             string moti = "";
             if (update.Message.ReplyToMessage != null)
             {
@@ -266,10 +266,10 @@ namespace Enforcer5
              Bot.SendReply("Deactivated", update);
         }
 
-        [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
+        [Command(Trigger = "unrekt", DevOnly = true)]
         public static void Unrekt(Update update, string[] args)
         {
-            int userId = 0;
+            long userId = 0;
             string moti = "";
             if (update.Message.ReplyToMessage != null)
             {
@@ -314,7 +314,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "leave", GlobalAdminOnly = true)]
+        [Command(Trigger = "leave", DevOnly = true)]
         public static void LeaveChat(Update update, string[] args)
         {
             try
@@ -368,11 +368,38 @@ namespace Enforcer5
             Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
         }
 
+        [Command(Trigger = "langcode")]
+        public static void GetUserLangCode(Update update, string[] args)
+        {
+            try
+            {
+                if (update.Message.ReplyToMessage != null)
+                {
+                    if (update.Message.ReplyToMessage.ForwardFrom != null)
+                    {
+                        Bot.Send($"{update.Message.ReplyToMessage.ForwardFrom.LanguageCode}", update.Message.Chat.Id);
+                    }
+                    else
+                    {
+                        Bot.Send($"{update.Message.ReplyToMessage.From.LanguageCode}", update.Message.Chat.Id);
+                    }
+                }
+                else
+                {
+                    Bot.Send($"{update.Message.From.LanguageCode}", update.Message.Chat.Id);
+                }
+            }
+            catch (Exception e)
+            {
+                Bot.SendReply(e.Message, update);
+            }
+        }
+
 
         [Command(Trigger = "getuser", DevOnly = true)]
         public static void GetUserDetails(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var userid = Methods.GetUserId(update, args);
             var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{userid}").Result;
@@ -412,6 +439,15 @@ namespace Enforcer5
                  Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
             }
              Bot.SendReply("done", update);
+        }
+
+        [Command(Trigger = "whois", DevOnly = true)]
+        public static void WhoIs(Update update, string[] args)
+        {
+            var id = Methods.GetUserId(update, args);
+            var username = Methods.GetUsername(id);           
+            Bot.SendReply($"ID: {id}\nUsername: {username}", update);
+
         }
     }
 

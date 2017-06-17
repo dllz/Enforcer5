@@ -13,7 +13,7 @@ namespace Enforcer5
         [Command(Trigger = "maxnl", InGroupOnly = true, GroupAdminOnly = true)]
         public static void MaxNameLength(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {
@@ -26,7 +26,7 @@ namespace Enforcer5
         [Command(Trigger = "maxtl", InGroupOnly = true, GroupAdminOnly = true)]
         public static void MaxTextLength(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {
@@ -39,7 +39,7 @@ namespace Enforcer5
         [Command(Trigger = "maxl", InGroupOnly = true, GroupAdminOnly = true)]
         public static void MaxLines(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message).Doc;
+            var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             int chars;
             if (Int32.TryParse(args[1], out chars))
             {

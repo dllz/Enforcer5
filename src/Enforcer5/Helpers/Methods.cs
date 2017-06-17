@@ -24,30 +24,30 @@ namespace Enforcer5.Helpers
 {
     public static class Methods
     {
-        public static bool KickUser(long chatId, int userId, XDocument doc)
+        public static bool KickUser(long chatId, long userId, XDocument doc)
         {
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId, CancellationToken.None).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), CancellationToken.None).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                    var check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                     var status = check.Status;
                     var count = 0;
 
                     while (status == ChatMemberStatus.Member && count < 10)
                     {
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                        check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
                         count++;
                     }
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
-                         Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                         Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
+                        check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
                         count++;
                     }
@@ -107,12 +107,12 @@ namespace Enforcer5.Helpers
             return str?.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
         }
 
-        public static Language GetGroupLanguage(Message uMessage)
+        public static Language GetGroupLanguage(User user)
         {
-            var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
-            if (lang.HasValue)
+            if (user.LanguageCode != null)
             {
-                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                var language = user.LanguageCode.ToLower();
+                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
                 try
                 {
                     if (res != null)
@@ -121,7 +121,15 @@ namespace Enforcer5.Helpers
                     }
                     else
                     {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
                     }
                 }
                 catch (NullReferenceException e)
@@ -133,7 +141,99 @@ namespace Enforcer5.Helpers
             {
                 return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
             }
+            
         }
+
+        public static Language GetGroupLanguage(Message uMessage, bool InGroupOnly)
+        {
+            if (InGroupOnly)
+            {
+                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
+                if (lang.HasValue)
+                {
+                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                    try
+                    {
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                else
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+            else if (uMessage.From.LanguageCode != null)
+            {
+
+                var language = uMessage.From.LanguageCode.ToLower();
+                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
+                try
+                {
+                    if (res != null)
+                    {
+                        return res;
+                    }
+                    else
+                    {
+                        language = language.Substring(0, 2);
+                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+            else
+            {
+                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
+                if (lang.HasValue)
+                {
+                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
+                    try
+                    {
+                        if (res != null)
+                        {
+                            return res;
+                        }
+                        else
+                        {
+                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    }
+                }
+                else
+                {
+                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                }
+            }
+
+        }
+
+
 
         internal static string GetHelpList(XDocument file)
         {
@@ -200,7 +300,7 @@ namespace Enforcer5.Helpers
                     {
                         args[i] = args[i].ToString().FormatHTML();
                     }
-                }
+                }   
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
@@ -320,7 +420,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static string GetNick(Message msg, string[] args, int userid = 0, bool sender = false)
+        public static string GetNick(Message msg, string[] args, long userid = 0, bool sender = false)
         {
             if (sender)
             {
@@ -340,9 +440,9 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static int GetUserId(Update update, string[] args)
+        public static long GetUserId(Update update, string[] args)
         {
-            var lang = GetGroupLanguage(update.Message).Doc;
+            var lang = GetGroupLanguage(update.Message,true).Doc;
             if (update.Message.NewChatMember != null)
             {
                 return update.Message.NewChatMember.Id;
@@ -402,7 +502,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static void SaveBan(int userId, string banType)
+        public static void SaveBan(long userId, string banType)
         {
             Redis.db.HashIncrementAsync($"ban:{userId}", banType);
         }
@@ -412,7 +512,7 @@ namespace Enforcer5.Helpers
             return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
         }
 
-        public static bool IsGroupAdmin(int user, long group)
+        public static bool IsGroupAdmin(long user, long group)
         {
             //fire off admin request
             var isAdmin = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
@@ -420,26 +520,31 @@ namespace Enforcer5.Helpers
             {
                 return true;
             }
+            else if (isAdmin.Equals("false"))
+            {
+                return false;
+            }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, user).Result;                
+                var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
                 }
                 else
                 {
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(10)).Result;
                     return false;
                 }
             }
             catch
-            {
+            {                
                 return false;
             }
         }
 
-        public static bool IsGlobalAdmin(int id)
+        public static bool IsGlobalAdmin(long id)
         {
             return Constants.GlobalAdmins.Contains(id);
         }
@@ -507,7 +612,7 @@ namespace Enforcer5.Helpers
             return dest;
         }
 
-        public static string GetUserInfo(int userid, long? chatId, string chatTitle, XDocument lang)
+        public static string GetUserInfo(long userid, long? chatId, string chatTitle, XDocument lang)
         {
             var text = GetLocaleString(lang, "userInfoGlobal");
             var hash = $"ban:{userid}";
@@ -522,13 +627,13 @@ namespace Enforcer5.Helpers
                 int warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
                 {
-                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result;
+                    warns = Convert.ToInt32( Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
                 warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
                 {
-                    warns = (int) Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result;
+                    warns = Convert.ToInt32( Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
             }
@@ -553,7 +658,9 @@ namespace Enforcer5.Helpers
             }                
             try
             {
-                int banned = int.Parse(isBanned[0].Value);                
+                int banned = 0;
+                    if(isBanned.Length > 0)
+                        banned = int.Parse(isBanned[0].Value);          
                 if (banned == 1)
                 {
                     var reason = isBanned[1].Value;
@@ -570,7 +677,7 @@ namespace Enforcer5.Helpers
                         return;
                     }
                     Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
-                    var lang = Methods.GetGroupLanguage(update.Message).Doc;                    
+                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;                    
                     
                     try
                     {
@@ -603,11 +710,11 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool BanUser(long chatId, int userId, XDocument doc)
+        public static bool BanUser(long chatId, long userId, XDocument doc)
         {
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
@@ -631,7 +738,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static void AddBanList(long chatId, int userId, string name, string why)
+        public static void AddBanList(long chatId, long userId, string name, string why)
         {
             var hash = $"chat:{chatId}:bannedlist";
             var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
@@ -685,14 +792,20 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool UnbanUser(long chatId, int userId, XDocument doc)
+        public static DateTime FromUnixTime(this long unixTime)
+        {
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return epoch.AddSeconds(unixTime);
+        }
+
+        public static bool UnbanUser(long chatId, long userId, XDocument doc)
         {
             try
             {
-                var res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                var res = Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                 while (!res.Result)
                 {
-                    res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
+                    res = Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                     
                 }
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
@@ -744,6 +857,10 @@ namespace Enforcer5.Helpers
                 {
                     return msg.ReplyToMessage.MessageId.ToString();
                 }
+                if (msg.ReplyToMessage.VideoNote != null)
+                {
+                    return msg.ReplyToMessage.VideoNote.FileId;
+                }              
                 else
                 {
                     return "unknown";
@@ -755,6 +872,10 @@ namespace Enforcer5.Helpers
                 if (msg.Photo != null)
                 {
                     return msg.Photo.Last().FileId;
+                }
+                if (msg.VideoNote != null)
+                {
+                    return msg.VideoNote.FileId;
                 }
                 if (msg.Document != null)
                 {
@@ -780,7 +901,7 @@ namespace Enforcer5.Helpers
                 if (msg.Text != null)
                 {
                     return msg.MessageId.ToString();
-                }
+                }                
                 else
                 {
                     return "unknown";
@@ -845,7 +966,7 @@ namespace Enforcer5.Helpers
 
 
         public static string GetMediaType(Message msg)
-        {            
+        {
             if (msg.Photo != null)
             {
                 return "photo";
@@ -864,7 +985,7 @@ namespace Enforcer5.Helpers
             if (msg.Voice != null)
             {
                 return "voice";
-            }
+            }           
             if (msg.Sticker != null)
             {
                 return "sticker";
@@ -880,6 +1001,10 @@ namespace Enforcer5.Helpers
             if (msg.Text != null)
             {
                 return "text";
+            }
+            if (msg.VideoNote != null)
+            {
+                return "videoNote";
             }
             else
             {
@@ -930,7 +1055,10 @@ namespace Enforcer5.Helpers
                     break;
                 case MessageType.ContactMessage:
                     return "contact";
-                    break;                
+                    break; 
+                    case MessageType.VideoNoteMessage:
+                        return "videoNote";
+                        break;               
                 default:
                     return "unknown";
                     break;
@@ -982,7 +1110,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool IsLangAdmin(int id)
+        public static bool IsLangAdmin(long id)
         {
             var res = Redis.db.SetContainsAsync($"langAdmins", id).Result;
             return res;
@@ -1028,6 +1156,14 @@ namespace Enforcer5.Helpers
                 return res;
             }
             return res;
+        }
+
+        public static object GetUsername(long id)
+        {
+            var username = Redis.db.HashGetAsync($"user:{id}", "username").Result;
+            if (username.HasValue)
+                return username.ToString();
+            return "No username found";
         }
     }
 }
