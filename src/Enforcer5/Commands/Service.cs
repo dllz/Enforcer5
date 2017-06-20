@@ -244,10 +244,10 @@ namespace Enforcer5
             {
                 username = "(no username)";
             }
-            string welcome = content.ToString().Replace("$name", name);
+            string welcome = content.ToString().Replace("$name", Methods.FormatHTML(name));
             welcome = welcome.Replace("$username", username);
             welcome = welcome.Replace("$id", id.ToString());
-            welcome = welcome.Replace("$title", message.Chat.Title);
+            welcome = welcome.Replace("$title", Methods.FormatHTML(message.Chat.Title));
             return welcome;
         }
 
