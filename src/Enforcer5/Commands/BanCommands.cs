@@ -23,6 +23,9 @@ namespace Enforcer5
         [Command(Trigger = "kickme", InGroupOnly = true)]
         public static void Kickme(Update update, string[] args)
         {
+            var allowed = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Kickme").Result.Equals("yes");
+            if (!allowed)
+                return;
             var lang = Methods.GetGroupLanguage(update.Message,true);
             var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc);
             if (res)

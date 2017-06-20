@@ -365,6 +365,7 @@ namespace Enforcer5
                     {"settings", "Extra", "yes"},
                     {"settings", "Flood", "yes"},
                     {"settings", "Admin_mode", "no"},
+                    {"settings", "Kickme", "yes" },
                     {"flood", "MaxFlood", 5},
                     {"flood", "ActionFlood", "kick"},
                     {"char", "Arab", "allowed"},
