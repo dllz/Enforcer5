@@ -46,6 +46,7 @@ namespace Enforcer5.Helpers
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
+                        if (count == 9) Thread.Sleep(2000);
                          Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                         check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
