@@ -194,7 +194,12 @@ namespace Enforcer5
         {
             long chatId = update.Message.Chat.Id;            
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            long userId = update.Message.From.Id;
+            var spamcheck = Redis.db.StringGetAsync($"chat:{chatId}:{userId}").Result;
+            if(spamcheck.HasValue)
+                return;
             var set = Redis.db.SetScan($"chat:{chatId}:tagall").ToList();
+            
             string list = "";
             long num = 0;
             foreach (var mem in set)
@@ -210,6 +215,7 @@ namespace Enforcer5
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "tagallregisterednoone"), update);
             }
+            Redis.db.StringSetAsync($"chat:{chatId}:{userId}", "true", TimeSpan.FromMinutes(10));
         }
 
         [Command(Trigger = "untagme", InGroupOnly = true)]
@@ -219,7 +225,7 @@ namespace Enforcer5
             long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             Redis.db.SetRemoveAsync($"chat:{chatId}:tagall", userId);
-            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+            Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }
     }
 }
