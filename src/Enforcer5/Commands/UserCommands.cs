@@ -179,5 +179,42 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update, keyboard:Key.CreateMarkupFromMenu(startMe));
         }
 
+        [Command(Trigger = "tagme", InGroupOnly = true)]
+        public static void TagMe(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;
+            long userId = update.Message.From.Id;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            Redis.db.SetAddAsync($"chat:{chatId}:tagall", userId);
+            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+        }
+
+        [Command(Trigger = "tagall", InGroupOnly = true)]
+        public static void TagAll(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;            
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            var set = Redis.db.SetScan($"chat:{chatId}:tagall");
+            string list = "";
+            long num = 0;
+            foreach (var mem in set)
+            {
+                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
+                {
+                    list = list + Methods.GetUsername(num);
+                }
+            }
+            Bot.SendReply(Methods.GetLocaleString(lang, "tagallregistered", list), update);
+        }
+
+        [Command(Trigger = "untagme", InGroupOnly = true)]
+        public static void unTagMe(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;
+            long userId = update.Message.From.Id;
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall", userId);
+            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+        }
     }
 }

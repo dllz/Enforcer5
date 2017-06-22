@@ -231,7 +231,7 @@ namespace Enforcer5.Handlers
                                 new Task(() => { Log(update, "extra"); }).Start();
                                  Task.Run(() => Commands.SendExtra(update, args));
                             }
-                            else if (update.Message.Text.StartsWith("@admin"))
+                            else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@tagall"))
                             {
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");

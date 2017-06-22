@@ -194,13 +194,13 @@ namespace Enforcer5.Helpers
                         }
                         else
                         {
-                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                            return GetGroupLanguage(uMessage.Chat.Id);
                         }
                     }
                 }
                 catch (NullReferenceException e)
                 {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    return GetGroupLanguage(uMessage.Chat.Id);
                 }
             }
             else
