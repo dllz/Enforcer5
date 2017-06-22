@@ -179,7 +179,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update, keyboard:Key.CreateMarkupFromMenu(startMe));
         }
 
-        [Command(Trigger = "tagme", InGroupOnly = true)]
+        [Command(Trigger = "pingme", InGroupOnly = true)]
         public static void TagMe(Update update, string[] args)
         {
             long chatId = update.Message.Chat.Id;
@@ -189,7 +189,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
         }
 
-        [Command(Trigger = "tagall", InGroupOnly = true)]
+        [Command(Trigger = "pingall", InGroupOnly = true)]
         public static void TagAll(Update update, string[] args)
         {
             long chatId = update.Message.Chat.Id;            
@@ -218,7 +218,7 @@ namespace Enforcer5
             Redis.db.StringSetAsync($"chat:{chatId}:{userId}", "true", TimeSpan.FromMinutes(10));
         }
 
-        [Command(Trigger = "untagme", InGroupOnly = true)]
+        [Command(Trigger = "unpingme", InGroupOnly = true)]
         public static void unTagMe(Update update, string[] args)
         {
             long chatId = update.Message.Chat.Id;
