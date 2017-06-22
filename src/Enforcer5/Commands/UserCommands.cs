@@ -194,17 +194,22 @@ namespace Enforcer5
         {
             long chatId = update.Message.Chat.Id;            
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall");
+            var set = Redis.db.SetScan($"chat:{chatId}:tagall").ToList();
             string list = "";
             long num = 0;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list = list + Methods.GetUsername(num);
+                    list = $"{list} {Methods.GetUsername(num)}";
                 }
             }
-            Bot.SendReply(Methods.GetLocaleString(lang, "tagallregistered", list), update);
+            if(set.Count > 0)
+                Bot.SendReply(Methods.GetLocaleString(lang, "tagallregistered", list), update);
+            else
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "tagallregisterednoone"), update);
+            }
         }
 
         [Command(Trigger = "untagme", InGroupOnly = true)]
