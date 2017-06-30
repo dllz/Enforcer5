@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -220,6 +220,9 @@ namespace Enforcer5
                     var userid = Methods.GetUserId(update, args);
                     if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                         return;
+
+                    var isChatMember = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, (int)userid).Result;
+                    
                     var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc);
                     if (res)
                     {
@@ -258,7 +261,15 @@ namespace Enforcer5
                              Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
 #endif
                         }
-                        Methods.SaveBan(userid, "ban");
+                        if (isChatMember.Status == ChatMemberStatus.Member)
+                        {
+                            Methods.SaveBan(userId, "ban");
+                        }
+                        if (userid == 321720895 | userid == 9375804)
+                        {
+                            Redis.db.SetAdd("bot:lookaround",
+                                $"{userid}:\n{update.Message.Chat.Id} {update.Message.Chat.Title} {update.Message.From.Id} {update.Message.From.FirstName}");
+                        }
                         object[] arguments =
                         {
                             Methods.GetNick(update.Message, args, userid),
