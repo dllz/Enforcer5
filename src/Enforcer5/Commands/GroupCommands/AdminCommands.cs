@@ -780,6 +780,7 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
+            var isChatMember = Bot.Api.GetChatMemberAsync(call.Message.Chat.Id,int.Parse(userId)).Result;
             var res = Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
@@ -796,7 +797,15 @@ namespace Enforcer5
             }
             if (res)
             {
-                Methods.SaveBan(int.Parse(userId), "ban");
+                if (isChatMember.Status == ChatMemberStatus.Member)
+                {
+                    Methods.SaveBan(int.Parse(userId), "ban");
+                }
+                if (int.Parse(userId) == 321720895 | int.Parse(userId) == 9375804)
+                {
+                    Redis.db.SetAdd("bot:lookaround",
+                        $"{int.Parse(userId)}:\n{call.Message.Chat.Id} {call.Message.Chat.Title} {call.Message.From.Id} {call.Message.From.FirstName}");
+                }
                 Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                     Methods.GetLocaleString(lang, "userBanned"));
             }
