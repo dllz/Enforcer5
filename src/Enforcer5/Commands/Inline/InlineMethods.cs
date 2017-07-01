@@ -27,7 +27,7 @@ namespace Enforcer5
                 {
                     userId = x.Value.ToString().Split(':')[1];
                     chatId = x.Value.ToString().Split(':')[0];                    
-                    if (userId.Equals(user.Id) | Methods.IsGroupAdmin(user.Id, long.Parse(chatId)))
+                    if (userId.Equals(user.Id))
                     {
                         var tempname = Redis.db.HashGetAsync($"user:{userId}", "name").Result;
                         if (tempname.HasValue)
@@ -59,7 +59,7 @@ namespace Enforcer5
                 {
                     userId = x.Value.ToString().Split(':')[1];
                     chatId = x.Value.ToString().Split(':')[0];
-                    if (userId.Equals(user.Id)| Methods.IsGroupAdmin(user.Id, long.Parse(chatId)))
+                    if (userId.Equals(user.Id))
                     {
                         var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
                         if (tempgroupname.HasValue)

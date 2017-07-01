@@ -640,9 +640,9 @@ namespace Enforcer5
             var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
 
             if (status == ChatMemberStatus.Creator) return "creator";
+            if (priv) return "auth";
             if (status == ChatMemberStatus.Administrator) return "admin";
             if (status == ChatMemberStatus.Kicked) return "banned";
-            if (priv) return "auth";
             if (elevated) return "elevated";
             if (status == ChatMemberStatus.Member) return "member";
             if (status == ChatMemberStatus.Left) return "left";

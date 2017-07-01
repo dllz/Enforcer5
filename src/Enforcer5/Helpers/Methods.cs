@@ -195,13 +195,13 @@ namespace Enforcer5.Helpers
                         }
                         else
                         {
-                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                            return GetGroupLanguage(uMessage.Chat.Id);
                         }
                     }
                 }
                 catch (NullReferenceException e)
                 {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+                    return GetGroupLanguage(uMessage.Chat.Id);
                 }
             }
             else
@@ -530,12 +530,12 @@ namespace Enforcer5.Helpers
                 var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
                     return true;
                 }
                 else
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(10)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(5)).Result;
                     return false;
                 }
             }

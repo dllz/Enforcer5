@@ -231,7 +231,7 @@ namespace Enforcer5.Handlers
                                 new Task(() => { Log(update, "extra"); }).Start();
                                  Task.Run(() => Commands.SendExtra(update, args));
                             }
-                            else if (update.Message.Text.StartsWith("@admin"))
+                            else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@tagall"))
                             {
                                 var args = GetParameters(update.Message.Text);
                                 args[0] = args[0].Replace("@" + Bot.Me.Username, "");
@@ -726,8 +726,7 @@ namespace Enforcer5.Handlers
                             String.Equals(x.Trigger, args[0],
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
-                    {                       
-                        AddCount(update.From.Id, update.Message.Text);
+                    {                                               
                         var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
                         if (blocked.HasValue)
                         {
