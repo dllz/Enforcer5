@@ -729,7 +729,7 @@ namespace Enforcer5.Helpers
                      Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
-                if (e.InnerExceptions[0].Message.Contains("USER_ADMIN_INVALID"))
+                if (e.InnerExceptions[0].Message.Contains("user is an administrator of the chat"))
                 {
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;
