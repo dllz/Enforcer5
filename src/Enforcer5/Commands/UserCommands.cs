@@ -185,8 +185,16 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetAddAsync($"chat:{chatId}:tagall", userId);
-            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+
+            if (!string.IsNullOrEmpty(update.Message.From.Username))
+            {
+                Redis.db.SetAddAsync($"chat:{chatId}:tagall", userId);
+                Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+            }
+            else
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "tagallNoUsername"), update);
+            }
         }
 
         [Command(Trigger = "pingall", InGroupOnly = true)]
