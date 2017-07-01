@@ -21,7 +21,7 @@ namespace Enforcer5
             mainMenu.Buttons = new List<InlineButton>();
             foreach (var mem in settings)
             {
-                if (mem.Name.Equals("Flood") | mem.Name.Equals("Report") | mem.Name.Equals("Welcome") | mem.Equals("Kickme"))
+                if (mem.Name.Equals("Flood") | mem.Name.Equals("Report") | mem.Name.Equals("Welcome"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                         $"menusettings:{mem.Name}"));
@@ -373,31 +373,6 @@ namespace Enforcer5
             {
                 Console.WriteLine(e);
                 var res = Bot.Send(call.Message.Text, call.From.Id, customMenu: keys);
-            }
-        }
-
-        [Callback(Trigger = "menuKickme", GroupAdminOnly = true)]
-        public static void MenuKickme(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "Kickme";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
-            if (current.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "no");
-                var keys = Commands.genGroupSettingsMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("no"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", option, "yes");
-                var keys = Commands.genGroupSettingsMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
     }
