@@ -1356,7 +1356,4 @@
   <string key="uct">
     <value>UTC</value>
   </string>
-  <string key="KickmeButton">
-    <value>Kickme</value>
-  </string>
 </strings>
