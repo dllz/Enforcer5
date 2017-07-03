@@ -349,7 +349,7 @@ namespace Enforcer5.Helpers
                 {
                     Random numbeRandom = new Random();
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id, parsemode: ParseMode.Html);
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
@@ -357,7 +357,7 @@ namespace Enforcer5.Helpers
                 {
                     Random numbeRandom = new Random();
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id, parsemode: ParseMode.Html);
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
@@ -452,7 +452,7 @@ namespace Enforcer5.Helpers
                 {
                     Random numbeRandom = new Random();
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid, parsemode: ParseMode.Html);
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
@@ -460,7 +460,7 @@ namespace Enforcer5.Helpers
                 {
                     Random numbeRandom = new Random();
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid, parsemode: ParseMode.Html);
+                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
                 }
