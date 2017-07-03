@@ -512,8 +512,9 @@ namespace Enforcer5
             if (choice == "current")
             {
                 Bot.ReplyToCallback(query, "No action taken.");
+                Bot.Edit(query, "No action taken.");
             }
-            LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
+            else LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
         }       
     }
 }
