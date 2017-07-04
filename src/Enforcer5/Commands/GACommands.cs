@@ -445,8 +445,9 @@ namespace Enforcer5
         public static void WhoIs(Update update, string[] args)
         {
             var id = Methods.GetUserId(update, args);
+            var name = Methods.GetName(id);
             var username = Methods.GetUsername(id);           
-            Bot.SendReply($"ID: {id}\nUsername: {username}", update);
+            Bot.SendReply($"Name: {name}\nID: {id}\nUsername: {username}", update);
 
         }
     }

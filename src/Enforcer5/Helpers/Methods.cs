@@ -485,6 +485,11 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static string GetName(long userid)
+        {
+            return Redis.db.HashGetAsync($"user:{userid}", "name").Result;
+        }
+
         public static int ResolveIdFromusername(string s, long chatId = 0)
         {
             if (!s.StartsWith("@"))
