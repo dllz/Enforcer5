@@ -46,6 +46,7 @@ namespace Enforcer5.Helpers
                     count = 0;
                     while (status != ChatMemberStatus.Left && count < 10)
                     {
+                        if (count == 9) Thread.Sleep(2000);
                          Bot.Api.UnbanChatMemberAsync(chatId, Convert.ToInt32(userId));
                         check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;
@@ -484,6 +485,11 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static string GetName(long userid)
+        {
+            return Redis.db.HashGetAsync($"user:{userid}", "name").Result;
+        }
+
         public static int ResolveIdFromusername(string s, long chatId = 0)
         {
             if (!s.StartsWith("@"))
@@ -682,10 +688,10 @@ namespace Enforcer5.Helpers
                     try
                     {
                          Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
-                        var temp = BanUser(update.Message.Chat.Id, update.Message.From.Id, lang);
+                        var temp = BanUser(update.Message.Chat.Id, id, lang);
                         if(temp)
-                            SaveBan(update.Message.From.Id, "ban");
-                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", update.Message.From.FirstName, reason), update);                        
+                            SaveBan(id, "ban");
+                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", name, reason), update);                        
                     }
                     catch (AggregateException e)
                     {
@@ -728,7 +734,7 @@ namespace Enforcer5.Helpers
                      Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
-                if (e.InnerExceptions[0].Message.Contains("USER_ADMIN_INVALID"))
+                if (e.InnerExceptions[0].Message.Contains("user is an administrator of the chat"))
                 {
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;

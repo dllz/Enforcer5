@@ -210,7 +210,7 @@ namespace Enforcer5.Handlers
             }
             catch(System.Xml.XmlException XmlExc)
             {
-                Bot.Api.SendTextMessageAsync(id, "XML error occured!\n\n" + XmlExc, replyToMessageId: msgID);
+                Bot.Api.SendTextMessageAsync(id, "XML error occured!\n\n" + XmlExc.Message, replyToMessageId: msgID);
             }
             catch(Exception exc)
             {
