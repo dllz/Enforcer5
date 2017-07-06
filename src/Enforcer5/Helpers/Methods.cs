@@ -544,8 +544,9 @@ namespace Enforcer5.Helpers
                     return false;
                 }
             }
-            catch
-            {                
+            catch (Exception e)
+            {
+                Bot.Send($"{e.Message}\n{e.StackTrace}", -1001076212715);            
                 return false;
             }
         }
