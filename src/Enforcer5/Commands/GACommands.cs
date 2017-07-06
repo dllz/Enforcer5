@@ -68,9 +68,11 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "validatelanguages", UploadAdmin = true)]
+        [Command(Trigger = "validatelanguages")]
         public static void ValidateLangs(Update update, string[] args)
         {
+            if (!Methods.IsLangAdmin(update.Message.From.Id) && update.Message.Chat.Id != Constants.TranslatorsId) return;
+
             var langs = Program.LangaugeList;
 
 
@@ -115,9 +117,11 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getlanguage", UploadAdmin = true)]
+        [Command(Trigger = "getlanguage")]
         public static void GetLang(Update update, string[] args)
         {
+            if (!Methods.IsLangAdmin(update.Message.From.Id) && update.Message.Chat.Id != Constants.TranslatorsId) return;
+
             var langs = Program.LangaugeList;
 
 
@@ -454,9 +458,11 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-        [Callback(Trigger = "validate", UploadAdmin = true)]
+        [Callback(Trigger = "validate")]
         public static void validateLang(CallbackQuery query, string[] args)
         {
+            if (!Methods.IsLangAdmin(query.From.Id) && query.Message.Chat.Id != Constants.TranslatorsId) return;
+
             var command = args[0];
             var choice = "";
             if (args.Length > 2)
@@ -479,9 +485,11 @@ namespace Enforcer5
             LanguageHelper.ValidateLanguageFile(query.Message.Chat.Id, vlang.FilePath, query.Message.MessageId);
         }
 
-        [Callback(Trigger = "getlang", UploadAdmin = true)]
+        [Callback(Trigger = "getlang")]
         public static void getLang(CallbackQuery query, string[] args)
         {
+            if (!Methods.IsLangAdmin(query.From.Id) && query.Message.Chat.Id != Constants.TranslatorsId) return;
+
             var command = args[0];
             var choice = "";
             if (args.Length > 2)

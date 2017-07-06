@@ -12,6 +12,7 @@ namespace Enforcer5.Models
         public static long[] GlobalAdmins = {125311351};
         private const string aPIKey = "";
         public static long SupportId = -1001060486754;
+        public static long TranslatorsId = -1001108140050;
 
         public static string APIKey
         {
