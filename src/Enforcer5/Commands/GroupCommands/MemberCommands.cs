@@ -109,12 +109,14 @@ namespace Enforcer5
             var msgID = update.Message.ReplyToMessage.MessageId;
             var chatId = update.Message.Chat.Id;
 
-            if (update.Message.From.Id == update.Message.ReplyToMessage.From.Id)
+            if (update.Message.From.Id == update.Message.ReplyToMessage.From.Id || Methods.IsGroupAdmin(update))
             {
                 try
                 {
                     Bot.DeleteMessage(chatId, msgID);
                     Bot.DeleteMessage(chatId, update.Message.MessageId);
+
+                    if (update.Message.ReplyToMessage.From.Id != update.Message.From.Id) Service.LogCommand(update, update.Message.Text);
                 }
                 catch (AggregateException e)
                 {
