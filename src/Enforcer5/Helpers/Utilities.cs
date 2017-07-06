@@ -351,7 +351,7 @@ namespace Enforcer5.Helpers
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}\n\n{id}", -1001076212715, parsemode: ParseMode.Default);
                 }
                 else if (e.Message.Contains("Request timed out"))
                 {
@@ -359,7 +359,7 @@ namespace Enforcer5.Helpers
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
                     result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
                     Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}\n\n{id}", -1001076212715, parsemode: ParseMode.Default);
                 }
                 else if(e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
                 {
