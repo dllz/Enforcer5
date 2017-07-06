@@ -22,7 +22,7 @@ namespace Enforcer5
             var menu = genMenu(chatId, lang);
             Bot.SendToPm(menuText, update, menu: menu);
             Bot.SendReply(Methods.GetLocaleString(lang, "botPm"), update);
-            Service.LogCommand(update, update.Message.Text);
+            if (Methods.IsGroupAdmin(update)) Service.LogCommand(update, update.Message.Text);
         }
 
         [Command(Trigger = "dashboard", InGroupOnly = true)]
