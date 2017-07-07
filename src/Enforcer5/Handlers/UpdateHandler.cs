@@ -359,6 +359,16 @@ namespace Enforcer5.Handlers
                                     {
                                          Service.BotAdded(update.Message);
                                     }
+                                    if (update.Message.Chat.Id == -1001060486754 && update.Message.NewChatMembers.Length > 0)
+                                    {
+                                        foreach (var newMember in update.Message.NewChatMembers)
+                                        {
+                                            Commands.Tempban(newMember.Id, -1001060486754, 60, message:$"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                        }
+                                        Commands.Tempban(update.Message.From.Id, -1001060486754, 120,
+                                            message:
+                                            $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                    }
                                     else
                                     {
                                          Service.Welcome(update.Message);
