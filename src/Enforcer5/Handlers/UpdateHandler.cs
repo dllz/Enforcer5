@@ -363,11 +363,27 @@ namespace Enforcer5.Handlers
                                     {
                                         foreach (var newMember in update.Message.NewChatMembers)
                                         {
-                                            Commands.Tempban(newMember.Id, -1001060486754, 60, message:$"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                            try
+                                            {
+                                                bool res = Commands.Tempban(newMember.Id, -1001060486754, 60,
+                                                    message:
+                                                    $"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine(e.Message);
+                                            }
                                         }
-                                        Commands.Tempban(update.Message.From.Id, -1001060486754, 120,
-                                            message:
-                                            $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                        try
+                                        {
+                                            bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120,
+                                                message:
+                                                $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                        }
+                                        catch (Exception e)
+                                        {
+                                           Console.WriteLine(e.Message); 
+                                        }
                                     }
                                     else
                                     {
