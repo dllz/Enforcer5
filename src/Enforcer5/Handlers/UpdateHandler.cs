@@ -359,38 +359,36 @@ namespace Enforcer5.Handlers
                                     {
                                          Service.BotAdded(update.Message);
                                     }
-                                    if (update.Message.Chat.Id == -1001060486754 && update.Message.NewChatMembers.Length > 0)
-                                    {
-                                        foreach (var newMember in update.Message.NewChatMembers)
-                                        {
-                                            try
-                                            {
-                                                bool res = Commands.Tempban(newMember.Id, -1001060486754, 60,
-                                                    message:
-                                                    $"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
-                                                Thread.Sleep(500);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Console.WriteLine(e.Message);
-                                            }
-                                        }
-                                        try
-                                        {
-                                            bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120,
-                                                message:
-                                                $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
-                                        }
-                                        catch (Exception e)
-                                        {
-                                           Console.WriteLine(e.Message); 
-                                        }
-                                    }
                                     else
                                     {
-                                         Service.Welcome(update.Message);
+                                        Service.Welcome(update.Message);
                                         // Service.ResetUser(update.Message);
                                     }
+                                    if (update.Message.Chat.Id == -1001060486754 && update.Message.NewChatMembers.Length > 0)
+                                    {
+                                        //foreach (var newMember in update.Message.NewChatMembers)
+                                        //{
+                                        //    try
+                                        //    {
+                                        //       // bool res = Commands.Tempban(newMember.Id, -1001060486754, 60,message:$"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                        //        Thread.Sleep(500);
+                                        //    }
+                                        //    catch (Exception e)
+                                        //    {
+                                        //        Console.WriteLine(e.Message);
+                                        //    }
+                                        //}
+                                        //try
+                                        //{
+                                        //    //bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120,message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                        //}
+                                        //catch (Exception e)
+                                        //{
+                                        //   Console.WriteLine(e.Message); 
+                                        //}
+                                        Bot.Send($"{update.Message.NewChatMembers.Length}", -1001060486754);
+                                    }
+                                   
                                 }
                                 catch (ApiRequestException e)
                                 {
