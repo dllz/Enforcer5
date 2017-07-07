@@ -364,31 +364,32 @@ namespace Enforcer5.Handlers
                                         Service.Welcome(update.Message);
                                         // Service.ResetUser(update.Message);
                                     }
-                                    if (update.Message.Chat.Id == -1001060486754 && update.Message.NewChatMembers.Length > 0)
+#if premium
+                                     if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id ==-1001030085238) && update.Message.NewChatMembers.Length > 1)
                                     {
-                                        //foreach (var newMember in update.Message.NewChatMembers)
-                                        //{
-                                        //    try
-                                        //    {
-                                        //       // bool res = Commands.Tempban(newMember.Id, -1001060486754, 60,message:$"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
-                                        //        Thread.Sleep(500);
-                                        //    }
-                                        //    catch (Exception e)
-                                        //    {
-                                        //        Console.WriteLine(e.Message);
-                                        //    }
-                                        //}
-                                        //try
-                                        //{
-                                        //    //bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120,message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
-                                        //}
-                                        //catch (Exception e)
-                                        //{
-                                        //   Console.WriteLine(e.Message); 
-                                        //}
-                                        Bot.Send($"{update.Message.NewChatMembers.Length}", -1001060486754);
+                                        for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
+                                        {
+                                            try
+                                            {
+                                                bool res = Commands.Tempban(long.Parse(update.Message.NewChatMembers[i].Id), -1001060486754, 60, message: $"User: {long.Parse(update.Message.NewChatMembers[i].Id)} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                                Thread.Sleep(2000);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine(e.Message);
+                                            }
+                                        }
+                                        try
+                                        {
+                                            bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine(e.Message);
+                                        }                                            
                                     }
-                                   
+#endif
+
                                 }
                                 catch (ApiRequestException e)
                                 {
