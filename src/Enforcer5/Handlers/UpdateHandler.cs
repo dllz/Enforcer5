@@ -368,6 +368,7 @@ namespace Enforcer5.Handlers
                                                 bool res = Commands.Tempban(newMember.Id, -1001060486754, 60,
                                                     message:
                                                     $"User: {newMember.Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                                Thread.Sleep(500);
                                             }
                                             catch (Exception e)
                                             {
