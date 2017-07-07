@@ -371,7 +371,7 @@ namespace Enforcer5.Handlers
                                         {
                                             try
                                             {
-                                                bool res = Commands.Tempban(long.Parse(update.Message.NewChatMembers[i].Id), -1001060486754, 60, message: $"User: {long.Parse(update.Message.NewChatMembers[i].Id)} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                                bool res = Commands.Tempban(long.Parse(update.Message.NewChatMembers[i].Id), update.Message.Chat.Id, 60, message: $"User: {long.Parse(update.Message.NewChatMembers[i].Id)} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
                                                 Thread.Sleep(2000);
                                             }
                                             catch (Exception e)
@@ -381,7 +381,7 @@ namespace Enforcer5.Handlers
                                         }
                                         try
                                         {
-                                            bool res = Commands.Tempban(update.Message.From.Id, -1001060486754, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                            bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
                                         }
                                         catch (Exception e)
                                         {
