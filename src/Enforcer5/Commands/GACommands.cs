@@ -413,6 +413,11 @@ namespace Enforcer5
             }
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
+            if (update.Message.Chat.Type != ChatType.Private)
+            {
+                var status = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, (int) userid).Result;
+                text = $"{text}\n The user is a {status.Status.ToString()} in this chat";
+            }
              Bot.SendReply(text, update);
         }
 
