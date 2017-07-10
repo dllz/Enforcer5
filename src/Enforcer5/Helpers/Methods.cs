@@ -526,14 +526,10 @@ namespace Enforcer5.Helpers
             {
                 return true;
             }
-            else if (isAdmin.Equals("false"))
-            {
-                return false;
-            }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
-                if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
+                var admin = Bot.Api.GetChatMemberAsync(group, (int) user).Result;                
+                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
