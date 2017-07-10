@@ -53,16 +53,10 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, userid),
                             Methods.GetNick(update.Message, args, true)
                         };
-<<<<<<< HEAD
                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
                             Service.LogCommand(update, update.Message.Text);
                     }
-=======
-                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                        }
->>>>>>> bugfixes
-                    }
+ }
                     catch (Exception e)
                     {
                         Methods.SendError(e.Message, update.Message, lang.Doc);
@@ -490,11 +484,9 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-<<<<<<< HEAD
                 Tempban(userId, update.Message.Chat.Id, time, Methods.GetNick(update.Message, args, userId));
                 Service.LogCommand(update, update.Message.Text);
             
-=======
                 var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
                 var hash = $"{update.Message.Chat.Id}:{userId}";
                 var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
@@ -521,7 +513,6 @@ namespace Enforcer5
                      Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
 #endif
                 }
->>>>>>> bugfixes
             }
         }
 

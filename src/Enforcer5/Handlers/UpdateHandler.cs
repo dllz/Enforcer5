@@ -176,11 +176,11 @@ namespace Enforcer5.Handlers
                                     {
                                         return; ;
                                     }
-                                    if (command.DevOnly & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    if (command.DevOnly && !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
                                     {
                                         return;
                                     }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
+                                    if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
                                         !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
                                     {
                                         Bot.SendReply(
@@ -188,28 +188,26 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-<<<<<<< HEAD
                                     if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
-=======
->>>>>>> bugfixes
-                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+
+                                    if (command.InGroupOnly && update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;
                                     }
-                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    if (command.RequiresReply && update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message, true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
-                                    if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
+                                    if (command.UploadAdmin && !Methods.IsLangAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
-                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    if (command.GlobalAdminOnly && !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
