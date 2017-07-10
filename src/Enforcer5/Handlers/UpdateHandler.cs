@@ -188,10 +188,13 @@ namespace Enforcer5.Handlers
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
+<<<<<<< HEAD
                                     if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
+=======
+>>>>>>> bugfixes
                                     if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;

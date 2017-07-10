@@ -68,7 +68,11 @@ namespace Enforcer5
                 reporter = $"{reporter} (@{update.Message.From.Username}";
             }            
              SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
+<<<<<<< HEAD
             
+=======
+            Service.LogCommand(update, update.Message.Text);
+>>>>>>> bugfixes
         }
 
         [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
@@ -211,7 +215,12 @@ namespace Enforcer5
 
                                 }
                             }
+<<<<<<< HEAD
                              Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);                            
+=======
+                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
+                            Service.LogCommand(update, update.Message.Text);
+>>>>>>> bugfixes
                         }
                         else if (isReported.TryParse(out isReport) && isReport == 1)
                         {
