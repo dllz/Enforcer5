@@ -109,7 +109,7 @@ namespace Enforcer5
             var msgID = update.Message.ReplyToMessage.MessageId;
             var chatId = update.Message.Chat.Id;
 
-            if (update.Message.From.Id == update.Message.ReplyToMessage.From.Id || Methods.IsGroupAdmin(update))
+            if (update.Message.From.Id == long.Parse(update.Message.ReplyToMessage.From.Id) || Methods.IsGroupAdmin(update))
             {
                 try
                 {
