@@ -140,7 +140,12 @@ namespace Enforcer5
                     Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
                     break;
                 case 295152997://Ludwig
-                    Bot.Send("Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.", chatId);
+#if premium
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADzz8AAsIYZAcQLF6h-zaemgI"), "Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.");
+#endif
+#if normal
+                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADzz8AAsIYZAc7HPc9Y1-hPwI"), "Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.");
+#endif
                     break;
                 case 81772130://Lordy
                     Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);

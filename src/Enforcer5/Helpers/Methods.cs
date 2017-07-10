@@ -735,7 +735,7 @@ namespace Enforcer5.Helpers
                      Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
-                if (e.InnerExceptions[0].Message.Contains("user is an administrator of the chat"))
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
                 {
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;
