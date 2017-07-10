@@ -535,7 +535,7 @@ namespace Enforcer5.Helpers
                 var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
                 }
                 else
@@ -546,6 +546,29 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                if (e.Message.Contains("Request timed out"))
+                {
+                    try
+                    {
+                        var Adminlist = Bot.Api.GetChatAdministratorsAsync(group).Result;
+                        bool found = false;
+                        foreach (var mem in Adminlist)
+                        {
+                            Redis.db.StringSetAsync($"chat:{group}:adminses:{mem.User.Id}", "true", TimeSpan.FromMinutes(10));
+                            if (mem.User.Id == user)
+                            {
+                                found = true;
+                            }                            
+                        }
+                        return found;
+                    }
+                    catch (Exception exception)
+                    {
+                        Bot.Send($"In adminlist\n{exception.Message}\n{exception.StackTrace}", -1001076212715);
+                        return false;
+                    }
+                    
+                }
                 Bot.Send($"{e.Message}\n{e.StackTrace}", -1001076212715);            
                 return false;
             }
