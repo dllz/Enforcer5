@@ -305,7 +305,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        var userId = Methods.ResolveIdFromusername(username);
+                        var userId = int.Parse(username);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
