@@ -269,11 +269,18 @@ namespace Enforcer5
                 var usernames = spilt[0].Split(',');
                 foreach (var username in usernames)
                 {
-                    var userId = Methods.ResolveIdFromusername(username);
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                    idlist = $"{idlist}, {userId}";
+                    try
+                    {
+                        var userId = Methods.ResolveIdFromusername(username);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        idlist = $"{idlist}, {userId}";
+                    }
+                    catch (Exception e)
+                    {
+                        Bot.SendReply(e.Message, update);
+                    }
                 }
                 Bot.SendReply($"{idlist} has been rekt for {moti}", update);
             }
@@ -296,11 +303,18 @@ namespace Enforcer5
                 var usernames = spilt[0].Split(',');
                 foreach (var username in usernames)
                 {
-                    var userId = username;
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                    Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                    idlist = $"{idlist}, {userId}";
+                    try
+                    {
+                        var userId = Methods.ResolveIdFromusername(username);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        idlist = $"{idlist}, {userId}";
+                    }
+                    catch (Exception e)
+                    {
+                        Bot.SendReply(e.Message, update);
+                    }
                 }
                 Bot.SendReply($"{idlist} has been rekt for {moti}", update);
             }
