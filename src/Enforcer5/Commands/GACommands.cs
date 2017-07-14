@@ -256,6 +256,60 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "getrektu", DevOnly = true)]
+        public static void GlobalBanListUsername(Update update, string[] args)
+        {
+            string moti = "";
+            string idlist = "";
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                moti = spilt[1];
+                var usernames = spilt[0].Split(',');
+                foreach (var username in usernames)
+                {
+                    var userId = Methods.ResolveIdFromusername(username);
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                    idlist = $"{idlist}, {userId}";
+                }
+                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+            }
+            else
+            {
+                Bot.SendReply("Nopes", update);
+            }
+        }
+
+        [Command(Trigger = "getrekti", DevOnly = true)]
+        public static void GlobalBanListids(Update update, string[] args)
+        {
+            string moti = "";
+            string idlist = "";
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                moti = spilt[1];
+                var usernames = spilt[0].Split(',');
+                foreach (var username in usernames)
+                {
+                    var userId = username;
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                    Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                    idlist = $"{idlist}, {userId}";
+                }
+                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+            }
+            else
+            {
+                Bot.SendReply("Nopes", update);
+            }
+        }
+
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static void AllowPremiumBot(Update update, string[] args)
         {
