@@ -8,6 +8,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 
 namespace Enforcer5
@@ -67,6 +68,13 @@ namespace Enforcer5
             {
                 Bot.SendReply(text, update);
             }
+        }
+
+        [Command(Trigger = "clearkeys", InGroupOnly = true)]
+        public static void ClearKeyboard(Update update, string[] args)
+        {
+            Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Clearing keyboards",
+                replyMarkup: new ReplyKeyboardRemove());
         }
 
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]

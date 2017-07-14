@@ -405,9 +405,7 @@ namespace Enforcer5
                     }
                     if (update != null)
                     {
-                        Bot.SendReply(message
-                            ,
-                            update);
+                        Bot.SendReply(message,update);
                     }
                     else
                     {
@@ -486,33 +484,6 @@ namespace Enforcer5
             {
                 Tempban(userId, update.Message.Chat.Id, time, Methods.GetNick(update.Message, args, userId));
                 Service.LogCommand(update, update.Message.Text);
-            
-                var unbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60).ToUnixTime();
-                var hash = $"{update.Message.Chat.Id}:{userId}";
-                var res = Methods.BanUser(update.Message.Chat.Id, userId, lang);
-                if (res.Equals(true))
-                {
-                    Methods.SaveBan(userId, "tempban");
-                     Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}:userJoin", userId);
-#if normal
-                     Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
-#endif
-#if premium
-                      Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
-#endif
-                    var timeBanned = TimeSpan.FromMinutes(time);
-                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                     Bot.SendReply(
-                        Methods.GetLocaleString(lang, "tempbanned", timeText, Methods.GetNick(update.Message, args, userId), userId),
-                        update);
-                    Service.LogCommand(update, update.Message.Text);
-#if normal
-                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbanned", userId);
-#endif
-#if premium
-                     Redis.db.SetAddAsync($"chat:{update.Message.Chat.Id}:tempbannedPremium", userId);
-#endif
-                }
             }
         }
 
