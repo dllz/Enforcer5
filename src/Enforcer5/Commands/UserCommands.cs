@@ -203,7 +203,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;            
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             long userId = update.Message.From.Id;
-            var spamcheck = Redis.db.StringGetAsync($"chat:{chatId}:{userId}").Result;
+            var spamcheck = Redis.db.StringGetAsync($"chat:{ chatId}:spamList").Result;
             if(spamcheck.HasValue)
                 return;
             var set = Redis.db.SetScan($"chat:{chatId}:tagall").ToList();
@@ -223,7 +223,7 @@ namespace Enforcer5
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "tagallregisterednoone"), update);
             }
-            Redis.db.StringSetAsync($"chat:{chatId}:{userId}", "true", TimeSpan.FromMinutes(10));
+            Redis.db.StringSetAsync($"chat:{chatId}:spamList", "true", TimeSpan.FromMinutes(10));
         }
 
         [Command(Trigger = "unpingme", InGroupOnly = true)]
