@@ -127,13 +127,12 @@ namespace Enforcer5.Handlers
                     }
                 }                
 #endif       
-                var allowed = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
-                if (allowed)
+                var banned = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
+                if (banned)
                 {
                     if (update.Message.Chat.Type != ChatType.Private)
                     {
-                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
-                        
+                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);                      
                     }
                     return;
                 }
@@ -619,6 +618,7 @@ namespace Enforcer5.Handlers
                                     try
                                     {
                                         Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                        Thread.Sleep(10000);
                                         Bot.Send(
                                             $"{long.Parse(key.ToString())}, {Methods.GetName(long.Parse(key.ToString()))}, {Methods.GetUsername(long.Parse(key.ToString()))} has been spam banned for 10 minutes.",
                                             -1001076212715);
