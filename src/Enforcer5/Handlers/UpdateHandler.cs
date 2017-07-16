@@ -130,7 +130,7 @@ namespace Enforcer5.Handlers
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
                     var allowed = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
-                    if (!allowed)
+                    if (allowed)
                     {
                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
                         return;
