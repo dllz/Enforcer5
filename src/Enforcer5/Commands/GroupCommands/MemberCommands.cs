@@ -80,33 +80,40 @@ namespace Enforcer5
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]
         public static void SaveMessage(Update update, string[] args)
         {
-            var msgID = update.Message.ReplyToMessage.MessageId;
-            var saveTo = update.Message.From.Id;
-            var chat = update.Message.Chat.Id;
-            try
+            if (update.Message.ReplyToMessage != null)
             {
-                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
-            }
-            catch (AggregateException e)
-            {
-                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                var msgID = update.Message.ReplyToMessage.MessageId;
+                var saveTo = update.Message.From.Id;
+                var chat = update.Message.Chat.Id;
+                try
                 {
-                    var lang = Methods.GetGroupLanguage(chat).Doc;
-                    var startMe = new Menu(1)
-                    {
-                        Buttons = new List<InlineButton>
-                        {
-                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                url: $"https://t.me/{Bot.Me.Username}")
-                        }
-                    };
-                    Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
-                    
+                    var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
                 }
-                else
+                catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                    if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                    {
+                        var lang = Methods.GetGroupLanguage(chat).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                            {
+                                new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                    url: $"https://t.me/{Bot.Me.Username}")
+                            }
+                        };
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
+
+                    }
+                    else if (e.Message.Contains("MESSAGE_ID_INVALID"))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                    }
                 }
             }
         }
