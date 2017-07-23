@@ -29,7 +29,7 @@ namespace Enforcer5.Helpers
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), CancellationToken.None).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
@@ -764,6 +764,34 @@ namespace Enforcer5.Helpers
             }
         }
 
+        public static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
+        {
+            try
+            {
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), untilDateTime).Result;
+                if (res)
+                {
+                    Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
+                }
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
+        }
+
         public static void AddBanList(long chatId, long userId, string name, string why)
         {
             var hash = $"chat:{chatId}:bannedlist";
@@ -792,7 +820,6 @@ namespace Enforcer5.Helpers
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = int.Parse(subStrings[1]);
-                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
 #if normal
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
                             Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);

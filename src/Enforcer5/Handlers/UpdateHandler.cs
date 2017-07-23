@@ -118,7 +118,7 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                    {
+                    {       
                         Bot.Send(
                             "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
                             update);
@@ -182,24 +182,24 @@ namespace Enforcer5.Handlers
                                 {                                  
                                     
                                     AddCount(update.Message.From.Id, update.Message.Text);
-                                    var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
+                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
                                     {
                                         return; ;
                                     }
-                                    if (command.DevOnly && !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         return;
                                     }
                                     if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
+                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
