@@ -384,6 +384,7 @@ namespace Enforcer5
                         Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
                             update);
                     }
+                    Bot.DeleteMessage(chatId, update.Message.MessageId);
 
                 }
             }
