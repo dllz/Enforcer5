@@ -354,7 +354,7 @@ namespace Enforcer5
 
         }
 
-        public static bool Tempban(long userId, long chatId, long time,
+        public static bool Tempban(long userId, long chatId, double time,
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -432,7 +432,7 @@ namespace Enforcer5
             long userId = 0, time;
             string length = "";
             string units = "";
-            if (update.Message.ReplyToMessage != null) // by reply
+                if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
 
@@ -496,25 +496,25 @@ namespace Enforcer5
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
-            int calculatedTime = 0;
+            double calculatedTime = 0;
             switch (units)
             {
                 case "min":
                 case "mins":
                 case "minutes":
                 case "minute":
-                    calculatedTime = TimeSpan.FromMinutes(time).Minutes;
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
                     break;
                 case "hour":
                 case "hours":
-                    calculatedTime = TimeSpan.FromHours(time).Minutes;
+                    calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
                     break;
                 case "days":
                 case "day":
-                    calculatedTime = TimeSpan.FromDays(time).Minutes;
+                    calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
                     break;
                 default:
-                    calculatedTime = TimeSpan.FromMinutes(time).Minutes;
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
                     break;
             }
             if (userId != 0)
