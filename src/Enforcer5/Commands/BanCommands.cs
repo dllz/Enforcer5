@@ -361,7 +361,7 @@ namespace Enforcer5
                 var dataUnbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60);
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
-                var res = Methods.BanUser(chatId, userId, lang);
+            var res = Methods.TempBanUser(chatId, userId, new DateTime(unbanTime), lang);
                 var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
             if (isBanned.HasValue)
             {
