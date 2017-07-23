@@ -820,6 +820,7 @@ namespace Enforcer5.Helpers
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = int.Parse(subStrings[1]);
+                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
 #if normal
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
                             Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
