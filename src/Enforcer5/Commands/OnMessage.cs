@@ -20,7 +20,7 @@ namespace Enforcer5
         {
             try
             {
-                var time = (DateTime.UtcNow - update.Message.Date);
+                var time = (DateTime.Now - update.Message.Date);
                 if (time.TotalSeconds > 7)
                 {
                     return;
@@ -70,6 +70,7 @@ namespace Enforcer5
                     var maxTime = TimeSpan.FromSeconds(6);
                     int maxmsgs;
                     Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
+                Bot.Send(num + "", update);
                     if (int.TryParse(maxMsgs.Value, out maxmsgs))
                     {
                        // Bot.Send($"{num} of {maxmsgs}", update);
