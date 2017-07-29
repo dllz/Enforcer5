@@ -151,7 +151,10 @@ namespace Enforcer5.Handlers
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
-                    if (update.Message == null) return;
+                    if (update.Message == null)
+                    {
+                        return;
+                    }
                     if (update.Message.Chat.Type != ChatType.Private)
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();

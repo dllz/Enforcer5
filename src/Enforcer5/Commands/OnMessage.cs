@@ -21,13 +21,22 @@ namespace Enforcer5
             try
             {
                 var time = (DateTime.UtcNow - update.Message.Date);
-                if (time.TotalSeconds > 5) return;
+                if (time.TotalSeconds > 7)
+                {
+                    return;
+                }
                 var chatId = update.Message.Chat.Id;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-                if (watch) return;
+                if (watch)
+                {
+                    return;
+                }
                 new Task(() => { AntiLength(update); }).Start();
                 var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
-                if (flood.Equals("yes")) return;
+                if (flood.Equals("yes"))
+                {
+                    return;
+                }
                 
                 
                 var msgType = Methods.GetContentType(update.Message);
@@ -36,7 +45,7 @@ namespace Enforcer5
                 {
                     lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 }
-                catch (NullReferenceException e)
+                catch (Exception e)
                 {
                     try
                     {
@@ -49,15 +58,16 @@ namespace Enforcer5
                     }
                 }
                 if (isIgnored(chatId, msgType))
+                {
                     return;
+                }
                     var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
                     int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;   
                     if (num == 0) num = 1;
-                    var maxSpam = 8;
-                    if (update.Message.Chat.Type == ChatType.Private) maxSpam = 12;
+                    var maxSpam = 8;                  
                     var floodSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
                     var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
-                    var maxTime = TimeSpan.FromSeconds(5);
+                    var maxTime = TimeSpan.FromSeconds(6);
                     int maxmsgs;
                     Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
                     if (int.TryParse(maxMsgs.Value, out maxmsgs))
