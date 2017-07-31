@@ -13,10 +13,10 @@
   "dependencies": {
     "Microsoft.NETCore.App": "1.1.2",
     "Microsoft.Win32.Registry": "4.3.0",
-    "StackExchange.Redis": "1.2.3",
+    "StackExchange.Redis": "1.2.4",
     "System.Diagnostics.StackTrace": "4.3.0",
-    "System.Runtime.Serialization.Json": "4.0.2",
-    "Telegram.Bot.Enforcer": "12.0.6"
+    "System.Runtime.Serialization.Json": "4.3.0",
+    "Telegram.Bot.Enforcer": "13.0.5"
   },
   "runtimes": {
     //"win10-x64": {},

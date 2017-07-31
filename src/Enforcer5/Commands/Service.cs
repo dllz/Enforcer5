@@ -106,7 +106,7 @@ namespace Enforcer5
             {
                 return;
             }
-            switch (int.Parse(message.NewChatMember.Id))
+            switch (message.NewChatMember.Id)
             {
                 case 352277339://Phyto
                     Bot.Send("Error 404", chatId);

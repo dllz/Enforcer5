@@ -56,7 +56,7 @@ namespace Enforcer5
                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
                             Service.LogCommand(update, update.Message.Text);
                     }
-                    }
+ }
                     catch (Exception e)
                     {
                         Methods.SendError(e.Message, update.Message, lang.Doc);
@@ -354,14 +354,14 @@ namespace Enforcer5
 
         }
 
-        public static bool Tempban(long userId, long chatId, long time,
+        public static bool Tempban(long userId, long chatId, double time,
             string nick = null, Update update = null, string message = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
                 var dataUnbanTime = System.DateTime.UtcNow.AddHours(2).AddSeconds(time * 60);
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
-                var res = Methods.BanUser(chatId, userId, lang);
+            var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang);
                 var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
             if (isBanned.HasValue)
             {
@@ -405,9 +405,7 @@ namespace Enforcer5
                     }
                     if (update != null)
                     {
-                        Bot.SendReply(message
-                            ,
-                            update);
+                        Bot.SendReply(message,update);
                     }
                     else
                     {
@@ -433,15 +431,23 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
             long userId = 0, time;
             string length = "";
-            if (update.Message.ReplyToMessage != null) // by reply
+            string units = "";
+                if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
 
                 if (args[1] != null)
                 {
-                    length = args[1].Contains(' ') // length is the first argument after the command
-                        ? args[1].Split(' ')[0]    // so admins can add a reason for the tempban after the time
-                        : args[1];
+                    length = args[1].Split(' ')[0];    
+                     
+                    try
+                    {
+                        units = args[1].Split(' ')[1];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
                 }
 
             }
@@ -451,6 +457,14 @@ namespace Enforcer5
                 {
                     var user = args[1].Split(' ')[0]; // either username or ID
                     length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
+                    try
+                    {
+                        units = args[1].Split(' ')[2];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
 
                     if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
                     else if (!long.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
@@ -482,11 +496,31 @@ namespace Enforcer5
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
+            double calculatedTime = 0;
+            switch (units)
+            {
+                case "min":
+                case "mins":
+                case "minutes":
+                case "minute":
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                    break;
+                case "hour":
+                case "hours":
+                    calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
+                    break;
+                case "days":
+                case "day":
+                    calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
+                    break;
+                default:
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                    break;
+            }
             if (userId != 0)
             {
-                Tempban(userId, update.Message.Chat.Id, time, Methods.GetNick(update.Message, args, userId));
+                Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId));
                 Service.LogCommand(update, update.Message.Text);
-            
             }
         }
 

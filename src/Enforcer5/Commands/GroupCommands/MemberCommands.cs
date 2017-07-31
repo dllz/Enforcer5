@@ -8,6 +8,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 
 namespace Enforcer5
@@ -69,36 +70,50 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "clearkeys", InGroupOnly = true)]
+        public static void ClearKeyboard(Update update, string[] args)
+        {
+            Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Clearing keyboards",
+                replyMarkup: new ReplyKeyboardRemove());
+        }
+
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]
         public static void SaveMessage(Update update, string[] args)
         {
-            var msgID = update.Message.ReplyToMessage.MessageId;
-            var saveTo = update.Message.From.Id;
-            var chat = update.Message.Chat.Id;
-            try
+            if (update.Message.ReplyToMessage != null)
             {
-                var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
-            }
-            catch (AggregateException e)
-            {
-                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                var msgID = update.Message.ReplyToMessage.MessageId;
+                var saveTo = update.Message.From.Id;
+                var chat = update.Message.Chat.Id;
+                try
                 {
-                    var lang = Methods.GetGroupLanguage(chat).Doc;
-                    var startMe = new Menu(1)
-                    {
-                        Buttons = new List<InlineButton>
-                        {
-                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
-                                url: $"https://t.me/{Bot.Me.Username}")
-                        }
-                    };
-                    Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
-                    
+                    var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
                 }
-                else
+                catch (AggregateException e)
                 {
-                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                    Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                    if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                    {
+                        var lang = Methods.GetGroupLanguage(chat).Doc;
+                        var startMe = new Menu(1)
+                        {
+                            Buttons = new List<InlineButton>
+                            {
+                                new InlineButton(Methods.GetLocaleString(lang, "StartMe"),
+                                    url: $"https://t.me/{Bot.Me.Username}")
+                            }
+                        };
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chat, update.Message.MessageId, Key.CreateMarkupFromMenu(startMe));
+
+                    }
+                    else if (e.Message.Contains("MESSAGE_ID_INVALID"))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
+                    }
                 }
             }
         }
@@ -109,7 +124,7 @@ namespace Enforcer5
             var msgID = update.Message.ReplyToMessage.MessageId;
             var chatId = update.Message.Chat.Id;
 
-            if (update.Message.From.Id == update.Message.ReplyToMessage.From.Id || Methods.IsGroupAdmin(update))
+            if (update.Message.From.Id ==  update.Message.ReplyToMessage.From.Id || Methods.IsGroupAdmin(update))
             {
                 try
                 {

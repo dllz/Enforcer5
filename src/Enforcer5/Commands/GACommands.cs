@@ -256,6 +256,94 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "getrektu", DevOnly = true)]
+        public static void GlobalBanListUsername(Update update, string[] args)
+        {
+            string moti = "";
+            string idlist = "";
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                moti = spilt[1];
+                var usernames = spilt[0].Split(',');
+                foreach (var username in usernames)
+                {
+                    try
+                    {
+                        var userId = Methods.ResolveIdFromusername(username);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        idlist = $"{idlist}, {userId}";
+                    }
+                    catch (Exception e)
+                    {
+                        Bot.SendReply(e.Message, update);
+                    }
+                }
+                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+            }
+            else
+            {
+                Bot.SendReply("Nopes", update);
+            }
+        }
+
+        [Command(Trigger = "bangroup", DevOnly = true)]
+        public static void BanGroup(Update update, string[] args)
+        {
+            if (args.Length == 2)
+            {
+                var groupId = args[1];
+                try
+                {
+                    var id = long.Parse(groupId);
+                    Redis.db.SetAddAsync("bot:bannedGroups", id);
+                    Bot.SendReply("Group banned", update);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+
+        [Command(Trigger = "getrekti", DevOnly = true)]
+        public static void GlobalBanListids(Update update, string[] args)
+        {
+            string moti = "";
+            string idlist = "";
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                moti = spilt[1];
+                var usernames = spilt[0].Split(',');
+                foreach (var username in usernames)
+                {
+                    try
+                    {
+                        var userId = int.Parse(username);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
+                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        idlist = $"{idlist}, {userId}";
+                    }
+                    catch (Exception e)
+                    {
+                        Bot.SendReply(e.Message, update);
+                    }
+                }
+                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+            }
+            else
+            {
+                Bot.SendReply("Nopes", update);
+            }
+        }
+
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static void AllowPremiumBot(Update update, string[] args)
         {
@@ -413,6 +501,11 @@ namespace Enforcer5
             }
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
+            if (update.Message.Chat.Type != ChatType.Private)
+            {
+                var status = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, (int) userid).Result;
+                text = $"{text}\n The user is a {status.Status.ToString()} in this chat";
+            }
              Bot.SendReply(text, update);
         }
 

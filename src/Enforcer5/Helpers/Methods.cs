@@ -29,7 +29,7 @@ namespace Enforcer5.Helpers
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), CancellationToken.None).Result;
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                 if (res)
                 {
                      Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
@@ -526,16 +526,12 @@ namespace Enforcer5.Helpers
             {
                 return true;
             }
-            else if (isAdmin.Equals("false"))
-            {
-                return false;
-            }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, Convert.ToInt32(user)).Result;                
-                if (admin.Status == ChatMemberStatus.Administrator || admin.Status == ChatMemberStatus.Creator)
+                var admin = Bot.Api.GetChatMemberAsync(group, (int) user).Result;                
+                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(5)).Result;
+                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
                 }
                 else
@@ -546,6 +542,29 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                if (e.Message.Contains("Request timed out"))
+                {
+                    try
+                    {
+                        var Adminlist = Bot.Api.GetChatAdministratorsAsync(group).Result;
+                        bool found = false;
+                        foreach (var mem in Adminlist)
+                        {
+                            Redis.db.StringSetAsync($"chat:{group}:adminses:{mem.User.Id}", "true", TimeSpan.FromMinutes(10));
+                            if (mem.User.Id == user)
+                            {
+                                found = true;
+                            }                            
+                        }
+                        return found;
+                    }
+                    catch (Exception exception)
+                    {
+                        Bot.Send($"In adminlist\n{exception.Message}\n{exception.StackTrace}", -1001076212715);
+                        return false;
+                    }
+                    
+                }
                 Bot.Send($"{e.Message}\n{e.StackTrace}", -1001076212715);            
                 return false;
             }
@@ -733,6 +752,34 @@ namespace Enforcer5.Helpers
                 if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                 {
                      Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
+        }
+
+        public static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
+        {
+            try
+            {
+                var res = Bot.Api.KickChatMemberAsync(chatId, Convert.ToInt32(userId), untilDateTime).Result;
+                if (res)
+                {
+                    Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
+                }
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
                 if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))

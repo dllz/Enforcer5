@@ -44,7 +44,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Red;
                 if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");                
                 Botan.log(update.Message, command.Trigger);
@@ -54,7 +54,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
                 Botan.log(update.Message, "welcome");
@@ -64,7 +64,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
                 Botan.log(update.Message, "extra");
@@ -76,7 +76,7 @@ namespace Enforcer5.Handlers
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
             Console.ForegroundColor = ConsoleColor.Cyan;
-            //Console.Write($"{(DateTime.UtcNow - update.Message.Date):mm\\:ss\\.ff}");
+            //Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
             Console.ForegroundColor = ConsoleColor.Red;
             if (command != null)
             {
@@ -118,14 +118,26 @@ namespace Enforcer5.Handlers
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
                     if (!allowed)
-                    {
+                    {       
                         Bot.Send(
                             "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
                             update);
                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                        return;
                     }
                 }                
-#endif             
+#endif
+                //return;
+                var banned = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
+                if (banned)
+                {
+                    if (update.Message.Chat.Type != ChatType.Private)
+                    {
+                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);                      
+                    }
+                    return;
+                }
+
                 new Task(() => { CollectStats(update.Message); }).Start();                
                 Bot.MessagesProcessed++;
                 new Task(() => { Methods.IsRekt(update); }).Start();
@@ -140,7 +152,10 @@ namespace Enforcer5.Handlers
                 try
                 {
                     //Console.WriteLine("Checking Message");                    
-                    if (update.Message == null) return;
+                    if (update.Message == null)
+                    {
+                        return;
+                    }
                     if (update.Message.Chat.Type != ChatType.Private)
                     {
                         new Task(() => { OnMessage.AntiFlood(update); }).Start();
@@ -171,42 +186,43 @@ namespace Enforcer5.Handlers
                                 {                                  
                                     
                                     AddCount(update.Message.From.Id, update.Message.Text);
-                                    var blocked = Redis.db.StringGetAsync($"spammers{long.Parse(update.Message.From.Id)}").Result;
+                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue)
                                     {
                                         return; ;
                                     }
-                                    if (command.DevOnly & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         return;
                                     }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(long.Parse(update.Message.From.Id)))
+                                    if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
+                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                                     {
                                         Bot.SendReply(
                                             Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
                                                 "userNotAdmin"), update.Message);
                                         return;
                                     }
-                                    if (Constants.Devs.Contains(long.Parse(update.Message.From.Id)) & (command.GroupAdminOnly | command.DevOnly))
+                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
                                     {
                                         Service.LogDevCommand(update, update.Message.Text);
                                     }
-                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+
+                                    if (command.InGroupOnly && update.Message.Chat.Type == ChatType.Private)
                                     {
                                         return;
                                     }
-                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                                    if (command.RequiresReply && update.Message.ReplyToMessage == null)
                                     {
                                         var lang = Methods.GetGroupLanguage(update.Message, true);
                                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                                         return;
                                     }
-                                    if (command.UploadAdmin & !Methods.IsLangAdmin(update.Message.From.Id))
+                                    if (command.UploadAdmin && !Methods.IsLangAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
-                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                                    if (command.GlobalAdminOnly && !Methods.IsGlobalAdmin(update.Message.From.Id))
                                     {
                                         return;
                                     }
@@ -361,9 +377,35 @@ namespace Enforcer5.Handlers
                                     }
                                     else
                                     {
-                                         Service.Welcome(update.Message);
+                                        Service.Welcome(update.Message);
                                         // Service.ResetUser(update.Message);
                                     }
+#if premium
+                                     if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id ==-1001030085238) && update.Message.NewChatMembers.Length > 1)
+                                    {
+                                        for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
+                                        {
+                                            try
+                                            {
+                                                bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {update.Message.NewChatMembers[i].Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                                                Thread.Sleep(2000);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine(e.Message);
+                                            }
+                                        }
+                                        try
+                                        {
+                                            bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine(e.Message);
+                                        }                                            
+                                    }
+#endif
+
                                 }
                                 catch (ApiRequestException e)
                                 {
@@ -580,6 +622,10 @@ namespace Enforcer5.Handlers
                                     try
                                     {
                                         Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                        Thread.Sleep(10000);
+                                        Bot.Send(
+                                            $"{long.Parse(key.ToString())}, {Methods.GetName(long.Parse(key.ToString()))}, {Methods.GetUsername(long.Parse(key.ToString()))} has been spam banned for 10 minutes.",
+                                            -1001076212715);
                                     }
                                     catch (Exception e)
                                     {
