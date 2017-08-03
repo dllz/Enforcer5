@@ -395,7 +395,19 @@ namespace Enforcer5
                         Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
                             update);
                     }
-                    Bot.DeleteMessage(chatId, update.Message.MessageId);
+                    try
+                    {
+                        Bot.DeleteMessage(chatId, update.Message.MessageId);
+                    }
+                    catch (AggregateException e)
+                    {
+                        if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("message can't be deleted")))
+                        {
+                            Bot.Send(Methods.GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+                            return;
+                        }
+                        throw e;
+                    }
 
                 }
             }

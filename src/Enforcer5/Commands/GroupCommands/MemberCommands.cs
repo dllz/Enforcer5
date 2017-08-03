@@ -251,14 +251,22 @@ namespace Enforcer5
         public static void Link(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
-            if (link.Equals("no") || link.IsNullOrEmpty)
+
+            if (update.Message.ReplyToMessage != null && update.Message.Chat.Type == ChatType.Supergroup && !string.IsNullOrEmpty(update.Message.Chat.Username))
             {
-                Bot.SendReply(Methods.GetLocaleString(lang, "linkMissing"), update);
+                Bot.SendReply($"https://t.me/{update.Message.Chat.Username}/{update.Message.ReplyToMessage.MessageId}", update.Message);
             }
             else
             {
-                Bot.SendReply($"<a href=\"{link}\">{update.Message.Chat.Title}</a>", update);
+                var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
+                if (link.Equals("no") || link.IsNullOrEmpty)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "linkMissing"), update);
+                }
+                else
+                {
+                    Bot.SendReply($"<a href=\"{link}\">{update.Message.Chat.Title}</a>", update);
+                }
             }
         }
 
