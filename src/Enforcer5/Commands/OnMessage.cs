@@ -320,8 +320,7 @@ namespace Enforcer5
             {                
                 var chatId = update.Message.Chat.Id;
                 var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-                var admin = Methods.IsGroupAdmin(update);
-                if (watch | admin) return;
+                if (watch) return;
                 var media = Methods.GetContentType(update.Message);
                 var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
                 XDocument lang;
