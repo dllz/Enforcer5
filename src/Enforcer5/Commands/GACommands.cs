@@ -310,6 +310,26 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "unbangroup", DevOnly = true)]
+        public static void UnbanGroup(Update update, string[] args)
+        {
+            if (args.Length == 2)
+            {
+                var groupId = args[1];
+                try
+                {
+                    var id = long.Parse(groupId);
+                    Redis.db.SetRemoveAsync("bot:bannedGroups", id);
+                    Bot.SendReply("Group unbanned", update);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+
         [Command(Trigger = "getrekti", DevOnly = true)]
         public static void GlobalBanListids(Update update, string[] args)
         {
