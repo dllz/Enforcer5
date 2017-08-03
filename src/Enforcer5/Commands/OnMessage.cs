@@ -403,7 +403,6 @@ namespace Enforcer5
                     {
                         if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("message can't be deleted")))
                         {
-                            Bot.Send(Methods.GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
                             return;
                         }
                         throw e;
