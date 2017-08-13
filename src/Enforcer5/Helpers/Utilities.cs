@@ -410,8 +410,8 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    Bot.CatchSend($"{e.Message}", id);
-                    result = Bot.CatchSend($"\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                    Bot.CatchSend($"{message}\nError:{e.Message} occured", id);
+                    result = Bot.CatchSend($"{message} being sent to:{id}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
                         parsemode: ParseMode.Default);
                 }
             }
