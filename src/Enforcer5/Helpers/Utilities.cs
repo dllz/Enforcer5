@@ -512,8 +512,9 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    Bot.CatchSend($"{e.Message}", chatid, messageId: msgid);
-                    result =  Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
+                    Bot.CatchSend($"{message}\nError:{e.Message} occured", chatid, messageId:msgid);
+                    result = Bot.CatchSend($"{message} being sent to:{chatid}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                        parsemode: ParseMode.Default);
                 }
             }
             return result;
