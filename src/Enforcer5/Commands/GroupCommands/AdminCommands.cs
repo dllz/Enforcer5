@@ -386,10 +386,19 @@ namespace Enforcer5
             {
                 if (args.Length == 2)
                 {
-                    link = args[1];
-                    Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
-                    Service.LogCommand(update, update.Message.Text);
+                    if (args[1].ToLower().Equals("no"))
+                    {
+                        Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}links", "link");
+                        Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
+                        Service.LogCommand(update, update.Message.Text);
+                    }
+                    else
+                    {
+                        link = args[1];
+                        Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
+                        Service.LogCommand(update, update.Message.Text);
+                    }
                 }
                 else
                 {

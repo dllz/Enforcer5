@@ -337,7 +337,7 @@ namespace Enforcer5
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{msgId}"),
-                                        groupLink.Result.HasValue
+                                        groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
                                                 Url = groupLink.Result.ToString()
@@ -358,7 +358,7 @@ namespace Enforcer5
                                     {
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                        groupLink.Result.HasValue
+                                        groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
                                                 Url = groupLink.Result
