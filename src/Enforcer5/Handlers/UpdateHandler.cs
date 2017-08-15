@@ -10,6 +10,7 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -127,6 +128,8 @@ namespace Enforcer5.Handlers
                     }
                 }                
 #endif
+                if (update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime())
+                    return;
                 //return;
                 var banned = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
                 if (banned)
