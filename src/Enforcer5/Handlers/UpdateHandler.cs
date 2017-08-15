@@ -128,8 +128,8 @@ namespace Enforcer5.Handlers
                     }
                 }                
 #endif
-                if (update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime())
-                    return;
+                //if (update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime())
+                 //   return;
                 //return;
                 var banned = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
                 if (banned)
