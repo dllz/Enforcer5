@@ -179,6 +179,16 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "donate", "paypal.me/stubbornrobot or Bitcoin: 13QvBKfAattcSxSsW274fbgnKU5ASpnK3A"), update, keyboard:Key.CreateMarkupFromMenu(startMe));
         }
 
+        [Command(Trigger = "unping", InGroupOnly = true, GroupAdminOnly = true)]
+        public static void UntagOverride(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;
+            long userId = Methods.GetUserId(update, args);
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall", userId);
+            Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
+        }      
+
         [Command(Trigger = "pingme", InGroupOnly = true)]
         public static void TagMe(Update update, string[] args)
         {
