@@ -667,6 +667,27 @@ namespace Enforcer5.Helpers
             return string.Join("\n", completedList);
         }
 
+        public static Boolean IsRekt(int id)
+        {
+            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{id}").Result;
+            try
+            {
+                int banned = 0;
+                if (isBanned.Length > 0)
+                    banned = int.Parse(isBanned[0].Value);
+                if (banned == 1)
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            return false;
+        }
+
         public static async void IsRekt(Update update)
         {
             if (update.Message.Chat.Type != ChatType.Supergroup)

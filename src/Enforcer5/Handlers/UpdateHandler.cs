@@ -127,12 +127,13 @@ namespace Enforcer5.Handlers
                         return;
                     }
                 }                
-#endif
+#endif  
                 //if (update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime())
                  //   return;
                 //return;
-                var banned = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
-                if (banned)
+                var bannedGroup = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
+                var bannedUser = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id).Result;
+                if (bannedGroup || bannedUser || Methods.IsRekt(update.Message.From.Id))
                 {
                     if (update.Message.Chat.Type != ChatType.Private)
                     {
