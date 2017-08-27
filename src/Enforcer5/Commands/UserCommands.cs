@@ -215,7 +215,12 @@ namespace Enforcer5
             {
                 Buttons = new List<InlineButton>(1)
                 {
+#if premium
+                    new InlineButton("Register", url:$"t.me/enforcedbot?start=pingme|{chatId}")
+#endif
+#if normal
                     new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme|{chatId}")
+#endif
                 }
             };
             Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update, Key.CreateMarkupFromMenu(button));
