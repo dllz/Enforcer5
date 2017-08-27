@@ -247,7 +247,7 @@ namespace Enforcer5
                 }
             }
             if(set.Count > 0)
-                Bot.SendReply(Methods.GetLocaleString(lang, "tagallregistered", list), update);
+                Bot.SendReply(Methods.GetLocaleString(lang, "tagallregistered", $"<![CDATA[{list}]]>"), update);
             else
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "tagallregisterednoone"), update);
