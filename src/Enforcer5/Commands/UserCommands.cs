@@ -218,7 +218,7 @@ namespace Enforcer5
                     new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme|{chatId}")
                 }
             };
-            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update, Key.CreateMarkupFromMenu(button));
         }
 
         [Command(Trigger = "pingall", InGroupOnly = true)]
