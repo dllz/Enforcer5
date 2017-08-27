@@ -44,10 +44,27 @@ namespace Enforcer5
         {
             if (update.Message.Chat.Type == ChatType.Private)
             {
-                 Redis.db.HashIncrementAsync("bot:general", "users");
-                 Bot.Send(
-                    "Welcome to Enforcer.\nPlease send /getCommands to get a command list.\n/help for more information", update);
-                 Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
+                if (!String.IsNullOrEmpty(args[1]))
+                {
+                    if (args[1].Split('|')[0].Equals("pingme"))
+                    {
+                        var group = args[1].Split('|')[1];
+                        long longGroup;
+                        if (long.TryParse(group, out longGroup))
+                        {
+                            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                            Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
+                            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+                        }
+                    }   
+                }
+                else
+                {
+                    Redis.db.HashIncrementAsync("bot:general", "users");
+                    Bot.Send(
+                        "Welcome to Enforcer.\nPlease send /getCommands to get a command list.\n/help for more information", update);
+                    Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
+                }
             }
         }
 
@@ -185,7 +202,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall", userId);
+            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }      
 
@@ -193,18 +210,15 @@ namespace Enforcer5
         public static void TagMe(Update update, string[] args)
         {
             long chatId = update.Message.Chat.Id;
-            long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-
-            if (!string.IsNullOrEmpty(update.Message.From.Username))
+            var button = new Menu(1)
             {
-                Redis.db.SetAddAsync($"chat:{chatId}:tagall", userId);
-                Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
-            }
-            else
-            {
-                Bot.SendReply(Methods.GetLocaleString(lang, "tagallNoUsername"), update);
-            }
+                Buttons = new List<InlineButton>(1)
+                {
+                    new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme|{chatId}")
+                }
+            };
+            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
         }
 
         [Command(Trigger = "pingall", InGroupOnly = true)]
@@ -216,7 +230,7 @@ namespace Enforcer5
             var spamcheck = Redis.db.StringGetAsync($"chat:{ chatId}:spamList").Result;
             if(spamcheck.HasValue)
                 return;
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall").ToList();
+            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
             
             string list = "";
             long num = 0;
@@ -224,7 +238,7 @@ namespace Enforcer5
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list = $"{list} {Methods.GetUsername(num)}";
+                    list = $"{list} <a href=\"tg:///user?id={num}\">{Methods.GetName(num)}</a>";
                 }
             }
             if(set.Count > 0)
