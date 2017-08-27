@@ -261,7 +261,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall", userId);
+            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }
     }
