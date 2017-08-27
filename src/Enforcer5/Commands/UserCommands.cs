@@ -46,9 +46,9 @@ namespace Enforcer5
             {
                 if (!String.IsNullOrEmpty(args[1]))
                 {
-                    if (args[1].Split('#')[0].Equals("pingme"))
+                    if (args[1].Split('_')[0].Equals("pingme"))
                     {
-                        var group = args[1].Split('#')[1];
+                        var group = args[1].Split('_')[1];
                         long longGroup;
                         if (long.TryParse(group, out longGroup))
                         {
@@ -216,10 +216,10 @@ namespace Enforcer5
                 Buttons = new List<InlineButton>(1)
                 {
 #if premium
-                    new InlineButton("Register", url:$"t.me/enforcedbot?start=pingme#{chatId}")
+                    new InlineButton("Register", url:$"t.me/enforcedbot?start=pingme_{chatId}")
 #endif
 #if normal
-                    new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme#{chatId}")
+                    new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme_{chatId}")
 #endif
                 }
             };
