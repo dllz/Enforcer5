@@ -239,11 +239,17 @@ namespace Enforcer5
             
             string list = "";
             long num = 0;
+            int count = 3;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list = $"{list} <a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a> \n";
+                    list = $"{list} <a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>";
+                    count++;
+                    if (count % 3 == 0)
+                    {
+                        list = $"{list}\n";
+                    }
                 }
             }
             if(set.Count > 0)
