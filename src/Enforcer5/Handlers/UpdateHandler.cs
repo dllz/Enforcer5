@@ -135,7 +135,7 @@ namespace Enforcer5.Handlers
                 var bannedUser = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id).Result;
                 if (bannedGroup || bannedUser)
                 {
-                    if (update.Message.Chat.Type != ChatType.Private)
+                    if (update.Message.Chat.Type != ChatType.Private && bannedGroup)
                     {
                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);                      
                     }
