@@ -246,9 +246,9 @@ namespace Enforcer5
                 {
                     list = $"{list} <a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>";
                     count++;
-                    if (count % 3 == 0)
+                    if (count % 2 == 0)
                     {
-                        list = $"{list}\n";
+                        list = $"{list} has been pinged\n";
                     }
                 }
             }
