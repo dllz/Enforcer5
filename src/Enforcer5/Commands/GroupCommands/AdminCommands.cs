@@ -708,8 +708,10 @@ namespace Enforcer5
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
+                var lang = Methods.GetGroupLanguage(chat).Doc;
                 Service.LogCommand(update, update.Message.Text);
                 Redis.db.SetRemoveAsync("logChatGroups", update.Message.Chat.Id);
+                Bot.Send(Methods.GetLocaleString(lang, "logchannelRemoved"), update);
             }
         }
 
