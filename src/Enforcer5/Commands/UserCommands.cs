@@ -239,19 +239,18 @@ namespace Enforcer5
             
             string list = "";
             long num = 0;
-            int count = 3;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list = $"{list} <a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>";
-                    count++;
-                    if (count % 2 == 0)
-                    {
-                        list = $"{list} has been pinged\n";
-                    }
+                    list += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>,";
                 }
             }
+
+            list = string.IsNullOrEmpty(list)
+                ? list
+                : list.Substring(0, list.Length - 1);
+
             if(set.Count > 0)
                 Bot.Send($"{list} {Methods.GetLocaleString(lang, "tagallregistered", "")}", update);
             else
