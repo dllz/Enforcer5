@@ -46,16 +46,52 @@ namespace Enforcer5
             {
                 if (!String.IsNullOrEmpty(args[1]))
                 {
-                    if (args[1].Split('_')[0].Equals("pingme"))
+                    var cmd = args[1].Split('_')[0].ToLower();
+                    long longGroup;
+                    string group;
+                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+
+                    switch (cmd)
                     {
-                        var group = args[1].Split('_')[1];
-                        long longGroup;
-                        if (long.TryParse(group, out longGroup))
-                        {
-                            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                            Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
-                            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
-                        }
+                        case "pingme":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
+                                Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "rules":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var rules = Methods.GetRules(longGroup, lang);
+                                Bot.SendReply(rules, update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "adminlist":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var admins = Methods.GetAdminList(longGroup, lang);
+                                Bot.SendReply(admins, update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "about":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var about = Methods.GetAbout(longGroup, lang);
+                                Bot.SendReply(about, update);
+                            }
+                            else Bot.SendReply("Error: wrong syntax!", update);
+                            break;
                     }   
                 }
                 else

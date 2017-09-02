@@ -577,7 +577,12 @@ namespace Enforcer5.Helpers
 
         public static string GetAdminList(Message message, XDocument lang)
         {
-            var chatAdmins = Bot.Api.GetChatAdministratorsAsync(message.Chat.Id).Result;
+            return GetAdminList(message.Chat.Id, lang);
+        }
+
+        public static string GetAdminList(long groupid, XDocument lang)
+        {
+            var chatAdmins = Bot.Api.GetChatAdministratorsAsync(groupid).Result;
             string creater = "Unknown";
             string adminList = "";
             foreach (var member in chatAdmins)
