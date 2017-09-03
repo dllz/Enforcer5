@@ -487,7 +487,7 @@ namespace Enforcer5.Helpers
 
         public static string GetName(long userid)
         {
-            return Redis.db.HashGetAsync($"user:{userid}", "name").Result;
+            return ((string)Redis.db.HashGetAsync($"user:{userid}", "name").Result).FormatHTML();
         }
 
         public static int ResolveIdFromusername(string s, long chatId = 0)
@@ -589,11 +589,11 @@ namespace Enforcer5.Helpers
             {
                 if (member.Status.Equals(ChatMemberStatus.Administrator))
                 {
-                    adminList = $"{adminList}\n{member.User.FirstName}";
+                    adminList = $"{adminList}\n{member.User.FirstName.FormatHTML()}";
                 }
                 else if (member.Status.Equals(ChatMemberStatus.Creator))
                 {
-                    creater = member.User.FirstName;
+                    creater = member.User.FirstName.FormatHTML();
                 }
             }
             return Methods.GetLocaleString(lang, "adminList", creater, adminList);
