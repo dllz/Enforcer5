@@ -225,7 +225,7 @@ namespace Enforcer5
                 }
             }
             Redis.db.SetAddAsync($"chat:{groupd}:watch", userId);
-            Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
+            Bot.Send(Methods.GetLocaleString(lang, "off"), update.Message.From.Id);
             //Service.LogCommand(update, update.Message.Text);
         }
 
