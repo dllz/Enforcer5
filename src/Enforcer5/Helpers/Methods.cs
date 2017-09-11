@@ -728,7 +728,7 @@ namespace Enforcer5.Helpers
                     
                     try
                     {
-                         Bot.Send($"{name} has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                         Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                         var temp = BanUser(update.Message.Chat.Id, id, lang);
                         if(temp)
                             SaveBan(id, "ban");
