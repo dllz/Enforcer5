@@ -488,7 +488,13 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
+                    List<string> removeTriggers = new List<string> { "bot was kicked from the", "bot is not a member of the", "bot was blocked by" };
+                    if (e is AggregateException && ((AggregateException)e).InnerExceptions.Any(x => removeTriggers.Any(y => x.Message.Contains(y))))
+                    {
+                        Redis.db.HashDeleteAsync($"chat:{chatId}:settings", "logchat");
+                        Bot.Send(Methods.GetLocaleString(lang, "logchannelAutoRemoved"), chatId);
+                    }
+                    else Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
                 }
             }
 
