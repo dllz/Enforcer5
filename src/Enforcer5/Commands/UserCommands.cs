@@ -46,16 +46,52 @@ namespace Enforcer5
             {
                 if (!String.IsNullOrEmpty(args[1]))
                 {
-                    if (args[1].Split('_')[0].Equals("pingme"))
+                    var cmd = args[1].Split('_')[0].ToLower();
+                    long longGroup;
+                    string group;
+                    var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+
+                    switch (cmd)
                     {
-                        var group = args[1].Split('_')[1];
-                        long longGroup;
-                        if (long.TryParse(group, out longGroup))
-                        {
-                            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                            Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
-                            Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
-                        }
+                        case "pingme":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
+                                Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "rules":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var rules = Methods.GetRules(longGroup, lang);
+                                Bot.SendReply(rules, update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "adminlist":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var admins = Methods.GetAdminList(longGroup, lang);
+                                Bot.SendReply(admins, update);
+                            }
+                            else Bot.SendReply("Error: Wrong syntax!", update);
+                            break;
+
+                        case "about":
+                            group = args[1].Split('_')[1];
+                            if (long.TryParse(group, out longGroup))
+                            {
+                                var about = Methods.GetAbout(longGroup, lang);
+                                Bot.SendReply(about, update);
+                            }
+                            else Bot.SendReply("Error: wrong syntax!", update);
+                            break;
                     }   
                 }
                 else
@@ -239,19 +275,18 @@ namespace Enforcer5
             
             string list = "";
             long num = 0;
-            int count = 3;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list = $"{list} <a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>";
-                    count++;
-                    if (count % 2 == 0)
-                    {
-                        list = $"{list} has been pinged\n";
-                    }
+                    list += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>,";
                 }
             }
+
+            list = string.IsNullOrEmpty(list)
+                ? list
+                : list.Substring(0, list.Length - 1);
+
             if(set.Count > 0)
                 Bot.Send($"{list} {Methods.GetLocaleString(lang, "tagallregistered", "")}", update);
             else
