@@ -602,6 +602,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
             Service.LogCommand(update, update.Message.Text);
         }
+      
         [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
         public static void EnableMediaExcempt(Update update, string[] args)
         {
