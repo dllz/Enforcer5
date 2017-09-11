@@ -208,7 +208,7 @@ namespace Enforcer5
              Bot.SendReply("Done", update);
         }
 
-        [Command(Trigger = "remotedisablewatch", InGroupOnly = true, GroupAdminOnly = true)]
+        [Command(Trigger = "remotedisablewatch", GlobalAdminOnly = true)]
         public static void RemoteDisbleMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
