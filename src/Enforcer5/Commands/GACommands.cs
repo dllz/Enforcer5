@@ -208,6 +208,27 @@ namespace Enforcer5
              Bot.SendReply("Done", update);
         }
 
+        [Command(Trigger = "remotedisablewatch", GlobalAdminOnly = true)]
+        public static void RemoteDisbleMediaExcempt(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            long userId = 0;
+            long groupd = 0;
+            if (args.Length == 2)
+            {
+                int temp;
+                var spilt = args[1].Split(':');
+                if (int.TryParse(spilt[0], out temp))
+                {
+                    userId = temp;
+                    groupd = int.Parse(spilt[1]);
+                }
+            }
+            Redis.db.SetAddAsync($"chat:{groupd}:watch", userId);
+            Bot.Send(Methods.GetLocaleString(lang, "off"), update.Message.From.Id);
+            //Service.LogCommand(update, update.Message.Text);
+        }
+
         [Command(Trigger = "getrekt", DevOnly = true)]
         public static void GlobalBan(Update update, string[] args)
         {
