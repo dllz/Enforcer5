@@ -279,7 +279,7 @@ namespace Enforcer5
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>,";
+                    list += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
                 }
             }
 

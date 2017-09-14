@@ -23,6 +23,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using System.Linq;
 #pragma warning disable CS0168
 namespace Enforcer5.Helpers
 {
@@ -541,7 +542,15 @@ namespace Enforcer5.Helpers
 
         public static Boolean DeleteMessage(long chatId, int msgid)
         {
-            return Bot.Api.DeleteMessageAsync(chatId, msgid).Result;
+            try
+            {
+                return Bot.Api.DeleteMessageAsync(chatId, msgid).Result;
+            }
+            catch (AggregateException AggE)
+            {
+                if (AggE.InnerExceptions.Any(x => x.Message.ToLower().Contains("message to delete not found"))) return true;
+                throw AggE;
+            }
            
         }
     }
