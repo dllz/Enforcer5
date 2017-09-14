@@ -221,7 +221,7 @@ namespace Enforcer5
                 if (int.TryParse(spilt[0], out temp))
                 {
                     userId = temp;
-                    groupd = int.Parse(spilt[1]);
+                    groupd = long.Parse(spilt[1]);
                 }
             }
             Redis.db.SetAddAsync($"chat:{groupd}:watch", userId);
