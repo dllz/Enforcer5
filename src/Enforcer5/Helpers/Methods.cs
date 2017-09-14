@@ -732,12 +732,15 @@ namespace Enforcer5.Helpers
                     var lang = Methods.GetGroupLanguage(update.Message,true).Doc;                    
                     
                     try
-                    {
-                         Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                    {                        
                         var temp = BanUser(update.Message.Chat.Id, id, lang);
-                        if(temp)
+                        if (temp)
+                        {
                             SaveBan(id, "ban");
-                        var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", name, reason), update);                        
+                            var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", name, reason), update);
+                            Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                        }
+                                                  
                     }
                     catch (AggregateException e)
                     {
