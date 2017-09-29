@@ -42,6 +42,7 @@ namespace Enforcer5
                 {
                     Environment.Exit(1);
                 }
+                count++;
             }
             new Thread(() => Bot.Initialize()).Start();
             //AppDomain.UnhandledException += (sender, eventArgs) =>
