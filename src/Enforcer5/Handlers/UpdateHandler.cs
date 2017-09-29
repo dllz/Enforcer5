@@ -28,6 +28,8 @@ namespace Enforcer5.Handlers
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
+            if (e.Update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime() - 180)
+                return;
             new Task(() => { HandleUpdate(e.Update); }).Start();
 #if premium
             Redis.db.StringSetAsync("bot:last_Premium_update", Bot.Api.MessageOffset);
@@ -128,8 +130,7 @@ namespace Enforcer5.Handlers
                     }
                 }                
 #endif  
-                if (update.Message.Date.ToUnixTime() < Bot.StartTime.ToUnixTime() - 180)
-                    return;
+               
                 //return;
                 var bannedGroup = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
                 var bannedUser = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id).Result;
