@@ -114,9 +114,6 @@ namespace Enforcer5
                 case 106665913://Jeff
                     Bot.Send("This is a known bug. No need to report", chatId);
                     break;
-                case 23776848://Melisa
-                    Bot.Send("Banhammer is ready for use milady. Feel free to strike them down", chatId);
-                    break;
                 case 9375804://Jhen
                     Bot.Send("Or else I'll kick your butt", chatId);
                     break;
@@ -140,18 +137,10 @@ namespace Enforcer5
                     Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
                     break;
                 case 295152997://Ludwig
-#if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADzz8AAsIYZAcQLF6h-zaemgI"), "Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.");
-#endif
-#if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADzz8AAsIYZAc7HPc9Y1-hPwI"), "Ludwig has joined the group. 1 crazy ape, 1 minimum, 1 max.");
-#endif
+                    Bot.Send("Everyone beware, a crazy ape is about to infiltrate this group!", chatId);
                     break;
                 case 81772130://Lordy
                     Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
-                    break;
-                case 221962247://Touka
-                    Bot.Send("Uhm, who are you again? I may not remember for sure, but feel free to spread terror with your kagune here.", chatId);
                     break;
                 default:
                     var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
