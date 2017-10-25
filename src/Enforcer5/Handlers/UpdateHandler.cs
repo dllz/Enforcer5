@@ -28,8 +28,8 @@ namespace Enforcer5.Handlers
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
             if (e.Update.Message == null) return;
-            if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
-                return; //toss it
+          //  if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
+            //    return; //toss it
             new Task(() => { HandleUpdate(e.Update); }).Start();
 #if premium
             Redis.db.StringSetAsync("bot:last_Premium_update", Bot.Api.MessageOffset);
@@ -156,7 +156,7 @@ namespace Enforcer5.Handlers
                 //}
                 try
                 {
-                    //Console.WriteLine("Checking Message");                    
+                    Console.WriteLine("Checking Message");                    
                     if (update.Message == null)
                     {
                         return;
