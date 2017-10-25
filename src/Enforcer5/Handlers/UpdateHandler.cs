@@ -156,7 +156,7 @@ namespace Enforcer5.Handlers
                 //}
                 try
                 {
-                    Console.WriteLine("Checking Message");                    
+                   // Console.WriteLine("Checking Message");                    
                     if (update.Message == null)
                     {
                         return;
