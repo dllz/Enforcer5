@@ -67,13 +67,13 @@ namespace Enforcer5.Helpers
 #if normal
             var key =
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\Werewolf");
+                        .OpenSubKey("SOFTWARE\\TelegramBots");
             TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
 #endif
 #if premium
             var key =
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\Werewolf");
+                        .OpenSubKey("SOFTWARE\\TelegramBots");
             TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
 #endif
 
@@ -557,13 +557,13 @@ namespace Enforcer5.Helpers
 
     internal static class Redis
     {
-        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
-        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"138.201.172.150:6379, password={key}, allowAdmin=true");        
+        //private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
+        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"127.0.0.1:6379, allowAdmin=true");        
         public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
 
         public static void SaveRedis()
         {
-            redis.GetServer($"138.201.172.150:6379").Save(SaveType.BackgroundSave);
+            redis.GetServer($"127.0.0.1:6379").Save(SaveType.BackgroundSave);
         }
 
         public static bool Start()
