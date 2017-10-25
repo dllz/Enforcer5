@@ -27,16 +27,16 @@ namespace Enforcer5.Handlers
         internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
-            if (e.Update.Message == null) return;
-          //  if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
-            //    return; //toss it
-            new Task(() => { HandleUpdate(e.Update); }).Start();
 #if premium
             Redis.db.StringSetAsync("bot:last_Premium_update", Bot.Api.MessageOffset);
 #endif
 #if normal
             Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
 #endif
+            if (e.Update.Message == null) return;
+            if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
+                return; //toss it
+            new Task(() => { HandleUpdate(e.Update); }).Start();
         }
         private static void Log(Update update, string text, Models.Commands command = null)
         {
