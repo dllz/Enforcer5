@@ -435,6 +435,7 @@ namespace Enforcer5
                 if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
+                if (userId == Bot.Me.Id) return;
 
                 if (args[1] != null)
                 {
@@ -485,6 +486,7 @@ namespace Enforcer5
                         Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                         return;
                     }
+                    if (userId == Bot.Me.Id) return;
                 }
             }
 
