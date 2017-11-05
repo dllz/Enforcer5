@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
@@ -273,22 +274,32 @@ namespace Enforcer5
                 return;
             var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
             
-            string list = "";
+            List<String> list = new List<string>();
+            string templist = "";
+            var count = 0;
             long num = 0;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    list += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
+                    templist += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
+                    count++;
+                }
+                if (count % 10 == 0 && count > 0)
+                {
+                    list.Add(templist);
+                    templist = "";
                 }
             }
 
-            list = string.IsNullOrEmpty(list)
-                ? list
-                : list.Substring(0, list.Length - 1);
-
-            if(set.Count > 0)
-                Bot.Send($"{list} {Methods.GetLocaleString(lang, "tagallregistered", "")}", update);
+            if (set.Count > 0)
+            {
+                foreach (var toBeSent in list)
+                {
+                    Bot.Send($"{toBeSent} {Methods.GetLocaleString(lang, "tagallregistered", "")}", update);
+                    Thread.Sleep(500);
+                }
+            }
             else
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "tagallregisterednoone"), update);
