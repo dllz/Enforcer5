@@ -297,7 +297,7 @@ namespace Enforcer5
                 foreach (var toBeSent in list)
                 {
                     Bot.Send($"{toBeSent} {Methods.GetLocaleString(lang, "tagallregistered", "")}", update);
-                    Thread.Sleep(500);
+                    Thread.Sleep(1000);
                 }
             }
             else
