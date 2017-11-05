@@ -378,6 +378,9 @@
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
       },
+      "Paymentwall/1.0.0": {
+        "type": "package"
+      },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
         "type": "package",
         "runtimeTargets": {
@@ -2845,6 +2848,9 @@
         "runtime": {
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
+      },
+      "Paymentwall/1.0.0": {
+        "type": "package"
       },
       "runtime.any.System.Collections/4.3.0": {
         "type": "package",
@@ -5527,6 +5533,9 @@
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
       },
+      "Paymentwall/1.0.0": {
+        "type": "package"
+      },
       "runtime.any.System.Collections/4.3.0": {
         "type": "package",
         "dependencies": {
@@ -7974,15 +7983,15 @@
       ]
     },
     "Microsoft.NETCore.App/1.1.2": {
-      "sha512": "fcN0Ob6rjY7Zu0770cA5l9wRJvj7+ltJPPdryUidejkkhao+y2AYrtezBTlP9nCSFXLmYR9BtaknORT17x8reA==",
+      "sha512": "TUPK1xhef7WcbsIkhfZOz6J7DrG5aebjVRBswPfHe90eDhfnlWHaLiI1OtMB2O78bf5d37WO6ge+9nel2keKkA==",
       "type": "package",
       "path": "Microsoft.NETCore.App/1.1.2",
       "files": [
-        "Microsoft.NETCore.App.1.1.2.nupkg.sha512",
-        "Microsoft.NETCore.App.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
-        "lib/netcoreapp1.0/_._"
+        "lib/netcoreapp1.0/_._",
+        "microsoft.netcore.app.1.1.2.nupkg.sha512",
+        "microsoft.netcore.app.nuspec"
       ]
     },
     "Microsoft.NETCore.DotNetHost/1.0.1": {
@@ -7998,14 +8007,14 @@
       ]
     },
     "Microsoft.NETCore.DotNetHostPolicy/1.0.5": {
-      "sha512": "KR8e8+lh/YnhD0wDCMBRUjn0/VnryxHbu6I61U6m7PAyz9HbRr+iX3BYL925OHMFuFmk1atc/RRGjGtVOVrvrg==",
+      "sha512": "QcjJndYeHT97mB2K+N9q0aLk9wPxEwfFcmHR/Ku9ZbtH4RL+qB23wIxXHx74yQ569LRRt+K9WnHMpe5gPnghlA==",
       "type": "package",
       "path": "Microsoft.NETCore.DotNetHostPolicy/1.0.5",
       "files": [
-        "Microsoft.NETCore.DotNetHostPolicy.1.0.5.nupkg.sha512",
-        "Microsoft.NETCore.DotNetHostPolicy.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
+        "microsoft.netcore.dotnethostpolicy.1.0.5.nupkg.sha512",
+        "microsoft.netcore.dotnethostpolicy.nuspec",
         "runtime.json"
       ]
     },
@@ -8022,14 +8031,14 @@
       ]
     },
     "Microsoft.NETCore.Jit/1.0.7": {
-      "sha512": "pNYSZFvX14x4ubToTLxj9O9xNIEg1kHaL6gkMr8urWKIY65cu8272KRlT3cgJCKLbzFO0XZDjvPlRBCFrbJm7Q==",
+      "sha512": "LWc4iSE7Ggrzag9y5IXubX9UatQFFf93aOhmji9ynf2aoXlo+ztG6JFrht+F+9gEBxwKMSE//BAJECEBBBZpAQ==",
       "type": "package",
       "path": "Microsoft.NETCore.Jit/1.0.7",
       "files": [
-        "Microsoft.NETCore.Jit.1.0.7.nupkg.sha512",
-        "Microsoft.NETCore.Jit.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
+        "microsoft.netcore.jit.1.0.7.nupkg.sha512",
+        "microsoft.netcore.jit.nuspec",
         "runtime.json"
       ]
     },
@@ -8047,14 +8056,14 @@
       ]
     },
     "Microsoft.NETCore.Runtime.CoreCLR/1.0.7": {
-      "sha512": "t81co+R1xDubSQDDYP+zddd1Eya7xGeN2XlJMSsNFUCKRm35/5u8knnXOQTdfE1nf6bYqPROt18WlhdZui1FLA==",
+      "sha512": "a6qRE/LJEGYcAbmJ54KImwGNGDAyRhhLYrF+/uGRzuAQ3ODyggrv/huRHeT/f2zuBK/2ytFSmPjkxYduR/peFA==",
       "type": "package",
       "path": "Microsoft.NETCore.Runtime.CoreCLR/1.0.7",
       "files": [
-        "Microsoft.NETCore.Runtime.CoreCLR.1.0.7.nupkg.sha512",
-        "Microsoft.NETCore.Runtime.CoreCLR.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
+        "microsoft.netcore.runtime.coreclr.1.0.7.nupkg.sha512",
+        "microsoft.netcore.runtime.coreclr.nuspec",
         "runtime.json"
       ]
     },
@@ -8226,6 +8235,16 @@
         "newtonsoft.json.10.0.3.nupkg.sha512",
         "newtonsoft.json.nuspec",
         "tools/install.ps1"
+      ]
+    },
+    "Paymentwall/1.0.0": {
+      "sha512": "QYEdHJFWIly2sa5INuG40+25JxAviP/L4xQoyYqOKe77x6QbNxmRKlXlHzpvffqy9QkdVw0oU2TeqUX5FCaFAg==",
+      "type": "package",
+      "path": "Paymentwall/1.0.0",
+      "files": [
+        "Paymentwall.1.0.0.nupkg.sha512",
+        "Paymentwall.nuspec",
+        "lib/net40/paymentwall.dll"
       ]
     },
     "runtime.any.System.Collections/4.3.0": {
@@ -8728,15 +8747,15 @@
       ]
     },
     "runtime.native.System.Security.Cryptography/4.0.1": {
-      "sha512": "6Z4SIheH5ziCRoMnLBE+fmcAPfyewKbteJQGTT86+dsBRSYZNuUmLS3Qg+rzo1nPdiK19VmOBne54j9kI7sI4Q==",
+      "sha512": "2Rjry5DmjTz2F03dYEzjBLCP5cz3zbFTiCSbkAcv9YvnzWzKKR6RkbL85byaPAlSpPEPM0ULLynFccKbNhifEg==",
       "type": "package",
       "path": "runtime.native.System.Security.Cryptography/4.0.1",
       "files": [
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
         "lib/netstandard1.0/_._",
-        "runtime.native.System.Security.Cryptography.4.0.1.nupkg.sha512",
-        "runtime.native.System.Security.Cryptography.nuspec"
+        "runtime.native.system.security.cryptography.4.0.1.nupkg.sha512",
+        "runtime.native.system.security.cryptography.nuspec"
       ]
     },
     "runtime.native.System.Security.Cryptography.Apple/4.3.0": {
@@ -10068,12 +10087,10 @@
       ]
     },
     "System.Diagnostics.StackTrace/4.3.0": {
-      "sha512": "BiHg0vgtd35/DM9jvtaC1eKRpWZxr0gcQd643ABG7GnvSlf5pOkY2uyd42mMOJoOmKvnpNj0F4tuoS1pacTwYw==",
+      "sha512": "fXjpElBTdYyZ/JGyWKLAwCJgYADzbZ90vyfQOFM3VtDqth9YBtIDEXWHqOlHXU6u2t+OV89SmmsHnj8D2iWUNw==",
       "type": "package",
       "path": "System.Diagnostics.StackTrace/4.3.0",
       "files": [
-        "System.Diagnostics.StackTrace.4.3.0.nupkg.sha512",
-        "System.Diagnostics.StackTrace.nuspec",
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
         "lib/MonoAndroid10/_._",
@@ -10102,7 +10119,9 @@
         "ref/xamarinmac20/_._",
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._",
-        "runtimes/aot/lib/netcore50/System.Diagnostics.StackTrace.dll"
+        "runtimes/aot/lib/netcore50/System.Diagnostics.StackTrace.dll",
+        "system.diagnostics.stacktrace.4.3.0.nupkg.sha512",
+        "system.diagnostics.stacktrace.nuspec"
       ]
     },
     "System.Diagnostics.Tools/4.3.0": {
@@ -13998,6 +14017,7 @@
     "": [
       "Microsoft.NETCore.App >= 1.1.2",
       "Microsoft.Win32.Registry >= 4.3.0",
+      "Paymentwall >= 1.0.0",
       "StackExchange.Redis >= 1.2.4",
       "System.Diagnostics.StackTrace >= 4.3.0",
       "System.Runtime.Serialization.Json >= 4.3.0",

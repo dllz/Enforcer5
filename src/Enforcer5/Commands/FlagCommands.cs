@@ -425,7 +425,7 @@ namespace Enforcer5
             }
             if (count > 0)
             {
-                 Bot.Send(Methods.GetLocaleString(groupLang, "reported", repId), chatId);
+                 Bot.SendReply(Methods.GetLocaleString(groupLang, "reported", repId), chatId, repId);
             }
         }
 
