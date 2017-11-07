@@ -13,7 +13,6 @@
   "dependencies": {
     "Microsoft.NETCore.App": "1.1.2",
     "Microsoft.Win32.Registry": "4.3.0",
-    "Paymentwall": "1.0.0",
     "StackExchange.Redis": "1.2.4",
     "System.Diagnostics.StackTrace": "4.3.0",
     "System.Runtime.Serialization.Json": "4.3.0",

@@ -378,9 +378,6 @@
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
       },
-      "Paymentwall/1.0.0": {
-        "type": "package"
-      },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
         "type": "package",
         "runtimeTargets": {
@@ -2848,9 +2845,6 @@
         "runtime": {
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
-      },
-      "Paymentwall/1.0.0": {
-        "type": "package"
       },
       "runtime.any.System.Collections/4.3.0": {
         "type": "package",
@@ -5532,9 +5526,6 @@
         "runtime": {
           "lib/netstandard1.3/Newtonsoft.Json.dll": {}
         }
-      },
-      "Paymentwall/1.0.0": {
-        "type": "package"
       },
       "runtime.any.System.Collections/4.3.0": {
         "type": "package",
@@ -8235,16 +8226,6 @@
         "newtonsoft.json.10.0.3.nupkg.sha512",
         "newtonsoft.json.nuspec",
         "tools/install.ps1"
-      ]
-    },
-    "Paymentwall/1.0.0": {
-      "sha512": "QYEdHJFWIly2sa5INuG40+25JxAviP/L4xQoyYqOKe77x6QbNxmRKlXlHzpvffqy9QkdVw0oU2TeqUX5FCaFAg==",
-      "type": "package",
-      "path": "Paymentwall/1.0.0",
-      "files": [
-        "Paymentwall.1.0.0.nupkg.sha512",
-        "Paymentwall.nuspec",
-        "lib/net40/paymentwall.dll"
       ]
     },
     "runtime.any.System.Collections/4.3.0": {
@@ -14017,7 +13998,6 @@
     "": [
       "Microsoft.NETCore.App >= 1.1.2",
       "Microsoft.Win32.Registry >= 4.3.0",
-      "Paymentwall >= 1.0.0",
       "StackExchange.Redis >= 1.2.4",
       "System.Diagnostics.StackTrace >= 4.3.0",
       "System.Runtime.Serialization.Json >= 4.3.0",
