@@ -341,7 +341,7 @@ namespace Enforcer5
                                         replyToMessageId: repId);
                                 break;
                             case "gif":
-                                if (!string.IsNullOrEmpty(hasMedia))
+                                if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.ToString().Contains("###file_id") && hasMedia.ToString().Contains("null"))
                                 {
                                     Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId), caption,
                                         replyToMessageId: repId);
