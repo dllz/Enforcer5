@@ -291,7 +291,10 @@ namespace Enforcer5
                     templist = "";
                 }
             }
-
+            if (templist.Length > 0)
+            {
+                list.Add(templist);
+            }
             if (set.Count > 0)
             {
                 foreach (var toBeSent in list)
