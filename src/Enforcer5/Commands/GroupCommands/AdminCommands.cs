@@ -330,7 +330,6 @@ namespace Enforcer5
                 }
 
             }
-            Service.LogCommand(update, update.Message.Text);
         }
 
         [Command(Trigger = "extralist", InGroupOnly = true)]
