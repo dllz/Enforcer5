@@ -83,6 +83,7 @@ namespace Enforcer5
                                     Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
                                     Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
                                 }
+                                Bot.DeleteMessage(chatId, msg.MessageId);
                             }
                         }
                     }
