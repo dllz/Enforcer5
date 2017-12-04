@@ -29,11 +29,11 @@ namespace Enforcer5
                 //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
                 var lang = Methods.GetGroupLanguage(msg, true).Doc;
                 try
-                {
+                {   
                     var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
                     var expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value.ToString());
                     int tryGenCount = 0;
-                    if (System.DateTime.UtcNow.ToUnixTime() > expireTime && tryGenCount < 5)
+                    if (System.DateTime.UtcNow.ToUnixTime() > expireTime && tryGenCount < 5 && expireTime != -1)
                     {
                         genNewToken(chatId);
                         nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
@@ -168,6 +168,28 @@ namespace Enforcer5
                     Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
                 }
                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "setnsfwapi", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void setclientapi(Update update, string[] args)
+        {
+
+            var chatId = update.Message.Chat.Id;
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", args[1].ToString());
+                var temp = Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "expireTime", -1).Result;
+                Redis.db.SetAddAsync("bot:nsfwgroups", chatId);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
+                Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
             }
             catch (Exception e)
             {
