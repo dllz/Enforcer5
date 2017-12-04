@@ -186,10 +186,10 @@ namespace Enforcer5
 
                         if (e.Message.Contains("message is too long"))
                         {
-                      
-                        Bot.SendReply(
-                                Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
-                                update);
+
+                            Bot.SendReply(
+                                    Methods.GetLocaleString(lang, "tooLong", Methods.GetLocaleString(lang, "extra")),
+                                    update);
                         }
                         else if (e.Message.Contains("Unsupported start tag"))
                         {
@@ -304,7 +304,7 @@ namespace Enforcer5
                     var hash = $"chat:{update.Message.Chat.Id}:extra";
                     Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                     Redis.db.HashSetAsync(hash, words[0], text);
-                    var resulted =  Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                    var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "extraSaved", words[0]));
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -330,6 +330,7 @@ namespace Enforcer5
                 }
 
             }
+            Service.LogCommand(update, update.Message.Text);
         }
 
         [Command(Trigger = "extralist", InGroupOnly = true)]
