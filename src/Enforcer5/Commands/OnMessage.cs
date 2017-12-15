@@ -156,7 +156,14 @@ namespace Enforcer5
                 var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
                 if (text.Length >= intml || lines.Length >= intmline)
                 {
-                    Bot.DeleteMessage(groupId, update.Message.MessageId);
+                    try
+                    {
+                        Bot.DeleteMessage(groupId, update.Message.MessageId);
+                    }
+                    catch (Exception e)
+                    {
+                        //moving on
+                    }
                     var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
                     XDocument lang;
                     try

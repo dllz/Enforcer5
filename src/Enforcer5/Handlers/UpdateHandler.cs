@@ -520,7 +520,7 @@ namespace Enforcer5.Handlers
             catch (Exception e)
             {
 
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
             }
 
         }

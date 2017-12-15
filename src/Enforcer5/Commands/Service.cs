@@ -108,14 +108,8 @@ namespace Enforcer5
             }
             switch (message.NewChatMember.Id)
             {
-                case 352277339://Phyto
-                    Bot.Send("Error 404", chatId);
-                    break;
                 case 106665913://Jeff
                     Bot.Send("This is a known bug. No need to report", chatId);
-                    break;
-                case 9375804://Jhen
-                    Bot.Send("Or else I'll kick your butt", chatId);
                     break;
                 case 125311351://Daniel
 #if premium
@@ -132,9 +126,6 @@ namespace Enforcer5
 #if normal
                     Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAePhP7wDwUKmgI"));
 #endif
-                    break;
-                case 263451571://Michelle
-                    Bot.Send("The Node Queen is here! This Vixen is ready to slay.", chatId);
                     break;
                 case 295152997://Ludwig
                     Bot.Send("Everyone beware, a crazy ape is about to infiltrate this group!", chatId);
