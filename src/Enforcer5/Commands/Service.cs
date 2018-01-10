@@ -133,6 +133,9 @@ namespace Enforcer5
                 case 81772130://Lordy
                     Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
                     break;
+                case 36702373://Karma (Prize Winner)
+                    Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.");
+                    break;
                 default:
                     var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
                     var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
