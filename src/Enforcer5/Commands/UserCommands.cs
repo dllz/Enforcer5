@@ -326,7 +326,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;                    
             long userId = update.Message.From.Id;        
             var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
-
+            long num = 0;
             foreach (var mem in set)
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
