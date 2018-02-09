@@ -319,5 +319,14 @@ namespace Enforcer5
             Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }
+
+        [Command(Trigger = "unpingall", InGroupOnly = true, GroupAdminOnly = true)]
+        public static void unTagAll(Update update, string[] args)
+        {
+            long chatId = update.Message.Chat.Id;                    
+            long userId = update.Message.From.Id;        
+            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2");                
+        }
+
     }
 }
