@@ -331,7 +331,7 @@ namespace Enforcer5
             {
                 if (mem.HasValue && long.TryParse(mem.ToString(), out num))
                 {
-                    Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", num)                
+                    Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", num);              
                 }            
             }              
         }
