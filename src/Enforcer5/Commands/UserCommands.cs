@@ -325,7 +325,15 @@ namespace Enforcer5
         {
             long chatId = update.Message.Chat.Id;                    
             long userId = update.Message.From.Id;        
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2");                
+            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
+
+            foreach (var mem in set)
+            {
+                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
+                {
+                    Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", num)                
+                }            
+            }              
         }
 
     }
