@@ -271,7 +271,22 @@ namespace Enforcer5
                     }
                     try
                     {
-                        var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId).Result;
+                        try
+                        {
+                            var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId).Result;
+                        }
+                        catch (ApiRequestException e)
+                        {
+                            Console.WriteLine(e.Message + e.StackTrace);
+                        }
+                        catch (AggregateException e)
+                        {
+                            Console.WriteLine(e.Message + e.StackTrace);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message + e.StackTrace);
+                        }
                         Message result;
                         if (!string.IsNullOrEmpty(username))
                         {
