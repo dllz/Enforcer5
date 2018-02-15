@@ -271,6 +271,7 @@ namespace Enforcer5
                     }
                     try
                     {
+                        var replyFailure = false;
                         try
                         {
                             var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId).Result;
@@ -278,22 +279,25 @@ namespace Enforcer5
                         catch (ApiRequestException e)
                         {
                             msgId = repId;
+                            replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (AggregateException e)
                         {
                             msgId = repId;
+                            replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (Exception e)
                         {
                             msgId = repId;
+                            replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         Message result;
                         if (!string.IsNullOrEmpty(username))
                         {
-                            if (updateMessage.ReplyToMessage != null)
+                            if (updateMessage.ReplyToMessage != null && replyFailure == false)
                             {
                                 var solvedMenu = new Menu(2)
                                 {
@@ -340,7 +344,7 @@ namespace Enforcer5
                         }
                         else
                         {
-                            if (updateMessage.ReplyToMessage != null)
+                            if (updateMessage.ReplyToMessage != null && replyFailure == false)
                             {
                                 var solvedMenu = new Menu(2)
                                 {
