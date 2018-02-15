@@ -277,14 +277,17 @@ namespace Enforcer5
                         }
                         catch (ApiRequestException e)
                         {
+                            msgId = repId;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (AggregateException e)
                         {
+                            msgId = repId;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (Exception e)
                         {
+                            msgId = repId;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         Message result;
