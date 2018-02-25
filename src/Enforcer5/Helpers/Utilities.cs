@@ -88,10 +88,10 @@ namespace Enforcer5.Helpers
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
 #if premium
-                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
+                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result + 10000000;
 #endif
 #if normal
-            var offset = Redis.db.StringGetAsync("bot:last_update").Result;
+            var offset = Redis.db.StringGetAsync("bot:last_update").Result + 10000000;
 #endif
             if (offset.HasValue)
             {
