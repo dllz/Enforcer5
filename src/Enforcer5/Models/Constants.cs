@@ -7,12 +7,26 @@ namespace Enforcer5.Models
 {
     public class Constants
     {
-        public static long[] Devs = {125311351, 295152997, 129046388};
+        public static long[] Devs = {125311351};
         public const int EnforcerDb = 0;
         public static long[] GlobalAdmins = {125311351};
         private const string aPIKey = "";
-        public static long SupportId = -1001060486754;
+        public static long SupportId = -1001360717102;
         public static long TranslatorsId = -1001108140050;
+        public static string supportUsername = "blackwolfsupport";
+        public static string supportUsernameWithAt = "@blackwolfsupport";
+        public static string announcementGroup = "BlackWolfAnnouncements";
+        public static int monthlyPremiumCost = 500;//in cents
+        public static int threemonthlyPremiumCost = 1300;
+        public static int sixmonthlyPremiumCost = 2500;
+        public static string paymentCurrency = "USD";
+        public static string premiumUsername = "enforcedbot";
+#if premium
+        public static string paymentProviderToken;
+#endif
+#if normal
+        public static string paymentProviderToken = " 361519591:TEST:4b73af0895f20b1092be5fd126c191c1 ";      
+#endif
 
         public static string APIKey
         {

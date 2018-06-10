@@ -160,12 +160,12 @@ namespace Enforcer5
             {
                 if (sendToPm)
                 {
-                    Bot.SendToPm(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "helpNoRequest", Constants.announcementGroup), update);
                     Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                 }
                 else
                 {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest"), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "helpNoRequest", Constants.announcementGroup), update);
                     Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
                 }
                  

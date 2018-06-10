@@ -16,7 +16,7 @@
     "StackExchange.Redis": "1.2.4",
     "System.Diagnostics.StackTrace": "4.3.0",
     "System.Runtime.Serialization.Json": "4.3.0",
-    "Telegram.Bot.Enforcer": "13.0.5"
+    "Telegram.Bot.Enforcer": "13.0.6"
   },
   "runtimes": {
     //"win10-x64": {},

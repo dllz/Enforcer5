@@ -24,6 +24,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Linq;
+using Telegram.Bot.Types.Payments;
+
 #pragma warning disable CS0168
 namespace Enforcer5.Helpers
 {
@@ -88,16 +90,13 @@ namespace Enforcer5.Helpers
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
 #if premium
-                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result + 10000000;
+                long offset = long.Parse(Redis.db.StringGetAsync("bot:last_Premium_update").Result) + 10000;
 #endif
 #if normal
-            var offset = Redis.db.StringGetAsync("bot:last_update").Result + 10000000;
+            long offset = long.Parse(Redis.db.StringGetAsync("bot:last_update").Result) + 10000;
 #endif
-            if (offset.HasValue)
-            {
-                Api.MessageOffset = int.Parse(offset) + 1;
-                Console.WriteLine($" database offset is {offset}");
-            }
+            Api.MessageOffset = offset + 1;
+            Console.WriteLine($" database offset is {offset}");
             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
@@ -552,6 +551,21 @@ namespace Enforcer5.Helpers
                 throw AggE;
             }
            
+        }
+
+        public static void SendInvoice(long userId, string title, string description, string callbackKey, LabeledPrice[] labeledPrices)
+        {
+            try
+            {
+                Api.SendInvoiceAsync(userId, title, description, callbackKey, Constants.paymentProviderToken,
+                    new Guid().ToString(), Constants.paymentCurrency, labeledPrices, needEmail:true);
+            }
+            catch (Exception e)
+            {
+                Bot.CatchSend($"Failed to send invoice\nError:{e.Message} occured", userId);
+                var result = Bot.CatchSend($"Failed to send invoice to:{userId}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                    parsemode: ParseMode.Default);
+            }
         }
     }
 

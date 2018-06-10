@@ -226,13 +226,13 @@
     <value>No input with command</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">Click here to get help from the support group</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
   </string>
   <string key="globalBan">
-    <value>{0} has been automatically banned for:{1}\nThe user can go to @werewolfsupport to appeal this ban.</value>
+    <value>{0} has been automatically banned for:{1}\nThe user can go to {2} to appeal this ban.</value>
   </string>
   <string key="goToMessage">
     <value>Go to message</value>
@@ -414,7 +414,7 @@
   <string key ="globalBanNotif">
     <value>
       {0} has been automatically banned as they have a history of: {1}
-      They can appeal this ban in @werewolfsupport
+      They can appeal this ban in {2}
     </value>
   </string>
   <string key="GetLang">
@@ -514,7 +514,7 @@
   </string>
   <string key="helpNoRequest">
     <value>
-      Enforcer is a bot designed to help make managing your groups easier. For updates go to https://t.me/greywolfdev.
+      Enforcer is a bot designed to help make managing your groups easier. For updates go to https://t.me/{0}.
       It does this by implementing antispam, anti media, tempbans, warnings, allowing you to set responses to hashtags etc.
       * This bot needs to be an admin of the group chat to function properly.
       * This bot functions best in supergroups.
