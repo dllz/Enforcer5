@@ -280,7 +280,14 @@ namespace Enforcer5.Helpers
             foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
             {
                 Console.WriteLine($"Adding language {language}");
-                Program.LangaugeList.Add(new Language(language));
+                try
+                {
+                    Program.LangaugeList.Add(new Language(language));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to load language {language} with error {e}");
+                }
             }
             Console.WriteLine($"{Program.LangaugeList.Count} languages added");
         }
