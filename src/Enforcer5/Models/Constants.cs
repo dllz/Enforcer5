@@ -16,6 +16,17 @@ namespace Enforcer5.Models
         public static string supportUsername = "blackwolfsupport";
         public static string supportUsernameWithAt = "@blackwolfsupport";
         public static string announcementGroup = "BlackWolfAnnouncements";
+        public static int monthlyPremiumCost = 500;//in cents
+        public static int threemonthlyPremiumCost = 1300;
+        public static int sixmonthlyPremiumCost = 2500;
+        public static string paymentCurrency = "USD";
+        public static string premiumUsername = "enforcedbot";
+#if premium
+        public static string paymentProviderToken;
+#endif
+#if normal
+        public static string paymentProviderToken = " 361519591:TEST:4b73af0895f20b1092be5fd126c191c1 ";      
+#endif
 
         public static string APIKey
         {

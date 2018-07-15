@@ -24,6 +24,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Linq;
+using Telegram.Bot.Types.Payments;
+
 #pragma warning disable CS0168
 namespace Enforcer5.Helpers
 {
@@ -549,6 +551,21 @@ namespace Enforcer5.Helpers
                 throw AggE;
             }
            
+        }
+
+        public static void SendInvoice(long userId, string title, string description, string callbackKey, LabeledPrice[] labeledPrices)
+        {
+            try
+            {
+                Api.SendInvoiceAsync(userId, title, description, callbackKey, Constants.paymentProviderToken,
+                    new Guid().ToString(), Constants.paymentCurrency, labeledPrices, needEmail:true);
+            }
+            catch (Exception e)
+            {
+                Bot.CatchSend($"Failed to send invoice\nError:{e.Message} occured", userId);
+                var result = Bot.CatchSend($"Failed to send invoice to:{userId}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
+                    parsemode: ParseMode.Default);
+            }
         }
     }
 

@@ -10,10 +10,17 @@ namespace Enforcer5.Models
     {
         public DateTime Time { get; set; }
         public string Command { get; set; }
+        public bool Replied { get; set; }
 
         public UserMessage(string command)
         {
             Time = DateTime.Now;
+            Command = command;
+        }
+
+        public UserMessage(string command, DateTime date)
+        {
+            Time = date;
             Command = command;
         }
     }
