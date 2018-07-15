@@ -446,7 +446,7 @@ namespace Enforcer5
                     }
                     catch (NullReferenceException exception)
                     {
-                        Console.WriteLine(exception);
+                        Console.WriteLine($"{exception}\n{e}\n\n");
                         return;
                     }
                 }
