@@ -414,7 +414,11 @@
   <string key ="globalBanNotif">
     <value>
       {0} has been automatically banned as they have a history of: {1}
+<<<<<<< HEAD
+      They can appeal this ban in @greywolfsupport
+=======
       They can appeal this ban in {2}
+>>>>>>> eb0deb9963a244d3c624d14ea2a0c48d276bbdba
     </value>
   </string>
   <string key="GetLang">
