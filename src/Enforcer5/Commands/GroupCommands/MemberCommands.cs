@@ -221,7 +221,7 @@ namespace Enforcer5
             if (update.Message.Chat.Id != Constants.SupportId)
             {
                 var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                text = Methods.GetLocaleString(lang, "Support");
+                text = Methods.GetLocaleString(lang, "Support", Constants.supportUsername);
             }
             else text = "This is the support group. Please ask your questions here :)";
             Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);

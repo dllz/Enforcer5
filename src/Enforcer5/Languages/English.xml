@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <strings>
-  <language name="English" base="English" owner="BladeZero" IEFT="en-GB"/>
+  <language name="English" base="English" owner="BladeZero" IEFT="en"/>
   <string key="statusKicked">
     <value>{0} is banned from this group. {1}</value>
   </string>
@@ -226,13 +226,13 @@
     <value>No input with command</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">Click here to get help from the support group</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Unable to get the users ID</value>
   </string>
   <string key="globalBan">
-    <value>{0} has been automatically banned for:{1}\nThe user can go to @werewolfsupport to appeal this ban.</value>
+    <value>{0} has been automatically banned for:{1}\nThe user can go to {2} to appeal this ban.</value>
   </string>
   <string key="goToMessage">
     <value>Go to message</value>
@@ -414,7 +414,7 @@
   <string key ="globalBanNotif">
     <value>
       {0} has been automatically banned as they have a history of: {1}
-      They can appeal this ban in @werewolfsupport
+      They can appeal this ban in @greywolfsupport
     </value>
   </string>
   <string key="GetLang">
@@ -514,7 +514,7 @@
   </string>
   <string key="helpNoRequest">
     <value>
-      Enforcer is a bot designed to help make managing your groups easier. For updates go to https://t.me/greywolfdev.
+      Enforcer is a bot designed to help make managing your groups easier. For updates go to https://t.me/{0}.
       It does this by implementing antispam, anti media, tempbans, warnings, allowing you to set responses to hashtags etc.
       * This bot needs to be an admin of the group chat to function properly.
       * This bot functions best in supergroups.
@@ -766,10 +766,11 @@
   </string>
   <string key="hcommandlink">
     <value>
-      Returns the link of the group. Only works if an admin set the link with setlink command before.
+      Returns the link of the group. Only works if an admin set the link with setlink command before. When used in public supergroup with reply, it returns the message link of the replied message.
 
       Example:
       /{0}
+      /{0} with reply to a message
     </value>
   </string>
   <string key="hcommandsetlink">
@@ -819,20 +820,24 @@
   </string>
   <string key="hcommanddisablewatch">
     <value>
-      Disables AntiFlood and persian detection for a user, Admins should use it in a group so it will ignore them.
+      Disables AntiFlood, persian detection, anti nsfw, anti name length / message length and all other filters for a user, Admins should use it in a group so it will ignore them.
 
       Example:
       /{0}
       /{0} while replying to a user
+      /{0} [User ID]
+      /{0} [Username]
     </value>
   </string>
   <string key="hcommandenablewatch">
     <value>
-      Enables AntiFlood and persian detection for a user, only necessary if that user was disablewatched before.
+      Enables all filters for a user, only necessary if that user was disablewatched before.
 
       Example:
       /{0}
       /{0} while replying to a user
+      /{0} [User ID]
+      /{0} [Username]
     </value>
   </string>
   <string key="hcommandcheck">
@@ -1274,7 +1279,7 @@
   </string>
 
   <string key="usergroupstatusauth">
-    <value>{0} is an auth in this group.\nThey sent {1} messages here since this combanformesslengthmand was made.</value>
+    <value>{0} is an auth in this group.\nThey sent {1} messages here since this command was made.</value>
   </string>
 
   <string key="usergroupstatuselevated">
@@ -1338,6 +1343,75 @@
   <string key="cannotbanadmin">
     <value>I can not kick or ban an admin</value>
   </string>
+  <string key="hcommanddelnsfw">
+  <value>
+  Delete an NSFW API Key that was set before. You need to set one for NSFW image detection to work (enter "/help nsfw" for more information) and with this command, you remove it again.
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandchecknsfw">
+  <value>
+  Can be used to manually check, how much a picture is NSFW due to enforcer. You need to set up NSFW detection for your group at first, enter "/help nsfw" for more information.
+  
+  Example:
+  /{0} while replying to a picture
+  </value>
+  </string>
+  <string key="hcommandmsgid">
+  <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="hcommanddellogchannel">
+  <value>
+  Delete a log channel from a group, that was added before. For more information about log channels, use "/help addlogchannel".
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandtemptime">
+    <value>
+      Set the default tempban time for a group. This time will be used when using /tempban with no time specified and when automatically tempbanning someone (for max warns, flood, etc.)
+
+      Example:
+      /{0} [time in minutes]
+    </value>
+  </string>
+  <string key="hcommandmedia">
+    <value>
+      Remove or reset media warns of a user.
+
+      Example:
+      /{0} while replying to a user
+      /{0} [User ID]
+      /{0} [Username]
+    </value>
+  </string>
+  <string key="hcommandunblockelevate">
+    <value>
+      Allow an admin, who was blocked before, to elevate others again.
+
+      Example:
+      /{0} while replying to the admin
+      /{0} [Admin's User ID]
+      /{0} [Admin's Username]
+    </value>
+  </string>
+  <string key="hcommandresetsettings">
+    <value>
+      Can be used to reset all settings in a group - log channel, rules, about, etc. Warning: The settings are completely deleted and can't be restored!
+      
+      Example:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandmissinghcommands">
+    <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="hcommandwhois">
+    <value>This command is only for enforcer's developers!</value>
+  </string>
   <string key="donateWord">
   <value>Donate</value>
   </string>
@@ -1356,4 +1430,96 @@
   <string key="uct">
     <value>UTC</value>
   </string>
+  <string key="HelpButton">
+  <value>Help</value>
+  </string>
+  <string key="hcommandlangcode">
+    <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="registerfortagall">
+  <value>You have successfully been registered for @pingall</value>
+  </string>
+  <string key="tagallregistered">
+  <value>{0} have all been called as they used /pingme</value>
+  </string>
+  <string key="tagallregisterednoone">
+  <value>no one has used /pingme yet</value>
+  </string>
+  <string key="unregisterfortagall">
+  <value>You have successfully been unregistered for @pingall</value>
+  </string>
+  <string key="hcommandpingme">
+  <value>
+  Add yourself to the @pingall list of a group. If you do this, enforcer will ping you when someone sends @pingall. Note that @pingall has a cooldown of ten minutes. To be removed from the pinglist again, you can use /unpingme.
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandunpingme">
+  <value>
+  Remove yourself from @pingall, where you added yourself with /pingme before. When using this command, enforcer will no longer ping you when someone sends @pingall.
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandpingall">
+  <value>
+  Call everyone in a group, who used /pingme before. Note that this command has a cooldown of 10 minutes and only users with a username can be pinged. To remove yourself from the pinglist, you can use /unpingme.
+  
+  Example:
+  @{0}
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandd">
+  <value>
+  Using this command will delete the message you reply to and the command itself. Note that you can only delete your own messages if you are not group admin.
+  
+  Example:
+  /{0} while replying to a message of your own
+  /{0} while replying to a foreign message (admins only)
+  </value>
+  </string>
+  <string key="hcommandgetrektu">
+  <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="hcommandgetrekti">
+  <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="hcommandclearkeys">
+  <value>
+  This command can be used to clear the button keyboard at the bottom of the screen (which some bots have). It is useful if for example a spambot was added to your group which gave everyone such a keyboard with 50 useless buttons.
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandbangroup">
+  <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="hcommandunbangroup">
+  <value>This command is only for enforcer's developers!</value>
+  </string>
+  <string key="registerfortagallclickme">
+  <value>To add yourself to @pingall, please click the button below and then Start.</value>
+  </string>
+  <string key="hcommandunping">
+  <value>
+  Remove someone else from @pingall, who added themselves with /pingme before. When using this command, enforcer will no longer ping this user when someone sends @pingall.
+  
+  Example:
+  /{0} with reply to a user
+  /{0} [User ID]
+  /{0} [Username]
+  </value>
+  </string>
+  <string key="logchannelAutoRemoved">
+  <value>Failed to send a message to your logchannel, therefore it was automatically removed. To use the feature again, add me to your logchannel again and use /addlogchannel.</value>
+  </string>
+  <string key="logchannelRemoved">
+  <value>Your logchannel was successfully removed!</value>
+  </string>
 </strings>
+

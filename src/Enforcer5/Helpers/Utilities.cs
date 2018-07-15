@@ -88,16 +88,13 @@ namespace Enforcer5.Helpers
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
 #if premium
-                var offset = Redis.db.StringGetAsync("bot:last_Premium_update").Result;
+                long offset = long.Parse(Redis.db.StringGetAsync("bot:last_Premium_update").Result) + 10000;
 #endif
 #if normal
-            var offset = Redis.db.StringGetAsync("bot:last_update").Result;
+            long offset = long.Parse(Redis.db.StringGetAsync("bot:last_update").Result) + 10000;
 #endif
-            if (offset.HasValue)
-            {
-                Api.MessageOffset = int.Parse(offset) + 1;
-                Console.WriteLine($" database offset is {offset}");
-            }
+            Api.MessageOffset = offset + 1;
+            Console.WriteLine($" database offset is {offset}");
             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
