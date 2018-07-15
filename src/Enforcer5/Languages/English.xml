@@ -411,15 +411,8 @@
   <string key="bannedForNoEnglishScript">
     <value>{0} has been Banned for using non-Latin characters</value>
   </string>
-  <string key ="globalBanNotif">
-    <value>
-      {0} has been automatically banned as they have a history of: {1}
-<<<<<<< HEAD
-      They can appeal this ban in @greywolfsupport
-=======
-      They can appeal this ban in {2}
->>>>>>> eb0deb9963a244d3c624d14ea2a0c48d276bbdba
-    </value>
+  <string key="globalBanNotif">
+    <value>{0} has been automatically banned as they have a history of: {1}\nThey can appeal this ban in {2}</value>
   </string>
   <string key="GetLang">
     <value>Get which language file?</value>

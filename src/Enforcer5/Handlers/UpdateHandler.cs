@@ -194,7 +194,7 @@ namespace Enforcer5.Handlers
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
                                     if (blocked.HasValue && iShouldNotReply)
                                     {
-                                        return; ;
+                                        return;
                                     }
                                     if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
                                     {
@@ -472,7 +472,8 @@ namespace Enforcer5.Handlers
                     UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
 
                 var shouldReply = (UserMessages[id].Messages.Where(x => x.Replied).OrderByDescending(x => x.Time).FirstOrDefault()?.Time ?? DateTime.MinValue) <
-                                  DateTime.UtcNow.AddSeconds(-4);                
+                                  DateTime.UtcNow.AddSeconds(-5);
+                UserMessages[id].Messages.Add(new UserMessage(m.Text, m.Date) { Replied = shouldReply });
                 return !shouldReply;
 
             }
