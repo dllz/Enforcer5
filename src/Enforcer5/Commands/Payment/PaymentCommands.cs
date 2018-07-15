@@ -12,7 +12,7 @@ namespace Enforcer5
 {
     public partial class Commands
     {
-        [Command(Trigger = "getPremium", DevOnly = true)]
+       // [Command(Trigger = "getPremium", DevOnly = true)]
         public static void GetPremium(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
@@ -30,7 +30,7 @@ namespace Enforcer5
 
     public partial class CallBacks
     {
-        [Callback(Trigger = "getpremium", InGroupOnly = false)]
+        //[Callback(Trigger = "getpremium", InGroupOnly = false)]
         public static void getPremiumInvoice(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message, false).Doc;
