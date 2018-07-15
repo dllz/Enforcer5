@@ -25,6 +25,7 @@ namespace Enforcer5.Handlers
     {
 
         internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
+        internal static Dictionary<long, SpamDetector> BlockReplies = new Dictionary<long, SpamDetector>();
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
 #if premium
@@ -470,10 +471,12 @@ namespace Enforcer5.Handlers
             {
                 if (!UserMessages.ContainsKey(id))
                     UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+                if (!BlockReplies.ContainsKey(id))
+                    BlockReplies.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
 
-                var shouldReply = (UserMessages[id].Messages.Where(x => x.Replied).OrderByDescending(x => x.Time).FirstOrDefault()?.Time ?? DateTime.MinValue) <
+                var shouldReply = (BlockReplies[id].Messages.Where(x => x.Replied).OrderByDescending(x => x.Time).FirstOrDefault()?.Time ?? DateTime.MinValue) <
                                   DateTime.UtcNow.AddSeconds(-5);
-                UserMessages[id].Messages.Add(new UserMessage(m.Text, m.Date) { Replied = shouldReply });
+                BlockReplies[id].Messages.Add(new UserMessage(m.Text, m.Date) { Replied = shouldReply });
                 return !shouldReply;
 
             }
@@ -573,6 +576,7 @@ namespace Enforcer5.Handlers
                 try
                 {
                     var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    var quickRemove = BlockReplies.ToDictionary(entry => entry.Key, entry => entry.Value);
                     //clone the dictionary
                     foreach (var key in temp.Keys.ToList())
                     {
@@ -580,6 +584,7 @@ namespace Enforcer5.Handlers
                         {
                             //drop older messages (1 minute)
                             temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
+                            quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-10));
 
                             //comment this out - if we remove it, it doesn't keep the warns
                             //if (temp[key].Messages.Count == 0)
