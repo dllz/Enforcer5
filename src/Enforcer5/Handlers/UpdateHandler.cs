@@ -192,7 +192,7 @@ namespace Enforcer5.Handlers
                                     
                                     var iShouldNotReply = AddCount(update.Message.From.Id, update.Message);
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue && iShouldNotReply)
+                                    if (blocked.HasValue || iShouldNotReply)
                                     {
                                         return;
                                     }
