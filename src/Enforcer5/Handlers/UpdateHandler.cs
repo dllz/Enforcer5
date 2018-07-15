@@ -190,9 +190,9 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {                                  
                                     
-                                    AddCount(update.Message.From.Id, update.Message.Text);
+                                    var iShouldNotReply = AddCount(update.Message.From.Id, update.Message);
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue)
+                                    if (blocked.HasValue && iShouldNotReply)
                                     {
                                         return; ;
                                     }
@@ -461,6 +461,25 @@ namespace Enforcer5.Handlers
             catch (Exception e)
             {
                 // ignored
+            }
+        }
+
+        private static bool AddCount(int id, Message m)
+        {
+            try
+            {
+                if (!UserMessages.ContainsKey(id))
+                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+
+                var shouldReply = (UserMessages[id].Messages.Where(x => x.Replied).OrderByDescending(x => x.Time).FirstOrDefault()?.Time ?? DateTime.MinValue) <
+                                  DateTime.UtcNow.AddSeconds(-4);                
+                return !shouldReply;
+
+            }
+            catch
+            {
+                // ignored
+                return false;
             }
         }
 
