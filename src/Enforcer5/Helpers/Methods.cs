@@ -279,9 +279,10 @@ namespace Enforcer5.Helpers
         {
             foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
             {
-
+                Console.WriteLine($"Adding language {language}");
                 Program.LangaugeList.Add(new Language(language));
             }
+            Console.WriteLine($"{Program.LangaugeList.Count} languages added");
         }
 
         /// Gets the matching language string and formats it with parameters
