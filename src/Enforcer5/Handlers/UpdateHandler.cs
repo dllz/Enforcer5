@@ -584,8 +584,12 @@ namespace Enforcer5.Handlers
                         {
                             //drop older messages (1 minute)
                             temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
+#if normal
                             quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-10));
-
+#endif
+#if premium
+                            quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-4));
+#endif
                             //comment this out - if we remove it, it doesn't keep the warns
                             //if (temp[key].Messages.Count == 0)
                             //{
