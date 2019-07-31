@@ -12,6 +12,7 @@ using Enforcer5.Models;
 using Newtonsoft.Json;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
+using Clarifai.API;
 
 namespace Enforcer5
 {
@@ -29,18 +30,18 @@ namespace Enforcer5
                 //var groupToken = "huPj6Tpc6zAjO8zFrnNVWrhlcEy4UV";
                 var lang = Methods.GetGroupLanguage(msg, true).Doc;
                 try
-                {   
+                {
                     var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
-                    var expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value.ToString());
-                    int tryGenCount = 0;
-                    if (System.DateTime.UtcNow.ToUnixTime() > expireTime && tryGenCount < 5 && expireTime != -1)
-                    {
-                        genNewToken(chatId);
-                        nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
-                        groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
-                        expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value);
-                        tryGenCount++;
-                    }
+                    /*  var expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value.ToString());
+                      int tryGenCount = 0;
+                      if (System.DateTime.UtcNow.ToUnixTime() > expireTime && tryGenCount < 5 && expireTime != -1)
+                      {
+                          genNewToken(chatId);
+                          nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+                          groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value;
+                          expireTime = long.Parse(nsfwSettings.Where(e => e.Name.Equals("expireTime")).FirstOrDefault().Value);
+                          tryGenCount++;
+                      }*/
                     if (!string.IsNullOrEmpty(groupToken))
                     {
                         //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
@@ -48,20 +49,24 @@ namespace Enforcer5
                         var pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
                         var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
                         // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-                        using (var client = new HttpClient())
+                        var clarifaiClient = new ClarifaiClient(groupToken);
+                        var request = clarifaiClient.PublicModels.NsfwModel.Predict(
+                            new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
+                        Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
+                        /*  var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
+                         var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
+                          client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
+                          var response = client.PostAsync(url, content).Result;
+                          response.EnsureSuccessStatusCode();
+                          var data = response.Content.ReadAsStringAsync().Result;
+                          var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);*/                       
+                        if (response.IsSuccessful)
                         {
-                            var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
-                            var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
-                            client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
-                            var response = client.PostAsync(url, content).Result;
-                            response.EnsureSuccessStatusCode();
-                            var data = response.Content.ReadAsStringAsync().Result;
-                            var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);
-                            var chance = (double)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
-                            //Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
+                            var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
                             if (chance > 90.0)
                             {
-                                var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;               
+                                var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
                                 var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
                                 if (action.Value.Equals("ban"))
                                 {
@@ -86,70 +91,23 @@ namespace Enforcer5
                                 Bot.DeleteMessage(chatId, msg.MessageId);
                             }
                         }
+                       
                     }
                 }
                 catch (Exception e)
                 {
-                    if (e.Message.Contains("401"))
-                    {
-                        genNewToken(chatId, true);
-                        return;
-                    }
+                    
                     Console.WriteLine(e);
                     Methods.SendError(e.Message, msg, lang);
                 }
             }
         }
 
-        public static bool genNewToken(long chatId, bool sendOutput = false)
-        {
-            var data = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
-            var appId = data.Where(e => e.Name.Equals("appId")).FirstOrDefault();
-            var appSecret = data.Where(e => e.Name.Equals("appSecret")).FirstOrDefault();
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    var url = "https://api.clarifai.com/v2/token";
-                    var content = new StringContent(JsonConvert.SerializeObject("\"grant_type\":\"client_credentials\""), Encoding.UTF8, "application/json");
-                    String encoded = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(appId.Value + ":" + appSecret.Value));
-                    client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Basic {encoded}");
-                    var response = client.PostAsync(url, content).Result;
-                    response.EnsureSuccessStatusCode();
-                    var res = response.Content.ReadAsStringAsync().Result;
-                    var result = JsonConvert.DeserializeObject<ClarifaiAPIKey>(res);
-
-                    //var result = JsonConvert.DeserializeObject<ClarifaiOutput>(res);
-                    try
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", result.access_token);
-                       var temp = Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "expireTime", System.DateTime.UtcNow.ToUnixTime() + (result.expires_in)).Result;
-                       
-
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        return false;
-                    }
-                    if (sendOutput)
-                    {
-                        Bot.Send(Methods.GetLocaleString(lang, "apikeysucgen"), chatId);
-                    }
-                    return true;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Bot.Send(e.Message, chatId);
-                return false;
-            }
+       
 
 
 
-        }
+        
 
         [Command(Trigger = "setnsfw", GroupAdminOnly = true, InGroupOnly = true)]
         public static void SetClient(Update update, string[] args)
@@ -159,16 +117,12 @@ namespace Enforcer5
             try
             {
                 var appInfo = args[1].Split(' ');
-                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appId", appInfo[0]);
-                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "appSecret", appInfo[1]);
-                if (genNewToken(chatId, true))
-                {
-                    Redis.db.SetAddAsync("bot:nsfwgroups", chatId);
-                    Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
-                    Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
-                    Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
-                }
-               
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "apikey", appInfo[0]);
+                Redis.db.SetAddAsync("bot:nsfwgroups", chatId);
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "on");
+                Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "action", "ban");
+                Bot.SendReply(Methods.GetLocaleString(lang, "nsfwapikeyset"), update);
+
             }
             catch (Exception e)
             {
@@ -210,7 +164,7 @@ namespace Enforcer5
         }
 
 
-        [Command(Trigger = "authnsfw", InGroupOnly = true, GlobalAdminOnly = true)]
+   /*     [Command(Trigger = "authnsfw", InGroupOnly = true, GlobalAdminOnly = true)]
         public static void autherisensfwgroup(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
@@ -226,7 +180,7 @@ namespace Enforcer5
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "autherised", "no");
             Redis.db.HashSetAsync($"chat:{chatId}:nsfwDetection", "activated", "off");
             Bot.SendReply("Deactivated", update);
-        }
+        }*/
 
         [Command(Trigger = "checknsfw", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void CheckNSFWSettings(Update update, string[] args)
@@ -248,17 +202,22 @@ namespace Enforcer5
                     var pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
                     var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
                     // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-                    using (var client = new HttpClient())
+                    // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                    var clarifaiClient = new ClarifaiClient(groupToken);
+                    var request = clarifaiClient.PublicModels.NsfwModel.Predict(
+                        new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
+                    Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
+                    /*  var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
+                     var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
+                      client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
+                      var response = client.PostAsync(url, content).Result;
+                      response.EnsureSuccessStatusCode();
+                      var data = response.Content.ReadAsStringAsync().Result;
+                      var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);*/
+                    if (response.IsSuccessful)
                     {
-                        var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
-                        var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
-                        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
-                        var response = client.PostAsync(url, content).Result;
-                        response.EnsureSuccessStatusCode();
-                        var data = response.Content.ReadAsStringAsync().Result;
-                        var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);
-                        var chance = (double)(result.outputs[0].data.concepts.First(x => x.name == "nsfw").value * 100);
-                        //Bot.SendReply(chance + $" Reponse time: {(DateTime.UtcNow - msg.Date):mm\\:ss\\.ff}", msg);
+                        var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
                         Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
                     }
                 }

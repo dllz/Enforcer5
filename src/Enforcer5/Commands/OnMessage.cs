@@ -603,6 +603,89 @@ namespace Enforcer5
             RightToLeft(update);
         }
 
+        public static void ArabJoinDetection(Update update)
+        {
+            var chatId = update.Message.Chat.Id;
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+            if (watch) return;
+            var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
+            if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
+            if (!arabStatus.Equals("allowed"))
+            {
+                var arabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
+                var text = $"{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.LastName}";
+                var found = false;
+                for (int i = 0; i < text.Length; i++)
+                {
+
+                    //var letter = char.ConvertToUtf32(text[i], text[i + 1]);
+                    found = Regex.IsMatch(text[i].ToString(), arabicChars);
+                    if (found)
+                    {
+                        break;
+                    }
+
+                }
+
+                if (found)
+                {
+                    var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+                    var name = update.Message.From.FirstName;
+                    var lastName = "x";
+                    if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+                    if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
+                    try
+                    {
+                        string reply;
+                        switch (arabStatus)
+                        {
+                            case "kick":
+                                Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript",
+                                    $"{name}, {update.Message.From.Id}");
+                                Service.LogBotAction(chatId, reply);
+                                Bot.Send(
+                                    reply,
+                                    update);
+                                break;
+                            case "ban":
+                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                if (res)
+                                {
+                                    Methods.SaveBan(update.Message.From.Id, "arab");
+                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                        Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
+
+                                    reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript",
+                                        $"{name}, {update.Message.From.Id}");
+                                    Service.LogBotAction(chatId, reply);
+                                    Bot.Send(
+                                        reply,
+                                        update);
+                                }
+                                break;
+
+                            case "tempban":
+                                var time = Methods.GetGroupTempbanTime(chatId);
+                                var timeBanned = TimeSpan.FromMinutes(time);
+                                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                                var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
+                                    $"{name}, {update.Message.From.Id}", timeText);
+                                Service.LogBotAction(chatId, message);
+                                Commands.Tempban(update.Message.From.Id, chatId, time, update.Message.From.Id.ToString(), message: message);
+                                break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+
+                }
+            }
+            RightToLeft(update);
+        }
+
         public static bool isIgnored(long chatId, string msgType)
         {
             var status = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", msgType).Result;

@@ -357,7 +357,7 @@ namespace Enforcer5.Handlers
                             }
                             break;
                         case MessageType.ServiceMessage:
-                            if (update.Message.NewChatMember != null)
+                            if (update.Message.NewChatMembers != null && update.Message.NewChatMembers.Length > 0)
                             {
                                 try
                                 {
@@ -377,6 +377,7 @@ namespace Enforcer5.Handlers
                 Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
                                     }
+                                    new Task(() => { OnMessage.ArabJoinDetection(update); }).Start();
                                     if (update.Message.NewChatMember.Id == Bot.Me.Id)
                                     {
                                          Service.BotAdded(update.Message);
@@ -576,20 +577,20 @@ namespace Enforcer5.Handlers
                 try
                 {
                     var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
-                    var quickRemove = BlockReplies.ToDictionary(entry => entry.Key, entry => entry.Value);
+                    //var quickRemove = BlockReplies.ToDictionary(entry => entry.Key, entry => entry.Value);
                     //clone the dictionary
                     foreach (var key in temp.Keys.ToList())
                     {
                         try
                         {
                             //drop older messages (1 minute)
-                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
+/*                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
 #if normal
                             quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-10));
 #endif
 #if premium
                             quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-4));
-#endif
+#endif*/
                             //comment this out - if we remove it, it doesn't keep the warns
                             //if (temp[key].Messages.Count == 0)
                             //{
