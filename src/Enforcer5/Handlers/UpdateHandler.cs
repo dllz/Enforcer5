@@ -25,7 +25,7 @@ namespace Enforcer5.Handlers
     {
 
         internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
-        internal static Dictionary<long, SpamDetector> BlockReplies = new Dictionary<long, SpamDetector>();
+       // internal static Dictionary<long, SpamDetector> BlockReplies = new Dictionary<long, SpamDetector>();
         public static void UpdateReceived(object sender, UpdateEventArgs e)
         {
 #if premium
@@ -191,9 +191,9 @@ namespace Enforcer5.Handlers
                                 if (command != null)
                                 {                                  
                                     
-                                    var iShouldNotReply = AddCount(update.Message.From.Id, update.Message);
+                                   
                                     var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue || iShouldNotReply)
+                                    if (blocked.HasValue)
                                     {
                                         return;
                                     }
@@ -466,25 +466,20 @@ namespace Enforcer5.Handlers
             }
         }
 
-        private static bool AddCount(int id, Message m)
+        private static void AddCount(int id, Message m)
         {
             try
             {
                 if (!UserMessages.ContainsKey(id))
                     UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
-                if (!BlockReplies.ContainsKey(id))
-                    BlockReplies.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+               
 
-                var shouldReply = (BlockReplies[id].Messages.Where(x => x.Replied).OrderByDescending(x => x.Time).FirstOrDefault()?.Time ?? DateTime.MinValue) <
-                                  DateTime.UtcNow.AddSeconds(-5);
-                BlockReplies[id].Messages.Add(new UserMessage(m.Text, m.Date) { Replied = shouldReply });
-                return !shouldReply;
 
             }
             catch
             {
                 // ignored
-                return false;
+
             }
         }
 

@@ -683,7 +683,6 @@ namespace Enforcer5
 
                 }
             }
-            RightToLeft(update);
         }
 
         public static bool isIgnored(long chatId, string msgType)
