@@ -571,13 +571,14 @@ namespace Enforcer5.Helpers
 
     internal static class Redis
     {
-        //private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
-        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"127.0.0.1:6379, allowAdmin=true");        
+        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
+        private static string conne = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisKey").ToString();
+        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"{conne}, allowAdmin=true, password={key}");        
         public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
 
         public static void SaveRedis()
         {
-            redis.GetServer($"127.0.0.1:6379").Save(SaveType.BackgroundSave);
+            redis.GetServer($"{conne}").Save(SaveType.BackgroundSave);
         }
 
         public static bool Start()
