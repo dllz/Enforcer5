@@ -324,17 +324,22 @@ namespace Enforcer5
 
         public static void CheckMedia(Update update)
         {
+            CheckMedia(update.Message);
+        }
+
+        public static void CheckMedia(Message message)
+        {
             try
             {                
-                var chatId = update.Message.Chat.Id;
-                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
+                var chatId = message.Chat.Id;
+                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", message.From.Id).Result;
                 if (watch) return;
-                var media = Methods.GetContentType(update.Message);
+                var media = Methods.GetContentType(message);
                 var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
                 XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
+                    lang = Methods.GetGroupLanguage(message,true).Doc;
                 }
                 catch (NullReferenceException e)
                 {
@@ -351,39 +356,39 @@ namespace Enforcer5
                 var allowed = status.Equals("blocked");
                 if (allowed)
                 {
-                    var name = $"{update.Message.From.FirstName} [{update.Message.From.Id}]";
-                    if (update.Message.From.Username != null)
-                        name = $"{name} (@{update.Message.From.Username})";
+                    var name = $"{message.From.FirstName} [{message.From.Id}]";
+                    if (message.From.Username != null)
+                        name = $"{name} (@{message.From.Username})";
                     var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result.HasValue
                         ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result
                         : 2;
-                    var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", update.Message.From.Id, 1).Result;
+                    var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
                     if (current >= int.Parse(max))
                     {
                         string reply;
                         var action = Redis.db.HashGetAsync($"chat:{chatId}:media", "action").Result;
-                        Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", update.Message.From.Id);
+                        Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
                         switch (action.ToString())
                         {
                             case "kick":
 
-                                Methods.KickUser(chatId, update.Message.From.Id, lang);
+                                Methods.KickUser(chatId, message.From.Id, lang);
                                 reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
                                 Service.LogBotAction(chatId, reply);
                                 Bot.SendReply(
                                     reply,
-                                    update);
+                                    message);
                                 break;
                             case "ban":
-                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
+                                var res = Methods.BanUser(chatId, message.From.Id, lang);
                                 if (res)
                                 {
-                                    Methods.SaveBan(update.Message.From.Id, "media");
+                                    Methods.SaveBan(message.From.Id, "media");
                                     reply = Methods.GetLocaleString(lang, "bannedformedia", name);
                                     Service.LogBotAction(chatId, reply);
-                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
+                                    Methods.AddBanList(chatId, message.From.Id, message.From.FirstName,
                                         Methods.GetLocaleString(lang, "bannedformedia", ""));
-                                    Bot.SendReply(reply, update);
+                                    Bot.SendReply(reply, message);
                                 }
                                 break;
 
@@ -391,21 +396,21 @@ namespace Enforcer5
                                 var time = Methods.GetGroupTempbanTime(chatId);
                                 var timeBanned = TimeSpan.FromMinutes(time);
                                 string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                var message = Methods.GetLocaleString(lang, "tempbannedformedia",
-                                    $"{name}, {update.Message.From.Id}", timeText);
-                                Service.LogBotAction(chatId, message);
-                                Commands.Tempban(update.Message.From.Id, chatId, time, update.Message.From.Id.ToString(), message:message);
+                                var messageText = Methods.GetLocaleString(lang, "tempbannedformedia",
+                                    $"{name}, {message.From.Id}", timeText);
+                                Service.LogBotAction(chatId, messageText);
+                                Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText);
                                 break;
                         }
                     }
                     else
                     {
                         Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
-                            update);
+                            message);
                     }
                     try
                     {
-                        Bot.DeleteMessage(chatId, update.Message.MessageId);
+                        Bot.DeleteMessage(chatId, message.MessageId);
                     }
                     catch (AggregateException e)
                     {
