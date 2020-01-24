@@ -308,9 +308,6 @@ namespace Enforcer5.Handlers
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
                                 Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
                             }
                             break;
@@ -324,6 +321,7 @@ namespace Enforcer5.Handlers
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                                Commands.IsNSFWVideo(update.Message.Chat.Id, update.Message);
                             }
                             break;
                         case MessageType.VoiceMessage:

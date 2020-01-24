@@ -52,14 +52,7 @@ namespace Enforcer5
                         var clarifaiClient = new ClarifaiClient(groupToken);
                         var request = clarifaiClient.PublicModels.NsfwModel.Predict(
                             new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
-                        Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
-                        /*  var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
-                         var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
-                          client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
-                          var response = client.PostAsync(url, content).Result;
-                          response.EnsureSuccessStatusCode();
-                          var data = response.Content.ReadAsStringAsync().Result;
-                          var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);*/                       
+                        Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;                    
                         if (response.IsSuccessful)
                         {
                             var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
@@ -103,6 +96,75 @@ namespace Enforcer5
             }
         }
 
+        public static void IsNSFWVideo(long chatId, Message msg)
+        {
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
+            if (watch) return;
+
+            var usingNSFW = Redis.db.SetContainsAsync("bot:nsfwgroups", chatId).Result;
+            if (usingNSFW)
+            {
+                var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+                var lang = Methods.GetGroupLanguage(msg, true).Doc;
+                try
+                {
+                    var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
+                  
+                    if (!string.IsNullOrEmpty(groupToken))
+                    {
+                        var video = msg.Video.FileId;
+                        if(video != null)
+                        {
+                            var pathing = Bot.Api.GetFileAsync(video).Result;
+                            var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                            var clarifaiClient = new ClarifaiClient(groupToken);
+                            var request = clarifaiClient.PublicModels.NsfwModel.Predict(
+                                new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
+                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
+                            if (response.IsSuccessful)
+                            {
+                                var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
+                                if (chance > 90.0)
+                                {
+                                    var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
+                                    var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
+                                    if (action.Value.Equals("ban"))
+                                    {
+                                        var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                        if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
+                                        var res = Methods.BanUser(chatId, msg.From.Id, lang);
+                                        if (res)
+                                        {
+                                            Methods.SaveBan(msg.From.Id, "NSFWImage");
+                                            Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                            Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                        if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
+                                        Methods.KickUser(chatId, msg.From.Id, lang);
+                                        Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                        Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                    }
+                                    Bot.DeleteMessage(chatId, msg.MessageId);
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e);
+                    Methods.SendError(e.Message, msg, lang);
+                }
+            }
+        }
        
 
 
