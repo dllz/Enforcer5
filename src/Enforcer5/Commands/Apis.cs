@@ -118,14 +118,36 @@ namespace Enforcer5
                             var pathing = Bot.Api.GetFileAsync(video).Result;
                             var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
                             var clarifaiClient = new ClarifaiClient(groupToken);
-                            var request = clarifaiClient.PublicModels.NsfwModel.Predict(
+                            var request = clarifaiClient.PublicModels.NsfwVideoModel.Predict(
                                 new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
-                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
+                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>> response = request.ExecuteAsync().Result;
                             if (response.IsSuccessful)
                             {
-                                var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+                                var chance = 0.0;
+                                var foundFrame = false;
+                                foreach (var item in response.Get().Data)
+                                {
+                                    if(foundFrame == false)
+                                    {
+                                        foreach (var concept in item.Concepts)
+                                        {
+                                            if (concept.Name.Equals("nsfw"))
+                                            {
+                                                chance = (double)concept.Value * 100;
+                                                if (chance > 90)
+                                                {
+                                                    foundFrame = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }else
+                                    {
+                                        break;
+                                    }
+                                }                              
 
-                                if (chance > 90.0)
+                                if (foundFrame)
                                 {
                                     var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
                                     var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
@@ -259,28 +281,81 @@ namespace Enforcer5
                 int tryGenCount = 0;
                 if (!string.IsNullOrEmpty(groupToken))
                 {
-                    //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
-                    var photo = msg.ReplyToMessage.Photo.OrderByDescending(x => x.Height).FirstOrDefault(x => x.FileId != null);
-                    var pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
-                    var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
-                    // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-                    // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
-                    var clarifaiClient = new ClarifaiClient(groupToken);
-                    var request = clarifaiClient.PublicModels.NsfwModel.Predict(
-                        new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
-                    Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
-                    /*  var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
-                     var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
-                      client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
-                      var response = client.PostAsync(url, content).Result;
-                      response.EnsureSuccessStatusCode();
-                      var data = response.Content.ReadAsStringAsync().Result;
-                      var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);*/
-                    if (response.IsSuccessful)
+                    switch (update.Message.Type)
                     {
-                        var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+                        case Telegram.Bot.Types.Enums.MessageType.VideoMessage:
+                            //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
+                            var video = msg.ReplyToMessage.Video;
+                            var pathing = Bot.Api.GetFileAsync(video.FileId).Result;
+                            var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            var clarifaiClient = new ClarifaiClient(groupToken);
+                            var request = clarifaiClient.PublicModels.NsfwVideoModel.Predict(
+                                new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
+                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>> response = request.ExecuteAsync().Result;
+                            if (response.IsSuccessful)
+                            {
+                                var chance = 0.0;
+                                var foundFrame = false;
+                                foreach (var item in response.Get().Data)
+                                {
+                                    if (foundFrame == false)
+                                    {
+                                        foreach (var concept in item.Concepts)
+                                        {
+                                            if (concept.Name.Equals("nsfw"))
+                                            {
+                                                chance = (double)concept.Value * 100;
+                                                if (chance > 90)
+                                                {
+                                                    foundFrame = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
 
-                        Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                            }
+                            else
+                            {
+                                Bot.SendReply("Shit didnt work", msg);
+                            }
+                            break;
+                        case Telegram.Bot.Types.Enums.MessageType.PhotoMessage:
+                            //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
+                            var photo = msg.ReplyToMessage.Photo.OrderByDescending(x => x.Height).FirstOrDefault(x => x.FileId != null);
+                            pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
+                           var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            clarifaiClient = new ClarifaiClient(groupToken);
+                            var photoRequest = clarifaiClient.PublicModels.NsfwModel.Predict(
+                                new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
+                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> photoResponse = photoRequest.ExecuteAsync().Result;
+                            /*  var url = "https://api.clarifai.com/v2/models/e9576d86d2004ed1a38ba0cf39ecb4b1/outputs";
+                             var content = new StringContent(JsonConvert.SerializeObject(new ClarifaiInputs(photoURL)), Encoding.UTF8, "application/json");
+                              client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {groupToken}");
+                              var response = client.PostAsync(url, content).Result;
+                              response.EnsureSuccessStatusCode();
+                              var data = response.Content.ReadAsStringAsync().Result;
+                              var result = JsonConvert.DeserializeObject<ClarifaiOutput>(data);*/
+                            if (photoResponse.IsSuccessful)
+                            {
+                                var chance = ((double)photoResponse.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
+                                Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                            }else
+                            {
+                                Bot.SendReply("Shit didnt work", msg);
+                            }
+                            break;
                     }
                 }
             }
