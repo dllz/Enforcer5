@@ -333,12 +333,15 @@ namespace Enforcer5.Handlers
                         case MessageType.DocumentMessage:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
+                                Commands.IsNSFWGif(update.Message.Chat.Id, update.Message);
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
+
                             }
                             break;
                         case MessageType.StickerMessage:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
+                                Commands.IsNSFWStickers(update.Message.Chat.Id, update.Message);
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;

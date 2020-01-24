@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Clarifai.API;
+using Telegram.Bot.Types.Enums;
 
 namespace Enforcer5
 {
@@ -187,11 +188,182 @@ namespace Enforcer5
                 }
             }
         }
-       
+
+        public static void IsNSFWGif(long chatId, Message msg)
+        {
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
+            if (watch) return;
+
+            var usingNSFW = Redis.db.SetContainsAsync("bot:nsfwgroups", chatId).Result;
+            if (usingNSFW)
+            {
+                var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+                var lang = Methods.GetGroupLanguage(msg, true).Doc;
+                try
+                {
+                    var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
+
+                    if (!string.IsNullOrEmpty(groupToken))
+                    {
+                        var video = msg.Document.FileId;
+                        if (video != null)
+                        {
+                            var pathing = Bot.Api.GetFileAsync(video).Result;
+                            if (pathing.FilePath.Contains("animations"))
+                            {
+                                var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                                var clarifaiClient = new ClarifaiClient(groupToken);
+                                var request = clarifaiClient.PublicModels.NsfwVideoModel.Predict(
+                                    new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
+                                Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>> response = request.ExecuteAsync().Result;
+                                if (response.IsSuccessful)
+                                {
+                                    var chance = 0.0;
+                                    var foundFrame = false;
+                                    foreach (var item in response.Get().Data)
+                                    {
+                                        if (foundFrame == false)
+                                        {
+                                            foreach (var concept in item.Concepts)
+                                            {
+                                                if (concept.Name.Equals("nsfw"))
+                                                {
+                                                    chance = (double)concept.Value * 100;
+                                                    if (chance > 90)
+                                                    {
+                                                        foundFrame = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+
+                                    if (foundFrame)
+                                    {
+                                        var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
+                                        var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
+                                        if (action.Value.Equals("ban"))
+                                        {
+                                            var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                            if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
+                                            var res = Methods.BanUser(chatId, msg.From.Id, lang);
+                                            if (res)
+                                            {
+                                                Methods.SaveBan(msg.From.Id, "NSFWImage");
+                                                Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                                Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                            if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
+                                            Methods.KickUser(chatId, msg.From.Id, lang);
+                                            Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                            Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                        }
+                                        Bot.DeleteMessage(chatId, msg.MessageId);
+                                    }
+                                }
+
+                            }
+                        }
+                            
+
+                    }
+                }
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e);
+                    Methods.SendError(e.Message, msg, lang);
+                }
+            }
+        }
+
+        public static void IsNSFWStickers(long chatId, Message msg)
+        {
+            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", msg.From.Id).Result;
+            if (watch) return;
+
+            var usingNSFW = Redis.db.SetContainsAsync("bot:nsfwgroups", chatId).Result;
+            if (usingNSFW)
+            {
+                var nsfwSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:nsfwDetection").Result;
+                var lang = Methods.GetGroupLanguage(msg, true).Doc;
+                try
+                {
+                    var groupToken = nsfwSettings.Where(e => e.Name.Equals("apikey")).FirstOrDefault().Value.ToString();
+
+                    if (!string.IsNullOrEmpty(groupToken))
+                    {
+                        var video = msg.Sticker.FileId;
+                        if (video != null)
+                        {
+                            var pathing = Bot.Api.GetFileAsync(video).Result;
+                            if (pathing.FilePath.Contains("webp"))
+                            {
+                                var photoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                                // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                                var clarifaiClient = new ClarifaiClient(groupToken);
+                                var request = clarifaiClient.PublicModels.NsfwModel.Predict(
+                                    new Clarifai.DTOs.Inputs.ClarifaiURLImage(photoURL));
+                                Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> response = request.ExecuteAsync().Result;
+                                if (response.IsSuccessful)
+                                {
+                                    var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
+                                    if (chance > 90.0)
+                                    {
+                                        var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
+                                        var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
+                                        if (action.Value.Equals("ban"))
+                                        {
+                                            var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                            if (msg.From.Username != null) name = $"{name} (@{msg.From.Username})";
+                                            var res = Methods.BanUser(chatId, msg.From.Id, lang);
+                                            if (res)
+                                            {
+                                                Methods.SaveBan(msg.From.Id, "NSFWImage");
+                                                Bot.SendReply(Methods.GetLocaleString(lang, "bannedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                                Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var name = $"{msg.From.FirstName} [{ msg.From.Id}]";
+                                            if (msg.From.Username != null) name = $"{name} (@{msg.From.Username}) ";
+                                            Methods.KickUser(chatId, msg.From.Id, lang);
+                                            Bot.SendReply(Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), msg);
+                                            Service.LogCommand(msg.Chat.Id, -1, "Enforcer", msg.Chat.Title, Methods.GetLocaleString(lang, "kickedfornsfwimage", $"Attention: {admins}: {name}", chance.ToString()), $"{msg.From.FirstName} ({msg.From.Id})");
+                                        }
+                                        Bot.DeleteMessage(chatId, msg.MessageId);
+                                    }
+                                }
+
+                            }
+                          
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e);
+                    Methods.SendError(e.Message, msg, lang);
+                }
+            }
+        }
 
 
 
-        
+
+
 
         [Command(Trigger = "setnsfw", GroupAdminOnly = true, InGroupOnly = true)]
         public static void SetClient(Update update, string[] args)
@@ -281,54 +453,168 @@ namespace Enforcer5
                 int tryGenCount = 0;
                 if (!string.IsNullOrEmpty(groupToken))
                 {
-                    switch (update.Message.Type)
+                    switch (update.Message.ReplyToMessage.Type)
                     {
-                        case Telegram.Bot.Types.Enums.MessageType.VideoMessage:
+                        case MessageType.StickerMessage:
+                            var sticket = msg.ReplyToMessage.Sticker;
+                            var pathing = Bot.Api.GetFileAsync(sticket.FileId).Result;
+                            Console.WriteLine(pathing.FilePath);
+                            if (pathing.FilePath.Contains("webp"))
+                            {
+                                var stickerUrl = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                                // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                                var clarifaiClient3 = new ClarifaiClient(groupToken);
+                                var requestImage = clarifaiClient3.PublicModels.NsfwModel.Predict(
+                                    new Clarifai.DTOs.Inputs.ClarifaiURLImage(stickerUrl));
+                                Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Concept>> responseImage = requestImage.ExecuteAsync().Result;
+                                if (responseImage.IsSuccessful)
+                                {
+                                    var chance = ((double)responseImage.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
+
+                                    Bot.SendReply($"Sticker has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                }
+
+                            }
+                            else if(pathing.FilePath.Contains("tgs"))
+                            {
+                                var sticketUrl = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                                var clarifaiClien2t = new ClarifaiClient(groupToken);
+                                var requestSticker2 = clarifaiClien2t.PublicModels.NsfwVideoModel.Predict(
+                                    new Clarifai.DTOs.Inputs.ClarifaiURLVideo(sticketUrl));
+                                Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>> response3 = requestSticker2.ExecuteAsync().Result;
+                                if (response3.IsSuccessful)
+                                {
+                                    var chance = 0.0;
+                                    var foundFrame = false;
+                                    foreach (var item in response3.Get().Data)
+                                    {
+                                        if (foundFrame == false)
+                                        {
+                                            foreach (var concept in item.Concepts)
+                                            {
+                                                if (concept.Name.Equals("nsfw"))
+                                                {
+                                                    chance = (double)concept.Value * 100;
+                                                    if (chance > 90)
+                                                    {
+                                                        foundFrame = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            break;
+                                        }
+                                    }
+
+                                    if (foundFrame)
+                                    {
+                                        Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                    }                                   
+                                }
+                                else
+                                {
+                                    Bot.SendReply("Shit didnt work", msg);
+                                }
+
+                            }
+                            break;
+                        case MessageType.DocumentMessage:
+                            Console.WriteLine(update.Message.ReplyToMessage.Document.FileId);
                             //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
-                            var video = msg.ReplyToMessage.Video;
-                            var pathing = Bot.Api.GetFileAsync(video.FileId).Result;
-                            var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                            var doc = msg.ReplyToMessage.Document;
+                            pathing = Bot.Api.GetFileAsync(doc.FileId).Result;
+                            var docUrl = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
                             // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
                             // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            Console.WriteLine("Sending for video " + docUrl);
                             var clarifaiClient = new ClarifaiClient(groupToken);
                             var request = clarifaiClient.PublicModels.NsfwVideoModel.Predict(
-                                new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
-                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>> response = request.ExecuteAsync().Result;
+                                new Clarifai.DTOs.Inputs.ClarifaiURLVideo(docUrl));
+                            Clarifai.API.Responses.ClarifaiResponse<Clarifai.DTOs.Models.Outputs.ClarifaiOutput<Clarifai.DTOs.Predictions.Frame>>  response = request.ExecuteAsync().Result;
+                            Console.WriteLine("Got response " + response.ToString());
                             if (response.IsSuccessful)
                             {
                                 var chance = 0.0;
                                 var foundFrame = false;
+                                Console.WriteLine("Looping through");
                                 foreach (var item in response.Get().Data)
                                 {
                                     if (foundFrame == false)
                                     {
                                         foreach (var concept in item.Concepts)
                                         {
+                                            Console.WriteLine(concept.Name);
                                             if (concept.Name.Equals("nsfw"))
                                             {
                                                 chance = (double)concept.Value * 100;
                                                 if (chance > 90)
                                                 {
+                                                    Console.WriteLine("Found something");
                                                     foundFrame = true;
                                                     break;
                                                 }
                                             }
                                         }
                                     }
-                                    else
-                                    {
-                                        break;
-                                    }
                                 }
 
-                                Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
                             }
                             else
                             {
                                 Bot.SendReply("Shit didnt work", msg);
                             }
                             break;
-                        case Telegram.Bot.Types.Enums.MessageType.PhotoMessage:
+                        case MessageType.VideoMessage:
+                            //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
+                            var video = msg.ReplyToMessage.Video;
+                            pathing = Bot.Api.GetFileAsync(video.FileId).Result;
+                            var videoURL = $"https://api.telegram.org/file/bot{Bot.TelegramAPIKey}/{pathing.FilePath}";
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            // var groupToken = Redis.db.StringGetAsync($"chat:{chatId}:clariToken");
+                            Console.WriteLine("Sending for video " + videoURL);
+                            clarifaiClient = new ClarifaiClient(groupToken);
+                            request = clarifaiClient.PublicModels.NsfwVideoModel.Predict(
+                                new Clarifai.DTOs.Inputs.ClarifaiURLVideo(videoURL));
+                            response = request.ExecuteAsync().Result;
+                            Console.WriteLine("Got response " + response.ToString());
+                            if (response.IsSuccessful)
+                            {
+                                var chance = 0.0;
+                                var foundFrame = false;
+                                Console.WriteLine("Looping through");
+                                foreach (var item in response.Get().Data)
+                                {
+                                    if (foundFrame == false)
+                                    {
+                                        foreach (var concept in item.Concepts)
+                                        {
+                                            Console.WriteLine(concept.Name);
+                                            if (concept.Name.Equals("nsfw"))
+                                            {
+                                                chance = (double)concept.Value * 100;
+                                                if (chance > 90)
+                                                {
+                                                    Console.WriteLine("Found something");
+                                                    foundFrame = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                            }
+                            else
+                            {
+                                Bot.SendReply("Shit didnt work", msg);
+                            }
+                            break;
+                        case MessageType.PhotoMessage:
                             //var groupToken = "HsUVHtdIlaNZuuZbmgrbfwiykpfyyX";
                             var photo = msg.ReplyToMessage.Photo.OrderByDescending(x => x.Height).FirstOrDefault(x => x.FileId != null);
                             pathing = Bot.Api.GetFileAsync(photo.FileId).Result;
@@ -355,6 +641,9 @@ namespace Enforcer5
                             {
                                 Bot.SendReply("Shit didnt work", msg);
                             }
+                            break;
+                        default:
+                            Console.WriteLine("No case found for " + update.Message.ReplyToMessage.Type);
                             break;
                     }
                 }
