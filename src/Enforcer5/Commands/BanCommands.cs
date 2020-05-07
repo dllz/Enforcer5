@@ -196,6 +196,13 @@ namespace Enforcer5
                 {
                     Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
                 }
+                else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
+                {
+                    var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick + $" ({warnedId})", $"{nick} ({callbackfromid})", num, max);
+                    Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
+                    Bot.Send(text, chatId);
+                }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
                     text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, num, max);

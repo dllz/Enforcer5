@@ -487,7 +487,9 @@ namespace Enforcer5
                 var why = Methods.GetLocaleString(grouplang, "inlineBan");
                 Methods.AddBanList(chatId, userId, userId.ToString(), why);
                 Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
-                Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", userId, call.From.Id), chatId);
+                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
+                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
+                Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
             }
         }
@@ -503,8 +505,9 @@ namespace Enforcer5
             if (res)
             {
                 Methods.SaveBan(userId, "kick");
-
-                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", userId, call.From.Id), chatId);
+                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
+                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
+                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", nick, admin), chatId);
                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
             }
         }
@@ -567,7 +570,7 @@ namespace Enforcer5
                     try
                     {
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href="https://t.me/c/{updateMessage.Chat.Id}/{repId}">View Report</a>");
+                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href='https://t.me/c/{chatid}/{repID}'>View Report</a>");
                     }
                     catch (Exception e)
                     {

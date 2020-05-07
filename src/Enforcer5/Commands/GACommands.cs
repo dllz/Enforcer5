@@ -550,36 +550,7 @@ namespace Enforcer5
              Bot.SendReply(text, update);
         }
 
-        [Command(Trigger = "look", GlobalAdminOnly = true)]
-        public static void Look(Update update, string[] args)
-        {
-            var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
-            StringBuilder res = new StringBuilder();
-            foreach (var mem in data)
-            {
-                res.Append("\n");
-                res.Append(mem.ToString());
-            }
-            if(!string.IsNullOrEmpty(res.ToString()))
-                 Bot.SendReply(res.ToString(), update);
-            else
-            {
-                 Bot.SendReply("Nothing to see", update);
-            }
-        }
-
-        [Command(Trigger = "unlook", GlobalAdminOnly = true)]
-        public static void unLook(Update update, string[] args)
-        {
-            var data = Redis.db.SetMembersAsync("bot:lookaround").Result;
-            foreach (var mem in data)
-            {
-                 Redis.db.SetRemoveAsync("bot:lookaround", mem.ToString());
-            }
-             Bot.SendReply("done", update);
-        }
-
-        [Command(Trigger = "whois", DevOnly = true)]
+        [Command(Trigger = "whois")]
         public static void WhoIs(Update update, string[] args)
         {
             var id = Methods.GetUserId(update, args);
