@@ -24,6 +24,27 @@ namespace Enforcer5.Helpers
 {
     public static class Methods
     {
+
+        public static string GetChatMessageLink(long chatId, string messageId, string chatLink = null, string username = null)
+        {
+            var stringId = chatId.ToString();
+            var idArray = stringId.ToCharArray();
+            if(idArray[0] == '-' && idArray[1] == '1' && idArray[2] == '0' && idArray[3] == '0')
+            {
+                stringId = stringId.Substring(4);
+                return $"https://t.me/c/{chatId}/{messageId}";
+            }
+            if(username != null)
+            {
+                return $"http://t.me/{username}/{messageId}";
+            }
+            if(chatLink != null)
+            {
+                return chatLink;
+            }
+            return "";           
+        }
+
         public static bool KickUser(long chatId, long userId, XDocument doc)
         {
 
@@ -37,7 +58,7 @@ namespace Enforcer5.Helpers
                     var status = check.Status;
                     var count = 0;
 
-                    while (status == ChatMemberStatus.Member && count < 10)
+                    while (status == ChatMemberStatus.Member && count < 10) 
                     {
                         check =  Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
                         status = check.Status;

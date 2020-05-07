@@ -135,8 +135,18 @@ namespace Enforcer5
                         MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
                         DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                         noti = ser.ReadObject(stream1) as AdminNotification;
-                         Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                        var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
+                        if (!string.IsNullOrEmpty(link))
+                        {
+                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                        }
+                        else
+                        {
+                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                        }
+                       
                     }
                      Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
                     Service.LogCommand(update, update.Message.Text);
@@ -195,8 +205,17 @@ namespace Enforcer5
                                     MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
                                     DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
                                     noti = ser.ReadObject(stream1) as AdminNotification;
-                                         Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                                    var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
+                                    if (!string.IsNullOrEmpty(link))
+                                    {
+                                        Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                                    }
+                                    else
+                                    {
+                                        Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                                    }                                    
                                 }
                                 catch (ApiRequestException e)
                                 {
@@ -313,7 +332,7 @@ namespace Enforcer5
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                         {
-                                            Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
+                                            Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), username: username)
                                         },
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),
                                             $"delflag:{updateMessage.Chat.Id}:{msgId}")
@@ -333,7 +352,7 @@ namespace Enforcer5
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                         {
-                                            Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
+                                            Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), username: username)
                                         }
                                     }
                                 };
@@ -362,7 +381,7 @@ namespace Enforcer5
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
+                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink.Result.ToString())
                                             }
                                             : null
                                     }
@@ -383,7 +402,7 @@ namespace Enforcer5
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
+                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink.Result.ToString())
                                             }
                                             : null
                                     }
@@ -569,8 +588,17 @@ namespace Enforcer5
                     noti = ser.ReadObject(stream1) as AdminNotification;
                     try
                     {
-                         Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href='https://t.me/c/{chatid}/{repID}'>View Report</a>");
+                        var link = Methods.GetChatMessageLink(chatid, repID);
+                        if (!string.IsNullOrEmpty(link))
+                        {
+                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                        }
+                        else
+                        {
+                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                        }
                     }
                     catch (Exception e)
                     {
