@@ -135,7 +135,7 @@ namespace Enforcer5
                                             if (concept.Name.Equals("nsfw"))
                                             {
                                                 chance = (double)concept.Value * 100;
-                                                if (chance > 90)
+                                                if (chance > 95)
                                                 {
                                                     foundFrame = true;
                                                     break;
@@ -229,7 +229,7 @@ namespace Enforcer5
                                                 if (concept.Name.Equals("nsfw"))
                                                 {
                                                     chance = (double)concept.Value * 100;
-                                                    if (chance > 90)
+                                                    if (chance > 97)
                                                     {
                                                         foundFrame = true;
                                                         break;
@@ -318,7 +318,7 @@ namespace Enforcer5
                                 {
                                     var chance = ((double)response.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
 
-                                    if (chance > 90.0)
+                                    if (chance > 95.0)
                                     {
                                         var admins = nsfwSettings.Where(e => e.Name.Equals("adminAlert")).FirstOrDefault().Value;
                                         var action = nsfwSettings.Where(e => e.Name.Equals("action")).FirstOrDefault();
@@ -471,7 +471,7 @@ namespace Enforcer5
                                 {
                                     var chance = ((double)responseImage.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
 
-                                    Bot.SendReply($"Sticker has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                    Bot.SendReply($"Sticker has a {chance}% change of being nsfw\nAPIKey: {groupToken}", msg);
                                 }
 
                             }
@@ -511,7 +511,7 @@ namespace Enforcer5
 
                                     if (foundFrame)
                                     {
-                                        Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                        Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}", msg);
                                     }                                   
                                 }
                                 else
@@ -561,7 +561,7 @@ namespace Enforcer5
                                     }
                                 }
 
-                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}", msg);
                             }
                             else
                             {
@@ -607,7 +607,7 @@ namespace Enforcer5
                                     }
                                 }
 
-                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                Bot.SendReply($"Video has a {chance}% change of being nsfw\nAPIKey: {groupToken}", msg);
                             }
                             else
                             {
@@ -636,7 +636,7 @@ namespace Enforcer5
                             {
                                 var chance = ((double)photoResponse.Get().Data.First(x => x.Name == "nsfw").Value) * 100;
 
-                                Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}\nExpires at:{expireTime}\nExpires in:{(int.Parse(expireTime) - System.DateTime.UtcNow.ToUnixTime())}", msg);
+                                Bot.SendReply($"Image has a {chance}% change of being nsfw\nAPIKey: {groupToken}", msg);
                             }else
                             {
                                 Bot.SendReply("Shit didnt work", msg);

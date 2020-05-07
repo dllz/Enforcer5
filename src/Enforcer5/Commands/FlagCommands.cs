@@ -313,7 +313,7 @@ namespace Enforcer5
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                         {
-                                            Url = $"http://t.me/{username}/{repId}"
+                                            Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
                                         },
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),
                                             $"delflag:{updateMessage.Chat.Id}:{msgId}")
@@ -333,7 +333,7 @@ namespace Enforcer5
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
                                         {
-                                            Url = $"http://t.me/{username}/{repId}"
+                                            Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
                                         }
                                     }
                                 };
@@ -362,7 +362,7 @@ namespace Enforcer5
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = groupLink.Result.ToString()
+                                                Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
                                             }
                                             : null
                                     }
@@ -383,7 +383,7 @@ namespace Enforcer5
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = groupLink.Result
+                                                Url = $"https://t.me/c/{updateMessage.Chat.Id}/{repId}"
                                             }
                                             : null
                                     }
@@ -567,7 +567,7 @@ namespace Enforcer5
                     try
                     {
                          Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
-                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href="https://t.me/c/{updateMessage.Chat.Id}/{repId}">View Report</a>");
                     }
                     catch (Exception e)
                     {

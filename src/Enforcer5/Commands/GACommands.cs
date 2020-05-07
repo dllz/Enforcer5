@@ -229,7 +229,7 @@ namespace Enforcer5
             //Service.LogCommand(update, update.Message.Text);
         }
 
-        [Command(Trigger = "getrekt", DevOnly = true)]
+        [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
         public static void GlobalBan(Update update, string[] args)
         {
             long userId = 0;
@@ -277,7 +277,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getrektu", DevOnly = true)]
+        [Command(Trigger = "getrektu", GlobalAdminOnly = true)]
         public static void GlobalBanListUsername(Update update, string[] args)
         {
             string moti = "";
@@ -351,7 +351,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getrekti", DevOnly = true)]
+        [Command(Trigger = "getrekti", GlobalAdminOnly = true)]
         public static void GlobalBanListids(Update update, string[] args)
         {
             string moti = "";
@@ -399,7 +399,7 @@ namespace Enforcer5
              Bot.SendReply("Deactivated", update);
         }
 
-        [Command(Trigger = "unrekt", DevOnly = true)]
+        [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
         public static void Unrekt(Update update, string[] args)
         {
             long userId = 0;
@@ -529,7 +529,7 @@ namespace Enforcer5
         }
 
 
-        [Command(Trigger = "getuser", DevOnly = true)]
+        [Command(Trigger = "getuser", GroupAdminOnly = true)]
         public static void GetUserDetails(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
