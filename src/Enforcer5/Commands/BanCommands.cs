@@ -199,7 +199,7 @@ namespace Enforcer5
                 else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick + $" ({warnedId})", $"{nick} ({callbackfromid})", num, max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({callbackfromid})", num, max);
                     Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
                     Bot.Send(text, chatId);
                 }

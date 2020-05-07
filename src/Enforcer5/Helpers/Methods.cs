@@ -32,7 +32,7 @@ namespace Enforcer5.Helpers
             if(idArray[0] == '-' && idArray[1] == '1' && idArray[2] == '0' && idArray[3] == '0')
             {
                 stringId = stringId.Substring(4);
-                return $"https://t.me/c/{chatId}/{messageId}";
+                return $"https://t.me/c/{stringId}/{messageId}";
             }
             if(username != null)
             {
