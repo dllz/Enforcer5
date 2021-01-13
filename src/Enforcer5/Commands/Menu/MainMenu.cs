@@ -54,6 +54,13 @@ namespace Enforcer5
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
             var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            if(settings.Length < 9)
+            {
+                Service.GenerateSettings(chatId);
+                settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            }
+                
+
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();

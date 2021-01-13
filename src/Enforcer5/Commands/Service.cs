@@ -131,7 +131,7 @@ namespace Enforcer5
                     Bot.Send("Everyone beware, a crazy ape is about to infiltrate this group!", chatId);
                     break;
                 case 81772130://Lordy
-                    Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
+                    Bot.Send("You're a bad admin. Be a good admin - Budi", chatId);
                     break;
                 case 36702373://Karma (Prize Winner)
                     Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.", chatId);
@@ -142,7 +142,9 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id));
+                        Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id)).Result;
+
+                        Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
@@ -151,12 +153,16 @@ namespace Enforcer5
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text);
+                            Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
                             var text = GetCustomWelcome(message, content);
-                            Bot.Send(text, message.Chat.Id);
+                            Message response = Bot.Send(text, message.Chat.Id);
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
@@ -206,13 +212,17 @@ namespace Enforcer5
                                     text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
                                     break;
                             }
-                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
                             var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
                                 message.Chat.Title);
-                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     break;

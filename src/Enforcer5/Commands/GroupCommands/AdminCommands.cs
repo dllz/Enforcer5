@@ -346,7 +346,17 @@ namespace Enforcer5
             else
             {
                 var text = string.Join("\n", commands.ToList());
-                Bot.SendReply(Methods.GetLocaleString(lang, "extraList", text), update);
+                
+                if (Methods.SendInPm(update.Message, "Extra"))
+                {
+                    lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "extraList", text), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "extraList", text), update);
+                }
             }
         }
 
