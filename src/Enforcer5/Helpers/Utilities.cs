@@ -566,9 +566,14 @@ namespace Enforcer5.Helpers
 
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
         {
+            var enabled = Redis.db.HashGetAsync($"chat:{ChatId}:settings", "DeleteLastWelcome").Result;
             int lastWelcomeMessageId = (int)Redis.db.StringGetAsync($"chat:{ChatId}:lastwelcome").Result;
-            Redis.db.StringSetAsync($"chat:{ChatId}:lastwelcome", $"{msgid}");
-            DeleteMessage(ChatId, lastWelcomeMessageId);
+            if (enabled.Equals("yes"))
+            {
+                
+                Redis.db.StringSetAsync($"chat:{ChatId}:lastwelcome", $"{msgid}");
+                DeleteMessage(ChatId, lastWelcomeMessageId);
+            }  
         }
 
         public static void SendInvoice(long userId, string title, string description, string callbackKey, LabeledPrice[] labeledPrices)

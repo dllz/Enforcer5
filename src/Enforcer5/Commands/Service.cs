@@ -23,7 +23,7 @@ namespace Enforcer5
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
             var defSpamValue = 1;
             var maxTime = TimeSpan.FromMinutes(1);
-            int msg = 0;            
+            int msg = 0;
             if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
@@ -38,19 +38,19 @@ namespace Enforcer5
                 {
                     Console.WriteLine(e);
                 }
-                
+
             }
             else
             {
                 msg = 1;
             }
-            Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
+    Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue+1)
             {
                return; 
             }
-            var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
-            defSpamValue = 3;
+var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
+defSpamValue = 3;
             maxTime = TimeSpan.FromMinutes(5);
             if (joinSpam.HasValue && !string.IsNullOrEmpty(joinSpam))
             {
@@ -360,6 +360,7 @@ namespace Enforcer5
                     {"settings", "Modlist", "yes"},
                     {"settings", "Report", "yes"},
                     {"settings", "Welcome", "yes"},
+                    {"settings", "DeleteLastWelcome", "no"},
                     {"settings", "Extra", "yes"},
                     {"settings", "Flood", "yes"},
                     {"settings", "Admin_mode", "no"},
@@ -374,8 +375,6 @@ namespace Enforcer5
                     {"warnsettings", "type", "ban"},
                     {"warnsettings", "max", 5},
                     {"warnsettings", "mediamax", 3},
-                    {"welcome", "type", "composed"},
-                    {"welcome", "content", "no"},
                     {"media", "image", "allowed"},
                     {"media", "audio", "allowed"},
                     {"media", "video", "allowed"},
@@ -390,7 +389,6 @@ namespace Enforcer5
                     {"antitextlengthsettings", "maxlength", 1024 },
                     {"antitextlengthsettings", "maxlines", 50 },
                     {"antitextlengthsettings", "action", "kick" },
-
                     {"antinamelengthsettings", "enabled", "yes" },
                     {"antinamelengthsettings", "maxlength", 50 },
                     {"antinamelengthsettings", "action", "kick" },
@@ -400,7 +398,25 @@ namespace Enforcer5
                 }
             };
 
+            SetSettings(defaultSettings, chatId);
 
+            var welcomeSet = Redis.db.HashGetAllAsync($"chat:{chatId}:welcome").Result;
+
+            if (welcomeSet.Length==0)
+            {
+                object[,,] welcomeSettings =
+                {
+                    {
+                        { "welcome", "type", "composed"},
+                        { "welcome", "content", "no" },
+                    }
+                };
+                SetSettings(welcomeSettings, chatId);
+            };
+        }
+
+        public static void SetSettings(object[,,] defaultSettings, long chatId)
+        {
             var num = 0;
             for (int i = 0; i < defaultSettings.GetLength(0); i++)
             {
