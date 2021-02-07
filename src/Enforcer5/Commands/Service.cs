@@ -368,6 +368,8 @@ defSpamValue = 3;
                     {"flood", "ActionFlood", "kick"},
                     {"char", "Arab", "allowed"},
                     {"char", "Rtl", "allowed"},
+                    {"welcome", "type", "composed"},
+                    {"welcome", "content", "no" },
                     {"floodexceptions", "image", "yes"},
                     {"floodexceptions", "video", "yes"},
                     {"floodexceptions", "sticker", "yes"},
@@ -400,19 +402,6 @@ defSpamValue = 3;
 
             SetSettings(defaultSettings, chatId);
 
-            var welcomeSet = Redis.db.HashGetAllAsync($"chat:{chatId}:welcome").Result;
-
-            if (welcomeSet.Length==0)
-            {
-                object[,,] welcomeSettings =
-                {
-                    {
-                        { "welcome", "type", "composed"},
-                        { "welcome", "content", "no" },
-                    }
-                };
-                SetSettings(welcomeSettings, chatId);
-            };
         }
 
         public static void SetSettings(object[,,] defaultSettings, long chatId)

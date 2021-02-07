@@ -13,6 +13,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using System.Xml.Linq;
 #pragma warning disable CS4014
 namespace Enforcer5
 {
@@ -487,6 +488,12 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var chatId = update.Message.Chat.Id;
+            var settings = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
+            if (!settings.HasValue)
+            {
+                tempAddDeleteLastWelcomeSetting(update, chatId);
+            }
+
             if (args.Length == 2)
             {
                 if (!string.IsNullOrEmpty(args[1]))
@@ -596,6 +603,13 @@ namespace Enforcer5
                     Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                 }
             }            
+        }
+
+        public static void tempAddDeleteLastWelcomeSetting(Update update, long chatId)
+        {
+            Redis.db.HashSetAsync($"chat:{chatId}:settings", "DeleteLastWelcome", "no");
+            var text = "We have set DeleteWelcomeLastMessage to 'no'. You can change this in the group settings menu.";
+            Bot.SendReply(text,update.Message);
         }
 
         [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
