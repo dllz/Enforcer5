@@ -294,9 +294,28 @@ namespace Enforcer5
             {
                 repId = update.Message.ReplyToMessage.MessageId;
             }
+            var chatId = update.Message.Chat.Id;
+            if (Methods.SendInPm(update.Message, "Extra"))
+            {
+                if (update.Message.ReplyToMessage != null)
+                {
+                    chatId = update.Message.ReplyToMessage.From.Id;
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), chatId, repId);
+                    repId = 0;
+                }
+                else
+                {
+                
+                    chatId = update.Message.From.Id;
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
+                    repId = 0;
+                }
+                    
+            }
+          
             if (string.IsNullOrEmpty(fileId) && string.IsNullOrEmpty(hasMedia))
             {
-                Bot.SendReply(text, update.Message.Chat.Id, repId);
+                Bot.SendReply(text, chatId, repId);
             }
             else
             {
@@ -308,59 +327,59 @@ namespace Enforcer5
                         switch (specialMethod)
                         {
                             case "voice":
-                                Bot.Api.SendVoiceAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                Bot.Api.SendVoiceAsync(chatId, new FileToSend(fileId),
                                     replyToMessageId: repId);
                                 break;
                             case "video":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, new FileToSend(fileId), caption: caption,
+                                    Bot.Api.SendVideoAsync(chatId, new FileToSend(fileId), caption: caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendVideoAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                    Bot.Api.SendVideoAsync(chatId, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
                             case "photo":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, new FileToSend(fileId), caption,
+                                    Bot.Api.SendPhotoAsync(chatId, new FileToSend(fileId), caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendPhotoAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                    Bot.Api.SendPhotoAsync(chatId, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
 
                             case "videoNote":
-                                    Bot.Api.SendVideoNoteAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                    Bot.Api.SendVideoNoteAsync(chatId, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 break;
                             case "gif":
                                 if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.ToString().Contains("###file_id") && hasMedia.ToString().Contains("null"))
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId), caption,
+                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId), caption,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
                             default:
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId), text,
+                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId), text,
                                         replyToMessageId: repId);
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(fileId),
+                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId),
                                         replyToMessageId: repId);
                                 }
                                 break;
@@ -368,12 +387,12 @@ namespace Enforcer5
                     }
                     else if (!string.IsNullOrEmpty(hasMedia))
                     {
-                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(hasMedia), text,
+                        Bot.Api.SendDocumentAsync(chatId, new FileToSend(hasMedia), text,
                             replyToMessageId: repId);
                     }
                     else
                     {
-                        Bot.Api.SendDocumentAsync(update.Message.Chat.Id, new FileToSend(hasMedia),
+                        Bot.Api.SendDocumentAsync(chatId, new FileToSend(hasMedia),
                             replyToMessageId: repId);
                     }
                 }
