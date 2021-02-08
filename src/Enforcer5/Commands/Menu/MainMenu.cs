@@ -18,6 +18,11 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var chatId = update.Message.Chat.Id;
+            var deleteLastWelcome = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
+            if (!deleteLastWelcome.HasValue)
+            {
+                tempAddDeleteLastWelcomeSetting(update, chatId);
+            }
             var menuText = Methods.GetLocaleString(lang, "mainMenu", update.Message.Chat.Title);
             var menu = genMenu(chatId, lang);
             Bot.SendToPm(menuText, update, menu: menu);
@@ -54,6 +59,13 @@ namespace Enforcer5
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
             var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            if(settings.Length < 9)
+            {
+                Service.GenerateSettings(chatId);
+                settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            }
+                
+
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();

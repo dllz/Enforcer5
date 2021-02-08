@@ -23,7 +23,7 @@ namespace Enforcer5
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
             var defSpamValue = 1;
             var maxTime = TimeSpan.FromMinutes(1);
-            int msg = 0;            
+            int msg = 0;
             if (msgs.HasValue && !string.IsNullOrEmpty(msgs))
             {
                 try
@@ -38,19 +38,19 @@ namespace Enforcer5
                 {
                     Console.WriteLine(e);
                 }
-                
+
             }
             else
             {
                 msg = 1;
             }
-            Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
+    Redis.db.StringSetAsync($"spam:added:{message.Chat.Id}", msg + 1, maxTime);
             if (msg >= defSpamValue+1)
             {
                return; 
             }
-            var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
-            defSpamValue = 3;
+var joinSpam = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}:{message.NewChatMember.Id}").Result;
+defSpamValue = 3;
             maxTime = TimeSpan.FromMinutes(5);
             if (joinSpam.HasValue && !string.IsNullOrEmpty(joinSpam))
             {
@@ -131,7 +131,7 @@ namespace Enforcer5
                     Bot.Send("Everyone beware, a crazy ape is about to infiltrate this group!", chatId);
                     break;
                 case 81772130://Lordy
-                    Bot.Send("Your a bad admin. Be a good admin - Budi", chatId);
+                    Bot.Send("You're a bad admin. Be a good admin - Budi", chatId);
                     break;
                 case 36702373://Karma (Prize Winner)
                     Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.", chatId);
@@ -142,7 +142,9 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id));
+                        Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id)).Result;
+
+                        Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
@@ -151,12 +153,16 @@ namespace Enforcer5
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text);
+                            Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
                             var text = GetCustomWelcome(message, content);
-                            Bot.Send(text, message.Chat.Id);
+                            Message response = Bot.Send(text, message.Chat.Id);
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
@@ -206,13 +212,17 @@ namespace Enforcer5
                                     text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
                                     break;
                             }
-                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
                             var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
                                 message.Chat.Title);
-                            Bot.Api.SendTextMessageAsync(message.Chat.Id, text);
+                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+
+                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     break;
@@ -350,6 +360,7 @@ namespace Enforcer5
                     {"settings", "Modlist", "yes"},
                     {"settings", "Report", "yes"},
                     {"settings", "Welcome", "yes"},
+                    {"settings", "DeleteLastWelcome", "no"},
                     {"settings", "Extra", "yes"},
                     {"settings", "Flood", "yes"},
                     {"settings", "Admin_mode", "no"},
@@ -357,6 +368,8 @@ namespace Enforcer5
                     {"flood", "ActionFlood", "kick"},
                     {"char", "Arab", "allowed"},
                     {"char", "Rtl", "allowed"},
+                    {"welcome", "type", "composed"},
+                    {"welcome", "content", "no" },
                     {"floodexceptions", "image", "yes"},
                     {"floodexceptions", "video", "yes"},
                     {"floodexceptions", "sticker", "yes"},
@@ -364,8 +377,6 @@ namespace Enforcer5
                     {"warnsettings", "type", "ban"},
                     {"warnsettings", "max", 5},
                     {"warnsettings", "mediamax", 3},
-                    {"welcome", "type", "composed"},
-                    {"welcome", "content", "no"},
                     {"media", "image", "allowed"},
                     {"media", "audio", "allowed"},
                     {"media", "video", "allowed"},
@@ -380,7 +391,6 @@ namespace Enforcer5
                     {"antitextlengthsettings", "maxlength", 1024 },
                     {"antitextlengthsettings", "maxlines", 50 },
                     {"antitextlengthsettings", "action", "kick" },
-
                     {"antinamelengthsettings", "enabled", "yes" },
                     {"antinamelengthsettings", "maxlength", 50 },
                     {"antinamelengthsettings", "action", "kick" },
@@ -390,7 +400,12 @@ namespace Enforcer5
                 }
             };
 
+            SetSettings(defaultSettings, chatId);
 
+        }
+
+        public static void SetSettings(object[,,] defaultSettings, long chatId)
+        {
             var num = 0;
             for (int i = 0; i < defaultSettings.GetLength(0); i++)
             {

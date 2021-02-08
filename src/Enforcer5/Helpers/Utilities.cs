@@ -90,12 +90,22 @@ namespace Enforcer5.Helpers
             Me = Api.GetMeAsync().Result;
             Console.Title += " " + Me.Username;
             StartTime = DateTime.UtcNow;
+            long offset;
+
+            try
+            {
 #if premium
-                long offset = long.Parse(Redis.db.StringGetAsync("bot:last_Premium_update").Result) + 10000;
+                offset = long.Parse(Redis.db.StringGetAsync("bot:last_Premium_update").Result);
 #endif
 #if normal
-            long offset = long.Parse(Redis.db.StringGetAsync("bot:last_update").Result) + 10000;
+                offset = long.Parse(Redis.db.StringGetAsync("bot:last_update").Result);
 #endif
+            }
+            catch (System.ArgumentNullException e)
+            {
+                 offset = 1;
+            }
+
             Api.MessageOffset = offset + 1;
             Console.WriteLine($" database offset is {offset}");
             Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
@@ -552,6 +562,18 @@ namespace Enforcer5.Helpers
                 throw AggE;
             }
            
+        }
+
+        public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
+        {
+            var enabled = Redis.db.HashGetAsync($"chat:{ChatId}:settings", "DeleteLastWelcome").Result;
+            int lastWelcomeMessageId = (int)Redis.db.StringGetAsync($"chat:{ChatId}:lastwelcome").Result;
+            if (enabled.Equals("yes"))
+            {
+                
+                Redis.db.StringSetAsync($"chat:{ChatId}:lastwelcome", $"{msgid}");
+                DeleteMessage(ChatId, lastWelcomeMessageId);
+            }  
         }
 
         public static void SendInvoice(long userId, string title, string description, string callbackKey, LabeledPrice[] labeledPrices)

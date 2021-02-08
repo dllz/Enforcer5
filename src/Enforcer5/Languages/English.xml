@@ -298,6 +298,9 @@
   <string key ="WelcomeButton">
     <value>Welcome Message</value>
   </string>
+  <string key ="DeleteLastWelcomeButton">
+    <value>Delete Last Welcome</value>
+  </string>
   <string key="ReportButton">
     <value>Report</value>
   </string>
