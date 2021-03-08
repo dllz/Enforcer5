@@ -558,7 +558,7 @@ namespace Enforcer5.Helpers
             try
             {
                 var admin = Bot.Api.GetChatMemberAsync(group, (int) user).Result;                
-                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
+                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator | admin.IsAnonymousAdmin)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
