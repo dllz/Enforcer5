@@ -285,7 +285,7 @@ namespace Enforcer5
                     templist += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
                     count++;
                 }
-                if (count % 10 == 0 && count > 0)
+                if (count % 5 == 0 && count > 0)
                 {
                     list.Add(templist);
                     templist = "";
