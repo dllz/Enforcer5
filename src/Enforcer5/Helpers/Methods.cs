@@ -551,14 +551,14 @@ namespace Enforcer5.Helpers
         {
             //fire off admin request
             var isAdmin = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
-            if (isAdmin.Equals("true"))
+            if (isAdmin.Equals("true") || user == 1087968824)
             {
                 return true;
             }
             try
             {
                 var admin = Bot.Api.GetChatMemberAsync(group, (int) user).Result;                
-                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator | admin.IsAnonymousAdmin)
+                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
                     return true;
@@ -1270,12 +1270,126 @@ namespace Enforcer5.Helpers
             return res;
         }
 
+        public static int GetGroupTempMuteTime(long chatId)
+        {
+            int res = 1440;
+            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempMuteTime").Result;
+            if (int.TryParse(time.ToString(), out res))
+            {
+                return res;
+            }
+            return res;
+        }
+
         public static object GetUsername(long id)
         {
             var username = Redis.db.HashGetAsync($"user:{id}", "username").Result;
             if (username.HasValue)
                 return username.ToString();
             return "No username found";
+        }
+
+        public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
+        {
+            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId, untilDatetime,
+                    canSendMessages: false,
+                    canSendMediaMessages: false,
+                    canSendPolls: false,
+                    canSendOtherMessages: false,
+                    canAddWebPagePreviews: false,
+                    canChangeInfo: false,
+                    canInviteUsers: false,
+                    canPinMessages: false).Result;
+            return res;
+        }
+
+        public static bool MuteUser(long chatId, long userId, XDocument doc)
+        {
+            try
+            {
+                var res = Mute(chatId, userId);
+                if (res)
+                {
+                    Redis.db.SetAddAsync($"chat:{chatId}:muted", userId);
+                }
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to mute chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannotmuteadmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
+        }
+
+        public static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
+        {
+            try
+            {
+                var res = Mute(chatId, userId, untilDateTime);
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to temp mute chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannottempmuteadmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
+        }
+
+        public static bool UnmuteUser(long chatId, long userId, XDocument doc)
+        {
+            try
+            {
+                ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
+                var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
+                    canSendMessages: chatPermission.CanSendMediaMessages,
+                    canSendMediaMessages: chatPermission.CanSendMediaMessages,
+                    canSendPolls: chatPermission.CanSendPolls,
+                    canSendOtherMessages: chatPermission.CanSendOtherMessages,
+                    canAddWebPagePreviews: chatPermission.CanAddWebPagePrevious,
+                    canChangeInfo: chatPermission.CanChangeInfo,
+                    canInviteUsers: chatPermission.CanInviteUsers,
+                    canPinMessages: chatPermission.CanPinMessages).Result;
+                if (res)
+                {
+                    Redis.db.SetRemoveAsync($"chat:{chatId}:muted", userId);
+                }
+                return res;
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to mute chat member"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    return false;
+                }
+                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                {
+                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
+                    return false;
+                }
+                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                return false;
+            }
         }
     }
 }
