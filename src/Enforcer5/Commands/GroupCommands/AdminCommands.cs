@@ -767,6 +767,33 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "tempmutetime", InGroupOnly = true)]
+        public static void SetDefaultTempMute(Update update, string[] args)
+        {
+            int time;
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            if (!int.TryParse(args[1], out time))
+            {
+
+                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultTime", time), update);
+            }
+            else
+            {
+                if (!Methods.IsGroupAdmin(update) &
+                    !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
+                {
+                    Bot.SendReply(
+                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
+                            "userNotAdmin"), update.Message);
+                    return;
+                }
+                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempMuteTime", time);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
+        }
+
         [Command(Trigger = "media", InGroupOnly = true, GroupAdminOnly = true)]
         public static void MediaUserMenu(Update update, string[] args)
         {

@@ -1521,5 +1521,10 @@
   <string key="logchannelRemoved">
   <value>Your logchannel was successfully removed!</value>
   </string>
+  <string key="userTempMuted">
+    <value>User temporarily muted.</value>
+  </string>
+  <string key="defaultMuteTimeSet">
+    <value>The default temporary mute time for this group has been updated.</value>
+  </string>
 </strings>
-
