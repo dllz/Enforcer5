@@ -403,5 +403,42 @@ namespace Enforcer5
                 }
             }
         }
+
+        [Command(Trigger = "info", RequiresReply = true)]
+        public static void GetMessageInfo(Update update, string[] args)
+        {
+            if (update.Message.ReplyToMessage != null)
+            {
+                DateTime date;
+                long id;
+                string name;
+                string lastname;
+                string message;
+                string language;
+                string username;
+                if(update.Message.ReplyToMessage.ForwardDate.HasValue)
+                {
+                    id = update.Message.ReplyToMessage.ForwardFrom.Id;
+                    name = update.Message.ReplyToMessage.ForwardFrom.FirstName;
+                    lastname = update.Message.ReplyToMessage.ForwardFrom.LastName;
+                    language = update.Message.ReplyToMessage.ForwardFrom.LanguageCode;
+                    username = update.Message.ReplyToMessage.ForwardFrom.Username;
+                    message = update.Message.ReplyToMessage.Text;
+                    date = update.Message.ReplyToMessage.ForwardDate.Value;
+                } else
+                {
+                    id = update.Message.ReplyToMessage.From.Id;
+                    name = update.Message.ReplyToMessage.From.FirstName;
+                    lastname = update.Message.ReplyToMessage.From.LastName;
+                    language = update.Message.ReplyToMessage.From.LanguageCode;
+                    username = update.Message.ReplyToMessage.From.Username;
+                    message = update.Message.ReplyToMessage.Text;
+                    date = update.Message.ReplyToMessage.Date;
+                }
+                var msg = $"<b>Message:</b> {message}\n<b>Name:</b>{name} {lastname} ({username} / {id})\n<b>Language:</b>{language}\n<b>Time:</b>{date.ToString("r")}";
+                Bot.SendReply(msg, update);
+            
+            }
+        }
     }
 }
