@@ -435,7 +435,7 @@ namespace Enforcer5
                     message = update.Message.ReplyToMessage.Text;
                     date = update.Message.ReplyToMessage.Date;
                 }
-                var msg = $"<b>Message:</b> {message}\n<b>Name:</b>{name} {lastname} ({username} / {id})\n<b>Language:</b>{language}\n<b>Time:</b>{date.ToString("r")}";
+                var msg = $"<b>Message:</b> {message}\n<b>Name:</b> {name} {lastname} (@{username} / {id})\n<b>Language:</b> {language}\n<b>Time:</b> {date.ToString("r")}";
                 Bot.SendReply(msg, update);
             
             }
