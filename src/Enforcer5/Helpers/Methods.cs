@@ -1289,28 +1289,21 @@ namespace Enforcer5.Helpers
             return "No username found";
         }
 
-        public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
-        {
-            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId, untilDatetime,
-                    canSendMessages: false,
-                    canSendMediaMessages: false,
-                    canSendPolls: false,
-                    canSendOtherMessages: false,
-                    canAddWebPagePreviews: false,
-                    canChangeInfo: false,
-                    canInviteUsers: false,
-                    canPinMessages: false).Result;
-            return res;
-        }
-
-        public static bool MuteUser(long chatId, long userId, XDocument doc)
+        public static bool MuteUser(long chatId, long userId, XDocument doc, bool newJoiner = false)
         {
             try
             {
-                var res = Mute(chatId, userId);
+                var res = Bot.Mute(chatId, userId);
                 if (res)
-                {
-                    Redis.db.SetAddAsync($"chat:{chatId}:muted", userId);
+                {   
+                    if (newJoiner)
+                    {
+                        Redis.db.SetAddAsync($"chat:{chatId}:newJoiner", userId);
+                    }
+                    else
+                    {
+                        Redis.db.SetAddAsync($"chat:{chatId}:muted", userId);
+                    }
                 }
                 return res;
             }
@@ -1335,7 +1328,7 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Mute(chatId, userId, untilDateTime);
+                var res = Bot.Mute(chatId, userId, untilDateTime);
                 return res;
             }
             catch (AggregateException e)
@@ -1359,6 +1352,7 @@ namespace Enforcer5.Helpers
         {
             try
             {
+                // TODO move to utities
                 ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
                 var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
                     canSendMessages: chatPermission.CanSendMediaMessages,
@@ -1372,6 +1366,7 @@ namespace Enforcer5.Helpers
                 if (res)
                 {
                     Redis.db.SetRemoveAsync($"chat:{chatId}:muted", userId);
+                    Redis.db.SetRemoveAsync($"chat:{chatId}:mutedJoiners", userId);
                 }
                 return res;
             }

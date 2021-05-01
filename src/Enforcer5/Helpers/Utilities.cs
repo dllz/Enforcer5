@@ -590,6 +590,20 @@ namespace Enforcer5.Helpers
                     parsemode: ParseMode.Default);
             }
         }
+
+        public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
+        {
+            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId, untilDatetime,
+                    canSendMessages: false,
+                    canSendMediaMessages: false,
+                    canSendPolls: false,
+                    canSendOtherMessages: false,
+                    canAddWebPagePreviews: false,
+                    canChangeInfo: false,
+                    canInviteUsers: false,
+                    canPinMessages: false).Result;
+            return res;
+        }
     }
 
     internal static class Redis

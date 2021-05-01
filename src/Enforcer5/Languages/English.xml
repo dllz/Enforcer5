@@ -1527,4 +1527,17 @@
   <string key="defaultMuteTimeSet">
     <value>The default temporary mute time for this group has been updated.</value>
   </string>
+  <string key="defaultMuteTime">
+    <value>The groups default tempban time is: {0} min</value>
+  </string>
+  <string key="noMutedJoiners">
+    <value>There are no new users who were muted when joining.</value>
+  </string>
+  <string key="mutedList">
+    <value><![CDATA[List of <b>muted joiners</b>:\n{0}]]></value>
+  </string>
+  <string key ="MuteOnJoinButton">
+    <value>Mute On Join</value>
+  </string>
+
 </strings>

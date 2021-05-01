@@ -387,6 +387,13 @@ namespace Enforcer5.Handlers
                                     else
                                     {
                                         Service.Welcome(update.Message);
+                                        var hash = $"chat:{update.Message.Chat.Id}:settings";
+                                        var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
+                                        var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+                                        if (muteOnJoin == "no")
+                                        {
+                                            Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, true);
+                                        }
                                         // Service.ResetUser(update.Message);
                                         
                                     }
