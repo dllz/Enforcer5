@@ -604,6 +604,21 @@ namespace Enforcer5.Helpers
                     canPinMessages: false).Result;
             return res;
         }
+
+        public static bool Unmute(long chatId, long userId)
+        {
+            ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
+            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
+                    canSendMessages: chatPermission.CanSendMediaMessages,
+                    canSendMediaMessages: chatPermission.CanSendMediaMessages,
+                    canSendPolls: chatPermission.CanSendPolls,
+                    canSendOtherMessages: chatPermission.CanSendOtherMessages,
+                    canAddWebPagePreviews: chatPermission.CanAddWebPagePrevious,
+                    canChangeInfo: chatPermission.CanChangeInfo,
+                    canInviteUsers: chatPermission.CanInviteUsers,
+                    canPinMessages: chatPermission.CanPinMessages).Result;
+            return res;
+        }
     }
 
     internal static class Redis

@@ -840,6 +840,54 @@ namespace Enforcer5
             }
         }
 
+        [Command(Trigger = "unmutenewjoiners", InGroupOnly = true)]
+        public static void UnmuteNewJoiners(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            var chatId = update.Message.Chat.Id;
+            var hash = $"chat:{chatId}:mutedJoiners";
+            var joiners = Redis.db.SetMembers(hash);
+            List<long> failedToUnmute = new List<long>();
+
+            if (joiners.Length == 0)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+            }
+            else
+            {
+                foreach(var joiner in joiners)
+                {
+                    var js = joiner.ToString();
+                    long joiner_id = long.Parse(joiner.ToString());
+                    var res = Methods.UnmuteUser(update.Message.Chat.Id, joiner_id, lang);
+                    if (!res)
+                    {
+                        failedToUnmute.Add(joiner_id);
+                    }
+                }
+                if (failedToUnmute.Count > 0)
+                {
+                    var text = string.Join("\n", failedToUnmute);
+
+                    if (Methods.SendInPm(update.Message, "Muted"))
+                    {
+                        lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                        Bot.SendToPm(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
+                    }
+                    else
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
+                    }
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "unmutedAllJoiners"), update);
+                }
+
+            }
+        }
+
 
     }
 

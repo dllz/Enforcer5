@@ -1298,7 +1298,7 @@ namespace Enforcer5.Helpers
                 {   
                     if (newJoiner)
                     {
-                        Redis.db.SetAddAsync($"chat:{chatId}:newJoiner", userId);
+                        Redis.db.SetAddAsync($"chat:{chatId}:mutedJoiners", userId);
                     }
                     else
                     {
@@ -1352,17 +1352,8 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                // TODO move to utities
                 ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
-                var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
-                    canSendMessages: chatPermission.CanSendMediaMessages,
-                    canSendMediaMessages: chatPermission.CanSendMediaMessages,
-                    canSendPolls: chatPermission.CanSendPolls,
-                    canSendOtherMessages: chatPermission.CanSendOtherMessages,
-                    canAddWebPagePreviews: chatPermission.CanAddWebPagePrevious,
-                    canChangeInfo: chatPermission.CanChangeInfo,
-                    canInviteUsers: chatPermission.CanInviteUsers,
-                    canPinMessages: chatPermission.CanPinMessages).Result;
+                var res = Bot.Unmute(chatId, userId);
                 if (res)
                 {
                     Redis.db.SetRemoveAsync($"chat:{chatId}:muted", userId);

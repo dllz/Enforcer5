@@ -1536,6 +1536,12 @@
   <string key="mutedList">
     <value><![CDATA[List of <b>muted joiners</b>:\n{0}]]></value>
   </string>
+  <string key="failedUnmutedList">
+    <value><![CDATA[List of <b>muted joiners that failed to unmute</b>:\n{0}]]></value>
+  </string>
+  <string key="unmutedAllJoiners">
+    <value>All new joiners have been unmuted.</value>
+  </string>
   <string key ="MuteOnJoinButton">
     <value>Mute On Join</value>
   </string>
