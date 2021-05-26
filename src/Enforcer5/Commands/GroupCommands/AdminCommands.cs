@@ -770,27 +770,74 @@ namespace Enforcer5
         [Command(Trigger = "settempmutetime", InGroupOnly = true)]
         public static void SetDefaultTempMute(Update update, string[] args)
         {
-            int time;
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            if (!int.TryParse(args[1], out time))
+            long userId = 0;
+            var chatId = update.Message.Chat.Id;
+            long time;
+            string length = "";
+            string units = "";
+            
+            if (args[1] != null)
             {
+                if (args[1].Contains(' '))
+                {
+                    length = args[1].Split(' ')[0];
+                    
+                    try
+                    {
+                        units = args[1].Split(' ')[1];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
+                }
+                else 
+                {
+                    length = args[1];
+                    units = "min";
+                }
+                if (long.TryParse(length, out time))
+                {
+                    time = long.Parse(length);
+                    if (time == 0)
+                    {
+                        time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+                    }
+                }
+                else
+                {
+                    time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+                }
+                double calculatedTime = 0;
+                switch (units)
+                {
+                    case "min":
+                    case "mins":
+                    case "minutes":
+                    case "minute":
+                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                        break;
+                    case "hour":
+                    case "hours":
+                        calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
+                        break;
+                    case "days":
+                    case "day":
+                        calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
+                        break;
+                    default:
+                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                        break;
 
-                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
-                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTime", time), update);
+                }
+                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempMuteTime", calculatedTime);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
+                Service.LogCommand(update, update.Message.Text);
             }
             else
             {
-                if (!Methods.IsGroupAdmin(update) &
-                    !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
-                {
-                    Bot.SendReply(
-                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
-                            "userNotAdmin"), update.Message);
-                    return;
-                }
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempMuteTime", time);
-                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
-                Service.LogCommand(update, update.Message.Text);
+                Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
             }
         }
 
@@ -817,15 +864,25 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:mutedJoiners";
-            var commands = Redis.db.SetMembers(hash);
+            var mutedJoinerIds = Redis.db.SetMembers(hash);
 
-            if (commands.Length == 0)
+            if (mutedJoinerIds.Length == 0)
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
             }
             else
             {
-                var text = string.Join("\n", commands.ToList());
+                List<string> userNames = new List<string>();
+                foreach (var id in mutedJoinerIds)
+                {
+                    var string_id = int.Parse(id.ToString())
+;                    var user = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, string_id).Result;
+                    var username = user.User.Username;
+                    userNames.Add(username);
+                }
+
+                
+                var text = string.Join("\n", userNames);
 
                 if (Methods.SendInPm(update.Message, "Muted"))
                 {
@@ -889,6 +946,12 @@ namespace Enforcer5
         }
 
 
+        public static void tempAddMuteOnJoinSetting(Update update, long chatId)
+        {
+            Redis.db.HashSetAsync($"chat:{chatId}:settings", "MuteOnJoin", "yes");
+            var text = "We have set Mute on join setting to 'no'. You can change this in the group settings menu.";
+            Bot.SendReply(text, update.Message);
+        }
     }
 
     public static partial class CallBacks
