@@ -2496,7 +2496,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/13.0.8": {
+      "Telegram.Bot.Enforcer/13.0.10": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -5187,7 +5187,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/13.0.8": {
+      "Telegram.Bot.Enforcer/13.0.10": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -7856,7 +7856,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XDocument.dll": {}
         }
       },
-      "Telegram.Bot.Enforcer/13.0.8": {
+      "Telegram.Bot.Enforcer/13.0.10": {
         "type": "package",
         "dependencies": {
           "NETStandard.Library": "1.6.1",
@@ -9326,7 +9326,7 @@
     "runtime.win7-x64.Microsoft.NETCore.DotNetHost/1.0.1": {
       "sha512": "Uey9m9vV2yOdZ7Gs+Lzxuy9+N7iv2gMlt2aG3HLS1FeWqhw+CTuOyKnOn3hqZ4M9YNsseSq2h7HC+6RZuh/42w==",
       "type": "package",
-      "path": "runtime.win7-x64.microsoft.netcore.dotnethost/1.0.1",
+      "path": "runtime.win7-x64.Microsoft.NETCore.DotNetHost/1.0.1",
       "files": [
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
@@ -9353,7 +9353,7 @@
     "runtime.win7-x64.Microsoft.NETCore.DotNetHostResolver/1.0.1": {
       "sha512": "pMi8x4uTaFCXTO33c8yF5OJSkAV5FZZylYVoSBvWaLuKe8tqLxME1G8W+1Jw6ZHIl3k4+vGMMvZt1YpJbpJaMg==",
       "type": "package",
-      "path": "runtime.win7-x64.microsoft.netcore.dotnethostresolver/1.0.1",
+      "path": "runtime.win7-x64.Microsoft.NETCore.DotNetHostResolver/1.0.1",
       "files": [
         "ThirdPartyNotices.txt",
         "dotnet_library_license.txt",
@@ -14188,15 +14188,126 @@
         "ref/xamarinwatchos10/_._"
       ]
     },
-    "Telegram.Bot.Enforcer/13.0.8": {
-      "sha512": "Wm2VQI6ClPeeTQMfvFgudnSpbs25VLgINHsarTfXRJ9m1YJeSfr2TDVyCX4shD2rsWQ7Mi/rFYOqLWCerBUcDA==",
+    "Telegram.Bot.Enforcer/13.0.10": {
+      "sha512": "Po6LLVqwRyHz/nBkN8+ZuH1TZkZBf/hxZv5nn6djWxnk8WGVOGij8Bd9f5XOatg67BYwQPNbv5MuD/3JgMGvUg==",
       "type": "package",
-      "path": "Telegram.Bot.Enforcer/13.0.8",
+      "path": "Telegram.Bot.Enforcer/13.0.10",
       "files": [
         ".signature.p7s",
-        "Telegram.Bot.Enforcer.13.0.8.nupkg.sha512",
+        "Telegram.Bot.Enforcer.13.0.10.nupkg.sha512",
         "Telegram.Bot.Enforcer.nuspec",
-        "lib/netstandard1.5/Telegram.Bot.dll"
+        "lib/netstandard1.5/Telegram.Bot.dll",
+        "lib/netstandard1.5/Telegram.Bot.pdb",
+        "src/Telegram.Bot/Args/CallbackQueryEventArgs.cs",
+        "src/Telegram.Bot/Args/ChosenInlineResultEventArgs.cs",
+        "src/Telegram.Bot/Args/InlineQueryEventArgs.cs",
+        "src/Telegram.Bot/Args/MessageEventArgs.cs",
+        "src/Telegram.Bot/Args/ReceiveErrorEventArgs.cs",
+        "src/Telegram.Bot/Args/ReceiveGeneralErrorEventArgs.cs",
+        "src/Telegram.Bot/Args/UpdateEventArgs.cs",
+        "src/Telegram.Bot/Converters/ChatIdConverter.cs",
+        "src/Telegram.Bot/Converters/FileToSendConverter.cs",
+        "src/Telegram.Bot/Converters/InlineQueryResultTypeConverter.cs",
+        "src/Telegram.Bot/Converters/ParseModeConverter.cs",
+        "src/Telegram.Bot/Converters/PhotoSizeConverter.cs",
+        "src/Telegram.Bot/Converters/UnixDatetimeConverter.cs",
+        "src/Telegram.Bot/Exceptions/ApiException.cs",
+        "src/Telegram.Bot/Helpers/Extensions.cs",
+        "src/Telegram.Bot/ITelegramBotClient.cs",
+        "src/Telegram.Bot/Telegram.Bot.csproj",
+        "src/Telegram.Bot/TelegramBotClient.cs",
+        "src/Telegram.Bot/Types/Animation.cs",
+        "src/Telegram.Bot/Types/ApiResponse.cs",
+        "src/Telegram.Bot/Types/Audio.cs",
+        "src/Telegram.Bot/Types/CallbackGame.cs",
+        "src/Telegram.Bot/Types/CallbackQuery.cs",
+        "src/Telegram.Bot/Types/Chat.cs",
+        "src/Telegram.Bot/Types/ChatId.cs",
+        "src/Telegram.Bot/Types/ChatMember.cs",
+        "src/Telegram.Bot/Types/ChatPermissions.cs",
+        "src/Telegram.Bot/Types/ChatPhoto.cs",
+        "src/Telegram.Bot/Types/ChosenInlineResult.cs",
+        "src/Telegram.Bot/Types/Contact.cs",
+        "src/Telegram.Bot/Types/Document.cs",
+        "src/Telegram.Bot/Types/Enums/ChatAction.cs",
+        "src/Telegram.Bot/Types/Enums/ChatMemberStatus.cs",
+        "src/Telegram.Bot/Types/Enums/ChatType.cs",
+        "src/Telegram.Bot/Types/Enums/FileType.cs",
+        "src/Telegram.Bot/Types/Enums/MessageEntityType.cs",
+        "src/Telegram.Bot/Types/Enums/MessageType.cs",
+        "src/Telegram.Bot/Types/Enums/ParseMode.cs",
+        "src/Telegram.Bot/Types/Enums/UpdateType.cs",
+        "src/Telegram.Bot/Types/File.cs",
+        "src/Telegram.Bot/Types/FileToSend.cs",
+        "src/Telegram.Bot/Types/Game.cs",
+        "src/Telegram.Bot/Types/GameHighScore.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardCallbackButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardCallbackGameButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardPayButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardSwitchCallbackQueryCurrentChatButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardSwitchInlineQueryButton.cs",
+        "src/Telegram.Bot/Types/InlineKeyboardButtons/InlineKeyboardUrlButton.cs",
+        "src/Telegram.Bot/Types/InlineQuery.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResult.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultArticle.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultAudio.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCached.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedAudio.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedDocument.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedGif.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedMpeg4Gif.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedPhoto.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedSticker.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedVideo.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultCachedVoice.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultContact.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultDocument.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultGame.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultGif.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultLocation.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultMpeg4Gif.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultNew.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultPhoto.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultType.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultVenue.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultVideo.cs",
+        "src/Telegram.Bot/Types/InlineQueryResults/InlineQueryResultVoice.cs",
+        "src/Telegram.Bot/Types/InputMessageContents/InputContactMessageContent.cs",
+        "src/Telegram.Bot/Types/InputMessageContents/InputLocationMessageContent.cs",
+        "src/Telegram.Bot/Types/InputMessageContents/InputMessageContent.cs",
+        "src/Telegram.Bot/Types/InputMessageContents/InputTextMessageContent.cs",
+        "src/Telegram.Bot/Types/InputMessageContents/InputVenueMessageContent.cs",
+        "src/Telegram.Bot/Types/KeyboardButton.cs",
+        "src/Telegram.Bot/Types/Location.cs",
+        "src/Telegram.Bot/Types/Message.cs",
+        "src/Telegram.Bot/Types/MessageEntity.cs",
+        "src/Telegram.Bot/Types/Payments/Invoice.cs",
+        "src/Telegram.Bot/Types/Payments/LabeledPrice.cs",
+        "src/Telegram.Bot/Types/Payments/OrderInfo.cs",
+        "src/Telegram.Bot/Types/Payments/PreCheckoutQuery.cs",
+        "src/Telegram.Bot/Types/Payments/ShippingAddress.cs",
+        "src/Telegram.Bot/Types/Payments/ShippingOption.cs",
+        "src/Telegram.Bot/Types/Payments/ShippingQuery.cs",
+        "src/Telegram.Bot/Types/Payments/SuccessfulPayment.cs",
+        "src/Telegram.Bot/Types/PhotoSize.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/ForceReply.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/IReplyMarkup.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/InlineKeyboardMarkup.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/ReplyKeyboardMarkup.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/ReplyKeyboardRemove.cs",
+        "src/Telegram.Bot/Types/ReplyMarkups/ReplyMarkup.cs",
+        "src/Telegram.Bot/Types/ResponseParameters.cs",
+        "src/Telegram.Bot/Types/Sticker.cs",
+        "src/Telegram.Bot/Types/Update.cs",
+        "src/Telegram.Bot/Types/User.cs",
+        "src/Telegram.Bot/Types/UserProfilePhotos.cs",
+        "src/Telegram.Bot/Types/Venue.cs",
+        "src/Telegram.Bot/Types/Video.cs",
+        "src/Telegram.Bot/Types/VideoNote.cs",
+        "src/Telegram.Bot/Types/Voice.cs",
+        "src/Telegram.Bot/Types/WebhookInfo.cs"
       ]
     }
   },
@@ -14208,7 +14319,7 @@
       "StackExchange.Redis >= 1.2.4",
       "System.Diagnostics.StackTrace >= 4.3.0",
       "System.Runtime.Serialization.Json >= 4.3.0",
-      "Telegram.Bot.Enforcer >= 13.0.8"
+      "Telegram.Bot.Enforcer >= 13.0.10"
     ],
     ".NETCoreApp,Version=v1.0": []
   },

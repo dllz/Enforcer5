@@ -18,8 +18,8 @@ using System.Xml.Linq;
 namespace Enforcer5
 {
     public static partial class Commands
-    {     
-       
+    {
+
         [Command(Trigger = "setrules", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetRules(Update update, string[] args)
         {
@@ -31,8 +31,8 @@ namespace Enforcer5
                 {
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", input);
-                   var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
-                        Methods.GetLocaleString(lang, "RulesSet"));
+                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                         Methods.GetLocaleString(lang, "RulesSet"));
                     Service.LogCommand(update, update.Message.Text);
                 }
                 catch (AggregateException e)
@@ -98,7 +98,7 @@ namespace Enforcer5
                 Bot.SendReply(Methods.GetLocaleString(lang, "NoInput"), update);
             }
         }
-      
+
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
         public static void User(Update update, string[] args)
         {
@@ -111,7 +111,7 @@ namespace Enforcer5
                 var userMenu = new Menu(2);
                 userMenu.Buttons = new List<InlineButton>
                 {
-                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{update.Message.Chat.Id}:{userid}"),                    
+                    new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"userbuttonremwarns:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"userbuttonresetwarn:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbuttonbanuser:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}"),
@@ -133,7 +133,7 @@ namespace Enforcer5
             }
 
 
-        }       
+        }
 
         [Command(Trigger = "extra", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Extra(Update update, string[] args)
@@ -142,28 +142,28 @@ namespace Enforcer5
                 return;
             if (!args[1].StartsWith("#"))
                 return;
-			
-			int splitindex = 0;
-			if (args[1].Contains(" ") && args[1].Contains("\n"))
-			{
-				splitindex = args[1].IndexOf(" ") < args[1].IndexOf("\n")
-					? args[1].IndexOf(" ")
-					: args[1].IndexOf("\n");
-			}
-			else if (args[1].Contains(" "))
-			{
-				splitindex = args[1].IndexOf(" ");
-			}
-			else if (args[1].Contains("\n"))
-			{
-				splitindex = args[1].IndexOf("\n");
-			}
-			else if (update.Message.ReplyToMessage == null) return;
-			
+
+            int splitindex = 0;
+            if (args[1].Contains(" ") && args[1].Contains("\n"))
+            {
+                splitindex = args[1].IndexOf(" ") < args[1].IndexOf("\n")
+                    ? args[1].IndexOf(" ")
+                    : args[1].IndexOf("\n");
+            }
+            else if (args[1].Contains(" "))
+            {
+                splitindex = args[1].IndexOf(" ");
+            }
+            else if (args[1].Contains("\n"))
+            {
+                splitindex = args[1].IndexOf("\n");
+            }
+            else if (update.Message.ReplyToMessage == null) return;
+
             var words = splitindex != 0
-                ? new[] {args[1].Substring(1, splitindex).Trim(), args[1].Substring(splitindex + 1)}
-                : new[] {args[1].Substring(1).Trim(), null};
-            words[0] = $"#{words[0]}";            
+                ? new[] { args[1].Substring(1, splitindex).Trim(), args[1].Substring(splitindex + 1) }
+                : new[] { args[1].Substring(1).Trim(), null };
+            words[0] = $"#{words[0]}";
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (update.Message.ReplyToMessage != null && words[1] == null)
             {
@@ -347,7 +347,7 @@ namespace Enforcer5
             else
             {
                 var text = string.Join("\n", commands.ToList());
-                
+
                 if (Methods.SendInPm(update.Message, "Extra"))
                 {
                     lang = Methods.GetGroupLanguage(update.Message, false).Doc;
@@ -379,8 +379,8 @@ namespace Enforcer5
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);
             }
-        } 
-      
+        }
+
         [Command(Trigger = "setlink", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetLink(Update update, string[] args)
         {
@@ -450,12 +450,12 @@ namespace Enforcer5
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                     if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
                     {
-                        
+
                         Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, Methods.GetLocaleString(lang, "bannedFor", reason)), update);
                     }
                     else
                     {
-                        Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name,""), update);
+                        Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, ""), update);
                     }
                 }
             }
@@ -554,7 +554,7 @@ namespace Enforcer5
                     }
                     else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
                     {
-                       Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
+                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
                         Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
                         Service.LogCommand(update, update.Message.Text);
@@ -573,7 +573,7 @@ namespace Enforcer5
                         try
                         {
                             var res = Bot.SendReply(args[1], update);
-                            var result =  Bot.Api.EditMessageTextAsync(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                            var result = Bot.Api.EditMessageTextAsync(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
                             Service.LogCommand(update, update.Message.Text);
                         }
                         catch (AggregateException e)
@@ -602,14 +602,14 @@ namespace Enforcer5
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                 }
-            }            
+            }
         }
 
         public static void tempAddDeleteLastWelcomeSetting(Update update, long chatId)
         {
             Redis.db.HashSetAsync($"chat:{chatId}:settings", "DeleteLastWelcome", "no");
             var text = "We have set DeleteWelcomeLastMessage to 'no'. You can change this in the group settings menu.";
-            Bot.SendReply(text,update.Message);
+            Bot.SendReply(text, update.Message);
         }
 
         [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
@@ -626,7 +626,7 @@ namespace Enforcer5
             Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
             Service.LogCommand(update, update.Message.Text);
         }
-      
+
         [Command(Trigger = "enablewatch", InGroupOnly = true, GroupAdminOnly = true)]
         public static void EnableMediaExcempt(Update update, string[] args)
         {
@@ -652,7 +652,7 @@ namespace Enforcer5
                 {
                     var userid = Methods.GetUserId(update, args);
                     var status = Check(userid, update.Message.Chat.Id);
-                    var n= Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
+                    var n = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
                     var number = n.HasValue ? int.Parse(n.ToString()) : 0;
                     Bot.SendReply(Methods.GetLocaleString(lang, $"usergroupstatus{status}", userid, number), update.Message);
                 }
@@ -665,7 +665,7 @@ namespace Enforcer5
             {
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
             }
-        }      
+        }
 
         public static string Check(long userid, long chatid)
         {
@@ -692,7 +692,7 @@ namespace Enforcer5
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
                 long channelId;
-                
+
                 var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
                 if (long.TryParse(args[1], out channelId))
                 {
@@ -715,7 +715,7 @@ namespace Enforcer5
                         Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
                         Service.LogCommand(update, update.Message.Text);
 
-                        Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);                   
+                        Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);
                     }
                 }
                 else
@@ -757,13 +757,87 @@ namespace Enforcer5
                     !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
                 {
                     Bot.SendReply(
-                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
+                        Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
                             "userNotAdmin"), update.Message);
                     return;
                 }
                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempbanTime", time);
                 Bot.SendReply(Methods.GetLocaleString(lang, "defaultTimeSet"), update);
                 Service.LogCommand(update, update.Message.Text);
+            }
+        }
+
+        [Command(Trigger = "settempmutetime", InGroupOnly = true)]
+        public static void SetDefaultTempMute(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            long userId = 0;
+            var chatId = update.Message.Chat.Id;
+            long time;
+            string length = "";
+            string units = "";
+            
+            if (args[1] != null)
+            {
+                if (args[1].Contains(' '))
+                {
+                    length = args[1].Split(' ')[0];
+                    
+                    try
+                    {
+                        units = args[1].Split(' ')[1];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
+                }
+                else 
+                {
+                    length = args[1];
+                    units = "min";
+                }
+                if (long.TryParse(length, out time))
+                {
+                    time = long.Parse(length);
+                    if (time == 0)
+                    {
+                        time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+                    }
+                }
+                else
+                {
+                    time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+                }
+                double calculatedTime = 0;
+                switch (units)
+                {
+                    case "min":
+                    case "mins":
+                    case "minutes":
+                    case "minute":
+                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                        break;
+                    case "hour":
+                    case "hours":
+                        calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
+                        break;
+                    case "days":
+                    case "day":
+                        calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
+                        break;
+                    default:
+                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                        break;
+
+                }
+                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempMuteTime", calculatedTime);
+                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
+            else
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
             }
         }
 
@@ -774,17 +848,110 @@ namespace Enforcer5
             var userid = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
             var warns = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
-            var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);            
+            var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);
             var userMenu = new Menu(2);
             userMenu.Buttons = new List<InlineButton>
             {
                 new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"usermediaremwarns:{update.Message.Chat.Id}:{userid}"),
                 new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"usermediaresetwarn:{update.Message.Chat.Id}:{userid}")
-                
+
             };
             Bot.SendReply(text, update, Key.CreateMarkupFromMenu(userMenu));
         }
 
+        [Command(Trigger = "listmutedjoiners", InGroupOnly = true)]
+        public static void GetMutedJoinersList(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            var hash = $"chat:{update.Message.Chat.Id}:mutedJoiners";
+            var mutedJoinerIds = Redis.db.SetMembers(hash);
+
+            if (mutedJoinerIds.Length == 0)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+            }
+            else
+            {
+                List<string> userNames = new List<string>();
+                foreach (var id in mutedJoinerIds)
+                {
+                    var string_id = int.Parse(id.ToString())
+;                    var user = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, string_id).Result;
+                    var username = user.User.Username;
+                    userNames.Add(username);
+                }
+
+                
+                var text = string.Join("\n", userNames);
+
+                if (Methods.SendInPm(update.Message, "Muted"))
+                {
+                    lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                    Bot.SendToPm(Methods.GetLocaleString(lang, "mutedList", text), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "mutedList", text), update);
+                }
+            }
+        }
+
+        [Command(Trigger = "unmutenewjoiners", InGroupOnly = true)]
+        public static void UnmuteNewJoiners(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            var chatId = update.Message.Chat.Id;
+            var hash = $"chat:{chatId}:mutedJoiners";
+            var joiners = Redis.db.SetMembers(hash);
+            List<long> failedToUnmute = new List<long>();
+
+            if (joiners.Length == 0)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+            }
+            else
+            {
+                foreach(var joiner in joiners)
+                {
+                    var js = joiner.ToString();
+                    long joiner_id = long.Parse(joiner.ToString());
+                    var res = Methods.UnmuteUser(update.Message.Chat.Id, joiner_id, lang);
+                    if (!res)
+                    {
+                        failedToUnmute.Add(joiner_id);
+                    }
+                }
+                if (failedToUnmute.Count > 0)
+                {
+                    var text = string.Join("\n", failedToUnmute);
+
+                    if (Methods.SendInPm(update.Message, "Muted"))
+                    {
+                        lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+                        Bot.SendToPm(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
+                    }
+                    else
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
+                    }
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "unmutedAllJoiners"), update);
+                }
+
+            }
+        }
+
+
+        public static void tempAddMuteOnJoinSetting(Update update, long chatId)
+        {
+            Redis.db.HashSetAsync($"chat:{chatId}:settings", "MuteOnJoin", "yes");
+            var text = "We have set Mute on join setting to 'no'. You can change this in the group settings menu.";
+            Bot.SendReply(text, update.Message);
+        }
     }
 
     public static partial class CallBacks

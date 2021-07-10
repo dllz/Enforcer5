@@ -325,7 +325,8 @@ namespace Enforcer5
                 {
                     Methods.SendError(e.Message, update.Message, lang.Doc);
                 }
-            }                         
+            }
+                                    
             catch (AggregateException e)
             {
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
@@ -417,7 +418,7 @@ namespace Enforcer5
                     else
                     {
                         Bot.Send(message, chatId);
-                    }
+                    } 
 
                 Redis.db.StringSetAsync($"chat:{chatId}:tempbanned:{userId}", unbanTime, TimeSpan.FromMinutes(time));
 #if normal
@@ -439,7 +440,7 @@ namespace Enforcer5
             long userId = 0, time;
             string length = "";
             string units = "";
-                if (update.Message.ReplyToMessage != null) // by reply
+            if (update.Message.ReplyToMessage != null) // by reply
             {
                 userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
                 if (userId == Bot.Me.Id) return;
@@ -540,8 +541,157 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
-       
+        [Command(Trigger = "mute", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void Mute(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                var userId = Methods.GetUserId(update, args);
+                var chatId = update.Message.Chat.Id;
+                if (userId == Bot.Me.Id || userId == update.Message.From.Id)
+                    return;
+                Methods.MuteUser(chatId, userId, lang);
+            }
+
+            catch (Exception e)
+            {
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "tempmute", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void TempMute(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+            long userId = 0;
+            var chatId = update.Message.Chat.Id;
+            long time;
+            string length = "";
+            string units = "";
+            if (update.Message.ReplyToMessage != null) // by reply
+            {
+                userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
+                if (userId == Bot.Me.Id) return;
+
+                if (args[1] != null)
+                {
+                    length = args[1].Split(' ')[0];
+
+                    try
+                    {
+                        units = args[1].Split(' ')[1];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
+                }
+
+            }
+            else if (args[1] != null)
+            {
+                if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
+                {
+                    var user = args[1].Split(' ')[0]; // either username or ID
+                    length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
+                    try
+                    {
+                        units = args[1].Split(' ')[2];
+                    }
+                    catch (Exception e)
+                    {
+                        units = "min";
+                    }
+
+                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                    else if (!long.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                        return;
+                    }
+                    if (userId == Bot.Me.Id) return;
+                }
+                else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
+                {
+                    var user = args[1];
+                    length = Methods.GetGroupTempMuteTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
+
+                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                    else if (!long.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                        return;
+                    }
+                    if (userId == Bot.Me.Id) return;
+                }
+            }
+
+            if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
+            {
+                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+            }
+            if (time == 0)
+            {
+                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
+            }
+            double calculatedTime = 0;
+            switch (units)
+            {
+                case "min":
+                case "mins":
+                case "minutes":
+                case "minute":
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                    break;
+                case "hour":
+                case "hours":
+                    calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
+                    break;
+                case "days":
+                case "day":
+                    calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
+                    break;
+                default:
+                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
+                    break;
+            }
+            if (userId != 0)
+            {
+                // UTC only because we plug into telgeram API which assumes UTC timezone.
+                var unmuteTime = System.DateTime.UtcNow.AddSeconds(calculatedTime * 60);
+                var res = Methods.TempMuteUser(chatId, userId, unmuteTime, lang);
+                Service.LogCommand(update, update.Message.Text);
+
+                if (res)
+                {
+                    var hash = $"chat:{chatId}:tempmuted";
+                    Redis.db.HashSetAsync(hash, $"{userId}", unmuteTime.ToUnixTime());
+                }
+            }
+
+        }
+            
+    
+        [Command(Trigger = "unmute", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void Unmute(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                var chatId = update.Message.Chat.Id;
+                var userId = Methods.GetUserId(update, args);
+
+                Methods.UnmuteUser(chatId, userId, lang);
+            }
+            catch (Exception e)
+            {
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
     }
+
 
     public static partial class CallBacks
     {

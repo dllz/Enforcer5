@@ -590,6 +590,35 @@ namespace Enforcer5.Helpers
                     parsemode: ParseMode.Default);
             }
         }
+
+        public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
+        {
+            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId, untilDatetime,
+                    canSendMessages: false,
+                    canSendMediaMessages: false,
+                    canSendPolls: false,
+                    canSendOtherMessages: false,
+                    canAddWebPagePreviews: false,
+                    canChangeInfo: false,
+                    canInviteUsers: false,
+                    canPinMessages: false).Result;
+            return res;
+        }
+
+        public static bool Unmute(long chatId, long userId)
+        {
+            ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
+            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
+                    canSendMessages: chatPermission.CanSendMediaMessages,
+                    canSendMediaMessages: chatPermission.CanSendMediaMessages,
+                    canSendPolls: chatPermission.CanSendPolls,
+                    canSendOtherMessages: chatPermission.CanSendOtherMessages,
+                    canAddWebPagePreviews: chatPermission.CanAddWebPagePrevious,
+                    canChangeInfo: chatPermission.CanChangeInfo,
+                    canInviteUsers: chatPermission.CanInviteUsers,
+                    canPinMessages: chatPermission.CanPinMessages).Result;
+            return res;
+        }
     }
 
     internal static class Redis

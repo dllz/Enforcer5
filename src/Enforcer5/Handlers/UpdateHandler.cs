@@ -34,6 +34,7 @@ namespace Enforcer5.Handlers
 #if normal
             Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
 #endif
+           
             if (e.Update.Message == null) return;
             if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
                 return; //toss it
@@ -142,7 +143,7 @@ namespace Enforcer5.Handlers
                         Bot.Api.LeaveChatAsync(update.Message.Chat.Id);                      
                     }
                     return;
-                }
+                } 
 
                 new Task(() => { CollectStats(update.Message); }).Start();                
                 Bot.MessagesProcessed++;
@@ -386,7 +387,15 @@ namespace Enforcer5.Handlers
                                     else
                                     {
                                         Service.Welcome(update.Message);
+                                        var hash = $"chat:{update.Message.Chat.Id}:settings";
+                                        var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
+                                        var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+                                        if (muteOnJoin == "no")
+                                        {
+                                            Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, true);
+                                        }
                                         // Service.ResetUser(update.Message);
+                                        
                                     }
 #if premium
                                      if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id ==-1001030085238) && update.Message.NewChatMembers.Length > 1)

@@ -19,9 +19,14 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var chatId = update.Message.Chat.Id;
             var deleteLastWelcome = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
+            var muteOnJoin = Redis.db.HashGet($"chat:{chatId}:settings", "MuteOnJoin");
             if (!deleteLastWelcome.HasValue)
             {
                 tempAddDeleteLastWelcomeSetting(update, chatId);
+            }
+            if (!muteOnJoin.HasValue)
+            {
+                tempAddMuteOnJoinSetting(update, chatId);
             }
             var menuText = Methods.GetLocaleString(lang, "mainMenu", update.Message.Chat.Title);
             var menu = genMenu(chatId, lang);
