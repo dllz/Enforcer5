@@ -551,7 +551,21 @@ namespace Enforcer5
                 var chatId = update.Message.Chat.Id;
                 if (userId == Bot.Me.Id || userId == update.Message.From.Id)
                     return;
-                Methods.MuteUser(chatId, userId, lang);
+
+                if (Methods.MuteUser(chatId, userId, lang))
+                {
+                    object[] arguments =
+                {
+                            Methods.GetNick(update.Message, args, userId),
+                            Methods.GetNick(update.Message, args, true)
+                };
+                    Service.LogCommand(update, update.Message.Text);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "muted", arguments), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+                }
             }
 
             catch (Exception e)
@@ -564,68 +578,12 @@ namespace Enforcer5
         public static void TempMute(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            long userId = 0;
+            long userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
             long time;
             string length = "";
             string units = "";
-            if (update.Message.ReplyToMessage != null) // by reply
-            {
-                userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
-                if (userId == Bot.Me.Id) return;
-
-                if (args[1] != null)
-                {
-                    length = args[1].Split(' ')[0];
-
-                    try
-                    {
-                        units = args[1].Split(' ')[1];
-                    }
-                    catch (Exception e)
-                    {
-                        units = "min";
-                    }
-                }
-
-            }
-            else if (args[1] != null)
-            {
-                if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
-                {
-                    var user = args[1].Split(' ')[0]; // either username or ID
-                    length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
-                    try
-                    {
-                        units = args[1].Split(' ')[2];
-                    }
-                    catch (Exception e)
-                    {
-                        units = "min";
-                    }
-
-                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!long.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                        return;
-                    }
-                    if (userId == Bot.Me.Id) return;
-                }
-                else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
-                {
-                    var user = args[1];
-                    length = Methods.GetGroupTempMuteTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
-
-                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!long.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                        return;
-                    }
-                    if (userId == Bot.Me.Id) return;
-                }
-            }
+            
 
             if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
@@ -665,8 +623,16 @@ namespace Enforcer5
 
                 if (res)
                 {
+                    string timeText = TimeSpan.FromMinutes(calculatedTime).ToString(@"dd\:hh\:mm");
+                    var nick = Methods.GetNick(update.Message, args, userId);
+                    Service.LogCommand(update, update.Message.Text);
                     var hash = $"chat:{chatId}:tempmuted";
                     Redis.db.HashSetAsync(hash, $"{userId}", unmuteTime.ToUnixTime());
+                    Bot.SendReply(Methods.GetLocaleString(lang, "temmpmuted", timeText, nick, userId), update);
+                }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
                 }
             }
 
@@ -681,8 +647,19 @@ namespace Enforcer5
             {
                 var chatId = update.Message.Chat.Id;
                 var userId = Methods.GetUserId(update, args);
-
-                Methods.UnmuteUser(chatId, userId, lang);
+                object[] arguments =
+                {
+                            Methods.GetNick(update.Message, args, userId),
+                            Methods.GetNick(update.Message, args, true)
+                };
+                if (Methods.UnmuteUser(chatId, userId, lang))
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "unmuted", arguments), update);
+                    Service.LogCommand(update, update.Message.Text);
+                } else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+                }
             }
             catch (Exception e)
             {

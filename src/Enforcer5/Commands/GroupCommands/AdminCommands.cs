@@ -683,7 +683,7 @@ namespace Enforcer5
             return "neverseen";
         }
 
-        [Command(Trigger = "addlogchannel", InGroupOnly = true)]
+        [Command(Trigger = "addlogchannel", InGroupOnly = true, GroupAdminOnly = true)]
         public static void AddLogChat(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -725,7 +725,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "dellogchannel", InGroupOnly = true)]
+        [Command(Trigger = "dellogchannel", InGroupOnly = true, GroupAdminOnly = true)]
         public static void DeleteLogChannel(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -740,7 +740,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "temptime", InGroupOnly = true)]
+        [Command(Trigger = "temptime", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetDefaultTempban(Update update, string[] args)
         {
             int time;
@@ -767,7 +767,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "settempmutetime", InGroupOnly = true)]
+        [Command(Trigger = "settempmutetime", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetDefaultTempMute(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
@@ -859,7 +859,7 @@ namespace Enforcer5
             Bot.SendReply(text, update, Key.CreateMarkupFromMenu(userMenu));
         }
 
-        [Command(Trigger = "listmutedjoiners", InGroupOnly = true)]
+        [Command(Trigger = "listmutedjoiners", InGroupOnly = true, GroupAdminOnly = true)]
         public static void GetMutedJoinersList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
@@ -897,7 +897,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "unmutenewjoiners", InGroupOnly = true)]
+        [Command(Trigger = "unmutenewjoiners", InGroupOnly = true, GroupAdminOnly = true)]
         public static void UnmuteNewJoiners(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;

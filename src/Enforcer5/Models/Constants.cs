@@ -9,7 +9,7 @@ namespace Enforcer5.Models
     {
         //538092996 = Suri
         //Bardia = 888143203
-        public static long[] Devs = { 1112734253, 125311351};
+        public static long[] Devs = { 125311351, 1112734253 };
         public const int EnforcerDb = 0;
         public static long[] GlobalAdmins = { 1112734253, 125311351, 538092996, 159790001, 888143203};
         private const string aPIKey = "";
