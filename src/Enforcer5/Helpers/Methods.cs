@@ -690,6 +690,12 @@ namespace Enforcer5.Helpers
                     warns = Convert.ToInt32( Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
+                int totalWarns = warns;
+                if (Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result.HasValue)
+                {
+                    totalWarns = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result);
+                }
+                completedList.Add(GetLocaleString(lang, "getgrouptotalwarn", totalWarns));
                 warns = 0;
                 if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
                 {

@@ -107,6 +107,7 @@ namespace Enforcer5
 
             }
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1).Result;
+            Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1);
             var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
