@@ -24,7 +24,7 @@ namespace Enforcer5
                 if (update.Message.From.Id == userid)
                     return;
                 var chat = update.Message.Chat.Id;
-                var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+                var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
                 var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
                 var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{update.Message.From.Id}").Result;
@@ -75,7 +75,7 @@ namespace Enforcer5
                 if (userid == Bot.Me.Id)
                     return;
                 var chat = update.Message.Chat.Id;
-                var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+                var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
                 if (role.Result.Status == ChatMemberStatus.Creator || priv)
                 {
@@ -113,7 +113,7 @@ namespace Enforcer5
             var userid = Methods.GetUserId(update, args);
             if (userid == Bot.Me.Id)
                 return;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if ((role.Result.Status == ChatMemberStatus.Creator || priv) || update.Message.From.Id == Constants.Devs[0])
             {
@@ -132,7 +132,7 @@ namespace Enforcer5
             var userid = Methods.GetUserId(update, args);
             if (userid == Bot.Me.Id)
                 return;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
@@ -151,7 +151,7 @@ namespace Enforcer5
             var userid = Methods.GetUserId(update, args);
             if (userid == Bot.Me.Id)
                 return;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
@@ -170,7 +170,7 @@ namespace Enforcer5
             var userid = Methods.GetUserId(update, args);
             if (userid == Bot.Me.Id)
                 return;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {

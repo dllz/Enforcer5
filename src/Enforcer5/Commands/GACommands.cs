@@ -544,7 +544,7 @@ namespace Enforcer5
             text = $"{text}\nUser has said {msgs} ever";
             if (update.Message.Chat.Type != ChatType.Private)
             {
-                var status = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, (int) userid).Result;
+                var status = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, userid).Result;
                 text = $"{text}\n The user is a {status.Status.ToString()} in this chat";
             }
              Bot.SendReply(text, update);

@@ -229,7 +229,7 @@ namespace Enforcer5
                     if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                         return;
 
-                    var isChatMember = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, (int)userid).Result;
+                    var isChatMember = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, userid).Result;
                     
                     var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc);
                     if (res)
@@ -339,7 +339,7 @@ namespace Enforcer5
         {
             var chatId = update.Message.Chat.Id;
             var userId = Methods.GetUserId(update, args);
-            var status = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatId, userId).Result.Status;
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             if (status == ChatMemberStatus.Kicked)
             {

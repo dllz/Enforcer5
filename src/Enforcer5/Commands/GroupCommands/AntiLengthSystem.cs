@@ -14,8 +14,8 @@ namespace Enforcer5
         public static void MaxNameLength(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            int chars;
-            if (Int32.TryParse(args[1], out chars))
+            long chars;
+            if (Int64.TryParse(args[1], out chars))
             {
                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antinamelengthsettings", "maxlength", chars);
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
@@ -27,8 +27,8 @@ namespace Enforcer5
         public static void MaxTextLength(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            int chars;
-            if (Int32.TryParse(args[1], out chars))
+            long chars;
+            if (Int64.TryParse(args[1], out chars))
             {
                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlength", chars);
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
@@ -40,8 +40,8 @@ namespace Enforcer5
         public static void MaxLines(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            int chars;
-            if (Int32.TryParse(args[1], out chars))
+            long chars;
+            if (Int64.TryParse(args[1], out chars))
             {
                 Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlines", chars);
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);

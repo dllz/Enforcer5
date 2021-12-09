@@ -289,7 +289,7 @@ namespace Enforcer5.Helpers
             return result;
         }
 
-        internal static Message SendToPm(string message, int pmId, long chatId, InlineKeyboardMarkup menu = null,
+        internal static Message SendToPm(string message, long pmId, long chatId, InlineKeyboardMarkup menu = null,
             ParseMode parseMode = ParseMode.Html, int messageId = -1)
         {
             Message result = null;
@@ -331,7 +331,7 @@ namespace Enforcer5.Helpers
         internal static Message SendToPm(string message, Update update, InlineKeyboardMarkup menu = null,
             ParseMode parseMode = ParseMode.Html)
         {
-            return SendToPm(message, Convert.ToInt32((long)update.Message.From.Id), update.Message.Chat.Id, menu, parseMode,
+            return SendToPm(message, update.Message.From.Id, update.Message.Chat.Id, menu, parseMode,
                 update.Message.MessageId);
         }
 

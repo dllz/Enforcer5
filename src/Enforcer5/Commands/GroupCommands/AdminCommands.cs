@@ -440,12 +440,12 @@ namespace Enforcer5
                 }
                 if (userId > 0)
                 {
-                    var user = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
+                    var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
                     var status = user.Status;
                     var name = user.User.FirstName;
                     if (user.User.Username != null)
                         name = $"{name} - @{user.User.Username}";
-                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, Convert.ToInt32(userId)))
+                    if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                         status = ChatMemberStatus.Kicked;
                     var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                     if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -462,12 +462,12 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
-                var user = Bot.Api.GetChatMemberAsync(chatId, Convert.ToInt32(userId)).Result;
+                var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
                 var status = user.Status;
                 var name = user.User.FirstName;
                 if (user.User.Username != null)
                     name = $"{name} - @{user.User.Username}";
-                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, Convert.ToInt32(userId)))
+                if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                     status = ChatMemberStatus.Kicked;
                 var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
                 if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
@@ -669,7 +669,7 @@ namespace Enforcer5
 
         public static string Check(long userid, long chatid)
         {
-            var status = Bot.Api.GetChatMemberAsync(chatid, Convert.ToInt32(userid)).Result.Status;
+            var status = Bot.Api.GetChatMemberAsync(chatid, userid).Result.Status;
             var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
             var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
 
@@ -729,7 +729,7 @@ namespace Enforcer5
         public static void DeleteLogChannel(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {

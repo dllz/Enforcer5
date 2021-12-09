@@ -338,8 +338,8 @@ defSpamValue = 3;
 
         public static void removeWarn0(long chatid, long userId)
         {
-            var currentMedia = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result);
-            var currentWarn = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result);
+            var currentMedia = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result);
+            var currentWarn = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result);
 
             if (currentWarn < 0)
             {
