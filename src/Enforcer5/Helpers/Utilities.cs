@@ -78,8 +78,18 @@ namespace Enforcer5.Helpers
                         .OpenSubKey("SOFTWARE\\TelegramBots");
             TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
 #endif
-
-            Api = new TelegramBotClient(TelegramAPIKey);
+            var url =
+                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+                        .OpenSubKey("SOFTWARE\\TelegramBots");
+            var UrlKey = key.GetValue("TelegramServerUrl")?.ToString();
+            if (UrlKey.Length > 0)
+            {
+                Api = new TelegramBotClient(TelegramAPIKey, baseUrl: UrlKey);
+            }
+            else
+            {
+                Api = new TelegramBotClient(TelegramAPIKey, httpClient: null);
+            }
             //Api.Timeout = TimeSpan.FromSeconds(3);
             Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
             Api.OnUpdate += UpdateHandler.UpdateReceived;
