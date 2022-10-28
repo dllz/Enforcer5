@@ -621,7 +621,7 @@ namespace Enforcer5
         public static void DeleteFlag(CallbackQuery call, string[] args)
         {
             var chatid = long.Parse(args[1]);
-            var msgid = long.Parse(args[2]);
+            var msgid = int.Parse(args[2]);
             Bot.DeleteMessage(chatid, msgid);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
