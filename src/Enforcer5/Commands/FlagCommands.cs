@@ -485,7 +485,7 @@ namespace Enforcer5
             var grouplang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userLang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
-            var userId = int.Parse(args[2]);
+            var userId = long.Parse(args[2]);
             var res = Methods.BanUser(chatId, userId, grouplang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
@@ -519,7 +519,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userlang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
-            var userId = int.Parse(args[2]);
+            var userId = long.Parse(args[2]);
              var res = Methods.KickUser(chatId, userId, lang);
             if (res)
             {
@@ -535,7 +535,7 @@ namespace Enforcer5
         public static void WarnFlag(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
-            var userId = int.Parse(args[2]);
+            var userId = long.Parse(args[2]);
             var callId = call.Id;
             var callFromId = call.From.Id;
             var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
@@ -546,7 +546,7 @@ namespace Enforcer5
         public static void SolveFlag(CallbackQuery call, string[] args)
         {            
             var chatid = long.Parse(args[1]);
-            var msgid = int.Parse(args[2]);
+            var msgid = long.Parse(args[2]);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             var hash = $"flagged:{chatid}:{msgid}";
             var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
@@ -565,7 +565,7 @@ namespace Enforcer5
                  Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                  Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
                  Redis.db.HashSetAsync(hash, "Solved", 1);
-                var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
+                var counter = long.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                 var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
                 var repID = Redis.db.HashGetAsync(hash, "repID").Result;
                 string text;
@@ -621,7 +621,7 @@ namespace Enforcer5
         public static void DeleteFlag(CallbackQuery call, string[] args)
         {
             var chatid = long.Parse(args[1]);
-            var msgid = int.Parse(args[2]);
+            var msgid = long.Parse(args[2]);
             Bot.DeleteMessage(chatid, msgid);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));

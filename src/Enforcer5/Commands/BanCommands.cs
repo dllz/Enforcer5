@@ -95,7 +95,33 @@ namespace Enforcer5
            }
         }
 
-        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0)
+        [Command(Trigger = "prewarn", InGroupOnly = true, GroupAdminOnly = true)]
+        public static void PreWarn(Update update, string[] args)
+        {
+            if (update.Message.ReplyToMessage != null)
+            {
+                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick: Methods.GetNick(update.Message, args, update.Message.From.Id), preWarn: true);
+                Service.LogCommand(update, update.Message.Text);
+            }
+            else
+            {
+                try
+                {
+                    var warnedid = Methods.GetUserId(update, args);
+                    var chatid = update.Message.Chat.Id;
+
+                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", preWarn: true);
+                    Service.LogCommand(update, update.Message.Text);
+                }
+                catch (Exception e)
+                {
+                    var lang = Methods.GetGroupLanguage(update.Message, true);
+                    Methods.SendError(e.Message, update.Message, lang.Doc);
+                }
+            }
+        }
+
+        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false)
         {
             try
             {
@@ -106,8 +132,36 @@ namespace Enforcer5
             {
 
             }
-            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1).Result;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1);
+            var lang = Methods.GetGroupLanguage(chatId);
+            var preText = "";
+            long preWarns = 0;
+            if (preWarn)
+            {
+                preWarns = Redis.db.HashIncrementAsync($"chat:{chatId}:prewarns", warnedId, 1).Result;
+                var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, preWarns);
+                var solvedMenu = new Menu(2)
+                {
+                    Buttons = new List<InlineButton>
+                    {
+                        new InlineButton(Methods.GetLocaleString(lang.Doc, "resetPreWarn"),
+                            $"resetPrewarns:{chatId}:{warnedId}"),
+                        new InlineButton(Methods.GetLocaleString(lang.Doc, "removePreWarn"),
+                            $"removePrewarn:{chatId}:{warnedId}"),
+                    }
+                };
+                Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
+                return;
+            } else
+            {
+                preWarns = long.Parse(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", warnedId).Result);
+                if(preWarns > 0)
+                {
+                    preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
+                    Redis.db.HashSetAsync($"chat:{chatId}:prewarns", warnedId, 0);
+                }
+            }
+            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1 + preWarns).Result;
+            Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns);
             var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
@@ -117,7 +171,6 @@ namespace Enforcer5
             }
             var id = warnedId;
             int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
-            var lang = Methods.GetGroupLanguage(chatId);
             if (num >= max)
             {
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
@@ -136,17 +189,17 @@ namespace Enforcer5
                                 name = targetnick;
                                 if (update != null)
                                 {
-                                    Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), update.Message);
+                                    Bot.SendReply($"{preText}{Methods.GetLocaleString(lang.Doc, "warnMaxBan", name)}", update.Message);
                                 }
                                 else if (!string.IsNullOrEmpty(callbackid))
                                 {
                                     var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
-                                    Bot.Api.AnswerCallbackQueryAsync(callbackid, bantext, true);
+                                    Bot.Api.AnswerCallbackQueryAsync(callbackid, preText + bantext, true);
                                     Bot.Send(bantext, chatId);
                                 }
                                 else //How should it be possible that there is neither an update nor a callback query?
                                 {
-                                    Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
+                                    Bot.Send(preText + Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
                                 }
                                 Methods.SaveBan(id, "maxWarn");
                             }
@@ -163,17 +216,17 @@ namespace Enforcer5
                         name = targetnick;
                         if (update != null)
                         {
-                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
+                            Bot.SendReply(preText + Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
                         }
                         else if (!string.IsNullOrEmpty(callbackid))
                         {
                             var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
-                            Bot.Api.AnswerCallbackQueryAsync(callbackid, kicktext, true);
+                            Bot.Api.AnswerCallbackQueryAsync(callbackid, preText + kicktext, true);
                             Bot.Send(kicktext, chatId);
                         }
                         else //How should it be possible that there is neither an update nor a callback query?
                         {
-                            Bot.Send(Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
+                            Bot.Send(preText + Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
                         }
                         break;
                 }
@@ -195,24 +248,24 @@ namespace Enforcer5
                 };
                 if (update != null)
                 {
-                    Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
+                    Bot.SendReply(preText + text, update, Key.CreateMarkupFromMenu(solvedMenu));
                 }
                 else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
                     text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({callbackfromid})", num, max);
-                    Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
+                    Bot.Api.AnswerCallbackQueryAsync(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
                     text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, num, max);
-                    Bot.Api.AnswerCallbackQueryAsync(callbackid, text, true);
+                    Bot.Api.AnswerCallbackQueryAsync(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
                 else //How should it be possible that there is neither an update nor a callback query?
                 {
-                    Bot.Send(text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
+                    Bot.Send(preText + text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
                 }
             }
         }
@@ -698,6 +751,33 @@ namespace Enforcer5
             }
              Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                text);
+        }
+
+        [Callback(Trigger = "resetPrewarns", GroupAdminOnly = true)]
+        public static void ResetPreWarns(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
+            var userId = args[2];
+            Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:prewarns", userId);
+
+            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+               Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
+        }
+
+        [Callback(Trigger = "removePrewarn", GroupAdminOnly = true)]
+        public static void RemovePreWarn(CallbackQuery call, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
+            var userId = args[2];
+            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, -1).Result;
+            var text = "";
+            text = Methods.GetLocaleString(lang, "warnRemoved");
+            if (res < 0)
+            {
+                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, 0);
+            }
+            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+              text);
         }
     }
 }

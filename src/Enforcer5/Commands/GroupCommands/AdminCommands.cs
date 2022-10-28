@@ -115,6 +115,8 @@ namespace Enforcer5
                     new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"userbuttonresetwarn:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "ban"), $"userbuttonbanuser:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "removePreWarn"), $"removePrewarn:{update.Message.Chat.Id}:{userid}"),
+                    new InlineButton(Methods.GetLocaleString(lang, "resetPreWarn"), $"resetPrewarns:{update.Message.Chat.Id}:{userid}"),
                 };
 
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
@@ -653,7 +655,7 @@ namespace Enforcer5
                     var userid = Methods.GetUserId(update, args);
                     var status = Check(userid, update.Message.Chat.Id);
                     var n = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
-                    var number = n.HasValue ? int.Parse(n.ToString()) : 0;
+                    var number = n.HasValue ? long.Parse(n.ToString()) : 0;
                     Bot.SendReply(Methods.GetLocaleString(lang, $"usergroupstatus{status}", userid, number), update.Message);
                 }
                 catch (Exception e)
@@ -875,7 +877,7 @@ namespace Enforcer5
                 List<string> userNames = new List<string>();
                 foreach (var id in mutedJoinerIds)
                 {
-                    var string_id = int.Parse(id.ToString())
+                    var string_id = long.Parse(id.ToString())
 ;                    var user = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, string_id).Result;
                     var username = user.User.Username;
                     userNames.Add(username);
@@ -983,8 +985,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
-            var isChatMember = Bot.Api.GetChatMemberAsync(call.Message.Chat.Id,int.Parse(userId)).Result;
-            var res = Methods.BanUser(call.Message.Chat.Id, int.Parse(userId), lang);
+            var isChatMember = Bot.Api.GetChatMemberAsync(call.Message.Chat.Id,long.Parse(userId)).Result;
+            var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {
@@ -1002,12 +1004,12 @@ namespace Enforcer5
             {
                 if (isChatMember.Status == ChatMemberStatus.Member)
                 {
-                    Methods.SaveBan(int.Parse(userId), "ban");
+                    Methods.SaveBan(long.Parse(userId), "ban");
                 }
-                if (int.Parse(userId) == 321720895 | int.Parse(userId) == 9375804)
+                if (long.Parse(userId) == 321720895 | long.Parse(userId) == 9375804)
                 {
                     Redis.db.SetAdd("bot:lookaround",
-                        $"{int.Parse(userId)}:\n{call.Message.Chat.Id} {call.Message.Chat.Title} {call.Message.From.Id} {call.Message.From.FirstName}");
+                        $"{long.Parse(userId)}:\n{call.Message.Chat.Id} {call.Message.Chat.Title} {call.Message.From.Id} {call.Message.From.FirstName}");
                 }
                 Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
                     Methods.GetLocaleString(lang, "userBanned"));
@@ -1018,7 +1020,7 @@ namespace Enforcer5
         [Callback(Trigger = "userbuttonwarnuser", GroupAdminOnly = true)]
         public static void UserButtonsWarnUser(CallbackQuery call, string[] args)
         {
-            var userId = int.Parse(args[2]);
+            var userId = long.Parse(args[2]);
             var chatId = long.Parse(args[1]);
             if (Methods.IsGroupAdmin(userId, chatId))
             {

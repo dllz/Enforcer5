@@ -702,6 +702,12 @@ namespace Enforcer5.Helpers
                     warns = Convert.ToInt64( Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
                 }
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
+                long preWarns = 0;
+                if (Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result.HasValue)
+                {
+                    preWarns = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result);
+                }
+                completedList.Add(GetLocaleString(lang, "getPreWarn", preWarns));
             }
             
             return string.Join("\n", completedList);
@@ -712,9 +718,9 @@ namespace Enforcer5.Helpers
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{id}").Result;
             try
             {
-                int banned = 0;
+                long banned = 0;
                 if (isBanned.Length > 0)
-                    banned = int.Parse(isBanned[0].Value);
+                    banned = long.Parse(isBanned[0].Value);
                 if (banned == 1)
                 {
                     return true;
@@ -745,9 +751,9 @@ namespace Enforcer5.Helpers
             }                
             try
             {
-                int banned = 0;
+                long banned = 0;
                     if(isBanned.Length > 0)
-                        banned = int.Parse(isBanned[0].Value);          
+                        banned = long.Parse(isBanned[0].Value);          
                 if (banned == 1)
                 {
                     var reason = isBanned[1].Value;

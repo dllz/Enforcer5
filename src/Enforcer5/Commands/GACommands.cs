@@ -216,9 +216,9 @@ namespace Enforcer5
             long groupd = 0;
             if (args.Length == 2)
             {
-                int temp;
+                long temp;
                 var spilt = args[1].Split(':');
-                if (int.TryParse(spilt[0], out temp))
+                if (long.TryParse(spilt[0], out temp))
                 {
                     userId = temp;
                     groupd = long.Parse(spilt[1]);
@@ -248,9 +248,9 @@ namespace Enforcer5
             }            
             if (args.Length == 2)
             {
-                int temp;
+                long temp;
                 var spilt = args[1].Split(':');
-                if (int.TryParse(spilt[0], out temp))
+                if (long.TryParse(spilt[0], out temp))
                 {
                     userId = temp;
                     moti = spilt[1];
@@ -358,7 +358,6 @@ namespace Enforcer5
             string idlist = "";
             if (args.Length == 2)
             {
-                int temp;
                 var spilt = args[1].Split(':');
                 moti = spilt[1];
                 var usernames = spilt[0].Split(',');
@@ -366,7 +365,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        var userId = int.Parse(username);
+                        var userId = long.Parse(username);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
                         Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
@@ -418,9 +417,9 @@ namespace Enforcer5
             }
             if (args.Length == 2)
             {
-                int temp;
+                long temp;
                 var spilt = args[1].Split(':');
-                if (int.TryParse(spilt[0], out temp))
+                if (long.TryParse(spilt[0], out temp))
                 {
                     userId = temp;
                     moti = spilt[1];
@@ -467,10 +466,10 @@ namespace Enforcer5
         {
             var bans = Redis.db.HashScan("globalBan", default(RedisValue), Int32.MaxValue, 1L);
             var ids = bans.Select(id => id.Name).ToList();
-            var basicID = new List<int>();
+            var basicID = new List<long>();
             foreach (var id in ids)
             {
-                basicID.Add(int.Parse(id.ToString().Split(':')[1]));
+                basicID.Add(long.Parse(id.ToString().Split(':')[1]));
             }
             var banInfo = new List<string>();
             foreach (var user in basicID)
