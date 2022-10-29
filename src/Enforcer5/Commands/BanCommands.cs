@@ -153,7 +153,7 @@ namespace Enforcer5
                 return;
             } else
             {
-                preWarns = long.Parse(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", warnedId).Result);
+                long.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", warnedId).Result, out preWarns);
                 if(preWarns > 0)
                 {
                     preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
