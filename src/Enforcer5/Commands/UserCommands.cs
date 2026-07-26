@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,6 +8,7 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot;
 #pragma warning disable CS4014
 namespace Enforcer5
 {
@@ -25,7 +26,7 @@ namespace Enforcer5
                 var result = Bot.Send(message, update.Message.Chat.Id);
                 var second  = DateTime.UtcNow - send;
                 message += "\n" + Methods.GetLocaleString(lang.Doc, "Ping2", $"{second:mm\\:ss\\.ff}");
-                 Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId, message);
+                 Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId, message);
             }
             catch (Exception e)
             {
@@ -109,7 +110,7 @@ namespace Enforcer5
         public static void HelpList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-             Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc)), update);
+             Bot.SendReply(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(Methods.GetGroupLanguage(Bot.ErrorChatId).Doc)), update);
         }
 
         [Command(Trigger = "help")]
@@ -139,7 +140,7 @@ namespace Enforcer5
                             {
                                 try
                                 {
-                                    lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                                    lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                                     text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                                 }
                                 catch (Exception ep)
@@ -183,7 +184,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                         text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                     }
                     catch (Exception ep)
@@ -215,7 +216,7 @@ namespace Enforcer5
             {
                 try
                 {
-                    lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                    lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                 }
                 catch (NullReferenceException exception)
                 {
@@ -252,10 +253,10 @@ namespace Enforcer5
             {
                 Buttons = new List<InlineButton>(1)
                 {
-#if premium
+#if PREMIUM
                     new InlineButton("Register", url:$"t.me/enforcedbot?start=pingme_{chatId}")
 #endif
-#if normal
+#if NORMAL
                     new InlineButton("Register", url:$"t.me/enforcerbot?start=pingme_{chatId}")
 #endif
                 }

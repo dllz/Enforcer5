@@ -14,8 +14,8 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Newtonsoft.Json;
 using StackExchange.Redis;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -24,6 +24,29 @@ namespace Enforcer5.Helpers
 {
     public static class Methods
     {
+        private static TimeZoneInfo _displayZone;
+
+        /// <summary>
+        /// Current time in the configured display timezone (DisplayTimeZone, default Europe/Amsterdam).
+        /// For display only - all scheduling and expiry logic uses UTC.
+        /// </summary>
+        public static DateTime DisplayNow()
+        {
+            if (_displayZone == null)
+            {
+                var id = RegHelper.GetRegValue("DisplayTimeZone") ?? "Europe/Amsterdam";
+                try
+                {
+                    _displayZone = TimeZoneInfo.FindSystemTimeZoneById(id);
+                }
+                catch (Exception)
+                {
+                    Console.Error.WriteLine($"[WARN] Unknown DisplayTimeZone '{id}', falling back to UTC");
+                    _displayZone = TimeZoneInfo.Utc;
+                }
+            }
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _displayZone);
+        }
 
         public static string GetChatMessageLink(long chatId, string messageId, string chatLink = null, string username = null)
         {
@@ -50,40 +73,40 @@ namespace Enforcer5.Helpers
 
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
-                if (res)
-                {
-                     Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                    var check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
-                    var status = check.Status;
-                    var count = 0;
+                // A kick is a ban followed by an unban; 22.x throws rather than returning false.
+                Bot.Api.BanChatMember(chatId, userId).Wait();
 
-                    while (status == ChatMemberStatus.Member && count < 10) 
-                    {
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
-                        status = check.Status;
-                        count++;
-                    }
-                    count = 0;
-                    while (status != ChatMemberStatus.Left && count < 10)
-                    {
-                        if (count == 9) Thread.Sleep(2000);
-                         Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                        check =  Bot.Api.GetChatMemberAsync(chatId, userId).Result;
-                        status = check.Status;
-                        count++;
-                    }
-                }
-                return res;
-            }
-            catch (AggregateException e)
-            {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
+                var check = Bot.Api.GetChatMember(chatId, userId).Result;
+                var status = check.Status;
+                var count = 0;
+
+                while (status == ChatMemberStatus.Member && count < 10)
                 {
-                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    check = Bot.Api.GetChatMember(chatId, userId).Result;
+                    status = check.Status;
+                    count++;
+                }
+                count = 0;
+                while (status != ChatMemberStatus.Left && count < 10)
+                {
+                    if (count == 9) Thread.Sleep(2000);
+                    Bot.Api.UnbanChatMember(chatId, userId);
+                    check = Bot.Api.GetChatMember(chatId, userId).Result;
+                    status = check.Status;
+                    count++;
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                var api = Bot.AsApiError(e);
+                if (api != null && api.Message.Contains("Not enough rights"))
+                {
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                Methods.SendError(api ?? e, chatId, doc);
                 return false;
             }
 
@@ -109,7 +132,7 @@ namespace Enforcer5.Helpers
                 };
             try
             {
-                 Bot.Api.SendTextMessageAsync(chatid, GetLocaleString(doc, "Error", arguments));
+                 Bot.Api.SendMessage(chatid, GetLocaleString(doc, "Error", arguments));
             }
             catch (ApiRequestException e)
             {
@@ -557,7 +580,7 @@ namespace Enforcer5.Helpers
             }
             try
             {
-                var admin = Bot.Api.GetChatMemberAsync(group, user).Result;                
+                var admin = Bot.Api.GetChatMember(group, user).Result;                
                 if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
@@ -575,7 +598,7 @@ namespace Enforcer5.Helpers
                 {
                     try
                     {
-                        var Adminlist = Bot.Api.GetChatAdministratorsAsync(group).Result;
+                        var Adminlist = Bot.Api.GetChatAdministrators(group).Result;
                         bool found = false;
                         foreach (var mem in Adminlist)
                         {
@@ -589,12 +612,12 @@ namespace Enforcer5.Helpers
                     }
                     catch (Exception exception)
                     {
-                        Bot.Send($"In adminlist\n{exception.Message}\n{exception.StackTrace}", -1001076212715);
+                        Bot.Send($"In adminlist\n{exception.Message}\n{exception.StackTrace}", Bot.ErrorChatId);
                         return false;
                     }
                     
                 }
-                Bot.Send($"{e.Message}\n{e.StackTrace}", -1001076212715);            
+                Bot.Send($"{e.Message}\n{e.StackTrace}", Bot.ErrorChatId);            
                 return false;
             }
         }
@@ -611,7 +634,7 @@ namespace Enforcer5.Helpers
 
         public static string GetAdminList(long groupid, XDocument lang)
         {
-            var chatAdmins = Bot.Api.GetChatAdministratorsAsync(groupid).Result;
+            var chatAdmins = Bot.Api.GetChatAdministrators(groupid).Result;
             string creater = "Unknown";
             string adminList = "";
             foreach (var member in chatAdmins)
@@ -743,7 +766,7 @@ namespace Enforcer5.Helpers
             var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
             var name = update.Message.From.FirstName;
             var id = update.Message.From.Id;
-            if (update.Message.Type == MessageType.ServiceMessage && update.Message.NewChatMember != null)
+            if (update.Message.NewChatMember != null)
             {
                 isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.NewChatMember.Id}").Result;
                 name = update.Message.NewChatMember.FirstName;
@@ -810,26 +833,25 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId).Result;
-                if (res)
-                {
-                     Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
-                }
-                return res;
+                Bot.Api.BanChatMember(chatId, userId).Wait();
+                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
+                return true;
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                var api = Bot.AsApiError(e);
+                var message = api?.Message ?? e.Message;
+                if (message.Contains("Not enough rights"))
                 {
-                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
-                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
+                if (message.ToLower().Contains("user is an administrator of the chat"))
                 {
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;
                 }
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
+                Methods.SendError(api ?? e, chatId, doc);
                 return false;
             }
         }
@@ -838,12 +860,9 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Bot.Api.KickChatMemberAsync(chatId, userId, untilDateTime).Result;
-                if (res)
-                {
-                    Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot                    
-                }
-                return res;
+                Bot.Api.BanChatMember(chatId, userId, untilDateTime).Wait();
+                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
+                return true;
             }
             catch (AggregateException e)
             {
@@ -875,27 +894,27 @@ namespace Enforcer5.Helpers
         {
             try
             {
-#if normal
+#if NORMAL
                 var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
 #endif
-#if premium
+#if PREMIUM
                 var tempbans = Redis.db.HashGetAllAsync("tempbannedPremium").Result;
 #endif
                 foreach (var mem in tempbans)
                 {
                     try
                     {
-                        if (System.DateTime.UtcNow.AddHours(2).ToUnixTime() >= long.Parse(mem.Name))
+                        if (System.DateTime.UtcNow.ToUnixTime() >= long.Parse(mem.Name))
                         {
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = long.Parse(subStrings[1]);
                             UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
-#if normal
+#if NORMAL
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
                             Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
 #endif
-#if premium
+#if PREMIUM
                         Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
                         Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbannedPremium", subStrings[1]);
 #endif
@@ -926,12 +945,8 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                var res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                while (!res.Result)
-                {
-                    res = Bot.Api.UnbanChatMemberAsync(chatId, userId);
-                    
-                }
+                // 22.x throws on failure, so a single call replaces the old retry-until-true loop.
+                Bot.Api.UnbanChatMember(chatId, userId).Wait();
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
                 return true;
 
@@ -1141,7 +1156,7 @@ namespace Enforcer5.Helpers
             if (msg.Type == null) return "unknown";
             switch (msg.Type)
             {
-                case MessageType.TextMessage:
+                case MessageType.Text:
                        var text = msg.Text;
                     var link = msg.Entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
                     if (link.Length > 0)
@@ -1151,10 +1166,10 @@ namespace Enforcer5.Helpers
                         return "link";
                     return "text";
                     break;
-                case MessageType.PhotoMessage:
+                case MessageType.Photo:
                     return "image";
                     break;
-                case MessageType.DocumentMessage:
+                case MessageType.Document:
                     if (msg.Document.MimeType == null) return "unknown";
                     if (msg.Document.MimeType.Equals("video/mp4"))
                     {
@@ -1165,22 +1180,22 @@ namespace Enforcer5.Helpers
                         return "file";
                     }
                     break;
-                case MessageType.VoiceMessage:
+                case MessageType.Voice:
                     return "voice";
                     break;
-                case MessageType.StickerMessage:
+                case MessageType.Sticker:
                     return "sticker";
                     break;
-                case MessageType.VideoMessage:
+                case MessageType.Video:
                     return "video";
                     break;
-                case MessageType.AudioMessage:
+                case MessageType.Audio:
                     return "audio";
                     break;
-                case MessageType.ContactMessage:
+                case MessageType.Contact:
                     return "contact";
                     break; 
-                    case MessageType.VideoNoteMessage:
+                    case MessageType.VideoNote:
                         return "videoNote";
                         break;               
                 default:
@@ -1250,26 +1265,8 @@ namespace Enforcer5.Helpers
             Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
         }
 
-        internal static void Restart(object obj)
-        {
-            while (true)
-            {
-                try
-                {
-                    var runningTime = DateTime.UtcNow - Bot.StartTime;
-                    if (runningTime >= TimeSpan.FromMinutes(45))
-                    {
-                        Bot.Api.SendTextMessageAsync(Constants.Devs[0], "Schedualed Restart");
-                        Environment.Exit(0);
-                    }                                        
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-                Thread.Sleep(TimeSpan.FromMinutes(10));
-            }
-        }
+        // Removed: the scheduled 45-minute self-restart. It existed because the old Windows host
+        // needed an external supervisor to babysit the process; systemd's Restart=always covers it.
 
         public static int GetGroupTempbanTime(long chatId)
         {
@@ -1364,7 +1361,7 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
+                ChatPermissions chatPermission = Bot.Api.GetChat(chatId).Result.Permissions;
                 var res = Bot.Unmute(chatId, userId);
                 if (res)
                 {

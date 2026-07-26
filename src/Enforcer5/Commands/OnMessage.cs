@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
-using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
@@ -49,7 +48,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                     }
                     catch (NullReferenceException exception)
                     {
@@ -71,7 +70,7 @@ namespace Enforcer5
                     int maxmsgs;
                     Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
                // Bot.Send(num + "", update);
-                    if (int.TryParse(maxMsgs.Value, out maxmsgs))
+                    if (int.TryParse(maxMsgs.Value.ToString(), out maxmsgs))
                     {
                        // Bot.Send($"{num} of {maxmsgs}", update);
                         if (num == (int.Parse(maxMsgs.Value) + 1))
@@ -136,7 +135,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
         }
 
@@ -174,7 +173,7 @@ namespace Enforcer5
                     {
                         try
                         {
-                            lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                            lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                         }   
                         catch (NullReferenceException exception)
                         {
@@ -250,7 +249,7 @@ namespace Enforcer5
                     {
                         try
                         {
-                            lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                            lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                         }
                         catch (NullReferenceException exception)
                         {
@@ -308,17 +307,17 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
             try
             {
-                if(update.Message.Type == MessageType.TextMessage)
+                if(update.Message.Type == MessageType.Text)
                     AntiTextLenght(update);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
         }
 
@@ -345,7 +344,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                     }
                     catch (NullReferenceException exception)
                     {
@@ -426,7 +425,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
         }
 
@@ -447,7 +446,7 @@ namespace Enforcer5
                 {
                     try
                     {
-                        lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                     }
                     catch (NullReferenceException exception)
                     {
@@ -513,7 +512,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
-                        Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                        Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
                     }
 
                 }               
@@ -521,172 +520,90 @@ namespace Enforcer5
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
         }
 
-        public static void ArabDetection (Update update)
+        private const string ArabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
+
+        public static void ArabDetection(Update update)
         {
-            var chatId = update.Message.Chat.Id;
-            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-            if (watch) return;
-            var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-            if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
-            if (!arabStatus.Equals("allowed"))
-            {
-                var arabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
-                var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom?.FirstName} {update.Message.ForwardFrom?.LastName} {update.Message.From.Username} {update.Message.ForwardFrom?.Username}";
-                var found = false;
-                for (int i = 0; i < text.Length; i++)
-                {
-                   
-                        //var letter = char.ConvertToUtf32(text[i], text[i + 1]);
-                        found = Regex.IsMatch(text[i].ToString(), arabicChars);
-                        if (found)
-                        {
-                            break;
-                        }
-                                        
-                }
-
-                if (found)
-                {                   
-                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                    var name = update.Message.From.FirstName;
-                    var lastName = "x";
-                    if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                    if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
-                    try
-                    {
-                        string reply;
-                        switch (arabStatus)
-                        {
-                            case "kick":
-                                Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript",
-                                    $"{name}, {update.Message.From.Id}");
-                                Service.LogBotAction(chatId, reply);
-                                Bot.Send(
-                                    reply,
-                                    update);
-                                break;
-                            case "ban":
-                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                if (res)
-                                {
-                                    Methods.SaveBan(update.Message.From.Id, "arab");
-                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
-
-                                    reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript",
-                                        $"{name}, {update.Message.From.Id}");
-                                    Service.LogBotAction(chatId, reply);
-                                    Bot.Send(
-                                        reply,
-                                        update);
-                                }
-                                break;
-
-                            case "tempban":
-                                var time = Methods.GetGroupTempbanTime(chatId);
-                                var timeBanned = TimeSpan.FromMinutes(time);
-                                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
-                                    $"{name}, {update.Message.From.Id}", timeText);
-                                Service.LogBotAction(chatId, message);
-                                Commands.Tempban(update.Message.From.Id, chatId,time, update.Message.From.Id.ToString(), message:message);
-                                break;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-
-                    }                    
-
-                }
-            }
+            var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom?.FirstName} {update.Message.ForwardFrom?.LastName} {update.Message.From.Username} {update.Message.ForwardFrom?.Username}";
+            CharacterDetection(update, "Arab", ArabicChars, text);
             RightToLeft(update);
         }
 
         public static void ArabJoinDetection(Update update)
         {
+            var text = $"{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.LastName}";
+            CharacterDetection(update, "Arab", ArabicChars, text);
+        }
+
+        /// <summary>
+        /// Applies the chat's chat:{id}:char/{setting} policy (kick/ban/tempban) if any character
+        /// in <paramref name="text"/> matches <paramref name="characterClass"/>.
+        /// Users on the watch list are exempt.
+        /// </summary>
+        private static void CharacterDetection(Update update, string setting, string characterClass, string text)
+        {
             var chatId = update.Message.Chat.Id;
             var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
             if (watch) return;
-            var arabStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Arab").Result.ToString();
-            if (string.IsNullOrEmpty(arabStatus)) arabStatus = "allowed";
-            if (!arabStatus.Equals("allowed"))
+
+            var status = Redis.db.HashGetAsync($"chat:{chatId}:char", setting).Result.ToString();
+            if (string.IsNullOrEmpty(status)) status = "allowed";
+            if (status.Equals("allowed")) return;
+
+            var found = false;
+            for (int i = 0; i < text.Length; i++)
             {
-                var arabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
-                var text = $"{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.LastName}";
-                var found = false;
-                for (int i = 0; i < text.Length; i++)
-                {
+                found = Regex.IsMatch(text[i].ToString(), characterClass);
+                if (found) break;
+            }
+            if (!found) return;
 
-                    //var letter = char.ConvertToUtf32(text[i], text[i + 1]);
-                    found = Regex.IsMatch(text[i].ToString(), arabicChars);
-                    if (found)
-                    {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            var userId = update.Message.From.Id;
+            var name = update.Message.From.FirstName;
+            if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+
+            try
+            {
+                string reply;
+                switch (status)
+                {
+                    case "kick":
+                        Methods.KickUser(chatId, userId, lang);
+                        reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
+                        Service.LogBotAction(chatId, reply);
+                        Bot.Send(reply, update);
                         break;
-                    }
-
-                }
-
-                if (found)
-                {
-                    var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-                    var name = update.Message.From.FirstName;
-                    var lastName = "x";
-                    if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                    if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
-                    try
-                    {
-                        string reply;
-                        switch (arabStatus)
+                    case "ban":
+                        var res = Methods.BanUser(chatId, userId, lang);
+                        if (res)
                         {
-                            case "kick":
-                                Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript",
-                                    $"{name}, {update.Message.From.Id}");
-                                Service.LogBotAction(chatId, reply);
-                                Bot.Send(
-                                    reply,
-                                    update);
-                                break;
-                            case "ban":
-                                var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                if (res)
-                                {
-                                    Methods.SaveBan(update.Message.From.Id, "arab");
-                                    Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
+                            Methods.SaveBan(userId, "arab");
+                            Methods.AddBanList(chatId, userId, update.Message.From.FirstName,
+                                Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
 
-                                    reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript",
-                                        $"{name}, {update.Message.From.Id}");
-                                    Service.LogBotAction(chatId, reply);
-                                    Bot.Send(
-                                        reply,
-                                        update);
-                                }
-                                break;
-
-                            case "tempban":
-                                var time = Methods.GetGroupTempbanTime(chatId);
-                                var timeBanned = TimeSpan.FromMinutes(time);
-                                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
-                                    $"{name}, {update.Message.From.Id}", timeText);
-                                Service.LogBotAction(chatId, message);
-                                Commands.Tempban(update.Message.From.Id, chatId, time, update.Message.From.Id.ToString(), message: message);
-                                break;
+                            reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");
+                            Service.LogBotAction(chatId, reply);
+                            Bot.Send(reply, update);
                         }
-                    }
-                    catch (Exception e)
-                    {
-
-                    }
-
+                        break;
+                    case "tempban":
+                        var time = Methods.GetGroupTempbanTime(chatId);
+                        var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
+                        var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
+                            $"{name}, {userId}", timeText);
+                        Service.LogBotAction(chatId, message);
+                        Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
+                        break;
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
 

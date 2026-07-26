@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -14,6 +14,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Xml.Linq;
+using Telegram.Bot;
 #pragma warning disable CS4014
 namespace Enforcer5
 {
@@ -31,7 +32,7 @@ namespace Enforcer5
                 {
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", input);
-                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                    var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                          Methods.GetLocaleString(lang, "RulesSet"));
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -58,7 +59,7 @@ namespace Enforcer5
                     var rules = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:rules").Result;
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", $"{rules}\n{input}");
-                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                    var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "RulesSet"));
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -84,7 +85,7 @@ namespace Enforcer5
                 {
                     var result = Bot.SendReply(input, update);
                     Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:about", input);
-                    var res = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                    var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "AboutSet"));
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -180,7 +181,7 @@ namespace Enforcer5
                         var hash = $"chat:{update.Message.Chat.Id}:extra";
                         Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                         Redis.db.HashSetAsync(hash, words[0], text);
-                        var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                        var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                             Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                         Service.LogCommand(update, update.Message.Text);
                     }
@@ -236,7 +237,7 @@ namespace Enforcer5
                             var hash = $"chat:{update.Message.Chat.Id}:extra";
                             Redis.db.HashSetAsync($"{hash}:{words[0]}", "mediaid", toSave);
                             Redis.db.HashSetAsync(hash, words[0], text);
-                            var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                            var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                                 Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                             Service.LogCommand(update, update.Message.Text);
                         }
@@ -307,7 +308,7 @@ namespace Enforcer5
                     var hash = $"chat:{update.Message.Chat.Id}:extra";
                     Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
                     Redis.db.HashSetAsync(hash, words[0], text);
-                    var resulted = Bot.Api.EditMessageTextAsync(update.Message.Chat.Id, result.MessageId,
+                    var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "extraSaved", words[0]));
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -442,7 +443,7 @@ namespace Enforcer5
                 }
                 if (userId > 0)
                 {
-                    var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                    var user = Bot.Api.GetChatMember(chatId, userId).Result;
                     var status = user.Status;
                     var name = user.User.FirstName;
                     if (user.User.Username != null)
@@ -464,7 +465,7 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null)
             {
                 userId = update.Message.ReplyToMessage.From.Id;
-                var user = Bot.Api.GetChatMemberAsync(chatId, userId).Result;
+                var user = Bot.Api.GetChatMember(chatId, userId).Result;
                 var status = user.Status;
                 var name = user.User.FirstName;
                 if (user.User.Username != null)
@@ -575,7 +576,7 @@ namespace Enforcer5
                         try
                         {
                             var res = Bot.SendReply(args[1], update);
-                            var result = Bot.Api.EditMessageTextAsync(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                            var result = Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
                             Service.LogCommand(update, update.Message.Text);
                         }
                         catch (AggregateException e)
@@ -671,7 +672,7 @@ namespace Enforcer5
 
         public static string Check(long userid, long chatid)
         {
-            var status = Bot.Api.GetChatMemberAsync(chatid, userid).Result.Status;
+            var status = Bot.Api.GetChatMember(chatid, userid).Result.Status;
             var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
             var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
 
@@ -689,7 +690,7 @@ namespace Enforcer5
         public static void AddLogChat(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, Convert.ToInt32((long)update.Message.From.Id));
+            var role = Bot.Api.GetChatMember(chat, Convert.ToInt32((long)update.Message.From.Id));
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
@@ -731,7 +732,7 @@ namespace Enforcer5
         public static void DeleteLogChannel(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
-            var role = Bot.Api.GetChatMemberAsync(chat, update.Message.From.Id);
+            var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
             var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
@@ -878,7 +879,7 @@ namespace Enforcer5
                 foreach (var id in mutedJoinerIds)
                 {
                     var string_id = long.Parse(id.ToString())
-;                    var user = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, string_id).Result;
+;                    var user = Bot.Api.GetChatMember(update.Message.Chat.Id, string_id).Result;
                     var username = user.User.Username;
                     userNames.Add(username);
                 }
@@ -964,7 +965,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
              Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);            
-             Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
         }
 
@@ -976,7 +977,7 @@ namespace Enforcer5
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
             if (res < 0)
                 Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
-            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
 
@@ -985,7 +986,7 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
-            var isChatMember = Bot.Api.GetChatMemberAsync(call.Message.Chat.Id,long.Parse(userId)).Result;
+            var isChatMember = Bot.Api.GetChatMember(call.Message.Chat.Id,long.Parse(userId)).Result;
             var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
@@ -1011,7 +1012,7 @@ namespace Enforcer5
                     Redis.db.SetAdd("bot:lookaround",
                         $"{long.Parse(userId)}:\n{call.Message.Chat.Id} {call.Message.Chat.Title} {call.Message.From.Id} {call.Message.From.FirstName}");
                 }
-                Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+                Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                     Methods.GetLocaleString(lang, "userBanned"));
             }
              
@@ -1030,7 +1031,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             var max = 3;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result, out max);
+            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result.ToString(), out max);
             
             if (num >= max)
             {
@@ -1041,8 +1042,8 @@ namespace Enforcer5
                 {
                     try
                     {
-                         var res = Bot.Api.KickChatMemberAsync(call.Message.Chat.Id, userId);
-                         var result = Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
+                         var res = Bot.Api.BanChatMember(call.Message.Chat.Id, userId);
+                         var result = Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
                     }
                     catch (AggregateException e)
                     {
@@ -1052,7 +1053,7 @@ namespace Enforcer5
                 else
                 {
                     Methods.KickUser(call.Message.Chat.Id, userId, lang);
-                    Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
+                    Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
                 }
                  Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
             }
@@ -1065,7 +1066,7 @@ namespace Enforcer5
                 baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"),
                     $"removewarn:{chatId}:{userId}"));
                 var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                 Bot.Api.EditMessageTextAsync(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
+                 Bot.Api.EditMessageText(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
             }
         }
 
@@ -1077,7 +1078,7 @@ namespace Enforcer5
             var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId).Result;
             if (res < 0)
                 Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId, 0);
-            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
 
@@ -1087,7 +1088,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
-            Bot.Api.EditMessageTextAsync(call.Message.Chat.Id, call.Message.MessageId,
+            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
         }
     }

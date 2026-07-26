@@ -121,7 +121,7 @@ namespace Enforcer5
                         {
                             try
                             {
-                                lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                                lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                                 text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                                 results.Add(new HelpArticle()
                                 {
@@ -157,7 +157,7 @@ namespace Enforcer5
                         {
                             try
                             {
-                                lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                                lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                                 text = Methods.GetLocaleString(lang, $"hcommand{request}", request);
                                 results.Add(new HelpArticle()
                                 {

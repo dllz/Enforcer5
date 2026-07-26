@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <Version>5.0.0</Version>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
+    <!-- Pack build timestamp into FileVersion with minute precision.
+         DeployBot reads this back via FileVersionInfo to report "v old -> v new". -->
+    <_BuildDay>$([System.DateTime]::UtcNow.Day)</_BuildDay>
+    <_BuildHour>$([System.DateTime]::UtcNow.Hour)</_BuildHour>
+    <_BuildMinute>$([System.DateTime]::UtcNow.Minute)</_BuildMinute>
+    <_BuildRevision>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Subtract($(_BuildDay), 1)), 1440)), $([MSBuild]::Multiply($(_BuildHour), 60)))), $(_BuildMinute)))</_BuildRevision>
+    <FileVersion>5.0.$([System.DateTime]::UtcNow.ToString('yyMM')).$(_BuildRevision)</FileVersion>
+    <InformationalVersion>5.0.0</InformationalVersion>
+  </PropertyGroup>
+</Project>

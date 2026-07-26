@@ -22,51 +22,62 @@ namespace Enforcer5
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
         private static System.Threading.Timer _tempbanJob;
-        private static System.Threading.Timer _restartBot;
         internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
         {
-            Console.Title = "Enforcer";
-            //Make sure another instance isn't already running
-            if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
+            AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+            {
+                try
+                {
+                    var e = eventArgs.ExceptionObject as Exception;
+                    var msg = $"[FATAL] {DateTime.UtcNow:u}\n{e?.Message}\n{e?.StackTrace}\n\n";
+                    Console.Error.WriteLine(msg);
+                    LogHelper.AppendLog(Path.Combine(Bot.LogDirectory, "error.log"), msg);
+                    if (eventArgs.IsTerminating)
+                        Environment.Exit(5);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"[FATAL] Unhandled exception handler failed: {e}");
+                }
+            };
+
+            // Apply any staged update before touching Redis or Telegram.
+            Updater.ApplyPendingUpdate();
+
+            try { Console.Title = "Enforcer"; } catch (PlatformNotSupportedException) { }
+            LogHelper.Info($"Enforcer starting, BaseDirectory={AppContext.BaseDirectory}");
+
+            // On Linux this process is always named "dotnet", so the guard would fire against any
+            // other .NET app on the host. systemd already enforces a single instance there.
+            if (!RegHelper.IsLinux &&
+                Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
             {
                 Environment.Exit(2);
             }
+
             var redisReady = Redis.Start();
             int count = 0;
             while (!redisReady)
             {
+                Thread.Sleep(2000);
                 redisReady = Redis.Start();
                 if (count > 5)
                 {
+                    Console.Error.WriteLine("[FATAL] Could not reach Redis, exiting.");
                     Environment.Exit(1);
                 }
                 count++;
             }
-            new Thread(() => Bot.Initialize()).Start();
-            //AppDomain.UnhandledException += (sender, eventArgs) =>
-            //{
-            //    //drop the error to log file and exit
-            //    using (var sw = new StreamWriter(Path.Combine(Bot.RootDirectory, "..\\Logs\\error.log"), true))
-            //    {
-            //        var e = (eventArgs.ExceptionObject as Exception);
-            //        sw.WriteLine(DateTime.Now);
-            //        sw.WriteLine(e.Message);
-            //        sw.WriteLine(e.StackTrace + "\n");
-            //        if (eventArgs.IsTerminating)
-            //            Environment.Exit(5);
-            //    }
-            //};
-            //new Thread(UpdateHandler.SpamDetection).Start();
-            //new Thread(UpdateHandler.BanMonitor).Start();
+
+            new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
+            new Thread(Updater.MonitorUpdates) { IsBackground = true }.Start();
+            new Thread(UpdateHandler.SpamDetection) { IsBackground = true }.Start();
+
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
-            new Task(Methods.IntialiseLanguages).Start();
+            Task.Run(Methods.IntialiseLanguages);
             var wait = TimeSpan.FromSeconds(30);
-            new Thread(UpdateHandler.SpamDetection).Start();
-#if normal             
-            // _restartBot = new Timer(Methods.Restart, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
-#endif
             _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
             //now pause the main thread to let everything else run
             Thread.Sleep(-1);

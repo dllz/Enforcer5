@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +8,7 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 
 namespace Enforcer5
 {
@@ -42,7 +43,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "warnMenu");
             var keys = Commands.genWarnMenu(chatId, lang);
-            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
 
         [Callback(Trigger = "menuDimWarn", GroupAdminOnly = true)]
@@ -54,13 +55,13 @@ namespace Enforcer5
             if (num > 0)
             {
                 var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
+                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
                 Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
             }
         }
@@ -72,8 +73,8 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
             var keys = Commands.genWarnMenu(chatId, lang);
-            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-            Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
         }
 
         [Callback(Trigger = "menuActionWarn", GroupAdminOnly = true)]
@@ -87,17 +88,17 @@ namespace Enforcer5
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "kick");
                 var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
+                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
                 Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
                 var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, call.Message.Text,
+                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
         }
     }

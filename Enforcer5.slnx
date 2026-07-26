@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Premium" />
+  </Configurations>
+  <Project Path="src/Enforcer5/Enforcer5.csproj" />
+</Solution>

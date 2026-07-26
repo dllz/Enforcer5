@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +8,7 @@ using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 
 namespace Enforcer5
 {
@@ -47,8 +48,6 @@ namespace Enforcer5
                 $"openFloodMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "lengthButton"),
                 $"openLengthMenu:{chatId}"));
-            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nsfwButton"),
-                $"opennsfwmenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"openWarnMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupSettingButton"), $"openGroupMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"),
@@ -81,8 +80,6 @@ namespace Enforcer5
                 $"openFloodMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "lengthButton"),
                 $"openLengthMenu:{chatId}"));
-            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nsfwButton"),
-                $"opennsfwmenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"openWarnMenu:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "groupSettingButton"), $"openGroupMenu:{chatId}"));            
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "mediaMenuHeader"),
@@ -102,7 +99,7 @@ namespace Enforcer5
         [Callback(Trigger = "close")]
         public static void CloseButton(CallbackQuery call, string[] args)
         {
-            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, "Good Bye");
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, "Good Bye");
         }
 
         [Callback(Trigger = "back")]
@@ -112,13 +109,13 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var keys = Commands.genMenu(chatId, lang);
             var menuText = Methods.GetLocaleString(lang, "mainMenu", "");
-            Bot.Api.EditMessageTextAsync(call.From.Id, call.Message.MessageId, replyMarkup: keys, text: menuText);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, replyMarkup: keys, text: menuText);
         }
 
         [Callback(Trigger = "menusettings")]
         public static void MenuChanges(CallbackQuery call, string[] args)
         {
-            Bot.Api.AnswerCallbackQueryAsync(call.Id, "Still coming");
+            Bot.Api.AnswerCallbackQuery(call.Id, "Still coming");
         }       
     }
 }

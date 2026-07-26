@@ -8,7 +8,6 @@ using Enforcer5.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 
 namespace Enforcer5
 {
@@ -28,7 +27,7 @@ namespace Enforcer5
                     Title = $"{u.name} ({u.userId})",
                     InputMessageContent = new InputTextMessageContent()
                     {
-                        DisableWebPagePreview = true,
+                        LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
                         MessageText = $"{u.name} ({u.userId})\n<b>{u.groupName}</b>\n<code>{u.unbanTime}</code>",
                         ParseMode = ParseMode.Html
                     }
@@ -52,7 +51,7 @@ namespace Enforcer5
                     Title = $"{u.name}",
                     InputMessageContent = new InputTextMessageContent()
                     {
-                        DisableWebPagePreview = true,
+                        LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
                         MessageText = $"<b>{u.name}</b>\n{u.details}",
                         ParseMode = ParseMode.Html
                     }

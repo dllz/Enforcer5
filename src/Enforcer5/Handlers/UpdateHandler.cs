@@ -1,21 +1,19 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
-using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Helpers;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.InputMessageContents;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 
 #pragma warning disable CS4014 // Because this call is not ed, execution of the current method continues before the call is completed
 namespace Enforcer5.Handlers
@@ -23,102 +21,61 @@ namespace Enforcer5.Handlers
 
     internal static class UpdateHandler
     {
+        // Written by the polling threads and read by SpamDetection() concurrently.
+        internal static ConcurrentDictionary<long, SpamDetector> UserMessages = new ConcurrentDictionary<long, SpamDetector>();
 
-        internal static Dictionary<long, SpamDetector> UserMessages = new Dictionary<long, SpamDetector>();
-       // internal static Dictionary<long, SpamDetector> BlockReplies = new Dictionary<long, SpamDetector>();
-        public static void UpdateReceived(object sender, UpdateEventArgs e)
+#if PREMIUM
+        private const string OffsetKey = "bot:last_Premium_update";
+#else
+        private const string OffsetKey = "bot:last_update";
+#endif
+
+        public static void UpdateReceived(Update update)
         {
-#if premium
-            Redis.db.StringSetAsync("bot:last_Premium_update", Bot.Api.MessageOffset);
-#endif
-#if normal
-            Redis.db.StringSetAsync("bot:last_update", Bot.Api.MessageOffset);
-#endif
-           
-            if (e.Update.Message == null) return;
-            if ((e.Update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
+            // Persist the offset so a restart resumes where we left off.
+            Redis.db.StringSetAsync(OffsetKey, update.Id);
+
+            if (update.Message == null) return;
+            if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
                 return; //toss it
-            new Task(() => { HandleUpdate(e.Update); }).Start();
+            new Task(() => { HandleUpdate(update); }).Start();
         }
         private static void Log(Update update, string text, Models.Commands command = null)
         {
+            // journald already timestamps each line, so log content only.
+            var latency = (DateTime.UtcNow - update.Message.Date.ToUniversalTime()).ToString(@"mm\:ss\.ff");
+            var from = update.Message.From.FirstName;
+
             if (text.Equals("text"))
             {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Red;
-                if (command != null) Console.Write(command.Method.GetMethodInfo().Name);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");                
-                Botan.log(update.Message, command.Trigger);
+                var name = command?.Method.GetMethodInfo().Name ?? "";
+                Console.WriteLine($"{name} {latency} {from} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }
             else if (text.Equals("chatMember"))
             {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.Id}]");
-                Botan.log(update.Message, "welcome");
+                Console.WriteLine($"{latency} {from} -> [{update.Message.NewChatMember?.FirstName} {update.Message.NewChatMember?.Id}]");
             }
             else if (text.Equals("extra"))
             {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
-                Botan.log(update.Message, "extra");
+                Console.WriteLine($"{latency} {from} -> [{update.Message.Chat.Title} {update.Message.Chat.Id}]");
             }
-            
         }
         private static void Log(CallbackQuery update, Models.CallBacks command = null)
         {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"[{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}] ");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            //Console.Write($"{(DateTime.Now - update.Message.Date):mm\\:ss\\.ff}");
-            Console.ForegroundColor = ConsoleColor.Red;
-            if (command != null)
-            {
-                Console.Write(command.Method.GetMethodInfo().Name);
-                Botan.log(update, command.Method.GetMethodInfo().Name);
-            }
-               
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($" {update.Message.From.FirstName} -> [{update.From.FirstName} {update.From.Id}]");
-            
+            var name = command?.Method.GetMethodInfo().Name ?? "";
+            Console.WriteLine($"{name} {update.Message?.From?.FirstName} -> [{update.From.FirstName} {update.From.Id}]");
         }
 
         private static void Log(InlineQuery update, string text, Models.Queries command = null)
         {
-            if (command != null)
-            {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                if (command.Method != null)
-                {
-                    Console.Write(command.Method.GetMethodInfo().Name);
-                    Botan.log(update, command.Method.GetMethodInfo().Name);
-                }
-                else
-                {
-                    Botan.log(update, "Query");
-                }
-            }
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write($" Query:  {text}");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($" [{update.From.FirstName} {update.From.Id}]");
+            var name = command?.Method?.GetMethodInfo().Name ?? "";
+            Console.WriteLine($"{name} Query: {text} [{update.From.FirstName} {update.From.Id}]");
         }
 
         private static async void HandleUpdate(Update update)
         {
             {
-#if premium
+#if PREMIUM
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
                     var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
@@ -127,7 +84,7 @@ namespace Enforcer5.Handlers
                         Bot.Send(
                             "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
                             update);
-                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                        Bot.Api.LeaveChat(update.Message.Chat.Id);
                         return;
                     }
                 }                
@@ -140,7 +97,7 @@ namespace Enforcer5.Handlers
                 {
                     if (update.Message.Chat.Type != ChatType.Private && bannedGroup)
                     {
-                        Bot.Api.LeaveChatAsync(update.Message.Chat.Id);                      
+                        Bot.Api.LeaveChat(update.Message.Chat.Id);                      
                     }
                     return;
                 } 
@@ -152,7 +109,7 @@ namespace Enforcer5.Handlers
                 //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
                 //{
                 //    Bot.Send("please use @enforcerbot", update);
-                //    Bot.Api.LeaveChatAsync(update.Message.Chat.Id);
+                //    Bot.Api.LeaveChat(update.Message.Chat.Id);
                 //    Console.WriteLine("LEaving chat");
                 //    return;
                 //}
@@ -170,9 +127,9 @@ namespace Enforcer5.Handlers
                     
                     switch (update.Message.Type)
                     {
-                        case MessageType.UnknownMessage:
+                        case MessageType.Unknown:
                             break;
-                        case MessageType.TextMessage:
+                        case MessageType.Text:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.ArabDetection(update); }).Start();
@@ -305,60 +262,56 @@ namespace Enforcer5.Handlers
                                 }
                             }
                             break;
-                        case MessageType.PhotoMessage:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                                Commands.IsNSFWImage(update.Message.Chat.Id, update.Message);
-                            }
-                            break;
-                        case MessageType.AudioMessage:
+                        case MessageType.Photo:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
-                        case MessageType.VideoMessage:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                                Commands.IsNSFWVideo(update.Message.Chat.Id, update.Message);
-                            }
-                            break;
-                        case MessageType.VoiceMessage:
+                        case MessageType.Audio:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
-                        case MessageType.DocumentMessage:
+                        case MessageType.Video:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
-                                Commands.IsNSFWGif(update.Message.Chat.Id, update.Message);
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
+                            break;
+                        case MessageType.Voice:
+                            if (update.Message.Chat.Type != ChatType.Private)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
+                            break;
+                        case MessageType.Document:
+                            if (update.Message.Chat.Type != ChatType.Private)
+                            {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
 
                             }
                             break;
-                        case MessageType.StickerMessage:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                Commands.IsNSFWStickers(update.Message.Chat.Id, update.Message);
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
-                        case MessageType.LocationMessage:
+                        case MessageType.Sticker:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
-                        case MessageType.ContactMessage:
+                        case MessageType.Location:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
-                        case MessageType.ServiceMessage:
+                        case MessageType.Contact:
+                            if (update.Message.Chat.Type != ChatType.Private)
+                            {
+                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                            }
+                            break;
+                        case MessageType.NewChatMembers:
                             if (update.Message.NewChatMembers != null && update.Message.NewChatMembers.Length > 0)
                             {
                                 try
@@ -372,10 +325,10 @@ namespace Enforcer5.Handlers
                                     var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
                                     if (isBanned.HasValue)
                                     {
-#if normal
+#if NORMAL
                                         Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
 #endif
-#if premium
+#if PREMIUM
                 Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
                                     }
@@ -397,7 +350,7 @@ namespace Enforcer5.Handlers
                                         // Service.ResetUser(update.Message);
                                         
                                     }
-#if premium
+#if PREMIUM
                                      if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id ==-1001030085238) && update.Message.NewChatMembers.Length > 1)
                                     {
                                         for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
@@ -438,13 +391,13 @@ namespace Enforcer5.Handlers
                                 }
                             }
                             break;
-                        case MessageType.VenueMessage:
+                        case MessageType.Venue:
                             if (update.Message.Chat.Type != ChatType.Private)
                             {
                                 new Task(() => { OnMessage.CheckMedia(update); }).Start();
                             }
                             break;
-                        case MessageType.GameMessage:
+                        case MessageType.Game:
                             break;
                         default:
                             return;
@@ -466,8 +419,7 @@ namespace Enforcer5.Handlers
         {
             try
             {
-                if (!UserMessages.ContainsKey(id))
-                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+                UserMessages.TryAdd(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
                 UserMessages[id].Messages.Add(new UserMessage(command));
             }
             catch (Exception e)
@@ -480,8 +432,7 @@ namespace Enforcer5.Handlers
         {
             try
             {
-                if (!UserMessages.ContainsKey(id))
-                    UserMessages.Add(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
+                UserMessages.TryAdd(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
                
 
 
@@ -549,7 +500,7 @@ namespace Enforcer5.Handlers
             catch (Exception e)
             {
 
-                Bot.Send($"shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                Bot.Send($"shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
             }
 
         }
@@ -590,10 +541,10 @@ namespace Enforcer5.Handlers
                         {
                             //drop older messages (1 minute)
 /*                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
-#if normal
+#if NORMAL
                             quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-10));
 #endif
-#if premium
+#if PREMIUM
                             quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-4));
 #endif*/
                             //comment this out - if we remove it, it doesn't keep the warns
@@ -603,31 +554,31 @@ namespace Enforcer5.Handlers
                             //    continue;
                             //}
                             //now count, notify if limit hit
-#if normal
+#if NORMAL
                             if (temp[key].Messages.Count() < 5)
                             {
                                 temp[key].NotifiedAdmin = false;
                             }
 #endif
-#if premium
+#if PREMIUM
                             if (temp[key].Messages.Count() < 10)
                             {
                                 temp[key].NotifiedAdmin = false;
                             }
 #endif
-#if normal
+#if NORMAL
                             if (temp[key].Messages.Count() >= 5) // 20 in a minute
                             {
 #endif
-#if premium
+#if PREMIUM
                             if (temp[key].Messages.Count() >= 10) // 20 in a minute
                             {
 #endif
-#if normal
+#if NORMAL
                                 if (temp[key].Messages.Count < 10)
                                 {
 #endif
-#if premium
+#if PREMIUM
                                 if (temp[key].Messages.Count < 15)
                                 {
 #endif
@@ -649,13 +600,12 @@ namespace Enforcer5.Handlers
                                     continue;
                                 }
                                 var number = 11;
-#if premium
+#if PREMIUM
                                 number = 15;
 #endif
                         if ((temp[key].Warns >= 3 || temp[key].Messages.Count > number))
                                 {
                                     Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
-                                    Console.ForegroundColor = ConsoleColor.Green;
                                     Console.WriteLine($"{key} - Banned for 10 minutes");
                                     temp[key].Warns = 1;
                                     temp[key].NotifiedAdmin = false;
@@ -665,7 +615,7 @@ namespace Enforcer5.Handlers
                                         Thread.Sleep(10000);
                                         Bot.Send(
                                             $"{long.Parse(key.ToString())}, {Methods.GetName(long.Parse(key.ToString()))}, {Methods.GetUsername(long.Parse(key.ToString()))} has been spam banned for 10 minutes.",
-                                            -1001076212715);
+                                            Bot.ErrorChatId);
                                     }
                                     catch (Exception e)
                                     {
@@ -682,7 +632,6 @@ namespace Enforcer5.Handlers
                             //Console.WriteLine(e.Message);
                         }
                     }
-                    UserMessages = temp;
                 }
                 catch (Exception e)
                 {
@@ -697,9 +646,9 @@ namespace Enforcer5.Handlers
             return Bot.Send(message, id, customMenu, parseMode);
         }
 
-        public static void InlineQueryReceived(object sender, InlineQueryEventArgs e)
+        public static void InlineQueryReceived(InlineQuery inlineQuery)
         {
-            new Task(() => { HandleInlineQuery(e.InlineQuery); }).Start();
+            new Task(() => { HandleInlineQuery(inlineQuery); }).Start();
         }
         
         internal static void HandleInlineQuery(InlineQuery q)
@@ -743,7 +692,7 @@ namespace Enforcer5.Handlers
                             Id = help.name,
                             InputMessageContent = new InputTextMessageContent
                             {
-                                DisableWebPagePreview = true,
+                                LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
                                 MessageText = help.details,
                                 ParseMode = ParseMode.Html
                             }
@@ -769,16 +718,16 @@ namespace Enforcer5.Handlers
                                 Id = choice.Trigger,
                                 InputMessageContent = new InputTextMessageContent()
                                 {
-                                    DisableWebPagePreview = true,
+                                    LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
                                     MessageText = Methods.GetLocaleString(userLang, "typeMore"),
-                                    ParseMode = ParseMode.Default
+                                    ParseMode = ParseMode.None
                                 }
                             });
                         }
                     }
                 }
                 var menu = results.Take(50).Cast<InlineQueryResult>().ToArray();
-                var res = Bot.Api.AnswerInlineQueryAsync(q.Id, menu, 0).Result;
+                Bot.Api.AnswerInlineQuery(q.Id, menu, 0).Wait();
 
             }
             catch (Exception e)
@@ -787,10 +736,9 @@ namespace Enforcer5.Handlers
             }
         }
 
-        public static void CallbackHandler(object sender, CallbackQueryEventArgs e)
+        public static void CallbackHandler(CallbackQuery callbackQuery)
         {
-            new Task(() => { HandleCallback(e.CallbackQuery); }).Start();
-            
+            new Task(() => { HandleCallback(callbackQuery); }).Start();
         }
 
         public static async void HandleCallback(CallbackQuery update)

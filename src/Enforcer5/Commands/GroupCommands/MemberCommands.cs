@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +9,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 
 
 namespace Enforcer5
@@ -73,7 +74,7 @@ namespace Enforcer5
         [Command(Trigger = "clearkeys", InGroupOnly = true)]
         public static void ClearKeyboard(Update update, string[] args)
         {
-            Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Clearing keyboards",
+            Bot.Api.SendMessage(update.Message.Chat.Id, "Clearing keyboards",
                 replyMarkup: new ReplyKeyboardRemove());
         }
 
@@ -87,7 +88,7 @@ namespace Enforcer5
                 var chat = update.Message.Chat.Id;
                 try
                 {
-                    var res = Bot.Api.ForwardMessageAsync(saveTo, chat, msgID, disableNotification: true).Result;
+                    var res = Bot.Api.ForwardMessage(saveTo, chat, msgID, disableNotification: true).Result;
                 }
                 catch (AggregateException e)
                 {
@@ -327,79 +328,79 @@ namespace Enforcer5
                         switch (specialMethod)
                         {
                             case "voice":
-                                Bot.Api.SendVoiceAsync(chatId, new FileToSend(fileId),
-                                    replyToMessageId: repId);
+                                Bot.Api.SendVoice(chatId, InputFile.FromFileId(fileId),
+                                    replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                             case "video":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendVideoAsync(chatId, new FileToSend(fileId), caption: caption,
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendVideo(chatId, InputFile.FromFileId(fileId), caption: caption,
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 else
                                 {
-                                    Bot.Api.SendVideoAsync(chatId, new FileToSend(fileId),
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendVideo(chatId, InputFile.FromFileId(fileId),
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 break;
                             case "photo":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
-                                    Bot.Api.SendPhotoAsync(chatId, new FileToSend(fileId), caption,
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendPhoto(chatId, InputFile.FromFileId(fileId), caption,
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 else
                                 {
-                                    Bot.Api.SendPhotoAsync(chatId, new FileToSend(fileId),
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendPhoto(chatId, InputFile.FromFileId(fileId),
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 break;
 
                             case "videoNote":
-                                    Bot.Api.SendVideoNoteAsync(chatId, new FileToSend(fileId),
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendVideoNote(chatId, InputFile.FromFileId(fileId),
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                             case "gif":
                                 if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.ToString().Contains("###file_id") && hasMedia.ToString().Contains("null"))
                                 {
-                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId), caption,
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId),
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId),
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 break;
                             default:
                                 if (!string.IsNullOrEmpty(hasMedia))
                                 {
-                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId), text,
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), text,
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 else
                                 {
-                                    Bot.Api.SendDocumentAsync(chatId, new FileToSend(fileId),
-                                        replyToMessageId: repId);
+                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId),
+                                        replyParameters: new ReplyParameters { MessageId = repId });
                                 }
                                 break;
                         }
                     }
                     else if (!string.IsNullOrEmpty(hasMedia))
                     {
-                        Bot.Api.SendDocumentAsync(chatId, new FileToSend(hasMedia), text,
-                            replyToMessageId: repId);
+                        Bot.Api.SendDocument(chatId, InputFile.FromFileId(hasMedia), text,
+                            replyParameters: new ReplyParameters { MessageId = repId });
                     }
                     else
                     {
-                        Bot.Api.SendDocumentAsync(chatId, new FileToSend(hasMedia),
-                            replyToMessageId: repId);
+                        Bot.Api.SendDocument(chatId, InputFile.FromFileId(hasMedia),
+                            replyParameters: new ReplyParameters { MessageId = repId });
                     }
                 }
                 catch (ApiRequestException e)
                 {
                     Methods.SendError($"Extra corrupted please recreate it, Error message for dev: {e.Message}", update.Message, lang);
-                    // Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", -1001076212715);
+                    // Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
                 }
             }
         }

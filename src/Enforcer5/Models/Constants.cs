@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Enforcer5.Helpers;
 
 namespace Enforcer5.Models
 {
@@ -12,7 +13,6 @@ namespace Enforcer5.Models
         public static long[] Devs = { 125311351, 1112734253 };
         public const int EnforcerDb = 0;
         public static long[] GlobalAdmins = { 1112734253, 125311351, 538092996, 159790001, 888143203};
-        private const string aPIKey = "";
         public static long SupportId = -1001360717102;
         public static long TranslatorsId = -1001108140050;
         public static string supportUsername = "blackwolfsupport";
@@ -23,19 +23,11 @@ namespace Enforcer5.Models
         public static int sixmonthlyPremiumCost = 2500;
         public static string paymentCurrency = "USD";
         public static string premiumUsername = "enforcedbot";
-#if premium
-        public static string paymentProviderToken;
-#endif
-#if normal
-        public static string paymentProviderToken = " 361519591:TEST:4b73af0895f20b1092be5fd126c191c1 ";      
-#endif
 
-        public static string APIKey
-        {
-            get
-            {
-                return aPIKey;
-            }
-        }
+        /// <summary>
+        /// Telegram Payments provider token. Configured, never committed - the old hardcoded
+        /// TEST token has been removed from source.
+        /// </summary>
+        public static string PaymentProviderToken => RegHelper.GetRegValue("PaymentProviderToken");
     }
 }

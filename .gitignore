@@ -248,18 +248,8 @@ ModelManifest.xml
 .fake/
 **/Internal.settings
 **/Internal.Designer.cs
+# App configuration (contains secrets)
+appsettings.json
 # drop cert
 *.crt
-/Werewolf for Telegram/Werewolf Control/Languages
-/Werewolf for Telegram/Werewolf Node/Languages
-.vs/Enforcer5/v14/.suo
-*.dtp
-src/PerspectiveAPI/AnalyzeCommentRequest.cs
-*.cs
-src/PerspectiveAPI/PerspectiveAPI.xproj
-*.json
-/src/PrespectiveAPI/
-.vs/restore.dg
-/src/telegram.bot/
-/src
-.vs/Enforcer5/v14/.suo
+.idea/

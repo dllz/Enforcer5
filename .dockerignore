@@ -1,0 +1,10 @@
+**/.git
+**/.idea
+**/.vs
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/TestResults
+appsettings.json
+Enforcer5.zip

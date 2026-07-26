@@ -1,0 +1,23 @@
+[Unit]
+Description=Enforcer (normal)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/enforcer/normal/App
+ExecStart=/usr/bin/dotnet /opt/enforcer/normal/App/Enforcer.dll
+Restart=always
+RestartSec=5
+Environment=EnforcerAPI=
+Environment=TelegramServerUrl=
+Environment=RedisConnection=
+Environment=RedisPassword=
+Environment=PaymentProviderToken=
+Environment=ErrorChatId=
+Environment=DisplayTimeZone=Europe/Amsterdam
+Environment=LogPath=/opt/enforcer/normal/Logs
+Environment=LanguagesPath=/opt/enforcer/normal/App/Languages
+Environment=TempLanguageFilesPath=/opt/enforcer/normal/TempLanguageFiles
+
+[Install]
+WantedBy=multi-user.target

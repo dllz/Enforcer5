@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +14,7 @@ using StackExchange.Redis;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 #pragma warning disable CS4014
 namespace Enforcer5
 {
@@ -138,12 +139,12 @@ namespace Enforcer5
                         var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
                         if (!string.IsNullOrEmpty(link))
                         {
-                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
                         }
                         else
                         {
-                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                              $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                         }
                        
@@ -208,12 +209,12 @@ namespace Enforcer5
                                     var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
                                     if (!string.IsNullOrEmpty(link))
                                     {
-                                        Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                                        Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
                                     }
                                     else
                                     {
-                                        Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                                        Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                                          $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                                     }                                    
                                 }
@@ -293,7 +294,7 @@ namespace Enforcer5
                         var replyFailure = false;
                         try
                         {
-                            var resulted = Bot.Api.ForwardMessageAsync(mod, chatId, msgId).Result;
+                            var resulted = Bot.Api.ForwardMessage(mod, chatId, msgId).Result;
                         }
                         catch (ApiRequestException e)
                         {
@@ -472,7 +473,7 @@ namespace Enforcer5
 
         private static List<ChatMember> GetModId(long id)
         {
-            var res = Bot.Api.GetChatAdministratorsAsync(id).Result;
+            var res = Bot.Api.GetChatAdministrators(id).Result;
             return res.ToList();
         }
     }
@@ -509,7 +510,7 @@ namespace Enforcer5
                 var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
                 var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
             }
         }
 
@@ -527,7 +528,7 @@ namespace Enforcer5
                 var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
                 var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", nick, admin), chatId);
-                Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
             }
         }
 
@@ -552,7 +553,7 @@ namespace Enforcer5
             var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
             if (!isReported.HasValue)
             {
-                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
+                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
                 return;
             }
             int isReport;
@@ -591,12 +592,12 @@ namespace Enforcer5
                         var link = Methods.GetChatMessageLink(chatid, repID);
                         if (!string.IsNullOrEmpty(link))
                         {
-                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
                         }
                         else
                         {
-                            Bot.Api.EditMessageTextAsync(noti.adminChatId, noti.adminMsgId,
+                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                         }
                     }
@@ -605,7 +606,7 @@ namespace Enforcer5
                         Console.WriteLine(e);
                     }
                 }
-                 Bot.Api.AnswerCallbackQueryAsync(call.Id,
+                 Bot.Api.AnswerCallbackQuery(call.Id,
                     Methods.GetLocaleString(lang, "markedAsSolved", chatid, repID));
                  Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, repID), chatid);
             }
@@ -613,7 +614,7 @@ namespace Enforcer5
             {
                 var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt").Result;
                 var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
-                 Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
+                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
             }
         }
 
@@ -624,7 +625,7 @@ namespace Enforcer5
             var msgid = int.Parse(args[2]);
             Bot.DeleteMessage(chatid, msgid);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
-            Bot.Api.AnswerCallbackQueryAsync(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
         }
     }
 }

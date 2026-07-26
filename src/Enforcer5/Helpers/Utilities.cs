@@ -13,12 +13,11 @@ using System.Xml.Linq;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
-using Microsoft.Win32;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using Telegram.Bot;
-using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
@@ -42,7 +41,6 @@ namespace Enforcer5.Helpers
         public static long TotalPlayers = 0;
         public static long TotalGames = 0;
         public static Random R = new Random();
-        private static System.Threading.Timer _apiWatch;
         public static int MessagesSent = 0;
         public static bool testing = false;
         public static string CurrentStatus = "";
@@ -60,65 +58,49 @@ namespace Enforcer5.Helpers
         internal static HashSet<Models.Commands> Commands = new HashSet<Models.Commands>();
         internal static HashSet<Models.CallBacks> CallBacks = new HashSet<Models.CallBacks>();
         internal static HashSet<Models.Queries> Queries = new HashSet<Models.Queries>();
-        internal static string LanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\..\Languages"));
-        internal static string TempLanguageDirectory => Path.GetFullPath(Path.Combine(RootDirectory, @"..\..\TempLanguageFiles"));
-        public static async void Initialize(string updateid = null)
+        internal static string LanguageDirectory => RegHelper.GetPath("LanguagesPath", "Languages");
+        internal static string TempLanguageDirectory => RegHelper.GetPath("TempLanguageFilesPath", "TempLanguageFiles");
+        internal static string LogDirectory => RegHelper.GetPath("LogPath", "Logs");
+
+        /// <summary>Chat that startup notices and unhandled errors are reported to.</summary>
+        internal static long ErrorChatId => RegHelper.GetLong("ErrorChatId") ?? Constants.Devs[0];
+
+        /// <summary>Redis key holding the last processed update id. Separate per edition.</summary>
+#if PREMIUM
+        private const string OffsetKey = "bot:last_Premium_update";
+#else
+        private const string OffsetKey = "bot:last_update";
+#endif
+
+        private static readonly CancellationTokenSource _receiverCts = new CancellationTokenSource();
+        internal static CancellationToken ShutdownToken => _receiverCts.Token;
+        internal static void StopReceiving() => _receiverCts.Cancel();
+
+        public static async Task Initialize(string updateid = null)
         {
+#if PREMIUM
+            TelegramAPIKey = RegHelper.GetRequired("EnforcerPremiumAPI");
+#else
+            TelegramAPIKey = RegHelper.GetRequired("EnforcerAPI");
+#endif
+            var serverUrl = RegHelper.GetRegValue("TelegramServerUrl");
+            Api = string.IsNullOrEmpty(serverUrl)
+                ? new TelegramBotClient(TelegramAPIKey)
+                : new TelegramBotClient(new TelegramBotClientOptions(TelegramAPIKey, serverUrl));
 
-            //get api token from registry
-#if normal
-            var key =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\TelegramBots");
-            TelegramAPIKey = key.GetValue("EnforcerAPI").ToString();
-#endif
-#if premium
-            var key =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\TelegramBots");
-            TelegramAPIKey = key.GetValue("EnforcerPremiumAPI").ToString();
-#endif
-            var url =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                        .OpenSubKey("SOFTWARE\\TelegramBots");
-            var UrlKey = key.GetValue("TelegramServerUrl")?.ToString();
-            if (UrlKey.Length > 0)
-            {
-                Api = new TelegramBotClient(TelegramAPIKey, baseUrl: UrlKey);
-            }
-            else
-            {
-                Api = new TelegramBotClient(TelegramAPIKey, httpClient: null);
-            }
-            //Api.Timeout = TimeSpan.FromSeconds(3);
-            Api.OnInlineQuery += UpdateHandler.InlineQueryReceived;
-            Api.OnUpdate += UpdateHandler.UpdateReceived;
-            Api.OnCallbackQuery += UpdateHandler.CallbackHandler;
-            Api.OnReceiveError += ApiOnReceiveError;
-            Api.OnReceiveGeneralError += ApiOnReceiveGenError;
-            Api.OnMessageEdited += EditHandler.EditReceived;
-            Me = Api.GetMeAsync().Result;
-            Console.Title += " " + Me.Username;
+            Me = await Api.GetMe();
+            try { Console.Title = $"Enforcer {Me.Username}"; } catch (PlatformNotSupportedException) { }
+            LogHelper.Info($"Connected as @{Me.Username}");
             StartTime = DateTime.UtcNow;
+
+            // Resume from the offset we persisted, so a restart neither reprocesses nor skips updates.
             long offset;
+            var storedOffset = Redis.db.StringGetAsync(OffsetKey).Result;
+            if (!storedOffset.HasValue || !long.TryParse(storedOffset.ToString(), out offset))
+                offset = 0;
 
-            try
-            {
-#if premium
-                offset = long.Parse(Redis.db.StringGetAsync("bot:last_Premium_update").Result);
-#endif
-#if normal
-                offset = long.Parse(Redis.db.StringGetAsync("bot:last_update").Result);
-#endif
-            }
-            catch (System.ArgumentNullException e)
-            {
-                 offset = 1;
-            }
-
-            Api.MessageOffset = offset + 1;
-            Console.WriteLine($" database offset is {offset}");
-            Send($"Bot Started:\n{System.DateTime.UtcNow.AddHours(2):hh:mm:ss dd-MM-yyyy}", Constants.Devs[0]);          
+            LogHelper.Info($"Database offset is {offset}");
+            Send($"Bot Started:\n{Methods.DisplayNow():hh:mm:ss dd-MM-yyyy}", ErrorChatId);
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
             {
@@ -181,53 +163,67 @@ namespace Enforcer5.Helpers
                     }
                 }
             }
-            //now we can start receiving            
-            Api.StartReceiving();
-            Console.WriteLine($"Starting ID = {Api.MessageOffset}");
-            var wait = TimeSpan.FromSeconds(5);
-            _apiWatch = new System.Threading.Timer(WatchAPI, null, wait, wait);
-
-        }
-
-        private static void ApiOnUpdate(object sender, UpdateEventArgs e)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-        }
-
-        private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
-        {
-            if (!Api.IsReceiving)
+            // Now we can start receiving. ReceiveAsync runs the long-polling loop until cancelled;
+            // it restarts internally on transient errors, so no watchdog timer is needed.
+            LogHelper.Info($"Starting ID = {offset + 1}");
+            var receiverOptions = new ReceiverOptions
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("--Not getting updates--");
-                Api.StartReceiving();
-            }
-            var e = receiveErrorEventArgs.ApiRequestException;
-                Console.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}\n{e.StackTrace}\\n{sender.ToString()} Offset = {Api.MessageOffset}");
-            var offset = Api.MessageOffset;
-            Api.MessageOffset = offset + 1;
+                Offset = (int)(offset + 1),
+                AllowedUpdates = new[]
+                {
+                    UpdateType.Message,
+                    UpdateType.CallbackQuery,
+                    UpdateType.InlineQuery,
+                    UpdateType.PreCheckoutQuery,
+                    UpdateType.ShippingQuery
+                }
+            };
 
+            await Api.ReceiveAsync(new EnforcerUpdateHandler(), receiverOptions, ShutdownToken);
         }
 
-        private static void ApiOnReceiveGenError(object sender, ReceiveGeneralErrorEventArgs receiveErrorEventArgs)
+        /// <summary>
+        /// Routes polled updates to the existing handlers. Replaces the 13.x
+        /// OnUpdate/OnInlineQuery/OnCallbackQuery event model.
+        /// </summary>
+        private sealed class EnforcerUpdateHandler : IUpdateHandler
         {
-            if (!Api.IsReceiving)
+            public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {
-                Api.StartReceiving();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("--Not getting updates--");
+                switch (update.Type)
+                {
+                    case UpdateType.CallbackQuery:
+                        UpdateHandler.CallbackHandler(update.CallbackQuery);
+                        break;
+                    case UpdateType.InlineQuery:
+                        UpdateHandler.InlineQueryReceived(update.InlineQuery);
+                        break;
+                    default:
+                        UpdateHandler.UpdateReceived(update);
+                        break;
+                }
+                return Task.CompletedTask;
             }
-            var e = receiveErrorEventArgs.Exception;
-            Console.WriteLine($"{DateTime.Now} {e.Source} - {e.Message}\n{e.Source}\n{e.StackTrace}\n{sender.ToString()} Offset = {Api.MessageOffset}");
-            var offset = Api.MessageOffset;
-            Api.MessageOffset = offset + 1;
 
+            public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
+                CancellationToken cancellationToken)
+            {
+                if (exception is ApiRequestException api)
+                    LogHelper.Error($"Polling [{source}] {api.ErrorCode}: {api.Message}");
+                else
+                    LogHelper.Error($"Polling [{source}]: {exception.Message}\n{exception.StackTrace}");
+
+                // A failing poll must not turn into a tight loop.
+                if (source == HandleErrorSource.PollingError)
+                    return Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                return Task.CompletedTask;
+            }
         }
 
         internal static void ReplyToCallback(CallbackQuery query, string text = null, bool edit = true, bool showAlert = false, InlineKeyboardMarkup replyMarkup = null)
         {
             //first answer the callback
-            Bot.Api.AnswerCallbackQueryAsync(query.Id, edit ? null : text, showAlert);
+            Bot.Api.AnswerCallbackQuery(query.Id, edit ? null : text, showAlert);
             //edit the original message
             if (edit)
                 Edit(query, text, replyMarkup);
@@ -241,60 +237,59 @@ namespace Enforcer5.Helpers
         internal static Task<Message> Edit(long id, int msgId, string text, InlineKeyboardMarkup replyMarkup = null)
         {
             Bot.MessagesSent++;
-            return Bot.Api.EditMessageTextAsync(id, msgId, text, replyMarkup: replyMarkup);
+            return Bot.Api.EditMessageText(id, msgId, text, replyMarkup: replyMarkup);
         }
 
+        /// <summary>
+        /// Unwraps the ApiRequestException from a blocking call's AggregateException, if there is one.
+        /// Every send path here is synchronous (.Result), so Telegram errors arrive wrapped.
+        /// </summary>
+        internal static ApiRequestException AsApiError(Exception e)
+        {
+            if (e is ApiRequestException direct) return direct;
+            if (e is AggregateException agg)
+                return agg.InnerExceptions.OfType<ApiRequestException>().FirstOrDefault();
+            return e?.InnerException as ApiRequestException;
+        }
 
-        //private static void ApiOnReceiveError(object sender, ReceiveErrorEventArgs receiveErrorEventArgs)
-        //{
-        //    if (!Api.IsReceiving)
-        //    {
-        //        Api.StartReceiving();
-        //    }
-        //    var e = receiveErrorEventArgs.ApiRequestException;
-        //    using (var sw = System.IO.File.AppendText(Path.Combine(RootDirectory, "..\\Logs\\apireceiveerror.log")))
-        //    {
-        //        sw.WriteLine($"{DateTime.Now} {e.ErrorCode} - {e.Message}\n{e.Source}");
-        //    }
-                
-        //}
+        /// <summary>True when Telegram rejected the send because the bot cannot reach that user or chat.</summary>
+        private static bool IsUnreachable(ApiRequestException api)
+        {
+            if (api == null) return false;
+            // 403: bot blocked, kicked, or user deactivated. 400 + these descriptions: chat gone.
+            if (api.ErrorCode == 403) return true;
+            return api.ErrorCode == 400 &&
+                   (api.Message.Contains("chat not found") || api.Message.Contains("user is deactivated"));
+        }
+
+        /// <summary>True when the message body failed Telegram's HTML/Markdown parser.</summary>
+        private static bool IsParseFailure(ApiRequestException api)
+        {
+            return api != null && api.ErrorCode == 400 && api.Message.Contains("can't parse entities");
+        }
+
+        /// <summary>Sleeps for the interval Telegram asked for on a 429, or a sane default.</summary>
+        private static void WaitOutRateLimit(ApiRequestException api)
+        {
+            var seconds = api?.Parameters?.RetryAfter ?? 5;
+            Thread.Sleep(TimeSpan.FromSeconds(Math.Min(seconds, 60)));
+        }
 
         private static Message CatchSend(string message, long id, InlineKeyboardMarkup customMenu = null,
-            ParseMode parsemode = ParseMode.Default, int messageId = -1)
+            ParseMode parsemode = ParseMode.None, int messageId = -1)
         {
             Message result = null;
             try
             {
                 MessagesSent++;
-                if ((customMenu == null) && (messageId != -1))
-                {
-                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId:messageId).Result;
-                }
-                else if (messageId != -1 && customMenu != null)
-                {
-                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyToMessageId: messageId, replyMarkup: customMenu).Result;
-                }
-                else if (customMenu != null && messageId == -1)
-                {
-                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default, replyMarkup: customMenu).Result;
-                }                
-                else
-                {
-                    result = Bot.Api.SendTextMessageAsync(id, message, ParseMode.Default).Result;
-                }
-                
+                result = Bot.Api.SendMessage(id, message, parsemode,
+                    replyParameters: messageId == -1 ? null : new ReplyParameters { MessageId = messageId },
+                    replyMarkup: customMenu).Result;
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                try
-                {
-                    result = Bot.Api.SendTextMessageAsync(-125311351, $"{e.Message}\n\n{e.StackTrace}").Result;
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(exception);
-                    
-                }
+                // Last-resort path: never recurse back into the error channel.
+                LogHelper.Error($"CatchSend to {id} failed: {AsApiError(e)?.Message ?? e.Message}");
             }
             return result;
         }
@@ -307,33 +302,26 @@ namespace Enforcer5.Helpers
             {
                 result = Send(message, pmId, menu, parseMode);
             }
-            catch (AggregateException e)
+            catch (Exception e) when (IsUnreachable(AsApiError(e)))
             {
-                if (e.Message.Contains("bot can't initiate") || e.Message.Contains("bot was blocked"))
+                // The user has not started the bot (or has blocked it) - point them at it in the group.
+                var lang = Methods.GetGroupLanguage(chatId).Doc;
+                var startMe = new Menu(1)
                 {
-                    var lang = Methods.GetGroupLanguage(chatId).Doc;
-                    var startMe = new Menu(1)
+                    Buttons = new List<InlineButton>
                     {
-                        Buttons = new List<InlineButton>
-                        {
-                            new InlineButton(Methods.GetLocaleString(lang, "StartMe"), url:$"https://t.me/{Bot.Me.Username}")
-                        }
-                    };
-                    if (messageId == -1)
-                    {
-                       Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatId, Key.CreateMarkupFromMenu(startMe));
-                        result = null;
+                        new InlineButton(Methods.GetLocaleString(lang, "StartMe"), url:$"https://t.me/{Bot.Me.Username}")
                     }
-                    else
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
-                        result = null;
-                    }
-                }
+                };
+                if (messageId == -1)
+                    Bot.Send(Methods.GetLocaleString(lang, "botNotStarted"), chatId, Key.CreateMarkupFromMenu(startMe));
                 else
-                {
-                    result = CatchSend(message, chatId, menu, parseMode, messageId);
-                }
+                    Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
+                result = null;
+            }
+            catch (Exception)
+            {
+                result = CatchSend(message, chatId, menu, parseMode, messageId);
             }
             return result;
         }
@@ -352,92 +340,71 @@ namespace Enforcer5.Helpers
             try
             {
                 MessagesSent++;
-                //message = message.Replace("`",@"\`");
-                if (customMenu != null)
-                {
-                    result = Api.SendTextMessageAsync(id, message, replyMarkup: customMenu,
-                        disableWebPagePreview: true,
-                        parseMode: parseMode).Result;
-                }
-                else
-                {
-                    result = Api.SendTextMessageAsync(id, message, disableWebPagePreview: true, parseMode: parseMode).Result;
-                }
+                result = Api.SendMessage(id, message, parseMode,
+                    linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
+                    replyMarkup: customMenu).Result;
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.Message.Contains("Too Many Requests"))
-                {
-                    Random numbeRandom = new Random();
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}\n\n{id}", -1001076212715, parsemode: ParseMode.Default);
-                }
-                else if (e.Message.Contains("Request timed out"))
-                {
-                    Random numbeRandom = new Random();
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", id);
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}\n\n{id}", -1001076212715, parsemode: ParseMode.Default);
-                }
-                else if(e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
-                {
-                    result = CatchSend($"MARKDOWN FAILED\n{message}", id, parsemode: ParseMode.Default);
-                }
-                else if (e.Message.Contains("message is too long"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                    var amount = messages.Length / 4;
-                    for (int j = 0; j < 4; j++)
-                    {
-                        var word = "";
-                        for (int i = 0; i < amount; i++)
-                        {
-                            word = $"{word}{messages[i]}";
-                        }
-                        CatchSend(word, id);
-                    }
+                var api = AsApiError(e);
 
-                }
-
-                else if (e.Message.Contains("bot can't initiate conversation") |
-                    e.Message.Contains("bot was blocked"))
+                if (api?.ErrorCode == 429)
                 {
-                    if (parentMethod.Equals("SendToPm"))
-                    {
-                        throw;
-                    }
-                    if (parentMethod.Equals("SendToAdmins"))
-                    {
-                        result = null;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
-                        result = null;
-                    }
+                    WaitOutRateLimit(api);
+                    result = CatchSend(message, id, customMenu, parseMode);
                 }
-                else if (e.Message.Contains("bot can't send messages to bots"))
+                else if (IsParseFailure(api))
                 {
-                    //skip
+                    // Send it unformatted rather than losing the message entirely.
+                    result = CatchSend(message, id, customMenu, ParseMode.None);
+                }
+                else if (api != null && api.Message.Contains("message is too long"))
+                {
+                    result = SendInChunks(message, id);
+                }
+                else if (IsUnreachable(api))
+                {
+                    // SendToPm needs to know so it can prompt the user to start the bot.
+                    if (parentMethod.Equals("SendToPm")) throw;
                     result = null;
                 }
-                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
+                else if (api != null && api.Message.Contains("bot can't send messages to bots"))
                 {
                     result = null;
                 }
                 else
                 {
-                    Bot.CatchSend($"{message}\nError:{e.Message} occured", id);
-                    result = Bot.CatchSend($"{message} being sent to:{id}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
-                        parsemode: ParseMode.Default);
+                    LogHelper.Error($"Send to {id} failed: {api?.Message ?? e.Message}");
+                    result = null;
                 }
             }
             return result;
-            
+        }
+
+        /// <summary>
+        /// Splits an over-long message on line boundaries and sends each part.
+        /// Returns the last message sent, or null if nothing went out.
+        /// </summary>
+        private static Message SendInChunks(string message, long id, int replyToMessageId = -1)
+        {
+            const int MaxLength = 4000; // Telegram's limit is 4096; leave room for formatting.
+            Message last = null;
+            var lines = message.Split('\n');
+            var chunk = new StringBuilder();
+
+            foreach (var line in lines)
+            {
+                if (chunk.Length + line.Length + 1 > MaxLength && chunk.Length > 0)
+                {
+                    last = CatchSend(chunk.ToString(), id, messageId: replyToMessageId);
+                    chunk.Clear();
+                }
+                chunk.Append(line).Append('\n');
+            }
+            if (chunk.Length > 0)
+                last = CatchSend(chunk.ToString(), id, messageId: replyToMessageId);
+
+            return last;
         }
         internal static Message Send(string message, Update chatUpdate,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
@@ -456,86 +423,42 @@ namespace Enforcer5.Helpers
             Message result = null;
             try
             {
-                if (keyboard == null)
-                {
-                    result =  Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
-                        disableWebPagePreview: true).Result;
-                }
-                else
-                {
-                    result = Api.SendTextMessageAsync(chatid, message, replyToMessageId: msgid, parseMode: ParseMode.Html,
-                        disableWebPagePreview: true, replyMarkup: keyboard).Result;
-                }
+                result = Api.SendMessage(chatid, message, ParseMode.Html,
+                    replyParameters: new ReplyParameters { MessageId = msgid },
+                    linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
+                    replyMarkup: keyboard).Result;
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.Message.Contains("Too Many Requests"))
-                {
-                    Random numbeRandom = new Random();
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
-                }
-                else if (e.Message.Contains("Request timed out"))
-                {
-                    Random numbeRandom = new Random();
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    result = Bot.CatchSend($"{message}+\nSorry this took long to send but telegram said I was too popular and wouldnt let me send messages for a bit", chatid, messageId: msgid);
-                    Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    Bot.CatchSend($"{e.Message}\n\n{e.StackTrace}", -1001076212715, parsemode: ParseMode.Default);
-                }
-                else if (e.Message.Contains("Unsupported start tag") | e.Message.Contains("Unmatched end tag") | e.Message.Contains("can't parse entities"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    result = CatchSend($"MARKDOWN FAILED\n{message}", chatid, parsemode: ParseMode.Default);
-                }
-                else if (e.Message.Contains("reply message not found"))
-                {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    result = Send(message, chatid);
+                var api = AsApiError(e);
 
-                }
-                else if (e.Message.Contains("message is too long"))
+                if (api?.ErrorCode == 429)
                 {
-                    //Console.WriteLine($"HANDLED\n{e.ErrorCode}\n\n{e.Message}\n\n{e.StackTrace}");
-                    var messages = Regex.Split(message, "(.+?)(?:\r\n|\n)");
-                    var amount = messages.Length / 4;
-                    for (int j = 0; j < 4; j++)
-                    {
-                        var word = "";
-                        for (int i = 0; i < amount; i++)
-                        {
-                            word = $"{word}{messages[i]}";
-                        }
-                        CatchSend(word, chatid, messageId: msgid);
-                        Random numbeRandom = new Random();
-                        Thread.Sleep(numbeRandom.Next(5000, 30000));
-                    }
+                    WaitOutRateLimit(api);
+                    result = CatchSend(message, chatid, keyboard, ParseMode.Html, msgid);
                 }
-                else if (e.Message.Contains("bot can't initiate") |
-                    e.Message.Contains("bot was blocked"))
+                else if (IsParseFailure(api))
                 {
-                    if (parentMethod.Equals("SendToPm"))
-                    {
-                        throw;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"{e.Message}\n\n{e.StackTrace}");
-                        result = null;
-                        
-                    }
+                    result = CatchSend(message, chatid, keyboard, ParseMode.None, msgid);
                 }
-                else if (e.Message.Contains("chat not found") | e.Message.Contains("user is deactivated"))
+                else if (api != null && api.Message.Contains("reply message not found"))
                 {
+                    // The message being replied to was deleted - send it standalone.
+                    result = Send(message, chatid);
+                }
+                else if (api != null && api.Message.Contains("message is too long"))
+                {
+                    result = SendInChunks(message, chatid, msgid);
+                }
+                else if (IsUnreachable(api))
+                {
+                    if (parentMethod.Equals("SendToPm")) throw;
                     result = null;
                 }
                 else
                 {
-                    Bot.CatchSend($"{message}\nError:{e.Message} occured", chatid, messageId:msgid);
-                    result = Bot.CatchSend($"{message} being sent to:{chatid}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
-                        parsemode: ParseMode.Default);
+                    LogHelper.Error($"SendReply to {chatid} failed: {api?.Message ?? e.Message}");
+                    result = null;
                 }
             }
             return result;
@@ -550,28 +473,20 @@ namespace Enforcer5.Helpers
         }
        
 
-        private static void WatchAPI(object state)
-        {
-            while (!Api.IsReceiving)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("--Not getting updates--");
-                Api.StartReceiving();
-            }
-        }
-
         public static Boolean DeleteMessage(long chatId, int msgid)
         {
             try
             {
-                return Bot.Api.DeleteMessageAsync(chatId, msgid).Result;
+                Bot.Api.DeleteMessage(chatId, msgid).Wait();
+                return true;
             }
-            catch (AggregateException AggE)
+            catch (Exception e)
             {
-                if (AggE.InnerExceptions.Any(x => x.Message.ToLower().Contains("message to delete not found"))) return true;
-                throw AggE;
+                // Already gone is success as far as callers are concerned.
+                var api = AsApiError(e);
+                if (api != null && api.Message.ToLower().Contains("message to delete not found")) return true;
+                throw;
             }
-           
         }
 
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
@@ -590,116 +505,133 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Api.SendInvoiceAsync(userId, title, description, callbackKey, Constants.paymentProviderToken,
-                    new Guid().ToString(), Constants.paymentCurrency, labeledPrices, needEmail:true);
+                Api.SendInvoice(userId, title, description,
+                    payload: Guid.NewGuid().ToString(),
+                    currency: Constants.paymentCurrency,
+                    prices: labeledPrices,
+                    providerToken: Constants.PaymentProviderToken,
+                    needEmail: true).Wait();
             }
             catch (Exception e)
             {
-                Bot.CatchSend($"Failed to send invoice\nError:{e.Message} occured", userId);
-                var result = Bot.CatchSend($"Failed to send invoice to:{userId}\n\n{e.Message}\n\n{e.StackTrace}", -1001076212715,
-                    parsemode: ParseMode.Default);
+                LogHelper.Error($"Failed to send invoice to {userId}: {AsApiError(e)?.Message ?? e.Message}");
+                Bot.CatchSend("Sorry, something went wrong creating your invoice. Please try again.", userId);
             }
         }
 
+        /// <summary>Permissions granted to a fully muted user - everything off.</summary>
+        private static readonly ChatPermissions MutedPermissions = new ChatPermissions
+        {
+            CanSendMessages = false,
+            CanSendAudios = false,
+            CanSendDocuments = false,
+            CanSendPhotos = false,
+            CanSendVideos = false,
+            CanSendVideoNotes = false,
+            CanSendVoiceNotes = false,
+            CanSendPolls = false,
+            CanSendOtherMessages = false,
+            CanAddWebPagePreviews = false,
+            CanChangeInfo = false,
+            CanInviteUsers = false,
+            CanPinMessages = false,
+            CanManageTopics = false
+        };
+
         public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
         {
-            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId, untilDatetime,
-                    canSendMessages: false,
-                    canSendMediaMessages: false,
-                    canSendPolls: false,
-                    canSendOtherMessages: false,
-                    canAddWebPagePreviews: false,
-                    canChangeInfo: false,
-                    canInviteUsers: false,
-                    canPinMessages: false).Result;
-            return res;
+            try
+            {
+                Bot.Api.RestrictChatMember(chatId, userId, MutedPermissions,
+                    untilDate: untilDatetime == default(DateTime) ? (DateTime?)null : untilDatetime).Wait();
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Mute failed in {chatId} for {userId}: {AsApiError(e)?.Message ?? e.Message}");
+                return false;
+            }
         }
 
         public static bool Unmute(long chatId, long userId)
         {
-            ChatPermissions chatPermission = Bot.Api.GetChatAsync(chatId).Result.ChatPermissions;
-            var res = Bot.Api.RestrictChatMemberAsync(chatId, userId,
-                    canSendMessages: chatPermission.CanSendMediaMessages,
-                    canSendMediaMessages: chatPermission.CanSendMediaMessages,
-                    canSendPolls: chatPermission.CanSendPolls,
-                    canSendOtherMessages: chatPermission.CanSendOtherMessages,
-                    canAddWebPagePreviews: chatPermission.CanAddWebPagePrevious,
-                    canChangeInfo: chatPermission.CanChangeInfo,
-                    canInviteUsers: chatPermission.CanInviteUsers,
-                    canPinMessages: chatPermission.CanPinMessages).Result;
-            return res;
+            try
+            {
+                // Restore the user to whatever the group's own default permissions are.
+                var chatPermissions = Bot.Api.GetChat(chatId).Result.Permissions ?? new ChatPermissions
+                {
+                    CanSendMessages = true,
+                    CanSendAudios = true,
+                    CanSendDocuments = true,
+                    CanSendPhotos = true,
+                    CanSendVideos = true,
+                    CanSendVideoNotes = true,
+                    CanSendVoiceNotes = true,
+                    CanSendOtherMessages = true,
+                    CanAddWebPagePreviews = true
+                };
+                Bot.Api.RestrictChatMember(chatId, userId, chatPermissions).Wait();
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Unmute failed in {chatId} for {userId}: {AsApiError(e)?.Message ?? e.Message}");
+                return false;
+            }
         }
     }
 
     internal static class Redis
     {
-        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisPass").ToString();
-        private static string conne = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("RedisKey").ToString();
-        static ConnectionMultiplexer redis = ConnectionMultiplexer.Connect($"{conne}, allowAdmin=true, password={key}");        
-        public static IDatabase db = redis.GetDatabase(Constants.EnforcerDb);
+        private static ConnectionMultiplexer _redis;
+        private static IDatabase _db;
+
+        /// <summary>
+        /// Connection is established lazily by Start(). It must not happen in a static field
+        /// initializer: a failure there surfaces as a TypeInitializationException from whichever
+        /// unrelated line first touches this class, with nothing logged.
+        /// </summary>
+        public static IDatabase db
+        {
+            get
+            {
+                if (_db == null)
+                    throw new InvalidOperationException("Redis.Start() must succeed before the database is used.");
+                return _db;
+            }
+        }
 
         public static void SaveRedis()
         {
-            redis.GetServer($"{conne}").Save(SaveType.BackgroundSave);
+            var endpoint = _redis.GetEndPoints().FirstOrDefault();
+            if (endpoint == null) return;
+            _redis.GetServer(endpoint).Save(SaveType.BackgroundSave);
         }
 
         public static bool Start()
         {
             try
             {
-                var res = db.StringSet("testWrite", "trying");
-                return res;
+                if (_redis == null || !_redis.IsConnected)
+                {
+                    var options = ConfigurationOptions.Parse(RegHelper.GetRequired("RedisConnection"));
+                    var password = RegHelper.GetRegValue("RedisPassword");
+                    if (!string.IsNullOrEmpty(password))
+                        options.Password = password;
+                    options.AllowAdmin = true;          // required for the BGSAVE in SaveRedis()
+                    options.AbortOnConnectFail = false; // survive Redis restarting under us
+
+                    _redis = ConnectionMultiplexer.Connect(options);
+                    _db = _redis.GetDatabase(Constants.EnforcerDb);
+                }
+
+                return _db.StringSet("testWrite", "trying");
             }
             catch (Exception e)
             {
+                Console.Error.WriteLine($"[ERROR] Redis connection failed: {e.Message}");
                 return false;
             }
-            
-        }
-    }
-
-    internal static class Botan
-    {
-#if normal
-        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EBotan").ToString();
-#endif
-#if premium
-        private static string key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey("SOFTWARE\\Werewolf").GetValue("EPBotan").ToString();
-#endif
-        public static BotanTrackResponse log(Object update, string eventId, long id)
-        {
-            var url = $"https://api.botan.io/track?token={key}&uid={id}&name={eventId}";            
-            var client = new HttpClient();
-            var temp = JsonConvert.SerializeObject(update);
-            var content = new StringContent(temp, Encoding.UTF8, "application/json");          
-            var response = client.PostAsync(url, content).Result;            
-            var data = response.Content.ReadAsStringAsync().Result;
-            var result = JsonConvert.DeserializeObject<BotanTrackResponse>(data);
-            return result;
-        }
-
-        public static BotanTrackResponse log(Message update, string eventId)
-        {        
-            //return log(update, eventId, update.From.Id);
-            return null;
-        }
-
-        public static BotanTrackResponse log(CallbackQuery update, string eventId)
-        {
-            return null;
-            return log(update, eventId, update.From.Id);
-        }
-
-        public static BotanTrackResponse log(InlineQuery update, string eventId)
-        {
-            return log(update, eventId, update.From.Id);
-        }
-
-
-        public class BotanTrackResponse
-        {
-            public string Status { get; set; }
-            public string Information { get; set; }
         }
     }
 }

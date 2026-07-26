@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -16,6 +16,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
+using Telegram.Bot;
 #pragma warning disable CS0168
 #pragma warning disable CS0618
 namespace Enforcer5.Handlers
@@ -72,12 +73,12 @@ namespace Enforcer5.Handlers
                 result += "\n";
 
             }
-            Bot.Api.SendTextMessageAsync(id, result, parseMode: ParseMode.Markdown);
+            Bot.Api.SendMessage(id, result, parseMode: ParseMode.Markdown);
             var sortedfiles = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new Language(x)).Where(x => x.Base == (choice ?? x.Base)).OrderBy(x => x.LatestUpdate);
             result = $"*Validation complete*\nErrors: {errors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
             result += $"\nMost recently updated file: {sortedfiles.Last().FileName}.xml ({sortedfiles.Last().LatestUpdate.ToString("MMM dd")})\nLeast recently updated file: {sortedfiles.First().FileName}.xml ({sortedfiles.First().LatestUpdate.ToString("MMM dd")})";
 
-            Bot.Api.EditMessageTextAsync(id, msgId, result, parseMode: ParseMode.Markdown);
+            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
         }
 
         public static void ValidateLanguageFile(long id, string filePath, int msgId)
@@ -118,7 +119,7 @@ namespace Enforcer5.Handlers
             //Program.Send(result, id);
             Thread.Sleep(500);
             result += $"*Validation complete*.\nErrors: {errors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
-            Bot.Api.EditMessageTextAsync(id, msgId, result, parseMode: ParseMode.Markdown);
+            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
 
         }
 
@@ -131,7 +132,7 @@ namespace Enforcer5.Handlers
                 var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
                 var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
                 using (var fs = new FileStream(newFilePath, FileMode.Create))
-                      await Bot.Api.GetFileAsync(fileid, fs);
+                      await Bot.Api.GetInfoAndDownloadFile(fileid, fs);
                 //ok, we have the file.  Now we need to determine the language, scan it and the original file.
                 var newFileErrors = new List<LanguageError>();
                 //first, let's load up the English file, which is our master file
@@ -187,7 +188,7 @@ namespace Enforcer5.Handlers
                 }
 
                 //send the validation result
-                Bot.Api.SendTextMessageAsync(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
+                Bot.Api.SendMessage(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
                 Thread.Sleep(500);
 
 
@@ -200,21 +201,21 @@ namespace Enforcer5.Handlers
                     new InlineKeyboardButton($"Old", $"upload:{id}:current")
                 };
                     var menu = new InlineKeyboardMarkup(buttons.ToArray());
-                    Bot.Api.SendTextMessageAsync(id, "Which file do you want to keep?", replyToMessageId: msgID,
+                    Bot.Api.SendMessage(id, "Which file do you want to keep?", replyParameters: new ReplyParameters { MessageId = msgID },
                         replyMarkup: menu);
                 }
                 else
                 {
-                     Bot.Api.SendTextMessageAsync(id, "Errors present, cannot upload.", replyToMessageId: msgID);
+                     Bot.Api.SendMessage(id, "Errors present, cannot upload.", replyParameters: new ReplyParameters { MessageId = msgID });
                 }
             }
             catch(System.Xml.XmlException XmlExc)
             {
-                Bot.Api.SendTextMessageAsync(id, "<b>XML error occured! Aborting upload!</b>\n\nError details:\n" + XmlExc.Message, replyToMessageId: msgID, parseMode: ParseMode.Html);
+                Bot.Api.SendMessage(id, "<b>XML error occured! Aborting upload!</b>\n\nError details:\n" + XmlExc.Message, replyParameters: new ReplyParameters { MessageId = msgID }, parseMode: ParseMode.Html);
             }
             catch(Exception exc)
             {
-                Bot.Api.SendTextMessageAsync(id, "Error occured! Exception:\n\n" + exc, replyToMessageId: msgID);
+                Bot.Api.SendMessage(id, "Error occured! Exception:\n\n" + exc, replyParameters: new ReplyParameters { MessageId = msgID });
             }
         }
 
@@ -224,7 +225,7 @@ namespace Enforcer5.Handlers
         {
             var msg = "Moving file to production..\n";
             msg += "Checking paths for duplicate language file...\n";
-            Bot.Api.EditMessageTextAsync(id, msgId, msg);
+            Bot.Api.EditMessageText(id, msgId, msg);
             fileName += ".xml";
             var tempPath = Bot.TempLanguageDirectory;
             var langPath = Bot.LanguageDirectory;
@@ -256,7 +257,7 @@ namespace Enforcer5.Handlers
                 {
                     msg += $"Found duplicate language (matching base and variant) with filename {Path.GetFileNameWithoutExtension(lang.FilePath)}\n";
                     msg += "Aborting!";
-                    Bot.Api.EditMessageTextAsync(id, msgId, msg);
+                    Bot.Api.EditMessageText(id, msgId, msg);
                     return;
                 }
             }
@@ -282,7 +283,7 @@ namespace Enforcer5.Handlers
             msg += $"File copied to git directory\n";
             msg += "* Operation complete.*";
 
-            Bot.Api.EditMessageTextAsync(id, msgId, msg, parseMode: ParseMode.Markdown);
+            Bot.Api.EditMessageText(id, msgId, msg, parseMode: ParseMode.Markdown);
         }
 
         public static void SendAllFiles(long id)
@@ -297,7 +298,7 @@ namespace Enforcer5.Handlers
             ZipFile.CreateFromDirectory(Bot.LanguageDirectory, path);
             //now send the file
             var fs = new FileStream(path, FileMode.Open);
-            Bot.Api.SendDocumentAsync(id, new FileToSend("languages.zip", fs));
+            Bot.Api.SendDocument(id, InputFile.FromStream(fs, "languages.zip"));
         }
 
         public static void SendFile(long id, string choice)
@@ -305,7 +306,7 @@ namespace Enforcer5.Handlers
             var langOptions = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new Language(x));
             var option = langOptions.First(x => x.Name == choice);
             var fs = new FileStream(option.FilePath, FileMode.Open);
-            Bot.Api.SendDocumentAsync(id, new FileToSend(option.FileName + ".xml", fs));
+            Bot.Api.SendDocument(id, InputFile.FromStream(fs, option.FileName + ".xml"));
         }
 
         internal static void SendBase(string choice, long id)
@@ -313,7 +314,7 @@ namespace Enforcer5.Handlers
             try
             {
                 var zipname = new Regex("[^a-zA-Z0-9]").Replace(choice, "_"); //get rid of non-alphanumeric characters which can cause trouble
-                var path = Path.Combine(Bot.LanguageDirectory, $"BaseZips\\{zipname}.zip"); //where the zipfile will be stored
+                var path = Path.Combine(Bot.LanguageDirectory, "BaseZips", $"{zipname}.zip"); //where the zipfile will be stored
                 if (File.Exists(path))
                     File.Delete(path);
 
@@ -326,14 +327,14 @@ namespace Enforcer5.Handlers
                 }
                 //now send the zip file
                 var fs = new FileStream(path, FileMode.Open);
-                Bot.Api.SendDocumentAsync(id, new FileToSend($"{zipname}.zip", fs));
+                Bot.Api.SendDocument(id, InputFile.FromStream(fs, $"{zipname}.zip"));
 
                 //uncomment following line if you don't want to store those zipfiles
                 //File.Delete(path);
             }
             catch (Exception e)
             {
-                Bot.Api.SendTextMessageAsync(id, e.Message);
+                Bot.Api.SendMessage(id, e.Message);
             }
         }
 

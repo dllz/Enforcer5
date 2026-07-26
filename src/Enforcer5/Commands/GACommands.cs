@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,6 +15,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot;
 #pragma warning disable 4014
 namespace Enforcer5
 {
@@ -24,7 +25,7 @@ namespace Enforcer5
         public static void MissingHcommands(Update update, string[] args)
         {
             var commands = Bot.Commands.Select(e => e.Trigger.ToLower()).ToList();
-            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(-1001076212715).Doc).Split('\n').Select(e => e.ToLower()).ToList();
+            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(Bot.ErrorChatId).Doc).Split('\n').Select(e => e.ToLower()).ToList();
 
             string missing = "<b>Missing hcommand strings:</b>\n";
 
@@ -42,7 +43,7 @@ namespace Enforcer5
             try
             {
                 var id = update.Message.Chat.Id;
-                if (update.Message.ReplyToMessage?.Type != MessageType.DocumentMessage)
+                if (update.Message.ReplyToMessage?.Type != MessageType.Document)
                 {
                      Bot.Send("Please reply to the file with /uploadlanguage", id);
                     return;
@@ -64,7 +65,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, e.Message, parseMode: ParseMode.Default);
+                Bot.Api.SendMessage(update.Message.Chat.Id, e.Message, parseMode: ParseMode.None);
             }
         }
 
@@ -99,8 +100,8 @@ namespace Enforcer5
             var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
             try
             {
-                 Bot.Api.SendTextMessageAsync(update.Message.Chat.Id, "Validate which language?",
-                    replyToMessageId: update.Message.MessageId, replyMarkup: menu);
+                 Bot.Api.SendMessage(update.Message.Chat.Id, "Validate which language?",
+                    replyParameters: new ReplyParameters { MessageId = update.Message.MessageId }, replyMarkup: menu);
             }
             catch (AggregateException e)
             {
@@ -452,7 +453,7 @@ namespace Enforcer5
             try
             {
                 var chatId = args[1];
-                 Bot.Api.LeaveChatAsync(chatId);
+                 Bot.Api.LeaveChat(chatId);
                  Bot.SendReply("The chat has been left", update);
             }
             catch (Exception e)
@@ -543,7 +544,7 @@ namespace Enforcer5
             text = $"{text}\nUser has said {msgs} ever";
             if (update.Message.Chat.Type != ChatType.Private)
             {
-                var status = Bot.Api.GetChatMemberAsync(update.Message.Chat.Id, userid).Result;
+                var status = Bot.Api.GetChatMember(update.Message.Chat.Id, userid).Result;
                 text = $"{text}\n The user is a {status.Status.ToString()} in this chat";
             }
              Bot.SendReply(text, update);
@@ -585,7 +586,7 @@ namespace Enforcer5
             var vlang = Program.LangaugeList.Where(e => e.Name.Equals(choice)).FirstOrDefault();
 
             //var menu = new ReplyKeyboardHide { HideKeyboard = true, Selective = true };
-            //Bot.SendTextMessage(id, "", replyToMessageId: update.Message.MessageId, replyMarkup: menu);
+            //Bot.SendTextMessage(id, "", replyParameters: new ReplyParameters { MessageId = update.Message.MessageId }, replyMarkup: menu);
             LanguageHelper.ValidateLanguageFile(query.Message.Chat.Id, vlang.FilePath, query.Message.MessageId);
         }
 

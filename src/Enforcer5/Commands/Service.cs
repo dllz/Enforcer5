@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -9,6 +9,7 @@ using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot;
 #pragma warning disable CS4014
 namespace Enforcer5
 { 
@@ -108,30 +109,13 @@ defSpamValue = 3;
             }
             switch (message.NewChatMember.Id)
             {
-                case 106665913://Jeff
-                    Bot.Send("This is a known bug. No need to report", chatId);
-                    break;
                 case 125311351://Daniel
-#if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfDe5MFy-IHCAI"));
+#if PREMIUM
+                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfDe5MFy-IHCAI"));
 #endif
-#if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADZCgAApwaZAfmRkSuLkIV9AI"));
+#if NORMAL
+                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfmRkSuLkIV9AI"));
 #endif
-                    break;
-                case 223494929:
-#if premium
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAfnHwfv4ufK6wI"));
-#endif
-#if normal
-                    Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend("CgADBAADOCEAAhsXZAePhP7wDwUKmgI"));
-#endif
-                    break;
-                case 295152997://Ludwig
-                    Bot.Send("Everyone beware, a crazy ape is about to infiltrate this group!", chatId);
-                    break;
-                case 81772130://Lordy
-                    Bot.Send("You're a bad admin. Be a good admin - Budi", chatId);
                     break;
                 case 36702373://Karma (Prize Winner)
                     Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.", chatId);
@@ -142,7 +126,7 @@ defSpamValue = 3;
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
-                        Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file_id)).Result;
+                        Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file_id)).Result;
 
                         Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                     }
@@ -153,7 +137,7 @@ defSpamValue = 3;
                         {
                             var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
-                            Message response = Bot.Api.SendDocumentAsync(message.Chat.Id, new FileToSend(file), text).Result;
+                            Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file), text).Result;
 
                             Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
@@ -176,7 +160,7 @@ defSpamValue = 3;
                         {
                             try
                             {
-                                lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+                                lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                             }
                             catch (NullReferenceException exception)
                             {
@@ -212,7 +196,7 @@ defSpamValue = 3;
                                     text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
                                     break;
                             }
-                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+                            Message response = Bot.Api.SendMessage(message.Chat.Id, text).Result;
 
                             Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
@@ -220,7 +204,7 @@ defSpamValue = 3;
                         {
                             var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
                                 message.Chat.Title);
-                            Message response = Bot.Api.SendTextMessageAsync(message.Chat.Id, text).Result;
+                            Message response = Bot.Api.SendMessage(message.Chat.Id, text).Result;
 
                             Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
@@ -257,7 +241,7 @@ defSpamValue = 3;
             {
                
                 Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
-                Bot.Api.LeaveChatAsync(updateMessage.Chat.Id);
+                Bot.Api.LeaveChat(updateMessage.Chat.Id);
                 return;
             }
             var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;
@@ -291,8 +275,6 @@ defSpamValue = 3;
 
         public static void NewSettings(long chatid)
         {
-            Redis.db.HashSetAsync($"chat:{chatid}:nsfwDetection", "activated", "on");
-            Redis.db.HashSetAsync($"chat:{chatid}:nsfwDetection", "action", "ban");
             
         }
 
@@ -394,8 +376,6 @@ defSpamValue = 3;
                     {"antinamelengthsettings", "enabled", "yes" },
                     {"antinamelengthsettings", "maxlength", 50 },
                     {"antinamelengthsettings", "action", "kick" },
-                    {"nsfwDetection", "activated", "on"},
-                    {"nsfwDetection", "action", "ban" },
 
                 }
             };
@@ -428,7 +408,7 @@ defSpamValue = 3;
 
         public static void LogBotAction(long chatId, string command)
         {
-            LogCommand(chatId, -1, "Enforcer", Bot.Api.GetChatAsync(chatId).Result.Title, command);
+            LogCommand(chatId, -1, "Enforcer", Bot.Api.GetChat(chatId).Result.Title, command);
         }
 
         public static void LogCommand(Update update, string command)
@@ -501,7 +481,7 @@ defSpamValue = 3;
 
         public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")
         {
-            var lang = Methods.GetGroupLanguage(-1001076212715).Doc;
+            var lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
             if (string.IsNullOrEmpty(replyto))
             {
                 replyto = Methods.GetLocaleString(lang, "noone");
