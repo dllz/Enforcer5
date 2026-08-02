@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Enforcer5.Helpers
@@ -25,6 +26,15 @@ namespace Enforcer5.Helpers
                 if (!Directory.Exists(updateDirectory)) return;
                 var files = Directory.GetFiles(updateDirectory);
                 if (files.Length == 0) return;
+
+                if (!IsUpdateStable(updateDirectory))
+                {
+                    // DeployBot is still writing files (docker cp is not atomic). Leave the
+                    // staging dir alone and boot the current build; MonitorUpdates will retry
+                    // once the copy has finished.
+                    Console.Error.WriteLine("[INFO] Pending update still being written, deferring.");
+                    return;
+                }
 
                 Console.Error.WriteLine($"[INFO] Found pending update with {files.Length} files, applying...");
 
@@ -64,7 +74,8 @@ namespace Enforcer5.Helpers
                 Thread.Sleep(5000);
                 try
                 {
-                    if (Directory.Exists(UpdateDirectory) && Directory.GetFiles(UpdateDirectory).Length > 0)
+                    if (Directory.Exists(UpdateDirectory) && Directory.GetFiles(UpdateDirectory).Length > 0 &&
+                        IsUpdateStable(UpdateDirectory))
                     {
                         Console.Error.WriteLine("[INFO] Update detected while running, shutting down to apply...");
                         Bot.Running = false;
@@ -79,6 +90,26 @@ namespace Enforcer5.Helpers
                     Console.Error.WriteLine($"[ERROR] Update monitor: {e.Message}");
                 }
             }
+        }
+
+        /// <summary>
+        /// DeployBot's docker cp writes staged files one at a time, not atomically. Returns true
+        /// only if the directory's file count and total size are unchanged across a short delay,
+        /// so we never copy a file that is still being written.
+        /// </summary>
+        private static bool IsUpdateStable(string updateDirectory)
+        {
+            var before = SnapshotUpdate(updateDirectory);
+            Thread.Sleep(1000);
+            var after = SnapshotUpdate(updateDirectory);
+            return before == after;
+        }
+
+        private static (int Count, long TotalBytes) SnapshotUpdate(string updateDirectory)
+        {
+            var files = Directory.GetFiles(updateDirectory, "*", SearchOption.AllDirectories);
+            var totalBytes = files.Sum(f => new FileInfo(f).Length);
+            return (files.Length, totalBytes);
         }
 
         private static void CopyDirectory(string sourceDir, string destDir)

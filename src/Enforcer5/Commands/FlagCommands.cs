@@ -73,6 +73,12 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
+        [Command(Trigger = "admins", InGroupOnly = true)]
+        public static void Admins(Update update, string[] args) => Admin(update, args);
+
+        [Command(Trigger = "report", InGroupOnly = true)]
+        public static void Report(Update update, string[] args) => Admin(update, args);
+
         [Command(Trigger = "adminoff", InGroupOnly = true, GroupAdminOnly = true)]
         public static void AdminOff(Update update, string[] args)
         {
@@ -283,6 +289,12 @@ namespace Enforcer5
             {
                 if (user != null)
                 {
+                    // Telegram forbids bots messaging other bots, so a bot promoted to admin
+                    // can never receive a report - forwarding to it always throws "Forbidden".
+                    if (user.User.IsBot)
+                    {
+                        continue;
+                    }
                     var lang = Methods.GetGroupLanguage(user.User).Doc;
                     var mod = user.User.Id;
                     var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
@@ -292,28 +304,45 @@ namespace Enforcer5
                     }
                     try
                     {
+                        // Scoped per-admin: falling back to repId on a failed forward must not
+                        // leak into the next admin's attempt, or every admin after the first
+                        // failure gets the wrong message id forwarded to them.
+                        var currentMsgId = msgId;
                         var replyFailure = false;
                         try
                         {
-                            var resulted = Bot.Api.ForwardMessage(mod, chatId, msgId).Result;
+                            var resulted = Bot.Api.ForwardMessage(mod, chatId, currentMsgId).Result;
                         }
                         catch (ApiRequestException e)
                         {
-                            msgId = repId;
+                            currentMsgId = repId;
                             replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (AggregateException e)
                         {
-                            msgId = repId;
+                            currentMsgId = repId;
                             replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
                         }
                         catch (Exception e)
                         {
-                            msgId = repId;
+                            currentMsgId = repId;
                             replyFailure = true;
                             Console.WriteLine(e.Message + e.StackTrace);
+                        }
+                        if (replyFailure && updateMessage.ReplyToMessage != null)
+                        {
+                            // Can't forward (deleted, protected content, etc.) - the Update
+                            // payload already has the flagged message's content in hand, so
+                            // send that as text instead of leaving the admin with no context.
+                            var originalContent = !string.IsNullOrEmpty(updateMessage.ReplyToMessage.Text)
+                                ? updateMessage.ReplyToMessage.Text
+                                : updateMessage.ReplyToMessage.Caption;
+                            if (!string.IsNullOrEmpty(originalContent))
+                            {
+                                Bot.Send($"Could not forward the original message, here is the text:\n{originalContent.FormatHTML()}", mod);
+                            }
                         }
                         Message result;
                         if (!string.IsNullOrEmpty(username))
@@ -337,7 +366,7 @@ namespace Enforcer5
                                             Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), username: username)
                                         },
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),
-                                            $"delflag:{updateMessage.Chat.Id}:{msgId}")
+                                            $"delflag:{updateMessage.Chat.Id}:{currentMsgId}")
                                     }
                                 };
                                 result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
@@ -379,7 +408,7 @@ namespace Enforcer5
                                             $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{msgId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}"),
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
@@ -420,7 +449,7 @@ namespace Enforcer5
                             var noti = new AdminNotification();
                             noti.hash = nme;
                             noti.chatId = chatId;
-                            noti.chatMsgId = msgId;
+                            noti.chatMsgId = currentMsgId;
                             noti.reportId = repId;
                             noti.adminChatId = result.Chat.Id;
                             noti.adminMsgId = result.MessageId;
