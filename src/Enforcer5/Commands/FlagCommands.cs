@@ -48,7 +48,8 @@ namespace Enforcer5
                 {
                     return;
                 }
-                if (Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id))
+                if (!update.Message.ReplyToMessage.From.IsBot &&
+                    Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id))
                 {
                     return;
                 }
