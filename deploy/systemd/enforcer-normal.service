@@ -16,7 +16,7 @@ Environment=PaymentProviderToken=
 Environment=ErrorChatId=
 Environment=DisplayTimeZone=Europe/Amsterdam
 Environment=LogPath=/opt/enforcer/normal/Logs
-Environment=LanguagesPath=/opt/enforcer/normal/App/Languages
+Environment=LanguagesPath=/opt/enforcer/Languages
 Environment=TempLanguageFilesPath=/opt/enforcer/normal/TempLanguageFiles
 
 [Install]

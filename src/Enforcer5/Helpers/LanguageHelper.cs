@@ -43,7 +43,7 @@ namespace Enforcer5.Handlers
             //first, let's load up the English file, which is our master file
             var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
 
-            foreach (var langfile in Directory.GetFiles(Bot.LanguageDirectory).Where(x => !x.EndsWith("English.xml")).Select(x => new Language(x)))
+            foreach (var langfile in Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Where(x => !x.EndsWith("English.xml")).Select(x => new Language(x)))
                 if (langfile.Base == choice || choice == null)
                 {
                     //first check the language node
@@ -74,7 +74,7 @@ namespace Enforcer5.Handlers
 
             }
             Bot.Api.SendMessage(id, result, parseMode: ParseMode.Markdown);
-            var sortedfiles = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new Language(x)).Where(x => x.Base == (choice ?? x.Base)).OrderBy(x => x.LatestUpdate);
+            var sortedfiles = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).Where(x => x.Base == (choice ?? x.Base)).OrderBy(x => x.LatestUpdate);
             result = $"*Validation complete*\nErrors: {errors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
             result += $"\nMost recently updated file: {sortedfiles.Last().FileName}.xml ({sortedfiles.Last().LatestUpdate.ToString("MMM dd")})\nLeast recently updated file: {sortedfiles.First().FileName}.xml ({sortedfiles.First().LatestUpdate.ToString("MMM dd")})";
 
@@ -125,20 +125,31 @@ namespace Enforcer5.Handlers
 
         internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
-        
+            string newFilePath = null;
+            string pendingNamePath = null;
             try
             {
-            
+                newFileCorrectName = Path.GetFileName(newFileCorrectName);
+                if (string.IsNullOrWhiteSpace(newFileCorrectName) ||
+                    !newFileCorrectName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Language uploads must have an XML filename.");
+                newFileCorrectName = Path.GetFileNameWithoutExtension(newFileCorrectName) + ".xml";
+
                 var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
-                var newFilePath = Path.Combine(path.FullName, newFileCorrectName);
-                using (var fs = new FileStream(newFilePath, FileMode.Create))
-                      await Bot.Api.GetInfoAndDownloadFile(fileid, fs);
+                var pendingId = Guid.NewGuid().ToString("N");
+                newFilePath = Path.Combine(path.FullName, pendingId + ".xml");
+                pendingNamePath = Path.Combine(path.FullName, pendingId + ".name");
+                using (var fs = new FileStream(newFilePath, FileMode.CreateNew))
+                    await Bot.Api.GetInfoAndDownloadFile(fileid, fs);
                 //ok, we have the file.  Now we need to determine the language, scan it and the original file.
                 var newFileErrors = new List<LanguageError>();
                 //first, let's load up the English file, which is our master file
                 var langs = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
                 var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
-                var newFile = new Language(newFilePath);
+                var newFile = new Language(newFilePath)
+                {
+                    FileName = Path.GetFileNameWithoutExtension(newFileCorrectName)
+                };
 
                 //make sure it has a complete langnode
                 CheckLanguageNode(newFile, newFileErrors);
@@ -195,10 +206,11 @@ namespace Enforcer5.Handlers
                 if (newFileErrors.All(x => x.Level != ErrorLevel.Error))
                 {
                     //load up each file and get the names
+                    File.WriteAllText(pendingNamePath, newFileCorrectName);
                     var buttons = new[]
                     {
-                    new InlineKeyboardButton($"New", $"upload:{id}:{newFile.FileName}"),
-                    new InlineKeyboardButton($"Old", $"upload:{id}:current")
+                    new InlineKeyboardButton($"New", $"upload:{id}:n{pendingId}"),
+                    new InlineKeyboardButton($"Old", $"upload:{id}:o{pendingId}")
                 };
                     var menu = new InlineKeyboardMarkup(buttons.ToArray());
                     Bot.Api.SendMessage(id, "Which file do you want to keep?", replyParameters: new ReplyParameters { MessageId = msgID },
@@ -206,84 +218,102 @@ namespace Enforcer5.Handlers
                 }
                 else
                 {
-                     Bot.Api.SendMessage(id, "Errors present, cannot upload.", replyParameters: new ReplyParameters { MessageId = msgID });
+                    DeletePendingLanguage(newFilePath, pendingNamePath);
+                    Bot.Api.SendMessage(id, "Errors present, cannot upload.", replyParameters: new ReplyParameters { MessageId = msgID });
                 }
             }
             catch(System.Xml.XmlException XmlExc)
             {
+                DeletePendingLanguage(newFilePath, pendingNamePath);
                 Bot.Api.SendMessage(id, "<b>XML error occured! Aborting upload!</b>\n\nError details:\n" + XmlExc.Message, replyParameters: new ReplyParameters { MessageId = msgID }, parseMode: ParseMode.Html);
             }
             catch(Exception exc)
             {
+                DeletePendingLanguage(newFilePath, pendingNamePath);
                 Bot.Api.SendMessage(id, "Error occured! Exception:\n\n" + exc, replyParameters: new ReplyParameters { MessageId = msgID });
             }
         }
 
 
 
-        public static void UseNewLanguageFile(string fileName, long id, int msgId)
+        public static void UseNewLanguageFile(string pendingId, long id, int msgId)
         {
             var msg = "Moving file to production..\n";
             msg += "Checking paths for duplicate language file...\n";
             Bot.Api.EditMessageText(id, msgId, msg);
-            fileName += ".xml";
+            if (!Guid.TryParseExact(pendingId, "N", out _))
+                throw new InvalidDataException("Pending language upload is invalid.");
+
             var tempPath = Bot.TempLanguageDirectory;
+            var newFilePath = Path.Combine(tempPath, pendingId + ".xml");
+            var pendingNamePath = Path.Combine(tempPath, pendingId + ".name");
+            if (!File.Exists(newFilePath) || !File.Exists(pendingNamePath))
+                throw new FileNotFoundException("Pending language upload has expired.");
+
+            var fileName = File.ReadAllText(pendingNamePath);
+            if (fileName != Path.GetFileName(fileName) ||
+                !fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Pending language filename is invalid.");
+
             var langPath = Bot.LanguageDirectory;
-            var newFilePath = Path.Combine(tempPath, fileName);
             var copyToPath = Path.Combine(langPath, fileName);
-
-            //get the new files language
-            var doc = XDocument.Load(newFilePath);
-
-            var newFileLang = new
+            try
             {
-                Name = doc.Descendants("language").First().Attribute("name").Value,
-                Base = doc.Descendants("language").First().Attribute("base").Value,
-            };
-
-
-            //check for existing file
-            var langs = Directory.GetFiles(langPath).Select(x => new Language(x)).ToList();
-            var lang = langs.FirstOrDefault(x => x.Name == newFileLang.Name && x.FilePath != copyToPath);
-            if (lang != null)
-            {
-                msg += $"Found duplicate language (name attribute) with filename {Path.GetFileNameWithoutExtension(lang.FilePath)}\n";
-                copyToPath = lang.FilePath;
-            }
-            else
-            {
-                lang = langs.FirstOrDefault(x => x.Base == newFileLang.Base && x.Name != newFileLang.Name);
-                if (lang != null)
+                using (AcquireLanguageLock())
                 {
-                    msg += $"Found duplicate language (matching base and variant) with filename {Path.GetFileNameWithoutExtension(lang.FilePath)}\n";
-                    msg += "Aborting!";
-                    Bot.Api.EditMessageText(id, msgId, msg);
-                    return;
+                    var candidate = new Language(newFilePath)
+                    {
+                        FileName = Path.GetFileNameWithoutExtension(fileName)
+                    };
+                    var errors = new List<LanguageError>();
+                    CheckLanguageNode(candidate, errors);
+                    TestLength(candidate, errors);
+                    var master = XDocument.Load(Path.Combine(langPath, "English.xml"));
+                    GetFileErrors(candidate, errors, master);
+
+                    //check for existing file
+                    var langs = Directory.GetFiles(langPath, "*.xml").Select(x => new Language(x)).ToList();
+                    var conflict = langs.FirstOrDefault(x =>
+                        (x.FileName == candidate.FileName && x.Name != candidate.Name)
+                        || (x.Name == candidate.Name && x.Base != candidate.Base)
+                        || (x.Base == candidate.Base && x.FileName != candidate.FileName));
+                    if (errors.Any(x => x.Level == ErrorLevel.Error) || conflict != null)
+                    {
+                        if (conflict != null)
+                            msg += $"Found conflicting language file {conflict.FileName}.xml\n";
+                        msg += "The pending file is no longer valid. Aborting!";
+                        Bot.Api.EditMessageText(id, msgId, msg);
+                        return;
+                    }
+
+                    PublishLanguageFile(newFilePath, copyToPath);
                 }
+
+                msg += "File copied to bot\n";
+                //#if RELEASE
+                //            msg += $"File copied to bot 1\n";
+                //#elif RELEASE2
+                //            msg += $"File copied to bot 2\n";
+                //#endif
+                //Bot.Api.EditMessageText(id, msgId, msg);
+                //#if RELEASE
+                //            copyToPath = copyToPath.Replace("Werewolf 3.0", "Werewolf 3.0 Clone");
+                //            System.IO.File.Copy(newFilePath, copyToPath, true);
+                //            msg += $"File copied to bot 2\n";
+                //            Bot.Api.EditMessageText(id, msgId, msg);
+                //#endif
+                //var gitPath = Path.Combine(@"C:\Werewolf Source\Werewolf\Werewolf for Telegram\Languages", Path.GetFileName(copyToPath));
+                //File.Copy(newFilePath, gitPath, true);
+                Methods.IntialiseLanguages();
+                msg += "Shared language directory updated\n";
+                msg += "* Operation complete.*";
+
+                Bot.Api.EditMessageText(id, msgId, msg, parseMode: ParseMode.Markdown);
             }
-
-
-            System.IO.File.Copy(newFilePath, copyToPath, true);
-            msg += "File copied to bot\n";
-            //#if RELEASE
-            //            msg += $"File copied to bot 1\n";
-            //#elif RELEASE2
-            //            msg += $"File copied to bot 2\n";
-            //#endif
-            //Bot.Api.EditMessageText(id, msgId, msg);
-            //#if RELEASE
-            //            copyToPath = copyToPath.Replace("Werewolf 3.0", "Werewolf 3.0 Clone");
-            //            System.IO.File.Copy(newFilePath, copyToPath, true);
-            //            msg += $"File copied to bot 2\n";
-            //            Bot.Api.EditMessageText(id, msgId, msg);
-            //#endif
-            //var gitPath = Path.Combine(@"C:\Werewolf Source\Werewolf\Werewolf for Telegram\Languages", Path.GetFileName(copyToPath));
-            //File.Copy(newFilePath, gitPath, true);
-            System.IO.File.Delete(newFilePath);
-            msg += $"File copied to git directory\n";
-            msg += "* Operation complete.*";
-
-            Bot.Api.EditMessageText(id, msgId, msg, parseMode: ParseMode.Markdown);
+            finally
+            {
+                DeletePendingLanguage(newFilePath, pendingNamePath);
+            }
         }
 
         public static void SendAllFiles(long id)
@@ -303,7 +333,7 @@ namespace Enforcer5.Handlers
 
         public static void SendFile(long id, string choice)
         {
-            var langOptions = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new Language(x));
+            var langOptions = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
             var option = langOptions.First(x => x.Name == choice);
             var fs = new FileStream(option.FilePath, FileMode.Open);
             Bot.Api.SendDocument(id, InputFile.FromStream(fs, option.FileName + ".xml"));
@@ -314,14 +344,15 @@ namespace Enforcer5.Handlers
             try
             {
                 var zipname = new Regex("[^a-zA-Z0-9]").Replace(choice, "_"); //get rid of non-alphanumeric characters which can cause trouble
-                var path = Path.Combine(Bot.LanguageDirectory, "BaseZips", $"{zipname}.zip"); //where the zipfile will be stored
+                var tempDirectory = Directory.CreateDirectory(Bot.TempLanguageDirectory);
+                var path = Path.Combine(tempDirectory.FullName, $"{zipname}-{Guid.NewGuid():N}.zip"); //where the zipfile will be stored
                 if (File.Exists(path))
                     File.Delete(path);
 
                 //create our zip file
                 using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
                 {
-                    var langs = Directory.GetFiles(Bot.LanguageDirectory).Select(x => new Language(x)).Where(x => x.Base == choice); //get the base
+                    var langs = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).Where(x => x.Base == choice); //get the base
                     foreach (var lang in langs)
                         zip.CreateEntryFromFile(Path.Combine(Bot.LanguageDirectory, $"{lang.FileName}.xml"), $"{lang.FileName}.xml", CompressionLevel.Optimal); //add the langs to the zipfile
                 }
@@ -339,6 +370,66 @@ namespace Enforcer5.Handlers
         }
 
         #region Helpers
+
+        internal static void DiscardPendingLanguage(string pendingId)
+        {
+            if (!Guid.TryParseExact(pendingId, "N", out _)) return;
+            var tempPath = Bot.TempLanguageDirectory;
+            DeletePendingLanguage(
+                Path.Combine(tempPath, pendingId + ".xml"),
+                Path.Combine(tempPath, pendingId + ".name"));
+        }
+
+        private static FileStream AcquireLanguageLock()
+        {
+            var parentDirectory = Directory.GetParent(
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(Bot.LanguageDirectory)))?.FullName
+                ?? Bot.LanguageDirectory;
+            var lockPath = Path.Combine(parentDirectory, ".enforcer-languages.lock");
+            var deadline = DateTime.UtcNow.AddSeconds(10);
+            while (true)
+            {
+                try
+                {
+                    return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                }
+                catch (IOException) when (DateTime.UtcNow < deadline)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+        }
+
+        private static void DeletePendingLanguage(string filePath, string namePath)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) File.Delete(filePath);
+                if (!string.IsNullOrEmpty(namePath) && File.Exists(namePath)) File.Delete(namePath);
+            }
+            catch
+            {
+            }
+        }
+
+        private static void PublishLanguageFile(string sourceFile, string destinationFile)
+        {
+            var destinationDirectory = Path.GetDirectoryName(destinationFile);
+            Directory.CreateDirectory(destinationDirectory);
+            var tempFile = Path.Combine(
+                destinationDirectory,
+                $".{Path.GetFileName(destinationFile)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                File.Copy(sourceFile, tempFile);
+                _ = XDocument.Load(tempFile);
+                File.Move(tempFile, destinationFile, true);
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
+        }
 
         private static string GetLocaleString(string key, XDocument file)
         {

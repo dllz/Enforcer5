@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5;
 using Enforcer5.Handlers;
@@ -48,6 +47,8 @@ namespace Enforcer5
 
             try { Console.Title = "Enforcer"; } catch (PlatformNotSupportedException) { }
             LogHelper.Info($"Enforcer starting, BaseDirectory={AppContext.BaseDirectory}");
+            Bot.EnsureLanguageDirectory();
+            Methods.IntialiseLanguages();
 
             // On Linux this process is always named "dotnet", so the guard would fire against any
             // other .NET app on the host. systemd already enforces a single instance there.
@@ -72,11 +73,11 @@ namespace Enforcer5
             }
 
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
+            new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();
             new Thread(Updater.MonitorUpdates) { IsBackground = true }.Start();
             new Thread(UpdateHandler.SpamDetection) { IsBackground = true }.Start();
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
-            Task.Run(Methods.IntialiseLanguages);
             var wait = TimeSpan.FromSeconds(30);
             _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
             //now pause the main thread to let everything else run

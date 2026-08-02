@@ -199,14 +199,8 @@ namespace Enforcer5
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
         public static void reloadLang(Update update, string[] args)
         {
-            Program.LangaugeList = null;
-            Program.LangaugeList = new List<Language>();
-            foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
-            {
-
-                Program.LangaugeList.Add(new Language(language));
-            }
-             Bot.SendReply("Done", update);
+            Methods.IntialiseLanguages();
+            Bot.SendReply("Done", update);
         }
 
         [Command(Trigger = "remotedisablewatch", GlobalAdminOnly = true)]
@@ -628,7 +622,20 @@ namespace Enforcer5
                 Bot.ReplyToCallback(query, "No action taken.");
                 Bot.Edit(query, "No action taken.");
             }
-            else LanguageHelper.UseNewLanguageFile(choice, query.Message.Chat.Id, query.Message.MessageId);
+            else if (choice.Length == 33 && choice[0] == 'o')
+            {
+                LanguageHelper.DiscardPendingLanguage(choice.Substring(1));
+                Bot.ReplyToCallback(query, "No action taken.");
+                Bot.Edit(query, "No action taken.");
+            }
+            else if (choice.Length == 33 && choice[0] == 'n')
+            {
+                LanguageHelper.UseNewLanguageFile(choice.Substring(1), query.Message.Chat.Id, query.Message.MessageId);
+            }
+            else
+            {
+                Bot.ReplyToCallback(query, "Pending language upload is invalid or expired.");
+            }
         }       
     }
 }

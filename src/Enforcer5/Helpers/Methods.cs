@@ -321,19 +321,23 @@ namespace Enforcer5.Helpers
 
         public static void IntialiseLanguages()
         {
+            var languages = new List<Language>();
             foreach (var language in Directory.GetFiles(Bot.LanguageDirectory, "*.xml"))
             {
                 Console.WriteLine($"Adding language {language}");
                 try
                 {
-                    Program.LangaugeList.Add(new Language(language));
+                    languages.Add(new Language(language));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Failed to load language {language} with error {e}");
                 }
             }
-            Console.WriteLine($"{Program.LangaugeList.Count} languages added");
+            if (!languages.Any(x => x.Name == "English"))
+                throw new InvalidOperationException($"No valid English language file found in {Bot.LanguageDirectory}");
+            Interlocked.Exchange(ref Program.LangaugeList, languages);
+            Console.WriteLine($"{languages.Count} languages added");
         }
 
         /// Gets the matching language string and formats it with parameters
@@ -518,7 +522,7 @@ namespace Enforcer5.Helpers
                     {
                         return id;
                     }
-                    var username = update.Message.Entities.Where(x => x.Type == MessageEntityType.TextMention).ToArray();
+                    var username = (update.Message.Entities ?? Array.Empty<MessageEntity>()).Where(x => x.Type == MessageEntityType.TextMention).ToArray();
                     if (username.Length > 0)
                     {
                         return username[0].User.Id;
@@ -1158,10 +1162,11 @@ namespace Enforcer5.Helpers
             {
                 case MessageType.Text:
                        var text = msg.Text;
-                    var link = msg.Entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
+                    var entities = msg.Entities ?? Array.Empty<MessageEntity>();
+                    var link = entities.Where(x => x.Type == MessageEntityType.Url).ToArray();
                     if (link.Length > 0)
                         return "link";
-                    link = msg.Entities.Where(x => x.Type == MessageEntityType.TextLink).ToArray();
+                    link = entities.Where(x => x.Type == MessageEntityType.TextLink).ToArray();
                     if (link.Length > 0)
                         return "link";
                     return "text";

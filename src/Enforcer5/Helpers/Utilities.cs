@@ -62,6 +62,85 @@ namespace Enforcer5.Helpers
         internal static string TempLanguageDirectory => RegHelper.GetPath("TempLanguageFilesPath", "TempLanguageFiles");
         internal static string LogDirectory => RegHelper.GetPath("LogPath", "Logs");
 
+        internal static void EnsureLanguageDirectory()
+        {
+            var bundledDirectory = Path.Combine(AppContext.BaseDirectory, "Languages");
+            var languageDirectory = LanguageDirectory;
+            Directory.CreateDirectory(languageDirectory);
+
+            var comparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+            var usesBundledDirectory = string.Equals(
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(bundledDirectory)),
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(languageDirectory)),
+                comparison);
+
+            if (!usesBundledDirectory && Directory.Exists(bundledDirectory))
+            {
+                foreach (var sourceFile in Directory.GetFiles(bundledDirectory, "*.xml"))
+                {
+                    var destinationFile = Path.Combine(languageDirectory, Path.GetFileName(sourceFile));
+                    if (File.Exists(destinationFile)) continue;
+
+                    var tempFile = Path.Combine(
+                        languageDirectory,
+                        $".{Path.GetFileName(sourceFile)}.{Guid.NewGuid():N}.tmp");
+                    try
+                    {
+                        File.Copy(sourceFile, tempFile);
+                        try
+                        {
+                            File.Move(tempFile, destinationFile);
+                        }
+                        catch (IOException) when (File.Exists(destinationFile))
+                        {
+                        }
+                    }
+                    finally
+                    {
+                        if (File.Exists(tempFile)) File.Delete(tempFile);
+                    }
+                }
+            }
+
+            var englishFile = Path.Combine(languageDirectory, "English.xml");
+            if (!File.Exists(englishFile))
+                throw new FileNotFoundException($"Required language file not found: {englishFile}", englishFile);
+        }
+
+        internal static void MonitorLanguageDirectory()
+        {
+            string state = null;
+            while (true)
+            {
+                Thread.Sleep(5000);
+                try
+                {
+                    var currentState = GetLanguageDirectoryState();
+                    if (currentState == state) continue;
+                    Methods.IntialiseLanguages();
+                    state = currentState;
+                    LogHelper.Info("Languages reloaded from the shared directory");
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"Failed to reload languages: {e.Message}");
+                }
+            }
+        }
+
+        private static string GetLanguageDirectoryState()
+        {
+            return string.Join("\n", Directory.GetFiles(LanguageDirectory, "*.xml")
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(path =>
+                {
+                    var file = new FileInfo(path);
+                    return $"{file.Name}|{file.Length}|{file.LastWriteTimeUtc.Ticks}";
+                }));
+        }
+
         /// <summary>Chat that startup notices and unhandled errors are reported to.</summary>
         internal static long ErrorChatId => RegHelper.GetLong("ErrorChatId") ?? Constants.Devs[0];
 

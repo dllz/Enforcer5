@@ -81,7 +81,9 @@ Production ships no JSON file; everything comes from the systemd unit.
 | `RedisConnection` / `RedisPassword` | Shared instance with blackwolf; DB index 0 |
 | `PaymentProviderToken` | Telegram Payments. Never commit this |
 | `ErrorChatId` | Errors and startup notices; falls back to `Constants.Devs[0]` |
-| `LanguagesPath` / `TempLanguageFilesPath` / `LogPath` | Relative paths resolve against the app dir |
+| `LanguagesPath` | Live XML directory. Both production editions use `/opt/enforcer/Languages` |
+| `TempLanguageFilesPath` | Per-edition upload staging; relative paths resolve against the app dir |
+| `LogPath` | Per-edition rotating logs; relative paths resolve against the app dir |
 | `DisplayTimeZone` | Display formatting only, default `Europe/Amsterdam` |
 
 ---
@@ -142,21 +144,37 @@ Docker is **artifact transport, not runtime**. CI builds `enforcer-normal` and
 blackwolf's DeployBot then extracts the image to disk and restarts the systemd unit.
 Nothing runs in a container in production.
 
-Server layout per config:
+Server layout:
 
 ```
-/opt/enforcer/{normal,premium}/
-├── App/                    # WorkingDirectory; Enforcer[ Premium].dll + Languages/
-│   ├── Update/             # staging dir, picked up by Updater.ApplyPendingUpdate()
-│   └── Backup/             # written before each upgrade, source for /rollbackenforcer
-├── TempLanguageFiles/      # admin uploads — OUTSIDE App/, survives deploys
-└── Logs/                   # tmpfs, 50MB, RAM-backed
+/opt/enforcer/
+├── Languages/                       # shared live XML used by both editions
+├── normal/
+│   ├── App/                          # Enforcer.dll + bundled Languages/ payload
+│   │   ├── Update/                   # staging, picked up by Updater.ApplyPendingUpdate()
+│   │   └── Backup/                   # source for /rollbackenforcer
+│   ├── TempLanguageFiles/            # edition-specific upload staging
+│   └── Logs/                         # tmpfs, 50MB, RAM-backed
+└── premium/
+    ├── App/                          # Enforcer Premium.dll + bundled Languages/ payload
+    │   ├── Update/
+    │   └── Backup/
+    ├── TempLanguageFiles/            # edition-specific upload staging
+    └── Logs/                         # tmpfs, 50MB, RAM-backed
 ```
+
+At startup each edition seeds XML files missing from the shared live directory from its
+bundled payload. Existing shared files are authoritative and are never overwritten by a
+restart or deployment. Both processes monitor the shared directory and atomically replace
+their in-memory language snapshot when XML files change. Admin upload staging remains
+separate, while an accepted upload is atomically published to the shared directory.
 
 DeployBot commands (run in blackwolf's deploy chat): `/enforcerstatus`,
 `/upgradeenforcer`, `/forceenforcer`, `/rollbackenforcer`, `/startenforcer`,
 `/stopenforcer`. They share blackwolf's `OpLock`, so werewolf and enforcer deploys cannot
-interleave.
+interleave. Bootstrap an empty installation with `/forceenforcer normal` and
+`/forceenforcer premium`; `/upgradeenforcer` requires an existing process to apply the
+staged files. Binary rollback does not roll back the persistent shared language directory.
 
 Server-side: `enf status`, `enf restart <config|all>`, `enf logs <config> [service|app]`.
 

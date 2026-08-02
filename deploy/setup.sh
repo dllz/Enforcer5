@@ -7,6 +7,7 @@ BASE=/opt/enforcer
 CONFIGS="normal premium"
 
 echo "=== Creating directory structure ==="
+mkdir -p $BASE/Languages
 for config in $CONFIGS; do
     mkdir -p $BASE/$config/App/Update
     mkdir -p $BASE/$config/App/Backup
@@ -49,7 +50,7 @@ Environment=PaymentProviderToken=
 Environment=ErrorChatId=
 Environment=DisplayTimeZone=Europe/Amsterdam
 Environment=LogPath=$BASE/$config/Logs
-Environment=LanguagesPath=$BASE/$config/App/Languages
+Environment=LanguagesPath=$BASE/Languages
 Environment=TempLanguageFilesPath=$BASE/$config/TempLanguageFiles
 
 [Install]
@@ -86,11 +87,12 @@ echo "Next steps:"
 echo "1. Edit each /etc/systemd/system/enforcer-*.service"
 echo "   Set the API token, RedisConnection, RedisPassword, ErrorChatId, PaymentProviderToken"
 echo ""
-echo "2. Deploy a build via the deploy bot: /upgradeenforcer normal"
+echo "2. Deploy the initial builds via the deploy bot:"
+echo "   /forceenforcer normal"
+echo "   /forceenforcer premium"
 echo ""
 echo "3. Enable services:"
-echo "   systemctl enable --now enforcer-normal"
-echo "   systemctl enable --now enforcer-premium"
+echo "   systemctl enable enforcer-normal enforcer-premium"
 echo ""
 echo "4. Check status:"
 echo "   enf status"
