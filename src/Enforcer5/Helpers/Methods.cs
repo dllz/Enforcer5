@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -112,7 +113,9 @@ namespace Enforcer5.Helpers
 
         }
 
-        public static async void SendError(string exception, Message updateMessage, XDocument doc)
+        // Not async void: an exception escaping one of these would reach the thread pool unhandled
+        // and terminate the process. Neither method ever awaited anything.
+        public static void SendError(string exception, Message updateMessage, XDocument doc)
         {
             try
             {
@@ -124,7 +127,7 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static async void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
+        public static void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
         {
             object[] arguments =
                 {
@@ -189,34 +192,78 @@ namespace Enforcer5.Helpers
             
         }
 
+        /// <summary>
+        /// chat id -> configured language name (null when unset). This lookup used to be a blocking
+        /// Redis read on nearly every handler path, several times per message.
+        ///
+        /// Entries expire so the other edition stays visible: normal and premium are separate
+        /// processes against the same Redis, and a group running both would otherwise never see a
+        /// language change made through the other bot. A local write updates the entry immediately.
+        /// </summary>
+        private static readonly ConcurrentDictionary<long, (string Name, DateTime Expires)> _chatLanguage =
+            new ConcurrentDictionary<long, (string, DateTime)>();
+
+        private static readonly TimeSpan LanguageCacheTtl = TimeSpan.FromMinutes(5);
+
+        private static bool TryGetCachedLanguage(long chatId, out string name)
+        {
+            name = null;
+            if (!_chatLanguage.TryGetValue(chatId, out var entry)) return false;
+            if (entry.Expires < DateTime.UtcNow) return false;
+            name = entry.Name;
+            return true;
+        }
+
+        // One entry per chat the bot has ever seen. Bounded for the same reason the migration
+        // caches are - nothing else evicts from it. Size is tracked with a counter because
+        // ConcurrentDictionary.Count takes every bucket lock, and this is a hot path.
+        private const int LanguageCacheLimit = 100000;
+        private static int _chatLanguageCount;
+
+        private static string CacheLanguage(long chatId, RedisValue value)
+        {
+            var name = value.HasValue ? value.ToString() : null;
+            var entry = (name, DateTime.UtcNow.Add(LanguageCacheTtl));
+            if (_chatLanguage.ContainsKey(chatId))
+            {
+                _chatLanguage[chatId] = entry; // refresh in place, no growth
+            }
+            else if (Volatile.Read(ref _chatLanguageCount) < LanguageCacheLimit &&
+                     _chatLanguage.TryAdd(chatId, entry))
+            {
+                Interlocked.Increment(ref _chatLanguageCount);
+            }
+            return name;
+        }
+
+        private static string ReadChatLanguage(long chatId)
+        {
+            if (TryGetCachedLanguage(chatId, out var cached)) return cached;
+            return CacheLanguage(chatId, Redis.db.StringGetAsync($"chat:{chatId}:language").Result);
+        }
+
+        internal static async Task<string> ReadChatLanguageAsync(long chatId)
+        {
+            if (TryGetCachedLanguage(chatId, out var cached)) return cached;
+            return CacheLanguage(chatId, await Redis.db.StringGetAsync($"chat:{chatId}:language"));
+        }
+
+        /// <summary>Maps a stored language name onto the in-memory snapshot, falling back to English.</summary>
+        internal static Language ResolveLanguage(string name)
+        {
+            if (!string.IsNullOrEmpty(name))
+            {
+                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == name);
+                if (res != null) return res;
+            }
+            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+        }
+
         public static Language GetGroupLanguage(Message uMessage, bool InGroupOnly)
         {
             if (InGroupOnly)
             {
-                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
-                if (lang.HasValue)
-                {
-                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
-                    try
-                    {
-                        if (res != null)
-                        {
-                            return res;
-                        }
-                        else
-                        {
-                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                        }
-                    }
-                    catch (NullReferenceException e)
-                    {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                    }
-                }
-                else
-                {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                }
+                return ResolveLanguage(ReadChatLanguage(uMessage.Chat.Id));
             }
             else if (uMessage.From.LanguageCode != null)
             {
@@ -250,30 +297,7 @@ namespace Enforcer5.Helpers
             }
             else
             {
-                var lang = Redis.db.StringGetAsync($"chat:{uMessage.Chat.Id}:language").Result;
-                if (lang.HasValue)
-                {
-                    var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
-                    try
-                    {
-                        if (res != null)
-                        {
-                            return res;
-                        }
-                        else
-                        {
-                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                        }
-                    }
-                    catch (NullReferenceException e)
-                    {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                    }
-                }
-                else
-                {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                }
+                return ResolveLanguage(ReadChatLanguage(uMessage.Chat.Id));
             }
 
         }
@@ -293,30 +317,13 @@ namespace Enforcer5.Helpers
 
         public static Language GetGroupLanguage(long chatId)
         {
-            var lang = Redis.db.StringGetAsync($"chat:{chatId}:language").Result;
-            if (lang.HasValue)
-            {
-                var res = Program.LangaugeList.FirstOrDefault(x => x.Name == lang);
-                try
-                {
-                    if (res != null)
-                    {
-                        return res;
-                    }
-                    else
-                    {
-                        return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                    }
-                }
-                catch (NullReferenceException e)
-                {
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                }
-            }
-            else
-            {
-                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-            }
+            return ResolveLanguage(ReadChatLanguage(chatId));
+        }
+
+        /// <summary>Async twin for the update hot path; usually served from the cache.</summary>
+        internal static async Task<Language> GetGroupLanguageAsync(long chatId)
+        {
+            return ResolveLanguage(await ReadChatLanguageAsync(chatId));
         }
 
         public static void IntialiseLanguages()
@@ -761,75 +768,87 @@ namespace Enforcer5.Helpers
             return false;
         }
 
-        public static async void IsRekt(Update update)
+        /// <summary>
+        /// Enforces the global ban list. This was previously `async void` with its Redis reads
+        /// sitting outside the try, so a Redis timeout escaped onto the thread pool as an unhandled
+        /// exception and terminated the process. Reads now come from the message context and the
+        /// whole body is guarded.
+        /// </summary>
+        internal static async Task IsRekt(MessageContext ctx)
         {
+            var update = ctx.Update;
             if (update.Message.Chat.Type != ChatType.Supergroup)
                 return;
-            var watch = Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:watch", update.Message.From.Id).Result;
-            if (watch) return;
-            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.From.Id}").Result;
+            if (ctx.Watched) return;
+
+            // The context fetched globalBan for the joining user on a join message, the sender
+            // otherwise - matching who we report on below.
+            var isBanned = ctx.GlobalBan;
             var name = update.Message.From.FirstName;
             var id = update.Message.From.Id;
             if (update.Message.NewChatMember != null)
             {
-                isBanned = Redis.db.HashGetAllAsync($"globalBan:{update.Message.NewChatMember.Id}").Result;
                 name = update.Message.NewChatMember.FirstName;
                 id = update.Message.NewChatMember.Id;
-            }                
+            }
+
             try
             {
                 long banned = 0;
-                    if(isBanned.Length > 0)
-                        banned = long.Parse(isBanned[0].Value);          
-                if (banned == 1)
-                {
-                    var reason = isBanned[1].Value;
-                    var time = isBanned[2].Value;
-                    if (update.Message.Chat.Id == Constants.SupportId)
-                    {
-                        var notified =  isBanned.Where(e => e.Name.Equals("notified")).FirstOrDefault().Value;
-                        if (!notified.HasValue)
-                        {
-                             Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
-                             Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
+                if (isBanned != null && isBanned.Length > 0)
+                    banned = long.Parse(isBanned[0].Value);
+                if (banned != 1) return;
 
-                        }
-                        return;
+                // Records are written as banned/motivation/time. A short one is malformed; the old
+                // code reached the same outcome by indexing past the end and being caught below.
+                if (isBanned.Length < 3) return;
+
+                var reason = isBanned[1].Value;
+                if (update.Message.Chat.Id == Constants.SupportId)
+                {
+                    var notified = isBanned.Where(e => e.Name.Equals("notified")).FirstOrDefault().Value;
+                    if (!notified.HasValue)
+                    {
+                        // Mark notified only after the notice has gone out; setting it here would
+                        // suppress the record forever if the dispatched send never ran.
+                        Bot.DispatchAction(() =>
+                        {
+                            Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
+                            Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
+                        }, "IsRekt");
                     }
-                    Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
-                    var lang = Methods.GetGroupLanguage(update.Message,true).Doc;                    
-                    
+                    return;
+                }
+
+                Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
+                var lang = ctx.Lang;
+
+                Bot.DispatchAction(() =>
+                {
                     try
-                    {                        
+                    {
                         var temp = BanUser(update.Message.Chat.Id, id, lang);
                         if (temp)
                         {
                             SaveBan(id, "ban");
-                            var temp2 = Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
+                            Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
                             Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                         }
-                                                  
                     }
                     catch (AggregateException e)
                     {
                         if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
                         {
-                            var temp = Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+                            Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
                             return;
                         }
                         Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
-                        return;
                     }
-                    return;
-                }
-                else
-                {
-                    return;
-                }
+                }, "IsRekt");
             }
             catch (Exception e)
             {
-                return;
+                LogHelper.Error($"IsRekt in {update.Message.Chat.Id} failed: {e.Message}");
             }
         }
 
@@ -894,8 +913,13 @@ namespace Enforcer5.Helpers
              Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
              Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
         }
+        // The timer fires every 30s and the scan is not instant. Without this, a slow run simply
+        // overlaps the next one and they pile up.
+        private static int _checkingTempBans;
+
         internal static void CheckTempBans(object obj)
         {
+            if (Interlocked.CompareExchange(ref _checkingTempBans, 1, 0) != 0) return;
             try
             {
 #if NORMAL
@@ -934,8 +958,11 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                Bot.Send($"{e.Message}", Constants.Devs[0]);
+                LogHelper.Error($"CheckTempBans failed: {e.Message}");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _checkingTempBans, 0);
             }
         }
 
@@ -1268,6 +1295,7 @@ namespace Enforcer5.Helpers
         public static void SetGroupLang(string newLang, long chatId)
         {
             Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
+            _chatLanguage[chatId] = (newLang, DateTime.UtcNow.Add(LanguageCacheTtl));
         }
 
         // Removed: the scheduled 45-minute self-restart. It existed because the old Windows host

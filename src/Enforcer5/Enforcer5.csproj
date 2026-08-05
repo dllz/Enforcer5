@@ -10,6 +10,10 @@
     <!-- Command dispatch is reflection-based (Bot.Initialize scans for [Command]/[Callback]/[Query]),
          which trimming would break. -->
     <PublishTrimmed>false</PublishTrimmed>
+    <!-- Long-running server process with a high-concurrency update path; workstation GC is the
+         wrong default here. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

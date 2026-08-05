@@ -53,9 +53,9 @@ namespace Enforcer5
                 {
                     try
                     {
-                          LanguageHelper.UploadFile(fileid, id,
-                            update.Message.ReplyToMessage.Document.FileName,
-                            update.Message.MessageId);
+                        var messageId = update.Message.MessageId;
+                        var fileName = update.Message.ReplyToMessage.Document.FileName;
+                        Bot.Dispatch(() => LanguageHelper.UploadFile(fileid, id, fileName, messageId));
                     }
                     catch (Exception e)
                     {

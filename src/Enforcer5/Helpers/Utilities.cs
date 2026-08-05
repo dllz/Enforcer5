@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Handlers;
@@ -111,7 +112,12 @@ namespace Enforcer5.Helpers
 
         internal static void MonitorLanguageDirectory()
         {
+            // Seed from the current contents. Starting at null made the first tick always compare
+            // unequal, so every start re-parsed all the XML five seconds in - right into the
+            // restart burst.
             string state = null;
+            try { state = GetLanguageDirectoryState(); } catch (Exception e) { }
+
             while (true)
             {
                 Thread.Sleep(5000);
@@ -153,7 +159,181 @@ namespace Enforcer5.Helpers
 
         private static readonly CancellationTokenSource _receiverCts = new CancellationTokenSource();
         internal static CancellationToken ShutdownToken => _receiverCts.Token;
-        internal static void StopReceiving() => _receiverCts.Cancel();
+
+        /// <summary>
+        /// Stops polling, then lets the queued updates finish before the caller exits. Cancelling
+        /// the consumers outright would discard whatever is still queued, and the offset has
+        /// already advanced past it.
+        /// </summary>
+        internal static void StopReceiving()
+        {
+            _receiverCts.Cancel();
+            _updates.Writer.TryComplete();
+            try
+            {
+                Task.WhenAll(_consumers).Wait(TimeSpan.FromSeconds(15));
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Drain on shutdown failed: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Updates are handed to a bounded queue and drained by a fixed set of async consumers.
+        /// Previously every update spawned unbounded thread-pool work, so a restart burst starved
+        /// the pool instead of degrading. A full queue now blocks the poll loop, which is the
+        /// back-pressure we want.
+        /// </summary>
+        private const int UpdateConsumers = 32;
+
+        // Deliberately modest. The offset advances when an update is received, so anything still
+        // queued at a hard kill is lost - a smaller queue bounds that window while still smoothing
+        // a restart burst.
+        private const int UpdateQueueDepth = 200;
+
+        // Carries when we received the update, so staleness checks in the handlers measure
+        // Telegram-to-us latency rather than however long it then sat in this queue.
+        private static readonly Channel<(Update Update, DateTime ReceivedAt)> _updates =
+            Channel.CreateBounded<(Update, DateTime)>(
+            new BoundedChannelOptions(UpdateQueueDepth)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = false,
+                SingleWriter = true
+            });
+
+        // Assigned once, before polling starts, so StopReceiving cannot enumerate it mid-build.
+        private static Task[] _consumers = Array.Empty<Task>();
+
+        private static void StartUpdateConsumers()
+        {
+            var started = new Task[UpdateConsumers];
+            for (var i = 0; i < UpdateConsumers; i++)
+                started[i] = Task.Run(ConsumeUpdatesAsync);
+            _consumers = started;
+        }
+
+        /// <summary>
+        /// Drains the update queue. The loop is supervised: a consumer that dies and is not
+        /// replaced silently reduces throughput, and losing all of them would leave the process
+        /// alive but deaf, which is worse than crashing. Nothing in here is allowed to escape.
+        /// </summary>
+        private static async Task ConsumeUpdatesAsync()
+        {
+            while (true)
+            {
+                try
+                {
+                    // No token: once the writer is completed this returns false and we exit
+                    // cleanly, having drained whatever was still queued.
+                    while (await _updates.Reader.WaitToReadAsync())
+                    {
+                        while (_updates.Reader.TryRead(out var queued))
+                        {
+                            try
+                            {
+                                await UpdateHandler.RouteAsync(queued.Update, queued.ReceivedAt);
+                            }
+                            catch (Exception e)
+                            {
+                                LogHelper.Error($"Update {queued.Update?.Id} failed: {AsApiError(e)?.Message ?? e.Message}");
+                            }
+                        }
+                    }
+                    return; // channel completed and empty
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"Update consumer faulted, restarting: {e.Message}");
+                    // Guard against a fault that reproduces immediately turning this into a spin.
+                    try { await Task.Delay(1000); } catch { }
+                }
+            }
+        }
+
+        // Blocking, Telegram-facing work is bounded separately from update routing. If the
+        // consumers awaited it, a rate-limited chat could park all of them, fill the queue, and
+        // stop the poll loop for every chat at once.
+        //
+        // Two gates, deliberately. Enforcement can hold a permit for a minute (Bot.Send sleeps out
+        // a 429; KickUser makes many blocking calls), so it must not share with work a user is
+        // waiting on: Telegram discards an unanswered inline query after about ten seconds, and a
+        // callback leaves the button spinning. Sharing one gate would let a single raided group
+        // stall every command, button and inline query bot-wide.
+        private static readonly SemaphoreSlim _actionGate = new SemaphoreSlim(32);
+        private static readonly SemaphoreSlim _interactiveGate = new SemaphoreSlim(64);
+
+        /// <summary>
+        /// Runs blocking enforcement on the pool without holding up an update consumer, capped so
+        /// a raid cannot spawn unbounded concurrent kicks. Fire-and-forget; never throws.
+        /// </summary>
+        internal static void DispatchAction(Action work, [CallerMemberName] string name = "")
+        {
+            Run(_actionGate, work, name);
+        }
+
+        /// <summary>
+        /// As DispatchAction, but for work a user is actively waiting on - commands, callbacks and
+        /// inline queries. Separate gate so an enforcement backlog cannot starve it.
+        /// </summary>
+        internal static void DispatchInteractive(Action work, [CallerMemberName] string name = "")
+        {
+            Run(_interactiveGate, work, name);
+        }
+
+        private static void Run(SemaphoreSlim gate, Action work, string name)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await gate.WaitAsync();
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"{name} could not be queued: {e.Message}");
+                    return;
+                }
+                try
+                {
+                    work();
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"{name} failed: {AsApiError(e)?.Message ?? e.Message}");
+                }
+                finally
+                {
+                    gate.Release();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Fire-and-forget background work that can never take the process down. Replaces the
+        /// `new Task(...).Start()` idiom, which scheduled on TaskScheduler.Current rather than the
+        /// pool and left exceptions to escape through async void.
+        ///
+        /// Do not add an Action overload: a lambda whose body returns Task binds to either, and
+        /// picking Action would silently drop the task - the async void trap again. Wrap sync work
+        /// as `() => { work(); return Task.CompletedTask; }` at the call site instead.
+        /// </summary>
+        internal static void Dispatch(Func<Task> work, [CallerMemberName] string name = "")
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await work();
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"{name} failed: {AsApiError(e)?.Message ?? e.Message}");
+                }
+            });
+        }
+
 
         public static async Task Initialize(string updateid = null)
         {
@@ -258,30 +438,35 @@ namespace Enforcer5.Helpers
                 }
             };
 
+            StartUpdateConsumers();
             await Api.ReceiveAsync(new EnforcerUpdateHandler(), receiverOptions, ShutdownToken);
         }
 
         /// <summary>
-        /// Routes polled updates to the existing handlers. Replaces the 13.x
+        /// Queues polled updates for the consumer pool. Replaces the 13.x
         /// OnUpdate/OnInlineQuery/OnCallbackQuery event model.
         /// </summary>
         private sealed class EnforcerUpdateHandler : IUpdateHandler
         {
-            public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+            public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {
-                switch (update.Type)
+                // Persist the offset here, on the receive thread, so it advances in order. Writing it
+                // from the consumers would let a later id land before an earlier update finished and
+                // a restart would then skip work.
+                Redis.db.StringSetAsync(OffsetKey, update.Id);
+
+                // Blocks the poll loop when the queue is full - that back-pressure is the point.
+                // No token: an OperationCanceledException here escapes ReceiveAsync and Initialize,
+                // reaching the unhandled handler as a terminating fault, so a planned shutdown
+                // would exit(5) and look like a crash to DeployBot. Writer completion ends this.
+                try
                 {
-                    case UpdateType.CallbackQuery:
-                        UpdateHandler.CallbackHandler(update.CallbackQuery);
-                        break;
-                    case UpdateType.InlineQuery:
-                        UpdateHandler.InlineQueryReceived(update.InlineQuery);
-                        break;
-                    default:
-                        UpdateHandler.UpdateReceived(update);
-                        break;
+                    await _updates.Writer.WriteAsync((update, DateTime.Now), CancellationToken.None);
                 }
-                return Task.CompletedTask;
+                catch (ChannelClosedException)
+                {
+                    // shutting down
+                }
             }
 
             public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
@@ -315,7 +500,7 @@ namespace Enforcer5.Helpers
 
         internal static Task<Message> Edit(long id, int msgId, string text, InlineKeyboardMarkup replyMarkup = null)
         {
-            Bot.MessagesSent++;
+            Interlocked.Increment(ref MessagesSent);
             return Bot.Api.EditMessageText(id, msgId, text, replyMarkup: replyMarkup);
         }
 
@@ -347,7 +532,12 @@ namespace Enforcer5.Helpers
             return api != null && api.ErrorCode == 400 && api.Message.Contains("can't parse entities");
         }
 
-        /// <summary>Sleeps for the interval Telegram asked for on a 429, or a sane default.</summary>
+        /// <summary>
+        /// Sleeps for the interval Telegram asked for on a 429, or a sane default. Honour the full
+        /// RetryAfter - backing off for less just earns another 429. This parks the calling thread,
+        /// so hot-path callers use WaitOutRateLimitAsync; the fix for the thread-starvation this
+        /// caused is fewer callers, not a shorter wait.
+        /// </summary>
         private static void WaitOutRateLimit(ApiRequestException api)
         {
             var seconds = api?.Parameters?.RetryAfter ?? 5;
@@ -360,7 +550,7 @@ namespace Enforcer5.Helpers
             Message result = null;
             try
             {
-                MessagesSent++;
+                Interlocked.Increment(ref MessagesSent);
                 result = Bot.Api.SendMessage(id, message, parsemode,
                     replyParameters: messageId == -1 ? null : new ReplyParameters { MessageId = messageId },
                     replyMarkup: customMenu).Result;
@@ -418,7 +608,7 @@ namespace Enforcer5.Helpers
             Message result = null;
             try
             {
-                MessagesSent++;
+                Interlocked.Increment(ref MessagesSent);
                 result = Api.SendMessage(id, message, parseMode,
                     linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
                     replyMarkup: customMenu).Result;
@@ -498,7 +688,7 @@ namespace Enforcer5.Helpers
         }
         internal static Message SendReply(string message, long chatid, int msgid, InlineKeyboardMarkup keyboard = null, [CallerMemberName]string parentMethod = "")
         {
-            MessagesSent++;
+            Interlocked.Increment(ref MessagesSent);
             Message result = null;
             try
             {
@@ -547,10 +737,82 @@ namespace Enforcer5.Helpers
             return SendReply(message, msg.Message.Chat.Id, msg.Message.MessageId, parentMethod:parentMethod);
         }
         internal static Message SendReply(string message, Update msg, InlineKeyboardMarkup keyboard, [CallerMemberName]string parentMethod = "")
-        {            
+        {
             return SendReply(message, msg.Message.Chat.Id, msg.Message.MessageId, keyboard, parentMethod);
         }
-       
+
+        // ---------------------------------------------------------------------------------------
+        // Async twins of the send helpers, for the update hot path. The sync versions above stay
+        // for the command handlers, which are offloaded to the pool anyway. Calling a blocking
+        // Send from an async handler would park a consumer for the whole Telegram round-trip and
+        // undo the point of the conversion.
+        // ---------------------------------------------------------------------------------------
+
+        /// <summary>Awaits the interval Telegram asked for on a 429, without parking a thread.</summary>
+        private static Task WaitOutRateLimitAsync(ApiRequestException api)
+        {
+            var seconds = api?.Parameters?.RetryAfter ?? 5;
+            return Task.Delay(TimeSpan.FromSeconds(Math.Min(seconds, 60)));
+        }
+
+        private static async Task<Message> CatchSendAsync(string message, long id, InlineKeyboardMarkup customMenu = null,
+            ParseMode parsemode = ParseMode.None, int messageId = -1)
+        {
+            try
+            {
+                Interlocked.Increment(ref MessagesSent);
+                return await Api.SendMessage(id, message, parsemode,
+                    replyParameters: messageId == -1 ? null : new ReplyParameters { MessageId = messageId },
+                    replyMarkup: customMenu);
+            }
+            catch (Exception e)
+            {
+                // Last-resort path: never recurse back into the error channel.
+                LogHelper.Error($"CatchSendAsync to {id} failed: {AsApiError(e)?.Message ?? e.Message}");
+                return null;
+            }
+        }
+
+        internal static async Task<Message> SendAsync(string message, long id,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+        {
+            try
+            {
+                Interlocked.Increment(ref MessagesSent);
+                return await Api.SendMessage(id, message, parseMode,
+                    linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
+                    replyMarkup: customMenu);
+            }
+            catch (Exception e)
+            {
+                var api = AsApiError(e);
+
+                if (api?.ErrorCode == 429)
+                {
+                    await WaitOutRateLimitAsync(api);
+                    return await CatchSendAsync(message, id, customMenu, parseMode);
+                }
+                if (IsParseFailure(api))
+                {
+                    // Send it unformatted rather than losing the message entirely.
+                    return await CatchSendAsync(message, id, customMenu, ParseMode.None);
+                }
+                if (IsUnreachable(api) || (api != null && api.Message.Contains("bot can't send messages to bots")))
+                {
+                    return null;
+                }
+
+                LogHelper.Error($"SendAsync to {id} failed: {api?.Message ?? e.Message}");
+                return null;
+            }
+        }
+
+        internal static Task<Message> SendAsync(string message, Update chatUpdate,
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
+        {
+            return SendAsync(message, chatUpdate.Message.Chat.Id, customMenu, parseMode);
+        }
+
 
         public static Boolean DeleteMessage(long chatId, int msgid)
         {
@@ -693,12 +955,38 @@ namespace Enforcer5.Helpers
             {
                 if (_redis == null || !_redis.IsConnected)
                 {
-                    var options = ConfigurationOptions.Parse(RegHelper.GetRequired("RedisConnection"));
+                    var connectionString = RegHelper.GetRequired("RedisConnection");
+                    var options = ConfigurationOptions.Parse(connectionString);
                     var password = RegHelper.GetRegValue("RedisPassword");
                     if (!string.IsNullOrEmpty(password))
                         options.Password = password;
                     options.AllowAdmin = true;          // required for the BGSAVE in SaveRedis()
                     options.AbortOnConnectFail = false; // survive Redis restarting under us
+
+                    // Supply timeouts only where the connection string is silent, so operator tuning
+                    // in the systemd unit still wins. The 5s SE.Redis default is too tight for a
+                    // shared instance under a restart burst.
+                    var declared = new HashSet<string>(
+                        connectionString.Split(',')
+                            .Select(part => part.Split('=')[0].Trim())
+                            .Where(name => name.Length > 0),
+                        StringComparer.OrdinalIgnoreCase);
+
+                    if (!declared.Contains("connectTimeout")) options.ConnectTimeout = 15000;
+                    if (!declared.Contains("syncTimeout")) options.SyncTimeout = 15000;
+                    if (!declared.Contains("asyncTimeout")) options.AsyncTimeout = 15000;
+                    if (!declared.Contains("connectRetry")) options.ConnectRetry = 3;
+                    if (!declared.Contains("keepAlive")) options.KeepAlive = 60;
+                    options.ReconnectRetryPolicy = new ExponentialRetry(1000);
+
+                    // The instance is shared with blackwolf; without this CLIENT LIST cannot tell
+                    // the consumers apart.
+                    if (!declared.Contains("name"))
+#if PREMIUM
+                        options.ClientName = "enforcer-premium";
+#else
+                        options.ClientName = "enforcer-normal";
+#endif
 
                     _redis = ConnectionMultiplexer.Connect(options);
                     _db = _redis.GetDatabase(Constants.EnforcerDb);

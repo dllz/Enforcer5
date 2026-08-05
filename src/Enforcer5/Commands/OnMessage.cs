@@ -1,542 +1,425 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
 #pragma warning disable CS0168
 namespace Enforcer5
 {
+    /// <summary>
+    /// Per-message checks. Every handler reads its settings from the <see cref="MessageContext"/>
+    /// built once per update, so the decision path touches neither Redis nor Telegram and runs
+    /// inline on an update consumer.
+    ///
+    /// Enforcement (kick/ban/warn/tempban, and the replies that go with it) is still synchronous
+    /// and can block for a minute or more behind a Telegram 429, so it goes through
+    /// Bot.DispatchAction. Awaiting it here would let one rate-limited chat park every consumer,
+    /// fill the update queue, and stop the poll loop for every other chat.
+    /// </summary>
     public static class OnMessage
     {
-        public static void AntiFlood(Update update)
+        internal static async Task AntiFlood(MessageContext ctx)
         {
-            try
+            var update = ctx.Update;
+            // Measured from receipt, not from now: queue time must not count here.
+            var time = (ctx.ReceivedAt - update.Message.Date);
+            if (time.TotalSeconds > 7)
             {
-                var time = (DateTime.Now - update.Message.Date);
-                if (time.TotalSeconds > 7)
+                return;
+            }
+            if (ctx.Watched)
+            {
+                return;
+            }
+
+            var chatId = ctx.ChatId;
+            AntiLength(ctx);
+
+            if (ctx.Setting("Flood").Equals("yes"))
+            {
+                return;
+            }
+
+            var msgType = Methods.GetContentType(update.Message);
+            var lang = ctx.Lang;
+            if (isIgnored(ctx, msgType))
+            {
+                return;
+            }
+
+            var msgs = ctx.SpamCount;
+            int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;
+            if (num == 0) num = 1;
+            var maxTime = TimeSpan.FromSeconds(6);
+            Redis.db.StringSetAsync($"spam:{chatId}:{ctx.UserId}", num + 1, maxTime);
+
+            int maxmsgs;
+            if (int.TryParse(ctx.FloodSetting("MaxFlood").ToString(), out maxmsgs) && num == maxmsgs + 1)
+            {
+                var action = ctx.FloodSetting("ActionFlood").ToString();
+                var name = update.Message.From.FirstName;
+                if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+                var userid = ctx.UserId;
+                var groupId = chatId;
+
+                Bot.DispatchAction(() =>
                 {
-                    return;
-                }
-                var chatId = update.Message.Chat.Id;
-                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-                if (watch)
-                {
-                    return;
-                }
-                new Task(() => { AntiLength(update); }).Start();
-                var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
-                if (flood.Equals("yes"))
-                {
-                    return;
-                }
-                
-                
-                var msgType = Methods.GetContentType(update.Message);
-                XDocument lang;
+                    try
+                    {
+                        switch (action)
+                        {
+                            case "kick":
+                                var res = Methods.KickUser(chatId, userid, lang);
+                                if (res)
+                                {
+                                    Methods.SaveBan(userid, "flood");
+                                    Bot.Send(Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {userid}"), update);
+                                }
+                                break;
+                            case "ban":
+                                res = Methods.BanUser(chatId, userid, lang);
+                                if (res)
+                                {
+                                    Methods.SaveBan(userid, "flood");
+                                    Methods.AddBanList(chatId, userid, update.Message.From.FirstName,
+                                        Methods.GetLocaleString(lang, "bannedForFlood", ".."));
+                                    Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
+                                }
+                                break;
+                            case "warn":
+                                Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                                Methods.SaveBan(userid, "flood");
+                                break;
+                            case "tempban":
+                                var time2 = Methods.GetGroupTempbanTime(groupId);
+                                var timeBanned = TimeSpan.FromMinutes(time2);
+                                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                                var message = Methods.GetLocaleString(lang, "tempbannedForFlood",
+                                    $"{userid}", timeText);
+                                if (Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message))
+                                {
+                                    Methods.SaveBan(userid, "flood");
+                                }
+                                break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }, "AntiFlood");
+            }
+        }
+
+        private static void AntiTextLenght(MessageContext ctx)
+        {
+            var update = ctx.Update;
+            var groupId = ctx.ChatId;
+            var settings = ctx.TextLength;
+            if (!MessageContext.Field(settings, "enabled").Equals("yes")) return;
+
+            var text = update.Message.Text;
+            int intml;
+            int intmline;
+            MessageContext.Field(settings, "maxlength").TryParse(out intml);
+            MessageContext.Field(settings, "maxlines").TryParse(out intmline);
+            var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
+            if (text.Length < intml && lines.Length < intmline) return;
+
+            var action = MessageContext.Field(settings, "action");
+            var lang = ctx.Lang;
+            var userid = ctx.UserId;
+            Bot.DispatchAction(() =>
+            {
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
+                    Bot.DeleteMessage(groupId, update.Message.MessageId);
                 }
                 catch (Exception e)
                 {
-                    try
-                    {
-                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
-                    }
-                    catch (NullReferenceException exception)
-                    {
-                        Console.WriteLine(exception);
+                    //moving on
+                }
+
+                string reply;
+                switch (action)
+                {
+                    case "kick":
+                        Methods.KickUser(groupId, userid, lang);
+                        reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
+                        Service.LogBotAction(groupId, reply);
+                        Bot.SendReply(reply, update);
                         return;
-                    }
-                }
-                if (isIgnored(chatId, msgType))
-                {
-                    return;
-                }
-                    var msgs = Redis.db.StringGetAsync($"spam:{chatId}:{update.Message.From.Id}").Result;
-                    int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;   
-                    if (num == 0) num = 1;
-                    var maxSpam = 8;                  
-                    var floodSettings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
-                    var maxMsgs = floodSettings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
-                    var maxTime = TimeSpan.FromSeconds(6);
-                    int maxmsgs;
-                    Redis.db.StringSetAsync($"spam:{chatId}:{update.Message.From.Id}", num + 1, maxTime);
-               // Bot.Send(num + "", update);
-                    if (int.TryParse(maxMsgs.Value.ToString(), out maxmsgs))
-                    {
-                       // Bot.Send($"{num} of {maxmsgs}", update);
-                        if (num == (int.Parse(maxMsgs.Value) + 1))
+                    case "ban":
+                        var res = Methods.BanUser(groupId, userid, lang);
+                        if (res)
                         {
-                            var action = floodSettings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
-                            var name = update.Message.From.FirstName;
-                            if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                            try
-                            {
-                                var userid = update.Message.From.Id;
-                                var groupId = update.Message.Chat.Id;
-                                switch (action.Value.ToString())
-                                {
-                                    case "kick":
-                                        var res = Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                        if (res)
-                                        {
-                                        Methods.SaveBan(update.Message.From.Id, "flood");
-                                            Bot.Send(
-                                                Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {update.Message.From.Id}"),
-                                                update);
-                                    }
-                                    break;
-                                    case "ban":
-                                     res = Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                        if (res)
-                                        {
-                                        Methods.SaveBan(update.Message.From.Id, "flood");
-                                            Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                                Methods.GetLocaleString(lang, "bannedForFlood", ".."));
-                                            Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
-                                           
-                                    }
-                                        break;
-                                case "warn":
-                                        Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
-                                    Methods.SaveBan(update.Message.From.Id, "flood");
-                                    break;
-                                case "tempban":
-
-                                    var time2= Methods.GetGroupTempbanTime(groupId);
-                                    var timeBanned = TimeSpan.FromMinutes(time2);
-                                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                    var message = Methods.GetLocaleString(lang, "tempbannedForFlood",
-                                        $"{update.Message.From.Id}", timeText);
-                                    res = Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message);
-                                    if (res)
-                                    {
-                                        Methods.SaveBan(update.Message.From.Id, "flood");
-                                    }
-                                    break;
-                             }
-
-                            }
-                            catch (Exception e)
-                            {
-                                
-                            }
-                        }
-                    }
-                
-            }
-            catch (Exception e)
-            {
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-            }
-        }
-
-        private static void AntiTextLenght(Update update)
-        {
-            var groupId = update.Message.Chat.Id;
-            var settings = Redis.db.HashGetAllAsync($"chat:{groupId}:antitextlengthsettings").Result;
-            var enabled = settings.Where(e => e.Name.Equals("enabled")).FirstOrDefault();
-            if (enabled.Value.Equals("yes"))
-            {                
-                var text = update.Message.Text;
-                var chartext = text.ToCharArray();
-                int intml;
-                int intmline;
-                settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
-                settings.Where(e => e.Name.Equals("maxlines")).FirstOrDefault().Value.TryParse(out intmline);
-                var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
-                if (text.Length >= intml || lines.Length >= intmline)
-                {
-                    try
-                    {
-                        Bot.DeleteMessage(groupId, update.Message.MessageId);
-                    }
-                    catch (Exception e)
-                    {
-                        //moving on
-                    }
-                    var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
-                    XDocument lang;
-                    try
-                    {
-                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                    }
-                    catch (NullReferenceException e)
-                    {
-                        try
-                        {
-                            lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
-                        }   
-                        catch (NullReferenceException exception)
-                        {
-                            Console.WriteLine(exception);
-                            return;
-                        }
-                    }
-                    var userid = update.Message.From.Id;
-                    string reply;
-                    switch (action.Value)
-                    {
-                        case "kick":
-                            Methods.KickUser(groupId, userid, lang);
-                            reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
+                            Methods.SaveBan(userid, "longmessages");
+                            reply = Methods.GetLocaleString(lang, "banformesslength", userid);
                             Service.LogBotAction(groupId, reply);
                             Bot.SendReply(reply, update);
                             return;
-                            break;
-                        case "ban":
-                            var res = Methods.BanUser(groupId, userid, lang);
-                            if (res)
-                            {
-                                Methods.SaveBan(userid, "longmessages");
-                                reply = Methods.GetLocaleString(lang, "banformesslength", userid);
-                                Service.LogBotAction(groupId, reply);
-                                Bot.SendReply(Methods.GetLocaleString(lang, "banformesslength", userid), update);
-                                return;
-                            }
-                            break;
-                        case "Warn":
-                            Commands.Warn(userid, groupId, update, targetnick:userid.ToString());
-                            return;
-                            break;
-                        case "tempban":
-
-                            var time = Methods.GetGroupTempbanTime(groupId);
-                            var timeBanned = TimeSpan.FromMinutes(time);
-                            string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                            var message = Methods.GetLocaleString(lang, "tempbanformesslength",
-                                $"{update.Message.From.Id}", timeText);
-                            Service.LogBotAction(groupId, message);
-                            Commands.Tempban(userid, groupId, time, userid.ToString(), message: message);
-                            break;
-                        case "default":
-                            Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
-                            break;
-                    }
+                        }
+                        break;
+                    case "Warn":
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                        return;
+                    case "tempban":
+                        var time = Methods.GetGroupTempbanTime(groupId);
+                        var timeBanned = TimeSpan.FromMinutes(time);
+                        string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                        var message = Methods.GetLocaleString(lang, "tempbanformesslength",
+                            $"{userid}", timeText);
+                        Service.LogBotAction(groupId, message);
+                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message);
+                        break;
+                    case "default":
+                        Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
+                        break;
                 }
-            }
+            }, "AntiTextLenght");
         }
 
-        private static void AntiNameLength(Update update)
+        private static void AntiNameLength(MessageContext ctx)
         {
-            var groupId = update.Message.Chat.Id;
-            var settings = Redis.db.HashGetAllAsync($"chat:{groupId}:antinamelengthsettings").Result;
-            var enabled = settings.Where(e => e.Name.Equals("enabled")).FirstOrDefault();
-            if (enabled.Value.Equals("yes"))
+            var update = ctx.Update;
+            var groupId = ctx.ChatId;
+            var settings = ctx.NameLength;
+            if (!MessageContext.Field(settings, "enabled").Equals("yes")) return;
+
+            var text = update.Message.From.FirstName;
+            if (update.Message.From.LastName != null)
+                text = $"{text}{update.Message.From.LastName}";
+            int intml = 40;
+            MessageContext.Field(settings, "maxlength").TryParse(out intml);
+            if (text.Length < intml) return;
+
+            var action = MessageContext.Field(settings, "action");
+            var lang = ctx.Lang;
+            var userid = ctx.UserId;
+            Bot.DispatchAction(() =>
             {
-                var text = update.Message.From.FirstName;
-                if(update.Message.From.LastName != null)
-                    text = $"{text}{update.Message.From.LastName}";
-                int intml = 40;
-                settings.Where(e => e.Name.Equals("maxlength")).FirstOrDefault().Value.TryParse(out intml);
-                if (text.Length >= intml)
+                string reply;
+                switch (action)
                 {
-                    var action = settings.Where(e => e.Name.Equals("action")).FirstOrDefault();
-                    XDocument lang;
-                    try
-                    {
-                        lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                    }
-                    catch (NullReferenceException e)
-                    {
-                        try
+                    case "kick":
+                        Methods.KickUser(groupId, userid, lang);
+                        reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
+                        Service.LogBotAction(groupId, reply);
+                        Bot.SendReply(reply, update);
+                        break;
+                    case "ban":
+                        var res = Methods.BanUser(groupId, userid, lang);
+                        if (res)
                         {
-                            lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
-                        }
-                        catch (NullReferenceException exception)
-                        {
-                            Console.WriteLine(exception);
-                            return;
-                        }
-                    }
-                    var userid = update.Message.From.Id;
-                    string reply;
-                    switch (action.Value)
-                    {
-                        case "kick":
-                            Methods.KickUser(groupId, userid, lang);
-                            reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
+                            Methods.SaveBan(userid, "namelength");
+                            reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
                             Service.LogBotAction(groupId, reply);
                             Bot.SendReply(reply, update);
+                        }
+                        break;
+                    case "Warn":
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                        break;
+                    case "tempban":
+                        var time = Methods.GetGroupTempbanTime(groupId);
+                        var timeBanned = TimeSpan.FromMinutes(time);
+                        string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                        var message = Methods.GetLocaleString(lang, "tempbanfornamelength",
+                            $"{userid}", timeText);
+                        Service.LogBotAction(groupId, message);
+                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message);
+                        break;
+                    case "default":
+                        Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
+                        break;
+                }
+            }, "AntiNameLength");
+        }
+
+        /// <summary>
+        /// Decision only - every read comes from the context and the enforcement inside each branch
+        /// dispatches itself. Runs inline on the consumer because it does no I/O.
+        /// </summary>
+        internal static void AntiLength(MessageContext ctx)
+        {
+            try
+            {
+                AntiNameLength(ctx);
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"AntiNameLength in {ctx.ChatId} failed: {e.Message}\n{e.StackTrace}");
+            }
+            try
+            {
+                if (ctx.Message.Type == MessageType.Text)
+                    AntiTextLenght(ctx);
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"AntiTextLenght in {ctx.ChatId} failed: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
+        internal static Task CheckMedia(MessageContext ctx)
+        {
+            if (ctx.Watched) return Task.CompletedTask;
+
+            var message = ctx.Message;
+            var chatId = ctx.ChatId;
+            var media = Methods.GetContentType(message);
+            if (!ctx.MediaSetting(media).Equals("blocked")) return Task.CompletedTask;
+
+            var lang = ctx.Lang;
+            var name = $"{message.From.FirstName} [{message.From.Id}]";
+            if (message.From.Username != null)
+                name = $"{name} (@{message.From.Username})";
+            var configuredAction = ctx.MediaSetting("action").ToString();
+
+            // The warn counter is incremented and reset in the same unit of work as the action it
+            // gates. Doing the increment out here and dispatching only the action would let a
+            // dropped action reset someone's strike count for free.
+            Bot.DispatchAction(() =>
+            {
+                // Only needed once media is actually blocked, so it stays off the common path.
+                // This read used to be issued twice - once for HasValue and once for the value.
+                var configuredMax = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
+                var max = configuredMax.HasValue ? configuredMax : 2;
+                var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
+
+                var overLimit = current >= int.Parse(max);
+                var action = overLimit ? configuredAction : null;
+                if (overLimit)
+                {
+                    Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
+                }
+
+                if (overLimit)
+                {
+                    string reply;
+                    switch (action)
+                    {
+                        case "kick":
+                            Methods.KickUser(chatId, message.From.Id, lang);
+                            reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
+                            Service.LogBotAction(chatId, reply);
+                            Bot.SendReply(reply, message);
                             break;
                         case "ban":
-                            var res = Methods.BanUser(groupId, userid, lang);
+                            var res = Methods.BanUser(chatId, message.From.Id, lang);
                             if (res)
                             {
-                                Methods.SaveBan(userid, "namelength");
-                                reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
-                                Service.LogBotAction(groupId, reply);
-                                Bot.SendReply(reply, update);
-                            }
-                            break;
-                        case "Warn":
-                            Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
-                            break;
-                        case "tempban":
-                            var time = Methods.GetGroupTempbanTime(groupId);
-                            var timeBanned = TimeSpan.FromMinutes(time);
-                            string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                            var message = Methods.GetLocaleString(lang, "tempbanfornamelength",
-                                $"{update.Message.From.Id}", timeText);
-                            Service.LogBotAction(groupId, message);
-                            Commands.Tempban(userid, groupId, time, userid.ToString(), message:message);
-                            break;
-                        case "default":
-                            Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
-                            break;
-                    }
-                }
-
-            }
-        }
-
-        public static void AntiLength(Update update)
-        {
-            try
-            {
-                AntiNameLength(update);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-            }
-            try
-            {
-                if(update.Message.Type == MessageType.Text)
-                    AntiTextLenght(update);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Bot.Send($"@falconza shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-            }
-        }
-
-        public static void CheckMedia(Update update)
-        {
-            CheckMedia(update.Message);
-        }
-
-        public static void CheckMedia(Message message)
-        {
-            try
-            {                
-                var chatId = message.Chat.Id;
-                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", message.From.Id).Result;
-                if (watch) return;
-                var media = Methods.GetContentType(message);
-                var status = Redis.db.HashGetAsync($"chat:{chatId}:media", media).Result;
-                XDocument lang;
-                try
-                {
-                    lang = Methods.GetGroupLanguage(message,true).Doc;
-                }
-                catch (NullReferenceException e)
-                {
-                    try
-                    {
-                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
-                    }
-                    catch (NullReferenceException exception)
-                    {
-                        Console.WriteLine(exception);
-                        return;
-                    }
-                }
-                var allowed = status.Equals("blocked");
-                if (allowed)
-                {
-                    var name = $"{message.From.FirstName} [{message.From.Id}]";
-                    if (message.From.Username != null)
-                        name = $"{name} (@{message.From.Username})";
-                    var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result.HasValue
-                        ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result
-                        : 2;
-                    var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
-                    if (current >= int.Parse(max))
-                    {
-                        string reply;
-                        var action = Redis.db.HashGetAsync($"chat:{chatId}:media", "action").Result;
-                        Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
-                        switch (action.ToString())
-                        {
-                            case "kick":
-
-                                Methods.KickUser(chatId, message.From.Id, lang);
-                                reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
+                                Methods.SaveBan(message.From.Id, "media");
+                                reply = Methods.GetLocaleString(lang, "bannedformedia", name);
                                 Service.LogBotAction(chatId, reply);
-                                Bot.SendReply(
-                                    reply,
-                                    message);
-                                break;
-                            case "ban":
-                                var res = Methods.BanUser(chatId, message.From.Id, lang);
-                                if (res)
-                                {
-                                    Methods.SaveBan(message.From.Id, "media");
-                                    reply = Methods.GetLocaleString(lang, "bannedformedia", name);
-                                    Service.LogBotAction(chatId, reply);
-                                    Methods.AddBanList(chatId, message.From.Id, message.From.FirstName,
-                                        Methods.GetLocaleString(lang, "bannedformedia", ""));
-                                    Bot.SendReply(reply, message);
-                                }
-                                break;
-
-                            case "tempban":
-                                var time = Methods.GetGroupTempbanTime(chatId);
-                                var timeBanned = TimeSpan.FromMinutes(time);
-                                string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                var messageText = Methods.GetLocaleString(lang, "tempbannedformedia",
-                                    $"{name}, {message.From.Id}", timeText);
-                                Service.LogBotAction(chatId, messageText);
-                                Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText);
-                                break;
-                        }
+                                Methods.AddBanList(chatId, message.From.Id, message.From.FirstName,
+                                    Methods.GetLocaleString(lang, "bannedformedia", ""));
+                                Bot.SendReply(reply, message);
+                            }
+                            break;
+                        case "tempban":
+                            var time = Methods.GetGroupTempbanTime(chatId);
+                            var timeBanned = TimeSpan.FromMinutes(time);
+                            string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                            var messageText = Methods.GetLocaleString(lang, "tempbannedformedia",
+                                $"{name}, {message.From.Id}", timeText);
+                            Service.LogBotAction(chatId, messageText);
+                            Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText);
+                            break;
                     }
-                    else
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max),
-                            message);
-                    }
-                    try
-                    {
-                        Bot.DeleteMessage(chatId, message.MessageId);
-                    }
-                    catch (AggregateException e)
-                    {
-                        if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("message can't be deleted")))
-                        {
-                            return;
-                        }
-                        throw e;
-                    }
-
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-            }
+                else
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max), message);
+                }
+
+                Bot.DeleteMessage(chatId, message.MessageId);
+            }, "CheckMedia");
+
+            return Task.CompletedTask;
         }
 
-        public static void RightToLeft(Update update)
+        internal static async Task RightToLeft(MessageContext ctx)
         {
-            try
+            if (ctx.Watched) return;
+
+            var update = ctx.Update;
+            var chatId = ctx.ChatId;
+            var rtlStatus = ctx.CharSetting("Rtl");
+            var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
+            if (!status.Equals("ban") && !status.Equals("kick")) return;
+
+            var name = update.Message.From.FirstName;
+            const string rtl = "‮";
+            var lastName = "x";
+            if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+            if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
+            var text = update.Message.Text ?? "";
+            if (!text.Contains(rtl) && !name.Contains(rtl) && !lastName.Contains(rtl)) return;
+
+            var lang = ctx.Lang;
+            var userId = ctx.UserId;
+
+            Bot.DispatchAction(() =>
             {
-                var msgType = Methods.GetMediaType(update.Message);
-                var chatId = update.Message.Chat.Id;
-                var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-                if (watch) return;
-                XDocument lang;
                 try
                 {
-                    lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                }
-                catch (NullReferenceException e)
-                {
-                    try
+                    string reply;
+                    switch (status)
                     {
-                        lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
-                    }
-                    catch (NullReferenceException exception)
-                    {
-                        Console.WriteLine($"{exception}\n{e}\n\n");
-                        return;
-                    }
-                }
-                var rtlStatus = Redis.db.HashGetAsync($"chat:{chatId}:char", "Rtl").Result;
-                var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
-                if (status.Equals("ban") || status.Equals("kick"))
-                {
-                    var name = update.Message.From.FirstName;
-                    var rtl = "‮";
-                    var lastName = "x";
-                    if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                    if (update.Message.From.LastName != null) lastName = update.Message.From.LastName;
-                    var text = update.Message.Text;
-                    bool check = text.Contains(rtl) || name.Contains(rtl) || lastName.Contains(rtl);
-                    try
-                    {
-                        if (check)
-                        {
-                            string reply;
-                            switch (status)
+                        case "kick":
+                            Methods.KickUser(chatId, userId, lang);
+                            reply = Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {userId}");
+                            Service.LogBotAction(chatId, reply);
+                            Bot.Send(reply, update);
+                            break;
+                        case "ban":
+                            var res = Methods.BanUser(chatId, userId, lang);
+                            if (res)
                             {
-                                case "kick":
-
-                                    Methods.KickUser(chatId, update.Message.From.Id, lang);
-                                    reply = Methods.GetLocaleString(lang, "kickedForRtl",
-                                        $"{name}, {update.Message.From.Id}");
-                                    Service.LogBotAction(chatId, reply);
-                                    Bot.Send(
-                                        reply,
-                                        update);
-                                    break;
-                                case "ban":
-                                    var res = Methods.BanUser(chatId, update.Message.From.Id, lang);
-                                    if (res)
-                                    {
-                                        Methods.SaveBan(update.Message.From.Id, "rtl");
-                                        Methods.AddBanList(chatId, update.Message.From.Id, update.Message.From.FirstName,
-                                            Methods.GetLocaleString(lang, "bannedForRtl", ""));
-                                        reply = Methods.GetLocaleString(lang, "bannedForRtl",
-                                            $"{name}, {update.Message.From.Id}");
-                                        Service.LogBotAction(chatId, reply);
-                                        Bot.Send(
-                                            reply,
-                                            update);
-                                    }
-                                    break;
-
-                                case "tempban":
-                                    var time = Methods.GetGroupTempbanTime(chatId);
-                                    var timeBanned = TimeSpan.FromMinutes(time);
-                                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                                    var message = Methods.GetLocaleString(lang, "tempbannedForRtl",
-                                        $"{name}, {update.Message.From.Id}", timeText);
-                                    Service.LogBotAction(chatId, message);
-                                    Commands.Tempban(update.Message.From.Id, chatId,time, update.Message.From.Id.ToString(), message:message);
-                                    break;
+                                Methods.SaveBan(userId, "rtl");
+                                Methods.AddBanList(chatId, userId, update.Message.From.FirstName,
+                                    Methods.GetLocaleString(lang, "bannedForRtl", ""));
+                                reply = Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {userId}");
+                                Service.LogBotAction(chatId, reply);
+                                Bot.Send(reply, update);
                             }
-                        }
+                            break;
+                        case "tempban":
+                            var time = Methods.GetGroupTempbanTime(chatId);
+                            var timeBanned = TimeSpan.FromMinutes(time);
+                            string timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                            var message = Methods.GetLocaleString(lang, "tempbannedForRtl",
+                                $"{name}, {userId}", timeText);
+                            Service.LogBotAction(chatId, message);
+                            Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
+                            break;
                     }
-                    catch (Exception e)
-                    {
-                        Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-                    }
-
-                }               
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Bot.Send($"{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
-            }
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"RightToLeft action in {chatId} failed: {e.Message}\n{e.StackTrace}");
+                }
+            }, "RightToLeft");
         }
 
         private const string ArabicChars = "[ساینبتسیکبدثصکبثحصخبدوزطئظضچج]";
 
-        public static void ArabDetection(Update update)
+        internal static async Task ArabDetection(MessageContext ctx)
         {
-            var text = $"{update.Message.Text} {update.Message.From.FirstName} {update.Message.From.LastName} {update.Message.ForwardFrom?.FirstName} {update.Message.ForwardFrom?.LastName} {update.Message.From.Username} {update.Message.ForwardFrom?.Username}";
-            CharacterDetection(update, "Arab", ArabicChars, text);
-            RightToLeft(update);
+            var m = ctx.Message;
+            var text = $"{m.Text} {m.From.FirstName} {m.From.LastName} {m.ForwardFrom?.FirstName} {m.ForwardFrom?.LastName} {m.From.Username} {m.ForwardFrom?.Username}";
+            await CharacterDetection(ctx, "Arab", ArabicChars, text);
+            await RightToLeft(ctx);
         }
 
-        public static void ArabJoinDetection(Update update)
+        internal static Task ArabJoinDetection(MessageContext ctx)
         {
-            var text = $"{update.Message.NewChatMember.FirstName} {update.Message.NewChatMember.LastName}";
-            CharacterDetection(update, "Arab", ArabicChars, text);
+            var text = $"{ctx.Message.NewChatMember.FirstName} {ctx.Message.NewChatMember.LastName}";
+            return CharacterDetection(ctx, "Arab", ArabicChars, text);
         }
 
         /// <summary>
@@ -544,87 +427,71 @@ namespace Enforcer5
         /// in <paramref name="text"/> matches <paramref name="characterClass"/>.
         /// Users on the watch list are exempt.
         /// </summary>
-        private static void CharacterDetection(Update update, string setting, string characterClass, string text)
+        private static async Task CharacterDetection(MessageContext ctx, string setting, string characterClass, string text)
         {
-            var chatId = update.Message.Chat.Id;
-            var watch = Redis.db.SetContainsAsync($"chat:{chatId}:watch", update.Message.From.Id).Result;
-            if (watch) return;
+            if (ctx.Watched) return;
 
-            var status = Redis.db.HashGetAsync($"chat:{chatId}:char", setting).Result.ToString();
+            var status = ctx.CharSetting(setting).ToString();
             if (string.IsNullOrEmpty(status)) status = "allowed";
             if (status.Equals("allowed")) return;
 
-            var found = false;
-            for (int i = 0; i < text.Length; i++)
-            {
-                found = Regex.IsMatch(text[i].ToString(), characterClass);
-                if (found) break;
-            }
-            if (!found) return;
+            // One match over the whole string; this used to run the regex once per character.
+            if (!Regex.IsMatch(text, characterClass)) return;
 
-            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var userId = update.Message.From.Id;
-            var name = update.Message.From.FirstName;
-            if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
+            var chatId = ctx.ChatId;
+            var lang = ctx.Lang;
+            var userId = ctx.UserId;
+            var name = ctx.Message.From.FirstName;
+            if (ctx.Message.From.Username != null) name = $"{name} (@{ctx.Message.From.Username})";
+            var update = ctx.Update;
 
-            try
+            Bot.DispatchAction(() =>
             {
-                string reply;
-                switch (status)
+                try
                 {
-                    case "kick":
-                        Methods.KickUser(chatId, userId, lang);
-                        reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
-                        Service.LogBotAction(chatId, reply);
-                        Bot.Send(reply, update);
-                        break;
-                    case "ban":
-                        var res = Methods.BanUser(chatId, userId, lang);
-                        if (res)
-                        {
-                            Methods.SaveBan(userId, "arab");
-                            Methods.AddBanList(chatId, userId, update.Message.From.FirstName,
-                                Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
-
-                            reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");
+                    string reply;
+                    switch (status)
+                    {
+                        case "kick":
+                            Methods.KickUser(chatId, userId, lang);
+                            reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
                             Service.LogBotAction(chatId, reply);
                             Bot.Send(reply, update);
-                        }
-                        break;
-                    case "tempban":
-                        var time = Methods.GetGroupTempbanTime(chatId);
-                        var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
-                        var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
-                            $"{name}, {userId}", timeText);
-                        Service.LogBotAction(chatId, message);
-                        Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
-                        break;
+                            break;
+                        case "ban":
+                            var res = Methods.BanUser(chatId, userId, lang);
+                            if (res)
+                            {
+                                Methods.SaveBan(userId, "arab");
+                                Methods.AddBanList(chatId, userId, ctx.Message.From.FirstName,
+                                    Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
+
+                                reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");
+                                Service.LogBotAction(chatId, reply);
+                                Bot.Send(reply, update);
+                            }
+                            break;
+                        case "tempban":
+                            var time = Methods.GetGroupTempbanTime(chatId);
+                            var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
+                            var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
+                                $"{name}, {userId}", timeText);
+                            Service.LogBotAction(chatId, message);
+                            Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
+                            break;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"CharacterDetection action in {chatId} failed: {e.Message}");
+                }
+            }, "CharacterDetection");
         }
 
-        public static bool isIgnored(long chatId, string msgType)
+        internal static bool isIgnored(MessageContext ctx, string msgType)
         {
-            var status = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", msgType).Result;
-            if (status.HasValue)
-            {
-                if (status.Equals("no"))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
+            var status = MessageContext.Field(ctx.FloodExceptions, msgType);
+            return status.HasValue && status.Equals("no");
         }
     }
 }

@@ -24,21 +24,28 @@ namespace Enforcer5.Handlers
         // Written by the polling threads and read by SpamDetection() concurrently.
         internal static ConcurrentDictionary<long, SpamDetector> UserMessages = new ConcurrentDictionary<long, SpamDetector>();
 
-#if PREMIUM
-        private const string OffsetKey = "bot:last_Premium_update";
-#else
-        private const string OffsetKey = "bot:last_update";
-#endif
-
-        public static void UpdateReceived(Update update)
+        /// <summary>
+        /// Entry point for the update consumers. The consumer awaits this, so the work it covers is
+        /// what bounds concurrency - which is why only Redis-bound work is awaited here. Callbacks
+        /// and inline queries run blocking Telegram handlers, so they go to the action pool.
+        /// </summary>
+        internal static async Task RouteAsync(Update update, DateTime receivedAt)
         {
-            // Persist the offset so a restart resumes where we left off.
-            Redis.db.StringSetAsync(OffsetKey, update.Id);
-
-            if (update.Message == null) return;
-            if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
-                return; //toss it
-            new Task(() => { HandleUpdate(update); }).Start();
+            switch (update.Type)
+            {
+                case UpdateType.CallbackQuery:
+                    Bot.DispatchInteractive(() => HandleCallback(update.CallbackQuery), "HandleCallback");
+                    break;
+                case UpdateType.InlineQuery:
+                    Bot.DispatchInteractive(() => HandleInlineQuery(update.InlineQuery), "HandleInlineQuery");
+                    break;
+                default:
+                    if (update.Message == null) return;
+                    if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
+                        return; //toss it
+                    await HandleUpdate(update, receivedAt);
+                    break;
+            }
         }
         private static void Log(Update update, string text, Models.Commands command = null)
         {
@@ -72,346 +79,328 @@ namespace Enforcer5.Handlers
             Console.WriteLine($"{name} Query: {text} [{update.From.FirstName} {update.From.Id}]");
         }
 
-        private static async void HandleUpdate(Update update)
+        private static async Task HandleUpdate(Update update, DateTime receivedAt)
         {
             {
 #if PREMIUM
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
-                    var allowed = Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id).Result;
+                    var allowed = await Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id);
                     if (!allowed)
-                    {       
-                        Bot.Send(
-                            "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
-                            update);
-                        Bot.Api.LeaveChat(update.Message.Chat.Id);
+                    {
+                        // Fires for every message from a non-premium group, so it must not occupy
+                        // a consumer.
+                        Bot.DispatchAction(() =>
+                        {
+                            Bot.Send(
+                                "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
+                                update);
+                            Bot.Api.LeaveChat(update.Message.Chat.Id);
+                        }, "PremiumNotice");
                         return;
                     }
-                }                
-#endif  
-               
-                //return;
-                var bannedGroup = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id).Result;
-                var bannedUser = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id).Result;
-                if (bannedGroup || bannedUser)
+                }
+#endif
+
+                // Both ban checks in one pipelined batch, before we spend anything else on this chat.
+                var bannedGroupTask = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id);
+                var bannedUserTask = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id);
+                await Task.WhenAll(bannedGroupTask, bannedUserTask);
+                var bannedGroup = bannedGroupTask.Result;
+                if (bannedGroup || bannedUserTask.Result)
                 {
                     if (update.Message.Chat.Type != ChatType.Private && bannedGroup)
                     {
-                        Bot.Api.LeaveChat(update.Message.Chat.Id);                      
+                        Bot.Api.LeaveChat(update.Message.Chat.Id);
                     }
                     return;
-                } 
+                }
 
-                new Task(() => { CollectStats(update.Message); }).Start();                
-                Bot.MessagesProcessed++;
-                new Task(() => { Methods.IsRekt(update); }).Start();
-                //ignore previous messages
-                //if (update.Message?.Chat.Type != ChatType.Private && update.Message?.Chat.Id != -1001108140050)
-                //{
-                //    Bot.Send("please use @enforcerbot", update);
-                //    Bot.Api.LeaveChat(update.Message.Chat.Id);
-                //    Console.WriteLine("LEaving chat");
-                //    return;
-                //}
+                var background = new List<Task>();
+                Interlocked.Increment(ref Bot.MessagesProcessed);
+
                 try
                 {
-                   // Console.WriteLine("Checking Message");                    
                     if (update.Message == null)
                     {
                         return;
                     }
-                    if (update.Message.Chat.Type != ChatType.Private)
+
+                    // One batch for everything the per-message handlers need. Individual reads are
+                    // allowed to fail: a timeout on one settings hash must not discard the whole
+                    // update, which would silently drop commands.
+                    var ctx = await MessageContext.BuildAsync(update, receivedAt);
+
+                    // Stats and commands run regardless; moderation only on a context we fully read.
+                    background.Add(CollectStats(ctx));
+
+                    var moderate = ctx.IsGroup && ctx.Complete;
+                    if (moderate)
                     {
-                        new Task(() => { OnMessage.AntiFlood(update); }).Start();
+                        background.Add(Methods.IsRekt(ctx));
+                        background.Add(OnMessage.AntiFlood(ctx));
                     }
-                    
+
                     switch (update.Message.Type)
                     {
                         case MessageType.Unknown:
                             break;
                         case MessageType.Text:
-                            if (update.Message.Chat.Type != ChatType.Private)
+                            if (moderate)
                             {
-                                new Task(() => { OnMessage.ArabDetection(update); }).Start();
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                                background.Add(OnMessage.ArabDetection(ctx));
+                                background.Add(OnMessage.CheckMedia(ctx));
                             }
-                                
-                            if (update.Message.Text.StartsWith("/"))
-                            {
-                                var args = GetParameters(update.Message.Text);
-                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                                //check for the command
-                                //Console.WriteLine("Looking for command");
-                                var command = Bot.Commands.FirstOrDefault(
-                                    x =>
-                                        String.Equals(x.Trigger, args[0],
-                                            StringComparison.CurrentCultureIgnoreCase));
-                                if (command != null)
-                                {                                  
-                                    
-                                   
-                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue)
-                                    {
-                                        return;
-                                    }
-                                    if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
-                                    {
-                                        Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
-                                                "userNotAdmin"), update.Message);
-                                        return;
-                                    }
-                                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
-                                    {
-                                        Service.LogDevCommand(update, update.Message.Text);
-                                    }
 
-                                    if (command.InGroupOnly && update.Message.Chat.Type == ChatType.Private)
-                                    {
-                                        return;
-                                    }
-                                    if (command.RequiresReply && update.Message.ReplyToMessage == null)
-                                    {
-                                        var lang = Methods.GetGroupLanguage(update.Message, true);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
-                                        return;
-                                    }
-                                    if (command.UploadAdmin && !Methods.IsLangAdmin(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    if (command.GlobalAdminOnly && !Methods.IsGlobalAdmin(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    Bot.CommandsReceived++;
-                                     command.Method.Invoke(update, args);
-                                    new Task(() => { Log(update, "text", command); }).Start();
-                                }
-                            }
-                            else if (update.Message.Text.StartsWith("#"))
+                            // Test the prefix here so an ordinary chat line costs nothing; only a
+                            // real command pays for a dispatch. The handlers are synchronous and
+                            // can block behind Telegram, so they never run on a consumer.
+                            var text = update.Message.Text;
+                            if (text.StartsWith("/") || text.StartsWith("#") ||
+                                text.StartsWith("@admin") || text.StartsWith("@pingall"))
                             {
-                                string[] args = new string[1];
-                                args[0] = update.Message.Text;
-                                if (update.Message.Chat.Type == ChatType.Private)
-                                {
-                                    return;
-                                }
-                                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                if (blocked.HasValue)
-                                {
-                                    return; ;
-                                }
-                                new Task(() => { Log(update, "extra"); }).Start();
-                                 Task.Run(() => Commands.SendExtra(update, args));
-                            }
-                            else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@pingall"))
-                            {
-                                var args = GetParameters(update.Message.Text);
-                                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
-                                //check for the command
-                                //Console.WriteLine("Looking for command");
-                                var command = Bot.Commands.FirstOrDefault(
-                                    x =>
-                                        String.Equals(x.Trigger, args[0],
-                                            StringComparison.CurrentCultureIgnoreCase));
-                                if (command != null)
-                                {
-                                    new Task(() => { Log(update, "text", command); }).Start();
-                                    AddCount(update.Message.From.Id, update.Message.Text);
-                                    //check that we should run the command
-                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                                    if (blocked.HasValue)
-                                    {
-                                        return; ;
-                                    }
-                                    if (command.DevOnly & !Constants.Devs.Contains((long)update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
-                                        !Methods.IsGlobalAdmin(update.Message.From.Id))
-                                    {
-                                        Bot.SendReply(
-                                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message,true).Doc,
-                                                "userNotAdmin"), update.Message);
-                                        return;
-                                    }
-                                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
-                                    {
-                                        return;
-                                    }
-                                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
-                                    {
-                                        var lang = Methods.GetGroupLanguage(update.Message,true);
-                                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
-                                        return;
-                                    }
-                                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
-                                    {
-                                        return;
-                                    }
-                                    Bot.CommandsReceived++;
-                                     command.Method.Invoke(update, args);
-                                }
+                                Bot.DispatchInteractive(() => ExecuteTextCommands(update), "ExecuteTextCommands");
                             }
                             break;
                         case MessageType.Photo:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Audio:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Video:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Voice:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Document:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-
-                            }
-                            break;
                         case MessageType.Sticker:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Location:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
-                            }
-                            break;
                         case MessageType.Contact:
-                            if (update.Message.Chat.Type != ChatType.Private)
+                        case MessageType.Venue:
+                            if (moderate)
                             {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                                background.Add(OnMessage.CheckMedia(ctx));
                             }
                             break;
                         case MessageType.NewChatMembers:
                             if (update.Message.NewChatMembers != null && update.Message.NewChatMembers.Length > 0)
                             {
-                                try
-                                {
-                                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.NewChatMember.Id}").Result;
-                                    if (blocked.HasValue)
-                                    {
-                                        return; ;
-                                    }
-                                    new Task(() => { Log(update, "chatMember"); }).Start();
-                                    var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
-                                    if (isBanned.HasValue)
-                                    {
-#if NORMAL
-                                        Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
-#endif
-#if PREMIUM
-                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
-#endif
-                                    }
-                                    new Task(() => { OnMessage.ArabJoinDetection(update); }).Start();
-                                    if (update.Message.NewChatMember.Id == Bot.Me.Id)
-                                    {
-                                         Service.BotAdded(update.Message);
-                                    }
-                                    else
-                                    {
-                                        Service.Welcome(update.Message);
-                                        var hash = $"chat:{update.Message.Chat.Id}:settings";
-                                        var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
-                                        var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-                                        if (muteOnJoin == "no")
-                                        {
-                                            Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, true);
-                                        }
-                                        // Service.ResetUser(update.Message);
-                                        
-                                    }
-#if PREMIUM
-                                     if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id ==-1001030085238) && update.Message.NewChatMembers.Length > 1)
-                                    {
-                                        for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
-                                        {
-                                            try
-                                            {
-                                                bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {update.Message.NewChatMembers[i].Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
-                                                Thread.Sleep(2000);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Console.WriteLine(e.Message);
-                                            }
-                                        }
-                                        try
-                                        {
-                                            bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine(e.Message);
-                                        }                                            
-                                    }
-#endif
-
-                                }
-                                catch (ApiRequestException e)
-                                {
-                                    Console.WriteLine(e);
-                                }
-                                catch (AggregateException e)
-                                {
-                                    Console.WriteLine(e);
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e);
-                                }
-                            }
-                            break;
-                        case MessageType.Venue:
-                            if (update.Message.Chat.Type != ChatType.Private)
-                            {
-                                new Task(() => { OnMessage.CheckMedia(update); }).Start();
+                                // ArabJoinDetection is started from inside, after the spammers
+                                // check, so a rate-limited joiner is skipped exactly as before.
+                                Bot.DispatchAction(() => HandleNewChatMembers(ctx), "HandleNewChatMembers");
                             }
                             break;
                         case MessageType.Game:
                             break;
                         default:
-                            return;
                             break;
                     }
                 }
-                catch (AggregateException e)
-                {
-                    Console.WriteLine(e);
-                }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);                    
+                    LogHelper.Error($"HandleUpdate for {update.Message?.Chat.Id} failed: {ex.Message}\n{ex.StackTrace}");
                 }
+                finally
+                {
+                    // Awaiting here is what makes the consumer pool a real concurrency limit -
+                    // without it we would be back to unbounded fan-out.
+                    try
+                    {
+                        await Task.WhenAll(background);
+                    }
+                    catch (Exception e)
+                    {
+                        LogHelper.Error($"Message handler in {update.Message?.Chat.Id} failed: {e.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The blocking command-dispatch path, unchanged apart from logging inline instead of
+        /// spawning a task per log line. Runs on the pool via Task.Run.
+        /// </summary>
+        private static void ExecuteTextCommands(Update update)
+        {
+            if (update.Message.Text.StartsWith("/"))
+            {
+                var args = GetParameters(update.Message.Text);
+                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                var command = Bot.Commands.FirstOrDefault(
+                    x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
+                if (command != null)
+                {
+                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
+                    if (blocked.HasValue)
+                    {
+                        return;
+                    }
+                    if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
+                    {
+                        return;
+                    }
+                    if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
+                        !Methods.IsGlobalAdmin(update.Message.From.Id) & !Constants.Devs.Contains(update.Message.From.Id))
+                    {
+                        Bot.SendReply(
+                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
+                                "userNotAdmin"), update.Message);
+                        return;
+                    }
+                    if (Constants.Devs.Contains(update.Message.From.Id) & (command.GroupAdminOnly | command.DevOnly))
+                    {
+                        Service.LogDevCommand(update, update.Message.Text);
+                    }
+
+                    if (command.InGroupOnly && update.Message.Chat.Type == ChatType.Private)
+                    {
+                        return;
+                    }
+                    if (command.RequiresReply && update.Message.ReplyToMessage == null)
+                    {
+                        var lang = Methods.GetGroupLanguage(update.Message, true);
+                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                        return;
+                    }
+                    if (command.UploadAdmin && !Methods.IsLangAdmin(update.Message.From.Id))
+                    {
+                        return;
+                    }
+                    if (command.GlobalAdminOnly && !Methods.IsGlobalAdmin(update.Message.From.Id))
+                    {
+                        return;
+                    }
+                    Interlocked.Increment(ref Bot.CommandsReceived);
+                    command.Method.Invoke(update, args);
+                    Log(update, "text", command);
+                }
+            }
+            else if (update.Message.Text.StartsWith("#"))
+            {
+                string[] args = new string[1];
+                args[0] = update.Message.Text;
+                if (update.Message.Chat.Type == ChatType.Private)
+                {
+                    return;
+                }
+                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
+                if (blocked.HasValue)
+                {
+                    return;
+                }
+                Log(update, "extra");
+                Commands.SendExtra(update, args);
+            }
+            else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@pingall"))
+            {
+                var args = GetParameters(update.Message.Text);
+                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                var command = Bot.Commands.FirstOrDefault(
+                    x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
+                if (command != null)
+                {
+                    Log(update, "text", command);
+                    AddCount(update.Message.From.Id, update.Message.Text);
+                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
+                    if (blocked.HasValue)
+                    {
+                        return;
+                    }
+                    if (command.DevOnly & !Constants.Devs.Contains((long)update.Message.From.Id))
+                    {
+                        return;
+                    }
+                    if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
+                        !Methods.IsGlobalAdmin(update.Message.From.Id))
+                    {
+                        Bot.SendReply(
+                            Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc,
+                                "userNotAdmin"), update.Message);
+                        return;
+                    }
+                    if (command.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
+                    {
+                        return;
+                    }
+                    if (command.RequiresReply & update.Message.ReplyToMessage == null)
+                    {
+                        var lang = Methods.GetGroupLanguage(update.Message, true);
+                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
+                        return;
+                    }
+                    if (command.GlobalAdminOnly & !Methods.IsGlobalAdmin(update.Message.From.Id))
+                    {
+                        return;
+                    }
+                    Interlocked.Increment(ref Bot.CommandsReceived);
+                    command.Method.Invoke(update, args);
+                }
+            }
+        }
+
+        /// <summary>Join handling. Blocking throughout, so it runs on the bounded action pool.</summary>
+        private static void HandleNewChatMembers(MessageContext ctx)
+        {
+            var update = ctx.Update;
+            try
+            {
+                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.NewChatMember.Id}").Result;
+                if (blocked.HasValue)
+                {
+                    return;
+                }
+                Log(update, "chatMember");
+                var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
+                if (isBanned.HasValue)
+                {
+#if NORMAL
+                    Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
+#endif
+#if PREMIUM
+                    Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
+#endif
+                }
+                // Matches the original ordering: only reached once the joiner passed the
+                // spammers check above.
+                Bot.Dispatch(() => OnMessage.ArabJoinDetection(ctx));
+                if (update.Message.NewChatMember.Id == Bot.Me.Id)
+                {
+                    Service.BotAdded(update.Message);
+                }
+                else
+                {
+                    Service.Welcome(update.Message);
+                    var hash = $"chat:{update.Message.Chat.Id}:settings";
+                    var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
+                    var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+                    if (muteOnJoin == "no")
+                    {
+                        Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, true);
+                    }
+                }
+#if PREMIUM
+                if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id == -1001030085238) && update.Message.NewChatMembers.Length > 1)
+                {
+                    for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
+                    {
+                        try
+                        {
+                            bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {update.Message.NewChatMembers[i].Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}");
+                            Thread.Sleep(2000);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
+                    try
+                    {
+                        bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+#endif
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"NewChatMembers in {update.Message.Chat.Id} failed: {e.Message}");
             }
         }
 
@@ -444,8 +433,90 @@ namespace Enforcer5.Handlers
             }
         }
 
-        private static async void CollectStats(Message updateMessage)
+        // One-time schema migrations. These were re-checked against Redis on every group message
+        // forever - four blocking round-trips per message. Once a chat has been seen in this
+        // process the check is skipped entirely.
+        private static readonly ConcurrentDictionary<long, byte> _migratedSettings = new ConcurrentDictionary<long, byte>();
+        private static readonly ConcurrentDictionary<long, byte> _migratedSettings2 = new ConcurrentDictionary<long, byte>();
+        private static readonly ConcurrentDictionary<long, byte> _migratedSettings3 = new ConcurrentDictionary<long, byte>();
+        private static readonly ConcurrentDictionary<string, byte> _migratedWarn0 = new ConcurrentDictionary<string, byte>();
+
+        // dbUpdate:lenghtUpdat4 is keyed per chat *and* user, so its cache is the one that can
+        // grow without bound. Past the cap we simply keep asking Redis rather than leak. Tracked
+        // with a counter because ConcurrentDictionary.Count takes every bucket lock.
+        private const int MigratedWarnCacheLimit = 200000;
+        private static int _migratedWarnCount;
+
+        private static async Task RunPendingMigrations(MessageContext ctx)
         {
+            var chatId = ctx.ChatId;
+            var warnKey = $"{chatId}:{ctx.UserId}";
+
+            var needSettings = !_migratedSettings.ContainsKey(chatId);
+            var needSettings2 = !_migratedSettings2.ContainsKey(chatId);
+            var needSettings3 = !_migratedSettings3.ContainsKey(chatId);
+            var needWarn0 = !_migratedWarn0.ContainsKey(warnKey);
+            if (!needSettings && !needSettings2 && !needSettings3 && !needWarn0) return;
+
+            var db = Redis.db;
+            var doneTask = needSettings ? db.SetContainsAsync("lenghtUpdate3", chatId) : Task.FromResult(true);
+            var done2Task = needSettings2 ? db.SetContainsAsync("lenghtUpdate", chatId) : Task.FromResult(true);
+            var done3Task = needSettings3 ? db.SetContainsAsync("dbUpdate:lenghtUpdate", chatId) : Task.FromResult(true);
+            var done4Task = needWarn0 ? db.SetContainsAsync("dbUpdate:lenghtUpdat4", warnKey) : Task.FromResult(true);
+            await Task.WhenAll(doneTask, done2Task, done3Task, done4Task);
+
+            if (needSettings)
+            {
+                if (!doneTask.Result)
+                {
+                    Service.NewSettings(chatId);
+                    db.SetAddAsync("lenghtUpdate3", chatId);
+                }
+                _migratedSettings[chatId] = 0;
+            }
+            if (needSettings2)
+            {
+                if (!done2Task.Result)
+                {
+                    Service.NewSetting2(chatId);
+                    db.SetAddAsync("lenghtUpdate", chatId);
+                }
+                _migratedSettings2[chatId] = 0;
+            }
+            if (needSettings3)
+            {
+                if (!done3Task.Result)
+                {
+                    Service.NewSetting3(chatId);
+                    db.SetAddAsync("dbUpdate:lenghtUpdate", chatId);
+                }
+                _migratedSettings3[chatId] = 0;
+            }
+            if (needWarn0)
+            {
+                if (!done4Task.Result)
+                {
+                    // Two blocking reads inside, so it must not run on a consumer continuation.
+                    // The flag is set from within, after the work: marking it here would leave the
+                    // migration permanently "done" if the dispatched action never ran.
+                    var userId = ctx.UserId;
+                    Bot.DispatchAction(() =>
+                    {
+                        Service.removeWarn0(chatId, userId);
+                        db.SetAddAsync("dbUpdate:lenghtUpdat4", warnKey);
+                    }, "removeWarn0");
+                }
+                if (Volatile.Read(ref _migratedWarnCount) < MigratedWarnCacheLimit &&
+                    _migratedWarn0.TryAdd(warnKey, 0))
+                {
+                    Interlocked.Increment(ref _migratedWarnCount);
+                }
+            }
+        }
+
+        private static async Task CollectStats(MessageContext ctx)
+        {
+            var updateMessage = ctx.Message;
             try
             {
                 //Console.WriteLine("Collecting Stats");
@@ -470,39 +541,16 @@ namespace Enforcer5.Handlers
                         Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
-                    }                  
-                    var updated = Redis.db.SetContainsAsync("lenghtUpdate3",updateMessage.Chat.Id).Result;
-                    if (!updated)
-                    {
-                        Service.NewSettings(updateMessage.Chat.Id);
-                        Redis.db.SetAddAsync("lenghtUpdate3", updateMessage.Chat.Id);
                     }
-                    updated = Redis.db.SetContainsAsync("lenghtUpdate", updateMessage.Chat.Id).Result;
-                    if (!updated)
-                    {
-                        Service.NewSetting2(updateMessage.Chat.Id);
-                        Redis.db.SetAddAsync("lenghtUpdate", updateMessage.Chat.Id);
-                    }
-                    updated = Redis.db.SetContainsAsync("dbUpdate:lenghtUpdate", updateMessage.Chat.Id).Result;
-                    if (!updated)
-                    {
-                        Service.NewSetting3(updateMessage.Chat.Id);
-                        Redis.db.SetAddAsync("dbUpdate:lenghtUpdate", updateMessage.Chat.Id);
-                    }
-                    updated = Redis.db.SetContainsAsync("dbUpdate:lenghtUpdat4", $"{updateMessage.Chat.Id}:{updateMessage.From.Id}").Result;
-                    if (!updated)
-                    {
-                        Service.removeWarn0(updateMessage.Chat.Id, updateMessage.From.Id);
-                        Redis.db.SetAddAsync("dbUpdate:lenghtUpdat4", $"{updateMessage.Chat.Id}:{updateMessage.From.Id}");
-                    }
+                    await RunPendingMigrations(ctx);
                 }
             }
             catch (Exception e)
             {
-
-                Bot.Send($"shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
+                // Never Telegram-send from here: this runs per message, so a systematic fault used
+                // to produce one send per message, hit 429, and sleep pool threads for a minute.
+                LogHelper.Error($"CollectStats for {updateMessage?.Chat.Id} failed: {e.Message}");
             }
-
         }
            
         private static string[] GetParameters(string input)
@@ -612,6 +660,9 @@ namespace Enforcer5.Handlers
                                     try
                                     {
                                         Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
+                                        // Deliberate pacing for Telegram's rate limits, and it costs
+                                        // nothing: SpamDetection owns a dedicated thread, so this
+                                        // never holds a thread-pool worker.
                                         Thread.Sleep(10000);
                                         Bot.Send(
                                             $"{long.Parse(key.ToString())}, {Methods.GetName(long.Parse(key.ToString()))}, {Methods.GetUsername(long.Parse(key.ToString()))} has been spam banned for 10 minutes.",
@@ -620,7 +671,7 @@ namespace Enforcer5.Handlers
                                     catch (Exception e)
                                     {
                                         Console.WriteLine(e);
-                                      
+
                                     }
                                 }
 
@@ -646,11 +697,6 @@ namespace Enforcer5.Handlers
             return Bot.Send(message, id, customMenu, parseMode);
         }
 
-        public static void InlineQueryReceived(InlineQuery inlineQuery)
-        {
-            new Task(() => { HandleInlineQuery(inlineQuery); }).Start();
-        }
-        
         internal static void HandleInlineQuery(InlineQuery q)
         {
             try
@@ -678,7 +724,7 @@ namespace Enforcer5.Handlers
                         Trigger = ""
                     };
                var optionDictionary = new Dictionary<string, string>();
-                new Task(() => { Log(q, query, matchedTrigger); }).Start();
+                Log(q, query, matchedTrigger);
                 if (string.IsNullOrEmpty(matchedTrigger.Trigger) && !string.IsNullOrEmpty(com[0]))
                 {
                     var helpArticles = InlineMethods.GetHelpArticles(com[0], userLang);
@@ -736,12 +782,9 @@ namespace Enforcer5.Handlers
             }
         }
 
-        public static void CallbackHandler(CallbackQuery callbackQuery)
-        {
-            new Task(() => { HandleCallback(callbackQuery); }).Start();
-        }
-
-        public static async void HandleCallback(CallbackQuery update)
+        // Not async void: it never awaited anything, and an escaping exception would have taken the
+        // process down. Runs on the pool via RouteAsync.
+        public static void HandleCallback(CallbackQuery update)
         {
             var callback = update.Data;
             if (!string.IsNullOrEmpty(callback))
@@ -795,8 +838,8 @@ namespace Enforcer5.Handlers
                         {
                             return;
                         }
-                        Bot.CommandsReceived++;
-                        new Task(() => { Log(update, callbacks); }).Start();
+                        Interlocked.Increment(ref Bot.CommandsReceived);
+                        Log(update, callbacks);
                         try
                         {
                             callbacks.Method.Invoke(update, args);

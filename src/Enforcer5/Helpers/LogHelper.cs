@@ -45,15 +45,23 @@ namespace Enforcer5.Helpers
             }
         }
 
+        /// <summary>
+        /// Writing to stderr can itself throw - it is a journald socket on the server, and that
+        /// pipe can break. These must be total: they are called from catch blocks and from the
+        /// update consumers, where a throwing logger would silently kill the caller.
+        /// </summary>
         public static void Error(string message)
         {
-            Console.Error.WriteLine($"[ERROR] {DateTime.UtcNow:u} {message}");
-            AppendLog(Path.Combine(Bot.LogDirectory, "error.log"), $"[ERROR] {DateTime.UtcNow:u} {message}\n");
+            var line = $"[ERROR] {DateTime.UtcNow:u} {message}";
+            try { Console.Error.WriteLine(line); } catch { }
+            // Resolving LogDirectory can throw on a malformed LogPath, so it stays inside the
+            // guard too - this is called from catch blocks that must not fault.
+            try { AppendLog(Path.Combine(Bot.LogDirectory, "error.log"), line + "\n"); } catch { }
         }
 
         public static void Info(string message)
         {
-            Console.Error.WriteLine($"[INFO] {DateTime.UtcNow:u} {message}");
+            try { Console.Error.WriteLine($"[INFO] {DateTime.UtcNow:u} {message}"); } catch { }
         }
     }
 }

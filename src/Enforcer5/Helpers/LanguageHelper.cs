@@ -123,7 +123,9 @@ namespace Enforcer5.Handlers
 
         }
 
-        internal static async void UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
+        // Task, not void: an exception escaping this (from the catch blocks, or DeletePendingLanguage)
+        // would reach the thread pool unhandled and terminate the process.
+        internal static async Task UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
         {
             string newFilePath = null;
             string pendingNamePath = null;

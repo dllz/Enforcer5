@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5;
 using Enforcer5.Handlers;
@@ -25,6 +26,24 @@ namespace Enforcer5
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
         {
+            // The update path issues many concurrent Redis and Telegram calls. The default minimum
+            // (= processor count) leaves the pool injecting only ~1-2 threads/sec once saturated,
+            // which is what turned a burst of updates into SE.Redis timeouts after the migration.
+            //
+            // This is coupled to the raised Sync/AsyncTimeout in Redis.Start(): the ~330 remaining
+            // blocking calls each hold their thread for up to that timeout, so if this line ever
+            // goes away the longer timeout makes starvation worse, not better.
+            if (!ThreadPool.SetMinThreads(200, 200))
+                Console.Error.WriteLine("[WARN] ThreadPool.SetMinThreads was rejected; expect Redis timeouts under load.");
+
+            // A faulted background task must never take the process down. Exceptions from the ~280
+            // unawaited Redis writes land here; log them instead of leaving them silent.
+            TaskScheduler.UnobservedTaskException += (sender, eventArgs) =>
+            {
+                eventArgs.SetObserved();
+                LogHelper.Error($"Unobserved task exception: {eventArgs.Exception?.Flatten().Message}");
+            };
+
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
             {
                 try
