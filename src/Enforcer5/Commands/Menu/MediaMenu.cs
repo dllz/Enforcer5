@@ -10,6 +10,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -17,7 +18,7 @@ namespace Enforcer5
     {
         public static InlineKeyboardMarkup genMediaMenu(long chatId, XDocument lang)
         {
-            var mediaList = Redis.db.HashGetAllAsync($"chat:{chatId}:media").Result;
+            var mediaList = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Media).Result;
             var menu = new Menu(2);
             
             foreach (var mem in mediaList)
@@ -38,9 +39,9 @@ namespace Enforcer5
                     }
                 }
             }
-            var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
+            var max = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "mediamax").Result;
             var warnTitle = new Menu(1);
-            var action = Redis.db.HashGetAsync($"chat:{chatId}:media", "action").Result;
+            var action = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, "action").Result;
 
             switch (action.ToString())
             {
@@ -83,24 +84,24 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "action";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("ban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "kick");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "kick").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "tempban");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "tempban").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("tempban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "ban");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "ban").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -112,7 +113,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
+            var num = GroupSettingsStore.DecrementAsync(chatId, GroupSettingGroups.Warn, "mediamax").GetAwaiter().GetResult();
             if (num > 0)
             {
                 var keys = Commands.genMediaMenu(chatId, lang);
@@ -122,7 +123,7 @@ namespace Enforcer5
             else
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "mediamax");
+                GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Warn, "mediamax").GetAwaiter().GetResult();
             }
         }
 
@@ -131,7 +132,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "mediamax");
+            GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Warn, "mediamax").GetAwaiter().GetResult();
             var keys = Commands.genMediaMenu(chatId, lang);
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -143,17 +144,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "text";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -165,17 +166,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "sticker";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -188,17 +189,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "image";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -211,17 +212,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "video";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -234,17 +235,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "gif";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -257,17 +258,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "contact";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -280,17 +281,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "file";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -303,17 +304,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "link";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -326,17 +327,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "voice";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -349,17 +350,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "audio";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:media", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Media, option).Result;
             if (current.Equals("allowed"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "blocked");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "blocked").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("blocked"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:media", option, "allowed");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Media, option, "allowed").GetAwaiter().GetResult();
                 var keys = Commands.genMediaMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));

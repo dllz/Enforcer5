@@ -9,6 +9,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -19,8 +20,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var chatId = update.Message.Chat.Id;
-            var deleteLastWelcome = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
-            var muteOnJoin = Redis.db.HashGet($"chat:{chatId}:settings", "MuteOnJoin");
+            var deleteLastWelcome = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "DeleteLastWelcome").Result;
+            var muteOnJoin = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "MuteOnJoin").Result;
             if (!deleteLastWelcome.HasValue)
             {
                 tempAddDeleteLastWelcomeSetting(update, chatId);
@@ -62,11 +63,11 @@ namespace Enforcer5
 
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            var settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Settings).Result;
             if(settings.Length < 9)
             {
                 Service.GenerateSettings(chatId);
-                settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+                settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Settings).Result;
             }
                 
 

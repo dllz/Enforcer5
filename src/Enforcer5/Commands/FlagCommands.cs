@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.PrincipalContent;
 using Enforcer5.Models;
 using Newtonsoft.Json;
 using StackExchange.Redis;
@@ -27,23 +30,16 @@ namespace Enforcer5
             {
                 return;
             }
-            var blocked =
-                Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:reportblocked", update.Message.From.Id).Result;
+            var blocked = ReportPolicyStore.IsReporterBlockedAsync(update.Message.Chat.Id,
+                update.Message.From.Id).Result;
             if (blocked)
                 return;
-            var ReportOn = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Flagged").Result;
+            var ReportOn = GroupSettingsStore.GetAsync(update.Message.Chat.Id, GroupSettingGroups.Settings, "Flagged").Result;
             if (ReportOn.Equals("yes"))
                 return;
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (update.Message.ReplyToMessage != null)
             {
-                var alreadyFlagged = Redis.db.HashExistsAsync($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported").Result;
-                if (alreadyFlagged)
-                {
-                     Bot.SendReply(Methods.GetLocaleString(lang, "alreadyFlagged"), update.Message);
-                    return;
-                }
-                 Redis.db.HashSetAsync($"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}", "reported", "true");
                 if (update.Message.ReplyToMessage.From.Id == Bot.Me.Id)
                 {
                     return;
@@ -51,6 +47,13 @@ namespace Enforcer5
                 if (!update.Message.ReplyToMessage.From.IsBot &&
                     Methods.IsGroupAdmin(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id))
                 {
+                    return;
+                }
+                if (!StorageModeProvider.PostgresIsPrimary && !Redis.db.HashSetAsync(
+                        $"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}",
+                        "reported", "true", StackExchange.Redis.When.NotExists).Result)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "alreadyFlagged"), update.Message);
                     return;
                 }
             }
@@ -68,8 +71,17 @@ namespace Enforcer5
             if (update.Message.From.Username != null)
             {
                 reporter = $"{reporter} (@{update.Message.From.Username}";
-            }            
-             SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply, update.Message.Chat.Title, update.Message, repId, username, lang);
+            }
+            var create = ReportStore.TryCreateAsync(new ReportCreate(update.Message.Chat.Id, repId,
+                update.Message.From.Id, reporter, update.Message.ReplyToMessage?.From?.Id,
+                update.Message.ReplyToMessage?.MessageId, DateTimeOffset.UtcNow)).Result;
+            if (!create.Created)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "alreadyFlagged"), update.Message);
+                return;
+            }
+            SendToAdmins(mods, update.Message.Chat.Id, msgId, reporter, isReply,
+                update.Message.Chat.Title, update.Message, repId, username, lang, create.Report);
             Service.LogCommand(update, update.Message.Text);
         }
 
@@ -85,7 +97,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-             Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
+             ReportPolicyStore.SetAdminNotificationsDisabledAsync(chatId, userId, true).GetAwaiter().GetResult();
              Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
@@ -94,7 +106,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-             Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
+             ReportPolicyStore.SetAdminNotificationsDisabledAsync(chatId, userId, false).GetAwaiter().GetResult();
              Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }
 
@@ -102,160 +114,27 @@ namespace Enforcer5
         public static void Solved(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            if (update.Message.ReplyToMessage != null)
+            var messageId = update.Message.ReplyToMessage?.MessageId;
+            if (!messageId.HasValue && args.Length == 2 && int.TryParse(args[1], out var parsed))
+                messageId = parsed;
+            if (!messageId.HasValue)
             {
-                var msgid = update.Message.ReplyToMessage.MessageId;
-                var chatid = update.Message.Chat.Id;
-                var hash = $"flagged:{chatid}:{msgid}";
-                var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
-                if (!isReported.HasValue)
-                {
-                     Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
-                    return;
-                }
-                int isReport;
-                if (isReported.TryParse(out isReport) && isReport == 0)
-                {
-                    var solvedBy = update.Message.From.FirstName;
-                    if (update.Message.From.Username != null)
-                        solvedBy = $"{solvedBy} (@{update.Message.From.Username})";
-                    var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-                     Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
-                     Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
-                     Redis.db.HashSetAsync(hash, "Solved", 1);
-                    var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
-                    var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                    string text;
-                    if (!reporter.HasValue)
-                    {
-                        text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {update.Message.From.Id}", solvedAt,
-                            update.Message.Chat.Title, reporter);
-                    }
-                    else
-                    {
-                        text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {update.Message.From.Id}", solvedAt,
-                            update.Message.Chat.Title);
-                    }
-                    for (int i = 0; i < counter; i++)
-                    {
-                        var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
-                        AdminNotification noti = new AdminNotification();
-                        MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
-                        DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
-                        noti = ser.ReadObject(stream1) as AdminNotification;
-                        var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
-                        if (!string.IsNullOrEmpty(link))
-                        {
-                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
-                        }
-                        else
-                        {
-                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
-                        }
-                       
-                    }
-                     Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
-                    Service.LogCommand(update, update.Message.Text);
-                }
-                else if (isReported.TryParse(out isReport) && isReport == 1)
-                {
-                    var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt").Result;
-                    var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
-                     Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
-                }
+                Bot.Send(Methods.GetLocaleString(lang, args.Length == 2 ? "incorrectArgument" : "solvedNoReply"),
+                    update.Message.Chat.Id);
+                return;
             }
-            else if (args.Length == 2)
-            {
-                if (!string.IsNullOrEmpty(args[1]))
-                {
-                    int msgid;
-                    if (int.TryParse(args[1], out msgid))
-                    {
-                        var chatid = update.Message.Chat.Id;
-                        var hash = $"flagged:{chatid}:{msgid}";
-                        var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
-                        if (!isReported.HasValue)
-                        {
-                             Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
-                            return;
-                        }
-                        int isReport;
-                        if (isReported.TryParse(out isReport) && isReport == 0)
-                        {
-                            var solvedBy = update.Message.From.FirstName;
-                            if (update.Message.From.Username != null)
-                                solvedBy = $"{solvedBy} (@{update.Message.From.Username})";
-                            var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-                             Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
-                             Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
-                             Redis.db.HashSetAsync(hash, "Solved", 1);
-                            var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
-                            var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                            string text;
-                            if (!reporter.HasValue)
-                            {
-                                text = Methods.GetLocaleString(lang, "solvedByReporter", solvedBy, solvedAt,
-                                    update.Message.Chat.Title, reporter);
-                            }
-                            else
-                            {
-                                text = Methods.GetLocaleString(lang, "solvedBy", solvedBy, solvedAt,
-                                    update.Message.Chat.Title);
-                            }
-                            for (int i = 0; i < counter; i++)
-                            {
-                                try
-                                {
-                                    var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
-                                    AdminNotification noti = new AdminNotification();
-                                    MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
-                                    DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
-                                    noti = ser.ReadObject(stream1) as AdminNotification;
-                                    var link = Methods.GetChatMessageLink(chatid, noti.reportId.ToString());
-                                    if (!string.IsNullOrEmpty(link))
-                                    {
-                                        Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
-                                    }
-                                    else
-                                    {
-                                        Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
-                                    }                                    
-                                }
-                                catch (ApiRequestException e)
-                                {
-
-                                }
-                                catch (AggregateException e)
-                                {
-
-                                }
-                                catch (Exception e)
-                                {
-
-                                }
-                            }                                                       
-                             Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
-                            Service.LogCommand(update, update.Message.Text);
-                        }
-                        else if (isReported.TryParse(out isReport) && isReport == 1)
-                        {
-                            var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt");
-                            var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy");
-                             Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), chatid);
-                        }
-                    }
-                    else
-                    {
-                         Bot.Send(Methods.GetLocaleString(lang, "incorrectArgument"), update.Message.Chat.Id);
-                    }
-                }
-            }
+            var result = TrySolveReport(update.Message.Chat.Id, messageId.Value, update.Message.From.Id,
+                DisplayName(update.Message.From), update.Message.Chat.Title, lang);
+            if (result.Outcome == ReportSolveOutcome.NotFound)
+                Bot.SendReply(Methods.GetLocaleString(lang, "reportNotFound"), update.Message);
+            else if (result.Outcome == ReportSolveOutcome.AlreadySolved)
+                Bot.Send(Methods.GetLocaleString(lang, "alreadySolved", result.Report?.SolvedAt,
+                    result.Report?.SolvedByDisplay), update.Message.Chat.Id);
             else
-                 Bot.Send(Methods.GetLocaleString(lang, "solvedNoReply"), update.Message.Chat.Id);
+            {
+                Bot.Send(Methods.GetLocaleString(lang, "markSolved"), update.Message.Chat.Id);
+                Service.LogCommand(update, update.Message.Text);
+            }
         }
 
         [Command(Trigger = "reporton", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
@@ -264,7 +143,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
-             Redis.db.SetRemoveAsync(hash, userId);
+             ReportPolicyStore.SetReporterBlockedAsync(update.Message.Chat.Id, userId, false).GetAwaiter().GetResult();
              Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
             Service.LogCommand(update, update.Message.Text);
         }
@@ -274,17 +153,18 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
-             Redis.db.SetAddAsync(hash, userId);
+             ReportPolicyStore.SetReporterBlockedAsync(update.Message.Chat.Id, userId, true).GetAwaiter().GetResult();
              Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
             Service.LogCommand(update, update.Message.Text);
         }
 
-        private static void SendToAdmins(List<ChatMember> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument groupLang)
+        private static void SendToAdmins(List<ChatMember> mods, long chatId, int msgId, string reporter, bool isReply, string chatTitle, Message updateMessage, int repId, string username, XDocument groupLang, ReportRecord report)
         {
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
             var count = 0;
-            var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
+            var groupLink = Task.FromResult((RedisValue)(Methods.ReadGroupContent(chatId,
+                GroupContentTypes.Link) ?? string.Empty));
             foreach (var user in mods)
             {
                 if (user != null)
@@ -297,7 +177,7 @@ namespace Enforcer5
                     }
                     var lang = Methods.GetGroupLanguage(user.User).Doc;
                     var mod = user.User.Id;
-                    var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
+                    var allowed = ReportPolicyStore.AreAdminNotificationsDisabledAsync(chatId, mod);
                     if (allowed.Result)
                     {
                         continue;
@@ -445,20 +325,8 @@ namespace Enforcer5
                         }
                         if (result != null)
                         {
-                            var nme = $"flagged:{chatId}:{repId}";
-                            var noti = new AdminNotification();
-                            noti.hash = nme;
-                            noti.chatId = chatId;
-                            noti.chatMsgId = currentMsgId;
-                            noti.reportId = repId;
-                            noti.adminChatId = result.Chat.Id;
-                            noti.adminMsgId = result.MessageId;
-                            MemoryStream stream1 = new MemoryStream();
-                            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(AdminNotification));
-                            ser.WriteObject(stream1, noti);
-                            byte[] json = stream1.ToArray();
-                            var text = Encoding.UTF8.GetString(json, 0, json.Length);
-                            Redis.db.HashSetAsync(nme, $"messageObject{count}", text);
+                            ReportStore.RecordDeliveryAsync(report, count, result.Chat.Id,
+                                result.MessageId, chatId, currentMsgId).GetAwaiter().GetResult();
                             count++;
                         }
                     }
@@ -477,24 +345,7 @@ namespace Enforcer5
                 }
                 
             }
-            var hash = $"flagged:{chatId}:{repId}";
-            var time = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-            var alreadyReported = Redis.db.HashGetAsync(hash, "Solved");
-            var ids = sendMessageIds.ToArray();
-            var chats = modsSentTo.ToArray();
-            for (int i = 0; i < modsSentTo.Count; i++)
-            {
-                 Redis.db.HashSetAsync(hash, $"Message{i}", ids[i]);
-                 Redis.db.HashSetAsync(hash, $"adminID{i}", chats[i]);
-            }
-            if (alreadyReported.Result.IsNullOrEmpty)
-            {
-                Redis.db.HashSetAsync(hash, "Solved", 0);
-                Redis.db.HashSetAsync(hash, "Created", time);
-                Redis.db.HashSetAsync(hash, "#Admin", count);
-                Redis.db.HashSetAsync(hash, "Reporter", reporter);
-                Redis.db.HashSetAsync(hash, "repID", repId);
-            }
+            ReportStore.SetDeliveryCountAsync(report, count).GetAwaiter().GetResult();
             if (count > 0)
             {
                  Bot.SendReply(Methods.GetLocaleString(groupLang, "reported", repId), chatId, repId);
@@ -506,6 +357,34 @@ namespace Enforcer5
             var res = Bot.Api.GetChatAdministrators(id).Result;
             return res.ToList();
         }
+
+        internal static ReportSolveResult TrySolveReport(long chatId, long reportMessageId,
+            long solverUserId, string solvedBy, string chatTitle, XDocument lang)
+        {
+            var solvedAt = DateTimeOffset.UtcNow;
+            var result = ReportStore.TrySolveAsync(chatId, reportMessageId, solverUserId,
+                solvedBy, solvedAt).GetAwaiter().GetResult();
+            if (result.Outcome != ReportSolveOutcome.Solved) return result;
+            var text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {solverUserId}",
+                solvedAt.UtcDateTime.ToString("hh:mm:ss dd-MM-yyyy"), chatTitle);
+            foreach (var delivery in ReportStore.ListDeliveriesAsync(result.Report).GetAwaiter().GetResult())
+            {
+                try
+                {
+                    var link = Methods.GetChatMessageLink(chatId, reportMessageId.ToString());
+                    Bot.Api.EditMessageText(delivery.AdminChatId, delivery.AdminMessageId,
+                        string.IsNullOrEmpty(link)
+                            ? $"{text}\n{Methods.GetLocaleString(lang, "reportID", reportMessageId)}"
+                            : $"{text}\n{Methods.GetLocaleString(lang, "reportID", reportMessageId)}\n<a href=\"{link}\">View Report</a>",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+                }
+                catch (Exception e) { Console.WriteLine(e); }
+            }
+            return result;
+        }
+
+        internal static string DisplayName(User user) => user.Username == null
+            ? user.FirstName : $"{user.FirstName} (@{user.Username})";
     }
 
     public static partial class CallBacks
@@ -537,8 +416,8 @@ namespace Enforcer5
                 var why = Methods.GetLocaleString(grouplang, "inlineBan");
                 Methods.AddBanList(chatId, userId, userId.ToString(), why);
                 Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
-                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
+                var nick = PrincipalContentStore.GetUserAsync(userId).Result?.Name + $" ({userId})";
+                var admin = PrincipalContentStore.GetUserAsync(call.From.Id).Result?.Name + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
             }
@@ -555,8 +434,8 @@ namespace Enforcer5
             if (res)
             {
                 Methods.SaveBan(userId, "kick");
-                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
+                var nick = PrincipalContentStore.GetUserAsync(userId).Result?.Name + $" ({userId})";
+                var admin = PrincipalContentStore.GetUserAsync(call.From.Id).Result?.Name + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", nick, admin), chatId);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
             }
@@ -569,82 +448,33 @@ namespace Enforcer5
             var userId = long.Parse(args[2]);
             var callId = call.Id;
             var callFromId = call.From.Id;
-            var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
+            var nick = PrincipalContentStore.GetUserAsync(userId).Result?.Name + $" ({userId})";
             Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId);
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
         public static void SolveFlag(CallbackQuery call, string[] args)
-        {            
+        {
             var chatid = long.Parse(args[1]);
             var msgid = long.Parse(args[2]);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
-            var hash = $"flagged:{chatid}:{msgid}";
-            var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
-            if (!isReported.HasValue)
+            var result = Commands.TrySolveReport(chatid, msgid, call.From.Id,
+                Commands.DisplayName(call.From), chatid.ToString(), lang);
+            if (result.Outcome == ReportSolveOutcome.NotFound)
             {
-                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
                 return;
             }
-            int isReport;
-            if (isReported.TryParse(out isReport) && isReport == 0)
+            if (result.Outcome == ReportSolveOutcome.Solved)
             {
-                var solvedBy = call.From.FirstName;
-                if (call.From.Username != null)
-                    solvedBy = $"{solvedBy} (@{call.From.Username})";
-                var solvedAt = System.DateTime.UtcNow.ToString("hh:mm:ss dd-MM-yyyy");
-                 Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
-                 Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
-                 Redis.db.HashSetAsync(hash, "Solved", 1);
-                var counter = long.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
-                var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
-                var repID = Redis.db.HashGetAsync(hash, "repID").Result;
-                string text;
-                if (!reporter.HasValue)
-                {
-                    text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {call.From.Id}", solvedAt,
-                        chatid, reporter);
-                }
-                else
-                {
-                    text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {call.From.Id}", solvedAt,
-                        chatid);
-                }
-                for (int i = 0; i < counter; i++)
-                {
-                    var json = Redis.db.HashGetAsync(hash, $"messageObject{i}").Result;
-                    AdminNotification noti = new AdminNotification();
-                    MemoryStream stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json));
-                    DataContractJsonSerializer ser = new DataContractJsonSerializer(noti.GetType());
-                    noti = ser.ReadObject(stream1) as AdminNotification;
-                    try
-                    {
-                        var link = Methods.GetChatMessageLink(chatid, repID);
-                        if (!string.IsNullOrEmpty(link))
-                        {
-                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
-                        }
-                        else
-                        {
-                            Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-                 Bot.Api.AnswerCallbackQuery(call.Id,
-                    Methods.GetLocaleString(lang, "markedAsSolved", chatid, repID));
-                 Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, repID), chatid);
+                Bot.Api.AnswerCallbackQuery(call.Id,
+                    Methods.GetLocaleString(lang, "markedAsSolved", chatid, msgid));
+                Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, msgid), chatid);
             }
-            else if (isReported.TryParse(out isReport) && isReport == 1)
+            else
             {
-                var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt").Result;
-                var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
-                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, solvedBy), true);
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "alreadySolved",
+                    result.Report?.SolvedAt, result.Report?.SolvedByDisplay), true);
             }
         }
 

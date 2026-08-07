@@ -14,6 +14,9 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.PrincipalContent;
 
 #pragma warning disable CS4014 // Because this call is not ed, execution of the current method continues before the call is completed
 namespace Enforcer5.Handlers
@@ -34,10 +37,18 @@ namespace Enforcer5.Handlers
             switch (update.Type)
             {
                 case UpdateType.CallbackQuery:
+#if NORMAL
+                    if (update.CallbackQuery?.Message?.Chat?.Type != ChatType.Private &&
+                        await PrincipalContentStore.IsPremiumAsync(update.CallbackQuery.Message.Chat.Id))
+                        break;
+#endif
                     Bot.DispatchInteractive(() => HandleCallback(update.CallbackQuery), "HandleCallback");
                     break;
                 case UpdateType.InlineQuery:
                     Bot.DispatchInteractive(() => HandleInlineQuery(update.InlineQuery), "HandleInlineQuery");
+                    break;
+                case UpdateType.MyChatMember:
+                    await TelegramCapabilityStore.UpdateAsync(update.MyChatMember);
                     break;
                 default:
                     if (update.Message == null) return;
@@ -82,10 +93,19 @@ namespace Enforcer5.Handlers
         private static async Task HandleUpdate(Update update, DateTime receivedAt)
         {
             {
+#if NORMAL
+                if (update.Message.Chat.Type != ChatType.Private &&
+                    await PrincipalContentStore.IsPremiumAsync(update.Message.Chat.Id))
+                {
+                    // Premium owns decisions in dual-bot groups. This process remains alive only
+                    // as a capability reporter and executor for explicitly handed-off actions.
+                    return;
+                }
+#endif
 #if PREMIUM
                 if (update.Message.Chat.Type != ChatType.Private)
                 {
-                    var allowed = await Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id);
+                    var allowed = await PrincipalContentStore.IsPremiumAsync(update.Message.Chat.Id);
                     if (!allowed)
                     {
                         // Fires for every message from a non-premium group, so it must not occupy
@@ -365,7 +385,8 @@ namespace Enforcer5.Handlers
                 {
                     Service.Welcome(update.Message);
                     var hash = $"chat:{update.Message.Chat.Id}:settings";
-                    var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
+                    var muteOnJoin = GroupSettingsStore.GetAsync(update.Message.Chat.Id,
+                        GroupSettingGroups.Settings, "MuteOnJoin").Result;
                     var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
                     if (muteOnJoin == "no")
                     {
@@ -520,28 +541,15 @@ namespace Enforcer5.Handlers
             try
             {
                 //Console.WriteLine("Collecting Stats");
-                Redis.db.HashIncrementAsync("bot:general", "messages");
-                Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "name", updateMessage.From.FirstName);            
-                if (updateMessage?.From?.Username != null)
-                {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.From.Username.ToLower()}", updateMessage.From.Id);                                   
-                    Redis.db.HashSetAsync($"user:{updateMessage.From.Id}", "username", $"@{updateMessage.From.Username.ToLower()}");
-                }
-                if (updateMessage?.ForwardFrom?.Username != null)
-                {
-                    Redis.db.HashSetAsync("bot:usernames", $"@{updateMessage.ForwardFrom.Username.ToLower()}", updateMessage.ForwardFrom.Id);                    
-                    Redis.db.HashSetAsync($"user:{updateMessage.ForwardFrom.Id}", "username", $"@{updateMessage.ForwardFrom.Username.ToLower()}");
-                }
+                await PrincipalContentStore.ObserveUserAsync(updateMessage.From);
+                if (updateMessage?.ForwardFrom != null)
+                    await PrincipalContentStore.ObserveUserAsync(updateMessage.ForwardFrom);
+                await OperationsStore.RecordMessageAsync(updateMessage.From.Id,
+                    updateMessage.Chat.Type == ChatType.Private ? null : updateMessage.Chat.Id,
+                    DateTimeOffset.UtcNow);
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {
-                    Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:details", "name", updateMessage.Chat.Title);
-                    if (updateMessage?.From != null)
-                    {
-                        Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
-                        Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
-                        Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
-                        Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
-                    }
+                    await PrincipalContentStore.ObserveGroupAsync(updateMessage.Chat);
                     await RunPendingMigrations(ctx);
                 }
             }
@@ -866,6 +874,3 @@ namespace Enforcer5.Handlers
         }
     }
 }
-
-
-

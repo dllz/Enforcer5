@@ -12,6 +12,10 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Net.Http;
 using Newtonsoft.Json;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Moderation;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.PrincipalContent;
 using Telegram.Bot;
 
 #pragma warning disable CS4014
@@ -137,7 +141,7 @@ namespace Enforcer5
             long preWarns = 0;
             if (preWarn)
             {
-                preWarns = Redis.db.HashIncrementAsync($"chat:{chatId}:prewarns", warnedId, 1).Result;
+                preWarns = WarningStore.IssuePrewarningAsync(chatId, warnedId).GetAwaiter().GetResult().Balance;
                 var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, preWarns);
                 var solvedMenu = new Menu(2)
                 {
@@ -151,30 +155,22 @@ namespace Enforcer5
                 };
                 Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
                 return;
-            } else
-            {
-                long.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", warnedId).Result.ToString(), out preWarns);
-                if(preWarns > 0)
-                {
-                    preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
-                    Redis.db.HashSetAsync($"chat:{chatId}:prewarns", warnedId, 0);
-                }
             }
-            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1 + preWarns).Result;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns);
+            var issued = WarningStore.IssueWarningAsync(chatId, warnedId).GetAwaiter().GetResult();
+            preWarns = issued.Quantity - 1;
+            if (preWarns > 0)
+                preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
+            var num = issued.Balance;
             var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
-            if (num < 0)
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:warns", warnedId, 0);
-            }
             var id = warnedId;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result.ToString(), out max);
+            int.TryParse(GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "max").Result.ToString(), out max);
             if (num >= max)
             {
-                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
+                var configuredType = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "type").Result;
+                var type = configuredType.HasValue
+                    ? configuredType.ToString()
                     : "kick";
                 var name = "";
                 switch(type)
@@ -230,7 +226,7 @@ namespace Enforcer5
                         }
                         break;
                 }
-                Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
+                WarningStore.ResetAsync(chatId, id, WarningTypes.Standard).GetAwaiter().GetResult();
             }
             else
             {
@@ -423,6 +419,18 @@ namespace Enforcer5
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
             var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang);
+            if (StorageModeProvider.PostgresIsPrimary)
+            {
+                if (!res) return false;
+                Methods.SaveBan(userId, "tempban");
+                Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
+                var timeBanned = TimeSpan.FromMinutes(time);
+                var timeText = timeBanned.ToString(@"dd\:hh\:mm");
+                message ??= Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
+                if (update != null) Bot.SendReply(message, update);
+                else Bot.Send(message, chatId);
+                return true;
+            }
                 var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
             if (isBanned.HasValue)
             {
@@ -729,9 +737,11 @@ namespace Enforcer5
         public static void ResetWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
+            var userId = long.Parse(args[2]);
+            WarningStore.ResetAsync(call.Message.Chat.Id, userId, WarningTypes.Standard)
+                .GetAwaiter().GetResult();
+            WarningStore.ResetAsync(call.Message.Chat.Id, userId, WarningTypes.Media)
+                .GetAwaiter().GetResult();
              Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                 Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));            
         }
@@ -740,14 +750,11 @@ namespace Enforcer5
         public static void RemoveWarn(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, -1).Result;
+            var userId = long.Parse(args[2]);
+            var res = WarningStore.DecrementAsync(call.Message.Chat.Id, userId, WarningTypes.Standard)
+                .GetAwaiter().GetResult().Balance;
             var text = "";            
                 text = Methods.GetLocaleString(lang, "warnRemoved");
-            if (res < 0)
-            {
-                 Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
-            }
              Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                text);
         }
@@ -756,8 +763,9 @@ namespace Enforcer5
         public static void ResetPreWarns(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
-            var userId = args[2];
-            Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:prewarns", userId);
+            var userId = long.Parse(args[2]);
+            WarningStore.ResetAsync(call.Message.Chat.Id, userId, WarningTypes.Prewarning)
+                .GetAwaiter().GetResult();
 
             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
                Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
@@ -767,14 +775,11 @@ namespace Enforcer5
         public static void RemovePreWarn(CallbackQuery call, string[] args)
         {
             var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, -1).Result;
+            var userId = long.Parse(args[2]);
+            WarningStore.DecrementAsync(call.Message.Chat.Id, userId, WarningTypes.Prewarning)
+                .GetAwaiter().GetResult();
             var text = "";
             text = Methods.GetLocaleString(lang, "warnRemoved");
-            if (res < 0)
-            {
-                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, 0);
-            }
             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
               text);
         }

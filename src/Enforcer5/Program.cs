@@ -5,14 +5,20 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Enforcer5.Helpers;
 using Enforcer5;
 using Enforcer5.Handlers;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Operations;
 
 namespace Enforcer5
 {
     public class Program
     {
+        private static readonly ManualResetEventSlim ShutdownRequested = new ManualResetEventSlim(false);
+        private static int _shutdownStarted;
+        private static PosixSignalRegistration _sigtermRegistration;
         internal static bool Running = true;
         internal static List<long> MessagesReceived = new List<long>();
         internal static List<long> MessagesProcessed = new List<long>();
@@ -22,10 +28,26 @@ namespace Enforcer5
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
         private static System.Threading.Timer _tempbanJob;
+        private static PostgresDatabase _operationsDatabase;
+        private static PostgresTempBanDueWorker _postgresTempBanWorker;
         internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
         {
+            if (MigrationCommand.IsMigrationCommand(args))
+            {
+                try
+                {
+                    Environment.ExitCode = MigrationCommand.RunAsync(args).GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"[FATAL] Migration command failed: {e.Message}");
+                    Environment.ExitCode = 1;
+                }
+                return;
+            }
+
             // The update path issues many concurrent Redis and Telegram calls. The default minimum
             // (= processor count) leaves the pool injecting only ~1-2 threads/sec once saturated,
             // which is what turned a burst of updates into SE.Redis timeouts after the migration.
@@ -64,6 +86,20 @@ namespace Enforcer5
             // Apply any staged update before touching Redis or Telegram.
             Updater.ApplyPendingUpdate();
 
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+                RequestShutdown("SIGINT");
+            };
+            if (!OperatingSystem.IsWindows())
+            {
+                _sigtermRegistration = PosixSignalRegistration.Create(PosixSignal.SIGTERM, context =>
+                {
+                    context.Cancel = true;
+                    RequestShutdown("SIGTERM");
+                });
+            }
+
             try { Console.Title = "Enforcer"; } catch (PlatformNotSupportedException) { }
             LogHelper.Info($"Enforcer starting, BaseDirectory={AppContext.BaseDirectory}");
             Bot.EnsureLanguageDirectory();
@@ -90,6 +126,10 @@ namespace Enforcer5
                 }
                 count++;
             }
+            MigrationMaintenanceGuard.EnsureRuntimeAllowedAsync().GetAwaiter().GetResult();
+            if (!MigrationMaintenanceGuard.PublishHeartbeatAsync(OperationsStore.CurrentEdition)
+                    .GetAwaiter().GetResult())
+                throw new InvalidOperationException("Migration maintenance lock became active during startup.");
 
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();
@@ -98,15 +138,51 @@ namespace Enforcer5
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);
-            _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
-            //now pause the main thread to let everything else run
-            Thread.Sleep(-1);
+            if (StorageModeProvider.PostgresIsPrimary)
+            {
+                _operationsDatabase = PostgresDatabase.FromConfiguration();
+                _postgresTempBanWorker = new PostgresTempBanDueWorker(_operationsDatabase,
+                    OperationsStore.CurrentEdition, $"{Environment.MachineName}-{OperationsStore.CurrentEdition}");
+                _tempbanJob = new System.Threading.Timer(_ => Bot.Dispatch(
+                    () => _postgresTempBanWorker.ProcessDueAsync(100, DateTimeOffset.UtcNow, Bot.ShutdownToken),
+                    "PostgresTempBanWorker"), null, wait, wait);
+            }
+            else
+            {
+                _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
+            }
+            ShutdownRequested.Wait();
+            _timer?.Dispose();
+            _tempbanJob?.Dispose();
+            _operationsDatabase?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            _sigtermRegistration?.Dispose();
+        }
+
+        internal static void RequestShutdown(string reason)
+        {
+            if (Interlocked.Exchange(ref _shutdownStarted, 1) != 0) return;
+
+            LogHelper.Info($"Shutdown requested ({reason})");
+            Running = false;
+            Bot.Running = false;
+            // A command can request shutdown from inside tracked dispatched work. Coordinate on a
+            // separate task so the command can return instead of waiting for itself to drain.
+            _ = Task.Run(() =>
+            {
+                Bot.StopReceiving();
+                ShutdownRequested.Set();
+            });
         }
 
         private static void TimerOnTick(Object stateInfo)
         {
             try
             {
+                Bot.Dispatch(async () =>
+                {
+                    if (!await MigrationMaintenanceGuard.PublishHeartbeatAsync(OperationsStore.CurrentEdition))
+                        RequestShutdown("migration maintenance lock detected");
+                }, "RuntimeHeartbeat");
                 var newMessages = Bot.MessagesProcessed - _previousMessages;
                 _previousMessages = Bot.MessagesProcessed;
                 MessagesProcessed.Insert(0, newMessages);

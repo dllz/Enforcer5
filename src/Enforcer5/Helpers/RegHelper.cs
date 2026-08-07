@@ -70,6 +70,11 @@ namespace Enforcer5.Helpers
             return long.TryParse(GetRegValue(key), out var value) ? value : (long?)null;
         }
 
+        public static int GetInt(string key, int fallback)
+        {
+            return int.TryParse(GetRegValue(key), out var value) ? value : fallback;
+        }
+
         /// <summary>
         /// Resolves a configured path. Relative values are taken relative to the app directory so
         /// the defaults in appsettings.template.json work without absolute paths.

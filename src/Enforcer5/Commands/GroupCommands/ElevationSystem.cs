@@ -8,6 +8,8 @@ using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot;
+using Enforcer5.Storage.Moderation;
+using Enforcer5.Storage.PrincipalContent;
 
 namespace Enforcer5
 {
@@ -26,15 +28,15 @@ namespace Enforcer5
                     return;
                 var chat = update.Message.Chat.Id;
                 var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-                var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id.ToString()).Result;
-                var upriv = Redis.db.SetContainsAsync($"chat:{chat}:deauth", update.Message.From.Id).Result;
+                var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
+                var upriv = RoleStore.IsElevationBlockedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
                 var blocked = Redis.db.StringGetAsync($"chat:{chat}:blockList:{update.Message.From.Id}").Result;
-                var alreadyElevated = Redis.db.SetContainsAsync($"chat:{chat}:mod", userid).Result;
+                var alreadyElevated = RoleStore.IsModeratorAsync(chat, userid).GetAwaiter().GetResult();
                 if (alreadyElevated)
                     return;
                 if ((role.Result.Status == ChatMemberStatus.Creator || priv))
                 {
-                    Redis.db.SetAddAsync($"chat:{chat}:mod", userid);
+                    RoleStore.ElevateAsync(chat, userid).GetAwaiter().GetResult();
                     Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
                     if (blocked.HasValue)
                         Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
@@ -77,11 +79,11 @@ namespace Enforcer5
                     return;
                 var chat = update.Message.Chat.Id;
                 var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-                var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+                var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
                 if (role.Result.Status == ChatMemberStatus.Creator || priv)
                 {
                     var set = Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "false").Result;
-                    Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
+                    RoleStore.DeelevateAsync(chat, userid).GetAwaiter().GetResult();
                     Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
@@ -115,12 +117,12 @@ namespace Enforcer5
             if (userid == Bot.Me.Id)
                 return;
             var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
             if ((role.Result.Status == ChatMemberStatus.Creator || priv) || update.Message.From.Id == Constants.Devs[0])
             {
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
-                Redis.db.SetAddAsync($"chat:{chat}:auth", userid);
+                RoleStore.AuthorizeAsync(chat, userid).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }
@@ -134,12 +136,12 @@ namespace Enforcer5
             if (userid == Bot.Me.Id)
                 return;
             var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
-                Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
+                RoleStore.BlockElevationAsync(chat, userid).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }
@@ -153,12 +155,12 @@ namespace Enforcer5
             if (userid == Bot.Me.Id)
                 return;
             var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
             if (role.Result.Status == ChatMemberStatus.Creator | priv)
             {
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
-                Redis.db.SetRemoveAsync($"chat:{chat}:deauth", userid);
+                RoleStore.UnblockElevationAsync(chat, userid).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "elevateUnblocked", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }
@@ -172,11 +174,11 @@ namespace Enforcer5
             if (userid == Bot.Me.Id)
                 return;
             var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = RoleStore.IsAuthorizedAsync(chat, update.Message.From.Id).GetAwaiter().GetResult();
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-                Redis.db.SetRemoveAsync($"chat:{chat}:auth", userid);
+                RoleStore.DeauthorizeAsync(chat, userid).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "dauth", userid, update.Message.From.Id), update);
                 Service.LogCommand(update, update.Message.Text);
             }

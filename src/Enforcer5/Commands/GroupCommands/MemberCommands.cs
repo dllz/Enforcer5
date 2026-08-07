@@ -10,6 +10,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage.PrincipalContent;
+using Enforcer5.Storage.Moderation;
 
 
 namespace Enforcer5
@@ -54,7 +56,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
-            var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
+            var mods = RoleStore.ListModeratorsAsync(update.Message.Chat.Id).Result
+                .Select(id => $"{PrincipalContentStore.GetUserAsync(id).Result?.Name} ({id})").ToList();
             if (mods.Count > 0)
             {
                 text = $"{text}\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";
@@ -259,8 +262,8 @@ namespace Enforcer5
             }
             else
             {
-                var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
-                if (link.Equals("no") || link.IsNullOrEmpty)
+                var link = Methods.ReadGroupContent(update.Message.Chat.Id, GroupContentTypes.Link);
+                if (link == "no" || string.IsNullOrEmpty(link))
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "linkMissing"), update);
                 }
@@ -274,22 +277,15 @@ namespace Enforcer5
         public static void SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:extra";
-            var text = Redis.db.HashGetAsync(hash, args[0]).Result;
-            if (!text.HasValue)
+            var command = Methods.ReadCustomCommand(update.Message.Chat.Id, args[0]);
+            if (command == null)
                 return;
-            var fileId = "";
-            var specialMethod = "";
-            if (text.ToString().Contains("###file_id!"))
-            {
-                var split = text.ToString()
-                    .Replace("###file_id!", "")
-                    .Split(new[] { "###:" }, StringSplitOptions.RemoveEmptyEntries);
-                fileId = split[1];
-                specialMethod = split[0];
-
-            }
-            var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;
+            var text = command.Content ?? (!string.IsNullOrEmpty(command.FileId)
+                ? $"###file_id!{command.MediaType}###:{command.FileId}"
+                : string.Empty);
+            var fileId = command.MediaType == "gif" ? string.Empty : command.FileId ?? string.Empty;
+            var specialMethod = command.MediaType == "gif" ? string.Empty : command.MediaType ?? string.Empty;
+            var hasMedia = command.MediaType == "gif" ? command.FileId : null;
             var repId = update.Message.MessageId;
             if (update.Message.ReplyToMessage != null)
             {
@@ -324,7 +320,7 @@ namespace Enforcer5
                 {
                     if (!string.IsNullOrEmpty(specialMethod))
                     {
-                        var caption = Redis.db.HashGetAsync($"{hash}:{args[0]}", "caption").Result;
+                        var caption = command.Caption;
                         switch (specialMethod)
                         {
                             case "voice":
@@ -361,7 +357,7 @@ namespace Enforcer5
                                         replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                             case "gif":
-                                if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.ToString().Contains("###file_id") && hasMedia.ToString().Contains("null"))
+                                if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.Contains("###file_id") && hasMedia.Contains("null"))
                                 {
                                     Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
                                         replyParameters: new ReplyParameters { MessageId = repId });

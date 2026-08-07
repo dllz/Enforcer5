@@ -6,6 +6,8 @@ using System.Reflection.Emit;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
+using Enforcer5.Storage;
+using Enforcer5.Storage.PrincipalContent;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -18,7 +20,7 @@ namespace Enforcer5
         public static void Welcome(Message message)
         {
             var chatId = message.Chat.Id;
-            var welcomeOn = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Welcome").Result;
+            var welcomeOn = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "Welcome").Result;
             if (welcomeOn.Equals("yes"))
                 return;
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
@@ -121,8 +123,8 @@ defSpamValue = 3;
                     Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.", chatId);
                     break;
                 default:
-                    var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
-                    var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
+                    var type = GroupSettingsStore.GetAsync(message.Chat.Id, GroupSettingGroups.Welcome, "type").Result;
+                    var content = GroupSettingsStore.GetAsync(message.Chat.Id, GroupSettingGroups.Welcome, "content").Result;
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
                         var file_id = content;
@@ -132,10 +134,10 @@ defSpamValue = 3;
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
-                        var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
+                        var hasMedia = GroupSettingsStore.GetAsync(message.Chat.Id, GroupSettingGroups.Welcome, "hasmedia").Result;
                         if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
                         {
-                            var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
+                            var file = GroupSettingsStore.GetAsync(message.Chat.Id, GroupSettingGroups.Welcome, "media").Result;
                             var text = GetCustomWelcome(message, content);
                             Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file), text).Result;
 
@@ -244,7 +246,9 @@ defSpamValue = 3;
                 Bot.Api.LeaveChat(updateMessage.Chat.Id);
                 return;
             }
-            var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;
+            var alreadyExists = StorageModeProvider.PostgresIsPrimary
+                ? GroupSettingsStore.GetAllAsync(updateMessage.Chat.Id, GroupSettingGroups.Settings).Result.Length > 0
+                : PrincipalContentStore.GroupExistsAsync(updateMessage.Chat.Id).Result;
             if (alreadyExists)
             {
                 Bot.Send(
@@ -303,16 +307,17 @@ defSpamValue = 3;
             {
                 for (int j = 0; j < defaultSettings.GetLength(1); j++)
                 {
-                    var hash = $"chat:{chatid}:{defaultSettings[i, j, 0]}";
-                    var value = defaultSettings[i, j, 1];
+                    var settingGroup = defaultSettings[i, j, 0].ToString();
                     var setting = defaultSettings[i, j, 2];
                     if (int.TryParse(setting.ToString(), out num))
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
+                        GroupSettingsStore.SetAsync(chatid, settingGroup,
+                            defaultSettings[i, j, 1].ToString(), num).GetAwaiter().GetResult();
                     }
                     else if (setting is string)
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                        GroupSettingsStore.SetAsync(chatid, settingGroup,
+                            defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString()).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -391,16 +396,17 @@ defSpamValue = 3;
             {
                 for (int j = 0; j < defaultSettings.GetLength(1); j++)
                 {
-                    var hash = $"chat:{chatId}:{defaultSettings[i, j, 0]}";
-                    var value = defaultSettings[i, j, 1];
+                    var settingGroup = defaultSettings[i, j, 0].ToString();
                     var setting = defaultSettings[i, j, 2];
                     if (int.TryParse(setting.ToString(), out num))
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
+                        GroupSettingsStore.SetAsync(chatId, settingGroup,
+                            defaultSettings[i, j, 1].ToString(), num).GetAwaiter().GetResult();
                     }
                     else if (setting is string)
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                        GroupSettingsStore.SetAsync(chatId, settingGroup,
+                            defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString()).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -446,9 +452,10 @@ defSpamValue = 3;
                 replyto = Methods.GetLocaleString(lang, "noone");
             }
 
-            if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
+            var configuredLogChat = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "logchat").Result;
+            if (configuredLogChat.HasValue)
             {
-                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();              
+                var logChatID = configuredLogChat.ToString();
                 try
                 {
 
@@ -469,7 +476,7 @@ defSpamValue = 3;
                     List<string> removeTriggers = new List<string> { "bot was kicked from the", "bot is not a member of the", "bot was blocked by" };
                     if (e is AggregateException && ((AggregateException)e).InnerExceptions.Any(x => removeTriggers.Any(y => x.Message.Contains(y))))
                     {
-                        Redis.db.HashDeleteAsync($"chat:{chatId}:settings", "logchat");
+                        GroupSettingsStore.SetLogChatAsync(chatId, null).GetAwaiter().GetResult();
                         Bot.Send(Methods.GetLocaleString(lang, "logchannelAutoRemoved"), chatId);
                     }
                     else Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
@@ -529,11 +536,13 @@ defSpamValue = 3;
                     var setting = defaultSettings[i, j, 2];
                     if (int.TryParse(setting.ToString(), out num))
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
+                        GroupSettingsStore.SetAsync(chatid.Identifier.GetValueOrDefault(), defaultSettings[i, j, 0].ToString(),
+                            defaultSettings[i, j, 1].ToString(), num).GetAwaiter().GetResult();
                     }
                     else if (setting is string)
                     {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
+                        GroupSettingsStore.SetAsync(chatid.Identifier.GetValueOrDefault(), defaultSettings[i, j, 0].ToString(),
+                            defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString()).GetAwaiter().GetResult();
                     }
                 }
             }

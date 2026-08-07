@@ -78,11 +78,8 @@ namespace Enforcer5.Helpers
                         IsUpdateStable(UpdateDirectory))
                     {
                         Console.Error.WriteLine("[INFO] Update detected while running, shutting down to apply...");
-                        Bot.Running = false;
-                        Program.Running = false;
-                        Bot.StopReceiving();
-                        Thread.Sleep(1000);
-                        Environment.Exit(0);
+                        Program.RequestShutdown("staged update");
+                        return;
                     }
                 }
                 catch (Exception e)

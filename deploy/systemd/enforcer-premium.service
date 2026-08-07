@@ -8,12 +8,21 @@ WorkingDirectory=/opt/enforcer/premium/App
 ExecStart=/usr/bin/dotnet "/opt/enforcer/premium/App/Enforcer Premium.dll"
 Restart=always
 RestartSec=5
+TimeoutStopSec=90
 Environment=EnforcerPremiumAPI=
 Environment=TelegramServerUrl=
 Environment=RedisConnection=
 Environment=RedisPassword=
+Environment=PostgresConnection=
+Environment=GroupSettingsShadowEnabled=false
+Environment=GroupSettingsOutboxCapacity=100000
+Environment=StorageMode=RedisPrimaryPostgresShadow
+Environment=PrincipalContentShadowEnabled=false
+Environment=ModerationShadowEnabled=false
+Environment=OperationsShadowEnabled=false
 Environment=PaymentProviderToken=
 Environment=ErrorChatId=
+Environment=TelegramActionWorkers=16
 Environment=DisplayTimeZone=Europe/Amsterdam
 Environment=LogPath=/opt/enforcer/premium/Logs
 Environment=LanguagesPath=/opt/enforcer/Languages

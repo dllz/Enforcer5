@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Storage;
 using Telegram.Bot.Types;
 
 namespace Enforcer5
@@ -17,7 +18,7 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antinamelengthsettings", "maxlength", chars);
+                GroupSettingsStore.SetAsync(update.Message.Chat.Id, GroupSettingGroups.NameLength, "maxlength", chars).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }
@@ -30,7 +31,7 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlength", chars);
+                GroupSettingsStore.SetAsync(update.Message.Chat.Id, GroupSettingGroups.TextLength, "maxlength", chars).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }
@@ -43,7 +44,7 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlines", chars);
+                GroupSettingsStore.SetAsync(update.Message.Chat.Id, GroupSettingGroups.TextLength, "maxlines", chars).GetAwaiter().GetResult();
                 Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
                 return;
             }

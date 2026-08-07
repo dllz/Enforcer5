@@ -13,6 +13,10 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Moderation;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.PrincipalContent;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using Telegram.Bot;
@@ -75,7 +79,10 @@ namespace Enforcer5.Helpers
             try
             {
                 // A kick is a ban followed by an unban; 22.x throws rather than returning false.
-                Bot.Api.BanChatMember(chatId, userId).Wait();
+                var banCompletion = Bot.QueueBanTrackedAsync(chatId, userId).GetAwaiter().GetResult();
+                Bot.WaitForTelegramActionAsync(banCompletion).GetAwaiter().GetResult();
+                OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.Ban, "kick")
+                    .GetAwaiter().GetResult();
 
                 Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
                 var check = Bot.Api.GetChatMember(chatId, userId).Result;
@@ -92,11 +99,14 @@ namespace Enforcer5.Helpers
                 while (status != ChatMemberStatus.Left && count < 10)
                 {
                     if (count == 9) Thread.Sleep(2000);
-                    Bot.Api.UnbanChatMember(chatId, userId);
+                    var unbanCompletion = Bot.QueueUnbanTrackedAsync(chatId, userId).GetAwaiter().GetResult();
+                    Bot.WaitForTelegramActionAsync(unbanCompletion).GetAwaiter().GetResult();
                     check = Bot.Api.GetChatMember(chatId, userId).Result;
                     status = check.Status;
                     count++;
                 }
+                OperationsStore.RecordAllSanctionsResolvedAsync(chatId, userId,
+                    SanctionKinds.Ban, SanctionKinds.TempBan).GetAwaiter().GetResult();
                 return true;
             }
             catch (Exception e)
@@ -239,13 +249,17 @@ namespace Enforcer5.Helpers
         private static string ReadChatLanguage(long chatId)
         {
             if (TryGetCachedLanguage(chatId, out var cached)) return cached;
-            return CacheLanguage(chatId, Redis.db.StringGetAsync($"chat:{chatId}:language").Result);
+            return CacheLanguage(chatId, ReadGroupContent(chatId, GroupContentTypes.Language));
         }
 
         internal static async Task<string> ReadChatLanguageAsync(long chatId)
         {
             if (TryGetCachedLanguage(chatId, out var cached)) return cached;
-            return CacheLanguage(chatId, await Redis.db.StringGetAsync($"chat:{chatId}:language"));
+            if (!StorageModeProvider.PostgresIsPrimary)
+                return CacheLanguage(chatId, await Redis.db.StringGetAsync($"chat:{chatId}:language"));
+            await using var database = PostgresDatabase.FromConfiguration();
+            var item = await new GroupContentRepository(database).GetAsync(chatId, GroupContentTypes.Language);
+            return CacheLanguage(chatId, item?.Content);
         }
 
         /// <summary>Maps a stored language name onto the in-memory snapshot, falling back to English.</summary>
@@ -476,7 +490,7 @@ namespace Enforcer5.Helpers
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
+                return $"{PrincipalContentStore.GetUserAsync(userid).Result?.Name} ({userid})";
             }
             else
             {
@@ -496,7 +510,7 @@ namespace Enforcer5.Helpers
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
+                return $"{PrincipalContentStore.GetUserAsync(userid).Result?.Name} ({userid})";
             }
             else
             {
@@ -550,7 +564,7 @@ namespace Enforcer5.Helpers
 
         public static string GetName(long userid)
         {
-            return ((string)Redis.db.HashGetAsync($"user:{userid}", "name").Result).FormatHTML();
+            return (PrincipalContentStore.GetUserAsync(userid).Result?.Name ?? string.Empty).FormatHTML();
         }
 
         public static long ResolveIdFromusername(string s, long chatId = 0)
@@ -559,11 +573,10 @@ namespace Enforcer5.Helpers
                 throw new Exception("UnableToResolveUsername");
             s = s.ToLower();
             if (s.Contains(' ')) s = s.Split(' ')[0];
-            var userid = Redis.db.HashGetAsync($"bot:usernames", s).Result;
-            var id = 0L;
-            if (long.TryParse(userid.ToString(), out id))
+            var id = PrincipalContentStore.ResolveUsernameAsync(s).Result;
+            if (id.HasValue)
             {
-                return id;
+                return id.Value;
             }
             else
             {
@@ -664,8 +677,8 @@ namespace Enforcer5.Helpers
 
         public static string GetAbout(long chatId, XDocument lang)
         {
-            var about = Redis.db.StringGetAsync($"chat:{chatId}:about").Result;
-            if (about.HasValue)
+            var about = ReadGroupContent(chatId, GroupContentTypes.About);
+            if (about != null)
             {
                 return GetLocaleStringNoFormat(lang, "about", about);
             }
@@ -677,8 +690,8 @@ namespace Enforcer5.Helpers
 
         public static string  GetRules(long chatId, XDocument lang)
         {
-            var rules = Redis.db.StringGetAsync($"chat:{chatId}:rules").Result;
-            if (rules.HasValue)
+            var rules = ReadGroupContent(chatId, GroupContentTypes.Rules);
+            if (rules != null)
             {
                 return GetLocaleStringNoFormat(lang, "rules", rules);
             }
@@ -690,7 +703,7 @@ namespace Enforcer5.Helpers
 
         public static bool SendInPm(Message updateMessage, string rules)
         {
-            var enabled = Redis.db.HashGetAsync($"chat:{updateMessage.Chat.Id}:settings", rules).Result;
+            var enabled = GroupSettingsStore.GetAsync(updateMessage.Chat.Id, GroupSettingGroups.Settings, rules).Result;
             return enabled.Equals("yes");
         }
 
@@ -718,29 +731,14 @@ namespace Enforcer5.Helpers
             if (chatId != null)
             {
                 completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
-                long warns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
-                {
-                    warns = Convert.ToInt64( Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result);
-                }
+                var standard = WarningStore.GetBalanceAsync(chatId.Value, userid, WarningTypes.Standard).Result;
+                long warns = standard.ActiveQuantity;
                 completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
-                long totalWarns = warns;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result.HasValue)
-                {
-                    totalWarns = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result);
-                }
+                long totalWarns = standard.LifetimeQuantity;
                 completedList.Add(GetLocaleString(lang, "getgrouptotalwarn", totalWarns));
-                warns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
-                {
-                    warns = Convert.ToInt64( Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
-                }
+                warns = WarningStore.GetBalanceAsync(chatId.Value, userid, WarningTypes.Media).Result.ActiveQuantity;
                 completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
-                long preWarns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result.HasValue)
-                {
-                    preWarns = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result);
-                }
+                long preWarns = WarningStore.GetBalanceAsync(chatId.Value, userid, WarningTypes.Prewarning).Result.ActiveQuantity;
                 completedList.Add(GetLocaleString(lang, "getPreWarn", preWarns));
             }
             
@@ -856,7 +854,10 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Bot.Api.BanChatMember(chatId, userId).Wait();
+                var completion = Bot.QueueBanTrackedAsync(chatId, userId).GetAwaiter().GetResult();
+                Bot.WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
+                OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.Ban)
+                    .GetAwaiter().GetResult();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
                 return true;
             }
@@ -883,7 +884,13 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Bot.Api.BanChatMember(chatId, userId, untilDateTime).Wait();
+                var completion = Bot.QueueBanTrackedAsync(chatId, userId,
+                    new DateTimeOffset(DateTime.SpecifyKind(untilDateTime, DateTimeKind.Utc)))
+                    .GetAwaiter().GetResult();
+                Bot.WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
+                OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.TempBan, null,
+                    new DateTimeOffset(DateTime.SpecifyKind(untilDateTime, DateTimeKind.Utc)))
+                    .GetAwaiter().GetResult();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
                 return true;
             }
@@ -906,6 +913,11 @@ namespace Enforcer5.Helpers
 
         public static void AddBanList(long chatId, long userId, string name, string why)
         {
+            if (StorageModeProvider.PostgresIsPrimary)
+            {
+                OperationsStore.SetActiveSanctionReasonAsync(chatId, userId, why).GetAwaiter().GetResult();
+                return;
+            }
             var hash = $"chat:{chatId}:bannedlist";
             var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
             kvp.Add(new KeyValuePair<RedisKey, RedisValue>(hash, userId.ToString()));
@@ -977,7 +989,11 @@ namespace Enforcer5.Helpers
             try
             {
                 // 22.x throws on failure, so a single call replaces the old retry-until-true loop.
-                Bot.Api.UnbanChatMember(chatId, userId).Wait();
+                var completion = Bot.QueueUnbanTrackedAsync(chatId, userId).GetAwaiter().GetResult();
+                Bot.WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
+                OperationsStore.RecordAllSanctionsResolvedAsync(chatId, userId,
+                    SanctionKinds.Ban, SanctionKinds.TempBan)
+                    .GetAwaiter().GetResult();
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
                 return true;
 
@@ -1238,6 +1254,9 @@ namespace Enforcer5.Helpers
 
         public static bool IsBanned(long chatId, long userId)
         {
+            if (StorageModeProvider.PostgresIsPrimary)
+                return OperationsStore.GetActiveSanctionAsync(chatId, userId, SanctionKinds.Ban)
+                    .Result != null;
             var hash = $"chat:{chatId}:banned";
             var res = Redis.db.SetContainsAsync(hash, userId).Result;
             return res;
@@ -1283,8 +1302,7 @@ namespace Enforcer5.Helpers
 
         public static bool IsLangAdmin(long id)
         {
-            var res = Redis.db.SetContainsAsync($"langAdmins", id).Result;
-            return res;
+            return GlobalRoleStore.IsLanguageAdminAsync(id).Result;
         }
 
         public static bool IsGroupAdmin(CallbackQuery update)
@@ -1294,8 +1312,136 @@ namespace Enforcer5.Helpers
 
         public static void SetGroupLang(string newLang, long chatId)
         {
-            Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
+            WriteGroupContent(chatId, GroupContentTypes.Language, newLang);
             _chatLanguage[chatId] = (newLang, DateTime.UtcNow.Add(LanguageCacheTtl));
+        }
+
+        internal static string ReadGroupContent(long chatId, string contentType)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                var value = contentType == GroupContentTypes.Link
+                    ? Redis.db.HashGetAsync($"chat:{chatId}links", "link").Result
+                    : Redis.db.StringGetAsync($"chat:{chatId}:{contentType}").Result;
+                return value.IsNull ? null : value.ToString();
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            return new GroupContentRepository(database.Value).GetAsync(chatId, contentType)
+                .GetAwaiter().GetResult()?.Content;
+        }
+
+        internal static void WriteGroupContent(long chatId, string contentType, string content)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                if (contentType == GroupContentTypes.Link)
+                    Redis.db.HashSetAsync($"chat:{chatId}links", "link", content).GetAwaiter().GetResult();
+                else
+                    Redis.db.StringSetAsync($"chat:{chatId}:{contentType}", content).GetAwaiter().GetResult();
+                if (!PrincipalContentShadowEnabled) return;
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            new GroupContentRepository(database.Value)
+                .UpsertAsync(new GroupContentItem(chatId, contentType, content)).GetAwaiter().GetResult();
+        }
+
+        internal static void DeleteGroupContent(long chatId, string contentType)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                if (contentType == GroupContentTypes.Link)
+                    Redis.db.HashDeleteAsync($"chat:{chatId}links", "link").GetAwaiter().GetResult();
+                else
+                    Redis.db.KeyDeleteAsync($"chat:{chatId}:{contentType}").GetAwaiter().GetResult();
+                if (!PrincipalContentShadowEnabled) return;
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            new GroupContentRepository(database.Value).DeleteAsync(chatId, contentType).GetAwaiter().GetResult();
+        }
+
+        internal static CustomCommand ReadCustomCommand(long chatId, string trigger)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                var key = $"chat:{chatId}:extra";
+                var value = Redis.db.HashGetAsync(key, trigger).Result;
+                if (value.IsNull) return null;
+                var side = Redis.db.HashGetAsync($"{key}:{trigger}", new RedisValue[] { "mediaid", "caption" }).Result;
+                return LegacyPrincipalContentMapper.ParseCustomCommand(chatId, trigger, value.ToString(),
+                    side[0].IsNull ? null : side[0].ToString(), side[1].IsNull ? null : side[1].ToString());
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            return new CustomCommandRepository(database.Value).GetAsync(chatId, trigger).GetAwaiter().GetResult();
+        }
+
+        internal static IReadOnlyList<CustomCommand> ListCustomCommands(long chatId)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                var key = $"chat:{chatId}:extra";
+                return Redis.db.HashKeysAsync(key).Result.Select(trigger =>
+                    ReadCustomCommand(chatId, trigger.ToString())).Where(command => command != null).ToList();
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            return new CustomCommandRepository(database.Value).ListAsync(chatId).GetAwaiter().GetResult();
+        }
+
+        internal static void WriteCustomCommand(CustomCommand command)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                var key = $"chat:{command.ChatId}:extra";
+                var sideKey = $"{key}:{command.Trigger}";
+                var content = command.Content;
+                if (!string.IsNullOrEmpty(command.FileId) && command.MediaType != "gif")
+                    content = $"###file_id!{command.MediaType}###:{command.FileId}";
+                Redis.db.HashSetAsync(key, command.Trigger, content ?? string.Empty).GetAwaiter().GetResult();
+                if (command.MediaType == "gif" && !string.IsNullOrEmpty(command.FileId))
+                    Redis.db.HashSetAsync(sideKey, "mediaid", command.FileId).GetAwaiter().GetResult();
+                else
+                    Redis.db.HashDeleteAsync(sideKey, "mediaid").GetAwaiter().GetResult();
+                if (command.Caption != null)
+                    Redis.db.HashSetAsync(sideKey, "caption", command.Caption).GetAwaiter().GetResult();
+                else
+                    Redis.db.HashDeleteAsync(sideKey, "caption").GetAwaiter().GetResult();
+                if (!PrincipalContentShadowEnabled) return;
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            new CustomCommandRepository(database.Value).UpsertAsync(command).GetAwaiter().GetResult();
+        }
+
+        internal static bool DeleteCustomCommand(long chatId, string trigger)
+        {
+            var existed = ReadCustomCommand(chatId, trigger) != null;
+            if (!StorageModeProvider.PostgresIsPrimary)
+            {
+                var key = $"chat:{chatId}:extra";
+                Redis.db.HashDeleteAsync(key, trigger).GetAwaiter().GetResult();
+                Redis.db.KeyDeleteAsync($"{key}:{trigger}").GetAwaiter().GetResult();
+                if (!PrincipalContentShadowEnabled) return existed;
+            }
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            new CustomCommandRepository(database.Value).DeleteAsync(chatId, trigger).GetAwaiter().GetResult();
+            return existed;
+        }
+
+        private static bool PrincipalContentShadowEnabled =>
+            string.Equals(RegHelper.GetRegValue("PrincipalContentShadowEnabled"), "true",
+                StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection"));
+
+        private sealed class SyncPostgresDatabase : IDisposable
+        {
+            internal SyncPostgresDatabase(PostgresDatabase value) => Value = value;
+            internal PostgresDatabase Value { get; }
+            public void Dispose() => Value.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
         // Removed: the scheduled 45-minute self-restart. It existed because the old Windows host
@@ -1304,7 +1450,7 @@ namespace Enforcer5.Helpers
         public static int GetGroupTempbanTime(long chatId)
         {
             int res = 1440;
-            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;
+            var time = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Other, "tempbanTime").Result;
             if (int.TryParse(time.ToString(), out res))
             {
                 return res;
@@ -1315,7 +1461,7 @@ namespace Enforcer5.Helpers
         public static int GetGroupTempMuteTime(long chatId)
         {
             int res = 1440;
-            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempMuteTime").Result;
+            var time = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Other, "tempMuteTime").Result;
             if (int.TryParse(time.ToString(), out res))
             {
                 return res;
@@ -1325,9 +1471,8 @@ namespace Enforcer5.Helpers
 
         public static object GetUsername(long id)
         {
-            var username = Redis.db.HashGetAsync($"user:{id}", "username").Result;
-            if (username.HasValue)
-                return username.ToString();
+            var username = PrincipalContentStore.GetUserAsync(id).Result?.Username;
+            if (!string.IsNullOrEmpty(username)) return username;
             return "No username found";
         }
 
@@ -1337,7 +1482,11 @@ namespace Enforcer5.Helpers
             {
                 var res = Bot.Mute(chatId, userId);
                 if (res)
-                {   
+                {
+                    if (StorageModeProvider.PostgresIsPrimary && newJoiner)
+                    {
+                        OperationsStore.MarkMuteAsNewJoinerAsync(chatId, userId).GetAwaiter().GetResult();
+                    }
                     if (newJoiner)
                     {
                         Redis.db.SetAddAsync($"chat:{chatId}:mutedJoiners", userId);

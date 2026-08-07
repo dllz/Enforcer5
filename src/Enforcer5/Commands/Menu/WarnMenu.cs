@@ -9,6 +9,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -16,13 +17,13 @@ namespace Enforcer5
     {
         public static InlineKeyboardMarkup genWarnMenu(long chatId, XDocument lang)
         {
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            var settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Settings).Result;
             var mainMenu = new Models.Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
 
-            var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
-            var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
+            var max = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "max").Result;
+            var action = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "type").Result;
             var editWarn = new Menu(3);
                      
             editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
@@ -51,7 +52,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:warnsettings", "max").Result;
+            var num = GroupSettingsStore.DecrementAsync(chatId, GroupSettingGroups.Warn, "max").GetAwaiter().GetResult();
             if (num > 0)
             {
                 var keys = Commands.genWarnMenu(chatId, lang);
@@ -62,7 +63,7 @@ namespace Enforcer5
             else
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+                GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Warn, "max").GetAwaiter().GetResult();
             }
         }
 
@@ -71,7 +72,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+            GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Warn, "max").GetAwaiter().GetResult();
             var keys = Commands.genWarnMenu(chatId, lang);
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -83,10 +84,10 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "type";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, option).Result;
             if (current.Equals("ban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "kick");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Warn, option, "kick").GetAwaiter().GetResult();
                 var keys = Commands.genWarnMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys);
@@ -94,7 +95,7 @@ namespace Enforcer5
             }
             else if (current.Equals("kick"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Warn, option, "ban").GetAwaiter().GetResult();
                 var keys = Commands.genWarnMenu(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys);

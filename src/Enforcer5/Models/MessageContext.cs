@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using StackExchange.Redis;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Moderation;
+using Enforcer5.Storage.Operations;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -108,15 +111,15 @@ namespace Enforcer5.Models
             var globalBanId = message.NewChatMember?.Id ?? context.UserId;
 
             var db = Redis.db;
-            var watch = db.SetContainsAsync($"chat:{context.ChatId}:watch", context.UserId);
-            var settings = db.HashGetAllAsync($"chat:{context.ChatId}:settings");
-            var flood = db.HashGetAllAsync($"chat:{context.ChatId}:flood");
-            var floodExceptions = db.HashGetAllAsync($"chat:{context.ChatId}:floodexceptions");
-            var media = db.HashGetAllAsync($"chat:{context.ChatId}:media");
-            var characters = db.HashGetAllAsync($"chat:{context.ChatId}:char");
-            var nameLength = db.HashGetAllAsync($"chat:{context.ChatId}:antinamelengthsettings");
-            var textLength = db.HashGetAllAsync($"chat:{context.ChatId}:antitextlengthsettings");
-            var globalBan = db.HashGetAllAsync($"globalBan:{globalBanId}");
+            var watch = PolicyStore.IsWatchDisabledAsync(context.ChatId, context.UserId);
+            var settings = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.Settings);
+            var flood = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.Flood);
+            var floodExceptions = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.FloodExceptions);
+            var media = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.Media);
+            var characters = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.Characters);
+            var nameLength = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.NameLength);
+            var textLength = GroupSettingsStore.GetAllAsync(context.ChatId, GroupSettingGroups.TextLength);
+            var globalBan = GetGlobalBanEntriesAsync(globalBanId);
             var spamCount = db.StringGetAsync($"spam:{context.ChatId}:{context.UserId}");
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
 
@@ -165,6 +168,20 @@ namespace Enforcer5.Models
         private static T Value<T>(Task<T> task)
         {
             return Ok(task) ? task.Result : default(T);
+        }
+
+        private static async Task<HashEntry[]> GetGlobalBanEntriesAsync(long userId)
+        {
+            if (!StorageModeProvider.PostgresIsPrimary)
+                return await Redis.db.HashGetAllAsync($"globalBan:{userId}");
+            var sanction = await OperationsStore.GetGlobalBanAsync(userId);
+            if (sanction == null) return Array.Empty<HashEntry>();
+            return new[]
+            {
+                new HashEntry("banned", sanction.Active ? "1" : "0"),
+                new HashEntry("motivation", sanction.Reason ?? string.Empty),
+                new HashEntry("time", sanction.CreatedAt?.ToString("O") ?? string.Empty)
+            };
         }
     }
 }

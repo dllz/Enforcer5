@@ -9,6 +9,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -16,7 +17,7 @@ namespace Enforcer5
     {
         public static InlineKeyboardMarkup genGroupSettingsMenu(long chatId, XDocument lang)
         {
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            var settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Settings).Result;
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
@@ -50,7 +51,7 @@ namespace Enforcer5
                     }
                 }
             }
-            settings = Redis.db.HashGetAllAsync($"chat:{chatId}:char").Result;
+            settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Characters).Result;
             foreach (var mem in settings)
             {
                 mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
@@ -133,14 +134,14 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, option).Result;
 
             string next;
             if (current.Equals("yes")) next = "no";
             else if (current.Equals("no")) next = "yes";
             else return;
 
-            Redis.db.HashSetAsync($"chat:{chatId}:settings", option, next);
+            GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Settings, option, next).GetAwaiter().GetResult();
             RedrawSettingsMenu(call, chatId, lang);
         }
 
@@ -152,7 +153,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Characters, option).Result;
 
             string next;
             if (current.Equals("ban")) next = "kick";
@@ -161,7 +162,7 @@ namespace Enforcer5
             else if (current.Equals("tempban")) next = "ban";
             else return;
 
-            Redis.db.HashSetAsync($"chat:{chatId}:char", option, next);
+            GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Characters, option, next).GetAwaiter().GetResult();
             RedrawSettingsMenu(call, chatId, lang);
         }
 

@@ -9,6 +9,7 @@ using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -16,7 +17,7 @@ namespace Enforcer5
     {
         public static InlineKeyboardMarkup genFlood(long chatId, XDocument lang)
         {
-            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            var flood = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "Flood").Result;
             var oneRow = new Menu(2);
             if (flood.Equals("no"))
             {
@@ -28,7 +29,7 @@ namespace Enforcer5
                 oneRow.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
                     $"floodstatus:{chatId}"));
             }
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
+            var settings = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.Flood).Result;
             var action = settings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
             switch (action.Value.ToString())
             {
@@ -51,7 +52,7 @@ namespace Enforcer5
             twoRow.Buttons.Add(new InlineButton("➖", $"flooddim:{chatId}"));
             twoRow.Buttons.Add(new InlineButton(action.Value, $"floodSettings:{chatId}"));
             twoRow.Buttons.Add(new InlineButton("➕", $"floodraise:{chatId}"));
-            var exceptions = Redis.db.HashGetAllAsync($"chat:{chatId}:floodexceptions").Result;
+            var exceptions = GroupSettingsStore.GetAllAsync(chatId, GroupSettingGroups.FloodExceptions).Result;
             var exeMenu = new Menu(2);
             var textFound = false;
             foreach (var mem in exceptions)
@@ -98,17 +99,17 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            var flood = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Settings, "Flood").Result;
             if (flood.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Settings, "Flood", "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (flood.Equals("no"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Settings, "Flood", "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -128,7 +129,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:flood", "MaxFlood").Result;
+            var num = GroupSettingsStore.DecrementAsync(chatId, GroupSettingGroups.Flood, "MaxFlood").GetAwaiter().GetResult();
             if (num > 4)
             {
                 var keys = Commands.genFlood(chatId, lang);
@@ -138,7 +139,7 @@ namespace Enforcer5
             else
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
+                GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Flood, "MaxFlood").GetAwaiter().GetResult();
             }
         }
 
@@ -147,7 +148,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
+            GroupSettingsStore.IncrementAsync(chatId, GroupSettingGroups.Flood, "MaxFlood").GetAwaiter().GetResult();
             var keys = Commands.genFlood(chatId, lang);
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -159,29 +160,29 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "ActionFlood";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:flood", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Flood, option).Result;
             if (current.Equals("ban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "kick");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Flood, option, "kick").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else if (current.Equals("kick"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "warn");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Flood, option, "warn").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             } else if (current.Equals("warn"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "tempban");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Flood, option, "tempban").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }else if (current.Equals("tempban"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "ban");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.Flood, option, "ban").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -194,17 +195,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "text";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.FloodExceptions, option).Result;
             if (current.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(call.From.Id, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -216,17 +217,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "sticker";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.FloodExceptions, option).Result;
             if (current.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -239,17 +240,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "image";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.FloodExceptions, option).Result;
             if (current.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -262,17 +263,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "video";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.FloodExceptions, option).Result;
             if (current.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
@@ -285,17 +286,17 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var option = "gif";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
+            var current = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.FloodExceptions, option).Result;
             if (current.Equals("yes"))
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "no").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             }
             else
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
+                GroupSettingsStore.SetAsync(chatId, GroupSettingGroups.FloodExceptions, option, "yes").GetAwaiter().GetResult();
                 var keys = Commands.genFlood(chatId, lang);
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));

@@ -14,6 +14,8 @@ using System.Xml.Linq;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Operations;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using Telegram.Bot;
@@ -24,6 +26,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Linq;
+using System.Collections.Concurrent;
 using Telegram.Bot.Types.Payments;
 
 #pragma warning disable CS0168
@@ -158,6 +161,13 @@ namespace Enforcer5.Helpers
 #endif
 
         private static readonly CancellationTokenSource _receiverCts = new CancellationTokenSource();
+        private static readonly object _receiverLifecycleLock = new object();
+        private static readonly TaskCompletionSource _receiverStopped =
+            new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        private static bool _receiverStarted;
+        private static TelegramActionQueue _telegramActions;
+        private static TelegramActionQueue _premiumFallbackActions;
+        private static TelegramActionQueue _premiumRescueActions;
         internal static CancellationToken ShutdownToken => _receiverCts.Token;
 
         /// <summary>
@@ -168,14 +178,84 @@ namespace Enforcer5.Helpers
         internal static void StopReceiving()
         {
             _receiverCts.Cancel();
+            lock (_receiverLifecycleLock)
+            {
+                if (!_receiverStarted) _receiverStopped.TrySetResult();
+            }
+            try
+            {
+                // The producer must be gone before the channel closes. Otherwise it can persist an
+                // offset and then lose the corresponding update to ChannelClosedException.
+                _receiverStopped.Task.GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Polling shutdown failed: {e.Message}");
+            }
             _updates.Writer.TryComplete();
             try
             {
-                Task.WhenAll(_consumers).Wait(TimeSpan.FromSeconds(15));
+                // Do not advance to producer/queue shutdown while an accepted update can still
+                // dispatch work. systemd owns the final hard timeout if a consumer is truly stuck.
+                Task.WhenAll(_consumers).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
                 LogHelper.Error($"Drain on shutdown failed: {e.Message}");
+            }
+            // Update handlers produce enforcement work. Drain those producers before stopping the
+            // durable action queue or an accepted update could exit before its action reaches Redis.
+            DrainDispatchedWork(TimeSpan.FromSeconds(60));
+            GroupSettingsStore.Stop(TimeSpan.FromSeconds(15));
+            _telegramActions?.Stop(TimeSpan.FromSeconds(15));
+            _premiumFallbackActions?.Stop(TimeSpan.FromSeconds(15));
+            _premiumRescueActions?.Stop(TimeSpan.FromSeconds(15));
+        }
+
+        internal static async Task QueueDeleteMessageAsync(long chatId, int messageId)
+        {
+            var queue = _telegramActions
+                ?? throw new InvalidOperationException("Telegram action queue has not started.");
+            await queue.EnqueueDeleteMessageAsync(chatId, messageId);
+        }
+
+        internal static Task<RedisValue> QueueBanAsync(long chatId, long userId, DateTimeOffset? until = null)
+        {
+            return (_telegramActions ?? throw new InvalidOperationException("Telegram action queue has not started."))
+                .EnqueueBanAsync(chatId, userId, until);
+        }
+
+        internal static Task<string> QueueUnbanTrackedAsync(long chatId, long userId)
+        {
+            return (_telegramActions ?? throw new InvalidOperationException("Telegram action queue has not started."))
+                .EnqueueUnbanTrackedAsync(chatId, userId);
+        }
+
+        internal static Task<string> QueueBanTrackedAsync(long chatId, long userId, DateTimeOffset? until = null) =>
+            (_telegramActions ?? throw new InvalidOperationException("Telegram action queue has not started."))
+                .EnqueueBanTrackedAsync(chatId, userId, until);
+
+        internal static Task<string> QueueRestrictTrackedAsync(long chatId, long userId,
+            ChatPermissions permissions, DateTimeOffset? until = null) =>
+            (_telegramActions ?? throw new InvalidOperationException("Telegram action queue has not started."))
+                .EnqueueRestrictTrackedAsync(chatId, userId, permissions, until);
+
+        internal static Task<string> QueueDeleteTrackedAsync(long chatId, int messageId) =>
+            (_telegramActions ?? throw new InvalidOperationException("Telegram action queue has not started."))
+                .EnqueueDeleteTrackedAsync(chatId, messageId);
+
+        internal static async Task WaitForTelegramActionAsync(string completionKey,
+            CancellationToken cancellationToken = default)
+        {
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var result = await Redis.db.HashGetAsync(completionKey,
+                    new RedisValue[] { "status", "error" });
+                if (result[0] == "succeeded") return;
+                if (result[0] == "failed")
+                    throw new InvalidOperationException($"Telegram action failed: {result[1]}");
+                await Task.Delay(100, cancellationToken);
             }
         }
 
@@ -263,6 +343,7 @@ namespace Enforcer5.Helpers
         // stall every command, button and inline query bot-wide.
         private static readonly SemaphoreSlim _actionGate = new SemaphoreSlim(32);
         private static readonly SemaphoreSlim _interactiveGate = new SemaphoreSlim(64);
+        private static readonly ConcurrentDictionary<Task, byte> _dispatchedWork = new ConcurrentDictionary<Task, byte>();
 
         /// <summary>
         /// Runs blocking enforcement on the pool without holding up an update consumer, capped so
@@ -284,7 +365,7 @@ namespace Enforcer5.Helpers
 
         private static void Run(SemaphoreSlim gate, Action work, string name)
         {
-            _ = Task.Run(async () =>
+            TrackDispatchedWork(Task.Run(async () =>
             {
                 try
                 {
@@ -307,7 +388,37 @@ namespace Enforcer5.Helpers
                 {
                     gate.Release();
                 }
-            });
+            }));
+        }
+
+        private static void TrackDispatchedWork(Task task)
+        {
+            _dispatchedWork.TryAdd(task, 0);
+            _ = task.ContinueWith(completed => _dispatchedWork.TryRemove(completed, out _),
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        private static void DrainDispatchedWork(TimeSpan timeout)
+        {
+            var deadline = DateTime.UtcNow.Add(timeout);
+            while (!_dispatchedWork.IsEmpty)
+            {
+                var remaining = deadline - DateTime.UtcNow;
+                if (remaining <= TimeSpan.Zero)
+                {
+                    LogHelper.Error($"Shutdown timed out with {_dispatchedWork.Count} dispatched actions still running");
+                    return;
+                }
+
+                try
+                {
+                    Task.WhenAll(_dispatchedWork.Keys).Wait(remaining);
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"Dispatched action drain failed: {e.Message}");
+                }
+            }
         }
 
         /// <summary>
@@ -321,7 +432,7 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static void Dispatch(Func<Task> work, [CallerMemberName] string name = "")
         {
-            _ = Task.Run(async () =>
+            TrackDispatchedWork(Task.Run(async () =>
             {
                 try
                 {
@@ -331,7 +442,7 @@ namespace Enforcer5.Helpers
                 {
                     LogHelper.Error($"{name} failed: {AsApiError(e)?.Message ?? e.Message}");
                 }
-            });
+            }));
         }
 
 
@@ -435,12 +546,54 @@ namespace Enforcer5.Helpers
                     UpdateType.InlineQuery,
                     UpdateType.PreCheckoutQuery,
                     UpdateType.ShippingQuery
+                    ,UpdateType.MyChatMember
                 }
             };
 
+            if (ShutdownToken.IsCancellationRequested)
+            {
+                _receiverStopped.TrySetResult();
+                return;
+            }
+
             StartUpdateConsumers();
-            await Api.ReceiveAsync(new EnforcerUpdateHandler(), receiverOptions, ShutdownToken);
+            _telegramActions = new TelegramActionQueue(Redis.db, new BotTelegramActionExecutor(), EditionName);
+            await _telegramActions.StartAsync();
+#if NORMAL
+            _premiumFallbackActions = new TelegramActionQueue(Redis.db, new BotTelegramActionExecutor(),
+                "premium", "normal", fallbackStream: true);
+            await _premiumFallbackActions.StartAsync();
+            _premiumRescueActions = new TelegramActionQueue(Redis.db, new BotTelegramActionExecutor(),
+                "premium", "normal", requiredAbsentHeartbeat: "premium");
+            await _premiumRescueActions.StartAsync();
+#endif
+            await GroupSettingsStore.StartAsync();
+            lock (_receiverLifecycleLock)
+            {
+                if (ShutdownToken.IsCancellationRequested)
+                {
+                    GroupSettingsStore.Stop(TimeSpan.FromSeconds(15));
+                    _telegramActions.Stop(TimeSpan.FromSeconds(15));
+                    _receiverStopped.TrySetResult();
+                    return;
+                }
+                _receiverStarted = true;
+            }
+            try
+            {
+                await Api.ReceiveAsync(new EnforcerUpdateHandler(), receiverOptions, ShutdownToken);
+            }
+            finally
+            {
+                _receiverStopped.TrySetResult();
+            }
         }
+
+#if PREMIUM
+        private const string EditionName = "premium";
+#else
+        private const string EditionName = "normal";
+#endif
 
         /// <summary>
         /// Queues polled updates for the consumer pool. Replaces the 13.x
@@ -450,23 +603,14 @@ namespace Enforcer5.Helpers
         {
             public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {
-                // Persist the offset here, on the receive thread, so it advances in order. Writing it
-                // from the consumers would let a later id land before an earlier update finished and
-                // a restart would then skip work.
-                Redis.db.StringSetAsync(OffsetKey, update.Id);
-
                 // Blocks the poll loop when the queue is full - that back-pressure is the point.
                 // No token: an OperationCanceledException here escapes ReceiveAsync and Initialize,
                 // reaching the unhandled handler as a terminating fault, so a planned shutdown
                 // would exit(5) and look like a crash to DeployBot. Writer completion ends this.
-                try
-                {
-                    await _updates.Writer.WriteAsync((update, DateTime.Now), CancellationToken.None);
-                }
-                catch (ChannelClosedException)
-                {
-                    // shutting down
-                }
+                await _updates.Writer.WriteAsync((update, DateTime.Now), CancellationToken.None);
+                // Persist only after queue admission. A crash between these operations replays the
+                // update; persisting first could permanently lose an update that never reached a consumer.
+                await Redis.db.StringSetAsync(OffsetKey, update.Id);
             }
 
             public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
@@ -818,7 +962,8 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Bot.Api.DeleteMessage(chatId, msgid).Wait();
+                var completion = QueueDeleteTrackedAsync(chatId, msgid).GetAwaiter().GetResult();
+                WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
                 return true;
             }
             catch (Exception e)
@@ -832,7 +977,7 @@ namespace Enforcer5.Helpers
 
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
         {
-            var enabled = Redis.db.HashGetAsync($"chat:{ChatId}:settings", "DeleteLastWelcome").Result;
+            var enabled = GroupSettingsStore.GetAsync(ChatId, GroupSettingGroups.Settings, "DeleteLastWelcome").Result;
             int lastWelcomeMessageId = (int)Redis.db.StringGetAsync($"chat:{ChatId}:lastwelcome").Result;
             if (enabled.Equals("no"))
             {
@@ -883,8 +1028,18 @@ namespace Enforcer5.Helpers
         {
             try
             {
-                Bot.Api.RestrictChatMember(chatId, userId, MutedPermissions,
-                    untilDate: untilDatetime == default(DateTime) ? (DateTime?)null : untilDatetime).Wait();
+                var completion = QueueRestrictTrackedAsync(chatId, userId, MutedPermissions,
+                    untilDatetime == default(DateTime)
+                        ? null
+                        : new DateTimeOffset(DateTime.SpecifyKind(untilDatetime, DateTimeKind.Utc)))
+                    .GetAwaiter().GetResult();
+                WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
+                OperationsStore.RecordSanctionAsync(chatId, userId,
+                    untilDatetime == default(DateTime) ? SanctionKinds.Mute : SanctionKinds.TempMute,
+                    expiresAt: untilDatetime == default(DateTime)
+                        ? null
+                        : new DateTimeOffset(DateTime.SpecifyKind(untilDatetime, DateTimeKind.Utc)))
+                    .GetAwaiter().GetResult();
                 return true;
             }
             catch (Exception e)
@@ -911,7 +1066,12 @@ namespace Enforcer5.Helpers
                     CanSendOtherMessages = true,
                     CanAddWebPagePreviews = true
                 };
-                Bot.Api.RestrictChatMember(chatId, userId, chatPermissions).Wait();
+                var completion = QueueRestrictTrackedAsync(chatId, userId, chatPermissions)
+                    .GetAwaiter().GetResult();
+                WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
+                OperationsStore.RecordAllSanctionsResolvedAsync(chatId, userId,
+                    SanctionKinds.Mute, SanctionKinds.TempMute)
+                    .GetAwaiter().GetResult();
                 return true;
             }
             catch (Exception e)
@@ -979,8 +1139,7 @@ namespace Enforcer5.Helpers
                     if (!declared.Contains("keepAlive")) options.KeepAlive = 60;
                     options.ReconnectRetryPolicy = new ExponentialRetry(1000);
 
-                    // The instance is shared with blackwolf; without this CLIENT LIST cannot tell
-                    // the consumers apart.
+                    // Give each edition a distinct CLIENT LIST identity.
                     if (!declared.Contains("name"))
 #if PREMIUM
                         options.ClientName = "enforcer-premium";

@@ -42,12 +42,21 @@ WorkingDirectory=$BASE/$config/App
 ExecStart=/usr/bin/dotnet "$BASE/$config/App/$DLL"
 Restart=always
 RestartSec=5
+TimeoutStopSec=90
 Environment=${APIKEY}=
 Environment=TelegramServerUrl=
 Environment=RedisConnection=
 Environment=RedisPassword=
+Environment=PostgresConnection=
+Environment=GroupSettingsShadowEnabled=false
+Environment=GroupSettingsOutboxCapacity=100000
+Environment=StorageMode=RedisPrimaryPostgresShadow
+Environment=PrincipalContentShadowEnabled=false
+Environment=ModerationShadowEnabled=false
+Environment=OperationsShadowEnabled=false
 Environment=PaymentProviderToken=
 Environment=ErrorChatId=
+Environment=TelegramActionWorkers=16
 Environment=DisplayTimeZone=Europe/Amsterdam
 Environment=LogPath=$BASE/$config/Logs
 Environment=LanguagesPath=$BASE/Languages
@@ -85,7 +94,7 @@ echo "=== Setup complete ==="
 echo ""
 echo "Next steps:"
 echo "1. Edit each /etc/systemd/system/enforcer-*.service"
-echo "   Set the API token, RedisConnection, RedisPassword, ErrorChatId, PaymentProviderToken"
+echo "   Set the API token, RedisConnection, RedisPassword, PostgresConnection, ErrorChatId, PaymentProviderToken"
 echo ""
 echo "2. Deploy the initial builds via the deploy bot:"
 echo "   /forceenforcer normal"

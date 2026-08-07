@@ -1,0 +1,9 @@
+# Requires Redis 6.2 or newer for XAUTOCLAIM crash recovery.
+# Merge these settings into Enforcer's dedicated Redis configuration after durable product data
+# has moved to PostgreSQL and the 30-day rollback window has completed.
+appendonly yes
+appendfsync everysec
+maxmemory-policy noeviction
+
+# Select maxmemory only after measuring raid load, queue depth, and allocator fragmentation.
+# maxmemory 2gb

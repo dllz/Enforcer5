@@ -8,6 +8,9 @@ using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
+using Enforcer5.Storage.PrincipalContent;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.Moderation;
 using Enforcer5.Models;
 using StackExchange.Redis;
 using StackExchange.Redis.KeyspaceIsolation;
@@ -178,14 +181,14 @@ namespace Enforcer5
             {
                 Console.WriteLine(e);
             }
-            Environment.Exit(0);
+            Program.RequestShutdown("halt command");
         }
 
         [Command(Trigger = "makelangadmin", RequiresReply = true, UploadAdmin = true)]
        public static void MakeLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            var res =  Redis.db.SetAddAsync("langAdmins", id).Result;
+            GlobalRoleStore.SetLanguageAdminAsync(id, true).GetAwaiter().GetResult();
              Bot.SendReply("Done", update);
         }
 
@@ -193,7 +196,7 @@ namespace Enforcer5
         public static void RemoveLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
+            GlobalRoleStore.SetLanguageAdminAsync(id, false).GetAwaiter().GetResult();
              Bot.SendReply("Done", update);
         }
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
@@ -219,7 +222,7 @@ namespace Enforcer5
                     groupd = long.Parse(spilt[1]);
                 }
             }
-            Redis.db.SetAddAsync($"chat:{groupd}:watch", userId);
+            PolicyStore.SetWatchDisabledAsync(groupd, userId, true).GetAwaiter().GetResult();
             Bot.Send(Methods.GetLocaleString(lang, "off"), update.Message.From.Id);
             //Service.LogCommand(update, update.Message.Text);
         }
@@ -261,9 +264,7 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                 OperationsStore.SetGlobalBanAsync(userId, true, moti).GetAwaiter().GetResult();
                  Bot.SendReply($"{userId} has been rekt for {moti}", update);
             }
             else
@@ -288,9 +289,7 @@ namespace Enforcer5
                     try
                     {
                         var userId = Methods.ResolveIdFromusername(username);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        OperationsStore.SetGlobalBanAsync(userId, true, moti).GetAwaiter().GetResult();
                         idlist = $"{idlist}, {userId}";
                     }
                     catch (Exception e)
@@ -361,9 +360,7 @@ namespace Enforcer5
                     try
                     {
                         var userId = long.Parse(username);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
+                        OperationsStore.SetGlobalBanAsync(userId, true, moti).GetAwaiter().GetResult();
                         idlist = $"{idlist}, {userId}";
                     }
                     catch (Exception e)
@@ -382,14 +379,14 @@ namespace Enforcer5
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static void AllowPremiumBot(Update update, string[] args)
         {
-             Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
+            PrincipalContentStore.SetPremiumAsync(update.Message.Chat.Id, true).GetAwaiter().GetResult();
              Bot.SendReply("Activated", update);
         }
 
         [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true)]
         public static void BlockPremiumBot(Update update, string[] args)
         {
-             Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
+            PrincipalContentStore.SetPremiumAsync(update.Message.Chat.Id, false).GetAwaiter().GetResult();
              Bot.SendReply("Deactivated", update);
         }
 
@@ -430,9 +427,7 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 0);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanMotivation", moti);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanTime", System.DateTime.UtcNow.ToString());
+                 OperationsStore.SetGlobalBanAsync(userId, false, moti).GetAwaiter().GetResult();
                  Bot.SendReply($"{userId} has been unrekt for {moti}", update);
             }
             else
@@ -534,7 +529,7 @@ namespace Enforcer5
             {
                 text = $"{text}\n{mem.Name}: {mem.Value}";
             }
-            var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
+            var msgs = OperationsStore.GetUserMessagesAsync(userid).Result;
             text = $"{text}\nUser has said {msgs} ever";
             if (update.Message.Chat.Type != ChatType.Private)
             {

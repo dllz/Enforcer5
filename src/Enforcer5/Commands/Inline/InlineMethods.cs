@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Operations;
+using Enforcer5.Storage.PrincipalContent;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 
@@ -16,6 +19,24 @@ namespace Enforcer5
         
         internal static TempbanUser[] GetTempbanUserDetails(User user, string args, XDocument lang)
         {
+            if (StorageModeProvider.PostgresIsPrimary)
+            {
+                var sanctions = OperationsStore.ListActiveSanctionsAsync(SanctionKinds.TempBan).Result;
+                var postgresResults = sanctions.Where(value => value.UserId == user.Id).Select(value =>
+                {
+                    var userName = PrincipalContentStore.GetUserAsync(value.UserId).Result?.Name ?? string.Empty;
+                    return new TempbanUser
+                    {
+                        userId = value.UserId.ToString(), name = userName.FormatHTML(),
+                        groupName = value.GroupId.ToString(), groupId = value.GroupId.ToString(),
+                        unbanTime = value.ExpiresAt?.UtcDateTime.ToString("hh:mm:ss dd-MM-yyyy") ?? string.Empty
+                    };
+                }).Where(value => string.IsNullOrEmpty(args) || value.name.Contains(args,
+                    StringComparison.OrdinalIgnoreCase) || value.groupId.Contains(args)).ToArray();
+                return postgresResults.Length == 0
+                    ? new[] { new TempbanUser { name = "Nothing Found", unbanTime = "", groupName = "", groupId = "", userId = "" } }
+                    : postgresResults;
+            }
             var bitBan = Redis.db.HashGetAllAsync("tempbanned").Result.ToList();
             bitBan.AddRange(Redis.db.HashGetAllAsync("tempbannedPremium").Result);
             

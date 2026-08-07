@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Enforcer5.Storage;
+using Enforcer5.Storage.Moderation;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
 #pragma warning disable CS0168
@@ -136,11 +138,13 @@ namespace Enforcer5
             {
                 try
                 {
-                    Bot.DeleteMessage(groupId, update.Message.MessageId);
+                    Bot.QueueDeleteMessageAsync(groupId, update.Message.MessageId).GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
-                    //moving on
+                    // Deletion is best effort here; a queue outage must not suppress the configured
+                    // kick, ban, warning, or tempban that follows.
+                    LogHelper.Error($"Could not queue anti-length delete: {e.Message}");
                 }
 
                 string reply;
@@ -286,15 +290,17 @@ namespace Enforcer5
             {
                 // Only needed once media is actually blocked, so it stays off the common path.
                 // This read used to be issued twice - once for HasValue and once for the value.
-                var configuredMax = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
+                var configuredMax = GroupSettingsStore.GetAsync(chatId, GroupSettingGroups.Warn, "mediamax").Result;
                 var max = configuredMax.HasValue ? configuredMax : 2;
-                var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
+                var current = WarningStore.IssueAsync(chatId, message.From.Id, WarningTypes.Media)
+                    .GetAwaiter().GetResult().Balance;
 
                 var overLimit = current >= int.Parse(max);
                 var action = overLimit ? configuredAction : null;
                 if (overLimit)
                 {
-                    Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
+                    WarningStore.ResetAsync(chatId, message.From.Id, WarningTypes.Media)
+                        .GetAwaiter().GetResult();
                 }
 
                 if (overLimit)

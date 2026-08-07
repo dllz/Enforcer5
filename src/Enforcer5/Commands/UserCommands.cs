@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
+using Enforcer5.Storage.Moderation;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -59,7 +60,8 @@ namespace Enforcer5
                             group = args[1].Split('_')[1];
                             if (long.TryParse(group, out longGroup))
                             {
-                                Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
+                                PolicyStore.SetTagAllSubscribedAsync(longGroup, update.Message.From.Id, true)
+                                    .GetAwaiter().GetResult();
                                 Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
                             }
                             else Bot.SendReply("Error: Wrong syntax!", update);
@@ -240,7 +242,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
+            PolicyStore.SetTagAllSubscribedAsync(chatId, userId, false).GetAwaiter().GetResult();
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }      
 
@@ -273,7 +275,7 @@ namespace Enforcer5
             var spamcheck = Redis.db.StringGetAsync($"chat:{ chatId}:spamList").Result;
             if(spamcheck.HasValue)
                 return;
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
+            var set = PolicyStore.ListTagAllSubscribersAsync(chatId).Result;
             
             List<String> list = new List<string>();
             string templist = "";
@@ -281,7 +283,8 @@ namespace Enforcer5
             long num = 0;
             foreach (var mem in set)
             {
-                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
+                num = mem;
+                if (num != 0)
                 {
                     templist += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
                     count++;
@@ -317,7 +320,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
+            PolicyStore.SetTagAllSubscribedAsync(chatId, userId, false).GetAwaiter().GetResult();
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }
 
@@ -326,14 +329,11 @@ namespace Enforcer5
         {
             long chatId = update.Message.Chat.Id;                    
             long userId = update.Message.From.Id;        
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
+            var set = PolicyStore.ListTagAllSubscribersAsync(chatId).Result;
             long num = 0;
             foreach (var mem in set)
             {
-                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
-                {
-                    Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", num);              
-                }            
+                PolicyStore.SetTagAllSubscribedAsync(chatId, mem, false).GetAwaiter().GetResult();
             }              
         }
 
