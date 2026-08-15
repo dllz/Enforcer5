@@ -479,6 +479,70 @@ Going forward the hot path can keep incrementing Redis as a write cache and batc
 PostgreSQL, which is the shape you described - the constraint is only that the *migration* must not
 derive the starting value.
 
+### 12.1a `ban:{userId}` - carry it, it is not derivable at all
+
+The natural question, having made the group the migration unit, is whether the user-tier moderation
+counters can be recomputed as a sum over per-group moderation data at cutover, the way one might
+expect a total to relate to its parts. Measured across the full dataset, no - and not marginally:
+
+```text
+accounts with moderation counters       123,459
+  would match if derived from groups        538     0.4%
+  would lose history                    122,889    99.6%
+  would go to zero                      121,783    98.6%
+
+total moderation events carried         653,077
+total derivable from group data           2,077     0.3%
+```
+
+Recomputing would destroy **99.7% of all moderation history** and zero out **98.6% of the users who
+have any**. Three independent reasons, any one of which is sufficient:
+
+**There is no group dimension to sum over.** `Methods.SaveBan(long userId, string banType)` takes no
+chat id. All eighteen call sites have one in scope and none passes it. The breakdown this proposal
+would sum has never existed.
+
+**A tally is not a state.** `ban:{userId}` increments on every action, forever. `sanctions` holds
+*current* state - one row per active sanction. A user banned and unbanned ten times has ten counter
+increments and either zero or one sanction rows. The `tempban` kind shows this most starkly: 44,038
+counter events against 141 surviving sanction rows.
+
+**Most kinds have no sanction representation whatsoever.** `flood` (293,497), `longmessages`
+(128,358), `arab`, `rtl`, `namelength`, `media`, `NSFWImage` and `maxWarn` are antispam *trigger*
+tallies, not sanctions. That is roughly 451,000 of the 653,077 events, and nothing per-group
+corresponds to them.
+
+This is the same conclusion as section 12.1 and for a stronger reason. There, the per-group counters
+genuinely existed and summed to no more than the global one, so the global figure was a superset.
+Here there is no relationship to exploit at all.
+
+**Decision: `ban:{userId}` is authoritative, carried as absolute values in Stage B with the rest of
+the global tier, and never derived.** This is what `account_moderation_counters` already does.
+
+### 12.1b What the per-group cutover can and cannot move
+
+Only tables with a `group_id` can move with a group:
+
+```text
+per group      sanctions (group_id, account_id, edition)
+               reports (group_id)
+               group_audit_events (group_id, NOT NULL)
+               group_account_message_totals (group_id, account_id)
+
+global tier    account_moderation_counters (account_id)
+               global_sanctions (account_id)
+               account_message_totals (account_id)
+               bot_statistic_baselines (edition)
+```
+
+The global tier has no group to attach to, so it is migrated once to completeness in Stage B and
+cannot be deferred to per-group cutover. Section 5 already requires this for correctness rather than
+speed - for `globalBan:*` and `ban:*` absence means *allowed*.
+
+One wrinkle on the group-scoped side: a group's tempbans are group-scoped in content but live in the
+process-wide `tempbanned` hash, which has no group dimension. Extracting one group's tempbans means
+reading the whole hash - blocker B1 for correctness, and section 9.2 H7 for throughput.
+
 ### 12.2 `bot:general` - frozen
 
 ```text
