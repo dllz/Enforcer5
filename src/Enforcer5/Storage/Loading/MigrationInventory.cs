@@ -85,6 +85,26 @@ SELECT telegram_chat_id AS GroupId, split_part(redis_key, ':', 3)::bigint AS Mes
         }
 
         /// <summary>
+        /// The group population, from the inventory when one exists and by discovery otherwise.
+        /// <para>
+        /// Never <c>bot:groupsid</c> alone. That set holds 36,441 members while 44,392 groups are
+        /// known and 38,152 hold data, because it was only ever written from one of the three code
+        /// paths that can create a settings hash. Seeding from it silently skips 7,951 groups.
+        /// </para>
+        /// </summary>
+        internal static async Task<IReadOnlyCollection<long>> GroupIdsOrDiscoverAsync(
+            PostgresDatabase database, CancellationToken cancellationToken = default)
+        {
+            var generation = await LatestAsync(database, cancellationToken);
+            if (generation != null)
+                return await GroupIdsAsync(database, generation.Value.GenerationId, cancellationToken);
+            // No inventory yet: fall back to a live scan, which costs a full keyspace pass but
+            // cannot miss a group that has data.
+            return await PrincipalContent.LegacyPrincipalContentReader
+                .DiscoverGroupIdsAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// The generation every domain should read, or null when no pass has ever completed.
         /// A partial generation is never offered: it would silently migrate a subset.
         /// </summary>

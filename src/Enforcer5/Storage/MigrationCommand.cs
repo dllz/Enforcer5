@@ -272,12 +272,10 @@ namespace Enforcer5.Storage
                 {
                 var groupIds = new System.Collections.Generic.HashSet<long>();
                 if (groupScope != null) groupIds.Add(groupScope.GroupId);
-                else
-                {
-                    var groupValues = await Redis.db.SetMembersAsync("bot:groupsid");
-                    foreach (var value in groupValues)
-                        if (long.TryParse(value.ToString(), out var id)) groupIds.Add(id);
-                }
+                // Not bot:groupsid: it misses the 7,951 groups that hold data but were never
+                // registered, every one of which has roles, policies and warnings to migrate.
+                else groupIds.UnionWith(await Loading.MigrationInventory.GroupIdsOrDiscoverAsync(
+                    moderationDatabase));
                 var moderationService = new ModerationBackfillService(moderationDatabase);
                 var moderationResult = await moderationService.RunRedisPrimaryAsync(groupIds,
                     moderationReconcile, includeGlobalRoles: groupScope == null,
@@ -331,9 +329,8 @@ namespace Enforcer5.Storage
                         var parts = principalKey.ToString().Split(':');
                         if (parts.Length == 2 && long.TryParse(parts[1], out var id)) userIds.Add(id);
                     }
-                    var groupValues = await Redis.db.SetMembersAsync("bot:groupsid");
-                    foreach (var value in groupValues)
-                        if (long.TryParse(value.ToString(), out var id)) groupIds.Add(id);
+                    groupIds.UnionWith(await Loading.MigrationInventory.GroupIdsOrDiscoverAsync(
+                        principalDatabase));
                 }
                 var principalService = new PrincipalContentBackfillService(principalDatabase);
                 var principalResult = await principalService.RunRedisPrimaryAsync(userIds, groupIds,
