@@ -102,6 +102,22 @@ namespace Enforcer5.Storage.Loading
                     ? new ClassifiedKey(MigrationKeyClasses.ModerationCounters, null, banUserId)
                     : ClassifiedKey.Unclassified;
 
+            // "groupBan:{chatId}" - whether the bot is banned from a group. Read at Service.cs:240.
+            if (key.StartsWith("groupBan:", StringComparison.Ordinal))
+                return long.TryParse(key.AsSpan(9), out var bannedChatId)
+                    ? new ClassifiedKey(MigrationKeyClasses.GroupScoped, bannedChatId, null)
+                    : ClassifiedKey.Unclassified;
+
+            // "lang:{id}" - the predecessor of "chat:{chatId}:language", holding values like "en".
+            // Nothing in the current codebase reads it; Methods.cs:258 uses the newer shape. Carries
+            // both group and user ids, so the sign decides which.
+            if (key.StartsWith("lang:", StringComparison.Ordinal))
+                return long.TryParse(key.AsSpan(5), out var languageId)
+                    ? languageId < 0
+                        ? new ClassifiedKey(MigrationKeyClasses.Legacy, languageId, null)
+                        : new ClassifiedKey(MigrationKeyClasses.Legacy, null, languageId)
+                    : ClassifiedKey.Unclassified;
+
             if (key.StartsWith("flagged:", StringComparison.Ordinal))
                 return ClassifyReport(key, 8);
             if (key.StartsWith("flaggedReply:", StringComparison.Ordinal))

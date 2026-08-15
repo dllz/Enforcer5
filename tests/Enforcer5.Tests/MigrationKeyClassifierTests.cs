@@ -113,15 +113,41 @@ public sealed class MigrationKeyClassifierTests
         Assert.Equal(expectedChatId, classified.TelegramChatId);
     }
 
+    [Fact]
+    public void SupersededShapesAreRecognisedRatherThanLeftUnknown()
+    {
+        // lang:{id} predates chat:{chatId}:language and still holds 1,325 live keys in the
+        // production copy. Nothing reads it, but leaving it unclassified would hide it in the
+        // bucket that is supposed to mean "investigate this".
+        var group = MigrationKeyClassifier.Classify("lang:-1001234567890");
+        Assert.Equal(MigrationKeyClasses.Legacy, group.KeyClass);
+        Assert.Equal(-1001234567890L, group.TelegramChatId);
+
+        var user = MigrationKeyClassifier.Classify("lang:42");
+        Assert.Equal(MigrationKeyClasses.Legacy, user.KeyClass);
+        Assert.Equal(42L, user.TelegramUserId);
+    }
+
+    [Fact]
+    public void AGroupLevelBanIsAttributedToItsGroup()
+    {
+        var classified = MigrationKeyClassifier.Classify("groupBan:-1001234567890");
+
+        Assert.Equal(MigrationKeyClasses.GroupScoped, classified.KeyClass);
+        Assert.Equal(-1001234567890L, classified.TelegramChatId);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("something:entirely:new")]
     [InlineData("user:notanumber")]
     [InlineData("chat:notanumber:settings")]
+    [InlineData("antinamelengthsettings")]
     public void AnUnrecognisedShapeIsReportedRatherThanGuessedAt(string key)
     {
         // A new key shape must surface as a rising unclassified count to be investigated, never as
-        // a plausible-looking wrong owner.
+        // a plausible-looking wrong owner. The bare setting-group name is a real orphan found in
+        // production - a settings hash written with no chat prefix - and belongs in this bucket.
         Assert.True(MigrationKeyClassifier.Classify(key).IsUnclassified);
     }
 }

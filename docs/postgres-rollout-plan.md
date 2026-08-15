@@ -444,20 +444,36 @@ sums are a breakdown of it, not its source.**
 accounts for, with check constraints keeping it non-negative and no greater than the total. The
 loader computes it set-wise from the staged group counters.
 
-Verified on the full dataset after a complete load:
+Verified on the full dataset after a complete load by the real loader (2026-08-15):
 
 ```text
-accounts loaded                4,713,977
-total messages             1,168,646,843
-unattributed                  26,384,222   2.258%
-accounts with a residual          39,963
-fully attributed               4,674,014
+accounts loaded                4,752,053
+total messages             1,170,249,076
+unattributed                  27,559,870   2.355%
+accounts with a residual          66,479
 
 invariant message_count = SUM(per-group) + unattributed_count
-  accounts checked             4,713,977
-  holds                        4,713,977
+  accounts checked             4,752,053
+  holds                        4,752,053
   violated                             0
 ```
+
+Three independent cross-checks land exactly, which is the reason to believe the figures rather than
+merely record them:
+
+- `total messages` equals the measured `sum of chat:{userId}` of **1,170,249,076** to the message.
+- `SUM(group_account_message_totals)` equals the measured `sum of group-level` of **1,142,689,206**.
+- The difference between those two is **27,559,870**, which is exactly the residual the loader
+  computed independently - and exactly the figure this section predicted would be lost if the total
+  were recomputed from group sums.
+
+**These supersede an earlier set of figures** (4,713,977 accounts / 1,168,646,843 messages /
+26,384,222 unattributed). That load seeded its population from `user:*` alone and so dropped the
+**38,076 users who exist only as a `chat:{userId}` counter**, along with their 1,602,233 messages.
+The earlier numbers were self-consistent, which is precisely why the gap was invisible: the
+invariant held across the subset that was loaded. The population is now the union of `user:{id}` and
+`chat:{userId}`, taken from the keyspace inventory, which makes the union explicit rather than
+implicit.
 
 Going forward the hot path can keep incrementing Redis as a write cache and batch-sync to
 PostgreSQL, which is the shape you described - the constraint is only that the *migration* must not
@@ -575,7 +591,7 @@ when the bot is re-added.
 | B1 | Global tempban hash has no group dimension. On flip, a group's in-flight tempbans were left with no worker - users stayed banned forever | **Fixed.** Both expiry workers now filter on per-group state and partition the estate: `Methods.CheckTempBans` skips groups PostgreSQL owns, `ClaimDueTempBansAsync` claims only those groups. Regression tested. |
 | B2 | No per-group lease. `MigrationMaintenanceGuard` is one global lock requiring both bots stopped | **Fixed.** `migration_group_state` plus `GroupMigrationStateStore` provide an exclusive, expiry-reclaimable per-group lease; only the holder may advance a group. Regression tested. |
 | B3 | `StorageMode` is process-global across ~80 branch sites; per-group routing does not exist | **Fixed.** `StorageRouting` splits global-tier from per-group routing; all 78 call sites converted. The only remaining `StorageModeProvider` uses are the three backfill guards that legitimately require shadow mode. Regression tested. |
-| - | The real loader. What exists is a benchmark prototype in `tools/`, not wired into `MigrationCommand`, with no resumable checkpoints or run tracking | **Not built** |
+| - | The real loader. What exists is a benchmark prototype in `tools/`, not wired into `MigrationCommand`, with no resumable checkpoints or run tracking | **Built.** `Storage/Loading/`, wired as `migrate inventory` and `migrate user-tier backfill`, resumable, run-tracked. Verified end to end on the full rehearsal dataset - section 16. |
 | - | Per-group state machine, `migbuf`, crawler - the whole of Stage C | **Not built** |
 | - | Sanction `active`-state remodel, without which the loader can resurrect an unban | **Already satisfied.** `sanctions` and `global_sanctions` were always status rows (`active`/`due`/`revoked`/`completed`) and are never hard-deleted - verified, no `DELETE FROM` exists for either. |
 | H6 | `ban:{userId}` (121,061 keys) still not migrated by anything | **Fixed.** `account_moderation_counters` plus a reader, repository and backfill path. Absolute values are carried, never increments, so a re-run converges. Regression tested. |
@@ -682,3 +698,105 @@ expiry worker's filter required a `migration_group_state` row with state `Postgr
 process-wide mode is flipped there are no such rows, so it would have claimed nothing and every
 tempban would have stalled at Stage D. Fixed with an `@AllGroups` short-circuit and covered by the
 mirror-mode test.
+
+---
+
+## 16. The loader - built
+
+`tools/Enforcer5.Benchmarks` proved the design; `src/Enforcer5/Storage/Loading/` is the production
+version. Two commands: `migrate inventory [--fresh]` and `migrate user-tier backfill`.
+
+### 16.1 The keyspace inventory
+
+One full pass, recorded in `migration_key_inventory` against a `migration_scan_generations` row.
+Everything downstream reads it instead of re-scanning, because `SCAN MATCH` filters *after* walking
+the keyspace - so a per-prefix scan costs a full pass and N prefixes cost N passes. The operations
+domain pays that six times per run today.
+
+Measured over the full rehearsal copy:
+
+```text
+keys scanned              19,407,887
+unclassified                   1,330      0.0069%
+elapsed                        15m28s     (7.4.10, ARM Docker on macOS)
+```
+
+Classification, which cross-checks against the independently measured key populations:
+
+```text
+group-statistics           7,383,778     matches the measured {groupId}:users:{userId} count
+user                       5,126,029     matches the measured user:{id} count
+user-message-total         4,752,053     matches the measured chat:{userId} count
+group-scoped                 753,166
+ephemeral                    719,600
+report                       495,278     flagged:* plus flaggedReply:*
+moderation-counters          123,459
+bot-global                    51,351
+global-ban                     1,843
+unclassified                   1,330
+```
+
+The 1,330 unclassified keys were four shapes, and investigating them is the point of the bucket:
+
+| Shape | Count | Disposition |
+|---|---|---|
+| `lang:{id}` | 1,325 | Superseded by `chat:{chatId}:language` (`Methods.cs:258`). Durable but unread, so classified `legacy` - recognised and deliberately not carried. |
+| `groupBan:{chatId}` | 3 | Live, read at `Service.cs:240`. Now classified `group-scoped`. |
+| `antinamelengthsettings`, `antitextlengthsettings` | 1 each | Genuine orphans - a settings hash written with no `chat:{id}:` prefix. Left unclassified deliberately; this is exactly what the bucket is for. |
+
+`legacy` is a distinct class from `ephemeral`: ephemeral data is TTL-bounded and rebuilt, legacy data
+is durable and simply no longer read. Collapsing them would hide a real decision.
+
+### 16.2 The user tier load
+
+```text
+users staged               5,164,105     union of user:{id} and chat:{userId}
+group counters staged      7,383,778
+accounts created           5,164,105     users = accounts = identity links
+groups created                38,152     matches the measured group population exactly
+missing names                459,161     recorded as warnings, never grounds for deletion
+blocking exceptions                0
+elapsed                        4m32s     (7.4.10, ARM Docker on macOS)
+```
+
+The population is the **union**, not `user:*` alone. 38,076 users exist only as a message counter
+with no user record, and seeding from `user:*` drops every one of them - see section 12.1.
+
+### 16.3 What changed from the prototype
+
+Removed outright: `ResetCanonicalAsync`, which `TRUNCATE ... CASCADE`d the whole user tier and
+deleted `migration_runs` and `migration_exceptions` - the entire audit history; and the two-variant
+loop that loaded the tier twice per run.
+
+Fixed:
+
+- **The group tier was never merged.** Staged group counters were loaded only so their `SUM` could
+  feed the residual; nothing wrote `group_account_message_totals`, so every per-group total would
+  have arrived at zero.
+- **Constraint names were hardcoded** EF-generated strings dropped with `IF EXISTS`. An EF rename
+  would match nothing, the load would silently run against live constraints at 2.5x the cost, and
+  the rebuild would create an index the schema no longer expected. Definitions now come from
+  `pg_catalog` and cannot drift.
+- **Drop and rebuild now happen inside the load transaction.** PostgreSQL DDL is transactional, so a
+  crash rolls the drops back. Dropping separately would leave a live database missing unique indexes
+  with no record of what they were.
+- **4.75M counters were materialised into a dictionary** before the COPY - several hundred MB on a
+  host with roughly 1.6 GB free. The lifetime total is now read alongside the profile in the same
+  pipelined pass.
+- **Nothing was resumable.** Staging is now its own watermark: the loader resumes from the highest id
+  already written rather than a cursor that could disagree with the data. The inventory persists its
+  `SCAN` cursor in the same transaction as the batch it describes, so the resume point can never be
+  ahead of the keys stored.
+- An absent, unparseable or negative counter is written as **null, not zero**. Zero is a real value
+  that would silently overwrite a genuine total.
+
+### 16.4 Measurement caveat, restated
+
+These figures are Redis **7.4.10** in ARM Docker on macOS against a PostgreSQL in the same
+environment. Production is Redis **6.0.9** on x86. Treat them as ratios. The inventory pass in
+particular is dominated by writing 19.4M rows to PostgreSQL rather than by Redis, so it will move
+with PostgreSQL I/O rather than with the Redis version.
+
+Note also that the inventory does **not** need to run inside the quiesce window: it is a documented
+superset that tolerates concurrent mutation, and consumers verify existence rather than trusting it.
+Only the user-tier load belongs in the pause.

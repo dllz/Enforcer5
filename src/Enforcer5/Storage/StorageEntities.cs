@@ -130,6 +130,11 @@ namespace Enforcer5.Storage
         internal const string BotGlobal = "bot-global";
         /// <summary>Recognised but deliberately not migrated - ephemeral, TTL-bounded state.</summary>
         internal const string Ephemeral = "ephemeral";
+        /// <summary>
+        /// Recognised, superseded by a newer key shape, and deliberately not carried. Distinct from
+        /// <see cref="Ephemeral"/>: this data is durable, it is simply no longer read.
+        /// </summary>
+        internal const string Legacy = "legacy";
         /// <summary>Not recognised. Counted, kept, and never silently discarded.</summary>
         internal const string Unclassified = "unclassified";
     }
