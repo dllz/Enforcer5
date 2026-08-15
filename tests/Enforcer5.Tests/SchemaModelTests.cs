@@ -170,6 +170,27 @@ public sealed class SchemaModelTests
         Assert.Equal("running", generation.FindProperty("Status")!.GetDefaultValue());
     }
 
+    [Fact]
+    public void InventoryAndUserTierCommandsAreExplicit()
+    {
+        Assert.True(EnforcerMigrationCommand.IsInventoryScan(["migrate", "inventory"], out var resumeFresh));
+        Assert.False(resumeFresh);
+        // --fresh forces a new generation, which is what Stage C needs when it requires an
+        // inventory strictly newer than a group's drain start.
+        Assert.True(EnforcerMigrationCommand.IsInventoryScan(["migrate", "inventory", "--fresh"], out var fresh));
+        Assert.True(fresh);
+        Assert.False(EnforcerMigrationCommand.IsInventoryScan(["migrate", "inventory", "--wipe"], out _));
+        Assert.False(EnforcerMigrationCommand.IsInventoryScan(["migrate", "schema"], out _));
+
+        Assert.True(EnforcerMigrationCommand.IsUserTierMigration(
+            ["migrate", "user-tier", "backfill"], out var backfillReconcile));
+        Assert.False(backfillReconcile);
+        Assert.True(EnforcerMigrationCommand.IsUserTierMigration(
+            ["migrate", "user-tier", "reconcile"], out var reconcile));
+        Assert.True(reconcile);
+        Assert.False(EnforcerMigrationCommand.IsUserTierMigration(["migrate", "user-tier", "load"], out _));
+    }
+
     [Theory]
     [InlineData("RedisPrimaryPostgresShadow")]
     [InlineData("PostgresPrimaryRedisMirror")]

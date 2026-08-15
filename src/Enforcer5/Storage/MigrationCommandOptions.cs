@@ -31,7 +31,8 @@ namespace Enforcer5.Storage
             string.Equals(value, "group-settings", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(value, "principal-content", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(value, "moderation", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(value, "operations", StringComparison.OrdinalIgnoreCase);
+            string.Equals(value, "operations", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "user-tier", StringComparison.OrdinalIgnoreCase);
 
         private static bool TryMode(string value, out bool reconcile)
         {

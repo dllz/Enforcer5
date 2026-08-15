@@ -53,6 +53,29 @@ namespace Enforcer5.Storage
             return parsed;
         }
 
+        internal static bool IsUserTierMigration(string[] args, out bool reconcile)
+        {
+            var parsed = TryParseDomain(args, "user-tier", out var options);
+            reconcile = options?.Reconcile == true;
+            return parsed;
+        }
+
+        /// <summary>
+        /// <c>migrate inventory [--fresh]</c>. A bare run resumes an unfinished pass; <c>--fresh</c>
+        /// forces a new generation, which is what Stage C needs when it wants an inventory strictly
+        /// newer than a group's drain start.
+        /// </summary>
+        internal static bool IsInventoryScan(string[] args, out bool fresh)
+        {
+            fresh = false;
+            if (args == null || args.Length is not (2 or 3) ||
+                !string.Equals(args[0], "migrate", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(args[1], "inventory", StringComparison.OrdinalIgnoreCase)) return false;
+            if (args.Length == 2) return true;
+            fresh = string.Equals(args[2], "--fresh", StringComparison.OrdinalIgnoreCase);
+            return fresh;
+        }
+
         private static bool TryParseDomain(string[] args, string domain,
             out MigrationCommandOptions options)
         {
@@ -67,9 +90,83 @@ namespace Enforcer5.Storage
             return 0;
         }
 
+        /// <summary>
+        /// One full keyspace pass, recorded in PostgreSQL. Everything downstream reads this rather
+        /// than re-scanning, because <c>SCAN MATCH</c> walks the whole keyspace regardless of the
+        /// pattern and N prefixes therefore cost N passes.
+        /// </summary>
+        private static async Task<int> RunInventoryAsync(bool fresh)
+        {
+            if (!Redis.Start()) throw new InvalidOperationException("Redis is unavailable.");
+            await using var database = PostgresDatabase.FromConfiguration();
+            var tracker = await MigrationRunTracker.StartAsync(database,
+                fresh ? "inventory-scan-fresh" : "inventory-scan");
+            try
+            {
+                var result = await new Loading.KeyspaceInventoryScanner(database, Redis.db)
+                    .ScanAsync(resume: !fresh);
+                await tracker.FinishAsync(result.Completed, result);
+                Console.WriteLine(
+                    $"Keyspace inventory: generation={result.GenerationId}, keys={result.KeyCount:N0}, " +
+                    $"unclassified={result.UnclassifiedCount:N0}, " +
+                    $"{(result.Completed ? "complete" : "interrupted - re-run to resume")}");
+                return result.Completed ? 0 : 1;
+            }
+            catch (Exception e)
+            {
+                await tracker.FailAsync(e);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// The Stage B user and global tier load. Requires a completed inventory generation - a
+        /// partial one would silently migrate a subset and report success.
+        /// </summary>
+        private static async Task<int> RunUserTierAsync(bool reconcile)
+        {
+            if (reconcile)
+            {
+                Console.Error.WriteLine("User-tier reconciliation is not implemented yet.");
+                return 2;
+            }
+            if (!Redis.Start()) throw new InvalidOperationException("Redis is unavailable.");
+            await using var database = PostgresDatabase.FromConfiguration();
+
+            var generation = await Loading.KeyspaceInventoryScanner.LatestCompletedAsync(database);
+            if (generation == null)
+            {
+                Console.Error.WriteLine(
+                    "No completed keyspace inventory. Run 'migrate inventory' first.");
+                return 2;
+            }
+
+            var tracker = await MigrationRunTracker.StartAsync(database, "user-tier-backfill");
+            try
+            {
+                var result = await new Loading.UserTierLoader(database, Redis.db)
+                    .LoadAsync(generation.Value.GenerationId, tracker);
+                await tracker.FinishAsync(true, result);
+                Console.WriteLine(
+                    $"User tier backfill (generation {generation.Value.GenerationId}): " +
+                    $"users={result.UsersStaged:N0}, group-counters={result.GroupCountersStaged:N0}, " +
+                    $"accounts-created={result.AccountsCreated:N0}, groups-created={result.GroupsCreated:N0}, " +
+                    $"missing-names={result.MissingNames:N0}");
+                return 0;
+            }
+            catch (Exception e)
+            {
+                await tracker.FailAsync(e);
+                throw;
+            }
+        }
+
         internal static async Task<int> RunAsync(string[] args)
         {
             if (IsSchemaMigration(args)) return await RunSchemaAsync();
+            if (IsInventoryScan(args, out var fresh)) return await RunInventoryAsync(fresh);
+            if (IsUserTierMigration(args, out var userTierReconcile))
+                return await RunUserTierAsync(userTierReconcile);
             MigrationCommandOptionsParser.TryParse(args, out var options);
             LegacyGroupScope groupScope = null;
             if (options?.GroupId != null)
