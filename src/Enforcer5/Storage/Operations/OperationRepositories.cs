@@ -223,11 +223,36 @@ ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET status = 'ac
                     transaction, cancellationToken: cancellationToken));
             }
             else
-                await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE global_sanctions SET status = 'revoked', reason = COALESCE(@Reason, reason), resolved_at = @ResolvedAt
+            {
+                // A revoked global ban is still durable moderation history: why the user was banned,
+                // when, why it was lifted and when. Previously this was an UPDATE only, so a record
+                // with no pre-existing active row produced nothing at all - no row, no exception, no
+                // trace. That accounted for exactly the 83 of 1,843 globalBan keys that never
+                // arrived, and it is the kind of silence the rollout's first property forbids.
+                //
+                // resolved_at is clamped to imposed_at because global_sanctions_period_check
+                // requires resolved_at >= imposed_at and the legacy timestamps are not guaranteed
+                // to be ordered - two different formats written by two different hosts.
+                var resolvedAt = value.RevokedAt ?? occurredAt;
+                if (resolvedAt < occurredAt) resolvedAt = occurredAt;
+                var revoked = await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE global_sanctions SET status = 'revoked', resolution_reason = COALESCE(@ResolutionReason, resolution_reason),
+    resolved_at = GREATEST(@ResolvedAt, imposed_at)
 WHERE account_id = @AccountId AND status = 'active'", new { principal.AccountId,
-                        Reason = value.RevocationReason, ResolvedAt = value.RevokedAt ?? occurredAt }, transaction,
+                        ResolutionReason = value.RevocationReason, ResolvedAt = resolvedAt }, transaction,
                     cancellationToken: cancellationToken));
+                if (revoked == 0)
+                    await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO global_sanctions (account_id, user_id_at_time, kind, status, reason, resolution_reason,
+    imposed_at, resolved_at, legacy_key)
+VALUES (@AccountId, @UserId, 'ban', 'revoked', @Reason, @ResolutionReason, @ImposedAt, @ResolvedAt, @LegacyKey)
+ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET status = 'revoked',
+    reason = EXCLUDED.reason, resolution_reason = EXCLUDED.resolution_reason,
+    resolved_at = EXCLUDED.resolved_at", new { principal.AccountId, UserId = principal.UserId,
+                            value.Reason, ResolutionReason = value.RevocationReason,
+                            ImposedAt = occurredAt, ResolvedAt = resolvedAt, value.LegacyKey },
+                        transaction, cancellationToken: cancellationToken));
+            }
             // Global tier: no group dimension, so this follows the process-wide mirror flag.
             if (StorageRouting.RedisMirrorEnabled)
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "global-sanctions",

@@ -874,5 +874,57 @@ still written one row at a time, each resolving principals first. That is the re
 It completes, so it is no longer a blocker, but it is the obvious next optimisation and it is the
 same staging-plus-set-based-merge shape the loader already uses.
 
-Note also that `global_sanctions` holds 1,760 rows against 1,843 migrated keys. The 83-row gap is
-consistent across both runs and is not yet explained - it should be before Stage B is called done.
+### 17.5 The 83-row gap - a third silent drop
+
+`global_sanctions` held 1,760 rows against 1,843 migrated keys. The gap is exactly the records with
+`banned=0`:
+
+```text
+globalBan keys      1,843
+  banned = 1        1,760     -> 1,760 rows
+  banned = 0           83     -> nothing at all
+```
+
+A `banned=0` record is not an absence. It is a *lifted* global ban, and it carries real history: 77
+of the 83 hold both the ban motivation and the time it was imposed, and about 75 hold the unban
+motivation and time. A representative one reads "banned for ads, unbanned eight minutes later, was
+a mistake".
+
+The revoke path was an `UPDATE ... WHERE status = 'active'` with no insert, so a record with no
+pre-existing active row matched nothing and produced no row, no exception and no trace. Unlike the
+197 above this is **not** a security false-negative - `banned=0` and absent both mean allowed - but
+it is history loss, and it is exactly the silence the first property in section 1 forbids.
+
+Two fixes:
+
+- A revocation with no active row now **inserts** a `revoked` row carrying the whole record.
+- `resolution_reason` was added (migration `GlobalSanctionResolutionReason`). The revoke path
+  previously did `reason = COALESCE(@RevocationReason, reason)`, overwriting *why the user was
+  banned* with *why it was lifted* - one column cannot hold both, so it silently discarded the
+  first. This applied to every revocation, not just these 83.
+
+`resolved_at` is clamped to `imposed_at`, because `global_sanctions_period_check` requires
+`resolved_at >= imposed_at` and the legacy timestamps are demonstrably not ordered - they come from
+at least four formats written by different hosts.
+
+After the fix, every figure reconciles exactly:
+
+```text
+global_sanctions rows              1,843    = total globalBan keys
+  active                           1,760    = banned = 1
+  revoked                             83    = banned = 0
+    keeping the ban reason            77    = keys holding a motivation
+    keeping the unban reason          75
+```
+
+### 17.6 A fourth: audit events with nowhere to go
+
+`ReadGlobalSanction` built a `legacy_global_sanction` audit event for all 1,843 global bans, and the
+writer discarded every one of them - `group_audit_events.group_id` is `NOT NULL` and a global ban
+has no group, so both `OperationsBackfillService` and `AuditEventRepository` filtered them out.
+Work done solely to produce a silent drop.
+
+They are no longer generated. The history they carried - reason, imposed_at, resolution_reason,
+resolved_at - is held by the `global_sanctions` row itself, which is now complete. The written audit
+count is unchanged at 322,721 either way, which is itself the confirmation that none of them ever
+reached the database.

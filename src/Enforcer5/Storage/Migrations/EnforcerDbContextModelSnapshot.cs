@@ -442,6 +442,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("reason");
 
+                    b.Property<string>("ResolutionReason")
+                        .HasColumnType("text")
+                        .HasColumnName("resolution_reason");
+
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("resolved_at");

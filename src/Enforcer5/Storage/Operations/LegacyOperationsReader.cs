@@ -79,10 +79,10 @@ namespace Enforcer5.Storage.Operations
             if (entries.Length == 0) return;
             var parsed = LegacyOperationParsers.ParseGlobalBan(userId, Hash(entries), $"redis:{key}");
             if (parsed.Value != null) snapshot.GlobalSanctions.Add(parsed.Value);
-            if (parsed.Value != null)
-                snapshot.AuditEvents.Add(new AuditEvent(0, Editions.Shared, "legacy_global_sanction",
-                    null, null, userId, parsed.Value.Reason, parsed.Value.CreatedAt ?? DateTimeOffset.UnixEpoch,
-                    $"redis:audit:{key}"));
+            // No audit event: group_audit_events.group_id is NOT NULL and a global ban has no group,
+            // so these 1,843 rows were built here only for the writer to filter them out again -
+            // work done to produce a silent drop. The history they carried (reason, imposed_at,
+            // resolution_reason, resolved_at) is held by the global_sanctions row itself.
             Record(snapshot, parsed.Status, key, parsed.Error);
         }
 
