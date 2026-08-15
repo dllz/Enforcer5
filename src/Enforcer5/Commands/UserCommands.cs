@@ -100,7 +100,6 @@ namespace Enforcer5
                 }
                 else
                 {
-                    Redis.db.HashIncrementAsync("bot:general", "users");
                     Bot.Send(
                         "Welcome to Enforcer.\nPlease send /getCommands to get a command list.\n/help for more information", update);
                     Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");

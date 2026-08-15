@@ -84,7 +84,6 @@ namespace Enforcer5.Helpers
                 OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.Ban, "kick")
                     .GetAwaiter().GetResult();
 
-                Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
                 var check = Bot.Api.GetChatMember(chatId, userId).Result;
                 var status = check.Status;
                 var count = 0;
@@ -868,7 +867,6 @@ namespace Enforcer5.Helpers
                 Bot.WaitForTelegramActionAsync(completion).GetAwaiter().GetResult();
                 OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.Ban)
                     .GetAwaiter().GetResult();
-                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
                 return true;
             }
             catch (Exception e)
@@ -901,7 +899,6 @@ namespace Enforcer5.Helpers
                 OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.TempBan, null,
                     new DateTimeOffset(DateTime.SpecifyKind(untilDateTime, DateTimeKind.Utc)))
                     .GetAwaiter().GetResult();
-                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
                 return true;
             }
             catch (AggregateException e)

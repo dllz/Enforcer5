@@ -60,7 +60,8 @@ namespace Enforcer5.Storage.Operations
                 await _moderationCounters.SetAsync(value.UserId, value.Kind, value.Count, cancellationToken);
                 result.ModerationCountersWritten++;
             }
-            foreach (var value in snapshot.BotStatisticBaselines) { await _statistics.UpsertAsync(value, cancellationToken); result.BotStatisticBaselinesWritten++; }
+            foreach (var value in snapshot.BotStatisticBaselines)
+                if (await _statistics.UpsertAsync(value, cancellationToken)) result.BotStatisticBaselinesWritten++;
             foreach (var value in snapshot.AuditEvents.Where(x => x.GroupId.HasValue))
             {
                 await _auditEvents.AppendAsync(value, cancellationToken);

@@ -351,11 +351,18 @@ bot:general.users            215,822    actual user records:  5,126,029   (24x o
 ```
 
 The same superset ordering holds for `messages`, but `groups` and `users` have drifted so far - 24x
-on users - that they cannot be treated as a view of anything. `Methods.cs:87,861,894` increment
-`bot:general` with no storage routing at all, which is part of why.
+on users - that they cannot be treated as a view of anything. `Methods.cs:87,871,904`,
+`UserCommands.cs:103` and `OperationsStore.cs:241` incremented `bot:general` with no storage routing
+at all, which is part of why. (An earlier revision cited `861,894` - stale by ten - and missed
+`UserCommands.cs:103`, the sole writer of `users`, the worst-drifted field of the three.)
 
 Treat `bot:general` as a vanity counter: freeze it in Redis for the duration and either recompute it
 once at cutover or retire it. Do not attempt to reconcile it.
+
+**Done.** Frozen - every increment site removed, the values left in place, `bot_statistic_baselines`
+kept for the recompute. See rollout plan section 12.2 for the site list and for two unrelated defects
+the work surfaced: the statistics mirror read three payload fields the producer never emitted, and
+every baseline was filed under `normal` regardless of edition.
 
 Do not continue optimizing by adding unbounded task parallelism to row-at-a-time code. It will move the bottleneck to PostgreSQL locks, connection pooling, WAL, and memory.
 

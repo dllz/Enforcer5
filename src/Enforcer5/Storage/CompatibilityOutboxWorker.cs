@@ -246,7 +246,8 @@ RETURNING id, domain, operation, payload::text AS payload",
             if (entry.Domain == "statistics")
             {
                 long userId = payload.userId;
-                await Redis.db.HashSetAsync("bot:general", "messages", (long)payload.botMessages);
+                // bot:general is frozen for the duration (section 12.2) and is deliberately not
+                // mirrored. The user and per-group totals are the authoritative pair from 12.1.
                 await Redis.db.HashSetAsync($"chat:{userId}", "msgs", (long)payload.userMessages);
                 if (payload.groupId != null)
                 {

@@ -238,7 +238,9 @@ WHERE sanction_id = (SELECT sanction_id FROM sanctions WHERE group_id = @GroupId
         private static async Task WriteRedisStatisticsAsync(long userId, long? groupId,
             DateTimeOffset occurredAt)
         {
-            await Redis.db.HashIncrementAsync("bot:general", "messages");
+            // bot:general is deliberately not incremented. It is bot-wide with no group dimension,
+            // so once groups are mixed it would silently become "messages from groups still on
+            // Redis". Section 12.2 records the decision to freeze it and recompute once at cutover.
             if (groupId == null) return;
 
             await Task.WhenAll(

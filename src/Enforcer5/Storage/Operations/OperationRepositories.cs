@@ -420,10 +420,26 @@ ON CONFLICT (group_id, day) DO UPDATE SET message_count = group_daily_analytics.
                     GroupId = resolvedGroupId, OccurredAt = occurredAt, Day = DateOnly.FromDateTime(occurredAt.UtcDateTime) },
                 transaction, cancellationToken: token));
             // bot:general is bot-wide with no group dimension. Section 12.2 records the decision to
-            // freeze it in Redis for the duration rather than reconcile it.
+            // freeze it in Redis for the duration rather than reconcile it, so the mirror carries
+            // only the user and per-group totals.
             if (StorageRouting.RedisMirrorEnabled)
+            {
+                // Project the resulting canonical values, not the delta. Replaying an increment
+                // after a crash would double-count; an absolute value converges. Read inside the
+                // same transaction so the mirrored figure matches what was just committed.
+                var userMessages = await connection.ExecuteScalarAsync<long>(new CommandDefinition(
+                    "SELECT message_count FROM account_message_totals WHERE account_id = @AccountId",
+                    new { principal.AccountId }, transaction, cancellationToken: token));
+                long? groupMessages = resolvedGroupId == null
+                    ? null
+                    : await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
+SELECT message_count FROM group_account_message_totals
+ WHERE group_id = @GroupId AND account_id = @AccountId",
+                        new { GroupId = resolvedGroupId, principal.AccountId }, transaction,
+                        cancellationToken: token));
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "statistics", "statistics:global",
-                    "increment", new { edition, userId, groupId, occurredAt }, token);
+                    "increment", new { edition, userId, groupId, occurredAt, userMessages, groupMessages }, token);
+            }
             await transaction.CommitAsync(token);
         }
 
@@ -448,16 +464,32 @@ ON CONFLICT (group_id, account_id) DO UPDATE SET message_count = EXCLUDED.messag
             await transaction.CommitAsync(token);
         }
 
-        internal async Task UpsertAsync(BotStatisticBaseline value, CancellationToken token = default)
+        /// <summary>
+        /// Seeds the frozen <c>bot:general</c> counters as this edition's starting baseline, and
+        /// reports whether it actually landed.
+        /// <para>
+        /// Deliberately <c>DO NOTHING</c> rather than an overwrite. <see cref="IncrementMessageAsync"/>
+        /// accumulates <c>message_count</c> on top of the baseline, so an absolute upsert here would
+        /// reset that progress every time a backfill ran with global data included - the counter
+        /// would sawtooth. The Redis hash is frozen (section 12.2), so there is never a newer value
+        /// to carry across.
+        /// </para>
+        /// <para>
+        /// The corollary is an ordering requirement: seed before runtime traffic accumulates, or the
+        /// row already exists and the frozen figure is not carried. The return value makes that
+        /// visible rather than silent. This is tolerable because the counter has no reader and is
+        /// recomputed at cutover regardless.
+        /// </para>
+        /// </summary>
+        /// <returns>True when the baseline was seeded; false when one already existed.</returns>
+        internal async Task<bool> UpsertAsync(BotStatisticBaseline value, CancellationToken token = default)
         {
             await using var connection = await Database.OpenConnectionAsync(token);
-            await connection.ExecuteAsync(new CommandDefinition(@"
+            return await connection.ExecuteAsync(new CommandDefinition(@"
 INSERT INTO bot_statistic_baselines (edition, message_count, user_count, ban_count, kick_count, captured_at)
 VALUES (@Edition, @Messages, @Users, @Bans, @Kicks, @CapturedAt)
-ON CONFLICT (edition) DO UPDATE SET message_count = EXCLUDED.message_count,
-    user_count = EXCLUDED.user_count, ban_count = EXCLUDED.ban_count,
-    kick_count = EXCLUDED.kick_count, captured_at = EXCLUDED.captured_at", value,
-                cancellationToken: token));
+ON CONFLICT (edition) DO NOTHING", value,
+                cancellationToken: token)) == 1;
         }
 
         private async Task UpsertAccountTotalAsync(long telegramUserId, long messages,

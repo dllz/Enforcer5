@@ -21,7 +21,7 @@ namespace Enforcer5.Storage.Operations
             var userIds = knownUserIds.Distinct().ToArray();
             await ReadTempBansAsync("tempbanned", Editions.Normal, groupIds, snapshot, capturedAt, cancellationToken);
             await ReadTempBansAsync("tempbannedPremium", Editions.Premium, groupIds, snapshot, capturedAt, cancellationToken);
-            if (includeGlobalData) await ReadBotBaselineAsync(Editions.Normal, snapshot, capturedAt);
+            if (includeGlobalData) await ReadBotBaselineAsync(OperationsStore.CurrentEdition, snapshot, capturedAt);
 
             if (includeGlobalData) foreach (var batch in userIds.Chunk(1000))
             {
@@ -273,6 +273,14 @@ return {scan[1], values}";
             // not copied into PostgreSQL. Old Telegram.Bot JSON shapes may no longer deserialize.
         }
 
+        /// <summary>
+        /// Captures the frozen <c>bot:general</c> counters as the PostgreSQL starting baseline.
+        /// <para>
+        /// Section 12.2 freezes this hash rather than reconciling it, so the values here no longer
+        /// move. The write side is a one-shot insert: once a baseline exists PostgreSQL accumulates
+        /// on top of it, and re-reading a frozen hash must not reset that accumulation.
+        /// </para>
+        /// </summary>
         private static async Task ReadBotBaselineAsync(string edition, OperationsBackfillSnapshot snapshot,
             DateTimeOffset capturedAt)
         {

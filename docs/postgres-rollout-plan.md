@@ -307,7 +307,7 @@ What does stand in the way is narrower and fixable.
 | B2 | **`MigrationMaintenanceGuard` is a single global lock** requiring both bot processes stopped, so the per-group lease section 6.2 assumes did not exist. | **Fixed.** `migration_group_state` and `GroupMigrationStateStore`. |
 | B3 | **`StorageMode` is process-global with 78 branch sites**, so one enum decided Redis-vs-PostgreSQL for every group. | **Fixed.** `StorageRouting`, all sites converted. See section 14. |
 | B4 | **User lifetime message total splits across stores.** `OperationsStore.cs` increments `chat:{userId}.msgs` or `account_message_totals` based on the *group's* route, but the row is user-scoped. | **Fixed.** `RecordMessageAsync` routes both counters on the group, so they always move together and the invariant in section 12.1 holds. |
-| B5 | **Bot-wide counters, same split.** `bot:general` is incremented from paths with no routing at all. | **Decision recorded, not implemented.** Freeze in Redis for the duration and recompute once at cutover - see section 12.2. |
+| B5 | **Bot-wide counters, same split.** `bot:general` is incremented from paths with no routing at all. | **Fixed.** Frozen - all six increment sites removed, values left in place, recomputed once at cutover. See section 12.2. |
 
 ### 9.2 Handled, but needing explicit work
 
@@ -346,10 +346,11 @@ Redis-only for everyone, so no mixed state arises.
 
 - `BanCommands.cs:452-456` - the tempban slot-collision loop discards the result of
   `dataUnbanTime.AddSeconds(1)`. `DateTime` is immutable, so `unbanTime` never changes and a real
-  collision **spins forever**. Reachable only because the hash is global.
-- `Methods.cs:87,861,894` - `bot:general` increments bypass storage routing entirely.
-
-Neither is fixed; both are recorded rather than silently carried.
+  collision **spins forever**. Reachable only because the hash is global. **Fixed.**
+- `Methods.cs:87,871,904` plus `UserCommands.cs:103` and `OperationsStore.cs:241` - `bot:general`
+  increments bypass storage routing entirely. **Fixed** by the freeze in section 12.2. The earlier
+  revision of this document cited `861,894`; those line numbers were stale by ten and it missed
+  `UserCommands.cs:103` entirely, which was the sole writer of the worst-drifted field.
 
 ---
 
@@ -377,8 +378,8 @@ In priority order, from the cross-group enumeration:
 3. **B2** - build `migration_group_state` and a real per-group lease.
    `MigrationMaintenanceGuard` cannot be reused as-is.
 4. **B4/B5** - decide explicitly what happens to `chat:{userId}.msgs`,
-   `account_message_totals` and `bot:general` during mixed state. "Sum both stores at read time" and
-   "freeze in Redis until Stage D" are both defensible; silent drift is not.
+   `account_message_totals` and `bot:general` during mixed state. **Done.** `chat:{userId}.msgs` is
+   carried, not recomputed (12.1); `bot:general` is frozen (12.2).
 5. **H6** - resolve `ban:{userId}`: migrate it in Stage B or record a decision to leave it in Redis.
 6. Sanction `active`-state remodel (section 2).
 7. `migration_key_inventory` and `migration_scan_generations` schema.
@@ -462,7 +463,7 @@ Going forward the hot path can keep incrementing Redis as a write cache and batc
 PostgreSQL, which is the shape you described - the constraint is only that the *migration* must not
 derive the starting value.
 
-### 12.2 `bot:general` - freeze, do not reconcile
+### 12.2 `bot:general` - frozen
 
 ```text
 bot:general.messages   1,331,976,572     13.8% above the sum of chat:{userId}
@@ -471,11 +472,47 @@ bot:general.users            215,822     actual user records:  5,126,029   (24x 
 ```
 
 `messages` follows the same superset ordering, but `groups` and `users` have drifted so far they are
-a view of nothing. `Methods.cs:87,861,894` increment `bot:general` with no storage routing at all.
+a view of nothing. `groups` is worse than drifted - **nothing in the current codebase writes it at
+all**, and the reader does not read it. It is a fossil.
 
 **Decision: freeze `bot:general` in Redis for the duration, then recompute once at cutover or retire
 it.** It is a vanity counter; reconciling it is not worth the effort and pretending it is accurate
 would be worse.
+
+**Implemented.** All six increment sites are removed. The values stay in Redis untouched - freezing
+means "stops moving", not "deleted".
+
+| Site | Field | Covered instead by |
+|---|---|---|
+| `Methods.cs:87` | `kick` | `RecordSanctionAsync` on the line above |
+| `Methods.cs:871` | `ban` | `RecordSanctionAsync` on the line above |
+| `Methods.cs:904` | `ban` | `RecordSanctionAsync` on the line above |
+| `UserCommands.cs:103` | `users` | nothing - it only ever counted bare `/start` in a private chat, with no de-duplication, which is why it reads 24x low |
+| `OperationsStore.cs:241` | `messages` | `bot_statistic_baselines.message_count` |
+| `CompatibilityOutboxWorker.cs:249` | `messages` | the mirror no longer projects it |
+
+`bot_statistic_baselines` is kept. Two consequences worth stating plainly:
+
+- The baseline seed is now `ON CONFLICT DO NOTHING` and returns whether it landed. It was an
+  absolute overwrite, which meant every backfill run with global data included **reset the
+  `message_count` that `IncrementMessageAsync` had been accumulating** - the counter sawtoothed.
+- The corollary is an ordering requirement: seed before runtime traffic accumulates, or the row
+  already exists and the frozen figure is not carried. The return value surfaces that instead of
+  hiding it. This is tolerable only because the counter has no reader and is recomputed at cutover.
+
+Two things were found while implementing it, neither of which is about `bot:general`:
+
+- **The statistics mirror was entirely broken.** `CompatibilityOutboxWorker.cs:249-254` read
+  `botMessages`, `userMessages` and `groupMessages` from the payload, but the producer at
+  `OperationRepositories.cs:425` emitted only `{ edition, userId, groupId, occurredAt }`. All three
+  casts would have thrown on the first entry. The path had never been exercised because it only runs
+  under `PostgresPrimaryRedisMirror`. The producer now reads the resulting canonical totals inside
+  the same transaction and emits them - absolute values, not deltas, so a replay after a crash
+  converges instead of double-counting.
+- **`LegacyOperationsReader` filed every baseline under `Editions.Normal`**, hardcoded, so a premium
+  backfill wrote its figures to the normal row. Now uses `OperationsStore.CurrentEdition`.
+
+Pinned by `BotGeneralFreezeTests`, which is the first test of any kind on this key.
 
 ### 12.3 `bot:groupsid` - droppable, once one caller changes
 
