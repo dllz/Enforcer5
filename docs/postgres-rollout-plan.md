@@ -183,6 +183,34 @@ Truncate the user tier and re-run. Redis is untouched; nothing has been cut over
 Run concurrently, relying on the section 2 ordering rule plus soft-delete sanctions plus the barrier
 stopping the tempban worker. Slower to verify, no outage.
 
+**This path is available now.** The loader is insert-only - every write is
+`INSERT ... ON CONFLICT DO NOTHING` or `INSERT ... WHERE NOT EXISTS`, with no `UPDATE` anywhere - so
+it already satisfies the ordering rule by construction. The measured full load is 4m32s.
+
+One precondition still to confirm: the tempban expiry worker hard-deletes on unban
+(`Methods.cs:954-955`), which is the single case the ordering rule does not cover, so the barrier
+must be shown to stop it before the concurrent path is used.
+
+### 5.5 The user tier is loaded in one pass, not per user
+
+Per-user migration - a background crawler with traffic fast-tracking, mirroring the per-group design
+- was considered and rejected. Three reasons:
+
+- **It buys nothing.** The whole tier is 4m32s of work, and the loader can already run concurrently
+  (5.4), so there is no pause to spread. Per-group cutover exists because there are 38,152 groups
+  ranging from 6 to 528,056 keys under live traffic; the user tier is one bulk operation.
+- **It costs a hot-path check and 5.1M rows of state**, against 38,152 for groups, where "absent
+  means Redis" keeps the cache small.
+- **The username index cannot be routed per user at all.** `ResolveUsernameAsync` looks up by
+  username and returns the id, so there is nothing to route on until after the lookup. An unmigrated
+  user would resolve to null and the caller would create a duplicate identity - precisely the failure
+  section 5 opens with.
+
+What makes laziness unnecessary is that **Redis stays complete throughout**: Stage B removes nothing,
+so reads keep hitting Redis until the tier finishes and a single flag flips.
+
+Background-plus-fast-track remains the right design for *groups*, and is section 6.3.
+
 ---
 
 ## 6. Stage C - per-group cutover
