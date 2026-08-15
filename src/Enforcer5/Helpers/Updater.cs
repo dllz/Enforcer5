@@ -67,6 +67,13 @@ namespace Enforcer5.Helpers
         /// Watches for an update staged while we are running, and exits so it gets applied on
         /// the next start. Run on a background thread.
         /// </summary>
+        // Not a data writer, but a restart part-way through a migration is the worst outcome
+        // available, so a staged update must not be applied while the barrier is raised. Registered
+        // so it also shows up in the quiesce report.
+        private static readonly Storage.Cutover.DurableWriter RestartGuard =
+            Storage.Cutover.QuiesceBarrier.Register("staged-update-restart",
+                Storage.Cutover.WriterResumeClass.Time);
+
         internal static void MonitorUpdates()
         {
             while (true)
@@ -74,9 +81,12 @@ namespace Enforcer5.Helpers
                 Thread.Sleep(5000);
                 try
                 {
+                    if (Storage.Cutover.QuiesceBarrier.IsQuiescing) continue;
+
                     if (Directory.Exists(UpdateDirectory) && Directory.GetFiles(UpdateDirectory).Length > 0 &&
                         IsUpdateStable(UpdateDirectory))
                     {
+                        using var work = RestartGuard.BeginWork();
                         Console.Error.WriteLine("[INFO] Update detected while running, shutting down to apply...");
                         Program.RequestShutdown("staged update");
                         return;

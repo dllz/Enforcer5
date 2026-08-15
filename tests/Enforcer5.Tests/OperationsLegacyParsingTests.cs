@@ -94,12 +94,12 @@ public sealed class OperationsLegacyParsingTests
     }
 
     [Fact]
-    public void OffsetlessLegacyTimeIsAmbiguousAndNotInventedAsUtc()
+    public void OffsetlessLegacyTimeUsesConfiguredLegacyTimezone()
     {
         var result = LegacyOperationParsers.ParseTimestamp("01:02:03 07-08-2026");
 
-        Assert.Equal(LegacyParseStatus.Ambiguous, result.Status);
-        Assert.Null(result.Value.Instant);
+        Assert.Equal(LegacyParseStatus.Success, result.Status);
+        Assert.NotNull(result.Value.Instant);
         Assert.Equal(DateTimeKind.Unspecified, result.Value.WallClock.Kind);
     }
 
@@ -113,13 +113,13 @@ public sealed class OperationsLegacyParsingTests
     }
 
     [Fact]
-    public void LocalDateTimeTicksAreReportedAsAmbiguous()
+    public void LocalDateTimeTicksUseConfiguredLegacyTimezone()
     {
         var ticks = new DateTime(2026, 8, 7, 12, 0, 0, DateTimeKind.Unspecified).Ticks.ToString();
 
         var result = LegacyOperationParsers.ParseTicks(ticks);
 
-        Assert.Equal(LegacyParseStatus.Ambiguous, result.Status);
-        Assert.NotNull(result.Error);
+        Assert.Equal(LegacyParseStatus.Success, result.Status);
+        Assert.NotEqual(default, result.Value);
     }
 }

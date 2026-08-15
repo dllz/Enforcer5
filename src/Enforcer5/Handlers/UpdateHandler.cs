@@ -582,12 +582,22 @@ namespace Enforcer5.Handlers
             return input.Split(':');
         }
 
-         internal static void SpamDetection()
+         // Writes ephemeral rate-limit markers (spammers{id}, 10 minute TTL) and acts on the
+        // in-memory UserMessages map, which is itself rebuilt from incoming updates. Once the poll
+        // loop is paused this has nothing new to act on, and none of its Redis writes are canonical
+        // or migrated - but it still mutates Redis, so it is gated.
+        private static readonly Storage.Cutover.DurableWriter SpamWriter =
+            Storage.Cutover.QuiesceBarrier.Register("spam-detection",
+                Storage.Cutover.WriterResumeClass.Ephemeral);
+
+        internal static void SpamDetection()
         {
             while (true)
             {
                 try
                 {
+                    SpamWriter.Gate(Bot.ShutdownToken);
+                    using var work = SpamWriter.BeginWork(Bot.ShutdownToken);
                     var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
                     //var quickRemove = BlockReplies.ToDictionary(entry => entry.Key, entry => entry.Value);
                     //clone the dictionary

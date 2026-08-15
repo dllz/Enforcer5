@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
+using Enforcer5.Helpers;
 
 namespace Enforcer5.Storage.Operations
 {
@@ -66,7 +67,9 @@ namespace Enforcer5.Storage.Operations
                                   !fields.ContainsKey("SolvedAt")))
                 return Malformed<Report>("solved report metadata", legacyKey);
 
-            var value = new Report(0, groupId, messageId, null, Get(fields, "Reporter"), null, null,
+            var value = new Report(0, groupId, messageId, ParseOptionalInt64(fields, "ReporterUserId"),
+                Get(fields, "Reporter"), ParseOptionalInt64(fields, "ReportedUserId"),
+                ParseOptionalInt64(fields, "ReportedMessageId"),
                 solved == "1" ? "solved" : "open", created.Value?.Instant, null,
                 Get(fields, "solvedBy"), solvedAt.Value?.Instant, legacyKey);
             if (created.Status == LegacyParseStatus.Ambiguous || solvedAt.Status == LegacyParseStatus.Ambiguous)
@@ -105,8 +108,8 @@ namespace Enforcer5.Storage.Operations
                 DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out wallClock))
             {
                 wallClock = DateTime.SpecifyKind(wallClock, DateTimeKind.Unspecified);
-                return LegacyParseResult<LegacyTimestamp>.Ambiguous(new LegacyTimestamp(wallClock, null),
-                    new FormatException($"Legacy timestamp '{value}' has no timezone offset."));
+                var instant = InterpretLegacyLocalTime(wallClock);
+                return LegacyParseResult<LegacyTimestamp>.Success(new LegacyTimestamp(wallClock, instant));
             }
             return Malformed<LegacyTimestamp>("timestamp", value);
         }
@@ -117,8 +120,24 @@ namespace Enforcer5.Storage.Operations
                 ticks < DateTime.MinValue.Ticks || ticks > DateTime.MaxValue.Ticks)
                 return Malformed<DateTimeOffset>("DateTime ticks", value);
             var wallClock = new DateTime(ticks, DateTimeKind.Unspecified);
-            return LegacyParseResult<DateTimeOffset>.Ambiguous(default,
-                new FormatException($"Legacy local DateTime ticks '{value}' ({wallClock:O}) have no timezone."));
+            return LegacyParseResult<DateTimeOffset>.Success(InterpretLegacyLocalTime(wallClock));
+        }
+
+        private static DateTimeOffset InterpretLegacyLocalTime(DateTime wallClock)
+        {
+            var zoneId = RegHelper.GetRegValue("DisplayTimeZone") ?? "Europe/Amsterdam";
+            TimeZoneInfo zone;
+            try { zone = TimeZoneInfo.FindSystemTimeZoneById(zoneId); }
+            catch (TimeZoneNotFoundException) { zone = TimeZoneInfo.Utc; }
+            catch (InvalidTimeZoneException) { zone = TimeZoneInfo.Utc; }
+            var offset = zone.GetUtcOffset(wallClock);
+            try { return new DateTimeOffset(wallClock, offset).ToUniversalTime(); }
+            catch (ArgumentOutOfRangeException)
+            {
+                // DateTime.MinValue/MaxValue are legacy sentinel-like values; applying a real
+                // timezone offset can underflow or overflow the representable UTC range.
+                return new DateTimeOffset(wallClock, TimeSpan.Zero);
+            }
         }
 
         private static LegacyParseResult<LegacyTimestamp> ParseOptionalTimestamp(
@@ -166,6 +185,11 @@ namespace Enforcer5.Storage.Operations
 
         private static string Get(IReadOnlyDictionary<string, string> fields, string name) =>
             fields.TryGetValue(name, out var value) ? value : null;
+
+        private static long? ParseOptionalInt64(IReadOnlyDictionary<string, string> fields, string name) =>
+            fields.TryGetValue(name, out var value) &&
+            long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed != 0
+                ? parsed : null;
 
         private static LegacyParseResult<T> Malformed<T>(string name, string value) =>
             LegacyParseResult<T>.Malformed(new FormatException($"Malformed legacy {name}: '{value}'."));

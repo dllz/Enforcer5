@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Enforcer5.Helpers;
+using Enforcer5.Storage;
 
 namespace Enforcer5.Storage.Moderation
 {
@@ -29,7 +30,7 @@ namespace Enforcer5.Storage.Moderation
 
         internal static async Task<IReadOnlyList<long>> ListModeratorsAsync(long groupId)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
                 return (await Redis.db.SetMembersAsync($"chat:{groupId}:mod"))
                     .Select(value => long.TryParse(value.ToString(), out var id) ? (long?)id : null)
@@ -41,17 +42,22 @@ namespace Enforcer5.Storage.Moderation
 
         internal static async Task<bool> IsElevationBlockedAsync(long groupId, long userId)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
                 return await Redis.db.SetContainsAsync(RedisKey(groupId, DurableRole.ElevationBlocked), userId);
 
             await using var database = PostgresDatabase.FromConfiguration();
             await using var connection = await database.OpenConnectionAsync();
-            return await connection.ExecuteScalarAsync<bool>(@"
+            await using var transaction = await connection.BeginTransactionAsync();
+            var resolvedGroupId = (await PrincipalResolver.EnsureGroupAsync(connection, transaction, groupId)).GroupId;
+            var user = await PrincipalResolver.EnsureUserAsync(connection, transaction, userId);
+            var blocked = await connection.ExecuteScalarAsync<bool>(@"
 SELECT EXISTS (
     SELECT 1 FROM group_elevation_blocks
     WHERE group_id = @GroupId AND user_id = @UserId AND revoked_at IS NULL
-)", new { GroupId = groupId, UserId = userId });
+)", new { GroupId = resolvedGroupId, UserId = user.UserId }, transaction);
+            await transaction.CommitAsync();
+            return blocked;
         }
 
         internal static Task BlockElevationAsync(long groupId, long userId) =>
@@ -70,7 +76,7 @@ SELECT EXISTS (
 
         private static async Task<bool> HasRoleAsync(long groupId, long userId, string role)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
                 return await Redis.db.SetContainsAsync(RedisKey(groupId, role), userId);
 
@@ -81,7 +87,7 @@ SELECT EXISTS (
 
         private static async Task SetRoleAsync(long groupId, long userId, string role, bool active)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
                 await SetRedisAsync(RedisKey(groupId, role), userId, active);
@@ -106,7 +112,7 @@ SELECT EXISTS (
 
         private static async Task SetElevationBlockAsync(long groupId, long userId, bool active)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
                 await SetRedisAsync(RedisKey(groupId, DurableRole.ElevationBlocked), userId, active);
@@ -135,7 +141,7 @@ SELECT EXISTS (
             else await Redis.db.SetRemoveAsync(key, userId);
         }
 
-        private static RoleStoreRoute CurrentRoute() => GetRoute(StorageModeProvider.Current,
+        private static RoleStoreRoute CurrentRoute(long groupId) => GetRoute(StorageRouting.EffectiveGroupMode(groupId),
             string.Equals(RegHelper.GetRegValue("ModerationShadowEnabled"), "true",
                 StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection")));

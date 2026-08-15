@@ -41,7 +41,7 @@ public sealed class ModerationLegacyMappingTests
 
         Assert.Contains(new WarningBalance(-1001, 10, WarningTypes.Standard, 2, 7, at),
             snapshot.WarningBalances);
-        Assert.Contains(new WarningBalance(-1001, 10, WarningTypes.Prewarning, 4, 0, at),
+        Assert.Contains(new WarningBalance(-1001, 10, WarningTypes.Prewarning, 4, 4, at),
             snapshot.WarningBalances);
         Assert.Contains(new WarningBalance(-1001, 20, WarningTypes.Standard, 0, 3, at),
             snapshot.WarningBalances);

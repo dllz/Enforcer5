@@ -53,7 +53,10 @@ namespace Enforcer5.Helpers
         /// <summary>Returns the configured value, or null if it is unset or blank.</summary>
         public static string GetRegValue(string key)
         {
-            var value = _configuration[key];
+            // Read the process environment live. Besides matching production's documented
+            // precedence, this lets isolated migration tests switch disposable connections
+            // without rebuilding the global configuration object.
+            var value = Environment.GetEnvironmentVariable(key) ?? _configuration[key];
             return string.IsNullOrWhiteSpace(value) ? null : value;
         }
 

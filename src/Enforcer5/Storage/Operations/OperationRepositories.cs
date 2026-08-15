@@ -19,27 +19,46 @@ namespace Enforcer5.Storage.Operations
 
         internal async Task<long> UpsertAsync(Sanction sanction, CancellationToken cancellationToken = default)
         {
+            // Legacy temp sanctions do not retain their creation instant. If already expired at
+            // capture time, use expiry as the earliest defensible imposition timestamp.
+            var imposedAt = sanction.ExpiresAt.HasValue && sanction.ExpiresAt.Value < sanction.CreatedAt
+                ? sanction.ExpiresAt.Value
+                : sanction.CreatedAt;
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            var groupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                sanction.GroupId, imposedAt, cancellationToken);
+            var subject = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                sanction.UserId, imposedAt, cancellationToken);
+            long? actorUserId = null;
+            if (sanction.ActorUserId.HasValue)
+                actorUserId = (await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    sanction.ActorUserId.Value, imposedAt, cancellationToken)).UserId;
             await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE sanctions SET status = 'revoked', resolved_at = @CreatedAt
-WHERE group_id = @GroupId AND user_id = @UserId AND kind = @Kind
-  AND status IN ('active','due')", sanction, transaction, cancellationToken: cancellationToken));
+UPDATE sanctions SET status = 'revoked', resolved_at = @ImposedAt, claimed_at = NULL, claimed_by = NULL
+WHERE group_id = @GroupId AND account_id = @AccountId AND kind = @Kind
+  AND status IN ('active','due') AND (@LegacyKey IS NULL OR legacy_key <> @LegacyKey)",
+                new { GroupId = groupId, subject.AccountId, sanction.Kind, ImposedAt = imposedAt,
+                    sanction.LegacyKey }, transaction, cancellationToken: cancellationToken));
             var id = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
-INSERT INTO sanctions (group_id, user_id, kind, status, edition, actor_user_id, reason,
-    created_at, expires_at, claimed_at, claimed_by, resolved_at, legacy_key)
-VALUES (@GroupId, @UserId, @Kind, @Status, @Edition, @ActorUserId, @Reason,
-    @CreatedAt, @ExpiresAt, @ClaimedAt, @ClaimedBy, @ResolvedAt, @LegacyKey)
+INSERT INTO sanctions (group_id, account_id, user_id_at_time, actor_user_id, kind, status, reason,
+    imposed_at, expires_at, resolved_at, edition, claimed_at, claimed_by, legacy_key)
+VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @Kind, @Status, @Reason,
+    @ImposedAt, @ExpiresAt, @ResolvedAt, @Edition, @ClaimedAt, @ClaimedBy, @LegacyKey)
 ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET
-    group_id = EXCLUDED.group_id, user_id = EXCLUDED.user_id, kind = EXCLUDED.kind,
-    status = EXCLUDED.status, edition = EXCLUDED.edition, actor_user_id = EXCLUDED.actor_user_id,
-    reason = EXCLUDED.reason, created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at,
-    resolved_at = EXCLUDED.resolved_at
-RETURNING id", sanction, transaction, cancellationToken: cancellationToken));
-            if (StorageModeProvider.RedisMirrorEnabled)
+    group_id = EXCLUDED.group_id, account_id = EXCLUDED.account_id,
+    user_id_at_time = EXCLUDED.user_id_at_time, actor_user_id = EXCLUDED.actor_user_id,
+    kind = EXCLUDED.kind, status = EXCLUDED.status, reason = EXCLUDED.reason,
+    imposed_at = EXCLUDED.imposed_at, expires_at = EXCLUDED.expires_at,
+    resolved_at = EXCLUDED.resolved_at, edition = EXCLUDED.edition
+RETURNING sanction_id", new { GroupId = groupId, subject.AccountId,
+                    UserIdAtTime = subject.UserId, ActorUserId = actorUserId, sanction.Kind, sanction.Status,
+                    sanction.Reason, ImposedAt = imposedAt, sanction.ExpiresAt, sanction.ResolvedAt,
+                    sanction.Edition, sanction.ClaimedAt, sanction.ClaimedBy, sanction.LegacyKey }, transaction,
+                cancellationToken: cancellationToken));
+            if (StorageRouting.GroupRedisMirrorEnabled(sanction.GroupId))
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "sanctions",
-                    $"sanction:{sanction.GroupId}:{sanction.UserId}", "set", sanction,
-                    cancellationToken);
+                    $"sanction:{sanction.GroupId}:{sanction.UserId}", "set", sanction, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return id;
         }
@@ -53,23 +72,35 @@ RETURNING id", sanction, transaction, cancellationToken: cancellationToken));
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
             var rows = await connection.QueryAsync<Sanction>(new CommandDefinition(@"
 WITH due AS (
-    SELECT id FROM sanctions
-    WHERE kind = 'tempban' AND edition = @Edition
-      AND (status = 'active' OR (status = 'due' AND claimed_at < @StaleBefore))
-      AND expires_at <= @Now
-    ORDER BY expires_at, id
-    FOR UPDATE SKIP LOCKED
-    LIMIT @Limit
+    SELECT s.sanction_id FROM sanctions s
+    WHERE s.kind = 'tempban' AND s.edition = @Edition
+      AND (s.status = 'active' OR (s.status = 'due' AND s.claimed_at < @StaleBefore))
+      AND s.expires_at <= @Now
+      -- Only groups PostgreSQL owns. The Redis expiry worker skips those same groups, so during a
+      -- mixed population the two workers partition the estate rather than both acting on a group
+      -- or, worse, neither. Once the process-wide mode is flipped it is the ceiling for every
+      -- group, and there are no per-group rows to match, so @AllGroups short-circuits the check.
+      AND (@AllGroups OR EXISTS (
+          SELECT 1
+          FROM groups g
+          JOIN telegram_chats tc ON tc.chat_id = g.chat_id
+          JOIN migration_group_state m ON m.telegram_chat_id = tc.telegram_chat_id
+          WHERE g.group_id = s.group_id AND m.state = 'Postgres'))
+    ORDER BY s.expires_at, s.sanction_id FOR UPDATE SKIP LOCKED LIMIT @Limit
 )
 UPDATE sanctions s SET status = 'due', claimed_at = @Now, claimed_by = @WorkerId
-FROM due WHERE s.id = due.id
-RETURNING s.id AS Id, s.group_id AS GroupId, s.user_id AS UserId, s.kind AS Kind,
-    s.status AS Status, s.edition AS Edition, s.actor_user_id AS ActorUserId,
-    s.reason AS Reason, s.created_at AS CreatedAt, s.expires_at AS ExpiresAt,
+FROM due WHERE s.sanction_id = due.sanction_id
+RETURNING s.sanction_id AS Id,
+    (SELECT telegram_chat_id FROM telegram_chats tc JOIN groups g ON g.chat_id = tc.chat_id WHERE g.group_id = s.group_id) AS GroupId,
+    (SELECT telegram_user_id FROM telegram_accounts ta WHERE ta.account_id = s.account_id) AS UserId,
+    s.kind AS Kind, s.status AS Status, s.edition AS Edition,
+    (SELECT telegram_user_id FROM user_identity_links l JOIN telegram_accounts ta ON ta.account_id = l.account_id WHERE l.user_id = s.actor_user_id AND l.unlinked_at IS NULL LIMIT 1) AS ActorUserId,
+    s.reason AS Reason, s.imposed_at AS CreatedAt, s.expires_at AS ExpiresAt,
     s.claimed_at AS ClaimedAt, s.claimed_by AS ClaimedBy, s.resolved_at AS ResolvedAt,
     s.legacy_key AS LegacyKey", new { Edition = edition, WorkerId = workerId, Limit = limit,
-                    Now = now, StaleBefore = now.Subtract(TimeSpan.FromHours(25)) },
-                transaction, cancellationToken: cancellationToken));
+                    Now = now, StaleBefore = now.Subtract(TimeSpan.FromHours(25)),
+                    AllGroups = StorageModeProvider.PostgresIsPrimary }, transaction,
+                cancellationToken: cancellationToken));
             await transaction.CommitAsync(cancellationToken);
             return rows.AsList();
         }
@@ -79,25 +110,19 @@ RETURNING s.id AS Id, s.group_id AS GroupId, s.user_id AS UserId, s.kind AS Kind
         {
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-            var sanction = await connection.QuerySingleOrDefaultAsync<Sanction>(new CommandDefinition(@"
-SELECT id AS Id, group_id AS GroupId, user_id AS UserId, kind AS Kind, status AS Status,
-       edition AS Edition, actor_user_id AS ActorUserId, reason AS Reason, created_at AS CreatedAt,
-       expires_at AS ExpiresAt, claimed_at AS ClaimedAt, claimed_by AS ClaimedBy,
-       resolved_at AS ResolvedAt, legacy_key AS LegacyKey
-FROM sanctions WHERE id = @Id AND status = 'due' AND claimed_by = @WorkerId FOR UPDATE",
-                new { Id = id, WorkerId = workerId }, transaction, cancellationToken: cancellationToken));
-            if (sanction == null) return false;
+            // Fetched only to build the mirror payload. The sanction's own group decides whether
+            // it is mirrored, but that is not known until it has been read, so read it whenever any
+            // mirroring is possible and filter below.
+            var sanction = await QueryByClaimAsync(connection, transaction, id, workerId, cancellationToken);
             var updated = await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE sanctions SET status = 'completed', resolved_at = @CompletedAt,
-    claimed_at = NULL, claimed_by = NULL
-WHERE id = @Id AND status = 'due' AND claimed_by = @WorkerId",
-                new { Id = id, WorkerId = workerId, CompletedAt = completedAt },
-                transaction, cancellationToken: cancellationToken)) == 1;
-            if (updated && StorageModeProvider.RedisMirrorEnabled)
+UPDATE sanctions SET status = 'completed', resolved_at = @CompletedAt, claimed_at = NULL, claimed_by = NULL
+WHERE sanction_id = @Id AND status = 'due' AND claimed_by = @WorkerId",
+                new { Id = id, WorkerId = workerId, CompletedAt = completedAt }, transaction,
+                cancellationToken: cancellationToken)) == 1;
+            if (updated && sanction != null && StorageRouting.GroupRedisMirrorEnabled(sanction.GroupId))
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "sanctions",
                     $"sanction:{sanction.GroupId}:{sanction.UserId}", "resolve",
-                    new { groupId = sanction.GroupId, userId = sanction.UserId, kind = sanction.Kind },
-                    cancellationToken);
+                    new { groupId = sanction.GroupId, userId = sanction.UserId, kind = sanction.Kind }, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return updated;
         }
@@ -108,7 +133,7 @@ WHERE id = @Id AND status = 'due' AND claimed_by = @WorkerId",
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
             return await connection.ExecuteAsync(new CommandDefinition(@"
 UPDATE sanctions SET status = 'active', claimed_at = NULL, claimed_by = NULL
-WHERE id = @Id AND status = 'due' AND claimed_by = @WorkerId",
+WHERE sanction_id = @Id AND status = 'due' AND claimed_by = @WorkerId",
                 new { Id = id, WorkerId = workerId }, cancellationToken: cancellationToken)) == 1;
         }
 
@@ -116,13 +141,9 @@ WHERE id = @Id AND status = 'due' AND claimed_by = @WorkerId",
             CancellationToken cancellationToken = default)
         {
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            return await connection.QuerySingleOrDefaultAsync<Sanction>(new CommandDefinition(@"
-SELECT id AS Id, group_id AS GroupId, user_id AS UserId, kind AS Kind, status AS Status,
-       edition AS Edition, actor_user_id AS ActorUserId, reason AS Reason, created_at AS CreatedAt,
-       expires_at AS ExpiresAt, claimed_at AS ClaimedAt, claimed_by AS ClaimedBy,
-       resolved_at AS ResolvedAt, legacy_key AS LegacyKey
-FROM sanctions WHERE group_id = @GroupId AND user_id = @UserId AND kind = @Kind
-  AND status IN ('active','due') ORDER BY created_at DESC LIMIT 1",
+            return await connection.QuerySingleOrDefaultAsync<Sanction>(new CommandDefinition(
+                SelectSql + @" WHERE tc.telegram_chat_id = @GroupId AND ta.telegram_user_id = @UserId
+AND s.kind = @Kind AND s.status IN ('active','due') ORDER BY s.imposed_at DESC LIMIT 1",
                 new { GroupId = groupId, UserId = userId, Kind = kind }, cancellationToken: cancellationToken));
         }
 
@@ -130,32 +151,48 @@ FROM sanctions WHERE group_id = @GroupId AND user_id = @UserId AND kind = @Kind
             CancellationToken cancellationToken = default)
         {
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            var rows = await connection.QueryAsync<Sanction>(new CommandDefinition(@"
-SELECT id AS Id, group_id AS GroupId, user_id AS UserId, kind AS Kind, status AS Status,
-       edition AS Edition, actor_user_id AS ActorUserId, reason AS Reason, created_at AS CreatedAt,
-       expires_at AS ExpiresAt, claimed_at AS ClaimedAt, claimed_by AS ClaimedBy,
-       resolved_at AS ResolvedAt, legacy_key AS LegacyKey
-FROM sanctions WHERE status IN ('active','due') AND (@Kind IS NULL OR kind = @Kind)
-ORDER BY expires_at NULLS LAST, id", new { Kind = kind }, cancellationToken: cancellationToken));
+            var rows = await connection.QueryAsync<Sanction>(new CommandDefinition(
+                SelectSql + @" WHERE s.status IN ('active','due') AND (@Kind IS NULL OR s.kind = @Kind)
+ORDER BY s.expires_at NULLS LAST, s.sanction_id", new { Kind = kind }, cancellationToken: cancellationToken));
             return rows.AsList();
         }
 
         internal async Task<IReadOnlyList<Sanction>> ListActiveForGroupAsync(long groupId,
-            string kind = null, bool newJoinersOnly = false,
-            CancellationToken cancellationToken = default)
+            string kind = null, bool newJoinersOnly = false, CancellationToken cancellationToken = default)
         {
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            var rows = await connection.QueryAsync<Sanction>(new CommandDefinition(@"
-SELECT id AS Id, group_id AS GroupId, user_id AS UserId, kind AS Kind, status AS Status,
-       edition AS Edition, actor_user_id AS ActorUserId, reason AS Reason, created_at AS CreatedAt,
-       expires_at AS ExpiresAt, claimed_at AS ClaimedAt, claimed_by AS ClaimedBy,
-       resolved_at AS ResolvedAt, legacy_key AS LegacyKey
-FROM sanctions WHERE group_id = @GroupId AND status IN ('active','due')
-  AND (@Kind IS NULL OR kind = @Kind)
-  AND (NOT @NewJoinersOnly OR legacy_key LIKE 'new-joiner:%') ORDER BY user_id",
-                new { GroupId = groupId, Kind = kind, NewJoinersOnly = newJoinersOnly }, cancellationToken: cancellationToken));
+            var rows = await connection.QueryAsync<Sanction>(new CommandDefinition(
+                SelectSql + @" WHERE tc.telegram_chat_id = @GroupId AND s.status IN ('active','due')
+AND (@Kind IS NULL OR s.kind = @Kind) AND (NOT @NewJoinersOnly OR s.legacy_key LIKE 'new-joiner:%')
+ORDER BY ta.telegram_user_id", new { GroupId = groupId, Kind = kind, NewJoinersOnly = newJoinersOnly },
+                cancellationToken: cancellationToken));
             return rows.AsList();
         }
+
+        private static Task<Sanction> QueryByClaimAsync(System.Data.Common.DbConnection connection,
+            System.Data.Common.DbTransaction transaction, long id, string workerId, CancellationToken token) =>
+            connection.QuerySingleOrDefaultAsync<Sanction>(new CommandDefinition(
+                // "FOR UPDATE OF s", not a bare "FOR UPDATE": SelectSql LEFT JOINs the actor's
+                // account, and PostgreSQL rejects locking the nullable side of an outer join with
+                // "FOR UPDATE cannot be applied to the nullable side of an outer join". Only the
+                // sanction row needs locking anyway. Unqualified, this threw on every call, and the
+                // caller treated the failure as an unban that could not be completed - so the claim
+                // was released instead, and the tempban never expired.
+                SelectSql + " WHERE s.sanction_id = @Id AND s.status = 'due' AND s.claimed_by = @WorkerId FOR UPDATE OF s",
+                new { Id = id, WorkerId = workerId }, transaction, cancellationToken: token));
+
+        private const string SelectSql = @"
+SELECT s.sanction_id AS Id, tc.telegram_chat_id AS GroupId, ta.telegram_user_id AS UserId,
+       s.kind AS Kind, s.status AS Status, s.edition AS Edition, actor.telegram_user_id AS ActorUserId,
+       s.reason AS Reason, s.imposed_at AS CreatedAt, s.expires_at AS ExpiresAt,
+       s.claimed_at AS ClaimedAt, s.claimed_by AS ClaimedBy, s.resolved_at AS ResolvedAt,
+       s.legacy_key AS LegacyKey
+FROM sanctions s JOIN groups g ON g.group_id = s.group_id
+JOIN telegram_chats tc ON tc.chat_id = g.chat_id
+JOIN telegram_accounts ta ON ta.account_id = s.account_id
+LEFT JOIN LATERAL (SELECT account_id FROM user_identity_links
+    WHERE user_id = s.actor_user_id AND unlinked_at IS NULL ORDER BY linked_at DESC LIMIT 1) ail ON TRUE
+LEFT JOIN telegram_accounts actor ON actor.account_id = ail.account_id";
     }
 
     internal sealed class GlobalSanctionRepository : OperationRepository
@@ -163,16 +200,36 @@ FROM sanctions WHERE group_id = @GroupId AND status IN ('active','due')
         internal GlobalSanctionRepository(PostgresDatabase database) : base(database) { }
         internal async Task UpsertAsync(GlobalSanction value, CancellationToken cancellationToken = default)
         {
+            var occurredAt = value.CreatedAt ?? value.RevokedAt ?? DateTimeOffset.UtcNow;
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-            await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO global_sanctions (user_id, active, reason, created_at, revocation_reason, revoked_at, legacy_key)
-VALUES (@UserId, @Active, @Reason, @CreatedAt, @RevocationReason, @RevokedAt, @LegacyKey)
-ON CONFLICT (user_id) DO UPDATE SET active = EXCLUDED.active, reason = EXCLUDED.reason,
-    created_at = EXCLUDED.created_at, revocation_reason = EXCLUDED.revocation_reason,
-    revoked_at = EXCLUDED.revoked_at, legacy_key = EXCLUDED.legacy_key", value,
-                transaction, cancellationToken: cancellationToken));
-            if (StorageModeProvider.RedisMirrorEnabled)
+            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                value.UserId, occurredAt, cancellationToken);
+            if (value.Active)
+            {
+                var updated = await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE global_sanctions SET status = 'active', reason = @Reason, imposed_at = @ImposedAt,
+    resolved_at = NULL, legacy_key = COALESCE(@LegacyKey, legacy_key)
+WHERE account_id = @AccountId AND status = 'active'", new { principal.AccountId,
+                        value.Reason, ImposedAt = occurredAt, value.LegacyKey }, transaction,
+                    cancellationToken: cancellationToken));
+                if (updated == 0)
+                    await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO global_sanctions (account_id, user_id_at_time, kind, status, reason, imposed_at, legacy_key)
+VALUES (@AccountId, @UserId, 'ban', 'active', @Reason, @ImposedAt, @LegacyKey)
+ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET status = 'active', reason = EXCLUDED.reason,
+    imposed_at = EXCLUDED.imposed_at, resolved_at = NULL", new { principal.AccountId,
+                        UserId = principal.UserId, value.Reason, ImposedAt = occurredAt, value.LegacyKey },
+                    transaction, cancellationToken: cancellationToken));
+            }
+            else
+                await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE global_sanctions SET status = 'revoked', reason = COALESCE(@Reason, reason), resolved_at = @ResolvedAt
+WHERE account_id = @AccountId AND status = 'active'", new { principal.AccountId,
+                        Reason = value.RevocationReason, ResolvedAt = value.RevokedAt ?? occurredAt }, transaction,
+                    cancellationToken: cancellationToken));
+            // Global tier: no group dimension, so this follows the process-wide mirror flag.
+            if (StorageRouting.RedisMirrorEnabled)
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "global-sanctions",
                     $"global-sanction:{value.UserId}", "set", value, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -184,136 +241,239 @@ ON CONFLICT (user_id) DO UPDATE SET active = EXCLUDED.active, reason = EXCLUDED.
         internal ReportRepository(PostgresDatabase database) : base(database) { }
         internal async Task<long> UpsertAsync(Report value, CancellationToken cancellationToken = default)
         {
+            var occurredAt = value.CreatedAt ?? DateTimeOffset.UtcNow;
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            return await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
-INSERT INTO reports (group_id, report_message_id, reporter_user_id, reporter_display,
-    reported_user_id, reported_message_id, status, created_at, solved_by_user_id,
-    solved_by_display, solved_at, legacy_key)
-VALUES (@GroupId, @ReportMessageId, @ReporterUserId, @ReporterDisplay, @ReportedUserId,
-    @ReportedMessageId, @Status, @CreatedAt, @SolvedByUserId, @SolvedByDisplay, @SolvedAt, @LegacyKey)
-ON CONFLICT (group_id, report_message_id) DO UPDATE SET reporter_user_id = EXCLUDED.reporter_user_id,
-    reporter_display = EXCLUDED.reporter_display, reported_user_id = EXCLUDED.reported_user_id,
-    reported_message_id = EXCLUDED.reported_message_id, status = EXCLUDED.status,
-    created_at = EXCLUDED.created_at, solved_by_user_id = EXCLUDED.solved_by_user_id,
-    solved_by_display = EXCLUDED.solved_by_display, solved_at = EXCLUDED.solved_at,
-    legacy_key = EXCLUDED.legacy_key
-RETURNING id", value, cancellationToken: cancellationToken));
+            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            var groupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                value.GroupId, occurredAt, cancellationToken);
+            OperationsUserPrincipal? reporter = value.ReporterUserId.HasValue
+                ? await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    value.ReporterUserId.Value, occurredAt, cancellationToken)
+                : null;
+            OperationsUserPrincipal? target = value.ReportedUserId.HasValue
+                ? await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    value.ReportedUserId.Value, occurredAt, cancellationToken)
+                : null;
+            long? solverUserId = null;
+            if (value.SolvedByUserId.HasValue)
+                solverUserId = (await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    value.SolvedByUserId.Value, value.SolvedAt ?? occurredAt, cancellationToken)).UserId;
+            await EnsureMessageAsync(connection, transaction, groupId, value.ReportMessageId,
+                reporter, occurredAt, cancellationToken);
+            if (value.ReportedMessageId.HasValue)
+                await EnsureMessageAsync(connection, transaction, groupId, value.ReportedMessageId.Value,
+                    target, occurredAt, cancellationToken);
+            var resolved = value.Status != "open";
+            await connection.ExecuteAsync(new CommandDefinition(
+                "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0))",
+                new { LockKey = $"report:{groupId}:{value.ReportMessageId}" }, transaction,
+                cancellationToken: cancellationToken));
+            var existingId = await connection.ExecuteScalarAsync<long?>(new CommandDefinition(@"
+SELECT report_id FROM reports WHERE group_id = @GroupId AND report_message_id = @ReportMessageId",
+                new { GroupId = groupId, value.ReportMessageId }, transaction,
+                cancellationToken: cancellationToken));
+            var parameters = new { GroupId = groupId, ReporterUserId = reporter?.UserId,
+                ReporterAccountId = reporter?.AccountId, value.ReporterDisplay,
+                TargetUserId = target?.UserId, TargetAccountId = target?.AccountId,
+                SolverUserId = solverUserId, SolverDisplay = value.SolvedByDisplay,
+                value.ReportMessageId, TargetMessageId = value.ReportedMessageId,
+                Status = resolved ? "resolved" : "open", ResolutionAction = resolved ? "solved" : null,
+                ReportedAt = occurredAt, ResolvedAt = resolved
+                    ? (DateTimeOffset?)(value.SolvedAt ?? occurredAt) : null,
+                value.LegacyKey };
+            long id;
+            if (existingId.HasValue)
+            {
+                await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE reports SET reporter_user_id = @ReporterUserId, reporter_account_id = @ReporterAccountId,
+    reporter_display = @ReporterDisplay,
+    target_user_id = @TargetUserId, target_account_id = @TargetAccountId,
+    solver_user_id = @SolverUserId, solver_display = @SolverDisplay,
+    status = @Status, resolution_action = @ResolutionAction,
+    reported_at = @ReportedAt, resolved_at = @ResolvedAt, legacy_key = COALESCE(@LegacyKey, legacy_key)
+WHERE report_id = @ExistingId", new { ExistingId = existingId.Value, parameters.ReporterUserId,
+                        parameters.ReporterAccountId, parameters.ReporterDisplay,
+                        parameters.TargetUserId, parameters.TargetAccountId,
+                        parameters.SolverUserId, parameters.SolverDisplay,
+                        parameters.Status, parameters.ResolutionAction,
+                        parameters.ReportedAt, parameters.ResolvedAt, parameters.LegacyKey }, transaction,
+                    cancellationToken: cancellationToken));
+                id = existingId.Value;
+            }
+            else id = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
+INSERT INTO reports (group_id, reporter_user_id, reporter_account_id, reporter_display,
+    target_user_id, target_account_id, solver_user_id, solver_display,
+    report_message_id, target_message_id, status, resolution_action,
+    reported_at, resolved_at, legacy_key)
+VALUES (@GroupId, @ReporterUserId, @ReporterAccountId, @ReporterDisplay,
+    @TargetUserId, @TargetAccountId, @SolverUserId, @SolverDisplay,
+    @ReportMessageId, @TargetMessageId, @Status, @ResolutionAction,
+    @ReportedAt, @ResolvedAt, @LegacyKey)
+ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET
+    reporter_user_id = EXCLUDED.reporter_user_id, reporter_account_id = EXCLUDED.reporter_account_id,
+    target_user_id = EXCLUDED.target_user_id, target_account_id = EXCLUDED.target_account_id,
+    solver_user_id = EXCLUDED.solver_user_id, status = EXCLUDED.status,
+    resolution_action = EXCLUDED.resolution_action, resolved_at = EXCLUDED.resolved_at
+RETURNING report_id", parameters, transaction, cancellationToken: cancellationToken));
+            await transaction.CommitAsync(cancellationToken);
+            return id;
         }
 
         internal async Task<bool> TrySolveAsync(long groupId, long reportMessageId, long solverUserId,
             string solverDisplay, DateTimeOffset solvedAt, CancellationToken cancellationToken = default)
         {
             await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            return await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE reports SET status = 'solved', solved_by_user_id = @SolverUserId,
-    solved_by_display = @SolverDisplay, solved_at = @SolvedAt
-WHERE group_id = @GroupId AND report_message_id = @ReportMessageId AND status = 'open'",
-                new { GroupId = groupId, ReportMessageId = reportMessageId, SolverUserId = solverUserId,
-                    SolverDisplay = solverDisplay, SolvedAt = solvedAt },
+            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            var internalGroupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                groupId, solvedAt, cancellationToken);
+            var solver = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                solverUserId, solvedAt, cancellationToken);
+            var changed = await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE reports SET status = 'resolved', resolution_action = 'solved', solver_user_id = @SolverUserId,
+    resolved_at = @SolvedAt WHERE group_id = @GroupId AND report_message_id = @ReportMessageId AND status = 'open'",
+                new { GroupId = internalGroupId, ReportMessageId = reportMessageId,
+                    SolverUserId = solver.UserId, SolvedAt = solvedAt }, transaction,
                 cancellationToken: cancellationToken)) == 1;
+            await transaction.CommitAsync(cancellationToken);
+            return changed;
         }
 
-        internal async Task UpsertDeliveryAsync(ReportDelivery value,
-            CancellationToken cancellationToken = default)
-        {
-            await using var connection = await Database.OpenConnectionAsync(cancellationToken);
-            await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO report_deliveries (report_id, delivery_index, admin_chat_id, admin_message_id,
-    forwarded_message_id, legacy_payload)
-VALUES (@ReportId, @DeliveryIndex, @AdminChatId, @AdminMessageId, @ForwardedMessageId, @LegacyPayload)
-ON CONFLICT (report_id, delivery_index) DO UPDATE SET admin_chat_id = EXCLUDED.admin_chat_id,
-    admin_message_id = EXCLUDED.admin_message_id, forwarded_message_id = EXCLUDED.forwarded_message_id,
-    legacy_payload = EXCLUDED.legacy_payload", value, cancellationToken: cancellationToken));
-        }
+        private static Task EnsureMessageAsync(System.Data.Common.DbConnection connection,
+            System.Data.Common.DbTransaction transaction, long groupId, long messageId,
+            OperationsUserPrincipal? principal, DateTimeOffset sentAt, CancellationToken token) =>
+            connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO message_metadata (group_id, telegram_message_id, account_id, user_id_at_time,
+    message_type, has_media, sent_at)
+VALUES (@GroupId, @MessageId, @AccountId, @UserId, 'unknown', FALSE, @SentAt)
+ON CONFLICT (group_id, telegram_message_id) DO NOTHING", new { GroupId = groupId, MessageId = messageId,
+                    AccountId = principal?.AccountId, UserId = principal?.UserId, SentAt = sentAt }, transaction,
+                cancellationToken: token));
     }
 
     internal sealed class StatisticsRepository : OperationRepository
     {
         internal StatisticsRepository(PostgresDatabase database) : base(database) { }
+
         internal async Task<long> GetUserMessagesAsync(long userId, CancellationToken token = default)
         {
             await using var connection = await Database.OpenConnectionAsync(token);
-            return await connection.ExecuteScalarAsync<long>(new CommandDefinition(
-                "SELECT COALESCE((SELECT messages FROM user_statistics WHERE user_id = @UserId), 0)",
+            return await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
+SELECT COALESCE((SELECT amt.message_count FROM account_message_totals amt
+JOIN telegram_accounts ta ON ta.account_id = amt.account_id WHERE ta.telegram_user_id = @UserId), 0)",
                 new { UserId = userId }, cancellationToken: token));
         }
+
         internal async Task<long> GetGroupUserMessagesAsync(long groupId, long userId,
             CancellationToken token = default)
         {
             await using var connection = await Database.OpenConnectionAsync(token);
             return await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
-SELECT COALESCE((SELECT messages FROM group_user_statistics
-WHERE group_id = @GroupId AND user_id = @UserId), 0)",
+SELECT COALESCE((SELECT gamt.message_count FROM group_account_message_totals gamt
+JOIN groups g ON g.group_id = gamt.group_id JOIN telegram_chats tc ON tc.chat_id = g.chat_id
+JOIN telegram_accounts ta ON ta.account_id = gamt.account_id
+WHERE tc.telegram_chat_id = @GroupId AND ta.telegram_user_id = @UserId), 0)",
                 new { GroupId = groupId, UserId = userId }, cancellationToken: token));
         }
+
         internal async Task IncrementMessageAsync(string edition, long userId, long? groupId,
             DateTimeOffset occurredAt, CancellationToken token = default)
         {
             occurredAt = occurredAt.ToUniversalTime();
             await using var connection = await Database.OpenConnectionAsync(token);
             await using var transaction = await connection.BeginTransactionAsync(token);
+            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                userId, occurredAt, token);
+            long? resolvedGroupId = null;
+            if (groupId.HasValue)
+                resolvedGroupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                    groupId.Value, occurredAt, token);
             await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO bot_statistic_baselines (edition, messages, users, bans, kicks, captured_at)
+INSERT INTO bot_statistic_baselines (edition, message_count, user_count, ban_count, kick_count, captured_at)
 VALUES (@Edition, 1, 0, 0, 0, @OccurredAt)
-ON CONFLICT (edition) DO UPDATE SET messages = bot_statistic_baselines.messages + 1,
+ON CONFLICT (edition) DO UPDATE SET message_count = bot_statistic_baselines.message_count + 1,
     captured_at = EXCLUDED.captured_at;
-
-INSERT INTO user_statistics (user_id, messages, captured_at)
-SELECT @UserId, 1, @OccurredAt WHERE @GroupId IS NOT NULL
-ON CONFLICT (user_id) DO UPDATE SET messages = user_statistics.messages + 1,
+INSERT INTO account_message_totals (account_id, message_count, captured_at)
+VALUES (@AccountId, 1, @OccurredAt)
+ON CONFLICT (account_id) DO UPDATE SET message_count = account_message_totals.message_count + 1,
     captured_at = EXCLUDED.captured_at;
-
-INSERT INTO group_user_statistics (group_id, user_id, messages, last_message_at, captured_at)
-SELECT @GroupId, @UserId, 1, @OccurredAt, @OccurredAt WHERE @GroupId IS NOT NULL
-ON CONFLICT (group_id, user_id) DO UPDATE SET messages = group_user_statistics.messages + 1,
-    last_message_at = EXCLUDED.last_message_at, captured_at = EXCLUDED.captured_at", new
-            {
-                Edition = edition,
-                UserId = userId,
-                GroupId = groupId,
-                OccurredAt = occurredAt
-            }, transaction, cancellationToken: token));
-            if (StorageModeProvider.RedisMirrorEnabled)
-            {
-                var state = await connection.QuerySingleAsync<dynamic>(new CommandDefinition(@"
-SELECT (SELECT COALESCE(SUM(messages), 0) FROM bot_statistic_baselines) AS BotMessages,
-       COALESCE(u.messages, 0) AS UserMessages,
-       COALESCE(g.messages, 0) AS GroupMessages
-FROM bot_statistic_baselines b
-LEFT JOIN user_statistics u ON u.user_id = @UserId
-LEFT JOIN group_user_statistics g ON g.group_id = @GroupId AND g.user_id = @UserId
-WHERE b.edition = @Edition", new { Edition = edition, UserId = userId, GroupId = groupId },
-                    transaction, cancellationToken: token));
-                await CompatibilityOutbox.EnqueueAsync(connection, transaction, "statistics",
-                    "statistics:global", "set", new
-                    {
-                        edition, userId, groupId, occurredAt,
-                        botMessages = (long)state.botmessages,
-                        userMessages = (long)state.usermessages,
-                        groupMessages = (long)state.groupmessages
-                    }, token);
-            }
+INSERT INTO group_account_message_totals (group_id, account_id, message_count, last_message_at, captured_at)
+SELECT @GroupId, @AccountId, 1, @OccurredAt, @OccurredAt WHERE @GroupId IS NOT NULL
+ON CONFLICT (group_id, account_id) DO UPDATE SET message_count = group_account_message_totals.message_count + 1,
+    last_message_at = EXCLUDED.last_message_at, captured_at = EXCLUDED.captured_at;
+INSERT INTO group_account_daily_analytics (group_id, account_id, day, message_count, first_message_at, last_message_at)
+SELECT @GroupId, @AccountId, @Day, 1, @OccurredAt, @OccurredAt WHERE @GroupId IS NOT NULL
+ON CONFLICT (group_id, account_id, day) DO UPDATE SET message_count = group_account_daily_analytics.message_count + 1,
+    first_message_at = LEAST(group_account_daily_analytics.first_message_at, EXCLUDED.first_message_at),
+    last_message_at = GREATEST(group_account_daily_analytics.last_message_at, EXCLUDED.last_message_at);
+INSERT INTO group_user_daily_analytics (group_id, user_id, day, message_count, first_message_at, last_message_at)
+SELECT @GroupId, @UserId, @Day, 1, @OccurredAt, @OccurredAt WHERE @GroupId IS NOT NULL
+ON CONFLICT (group_id, user_id, day) DO UPDATE SET message_count = group_user_daily_analytics.message_count + 1,
+    first_message_at = LEAST(group_user_daily_analytics.first_message_at, EXCLUDED.first_message_at),
+    last_message_at = GREATEST(group_user_daily_analytics.last_message_at, EXCLUDED.last_message_at);
+INSERT INTO group_daily_analytics (group_id, day, message_count, active_user_count, join_count, leave_count)
+SELECT @GroupId, @Day, 1, 1, 0, 0 WHERE @GroupId IS NOT NULL
+ON CONFLICT (group_id, day) DO UPDATE SET message_count = group_daily_analytics.message_count + 1,
+    active_user_count = GREATEST(group_daily_analytics.active_user_count,
+        (SELECT COUNT(*) FROM group_account_daily_analytics ga
+         WHERE ga.group_id = @GroupId AND ga.day = @Day))",
+                new { Edition = edition, principal.AccountId, UserId = principal.UserId,
+                    GroupId = resolvedGroupId, OccurredAt = occurredAt, Day = DateOnly.FromDateTime(occurredAt.UtcDateTime) },
+                transaction, cancellationToken: token));
+            // bot:general is bot-wide with no group dimension. Section 12.2 records the decision to
+            // freeze it in Redis for the duration rather than reconcile it.
+            if (StorageRouting.RedisMirrorEnabled)
+                await CompatibilityOutbox.EnqueueAsync(connection, transaction, "statistics", "statistics:global",
+                    "increment", new { edition, userId, groupId, occurredAt }, token);
             await transaction.CommitAsync(token);
         }
 
-        internal Task UpsertAsync(UserStatistic value, CancellationToken token = default) => ExecuteAsync(@"
-INSERT INTO user_statistics (user_id, messages, captured_at) VALUES (@UserId, @Messages, @CapturedAt)
-ON CONFLICT (user_id) DO UPDATE SET messages = EXCLUDED.messages, captured_at = EXCLUDED.captured_at", value, token);
-        internal Task UpsertAsync(GroupUserStatistic value, CancellationToken token = default) => ExecuteAsync(@"
-INSERT INTO group_user_statistics (group_id, user_id, messages, last_message_at, captured_at)
-VALUES (@GroupId, @UserId, @Messages, @LastMessageAt, @CapturedAt)
-ON CONFLICT (group_id, user_id) DO UPDATE SET messages = EXCLUDED.messages,
-    last_message_at = EXCLUDED.last_message_at, captured_at = EXCLUDED.captured_at", value, token);
-        internal Task UpsertAsync(BotStatisticBaseline value, CancellationToken token = default) => ExecuteAsync(@"
-INSERT INTO bot_statistic_baselines (edition, messages, users, bans, kicks, captured_at)
-VALUES (@Edition, @Messages, @Users, @Bans, @Kicks, @CapturedAt)
-ON CONFLICT (edition) DO UPDATE SET messages = EXCLUDED.messages, users = EXCLUDED.users,
-    bans = EXCLUDED.bans, kicks = EXCLUDED.kicks, captured_at = EXCLUDED.captured_at", value, token);
+        internal Task UpsertAsync(UserStatistic value, CancellationToken token = default) =>
+            UpsertAccountTotalAsync(value.UserId, value.Messages, value.CapturedAt, token);
 
-        private async Task ExecuteAsync(string sql, object value, CancellationToken token)
+        internal async Task UpsertAsync(GroupUserStatistic value, CancellationToken token = default)
         {
             await using var connection = await Database.OpenConnectionAsync(token);
-            await connection.ExecuteAsync(new CommandDefinition(sql, value, cancellationToken: token));
+            await using var transaction = await connection.BeginTransactionAsync(token);
+            var groupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                value.GroupId, value.CapturedAt, token);
+            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                value.UserId, value.CapturedAt, token);
+            await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO group_account_message_totals (group_id, account_id, message_count, last_message_at, captured_at)
+VALUES (@GroupId, @AccountId, @MessageCount, @LastMessageAt, @CapturedAt)
+ON CONFLICT (group_id, account_id) DO UPDATE SET message_count = EXCLUDED.message_count,
+    last_message_at = EXCLUDED.last_message_at, captured_at = EXCLUDED.captured_at", new { GroupId = groupId,
+                    principal.AccountId, MessageCount = value.Messages, value.LastMessageAt, value.CapturedAt },
+                transaction, cancellationToken: token));
+            await transaction.CommitAsync(token);
+        }
+
+        internal async Task UpsertAsync(BotStatisticBaseline value, CancellationToken token = default)
+        {
+            await using var connection = await Database.OpenConnectionAsync(token);
+            await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO bot_statistic_baselines (edition, message_count, user_count, ban_count, kick_count, captured_at)
+VALUES (@Edition, @Messages, @Users, @Bans, @Kicks, @CapturedAt)
+ON CONFLICT (edition) DO UPDATE SET message_count = EXCLUDED.message_count,
+    user_count = EXCLUDED.user_count, ban_count = EXCLUDED.ban_count,
+    kick_count = EXCLUDED.kick_count, captured_at = EXCLUDED.captured_at", value,
+                cancellationToken: token));
+        }
+
+        private async Task UpsertAccountTotalAsync(long telegramUserId, long messages,
+            DateTimeOffset capturedAt, CancellationToken token)
+        {
+            await using var connection = await Database.OpenConnectionAsync(token);
+            await using var transaction = await connection.BeginTransactionAsync(token);
+            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                telegramUserId, capturedAt, token);
+            await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO account_message_totals (account_id, message_count, captured_at)
+VALUES (@AccountId, @Messages, @CapturedAt)
+ON CONFLICT (account_id) DO UPDATE SET message_count = EXCLUDED.message_count,
+    captured_at = EXCLUDED.captured_at", new { principal.AccountId, Messages = messages, CapturedAt = capturedAt },
+                transaction, cancellationToken: token));
+            await transaction.CommitAsync(token);
         }
     }
 
@@ -322,13 +482,27 @@ ON CONFLICT (edition) DO UPDATE SET messages = EXCLUDED.messages, users = EXCLUD
         internal AuditEventRepository(PostgresDatabase database) : base(database) { }
         internal async Task<long> AppendAsync(AuditEvent value, CancellationToken token = default)
         {
+            if (!value.GroupId.HasValue) return 0;
             await using var connection = await Database.OpenConnectionAsync(token);
-            return await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
-INSERT INTO audit_events (edition, event_type, group_id, actor_user_id, subject_user_id,
-    details, occurred_at, legacy_key)
-VALUES (@Edition, @EventType, @GroupId, @ActorUserId, @SubjectUserId, @Details, @OccurredAt, @LegacyKey)
+            await using var transaction = await connection.BeginTransactionAsync(token);
+            var groupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
+                value.GroupId.Value, value.OccurredAt, token);
+            long? actor = null;
+            long? subject = null;
+            if (value.ActorUserId.HasValue)
+                actor = (await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    value.ActorUserId.Value, value.OccurredAt, token)).UserId;
+            if (value.SubjectUserId.HasValue)
+                subject = (await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
+                    value.SubjectUserId.Value, value.OccurredAt, token)).UserId;
+            var id = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
+INSERT INTO group_audit_events (group_id, actor_user_id, subject_user_id, event_type, occurred_at, legacy_key)
+VALUES (@GroupId, @ActorUserId, @SubjectUserId, @EventType, @OccurredAt, @LegacyKey)
 ON CONFLICT (legacy_key) WHERE legacy_key IS NOT NULL DO UPDATE SET legacy_key = EXCLUDED.legacy_key
-RETURNING id", value, cancellationToken: token));
+RETURNING event_id", new { GroupId = groupId, ActorUserId = actor, SubjectUserId = subject,
+                    value.EventType, value.OccurredAt, value.LegacyKey }, transaction, cancellationToken: token));
+            await transaction.CommitAsync(token);
+            return id;
         }
     }
 }

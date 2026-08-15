@@ -13,6 +13,12 @@ namespace Enforcer5.Storage
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private Task _worker;
 
+        // Projects PostgreSQL writes back into Redis for rollback. Claims are durable rows, so a
+        // pause leaves them claimed-but-incomplete and they are retried on resume.
+        private static readonly Cutover.DurableWriter MirrorWriter =
+            Cutover.QuiesceBarrier.Register("redis-rollback-mirror",
+                Cutover.WriterResumeClass.Cursor);
+
         internal CompatibilityOutboxWorker(PostgresDatabase database)
         {
             _database = database;
@@ -57,7 +63,11 @@ namespace Enforcer5.Storage
                         continue;
                     }
 
-                    await ApplyAsync(entry);
+                    // The entry is claimed but not completed, so pausing before applying it leaves
+                    // it pending and it is re-claimed on resume. Wrapping the apply keeps the
+                    // barrier from declaring quiet part-way through projecting into Redis.
+                    using (await MirrorWriter.BeginWorkAsync(_cts.Token))
+                        await ApplyAsync(entry);
                     await CompleteAsync(entry.Id);
                 }
                 catch (OperationCanceledException) when (_cts.IsCancellationRequested)
@@ -332,9 +342,12 @@ RETURNING id, domain, operation, payload::text AS payload",
         {
             var chatId = (long)payload.chatId;
             var trigger = (string)payload.trigger;
+            if (entry.Operation != "delete-source" && entry.Operation != "restore-source" &&
+                !trigger.StartsWith("#", StringComparison.Ordinal))
+                trigger = $"#{trigger}";
             var key = $"chat:{chatId}:extra";
             var sideKey = $"{key}:{trigger}";
-            if (entry.Operation == "delete")
+            if (entry.Operation == "delete" || entry.Operation == "delete-source")
             {
                 await Redis.db.HashDeleteAsync(key, trigger);
                 await Redis.db.KeyDeleteAsync(sideKey);

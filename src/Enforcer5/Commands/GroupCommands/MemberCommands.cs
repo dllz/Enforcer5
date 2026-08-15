@@ -277,6 +277,27 @@ namespace Enforcer5
         public static void SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
+            var conflicts = Methods.ReadCustomCommandConflicts(update.Message.Chat.Id, args[0]);
+            if (conflicts.Count > 1)
+            {
+                var rows = conflicts.Select((candidate, index) => new[]
+                {
+                    new InlineKeyboardButton($"Keep {index + 1}: {DisplayTrigger(candidate.SourceTrigger)}",
+                        $"xcr:{update.Message.Chat.Id}:{candidate.CandidateId:N}")
+                }).ToList();
+                rows.Add(new[]
+                {
+                    new InlineKeyboardButton("Delete all duplicates",
+                        $"xcd:{update.Message.Chat.Id}:{conflicts[0].CandidateId:N}")
+                });
+                var details = string.Join("\n", conflicts.Select((candidate, index) =>
+                    $"{index + 1}. {System.Net.WebUtility.HtmlEncode(candidate.SourceTrigger)}: " +
+                    System.Net.WebUtility.HtmlEncode(DescribeConflictCandidate(candidate))));
+                Bot.SendReply($"Multiple custom commands match <code>#{System.Net.WebUtility.HtmlEncode(conflicts[0].Trigger)}</code>. " +
+                    $"A group admin must choose which one to keep.\n\n{details}", update,
+                    keyboard: new InlineKeyboardMarkup(rows));
+                return;
+            }
             var command = Methods.ReadCustomCommand(update.Message.Chat.Id, args[0]);
             if (command == null)
                 return;
@@ -352,11 +373,11 @@ namespace Enforcer5
                                 }
                                 break;
 
-                            case "videoNote":
+                            case "video_note":
                                     Bot.Api.SendVideoNote(chatId, InputFile.FromFileId(fileId),
                                         replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
-                            case "gif":
+                            case "animation":
                                 if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.Contains("###file_id") && hasMedia.Contains("null"))
                                 {
                                     Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
@@ -399,6 +420,20 @@ namespace Enforcer5
                     // Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
                 }
             }
+        }
+
+        private static string DisplayTrigger(string trigger) =>
+            trigger.Length <= 30 ? trigger : trigger.Substring(0, 29) + "...";
+
+        private static string DescribeConflictCandidate(CustomCommandConflictCandidate candidate)
+        {
+            var value = candidate.Content ?? candidate.Caption;
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                value = value.Replace('\n', ' ').Replace('\r', ' ');
+                return value.Length <= 80 ? value : value.Substring(0, 79) + "...";
+            }
+            return candidate.MediaType == null ? "empty command" : $"{candidate.MediaType} media";
         }
 
         [Command(Trigger = "info", RequiresReply = true)]

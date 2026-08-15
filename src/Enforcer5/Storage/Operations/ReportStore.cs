@@ -24,7 +24,7 @@ namespace Enforcer5.Storage.Operations
         internal static async Task<ReportCreateResult> TryCreateAsync(ReportCreate request,
             CancellationToken cancellationToken = default)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(request.GroupId);
             if (route.ReadRedis)
             {
                 var created = await TryCreateRedisAsync(request);
@@ -48,7 +48,7 @@ namespace Enforcer5.Storage.Operations
         internal static async Task<ReportRecord> GetAsync(long groupId, long reportMessageId,
             CancellationToken cancellationToken = default)
         {
-            if (CurrentRoute().ReadRedis) return await ReadRedisAsync(groupId, reportMessageId);
+            if (CurrentRoute(groupId).ReadRedis) return await ReadRedisAsync(groupId, reportMessageId);
             await using var database = PostgresDatabase.FromConfiguration();
             return await ReadPostgresAsync(database, groupId, reportMessageId, cancellationToken);
         }
@@ -57,7 +57,7 @@ namespace Enforcer5.Storage.Operations
             long solverUserId, string solverDisplay, DateTimeOffset solvedAt,
             CancellationToken cancellationToken = default)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
                 var outcome = await TrySolveRedisAsync(groupId, reportMessageId, solverUserId,
@@ -87,74 +87,27 @@ namespace Enforcer5.Storage.Operations
             long adminChatId, int adminMessageId, long sourceChatId, int sourceMessageId,
             CancellationToken cancellationToken = default)
         {
-            var route = CurrentRoute();
             var delivery = new ReportDeliveryRecord(index, adminChatId, adminMessageId,
                 sourceChatId, sourceMessageId, Bot.Me.Id, OperationsStore.CurrentEdition);
-            if (route.ReadRedis)
-                await Redis.db.HashSetAsync(RedisKey(report.GroupId, report.ReportMessageId),
-                    $"messageObject{index}", JsonConvert.SerializeObject(delivery));
-            if (route.WritePostgres)
-            {
-                await using var database = PostgresDatabase.FromConfiguration();
-                await using var connection = await database.OpenConnectionAsync(cancellationToken);
-                await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-                await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO report_deliveries (report_id, delivery_index, admin_chat_id, admin_message_id,
-    forwarded_message_id, legacy_payload)
-VALUES (@ReportId, @DeliveryIndex, @AdminChatId, @AdminMessageId, @ForwardedMessageId, @LegacyPayload)
-ON CONFLICT (report_id, delivery_index) DO UPDATE SET admin_chat_id = EXCLUDED.admin_chat_id,
-    admin_message_id = EXCLUDED.admin_message_id, forwarded_message_id = EXCLUDED.forwarded_message_id,
-    legacy_payload = EXCLUDED.legacy_payload", new ReportDelivery(report.Id, index, adminChatId,
-                    adminMessageId, sourceMessageId, JsonConvert.SerializeObject(delivery)), transaction,
-                    cancellationToken: cancellationToken));
-                if (route.WriteRedis)
-                    await CompatibilityOutbox.EnqueueAsync(connection, transaction, "report-deliveries",
-                        $"report:{report.GroupId}:{report.ReportMessageId}", "set",
-                        new { groupId = report.GroupId, reportMessageId = report.ReportMessageId, index,
-                            payload = JsonConvert.SerializeObject(delivery) }, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-            }
+            await Redis.db.HashSetAsync(RedisKey(report.GroupId, report.ReportMessageId),
+                $"messageObject{index}", JsonConvert.SerializeObject(delivery));
         }
 
         internal static async Task<IReadOnlyList<ReportDeliveryRecord>> ListDeliveriesAsync(
             ReportRecord report, CancellationToken cancellationToken = default)
         {
-            if (CurrentRoute().ReadRedis)
-            {
-                var countValue = await Redis.db.HashGetAsync(RedisKey(report.GroupId, report.ReportMessageId), "#Admin");
-                if (!int.TryParse(countValue.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out var count))
-                    return Array.Empty<ReportDeliveryRecord>();
-                var values = await Redis.db.HashGetAsync(RedisKey(report.GroupId, report.ReportMessageId),
-                    Enumerable.Range(0, count).Select(i => (RedisValue)$"messageObject{i}").ToArray());
-                return values.Select((value, index) => ParseDelivery(value, index))
-                    .Where(IsCurrentExecutor).ToArray();
-            }
-
-            await using var database = PostgresDatabase.FromConfiguration();
-            await using var connection = await database.OpenConnectionAsync(cancellationToken);
-            var payloads = await connection.QueryAsync<string>(new CommandDefinition(@"
-SELECT legacy_payload FROM report_deliveries
-WHERE report_id = @ReportId ORDER BY delivery_index", new { ReportId = report.Id },
-                cancellationToken: cancellationToken));
-            return payloads.Select((value, index) => ParseDelivery(value, index))
+            var countValue = await Redis.db.HashGetAsync(RedisKey(report.GroupId, report.ReportMessageId), "#Admin");
+            if (!int.TryParse(countValue.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out var count))
+                return Array.Empty<ReportDeliveryRecord>();
+            var values = await Redis.db.HashGetAsync(RedisKey(report.GroupId, report.ReportMessageId),
+                Enumerable.Range(0, count).Select(i => (RedisValue)$"messageObject{i}").ToArray());
+            return values.Select((value, index) => ParseDelivery(value, index))
                 .Where(IsCurrentExecutor).ToArray();
         }
 
         internal static async Task SetDeliveryCountAsync(ReportRecord report, int count)
         {
-            var route = CurrentRoute();
-            if (route.ReadRedis)
-                await Redis.db.HashSetAsync(RedisKey(report.GroupId, report.ReportMessageId), "#Admin", count);
-            else if (route.WriteRedis)
-            {
-                await using var database = PostgresDatabase.FromConfiguration();
-                await using var connection = await database.OpenConnectionAsync();
-                await using var transaction = await connection.BeginTransactionAsync();
-                await CompatibilityOutbox.EnqueueAsync(connection, transaction, "report-deliveries",
-                    $"report:{report.GroupId}:{report.ReportMessageId}", "count",
-                    new { groupId = report.GroupId, reportMessageId = report.ReportMessageId, count });
-                await transaction.CommitAsync();
-            }
+            await Redis.db.HashSetAsync(RedisKey(report.GroupId, report.ReportMessageId), "#Admin", count);
         }
 
         private static async Task<bool> TryCreateRedisAsync(ReportCreate request)
@@ -181,50 +134,23 @@ WHERE report_id = @ReportId ORDER BY delivery_index", new { ReportId = report.Id
         private static async Task<ReportCreateResult> TryCreatePostgresAsync(PostgresDatabase database,
             ReportCreate request, CancellationToken cancellationToken)
         {
-            await using var connection = await database.OpenConnectionAsync(cancellationToken);
-            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-            await connection.ExecuteAsync(new CommandDefinition(
-                "SELECT pg_advisory_xact_lock(hashtextextended(@LockKey, 0))",
-                new { LockKey = $"report:{request.GroupId}:{request.ReportedMessageId ?? request.ReportMessageId}" },
-                transaction, cancellationToken: cancellationToken));
-            var id = await connection.QuerySingleOrDefaultAsync<long?>(new CommandDefinition(@"
-INSERT INTO reports (group_id, report_message_id, reporter_user_id, reporter_display,
-    reported_user_id, reported_message_id, status, created_at)
-SELECT @GroupId, @ReportMessageId, @ReporterUserId, @ReporterDisplay,
-    @ReportedUserId, @ReportedMessageId, 'open', @CreatedAt
-WHERE @ReportedMessageId IS NULL OR NOT EXISTS (
-    SELECT 1 FROM reports
-    WHERE group_id = @GroupId AND reported_message_id = @ReportedMessageId)
-ON CONFLICT (group_id, report_message_id) DO NOTHING
-RETURNING id", request, transaction, cancellationToken: cancellationToken));
-            var report = await ReadPostgresAsync(connection, request.GroupId, request.ReportMessageId,
-                cancellationToken, transaction);
-            if (id.HasValue && StorageModeProvider.RedisMirrorEnabled)
-                await CompatibilityOutbox.EnqueueAsync(connection, transaction, "reports",
-                    $"report:{request.GroupId}:{request.ReportMessageId}", "set", new
-                    {
-                        groupId = request.GroupId, reportMessageId = request.ReportMessageId,
-                        reporterUserId = request.ReporterUserId, reporterDisplay = request.ReporterDisplay,
-                        reportedUserId = request.ReportedUserId, reportedMessageId = request.ReportedMessageId,
-                        createdAt = request.CreatedAt, status = "open"
-                    }, cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return new ReportCreateResult(id.HasValue, report);
+            var existing = await ReadPostgresAsync(database, request.GroupId, request.ReportMessageId,
+                cancellationToken);
+            if (existing != null) return new ReportCreateResult(false, existing);
+            var id = await new ReportRepository(database).UpsertAsync(ToReport(request), cancellationToken);
+            var report = await ReadPostgresAsync(database, request.GroupId, request.ReportMessageId,
+                cancellationToken);
+            return new ReportCreateResult(id != 0, report);
         }
 
         private static async Task<bool> TrySolvePostgresAsync(PostgresDatabase database, long groupId,
             long reportMessageId, long solverUserId, string solverDisplay, DateTimeOffset solvedAt,
             bool mirrorRedis, CancellationToken cancellationToken)
         {
+            var solved = await new ReportRepository(database).TrySolveAsync(groupId, reportMessageId,
+                solverUserId, solverDisplay, solvedAt, cancellationToken);
             await using var connection = await database.OpenConnectionAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-            var solved = await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE reports SET status = 'solved', solved_by_user_id = @SolverUserId,
-    solved_by_display = @SolverDisplay, solved_at = @SolvedAt
-WHERE group_id = @GroupId AND report_message_id = @ReportMessageId AND status = 'open'",
-                new { GroupId = groupId, ReportMessageId = reportMessageId, SolverUserId = solverUserId,
-                    SolverDisplay = solverDisplay, SolvedAt = solvedAt }, transaction,
-                cancellationToken: cancellationToken)) == 1;
             if (solved && mirrorRedis)
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "reports",
                     $"report:{groupId}:{reportMessageId}", "solve",
@@ -244,12 +170,19 @@ WHERE group_id = @GroupId AND report_message_id = @ReportMessageId AND status = 
             long groupId, long reportMessageId, CancellationToken cancellationToken,
             System.Data.Common.DbTransaction transaction = null) =>
             connection.QuerySingleOrDefaultAsync<ReportRecord>(new CommandDefinition(@"
-SELECT id AS Id, group_id AS GroupId, report_message_id AS ReportMessageId,
-       reporter_user_id AS ReporterUserId, reporter_display AS ReporterDisplay,
-       reported_user_id AS ReportedUserId, reported_message_id AS ReportedMessageId,
-       status AS Status, created_at AS CreatedAt, solved_by_user_id AS SolvedByUserId,
-       solved_by_display AS SolvedByDisplay, solved_at AS SolvedAt
-FROM reports WHERE group_id = @GroupId AND report_message_id = @ReportMessageId",
+SELECT r.report_id AS Id, tc.telegram_chat_id AS GroupId, r.report_message_id AS ReportMessageId,
+        reporter.telegram_user_id AS ReporterUserId, r.reporter_display AS ReporterDisplay,
+       target.telegram_user_id AS ReportedUserId, r.target_message_id AS ReportedMessageId,
+       CASE WHEN r.status = 'open' THEN 'open' ELSE 'solved' END AS Status,
+       r.reported_at AS CreatedAt, solver.telegram_user_id AS SolvedByUserId,
+        r.solver_display AS SolvedByDisplay, r.resolved_at AS SolvedAt
+FROM reports r JOIN groups g ON g.group_id = r.group_id
+JOIN telegram_chats tc ON tc.chat_id = g.chat_id
+LEFT JOIN telegram_accounts reporter ON reporter.account_id = r.reporter_account_id
+LEFT JOIN telegram_accounts target ON target.account_id = r.target_account_id
+LEFT JOIN user_identity_links sil ON sil.user_id = r.solver_user_id AND sil.unlinked_at IS NULL
+LEFT JOIN telegram_accounts solver ON solver.account_id = sil.account_id
+WHERE tc.telegram_chat_id = @GroupId AND r.report_message_id = @ReportMessageId",
                 new { GroupId = groupId, ReportMessageId = reportMessageId },
                 transaction, cancellationToken: cancellationToken));
 
@@ -310,7 +243,7 @@ return 2";
             (value.ExecutorBotId.HasValue
                 ? value.ExecutorBotId.Value == Bot.Me.Id
                 : value.Executor == null || value.Executor == OperationsStore.CurrentEdition);
-        private static ReportStoreRoute CurrentRoute() => GetRoute(StorageModeProvider.Current,
+        private static ReportStoreRoute CurrentRoute(long groupId) => GetRoute(StorageRouting.EffectiveGroupMode(groupId),
             string.Equals(RegHelper.GetRegValue("OperationsShadowEnabled"), "true",
                 StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection")));

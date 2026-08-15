@@ -34,9 +34,13 @@ public sealed class OperationsReportRepositoryIntegrationTests
 
             await using var connection = await database.OpenConnectionAsync();
             Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
-                "SELECT count(*) FROM reports WHERE group_id = -10042 AND report_message_id = 81"));
+                "SELECT count(*) FROM reports r JOIN groups g ON g.group_id = r.group_id " +
+                "JOIN telegram_chats c ON c.chat_id = g.chat_id " +
+                "WHERE c.telegram_chat_id = -10042 AND report_message_id = 81"));
             var solvedBy = await connection.ExecuteScalarAsync<long>(
-                "SELECT solved_by_user_id FROM reports WHERE group_id = -10042 AND report_message_id = 81");
+                "SELECT a.telegram_user_id FROM reports r JOIN user_identity_links l ON l.user_id = r.solver_user_id " +
+                "AND l.unlinked_at IS NULL JOIN telegram_accounts a ON a.account_id = l.account_id " +
+                "WHERE r.report_message_id = 81");
             Assert.Equal(9, solvedBy);
         }
         finally

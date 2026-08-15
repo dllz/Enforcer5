@@ -28,6 +28,7 @@ namespace Enforcer5
         internal static int NodeMessagesSent = 0;
         private static System.Threading.Timer _timer;
         private static System.Threading.Timer _tempbanJob;
+        private static System.Threading.Timer _postgresTempbanJob;
         private static PostgresDatabase _operationsDatabase;
         private static PostgresTempBanDueWorker _postgresTempBanWorker;
         internal static List<Language> LangaugeList = new List<Language>();
@@ -138,23 +139,31 @@ namespace Enforcer5
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);
-            if (StorageModeProvider.PostgresIsPrimary)
+
+            // Both expiry workers run. Choosing one at start-up was safe only while every group
+            // lived in the same store; during the per-group migration the estate is mixed, and a
+            // group that had cut over would have been left with its tempbans in Redis and no worker
+            // acting on them. Each worker filters on per-group state, so together they cover the
+            // whole estate exactly once.
+            _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
+
+            if (!string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection")))
             {
                 _operationsDatabase = PostgresDatabase.FromConfiguration();
                 _postgresTempBanWorker = new PostgresTempBanDueWorker(_operationsDatabase,
                     OperationsStore.CurrentEdition, $"{Environment.MachineName}-{OperationsStore.CurrentEdition}");
-                _tempbanJob = new System.Threading.Timer(_ => Bot.Dispatch(
+                _postgresTempbanJob = new System.Threading.Timer(_ => Bot.Dispatch(
                     () => _postgresTempBanWorker.ProcessDueAsync(100, DateTimeOffset.UtcNow, Bot.ShutdownToken),
                     "PostgresTempBanWorker"), null, wait, wait);
-            }
-            else
-            {
-                _tempbanJob = new System.Threading.Timer(Methods.CheckTempBans, null, wait, wait);
             }
             ShutdownRequested.Wait();
             _timer?.Dispose();
             _tempbanJob?.Dispose();
+            _postgresTempbanJob?.Dispose();
             _operationsDatabase?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            // _operationsDatabase is a shared instance, so its own dispose is a no-op. The pools
+            // themselves are process-owned and released here.
+            PostgresDatabase.DisposeSharedAsync().GetAwaiter().GetResult();
             _sigtermRegistration?.Dispose();
         }
 

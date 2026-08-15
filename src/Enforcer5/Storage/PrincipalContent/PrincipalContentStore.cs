@@ -10,8 +10,8 @@ namespace Enforcer5.Storage.PrincipalContent
         {
             if (user == null) return;
             var principal = new UserPrincipal(user.Id, user.FirstName,
-                user.Username == null ? null : $"@{user.Username.ToLowerInvariant()}");
-            if (!StorageModeProvider.PostgresIsPrimary)
+                user.Username == null ? null : $"@{user.Username.ToLowerInvariant()}", user.IsBot);
+            if (!StorageRouting.GlobalTierPostgresIsPrimary)
             {
                 await Redis.db.HashSetAsync($"user:{user.Id}", "name", user.FirstName);
                 if (principal.Username != null)
@@ -28,8 +28,9 @@ namespace Enforcer5.Storage.PrincipalContent
         internal static async Task ObserveGroupAsync(Chat chat)
         {
             if (chat == null || chat.Type == Telegram.Bot.Types.Enums.ChatType.Private) return;
-            var principal = new GroupPrincipal(chat.Id, chat.Title);
-            if (!StorageModeProvider.PostgresIsPrimary)
+            var principal = new GroupPrincipal(chat.Id, chat.Title, chat.Username,
+                chat.Type.ToString().ToLowerInvariant());
+            if (!StorageRouting.GlobalTierPostgresIsPrimary)
             {
                 await Redis.db.HashSetAsync($"chat:{chat.Id}:details", "name", chat.Title);
                 if (!ShadowEnabled) return;
@@ -40,7 +41,7 @@ namespace Enforcer5.Storage.PrincipalContent
 
         internal static async Task<bool> IsPremiumAsync(long chatId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await Redis.db.SetContainsAsync("premiumBot", chatId);
             await using var database = PostgresDatabase.FromConfiguration();
             var rows = await new GroupEntitlementRepository(database).GetAsync(chatId);
@@ -51,7 +52,7 @@ namespace Enforcer5.Storage.PrincipalContent
 
         internal static async Task<UserPrincipal> GetUserAsync(long userId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GlobalTierPostgresIsPrimary)
             {
                 var values = await Redis.db.HashGetAsync($"user:{userId}",
                     new StackExchange.Redis.RedisValue[] { "name", "username" });
@@ -63,7 +64,7 @@ namespace Enforcer5.Storage.PrincipalContent
 
         internal static async Task<long?> ResolveUsernameAsync(string username)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GlobalTierPostgresIsPrimary)
             {
                 var value = await Redis.db.HashGetAsync("bot:usernames", username);
                 return long.TryParse(value.ToString(), out var id) ? id : null;
@@ -74,7 +75,7 @@ namespace Enforcer5.Storage.PrincipalContent
 
         internal static async Task<bool> GroupExistsAsync(long chatId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await Redis.db.SetContainsAsync("bot:groupsid", chatId);
             await using var database = PostgresDatabase.FromConfiguration();
             return await new GroupRepository(database).GetAsync(chatId) != null;
@@ -82,7 +83,7 @@ namespace Enforcer5.Storage.PrincipalContent
 
         internal static async Task SetPremiumAsync(long chatId, bool enabled)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 if (enabled) await Redis.db.SetAddAsync("premiumBot", chatId);
                 else await Redis.db.SetRemoveAsync("premiumBot", chatId);

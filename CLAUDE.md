@@ -78,7 +78,7 @@ Production ships no JSON file; everything comes from the systemd unit.
 |---|---|
 | `EnforcerAPI` / `EnforcerPremiumAPI` | Bot token; which one is read is a compile-time choice |
 | `TelegramServerUrl` | Optional self-hosted Bot API server |
-| `RedisConnection` / `RedisPassword` | Shared instance with blackwolf; DB index 0 |
+| `RedisConnection` / `RedisPassword` | Enforcer's own instance, not shared with blackwolf; DB index 0 |
 | `PaymentProviderToken` | Telegram Payments. Never commit this |
 | `ErrorChatId` | Errors and startup notices; falls back to `Constants.Devs[0]` |
 | `LanguagesPath` | Live XML directory. Both production editions use `/opt/enforcer/Languages` |
@@ -128,7 +128,9 @@ StackExchange.Redis 2.x. The connection is established lazily in `Redis.Start()`
 **never move it back into a static field initializer**, which is what made the old build
 throw `TypeInitializationException` on Linux before anything could be logged.
 
-The instance is shared with blackwolf. Enforcer uses DB index 0 (`Constants.EnforcerDb`).
+Enforcer has its own Redis instance — it is **not** shared with blackwolf. It uses DB index 0
+(`Constants.EnforcerDb`). The instance has a `maxmemory` limit, so treat Redis memory as a
+constrained budget: do not park large migration indexes or bulk working sets there.
 `Redis.SaveRedis()` issues a BGSAVE and needs `AllowAdmin`.
 
 Message objects stashed in Redis (`messageObject{i}` in `FlagCommands`) were serialised by

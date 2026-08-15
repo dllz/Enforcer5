@@ -6,15 +6,28 @@ namespace Enforcer5.Tests;
 public sealed class PrincipalContentLegacyMappingTests
 {
     [Fact]
-    public void PlainCustomCommandIsPreservedExactly()
+    public void PlainCustomCommandNormalizesTriggerAndPreservesContentExactly()
     {
         var command = LegacyPrincipalContentMapper.ParseCustomCommand(-1001, "#Hello",
             "  Mixed CASE\n<b>markup</b>  ", null, null);
 
-        Assert.Equal("#Hello", command.Trigger);
+        Assert.Equal("hello", command.Trigger);
         Assert.Equal("  Mixed CASE\n<b>markup</b>  ", command.Content);
         Assert.Null(command.MediaType);
         Assert.Null(command.FileId);
+    }
+
+    [Theory]
+    [InlineData("#deadtalk❗️", "deadtalk")]
+    [InlineData("#deadtalk❗️Deadtalk", "deadtalk")]
+    [InlineData("#Hello_world42", "hello_world42")]
+    [InlineData("#سلام_دنیا", "سلام_دنیا")]
+    [InlineData("#東京テスト", "東京テスト")]
+    [InlineData("#CAFÉ", "café")]
+    [InlineData("#CAFÉ", "café")]
+    public void CustomCommandTriggerDropsPrefixAndTrailingNonHashtagText(string trigger, string expected)
+    {
+        Assert.Equal(expected, LegacyPrincipalContentMapper.NormalizeCustomCommandTrigger(trigger));
     }
 
     [Fact]
@@ -36,8 +49,20 @@ public sealed class PrincipalContentLegacyMappingTests
             "text caption", "gif-file-id", null);
 
         Assert.Equal("text caption", command.Content);
-        Assert.Equal("gif", command.MediaType);
+        Assert.Equal("animation", command.MediaType);
         Assert.Equal("gif-file-id", command.FileId);
+    }
+
+    [Theory]
+    [InlineData("gif", "animation")]
+    [InlineData("file", "document")]
+    [InlineData("text", "document")]
+    [InlineData("unknown", "document")]
+    [InlineData("videoNote", "video_note")]
+    [InlineData("voice", "voice")]
+    public void LegacyMediaTypesMapToCanonicalTypes(string mediaType, string expected)
+    {
+        Assert.Equal(expected, LegacyPrincipalContentMapper.NormalizeCustomCommandMediaType(mediaType));
     }
 
     [Fact]

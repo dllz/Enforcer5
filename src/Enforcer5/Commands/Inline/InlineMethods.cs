@@ -19,10 +19,30 @@ namespace Enforcer5
         
         internal static TempbanUser[] GetTempbanUserDetails(User user, string args, XDocument lang)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            // This lists every group in which the user is tempbanned, and an inline query carries no
+            // group context, so it is the one user-facing feature that has to read both stores while
+            // the population is mixed. The two sets are disjoint by group state - Redis entries for
+            // groups PostgreSQL owns are filtered out below - so a union is correct and no
+            // aggregation is involved.
+            var postgres = ReadPostgresTempbans(user, args);
+            if (StorageRouting.GlobalTierPostgresIsPrimary && postgres.Length > 0)
+                return postgres;
+
+            var redis = ReadRedisTempbans(user, args, lang);
+            var merged = redis.Concat(postgres).ToArray();
+            return merged.Length == 0
+                ? new[] { new TempbanUser { name = "Nothing Found", unbanTime = "", groupName = "", groupId = "", userId = "" } }
+                : merged;
+        }
+
+        private static TempbanUser[] ReadPostgresTempbans(User user, string args)
+        {
+            if (string.IsNullOrWhiteSpace(Helpers.RegHelper.GetRegValue("PostgresConnection")))
+                return Array.Empty<TempbanUser>();
+            try
             {
                 var sanctions = OperationsStore.ListActiveSanctionsAsync(SanctionKinds.TempBan).Result;
-                var postgresResults = sanctions.Where(value => value.UserId == user.Id).Select(value =>
+                return sanctions.Where(value => value.UserId == user.Id).Select(value =>
                 {
                     var userName = PrincipalContentStore.GetUserAsync(value.UserId).Result?.Name ?? string.Empty;
                     return new TempbanUser
@@ -33,10 +53,16 @@ namespace Enforcer5
                     };
                 }).Where(value => string.IsNullOrEmpty(args) || value.name.Contains(args,
                     StringComparison.OrdinalIgnoreCase) || value.groupId.Contains(args)).ToArray();
-                return postgresResults.Length == 0
-                    ? new[] { new TempbanUser { name = "Nothing Found", unbanTime = "", groupName = "", groupId = "", userId = "" } }
-                    : postgresResults;
             }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Inline tempban lookup against PostgreSQL failed: {e.Message}");
+                return Array.Empty<TempbanUser>();
+            }
+        }
+
+        private static TempbanUser[] ReadRedisTempbans(User user, string args, XDocument lang)
+        {
             var bitBan = Redis.db.HashGetAllAsync("tempbanned").Result.ToList();
             bitBan.AddRange(Redis.db.HashGetAllAsync("tempbannedPremium").Result);
             
@@ -100,18 +126,12 @@ namespace Enforcer5
                     }
                 }
             }
-            if (results.Count == 0)
-            {
-                results.Add(new TempbanUser()
-                {
-                    name = $"Nothing Found",
-                    unbanTime = "",
-                    groupName = "",
-                    groupId = "",
-                    userId = ""
-                });
-            }
-            return results.ToArray();
+            // Entries for migrated groups stay in the global hash for the migration to move, so
+            // they are filtered here rather than reported twice.
+            return results
+                .Where(value => !long.TryParse(value.groupId, out var chatId) ||
+                                !StorageRouting.GroupPostgresIsPrimary(chatId))
+                .ToArray();
         }
 
         internal static HelpArticle[] GetHelpArticles(string args, XDocument lang)

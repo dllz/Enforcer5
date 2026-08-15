@@ -26,10 +26,9 @@ namespace Enforcer5.Storage.Moderation
 
     internal static class WarningOperations
     {
-        internal const string Issue = "issue";
+        internal const string Add = "add";
+        internal const string Remove = "remove";
         internal const string Reset = "reset";
-        internal const string Decrement = "decrement";
-        internal const string Backfill = "backfill";
     }
 
     internal sealed record GroupRoleAssignment(

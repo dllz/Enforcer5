@@ -8,7 +8,7 @@ namespace Enforcer5.Storage.Moderation
     {
         internal static async Task<WarningIssueResult> IssuePrewarningAsync(long groupId, long userId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 var balance = await Redis.db.HashIncrementAsync($"chat:{groupId}:prewarns", userId, 1);
                 var result = new WarningIssueResult(balance, 1, balance);
@@ -21,7 +21,7 @@ namespace Enforcer5.Storage.Moderation
 
         internal static async Task<WarningIssueResult> IssueWarningAsync(long groupId, long userId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 long.TryParse((await Redis.db.HashGetAsync($"chat:{groupId}:prewarns", userId)).ToString(),
                     out var prewarnings);
@@ -41,7 +41,7 @@ namespace Enforcer5.Storage.Moderation
         internal static async Task<WarningIssueResult> IssueAsync(long groupId, long userId,
             string warningType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 var balance = await Redis.db.HashIncrementAsync(Key(groupId, warningType), userId, 1);
                 if (balance < 0)
@@ -65,7 +65,7 @@ namespace Enforcer5.Storage.Moderation
         internal static async Task<WarningIssueResult> ResetAsync(long groupId, long userId,
             string warningType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 var current = await GetBalanceAsync(groupId, userId, warningType);
                 await Redis.db.HashSetAsync(Key(groupId, warningType), userId, 0);
@@ -79,7 +79,7 @@ namespace Enforcer5.Storage.Moderation
         internal static async Task<WarningIssueResult> DecrementAsync(long groupId, long userId,
             string warningType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 long.TryParse((await Redis.db.HashGetAsync(Key(groupId, warningType), userId)).ToString(),
                     out var current);
@@ -98,7 +98,7 @@ namespace Enforcer5.Storage.Moderation
         internal static async Task<WarningBalance> GetBalanceAsync(long groupId, long userId,
             string warningType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 long.TryParse((await Redis.db.HashGetAsync(Key(groupId, warningType), userId)).ToString(),
                     out var active);

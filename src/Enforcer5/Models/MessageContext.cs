@@ -172,7 +172,7 @@ namespace Enforcer5.Models
 
         private static async Task<HashEntry[]> GetGlobalBanEntriesAsync(long userId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GlobalTierPostgresIsPrimary)
                 return await Redis.db.HashGetAllAsync($"globalBan:{userId}");
             var sanction = await OperationsStore.GetGlobalBanAsync(userId);
             if (sanction == null) return Array.Empty<HashEntry>();

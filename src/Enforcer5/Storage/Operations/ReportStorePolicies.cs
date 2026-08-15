@@ -27,7 +27,7 @@ namespace Enforcer5.Storage.Operations
         private static async Task<bool> IsEnabledAsync(long groupId, long userId, string policy,
             string redisKey)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
                 return await Redis.db.SetContainsAsync(redisKey, userId);
             await using var database = PostgresDatabase.FromConfiguration();
             await using var connection = await database.OpenConnectionAsync();
@@ -43,7 +43,7 @@ WHERE group_id = @GroupId AND user_id = @UserId AND policy = @Policy), FALSE)",
             var shadow = string.Equals(RegHelper.GetRegValue("ModerationShadowEnabled"), "true",
                 StringComparison.OrdinalIgnoreCase) &&
                 !string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection"));
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(groupId))
             {
                 await SetRedisAsync(redisKey, userId, enabled);
                 if (!shadow) return;
@@ -52,7 +52,7 @@ WHERE group_id = @GroupId AND user_id = @UserId AND policy = @Policy), FALSE)",
             await using var database = PostgresDatabase.FromConfiguration();
             await new GroupUserPolicyRepository(database).UpsertAsync(new GroupUserPolicy(groupId,
                 userId, policy, enabled, DateTimeOffset.UtcNow));
-            if (StorageModeProvider.RedisMirrorEnabled) await SetRedisAsync(redisKey, userId, enabled);
+            if (StorageRouting.RedisMirrorEnabled) await SetRedisAsync(redisKey, userId, enabled);
         }
 
         private static Task SetRedisAsync(string key, long userId, bool enabled) => enabled

@@ -215,7 +215,7 @@ namespace Enforcer5
                     if (!string.IsNullOrEmpty(type))
                     {
                         Methods.WriteCustomCommand(new CustomCommand(update.Message.Chat.Id, words[0], null,
-                            type, fileId, null));
+                            type, fileId, null, OperationsStore.CurrentEdition));
                         Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                         Service.LogCommand(update, update.Message.Text);
                         return;
@@ -238,7 +238,7 @@ namespace Enforcer5
                             var res = Bot.SendReply(text, update);
                             var result = res;
                             Methods.WriteCustomCommand(new CustomCommand(update.Message.Chat.Id, words[0], text,
-                                "gif", toSave, null));
+                                "gif", toSave, null, OperationsStore.CurrentEdition));
                             var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                                 Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                             Service.LogCommand(update, update.Message.Text);
@@ -271,7 +271,7 @@ namespace Enforcer5
                         {
                             var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
                             Methods.WriteCustomCommand(new CustomCommand(update.Message.Chat.Id, words[0], null,
-                                type, fileId, words[1]));
+                                type, fileId, words[1], OperationsStore.CurrentEdition));
                             Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                             Service.LogCommand(update, update.Message.Text);
                         }
@@ -380,6 +380,75 @@ namespace Enforcer5
             }
         }
 
+        [Callback(Trigger = "xcr", GroupAdminOnly = true)]
+        public static void ResolveExtraConflict(CallbackQuery call, string[] args)
+        {
+            if (args.Length < 3 || !long.TryParse(args[1], out var chatId) ||
+                !Guid.TryParseExact(args[2], "N", out var candidateId)) return;
+            var database = PostgresDatabase.FromConfiguration();
+            CustomCommand command;
+            try
+            {
+                command = new CustomCommandConflictRepository(database).ResolveAsync(chatId, candidateId)
+                    .GetAwaiter().GetResult();
+            }
+            finally
+            {
+                database.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+            Bot.ReplyToCallback(call, command == null
+                ? "This custom-command conflict was already resolved."
+                : $"Kept #{command.Trigger} and deleted the other duplicates.", replyMarkup: command == null
+                    ? null
+                    : new InlineKeyboardMarkup(new[] { new InlineKeyboardButton("Undo",
+                        $"xcu:{chatId}:{candidateId:N}") }));
+        }
+
+        [Callback(Trigger = "xcd", GroupAdminOnly = true)]
+        public static void DeleteExtraConflict(CallbackQuery call, string[] args)
+        {
+            if (args.Length < 3 || !long.TryParse(args[1], out var chatId) ||
+                !Guid.TryParseExact(args[2], "N", out var candidateId)) return;
+            var database = PostgresDatabase.FromConfiguration();
+            bool deleted;
+            try
+            {
+                deleted = new CustomCommandConflictRepository(database).DeleteAllAsync(chatId, candidateId)
+                    .GetAwaiter().GetResult();
+            }
+            finally
+            {
+                database.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+            Bot.ReplyToCallback(call, deleted
+                ? "Deleted all duplicate custom commands."
+                : "This custom-command conflict was already resolved.", replyMarkup: deleted
+                    ? new InlineKeyboardMarkup(new[] { new InlineKeyboardButton("Undo",
+                        $"xcu:{chatId}:{candidateId:N}") })
+                    : null);
+        }
+
+        [Callback(Trigger = "xcu", GroupAdminOnly = true)]
+        public static void UndoExtraConflict(CallbackQuery call, string[] args)
+        {
+            if (args.Length < 3 || !long.TryParse(args[1], out var chatId) ||
+                !Guid.TryParseExact(args[2], "N", out var candidateId)) return;
+            var database = PostgresDatabase.FromConfiguration();
+            bool restored;
+            try
+            {
+                restored = new CustomCommandConflictRepository(database).UndoAsync(chatId, candidateId)
+                    .GetAwaiter().GetResult();
+            }
+            finally
+            {
+                database.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+            Bot.ReplyToCallback(call, restored
+                ? "Restored the duplicate custom commands. Run the trigger again to choose."
+                : "This custom-command change can no longer be undone.");
+        }
+
         [Command(Trigger = "setlink", InGroupOnly = true, GroupAdminOnly = true)]
         public static void SetLink(Update update, string[] args)
         {
@@ -446,7 +515,7 @@ namespace Enforcer5
                         name = $"{name} - @{user.User.Username}";
                     if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                         status = ChatMemberStatus.Kicked;
-                    var reason = StorageModeProvider.PostgresIsPrimary
+                    var reason = StorageRouting.GroupPostgresIsPrimary(chatId)
                         ? (RedisValue)(OperationsStore.GetActiveSanctionAsync(chatId, userId,
                             SanctionKinds.Ban).Result?.Reason ?? string.Empty)
                         : Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
@@ -471,7 +540,7 @@ namespace Enforcer5
                     name = $"{name} - @{user.User.Username}";
                 if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                     status = ChatMemberStatus.Kicked;
-                var reason = StorageModeProvider.PostgresIsPrimary
+                var reason = StorageRouting.GroupPostgresIsPrimary(chatId)
                     ? (RedisValue)(OperationsStore.GetActiveSanctionAsync(chatId, userId,
                         SanctionKinds.Ban).Result?.Reason ?? string.Empty)
                     : Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
@@ -862,7 +931,7 @@ namespace Enforcer5
         public static void GetMutedJoinersList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var mutedJoinerIds = StorageModeProvider.PostgresIsPrimary
+            var mutedJoinerIds = StorageRouting.GroupPostgresIsPrimary(update.Message.Chat.Id)
                 ? OperationsStore.ListActiveSanctionsForGroupAsync(update.Message.Chat.Id, SanctionKinds.Mute)
                     .Result.Where(value => value.LegacyKey?.StartsWith("new-joiner:") == true)
                     .Select(value => (RedisValue)value.UserId).ToArray()
@@ -904,7 +973,7 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var chatId = update.Message.Chat.Id;
-            var joiners = StorageModeProvider.PostgresIsPrimary
+            var joiners = StorageRouting.GroupPostgresIsPrimary(chatId)
                 ? OperationsStore.ListActiveSanctionsForGroupAsync(chatId, SanctionKinds.Mute)
                     .Result.Where(value => value.LegacyKey?.StartsWith("new-joiner:") == true)
                     .Select(value => (RedisValue)value.UserId).ToArray()

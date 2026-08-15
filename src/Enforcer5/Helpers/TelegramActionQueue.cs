@@ -122,6 +122,12 @@ namespace Enforcer5.Helpers
     internal sealed class TelegramActionQueue : IDisposable
     {
         private const string GroupName = "telegram-workers";
+
+        // Bans, unbans and restrictions leave the process here. A quiesce must not cut across a
+        // Telegram call that has been made but not yet acknowledged in the stream.
+        private static readonly Storage.Cutover.DurableWriter ActionWriter =
+            Storage.Cutover.QuiesceBarrier.Register("telegram-action-queue",
+                Storage.Cutover.WriterResumeClass.Cursor);
         private const int ReadBatchSize = 20;
         // Must exceed the Telegram HTTP timeout; reclaiming an action while its original request is
         // still in flight can execute it twice. A crashed worker is recovered after this lease.
@@ -250,6 +256,9 @@ return 1";
         internal async Task EnqueueDeleteMessageAsync(long chatId, int messageId)
         {
             var action = TelegramAction.DeleteMessage(chatId, messageId, DateTimeOffset.UtcNow);
+            action.DecisionOwner = _ownerEdition;
+            action.PreferredExecutor = _ownerEdition;
+            action.AllowedExecutors = new[] { _ownerEdition };
             await EnqueueAsync(action);
         }
 
@@ -308,6 +317,10 @@ return 1";
             {
                 try
                 {
+                    // Safe point before claiming. Entries sit in a stream consumer group, so
+                    // anything unacknowledged when the barrier rises is re-delivered on resume.
+                    await ActionWriter.GateAsync(_cts.Token);
+
                     if (_requiredAbsentHeartbeat != null &&
                         await _db.KeyExistsAsync(MigrationMaintenanceGuard.HeartbeatKey(_requiredAbsentHeartbeat)))
                     {
@@ -323,7 +336,12 @@ return 1";
                     }
 
                     foreach (var entry in entries)
+                    {
+                        // An action in flight calls Telegram and then acknowledges, so this scope
+                        // is what stops the barrier declaring quiet mid-call.
+                        using var work = await ActionWriter.BeginWorkAsync(_cts.Token);
                         await ProcessEntryAsync(entry);
+                    }
                 }
                 catch (OperationCanceledException) when (_cts.IsCancellationRequested)
                 {
@@ -523,15 +541,14 @@ return 1";
 
         private async Task ReclaimerLoopAsync()
         {
-            var cursor = (RedisValue)"0-0";
             while (!_cts.IsCancellationRequested)
             {
                 try
                 {
-                    var result = await _db.StreamAutoClaimAsync(_streamKey, GroupName,
-                        $"{_consumerPrefix}-reclaimer", ReclaimAfterMs, cursor, ReadBatchSize);
-                    cursor = result.NextStartId;
-                    foreach (var entry in result.ClaimedEntries)
+                    // XAUTOCLAIM needs Redis 6.2; production is 6.0.9. See RedisStreamReclaim.
+                    var claimed = await RedisStreamReclaim.ClaimStaleAsync(_db, _streamKey, GroupName,
+                        $"{_consumerPrefix}-reclaimer", ReclaimAfterMs, ReadBatchSize, _cts.Token);
+                    foreach (var entry in claimed)
                         await ProcessEntryAsync(entry);
                     await Task.Delay(TimeSpan.FromSeconds(5), _cts.Token);
                 }

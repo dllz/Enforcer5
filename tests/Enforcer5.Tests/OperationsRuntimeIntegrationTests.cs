@@ -31,11 +31,15 @@ public sealed class OperationsRuntimeIntegrationTests
 
             await using var connection = await database.OpenConnectionAsync();
             Assert.Equal(20, await connection.ExecuteScalarAsync<long>(
-                "SELECT messages FROM user_statistics WHERE user_id = 42"));
+                "SELECT t.message_count FROM account_message_totals t JOIN telegram_accounts a " +
+                "ON a.account_id = t.account_id WHERE a.telegram_user_id = 42"));
             Assert.Equal(20, await connection.ExecuteScalarAsync<long>(
-                "SELECT messages FROM group_user_statistics WHERE group_id = -10042 AND user_id = 42"));
+                "SELECT t.message_count FROM group_account_message_totals t " +
+                "JOIN telegram_accounts a ON a.account_id = t.account_id " +
+                "JOIN groups g ON g.group_id = t.group_id JOIN telegram_chats c ON c.chat_id = g.chat_id " +
+                "WHERE c.telegram_chat_id = -10042 AND a.telegram_user_id = 42"));
             Assert.Equal(20, await connection.ExecuteScalarAsync<long>(
-                "SELECT messages FROM bot_statistic_baselines WHERE edition = 'normal'"));
+                "SELECT message_count FROM bot_statistic_baselines WHERE edition = 'normal'"));
         }
         finally
         {
@@ -50,6 +54,12 @@ public sealed class OperationsRuntimeIntegrationTests
         var schema = $"enforcer_tempban_worker_{Guid.NewGuid():N}";
         var quotedSchema = $"\"{schema}\"";
 
+        // SanctionRepository.CompleteClaimAsync branches on StorageModeProvider.RedisMirrorEnabled.
+        // Under a leaked mirror mode it takes the outbox path and the claim is released instead of
+        // completed, so pin the mode for the duration of this test.
+        using var config = GlobalConfigScope.Acquire("StorageMode", "PostgresConnection");
+        config.Set("StorageMode", nameof(StorageMode.RedisPrimaryPostgresShadow));
+
         await using var admin = new NpgsqlConnection(baseConnectionString);
         await admin.OpenAsync();
         await admin.ExecuteAsync($"CREATE SCHEMA {quotedSchema}");
@@ -62,6 +72,17 @@ public sealed class OperationsRuntimeIntegrationTests
             var now = DateTimeOffset.UtcNow;
             await sanctions.UpsertAsync(TempBan(1, now.AddMinutes(-2)));
             await sanctions.UpsertAsync(TempBan(2, now.AddMinutes(-1)));
+
+            // The PostgreSQL expiry worker only claims groups PostgreSQL owns, so that during a
+            // mixed population it and the Redis worker partition the estate instead of both acting
+            // on a group - or neither.
+            await using (var stateConnection = new NpgsqlConnection(builder.ConnectionString))
+            {
+                await stateConnection.OpenAsync();
+                await stateConnection.ExecuteAsync(
+                    "INSERT INTO migration_group_state (telegram_chat_id, state) VALUES (-10042, 'Postgres')");
+            }
+
             var queued = new List<long>();
             var worker = new PostgresTempBanDueWorker(sanctions, Editions.Normal, "test-worker",
                 (groupId, userId, _) =>
@@ -77,7 +98,8 @@ public sealed class OperationsRuntimeIntegrationTests
             Assert.Equal(new TempBanDueWorkerResult(2, 1, 1), result);
             await using var connection = await database.OpenConnectionAsync();
             var statuses = (await connection.QueryAsync<(long UserId, string Status)>(
-                "SELECT user_id AS UserId, status AS Status FROM sanctions ORDER BY user_id")).ToArray();
+                "SELECT a.telegram_user_id AS UserId, s.status AS Status FROM sanctions s " +
+                "JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY a.telegram_user_id")).ToArray();
             Assert.Equal((1L, SanctionStatuses.Completed), statuses[0]);
             Assert.Equal((2L, SanctionStatuses.Active), statuses[1]);
         }

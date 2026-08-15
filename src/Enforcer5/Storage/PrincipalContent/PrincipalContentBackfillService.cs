@@ -15,6 +15,7 @@ namespace Enforcer5.Storage.PrincipalContent
         private readonly GroupEntitlementRepository _entitlements;
         private readonly GroupContentRepository _content;
         private readonly CustomCommandRepository _commands;
+        private readonly CustomCommandConflictRepository _commandConflicts;
         internal int ReconciliationMismatches { get; private set; }
 
         internal PrincipalContentBackfillService(PostgresDatabase database)
@@ -25,24 +26,32 @@ namespace Enforcer5.Storage.PrincipalContent
             _entitlements = new GroupEntitlementRepository(database);
             _content = new GroupContentRepository(database);
             _commands = new CustomCommandRepository(database);
+            _commandConflicts = new CustomCommandConflictRepository(database);
         }
 
         internal async Task<PrincipalContentBackfillResult> RunRedisPrimaryAsync(
             IEnumerable<long> userIds, bool reconcile = false,
             CancellationToken cancellationToken = default)
         {
+            // Discovery unions bot:groupsid with a scan, because the set alone omits 7,951 groups
+            // that have data. See LegacyPrincipalContentReader.DiscoverGroupIdsAsync.
+            var groupIds = await LegacyPrincipalContentReader.DiscoverGroupIdsAsync(cancellationToken);
+            return await RunRedisPrimaryAsync(userIds, groupIds, reconcile, cancellationToken);
+        }
+
+        internal async Task<PrincipalContentBackfillResult> RunRedisPrimaryAsync(
+            IEnumerable<long> userIds, IEnumerable<long> groupIds, bool reconcile = false,
+            CancellationToken cancellationToken = default)
+        {
             if (StorageModeProvider.Current != StorageMode.RedisPrimaryPostgresShadow)
                 throw new System.InvalidOperationException("Redis backfill requires RedisPrimaryPostgresShadow mode.");
 
-            var snapshot = await _reader.ReadAsync(userIds, cancellationToken);
+            var snapshot = await _reader.ReadAsync(userIds, groupIds, cancellationToken);
             var result = new PrincipalContentBackfillResult();
             if (reconcile)
                 ReconciliationMismatches = await ReconcileAsync(_database, snapshot, cancellationToken);
-            foreach (var user in snapshot.Users)
-            {
-                await _users.UpsertAsync(user, cancellationToken);
-                result.UsersWritten++;
-            }
+            await _users.UpsertManyAsync(snapshot.Users, cancellationToken);
+            result.UsersWritten = snapshot.Users.Count;
             foreach (var group in snapshot.Groups)
             {
                 await _groups.UpsertAsync(group, cancellationToken);
@@ -63,7 +72,47 @@ namespace Enforcer5.Storage.PrincipalContent
                 await _commands.UpsertAsync(command, cancellationToken);
                 result.CustomCommandsWritten++;
             }
+            foreach (var conflict in snapshot.CustomCommandConflicts.GroupBy(value =>
+                         (value.ChatId, value.Trigger)))
+                await _commandConflicts.ReplaceAsync(conflict.Key.ChatId, conflict.Key.Trigger,
+                    conflict.ToArray(), cancellationToken);
+
+            result.DataQualityIssues = await RecordDataQualityIssuesAsync(snapshot, cancellationToken);
             return result;
+        }
+
+        /// <summary>
+        /// Records defects that do not stop the record migrating - a legacy user with no name, for
+        /// example. Severity is 'warning' rather than 'blocking': the data is migrated, and the gap
+        /// is left visible for follow-up instead of being used as grounds for deletion.
+        /// </summary>
+        private async Task<int> RecordDataQualityIssuesAsync(PrincipalContentBackfill snapshot,
+            CancellationToken cancellationToken)
+        {
+            if (snapshot.DataQualityIssues.Count == 0) return 0;
+
+            await using var connection = await _database.OpenConnectionAsync(cancellationToken);
+            await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+            var runId = await connection.ExecuteScalarAsync<long>(new Dapper.CommandDefinition(@"
+INSERT INTO migration_runs (mode, status, completed_at, details)
+VALUES ('principal-content-data-quality', 'completed', now(), '{}'::jsonb)
+RETURNING id", transaction: transaction, cancellationToken: cancellationToken));
+
+            var written = await connection.ExecuteAsync(new Dapper.CommandDefinition(@"
+INSERT INTO migration_exceptions
+    (migration_run_id, domain, source_key, source_field, severity, reason)
+VALUES (@RunId, 'principal-content', @SourceKey, @SourceField, 'warning', @Reason)",
+                snapshot.DataQualityIssues.Select(issue => new
+                {
+                    RunId = runId,
+                    issue.SourceKey,
+                    issue.SourceField,
+                    issue.Reason
+                }).ToArray(), transaction, cancellationToken: cancellationToken));
+
+            await transaction.CommitAsync(cancellationToken);
+            return written;
         }
 
         internal static async Task<int> ReconcileAsync(PostgresDatabase database,
@@ -84,9 +133,12 @@ namespace Enforcer5.Storage.PrincipalContent
 
             if (userIds.Length > 0)
                 mismatches += await connection.ExecuteScalarAsync<int>(new CommandDefinition(@"
-SELECT count(*) FROM users p
-RIGHT JOIN unnest(@Ids, @Names, @Usernames) AS r(user_id, name, username) ON r.user_id = p.user_id
-WHERE p.user_id IS NULL OR p.name IS DISTINCT FROM r.name OR p.username IS DISTINCT FROM r.username",
+SELECT count(*) FROM unnest(@Ids, @Names, @Usernames) AS r(telegram_user_id, name, username)
+LEFT JOIN telegram_accounts a ON a.telegram_user_id = r.telegram_user_id
+LEFT JOIN user_identity_links l ON l.account_id = a.account_id AND l.unlinked_at IS NULL
+LEFT JOIN telegram_account_profiles profile ON profile.account_id = a.account_id AND profile.valid_to IS NULL
+WHERE a.account_id IS NULL OR l.identity_link_id IS NULL OR profile.display_name IS DISTINCT FROM r.name
+OR profile.username IS DISTINCT FROM r.username",
                     new { Ids = userIds, Names = snapshot.Users.Select(x => x.Name).ToArray(),
                         Usernames = snapshot.Users.Select(x => x.Username).ToArray() }, transaction,
                     cancellationToken: cancellationToken));
@@ -94,63 +146,90 @@ WHERE p.user_id IS NULL OR p.name IS DISTINCT FROM r.name OR p.username IS DISTI
             if (groupIds.Length > 0)
             {
                 mismatches += await connection.ExecuteScalarAsync<int>(new CommandDefinition(@"
-SELECT count(*) FROM groups p
-RIGHT JOIN unnest(@Ids, @Names) AS r(chat_id, name) ON r.chat_id = p.chat_id
-WHERE p.chat_id IS NULL OR p.name IS DISTINCT FROM r.name", new { Ids = groupIds,
+SELECT count(*) FROM unnest(@Ids, @Names) AS r(telegram_chat_id, name)
+LEFT JOIN telegram_chats c ON c.telegram_chat_id = r.telegram_chat_id
+LEFT JOIN groups g ON g.chat_id = c.chat_id
+LEFT JOIN telegram_chat_profiles profile ON profile.chat_id = c.chat_id AND profile.valid_to IS NULL
+WHERE g.group_id IS NULL OR COALESCE(profile.title, g.title) IS DISTINCT FROM r.name", new { Ids = groupIds,
                     Names = snapshot.Groups.Select(x => x.Name).ToArray() }, transaction,
                     cancellationToken: cancellationToken));
 
                 var entitlements = await connection.QueryAsync<(long ChatId, string Entitlement)>(
-                    new CommandDefinition(@"SELECT chat_id AS ChatId, entitlement AS Entitlement
-FROM group_entitlements WHERE chat_id = ANY(@GroupIds) AND enabled", new { GroupIds = groupIds },
+                    new CommandDefinition(@"SELECT c.telegram_chat_id AS ChatId, e.entitlement AS Entitlement
+FROM group_entitlements e JOIN groups g ON g.group_id = e.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id WHERE c.telegram_chat_id = ANY(@GroupIds) AND e.enabled", new { GroupIds = groupIds },
                         transaction, cancellationToken: cancellationToken));
                 foreach (var value in snapshot.Entitlements)
                     if (!entitlements.Contains((value.ChatId, value.Entitlement))) mismatches++;
                 foreach (var value in entitlements.Where(value => !entitlementKeys.Contains(value)))
                 {
                     mismatches++;
-                    await connection.ExecuteAsync(new CommandDefinition(@"UPDATE group_entitlements
-SET enabled = FALSE, updated_at = now() WHERE chat_id = @ChatId AND entitlement = @Entitlement",
-                        value, transaction, cancellationToken: cancellationToken));
+                    await connection.ExecuteAsync(new CommandDefinition(@"UPDATE group_entitlements e SET enabled = FALSE
+FROM groups g JOIN telegram_chats c ON c.chat_id = g.chat_id
+WHERE e.group_id = g.group_id AND c.telegram_chat_id = @ChatId AND e.entitlement = @Entitlement",
+                        new { value.ChatId, value.Entitlement }, transaction,
+                        cancellationToken: cancellationToken));
                 }
 
                 var content = await connection.QueryAsync<(long ChatId, string ContentType)>(
-                    new CommandDefinition(@"SELECT chat_id AS ChatId, content_type AS ContentType
-FROM group_content_items WHERE chat_id = ANY(@GroupIds)", new { GroupIds = groupIds }, transaction,
+                    new CommandDefinition(@"SELECT c.telegram_chat_id AS ChatId, i.content_type AS ContentType
+FROM group_content_items i JOIN groups g ON g.group_id = i.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id WHERE c.telegram_chat_id = ANY(@GroupIds)", new { GroupIds = groupIds }, transaction,
                         cancellationToken: cancellationToken));
                 foreach (var value in snapshot.ContentItems)
                 {
                     var current = await connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition(@"
-SELECT content FROM group_content_items WHERE chat_id = @ChatId AND content_type = @ContentType",
+SELECT i.content FROM group_content_items i JOIN groups g ON g.group_id = i.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+WHERE c.telegram_chat_id = @ChatId AND i.content_type = @ContentType",
                         value, transaction, cancellationToken: cancellationToken));
                     if (!string.Equals(current, value.Content, System.StringComparison.Ordinal)) mismatches++;
                 }
                 foreach (var value in content.Where(value => !contentKeys.Contains(value)))
                 {
                     mismatches++;
-                    await connection.ExecuteAsync(new CommandDefinition(@"DELETE FROM group_content_items
-WHERE chat_id = @ChatId AND content_type = @ContentType", value, transaction,
+                    await connection.ExecuteAsync(new CommandDefinition(@"DELETE FROM group_content_items i USING groups g, telegram_chats c
+WHERE i.group_id = g.group_id AND g.chat_id = c.chat_id
+AND c.telegram_chat_id = @ChatId AND i.content_type = @ContentType",
+                        new { value.ChatId, value.ContentType }, transaction,
                         cancellationToken: cancellationToken));
                 }
 
                 var commands = await connection.QueryAsync<(long ChatId, string Trigger)>(
-                    new CommandDefinition(@"SELECT chat_id AS ChatId, trigger AS Trigger
-FROM custom_commands WHERE chat_id = ANY(@GroupIds)", new { GroupIds = groupIds }, transaction,
+                    new CommandDefinition(@"SELECT c.telegram_chat_id AS ChatId, x.trigger AS Trigger
+FROM custom_commands x JOIN groups g ON g.group_id = x.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id WHERE c.telegram_chat_id = ANY(@GroupIds)", new { GroupIds = groupIds }, transaction,
                         cancellationToken: cancellationToken));
                 foreach (var value in snapshot.CustomCommands)
                 {
+                    var normalized = value with
+                    {
+                        MediaType = value.MediaType == "gif" ? "animation" : value.MediaType
+                    };
                     var equal = await connection.ExecuteScalarAsync<bool>(new CommandDefinition(@"
-SELECT EXISTS (SELECT 1 FROM custom_commands WHERE chat_id = @ChatId AND trigger = @Trigger
-AND content IS NOT DISTINCT FROM @Content AND media_type IS NOT DISTINCT FROM @MediaType
-AND file_id IS NOT DISTINCT FROM @FileId AND caption IS NOT DISTINCT FROM @Caption)", value,
+SELECT EXISTS (SELECT 1 FROM custom_commands x JOIN groups g ON g.group_id = x.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id WHERE c.telegram_chat_id = @ChatId AND x.trigger = @Trigger
+AND x.content IS NOT DISTINCT FROM @Content AND x.media_type IS NOT DISTINCT FROM @MediaType
+AND x.file_id IS NOT DISTINCT FROM @FileId
+AND x.file_owner_edition IS NOT DISTINCT FROM @FileOwnerEdition
+AND x.caption IS NOT DISTINCT FROM @Caption)", normalized,
                         transaction, cancellationToken: cancellationToken));
                     if (!equal) mismatches++;
                 }
                 foreach (var value in commands.Where(value => !commandKeys.Contains(value)))
                 {
+                    var conflictBacked = await connection.ExecuteScalarAsync<bool>(new CommandDefinition(@"
+SELECT EXISTS (SELECT 1 FROM custom_command_conflict_candidates x JOIN groups g ON g.group_id = x.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+WHERE c.telegram_chat_id = @ChatId AND x.trigger = @Trigger AND x.resolution = 'selected')",
+                        new { value.ChatId, value.Trigger }, transaction,
+                        cancellationToken: cancellationToken));
+                    if (conflictBacked) continue;
                     mismatches++;
-                    await connection.ExecuteAsync(new CommandDefinition(@"DELETE FROM custom_commands
-WHERE chat_id = @ChatId AND trigger = @Trigger", value, transaction,
+                    await connection.ExecuteAsync(new CommandDefinition(@"DELETE FROM custom_commands x USING groups g, telegram_chats c
+WHERE x.group_id = g.group_id AND g.chat_id = c.chat_id
+AND c.telegram_chat_id = @ChatId AND x.trigger = @Trigger",
+                        new { value.ChatId, value.Trigger }, transaction,
                         cancellationToken: cancellationToken));
                 }
             }

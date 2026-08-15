@@ -20,28 +20,48 @@ public sealed class SchemaModelTests
     }
 
     [Fact]
-    public void GroupSettingsModelUsesCanonicalJsonbAndCompositeKey()
+    public void GroupSettingsModelUsesTypedColumnsAndGroupForeignKey()
     {
         using var context = CreateContext();
         var entity = context.Model.FindEntityType(typeof(GroupSettingsEntity));
 
         Assert.NotNull(entity);
         Assert.Equal("group_settings", entity!.GetTableName());
-        Assert.Equal(["ChatId", "SettingGroup"], entity.FindPrimaryKey()!.Properties.Select(x => x.Name));
-        Assert.Equal("jsonb", entity.FindProperty("Values")!.GetColumnType());
+        Assert.Equal(["GroupId"], entity.FindPrimaryKey()!.Properties.Select(x => x.Name));
+        Assert.NotNull(entity.FindProperty("ReportsEnabled"));
+        Assert.NotNull(entity.FindProperty("MaximumMessages"));
+        Assert.NotNull(entity.FindProperty("LogChatId"));
+        Assert.DoesNotContain(entity.GetProperties(), property => property.GetColumnType() == "jsonb");
+        Assert.Contains(entity.GetForeignKeys(), key => key.PrincipalEntityType.ClrType == typeof(GroupEntity));
         Assert.True(entity.FindProperty("Version")!.IsConcurrencyToken);
     }
 
     [Fact]
-    public void RedisSyncMetadataIsSeparateFromCanonicalSettings()
+    public void ExternalTelegramIdsAreSeparateFromGeneratedPrincipals()
     {
         using var context = CreateContext();
-        var canonical = context.Model.FindEntityType(typeof(GroupSettingsEntity))!;
-        var sync = context.Model.FindEntityType(typeof(GroupSettingsRedisSync))!;
+        var user = context.Model.FindEntityType(typeof(UserEntity))!;
+        var account = context.Model.FindEntityType(typeof(TelegramAccountEntity))!;
+        var group = context.Model.FindEntityType(typeof(GroupEntity))!;
+        var chat = context.Model.FindEntityType(typeof(TelegramChatEntity))!;
 
-        Assert.Null(canonical.FindProperty("SourceRevision"));
-        Assert.NotNull(sync.FindProperty("SourceRevision"));
-        Assert.NotNull(sync.FindProperty("SourceChecksum"));
+        Assert.Equal(ValueGenerated.OnAdd, user.FindProperty("UserId")!.ValueGenerated);
+        Assert.NotNull(account.FindProperty("TelegramUserId"));
+        Assert.Equal(ValueGenerated.OnAdd, group.FindProperty("GroupId")!.ValueGenerated);
+        Assert.NotNull(chat.FindProperty("TelegramChatId"));
+    }
+
+    [Fact]
+    public void UserPreferencesAreTyped()
+    {
+        using var context = CreateContext();
+        var entity = context.Model.FindEntityType(typeof(GroupUserPreferenceEntity))!;
+
+        Assert.NotNull(entity.FindProperty("AdminNotificationsDisabled"));
+        Assert.NotNull(entity.FindProperty("ReportsBlocked"));
+        Assert.NotNull(entity.FindProperty("WatchDisabled"));
+        Assert.NotNull(entity.FindProperty("TagAllSubscribed"));
+        Assert.Null(entity.FindProperty("Policy"));
     }
 
     [Fact]
@@ -69,6 +89,8 @@ public sealed class SchemaModelTests
         Assert.True(EnforcerMigrationCommand.IsGroupSettingsMigration(
             ["migrate", "group-settings", "reconcile"], out var reconcile));
         Assert.True(reconcile);
+        Assert.True(EnforcerMigrationCommand.IsGroupSettingsMigration(
+            ["migrate", "group-settings", "backfill", "--group", "-1001030085238"], out _));
         Assert.False(EnforcerMigrationCommand.IsGroupSettingsMigration(
             ["migrate", "group-settings", "delete"], out _));
     }

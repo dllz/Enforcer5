@@ -81,10 +81,17 @@ namespace Enforcer5.Storage.Operations
         internal List<ReportDelivery> ReportDeliveries { get; } = new();
         internal List<UserStatistic> UserStatistics { get; } = new();
         internal List<GroupUserStatistic> GroupUserStatistics { get; } = new();
+        internal List<AccountModerationCounter> ModerationCounters { get; } = new();
         internal List<BotStatisticBaseline> BotStatisticBaselines { get; } = new();
         internal List<AuditEvent> AuditEvents { get; } = new();
         internal List<Exception> Errors { get; } = new();
     }
+
+    /// <summary>
+    /// One <c>ban:{userId}</c> field: a lifetime count of a kind of moderation action against a
+    /// user, across every group.
+    /// </summary>
+    internal sealed record AccountModerationCounter(long UserId, string Kind, long Count);
 
     internal sealed class OperationsBackfillResult
     {
@@ -94,6 +101,7 @@ namespace Enforcer5.Storage.Operations
         internal int ReportDeliveriesWritten { get; set; }
         internal int UserStatisticsWritten { get; set; }
         internal int GroupUserStatisticsWritten { get; set; }
+        internal int ModerationCountersWritten { get; set; }
         internal int BotStatisticBaselinesWritten { get; set; }
         internal int AuditEventsWritten { get; set; }
         internal IReadOnlyList<Exception> Errors { get; set; } = Array.Empty<Exception>();

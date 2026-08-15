@@ -1,6 +1,5 @@
 using Dapper;
 using Enforcer5.Storage;
-using Newtonsoft.Json;
 using Npgsql;
 using Xunit;
 
@@ -40,15 +39,11 @@ public sealed class GroupSettingsRepositoryIntegrationTests
             Assert.True(await repository.UpsertAsync(stale, force: true, expectedCurrentRevision: 10));
 
             await using var connection = await database.OpenConnectionAsync();
-            var json = await connection.ExecuteScalarAsync<string>(@"
-SELECT values::text FROM group_settings
-WHERE chat_id = @ChatId AND setting_group = @SettingGroup",
-                new { stale.ChatId, stale.SettingGroup });
-            var values = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            var values = await repository.GetAsync(stale.ChatId, stale.SettingGroup);
             var revision = await connection.ExecuteScalarAsync<long>(@"
-SELECT source_revision FROM group_settings_redis_sync
-WHERE chat_id = @ChatId AND setting_group = @SettingGroup",
-                new { stale.ChatId, stale.SettingGroup });
+SELECT split_part(target_reference, ';revision:', 2)::bigint
+FROM legacy_redis_records WHERE source_key = @RedisKey AND source_field = ''",
+                new { stale.RedisKey });
 
             Assert.Equal("no", values!["Flood"]);
             Assert.Equal(9, revision);
@@ -60,10 +55,7 @@ WHERE chat_id = @ChatId AND setting_group = @SettingGroup",
                 Fields = new Dictionary<string, string>()
             };
             Assert.True(await repository.UpsertAsync(deleted));
-            Assert.Equal(0, await connection.ExecuteScalarAsync<int>(@"
-SELECT count(*) FROM group_settings
-WHERE chat_id = @ChatId AND setting_group = @SettingGroup",
-                new { deleted.ChatId, deleted.SettingGroup }));
+            Assert.Empty(await repository.GetAsync(deleted.ChatId, deleted.SettingGroup));
         }
         finally
         {

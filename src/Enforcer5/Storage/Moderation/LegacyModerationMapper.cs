@@ -80,8 +80,9 @@ namespace Enforcer5.Storage.Moderation
                 var active = Quantity(standard, key);
                 var total = Math.Max(active, Quantity(lifetime, key));
                 AddBalance(balances, groupId, userId, WarningTypes.Standard, active, total, capturedAt);
+                var prewarningQuantity = Quantity(prewarnings, key);
                 AddBalance(balances, groupId, userId, WarningTypes.Prewarning,
-                    Quantity(prewarnings, key), 0, capturedAt);
+                    prewarningQuantity, prewarningQuantity, capturedAt);
                 var mediaQuantity = Quantity(media, key);
                 AddBalance(balances, groupId, userId, WarningTypes.Media,
                     mediaQuantity, mediaQuantity, capturedAt);

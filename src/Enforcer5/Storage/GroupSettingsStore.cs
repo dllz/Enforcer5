@@ -57,16 +57,23 @@ return 1";
         private const int WriterCount = 2;
         private const long ReclaimAfterMs = 30_000;
         private static readonly object StartLock = new object();
+        private static readonly Cutover.DurableWriter ShadowWriter =
+            Cutover.QuiesceBarrier.Register("group-settings-shadow-writer",
+                Cutover.WriterResumeClass.Cursor);
+        private static readonly object MirrorLock = new object();
+        private static readonly TimeSpan MirrorRebindTimeout = TimeSpan.FromSeconds(15);
         private static readonly CancellationTokenSource WriterCts = new CancellationTokenSource();
         private static Task _startTask;
         private static Task[] _writers = Array.Empty<Task>();
         private static PostgresDatabase _mirrorDatabase;
         private static CompatibilityOutboxWorker _mirrorWorker;
+        private static string _mirrorConnection;
+        private static int _mirrorGeneration;
 
         internal static async Task<bool> SetAsync(long chatId, string settingGroup, string field,
             RedisValue value)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await MutatePostgresAsync(chatId, settingGroup, "set", field, value.ToString()) != 0;
             var result = await MutateAsync(chatId, settingGroup, "set", field, value);
             return (long)result[0] != 0;
@@ -74,7 +81,7 @@ return 1";
 
         internal static async Task<bool> DeleteAsync(long chatId, string settingGroup, string field)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await MutatePostgresAsync(chatId, settingGroup, "delete", field, string.Empty) != 0;
             var result = await MutateAsync(chatId, settingGroup, "delete", field, RedisValue.EmptyString);
             return (long)result[0] != 0;
@@ -83,7 +90,7 @@ return 1";
         internal static async Task<long> IncrementAsync(long chatId, string settingGroup, string field,
             long delta = 1)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await MutatePostgresAsync(chatId, settingGroup, "increment", field, delta.ToString());
             var result = await MutateAsync(chatId, settingGroup, "increment", field, delta);
             return (long)result[0];
@@ -94,7 +101,7 @@ return 1";
 
         internal static async Task SetLogChatAsync(long chatId, long? logChatId)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 if (logChatId.HasValue)
                     await MutatePostgresAsync(chatId, GroupSettingGroups.Settings, "set", "logchat",
@@ -122,15 +129,92 @@ return 1";
                 });
         }
 
+        /// <summary>
+        /// The PostgreSQL connection the Redis rollback-mirror worker is currently bound to, or
+        /// null when no worker is running.
+        /// </summary>
+        internal static string MirrorWorkerConnection
+        {
+            get { lock (MirrorLock) return _mirrorConnection; }
+        }
+
+        /// <summary>
+        /// Number of rollback-mirror workers built since start-up. Increments only when a worker is
+        /// actually constructed, so it distinguishes a genuine rebind from a no-op start.
+        /// </summary>
+        internal static int MirrorWorkerGeneration
+        {
+            get { lock (MirrorLock) return _mirrorGeneration; }
+        }
+
         internal static Task StartAsync()
         {
-            if (StorageModeProvider.RedisMirrorEnabled)
+            StartMirrorWorker();
+            return ShadowEnabled ? EnsureWriterStartedAsync() : Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Brings the Redis rollback-mirror worker in line with current configuration.
+        /// <para>
+        /// The worker used to be a one-shot static, so the first call bound it to whatever
+        /// <c>PostgresConnection</c> happened to be set at the time and it stayed bound to that
+        /// database for the life of the process - even after the connection or storage mode
+        /// changed. It now tracks the connection it was built for and is rebuilt when that changes.
+        /// </para>
+        /// </summary>
+        private static void StartMirrorWorker()
+        {
+            // Resolve the connection once, so the mode decision and the pool the worker gets are
+            // based on the same value rather than two separate live config reads.
+            var connection = StorageRouting.RedisMirrorEnabled
+                ? RegHelper.GetRegValue("PostgresConnection")
+                : null;
+
+            lock (MirrorLock)
             {
-                _mirrorDatabase ??= PostgresDatabase.FromConfiguration();
-                _mirrorWorker ??= new CompatibilityOutboxWorker(_mirrorDatabase);
+                if (string.IsNullOrWhiteSpace(connection))
+                {
+                    StopMirrorWorkerLocked(MirrorRebindTimeout);
+                    return;
+                }
+
+                if (_mirrorWorker != null &&
+                    string.Equals(_mirrorConnection, connection, StringComparison.Ordinal))
+                {
+                    _mirrorWorker.Start();
+                    return;
+                }
+
+                // A worker's cancellation source is single-use, so rebinding needs a new worker
+                // rather than a restart of the existing one.
+                StopMirrorWorkerLocked(MirrorRebindTimeout);
+                _mirrorDatabase = PostgresDatabase.Shared(connection);
+                _mirrorWorker = new CompatibilityOutboxWorker(_mirrorDatabase);
+                _mirrorConnection = connection;
+                _mirrorGeneration++;
                 _mirrorWorker.Start();
             }
-            return ShadowEnabled ? EnsureWriterStartedAsync() : Task.CompletedTask;
+        }
+
+        private static void StopMirrorWorkerLocked(TimeSpan timeout)
+        {
+            if (_mirrorWorker == null) return;
+            try
+            {
+                _mirrorWorker.Stop(timeout);
+                _mirrorWorker.Dispose();
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Stopping the Redis rollback-mirror worker failed: {e.Message}");
+            }
+            finally
+            {
+                _mirrorWorker = null;
+                // The database is a shared instance owned by the process, so it is not disposed here.
+                _mirrorDatabase = null;
+                _mirrorConnection = null;
+            }
         }
 
         internal static async Task<GroupSettingsSnapshot> ObserveAsync(long chatId, string settingGroup)
@@ -147,7 +231,7 @@ return 1";
         internal static async Task<HashEntry[]> GetAllAsync(long chatId, string settingGroup)
         {
             ValidateGroup(settingGroup);
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
                 return await Redis.db.HashGetAllAsync($"chat:{chatId}:{settingGroup}");
 
             await using var database = PostgresDatabase.FromConfiguration();
@@ -198,7 +282,7 @@ return 1";
             ValidateGroup(settingGroup);
             await using var database = PostgresDatabase.FromConfiguration();
             return await new GroupSettingsRepository(database).MutateCanonicalAsync(chatId, settingGroup,
-                operation, field, value, StorageModeProvider.RedisMirrorEnabled);
+                operation, field, value, StorageRouting.GroupRedisMirrorEnabled(chatId));
         }
 
         private static GroupSettingsSnapshot BuildSnapshot(long chatId, string settingGroup,
@@ -214,7 +298,10 @@ return 1";
         internal static void Stop(TimeSpan timeout)
         {
             WriterCts.Cancel();
-            _mirrorWorker?.Stop(timeout);
+            lock (MirrorLock)
+            {
+                StopMirrorWorkerLocked(timeout);
+            }
             try
             {
                 Task.WhenAll(_writers).Wait(timeout);
@@ -269,15 +356,23 @@ return 1";
             {
                 try
                 {
+                    // Safe point. The stream consumer group holds the durable position, so pausing
+                    // here leaves unacknowledged entries pending and they are re-delivered on
+                    // resume. Gate before reading so a quiesce is not held up by a full batch.
+                    await ShadowWriter.GateAsync(WriterCts.Token);
+
                     StreamEntry[] entries;
                     if (DateTime.UtcNow - lastReclaim >= TimeSpan.FromSeconds(30))
                     {
-                        var claimed = await Redis.db.StreamAutoClaimAsync(OutboxStream, OutboxGroup,
-                            consumer, ReclaimAfterMs, reclaimCursor, 20);
-                        entries = claimed.ClaimedEntries;
-                        reclaimCursor = claimed.NextStartId;
-                        if (reclaimCursor == "0-0") reclaimCursor = "0-0";
+                        // XAUTOCLAIM needs Redis 6.2; production is 6.0.9. See RedisStreamReclaim.
+                        entries = await RedisStreamReclaim.ClaimStaleAsync(Redis.db, OutboxStream,
+                            OutboxGroup, consumer, ReclaimAfterMs, 20, WriterCts.Token);
                         lastReclaim = DateTime.UtcNow;
+                        // Nothing stale this pass, so fall through to new entries rather than
+                        // idling for the next 30 seconds.
+                        if (entries.Length == 0)
+                            entries = await Redis.db.StreamReadGroupAsync(OutboxStream, OutboxGroup,
+                                consumer, StreamPosition.NewMessages, 20);
                     }
                     else
                     {
@@ -293,6 +388,7 @@ return 1";
 
                     foreach (var entry in entries)
                     {
+                        using var work = await ShadowWriter.BeginWorkAsync(WriterCts.Token);
                         if (!long.TryParse(entry["chatId"].ToString(), out var chatId) ||
                             !GroupSettingGroups.IsSupported(entry["settingGroup"].ToString()))
                         {

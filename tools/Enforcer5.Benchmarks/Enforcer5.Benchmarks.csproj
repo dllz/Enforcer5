@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Enforcer.Benchmarks</AssemblyName>
+    <RootNamespace>Enforcer5.Benchmarks</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Never shipped. The Dockerfile builds src/Enforcer5 only; this project exists to size the
+         PostgreSQL migration and must not reach Enforcer.dll or Enforcer Premium.dll. -->
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.2" />
+    <PackageReference Include="StackExchange.Redis" Version="2.9.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Used only for SchemaMigrationRunner, so benchmarks build the real shipped schema. -->
+    <ProjectReference Include="../../src/Enforcer5/Enforcer5.csproj" />
+  </ItemGroup>
+</Project>

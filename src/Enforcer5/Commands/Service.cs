@@ -246,7 +246,7 @@ defSpamValue = 3;
                 Bot.Api.LeaveChat(updateMessage.Chat.Id);
                 return;
             }
-            var alreadyExists = StorageModeProvider.PostgresIsPrimary
+            var alreadyExists = StorageRouting.GroupPostgresIsPrimary(updateMessage.Chat.Id)
                 ? GroupSettingsStore.GetAllAsync(updateMessage.Chat.Id, GroupSettingGroups.Settings).Result.Length > 0
                 : PrincipalContentStore.GroupExistsAsync(updateMessage.Chat.Id).Result;
             if (alreadyExists)
@@ -339,6 +339,14 @@ defSpamValue = 3;
 
         public static void GenerateSettings(long chatId)
         {
+            // Register the group here rather than only in IntiliseSettings. Settings are also
+            // created by MainMenu.genMenu (when a group has fewer than 9 settings) and by
+            // /resetSettings, and neither used to add the group to bot:groupsid - so a group that
+            // first materialised through either path stayed permanently invisible to it. 7,951
+            // groups in production have data and are absent from the set. SADD is idempotent, so
+            // this is a no-op on the IntiliseSettings path.
+            Redis.db.SetAddAsync("bot:groupsid", chatId);
+
             object[,,] defaultSettings =
             {
                 {

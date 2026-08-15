@@ -49,7 +49,7 @@ namespace Enforcer5
                 {
                     return;
                 }
-                if (!StorageModeProvider.PostgresIsPrimary && !Redis.db.HashSetAsync(
+                if (!StorageRouting.GroupPostgresIsPrimary(update.Message.Chat.Id) && !Redis.db.HashSetAsync(
                         $"flaggedReply:{update.Message.Chat.Id}:{update.Message.ReplyToMessage.MessageId}",
                         "reported", "true", StackExchange.Redis.When.NotExists).Result)
                 {

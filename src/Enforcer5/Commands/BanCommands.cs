@@ -419,7 +419,7 @@ namespace Enforcer5
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
             var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang);
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 if (!res) return false;
                 Methods.SaveBan(userId, "tempban");
@@ -450,7 +450,11 @@ namespace Enforcer5
                 var entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
                     while (entry.HasValue)
                     {
-                            dataUnbanTime.AddSeconds(1);
+                        // DateTime is immutable, so the previous "dataUnbanTime.AddSeconds(1);"
+                        // discarded its result and this loop never advanced - a real slot collision
+                        // spun forever. The collision only exists because the hash is global and
+                        // keyed by expiry second across every group.
+                        dataUnbanTime = dataUnbanTime.AddSeconds(1);
                         unbanTime = dataUnbanTime.ToUnixTime();
                         entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
                 }
@@ -460,7 +464,8 @@ namespace Enforcer5
                 var entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
                     while (entry.HasValue)
                     {
-                            dataUnbanTime.AddSeconds(1);
+                        // See the NORMAL branch: this assignment is what makes the loop terminate.
+                        dataUnbanTime = dataUnbanTime.AddSeconds(1);
                         unbanTime = dataUnbanTime.ToUnixTime();
                         entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
                 }

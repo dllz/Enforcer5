@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
 using Enforcer5.Helpers;
-using Newtonsoft.Json;
 
 namespace Enforcer5.Storage
 {
@@ -22,90 +21,70 @@ namespace Enforcer5.Storage
             System.Threading.CancellationToken cancellationToken = default)
         {
             var groups = await Redis.db.SetMembersAsync("bot:groupsid");
+            return await RunAsync(groups.Select(value =>
+                long.TryParse(value.ToString(), out var id) ? (long?)id : null)
+                .Where(value => value.HasValue).Select(value => value.Value), reconcile, cancellationToken);
+        }
+
+        internal async Task<GroupSettingsMigrationResult> RunAsync(IEnumerable<long> groupIds,
+            bool reconcile, System.Threading.CancellationToken cancellationToken = default)
+        {
+            var groups = groupIds.Distinct().ToArray();
             var result = new GroupSettingsMigrationResult(groups.Length * GroupSettingGroups.All.Count);
+            await using var connection = await _database.OpenConnectionAsync(cancellationToken);
+            System.Data.Common.DbTransaction batch = null;
+            var batchCount = 0;
 
-            foreach (var groupValue in groups)
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!long.TryParse(groupValue.ToString(), out var chatId))
+                batch = await connection.BeginTransactionAsync(cancellationToken);
+                foreach (var chatId in groups)
                 {
-                    result.InvalidGroups++;
-                    continue;
-                }
-
-                foreach (var settingGroup in GroupSettingGroups.All)
-                {
-                    try
+                    cancellationToken.ThrowIfCancellationRequested();
+                    foreach (var settingGroup in GroupSettingGroups.All)
                     {
                         var snapshot = await GroupSettingsStore.ObserveAsync(chatId, settingGroup);
-                        var comparison = reconcile ? await CompareAsync(snapshot) : null;
-                        var different = comparison?.Different == true;
+                        var different = reconcile && !await _repository.MatchesAsync(snapshot, cancellationToken);
                         if (different) result.Mismatches++;
-                        var applied = await _repository.UpsertAsync(snapshot,
+                        var applied = await GroupSettingsRepository.UpsertAsync(connection, batch, snapshot,
+                            cancellationToken,
                             force: reconcile && different,
-                            expectedCurrentRevision: comparison?.SourceRevision);
+                            expectedCurrentRevision: null);
                         if (!applied && different)
                         {
                             // PostgreSQL changed after comparison. Re-observe Redis and retry through
                             // normal revision ordering rather than overwriting the concurrent write.
                             snapshot = await GroupSettingsStore.ObserveAsync(chatId, settingGroup);
-                            applied = await _repository.UpsertAsync(snapshot);
-                            if (!applied && (await CompareAsync(snapshot)).Different)
+                            applied = await GroupSettingsRepository.UpsertAsync(connection, batch, snapshot,
+                                cancellationToken);
+                            if (!applied && !await _repository.MatchesAsync(snapshot, cancellationToken))
                                 throw new InvalidOperationException("Concurrent settings reconciliation did not converge.");
                         }
                         result.Processed++;
-                    }
-                    catch (Exception e)
-                    {
-                        result.Failures++;
-                        Console.Error.WriteLine($"[ERROR] chat:{chatId}:{settingGroup}: {e.Message}");
+                        batchCount++;
+                        if (batchCount < 500) continue;
+                        await batch.CommitAsync(cancellationToken);
+                        await batch.DisposeAsync();
+                        batch = await connection.BeginTransactionAsync(cancellationToken);
+                        batchCount = 0;
                     }
                 }
+                await batch.CommitAsync(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                result.Failures++;
+                if (batch != null) await batch.RollbackAsync(System.Threading.CancellationToken.None);
+                Console.Error.WriteLine($"[ERROR] Group settings batch failed: {e.Message}");
+            }
+            finally
+            {
+                if (batch != null) await batch.DisposeAsync();
             }
 
             return result;
         }
 
-        private async Task<SettingsComparison> CompareAsync(GroupSettingsSnapshot snapshot)
-        {
-            await using var connection = await _database.OpenConnectionAsync();
-            var current = await connection.QuerySingleOrDefaultAsync<StoredSettings>(@"
-SELECT sync.source_exists AS SourceExists,
-       sync.source_checksum AS SourceChecksum,
-       sync.source_revision AS SourceRevision,
-       (canonical.chat_id IS NOT NULL) AS CanonicalExists,
-       canonical.values::text AS CanonicalValues
-FROM group_settings_redis_sync sync
-LEFT JOIN group_settings canonical
-  ON canonical.chat_id = sync.chat_id AND canonical.setting_group = sync.setting_group
-WHERE sync.chat_id = @ChatId AND sync.setting_group = @SettingGroup",
-                new { snapshot.ChatId, snapshot.SettingGroup });
-            if (current == null)
-                return new SettingsComparison(true, null);
-
-            var canonicalChecksum = current.CanonicalExists
-                ? GroupSettingsSnapshot.CalculateChecksum(
-                    JsonConvert.DeserializeObject<Dictionary<string, string>>(current.CanonicalValues)
-                    ?? new Dictionary<string, string>())
-                : GroupSettingsSnapshot.CalculateChecksum(new Dictionary<string, string>());
-            var different = current.SourceExists != snapshot.SourceExists ||
-                            current.CanonicalExists != snapshot.SourceExists ||
-                            !string.Equals(current.SourceChecksum, snapshot.Checksum, StringComparison.Ordinal) ||
-                            (snapshot.SourceExists &&
-                             !string.Equals(canonicalChecksum, snapshot.Checksum, StringComparison.Ordinal));
-            return new SettingsComparison(different, current.SourceRevision);
-        }
-
-        private sealed record SettingsComparison(bool Different, long? SourceRevision);
-
-        private sealed class StoredSettings
-        {
-            public bool SourceExists { get; set; }
-            public string SourceChecksum { get; set; }
-            public long SourceRevision { get; set; }
-            public bool CanonicalExists { get; set; }
-            public string CanonicalValues { get; set; }
-        }
     }
 
     internal sealed class GroupSettingsMigrationResult

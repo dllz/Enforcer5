@@ -11,8 +11,13 @@ public sealed class GroupSettingsRedisIntegrationTests
     public async Task SetIncrementDeleteAndObservePreserveExactRedisState()
     {
         var connectionString = Environment.GetEnvironmentVariable(RedisFactAttribute.ConnectionVariable)!;
-        Environment.SetEnvironmentVariable("RedisConnection", connectionString);
-        Environment.SetEnvironmentVariable("GroupSettingsShadowEnabled", "false");
+        // GroupSettingsStore.SetAsync branches on StorageModeProvider.PostgresIsPrimary at call
+        // time, so this test must not observe another test's temporary StorageMode.
+        using var config = GlobalConfigScope.Acquire(
+            "RedisConnection", "GroupSettingsShadowEnabled", "StorageMode", "PostgresConnection");
+        config.Set("RedisConnection", connectionString);
+        config.Set("GroupSettingsShadowEnabled", "false");
+        config.Set("StorageMode", nameof(StorageMode.RedisPrimaryPostgresShadow));
         Assert.True(Redis.Start());
 
         var chatId = -DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

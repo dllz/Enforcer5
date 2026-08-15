@@ -52,9 +52,18 @@ namespace Enforcer5.Storage.Operations
             _enqueueUnban = enqueueUnban ?? throw new ArgumentNullException(nameof(enqueueUnban));
         }
 
+        // PostgreSQL-primary counterpart of Methods.CheckTempBans, and the same hazard: it resolves
+        // sanctions. Claims are durable and stale claims are re-claimed, so stopping loses nothing.
+        private static readonly Cutover.DurableWriter Writer =
+            Cutover.QuiesceBarrier.Register("postgres-tempban-expiry", Cutover.WriterResumeClass.Time);
+
         internal async Task<TempBanDueWorkerResult> ProcessDueAsync(int limit,
             DateTimeOffset now, CancellationToken cancellationToken = default)
         {
+            if (Cutover.QuiesceBarrier.IsQuiescing)
+                return new TempBanDueWorkerResult(0, 0, 0);
+            using var work = await Writer.BeginWorkAsync(cancellationToken);
+
             var claims = await _sanctions.ClaimDueTempBansAsync(
                 _edition, _workerId, limit, now, cancellationToken);
             var completed = 0;

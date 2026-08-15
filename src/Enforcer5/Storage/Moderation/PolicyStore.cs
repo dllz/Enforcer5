@@ -34,7 +34,7 @@ namespace Enforcer5.Storage.Moderation
 
         internal static async Task<IReadOnlyList<long>> ListTagAllSubscribersAsync(long groupId)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
                 return (await Redis.db.SetMembersAsync(RedisKey(groupId,
                         GroupUserPolicyNames.TagAllSubscribed)))
@@ -56,7 +56,7 @@ namespace Enforcer5.Storage.Moderation
 
         private static async Task<bool> IsEnabledAsync(long groupId, long userId, string policy)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
                 return await Redis.db.SetContainsAsync(RedisKey(groupId, policy), userId);
 
@@ -66,7 +66,7 @@ namespace Enforcer5.Storage.Moderation
 
         private static async Task SetAsync(long groupId, long userId, string policy, bool enabled)
         {
-            var route = CurrentRoute();
+            var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
                 await SetRedisAsync(groupId, userId, policy, enabled);
@@ -92,7 +92,7 @@ namespace Enforcer5.Storage.Moderation
             else await Redis.db.SetRemoveAsync(key, userId);
         }
 
-        private static PolicyStoreRoute CurrentRoute() => GetRoute(StorageModeProvider.Current,
+        private static PolicyStoreRoute CurrentRoute(long groupId) => GetRoute(StorageRouting.EffectiveGroupMode(groupId),
             string.Equals(RegHelper.GetRegValue("ModerationShadowEnabled"), "true",
                 StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection")));

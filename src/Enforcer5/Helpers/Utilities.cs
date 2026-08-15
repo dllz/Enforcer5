@@ -568,6 +568,7 @@ namespace Enforcer5.Helpers
             await _premiumRescueActions.StartAsync();
 #endif
             await GroupSettingsStore.StartAsync();
+            await PrimeGroupMigrationStateAsync();
             lock (_receiverLifecycleLock)
             {
                 if (ShutdownToken.IsCancellationRequested)
@@ -599,10 +600,46 @@ namespace Enforcer5.Helpers
         /// Queues polled updates for the consumer pool. Replaces the 13.x
         /// OnUpdate/OnInlineQuery/OnCallbackQuery event model.
         /// </summary>
+        /// <summary>
+        /// Loads per-group cutover state into the hot-path cache.
+        /// <para>
+        /// A failure here is deliberately not fatal. An empty cache reads as "every group is still
+        /// on Redis", which is the safe direction - Redis stays authoritative until a group is
+        /// explicitly flipped - so a PostgreSQL outage degrades to pre-migration behaviour rather
+        /// than stopping the bot.
+        /// </para>
+        /// </summary>
+        private static async Task PrimeGroupMigrationStateAsync()
+        {
+            if (string.IsNullOrWhiteSpace(RegHelper.GetRegValue("PostgresConnection"))) return;
+            try
+            {
+                await Storage.Cutover.GroupMigrationStateStore.PrimeAsync(
+                    Storage.PostgresDatabase.FromConfiguration(), ShutdownToken);
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error("Priming group migration state failed, treating all groups as " +
+                                $"Redis-owned: {e.Message}");
+            }
+        }
+
         private sealed class EnforcerUpdateHandler : IUpdateHandler
         {
+            // Pausing here is what actually stops new work entering the system. It is lossless:
+            // the offset is only persisted after queue admission, so blocking before admission
+            // leaves bot:last_update where it is and Telegram redelivers on resume, within its
+            // 24h retention window.
+            private static readonly Storage.Cutover.DurableWriter Writer =
+                Storage.Cutover.QuiesceBarrier.Register("telegram-poll-loop",
+                    Storage.Cutover.WriterResumeClass.Cursor);
+
             public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {
+                // Hold the poll loop before admitting anything, so a quiesce does not leave an
+                // update queued but unprocessed with the offset already advanced past it.
+                using var work = await Writer.BeginWorkAsync(CancellationToken.None);
+
                 // Blocks the poll loop when the queue is full - that back-pressure is the point.
                 // No token: an OperationCanceledException here escapes ReceiveAsync and Initialize,
                 // reaching the unhandled handler as a terminating fault, so a planned shutdown

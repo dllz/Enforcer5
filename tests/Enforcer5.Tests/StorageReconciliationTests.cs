@@ -17,11 +17,14 @@ public sealed class StorageReconciliationTests
         {
             await using (var connection = await database.OpenConnectionAsync())
             {
-                await connection.ExecuteAsync("INSERT INTO groups (chat_id, name) VALUES (1, 'group')");
-                await connection.ExecuteAsync(@"INSERT INTO group_entitlements (chat_id, entitlement, enabled)
-VALUES (1, 'premium', TRUE);
-INSERT INTO group_content_items (chat_id, content_type, content) VALUES (1, 'rules', 'old');
-INSERT INTO custom_commands (chat_id, trigger, content) VALUES (1, 'old', 'old')");
+                await using var transaction = await connection.BeginTransactionAsync();
+                var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, 1, "group");
+                await connection.ExecuteAsync(@"INSERT INTO group_entitlements (group_id, entitlement, enabled)
+VALUES (@GroupId, 'premium', TRUE);
+INSERT INTO group_content_items (group_id, content_type, content) VALUES (@GroupId, 'rules', 'old');
+INSERT INTO custom_commands (group_id, trigger, content) VALUES (@GroupId, 'old', 'old')",
+                    new { group.GroupId }, transaction);
+                await transaction.CommitAsync();
             }
 
             var snapshot = new PrincipalContentBackfill(Array.Empty<UserPrincipal>(),
@@ -31,7 +34,7 @@ INSERT INTO custom_commands (chat_id, trigger, content) VALUES (1, 'old', 'old')
 
             await using var verify = await database.OpenConnectionAsync();
             Assert.False(await verify.ExecuteScalarAsync<bool>(
-                "SELECT enabled FROM group_entitlements WHERE chat_id = 1 AND entitlement = 'premium'"));
+                "SELECT enabled FROM group_entitlements WHERE entitlement = 'premium'"));
             Assert.Equal(0, await verify.ExecuteScalarAsync<int>("SELECT count(*) FROM group_content_items"));
             Assert.Equal(0, await verify.ExecuteScalarAsync<int>("SELECT count(*) FROM custom_commands"));
         });
@@ -43,14 +46,18 @@ INSERT INTO custom_commands (chat_id, trigger, content) VALUES (1, 'old', 'old')
         await InSchemaAsync(async database =>
         {
             await using (var connection = await database.OpenConnectionAsync())
-                await connection.ExecuteAsync(@"INSERT INTO users (user_id, name) VALUES (2, 'user');
-INSERT INTO groups (chat_id, name) VALUES (1, 'group');
-INSERT INTO group_role_assignments (group_id, user_id, role, assigned_at) VALUES (1, 2, 'moderator', now());
-INSERT INTO group_elevation_blocks (group_id, user_id, blocked_at) VALUES (1, 2, now());
-INSERT INTO group_user_policies (group_id, user_id, policy, enabled, updated_at)
-VALUES (1, 2, 'watch_disabled', TRUE, now());
-INSERT INTO warning_balances (group_id, user_id, warning_type, active_quantity, lifetime_quantity, updated_at)
-VALUES (1, 2, 'standard', 2, 4, now())");
+            {
+                await using var transaction = await connection.BeginTransactionAsync();
+                var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, 1, "group");
+                var user = await PrincipalResolver.EnsureUserAsync(connection, transaction, 2, "user");
+                await connection.ExecuteAsync(@"INSERT INTO group_role_assignments (group_id, user_id, role, assigned_at) VALUES (@GroupId, @UserId, 'moderator', now());
+INSERT INTO group_elevation_blocks (group_id, user_id, blocked_at) VALUES (@GroupId, @UserId, now());
+INSERT INTO group_user_preferences (group_id, user_id, watch_disabled, updated_at)
+VALUES (@GroupId, @UserId, TRUE, now());
+INSERT INTO warning_balances (group_id, user_id, warning_type, active_quantity, lifetime_quantity)
+VALUES (@GroupId, @UserId, 'standard', 2, 4)", new { group.GroupId, user.UserId }, transaction);
+                await transaction.CommitAsync();
+            }
 
             var snapshot = new ModerationSnapshot(Array.Empty<GroupRoleAssignment>(),
                 Array.Empty<GroupElevationBlock>(), Array.Empty<GroupUserPolicy>(),
@@ -62,7 +69,7 @@ VALUES (1, 2, 'standard', 2, 4, now())");
                 "SELECT revoked_at FROM group_role_assignments"));
             Assert.NotNull(await verify.ExecuteScalarAsync<DateTimeOffset?>(
                 "SELECT revoked_at FROM group_elevation_blocks"));
-            Assert.False(await verify.ExecuteScalarAsync<bool>("SELECT enabled FROM group_user_policies"));
+            Assert.False(await verify.ExecuteScalarAsync<bool>("SELECT watch_disabled FROM group_user_preferences"));
             Assert.Equal(0, await verify.ExecuteScalarAsync<long>("SELECT active_quantity FROM warning_balances"));
             Assert.Equal(4, await verify.ExecuteScalarAsync<long>("SELECT lifetime_quantity FROM warning_balances"));
         });
@@ -74,12 +81,20 @@ VALUES (1, 2, 'standard', 2, 4, now())");
         await InSchemaAsync(async database =>
         {
             await using (var connection = await database.OpenConnectionAsync())
+            {
+                await using var transaction = await connection.BeginTransactionAsync();
+                var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, 1, "group");
+                var user = await PrincipalResolver.EnsureUserAsync(connection, transaction, 2, "user");
                 await connection.ExecuteAsync(@"INSERT INTO sanctions
-(group_id, user_id, kind, status, edition, created_at, legacy_key)
-VALUES (1, 2, 'ban', 'active', 'normal', now(), 'redis:stale');
-INSERT INTO global_sanctions (user_id, active, legacy_key) VALUES (2, TRUE, 'redis:globalBan:2');
-INSERT INTO audit_events (edition, event_type, occurred_at, legacy_key)
-VALUES ('normal', 'legacy_ban', now(), 'redis:audit:stale')");
+(group_id, account_id, user_id_at_time, kind, status, edition, imposed_at, legacy_key)
+VALUES (@GroupId, @AccountId, @UserId, 'ban', 'active', 'normal', now(), 'redis:stale');
+INSERT INTO global_sanctions (account_id, user_id_at_time, kind, status, imposed_at, legacy_key)
+VALUES (@AccountId, @UserId, 'ban', 'active', now(), 'redis:globalBan:2');
+INSERT INTO group_audit_events (group_id, event_type, occurred_at, legacy_key)
+VALUES (@GroupId, 'legacy_ban', now(), 'redis:audit:stale')",
+                    new { group.GroupId, user.AccountId, user.UserId }, transaction);
+                await transaction.CommitAsync();
+            }
 
             var snapshot = new OperationsBackfillSnapshot();
             Assert.Equal(2, await OperationsBackfillService.ReconcileAsync(database,
@@ -88,8 +103,8 @@ VALUES ('normal', 'legacy_ban', now(), 'redis:audit:stale')");
 
             await using var verify = await database.OpenConnectionAsync();
             Assert.Equal("revoked", await verify.ExecuteScalarAsync<string>("SELECT status FROM sanctions"));
-            Assert.False(await verify.ExecuteScalarAsync<bool>("SELECT active FROM global_sanctions"));
-            Assert.Equal(1, await verify.ExecuteScalarAsync<int>("SELECT count(*) FROM audit_events"));
+            Assert.Equal("revoked", await verify.ExecuteScalarAsync<string>("SELECT status FROM global_sanctions"));
+            Assert.Equal(1, await verify.ExecuteScalarAsync<int>("SELECT count(*) FROM group_audit_events"));
         });
     }
 

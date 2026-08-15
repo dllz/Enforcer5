@@ -255,7 +255,7 @@ namespace Enforcer5.Helpers
         internal static async Task<string> ReadChatLanguageAsync(long chatId)
         {
             if (TryGetCachedLanguage(chatId, out var cached)) return cached;
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
                 return CacheLanguage(chatId, await Redis.db.StringGetAsync($"chat:{chatId}:language"));
             await using var database = PostgresDatabase.FromConfiguration();
             var item = await new GroupContentRepository(database).GetAsync(chatId, GroupContentTypes.Language);
@@ -586,7 +586,14 @@ namespace Enforcer5.Helpers
 
         public static void SaveBan(long userId, string banType)
         {
-            Redis.db.HashIncrementAsync($"ban:{userId}", banType);
+            // User-tier: this counts moderation actions against a user across every group, so it
+            // follows the global tier rather than any one group's cutover state. Redis is still
+            // written while it remains authoritative for that tier.
+            if (!Storage.StorageRouting.GlobalTierPostgresIsPrimary)
+                Redis.db.HashIncrementAsync($"ban:{userId}", banType);
+
+            Storage.Operations.OperationsStore.RecordModerationCounterAsync(userId, banType)
+                .GetAwaiter().GetResult();
         }
 
         public static bool IsGroupAdmin(Update update)
@@ -722,12 +729,15 @@ namespace Enforcer5.Helpers
         public static string GetUserInfo(long userid, long? chatId, string chatTitle, XDocument lang)
         {
             var text = GetLocaleString(lang, "userInfoGlobal");
-            var hash = $"ban:{userid}";
-            var banInfo = Redis.db.HashGetAllAsync(hash).Result;
+            var counters = Storage.Operations.OperationsStore.GetModerationCountersAsync(userid)
+                .GetAwaiter().GetResult()
+                ?? Redis.db.HashGetAllAsync($"ban:{userid}").Result
+                    .ToDictionary(entry => entry.Name.ToString(), entry => (long)entry.Value);
             var completedList = new List<string>();
             completedList.Add(text);
-            completedList = banInfo.
-                Select(member => GetLocaleString(lang, $"get{member.Name.ToString().ToLower()}", member.Value)).ToList();
+            completedList = counters
+                .Select(member => GetLocaleString(lang, $"get{member.Key.ToLower()}", member.Value.ToString()))
+                .ToList();
             if (chatId != null)
             {
                 completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
@@ -913,7 +923,7 @@ namespace Enforcer5.Helpers
 
         public static void AddBanList(long chatId, long userId, string name, string why)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 OperationsStore.SetActiveSanctionReasonAsync(chatId, userId, why).GetAwaiter().GetResult();
                 return;
@@ -929,11 +939,22 @@ namespace Enforcer5.Helpers
         // overlaps the next one and they pile up.
         private static int _checkingTempBans;
 
+        // Expiring a tempban removes it with a hard HashDelete/SetRemove. A snapshot loader running
+        // concurrently can re-insert a sanction this worker has just cleared, so the migration must
+        // be able to stop it. Nothing is lost by stopping: the worker re-reads the whole tempban
+        // hash every tick and processes whatever is due, so anything that fell due while paused is
+        // still due on the first tick after resume.
+        private static readonly Storage.Cutover.DurableWriter TempBanWriter =
+            Storage.Cutover.QuiesceBarrier.Register("tempban-expiry",
+                Storage.Cutover.WriterResumeClass.Time);
+
         internal static void CheckTempBans(object obj)
         {
             if (Interlocked.CompareExchange(ref _checkingTempBans, 1, 0) != 0) return;
             try
             {
+                if (Storage.Cutover.QuiesceBarrier.IsQuiescing) return;
+                using var work = TempBanWriter.BeginWork(Bot.ShutdownToken);
 #if NORMAL
                 var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
 #endif
@@ -949,6 +970,16 @@ namespace Enforcer5.Helpers
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = long.Parse(subStrings[1]);
+
+                            // The global tempban hash spans every group, but expiry has to be
+                            // handled by whichever store now owns the group. Without this filter a
+                            // group that cut over would keep its entries here with no Redis worker
+                            // acting on them and no PostgreSQL row to act on either, so its users
+                            // would stay banned indefinitely. Entries for migrated groups are left
+                            // in place for the migration to move, not silently dropped.
+                            if (Storage.Cutover.GroupMigrationStateStore.PostgresIsAuthoritative(chatId))
+                                continue;
+
                             UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
 #if NORMAL
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
@@ -1254,7 +1285,7 @@ namespace Enforcer5.Helpers
 
         public static bool IsBanned(long chatId, long userId)
         {
-            if (StorageModeProvider.PostgresIsPrimary)
+            if (StorageRouting.GroupPostgresIsPrimary(chatId))
                 return OperationsStore.GetActiveSanctionAsync(chatId, userId, SanctionKinds.Ban)
                     .Result != null;
             var hash = $"chat:{chatId}:banned";
@@ -1318,7 +1349,7 @@ namespace Enforcer5.Helpers
 
         internal static string ReadGroupContent(long chatId, string contentType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 var value = contentType == GroupContentTypes.Link
                     ? Redis.db.HashGetAsync($"chat:{chatId}links", "link").Result
@@ -1333,7 +1364,7 @@ namespace Enforcer5.Helpers
 
         internal static void WriteGroupContent(long chatId, string contentType, string content)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 if (contentType == GroupContentTypes.Link)
                     Redis.db.HashSetAsync($"chat:{chatId}links", "link", content).GetAwaiter().GetResult();
@@ -1349,7 +1380,7 @@ namespace Enforcer5.Helpers
 
         internal static void DeleteGroupContent(long chatId, string contentType)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 if (contentType == GroupContentTypes.Link)
                     Redis.db.HashDeleteAsync($"chat:{chatId}links", "link").GetAwaiter().GetResult();
@@ -1364,14 +1395,15 @@ namespace Enforcer5.Helpers
 
         internal static CustomCommand ReadCustomCommand(long chatId, string trigger)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 var key = $"chat:{chatId}:extra";
                 var value = Redis.db.HashGetAsync(key, trigger).Result;
                 if (value.IsNull) return null;
                 var side = Redis.db.HashGetAsync($"{key}:{trigger}", new RedisValue[] { "mediaid", "caption" }).Result;
                 return LegacyPrincipalContentMapper.ParseCustomCommand(chatId, trigger, value.ToString(),
-                    side[0].IsNull ? null : side[0].ToString(), side[1].IsNull ? null : side[1].ToString());
+                    side[0].IsNull ? null : side[0].ToString(), side[1].IsNull ? null : side[1].ToString())
+                    with { Trigger = trigger };
             }
 
             using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
@@ -1380,7 +1412,7 @@ namespace Enforcer5.Helpers
 
         internal static IReadOnlyList<CustomCommand> ListCustomCommands(long chatId)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 var key = $"chat:{chatId}:extra";
                 return Redis.db.HashKeysAsync(key).Result.Select(trigger =>
@@ -1393,7 +1425,7 @@ namespace Enforcer5.Helpers
 
         internal static void WriteCustomCommand(CustomCommand command)
         {
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(command.ChatId))
             {
                 var key = $"chat:{command.ChatId}:extra";
                 var sideKey = $"{key}:{command.Trigger}";
@@ -1419,7 +1451,7 @@ namespace Enforcer5.Helpers
         internal static bool DeleteCustomCommand(long chatId, string trigger)
         {
             var existed = ReadCustomCommand(chatId, trigger) != null;
-            if (!StorageModeProvider.PostgresIsPrimary)
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
             {
                 var key = $"chat:{chatId}:extra";
                 Redis.db.HashDeleteAsync(key, trigger).GetAwaiter().GetResult();
@@ -1430,6 +1462,18 @@ namespace Enforcer5.Helpers
             using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
             new CustomCommandRepository(database.Value).DeleteAsync(chatId, trigger).GetAwaiter().GetResult();
             return existed;
+        }
+
+        internal static IReadOnlyList<CustomCommandConflictCandidate> ReadCustomCommandConflicts(
+            long chatId, string trigger)
+        {
+            trigger = LegacyPrincipalContentMapper.NormalizeCustomCommandTrigger(trigger);
+            if (!StorageRouting.GroupPostgresIsPrimary(chatId))
+                return Array.Empty<CustomCommandConflictCandidate>();
+
+            using var database = new SyncPostgresDatabase(PostgresDatabase.FromConfiguration());
+            return new CustomCommandConflictRepository(database.Value).GetAsync(chatId, trigger)
+                .GetAwaiter().GetResult();
         }
 
         private static bool PrincipalContentShadowEnabled =>
@@ -1483,7 +1527,7 @@ namespace Enforcer5.Helpers
                 var res = Bot.Mute(chatId, userId);
                 if (res)
                 {
-                    if (StorageModeProvider.PostgresIsPrimary && newJoiner)
+                    if (StorageRouting.GroupPostgresIsPrimary(chatId) && newJoiner)
                     {
                         OperationsStore.MarkMuteAsNewJoinerAsync(chatId, userId).GetAwaiter().GetResult();
                     }

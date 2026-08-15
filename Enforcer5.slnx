@@ -6,4 +6,5 @@
   </Configurations>
   <Project Path="src/Enforcer5/Enforcer5.csproj" />
   <Project Path="tests/Enforcer5.Tests/Enforcer5.Tests.csproj" />
+  <Project Path="tools/Enforcer5.Benchmarks/Enforcer5.Benchmarks.csproj" />
 </Solution>
