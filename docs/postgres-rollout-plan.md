@@ -1020,3 +1020,74 @@ They are no longer generated. The history they carried - reason, imposed_at, res
 resolved_at - is held by the `global_sanctions` row itself, which is now complete. The written audit
 count is unchanged at 322,721 either way, which is itself the confirmation that none of them ever
 reached the database.
+
+---
+
+## 18. Reconciliation - now a gate, and one clean pass
+
+### 18.1 Why the old gate meant nothing
+
+Three defects, each sufficient on its own to make "reconciliation ran clean" unfalsifiable.
+
+**It returned zero on any error.** `ReconcileAsync` short-circuited the moment the snapshot carried
+one exception, printing a count identical to a clean run. The operations snapshot always had errors
+at full scale, so operations reconciliation had **never actually compared anything** in its life
+while reporting `mismatches=0`.
+
+**It only looked one way.** Every domain compared PostgreSQL-present-Redis-absent and acted on it.
+Nothing compared Redis-present-PostgreSQL-absent, so a backfill that silently skipped records
+reconciled clean *by construction* - which is exactly the failure the operations domain was hiding.
+
+**Moderation counters were never compared at all** - not even counted, despite the section 12
+comment claiming differences are "reported, never deleted".
+
+Plus: mismatch counts survived only as a number in `migration_runs.details`, and moderation and
+principal-content passed `FinishAsync(true, ...)` unconditionally, so the status column could not be
+used as a gate either.
+
+### 18.2 What it does now
+
+An incomplete snapshot withholds **removals** - the part that would be unsafe - while still running
+every comparison and reporting that removals were withheld. Both directions are compared. Moderation
+counters are compared for presence and value. Comparisons are set-based against staged key sets
+rather than one query per record; audit events alone were 322,721 queries. Mismatches are persisted
+to `migration_exceptions`, so a clean run has evidence rather than a log line.
+
+### 18.3 A fourth silent data-loss defect, found by running it
+
+The 7,951-orphan group defect was recorded in section 11 as *"Fixed. Discovery unions the set with a
+scan. Regression tested."* That fix only ever reached the reader helper. **Three of the four domains
+still called `SetMembersAsync("bot:groupsid")` directly** and were skipping every orphan group.
+
+Correcting it changed the migrated volume materially:
+
+```text
+                     bot:groupsid   full discovery   left behind
+group settings            364,410          443,920        79,510
+custom commands            99,821          119,883        20,062   16.7%
+content items              14,030           17,005         2,975   17.5%
+warning balances          227,696          237,592         9,896
+```
+
+One in six custom commands in the entire estate was being dropped, silently, by a defect the plan
+recorded as closed. All four domains now agree on the population via
+`MigrationInventory.GroupIdsOrDiscoverAsync`, which reads the recorded inventory when one exists and
+falls back to a discovery scan when it does not.
+
+### 18.4 First clean pass
+
+All four domains, against the full rehearsal copy:
+
+```text
+operations         orphans=0, missing=0, value-mismatches=0     51m34s
+group-settings     processed=443,920/443,920, mismatches=0,
+                   failures=0, invalid-groups=0                 1h02m15s
+principal-content  mismatches=0                                 ~20m
+moderation         mismatches=0                                 ~19m
+```
+
+`missing=0` is the figure that did not exist before, and it is the one that says the backfill is
+complete rather than merely self-consistent.
+
+**This is one pass. The gate is two.** The second pass is what demonstrates convergence - that a
+re-run changes nothing - and it has not been run yet.
