@@ -17,14 +17,20 @@ namespace Enforcer5.Storage
             _repository = new GroupSettingsRepository(database);
         }
 
+        /// <summary>
+        /// Migrates every group's settings.
+        /// <para>
+        /// The population comes from discovery, not from <c>bot:groupsid</c>. That set holds 36,441
+        /// members while 38,152 groups have data, because it was only written from one of the three
+        /// code paths that can create a settings hash - so seeding from it alone silently skipped
+        /// 7,951 groups, all of which have settings to migrate.
+        /// </para>
+        /// </summary>
         internal async Task<GroupSettingsMigrationResult> RunAsync(bool reconcile,
-            System.Threading.CancellationToken cancellationToken = default)
-        {
-            var groups = await Redis.db.SetMembersAsync("bot:groupsid");
-            return await RunAsync(groups.Select(value =>
-                long.TryParse(value.ToString(), out var id) ? (long?)id : null)
-                .Where(value => value.HasValue).Select(value => value.Value), reconcile, cancellationToken);
-        }
+            System.Threading.CancellationToken cancellationToken = default) =>
+            await RunAsync(
+                await PrincipalContent.LegacyPrincipalContentReader.DiscoverGroupIdsAsync(cancellationToken),
+                reconcile, cancellationToken);
 
         internal async Task<GroupSettingsMigrationResult> RunAsync(IEnumerable<long> groupIds,
             bool reconcile, System.Threading.CancellationToken cancellationToken = default)
@@ -41,6 +47,11 @@ namespace Enforcer5.Storage
                 foreach (var chatId in groups)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    // Per group, so one unreadable group does not abandon every group after it. The
+                    // catch used to sit outside this loop, which meant a single failure aborted the
+                    // remainder of the run while reporting Failures = 1.
+                    try
+                    {
                     foreach (var settingGroup in GroupSettingGroups.All)
                     {
                         var snapshot = await GroupSettingsStore.ObserveAsync(chatId, settingGroup);
@@ -68,6 +79,20 @@ namespace Enforcer5.Storage
                         batch = await connection.BeginTransactionAsync(cancellationToken);
                         batchCount = 0;
                     }
+                    }
+                    catch (Exception e) when (e is not OperationCanceledException)
+                    {
+                        result.InvalidGroups++;
+                        Console.Error.WriteLine($"[ERROR] Group settings failed for {chatId}: {e.Message}");
+                        // The batch is poisoned, so start a clean one and carry on with the next group.
+                        if (batch != null)
+                        {
+                            await batch.RollbackAsync(System.Threading.CancellationToken.None);
+                            await batch.DisposeAsync();
+                        }
+                        batch = await connection.BeginTransactionAsync(cancellationToken);
+                        batchCount = 0;
+                    }
                 }
                 await batch.CommitAsync(cancellationToken);
             }
@@ -75,7 +100,7 @@ namespace Enforcer5.Storage
             {
                 result.Failures++;
                 if (batch != null) await batch.RollbackAsync(System.Threading.CancellationToken.None);
-                Console.Error.WriteLine($"[ERROR] Group settings batch failed: {e.Message}");
+                Console.Error.WriteLine($"[ERROR] Group settings run failed: {e.Message}");
             }
             finally
             {

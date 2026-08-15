@@ -225,7 +225,8 @@ namespace Enforcer5.Storage
                 var operationsService = new OperationsBackfillService(operationsDatabase);
                 var operationsResult = await operationsService.RunRedisPrimaryAsync(
                     groupIds, userIds, reportMessageIds, operationsReconcile,
-                    operationsLease?.Token ?? default, includeGlobalData: groupScope == null);
+                    operationsLease?.Token ?? default, includeGlobalData: groupScope == null,
+                    tracker: operationsTracker);
                 foreach (var error in operationsResult.Errors)
                     await operationsTracker.AddExceptionAsync("operations", error.Message, error.ToString());
                 // Migrated, but the source was defective or undecidable. Recorded as warnings so a
@@ -239,7 +240,9 @@ namespace Enforcer5.Storage
                     operationsResult.GlobalSanctionsWritten,
                     operationsResult.ReportsWritten,
                     operationsService.ReconciliationMismatches,
-                    Errors = operationsResult.Errors.Count
+                    Reconciliation = operationsService.ReconciliationOutcome.ToString(),
+                    Errors = operationsResult.Errors.Count,
+                    Warnings = operationsResult.DataQualityIssues.Count
                 });
                 Console.WriteLine(
                     $"Operations {(operationsReconcile ? "reconciliation" : "backfill")}: " +
@@ -279,7 +282,9 @@ namespace Enforcer5.Storage
                 var moderationResult = await moderationService.RunRedisPrimaryAsync(groupIds,
                     moderationReconcile, includeGlobalRoles: groupScope == null,
                     moderationLease?.Token ?? default);
-                await moderationTracker.FinishAsync(true, new
+                // Was hardcoded true: a reconciliation that found mismatches still reported a
+                // completed run, so the status column could not be used as a gate.
+                await moderationTracker.FinishAsync(moderationService.ReconciliationMismatches == 0, new
                 {
                     moderationResult.RolesWritten, moderationResult.ElevationBlocksWritten,
                     moderationResult.PoliciesWritten, moderationResult.WarningBalancesWritten,
@@ -333,7 +338,7 @@ namespace Enforcer5.Storage
                 var principalService = new PrincipalContentBackfillService(principalDatabase);
                 var principalResult = await principalService.RunRedisPrimaryAsync(userIds, groupIds,
                     principalReconcile, principalLease?.Token ?? default);
-                await principalTracker.FinishAsync(true, new
+                await principalTracker.FinishAsync(principalService.ReconciliationMismatches == 0, new
                 {
                     principalResult.UsersWritten, principalResult.GroupsWritten,
                     principalResult.EntitlementsWritten, principalResult.ContentItemsWritten,

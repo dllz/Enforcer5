@@ -97,14 +97,75 @@ VALUES (@GroupId, 'legacy_ban', now(), 'redis:audit:stale')",
             }
 
             var snapshot = new OperationsBackfillSnapshot();
-            Assert.Equal(2, await OperationsBackfillService.ReconcileAsync(database,
+            var outcome = await OperationsBackfillService.ReconcileAsync(database,
                 new[] { 1L }, new[] { 2L }, new Dictionary<long, IReadOnlyCollection<long>>(),
-                snapshot, Array.Empty<Exception>()));
+                snapshot, Array.Empty<Exception>());
+
+            // Two PostgreSQL rows have no Redis counterpart and are revoked. The audit event is
+            // durable history and is reported rather than deleted, so it is not an orphan.
+            Assert.Equal(2, outcome.PostgresOrphans);
+            Assert.False(outcome.RemovalsSkipped);
 
             await using var verify = await database.OpenConnectionAsync();
             Assert.Equal("revoked", await verify.ExecuteScalarAsync<string>("SELECT status FROM sanctions"));
             Assert.Equal("revoked", await verify.ExecuteScalarAsync<string>("SELECT status FROM global_sanctions"));
             Assert.Equal(1, await verify.ExecuteScalarAsync<int>("SELECT count(*) FROM group_audit_events"));
+        });
+    }
+
+    [PostgresFact]
+    public async Task AnIncompleteSnapshotWithholdsRemovalsButStillCompares()
+    {
+        // This used to return zero the moment the snapshot carried an error, printing a count
+        // indistinguishable from a clean run - and the operations snapshot always had errors at
+        // full scale, so reconciliation had never actually compared anything.
+        await InSchemaAsync(async database =>
+        {
+            await using (var connection = await database.OpenConnectionAsync())
+            {
+                await using var transaction = await connection.BeginTransactionAsync();
+                var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, 1, "group");
+                var user = await PrincipalResolver.EnsureUserAsync(connection, transaction, 2, "user");
+                await connection.ExecuteAsync(@"INSERT INTO sanctions
+(group_id, account_id, user_id_at_time, kind, status, edition, imposed_at, legacy_key)
+VALUES (@GroupId, @AccountId, @UserId, 'ban', 'active', 'normal', now(), 'redis:stale')",
+                    new { group.GroupId, user.AccountId, user.UserId }, transaction);
+                await transaction.CommitAsync();
+            }
+
+            var outcome = await OperationsBackfillService.ReconcileAsync(database,
+                new[] { 1L }, new[] { 2L }, new Dictionary<long, IReadOnlyCollection<long>>(),
+                new OperationsBackfillSnapshot(), new[] { new FormatException("bad record") });
+
+            // The comparison still ran and found the orphan...
+            Assert.Equal(1, outcome.PostgresOrphans);
+            Assert.True(outcome.RemovalsSkipped);
+
+            // ...but did not act on it, because a partial snapshot cannot authorise a deletion.
+            await using var verify = await database.OpenConnectionAsync();
+            Assert.Equal("active", await verify.ExecuteScalarAsync<string>("SELECT status FROM sanctions"));
+        });
+    }
+
+    [PostgresFact]
+    public async Task ARecordPresentInRedisButMissingFromPostgresIsDetected()
+    {
+        // The direction that did not exist in any domain. Every compare looked only for PostgreSQL
+        // rows absent from Redis, so a backfill that silently skipped records reconciled clean by
+        // construction - which is exactly the failure mode the operations domain was hiding.
+        await InSchemaAsync(async database =>
+        {
+            var snapshot = new OperationsBackfillSnapshot();
+            snapshot.Sanctions.Add(new Sanction(0, 1, 2, SanctionKinds.Ban, SanctionStatuses.Active,
+                Editions.Normal, null, null, DateTimeOffset.UtcNow, null, null, null, null,
+                "redis:never-loaded"));
+
+            var outcome = await OperationsBackfillService.ReconcileAsync(database,
+                new[] { 1L }, new[] { 2L }, new Dictionary<long, IReadOnlyCollection<long>>(),
+                snapshot, Array.Empty<Exception>());
+
+            Assert.Equal(1, outcome.MissingFromPostgres);
+            Assert.Equal(0, outcome.PostgresOrphans);
         });
     }
 
