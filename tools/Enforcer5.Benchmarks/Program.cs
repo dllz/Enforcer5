@@ -23,7 +23,7 @@ internal static class Program
         }
 
         var selected = args.Length == 0
-            ? new[] { "1", "2", "3", "4" }
+            ? new[] { "1" }
             : args;
 
         var scanPageSize = GetInt("BENCH_SCAN_PAGE_SIZE", 5000);
@@ -56,21 +56,22 @@ internal static class Program
                 inventory = await new RedisHydrationBenchmark(database, server, recorder)
                     .RunAsync(depths, scanPageSize, cancellation.Token);
 
+            // Benchmarks 2-4 measured the staging/COPY/merge path. That path now ships as
+            // Storage/Loading, so it is measured by timing the real thing:
+            //
+            //     time dotnet Enforcer.dll migrate inventory
+            //     time dotnet Enforcer.dll migrate user-tier backfill
+            //
+            // Keeping a second copy here meant a divergent implementation and, worse, a
+            // ResetCanonicalAsync that TRUNCATE ... CASCADE'd the user tier and deleted
+            // migration_runs and migration_exceptions outright. Measuring what actually ships is
+            // both more honest and less dangerous.
             if (selected.Intersect(new[] { "2", "3", "4" }).Any())
             {
-                if (string.IsNullOrWhiteSpace(postgresConnection))
-                {
-                    Console.Error.WriteLine("Benchmarks 2-4 need BENCH_POSTGRES.");
-                    return 2;
-                }
-
-                inventory ??= await ScanOnlyAsync(database, server, scanPageSize, cancellation.Token);
-
-                Console.WriteLine("\nApplying the shipped schema to the benchmark database...");
-                await Enforcer5.Storage.SchemaMigrationRunner.ApplyAsync(postgresConnection);
-
-                var loader = new UserTierLoadBenchmark(database, postgresConnection, recorder);
-                await loader.RunAsync(inventory, selected, depths.Max(), cancellation.Token);
+                Console.Error.WriteLine(
+                    "Benchmarks 2-4 are retired. Time 'migrate inventory' and " +
+                    "'migrate user-tier backfill' instead - they run the shipped loader.");
+                return 2;
             }
         }
         catch (OperationCanceledException)
