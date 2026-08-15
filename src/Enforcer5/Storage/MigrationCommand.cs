@@ -186,58 +186,53 @@ namespace Enforcer5.Storage
                     $"operations-{(operationsReconcile ? "reconcile" : "backfill")}");
                 try
                 {
+                // Populations come from the recorded inventory, not from live scans. This block used
+                // to run three full SCANs - user:*, globalBan:* and flagged:* - each walking all
+                // 19.4M keys, because MATCH filters after the walk rather than before it.
                 var groupIds = new System.Collections.Generic.HashSet<long>();
                 var userIds = new System.Collections.Generic.HashSet<long>();
+                System.Collections.Generic.IReadOnlyDictionary<long,
+                    System.Collections.Generic.IReadOnlyCollection<long>> reportMessageIds;
+
                 if (groupScope != null)
                 {
                     groupIds.Add(groupScope.GroupId);
                     userIds.UnionWith(groupScope.UserIds);
+                    reportMessageIds = new System.Collections.Generic.Dictionary<long,
+                        System.Collections.Generic.IReadOnlyCollection<long>>
+                    {
+                        [groupScope.GroupId] = groupScope.ReportMessageIds
+                    };
                 }
                 else
                 {
-                    var groupValues = await Redis.db.SetMembersAsync("bot:groupsid");
-                    foreach (var value in groupValues)
-                        if (long.TryParse(value.ToString(), out var id)) groupIds.Add(id);
-                    var usernameIds = await Redis.db.HashValuesAsync("bot:usernames");
-                    foreach (var value in usernameIds)
-                        if (long.TryParse(value.ToString(), out var id)) userIds.Add(id);
-                    await foreach (var principalKey in ScanKeysAsync("user:*"))
+                    var generation = await Loading.MigrationInventory.LatestAsync(operationsDatabase);
+                    if (generation == null)
                     {
-                        var parts = principalKey.ToString().Split(':');
-                        if (parts.Length == 2 && long.TryParse(parts[1], out var id)) userIds.Add(id);
+                        Console.Error.WriteLine(
+                            "No completed keyspace inventory. Run 'migrate inventory' first.");
+                        await operationsTracker.FinishAsync(false, new { error = "no inventory" });
+                        return 2;
                     }
-                    await foreach (var globalBanKey in ScanKeysAsync("globalBan:*"))
-                    {
-                        var parts = globalBanKey.ToString().Split(':');
-                        if (parts.Length == 2 && long.TryParse(parts[1], out var id)) userIds.Add(id);
-                    }
+                    var generationId = generation.Value.GenerationId;
+                    groupIds.UnionWith(await Loading.MigrationInventory.GroupIdsAsync(
+                        operationsDatabase, generationId));
+                    userIds.UnionWith(await Loading.MigrationInventory.UserIdsAsync(
+                        operationsDatabase, generationId));
+                    reportMessageIds = await Loading.MigrationInventory.ReportMessageIdsAsync(
+                        operationsDatabase, generationId);
                 }
-                var reportMessageIds = new System.Collections.Generic.Dictionary<long,
-                    System.Collections.Generic.IReadOnlyCollection<long>>();
-                var reportsByGroup = new System.Collections.Generic.Dictionary<long,
-                    System.Collections.Generic.HashSet<long>>();
-                if (groupScope != null)
-                    reportsByGroup[groupScope.GroupId] = new System.Collections.Generic.HashSet<long>(
-                        groupScope.ReportMessageIds);
-                else
-                {
-                    await foreach (var reportKey in ScanKeysAsync("flagged:*"))
-                    {
-                        var parts = reportKey.ToString().Split(':');
-                        if (parts.Length != 3 || !long.TryParse(parts[1], out var groupId) ||
-                            !long.TryParse(parts[2], out var messageId)) continue;
-                        if (!reportsByGroup.TryGetValue(groupId, out var ids))
-                            reportsByGroup[groupId] = ids = new System.Collections.Generic.HashSet<long>();
-                        ids.Add(messageId);
-                    }
-                }
-                foreach (var pair in reportsByGroup) reportMessageIds[pair.Key] = pair.Value;
                 var operationsService = new OperationsBackfillService(operationsDatabase);
                 var operationsResult = await operationsService.RunRedisPrimaryAsync(
                     groupIds, userIds, reportMessageIds, operationsReconcile,
                     operationsLease?.Token ?? default, includeGlobalData: groupScope == null);
                 foreach (var error in operationsResult.Errors)
                     await operationsTracker.AddExceptionAsync("operations", error.Message, error.ToString());
+                // Migrated, but the source was defective or undecidable. Recorded as warnings so a
+                // noisy run is distinguishable from a failed one.
+                foreach (var issue in operationsResult.DataQualityIssues)
+                    await operationsTracker.AddExceptionAsync("operations", issue.Message,
+                        issue.ToString(), MigrationSeverities.Warning);
                 await operationsTracker.FinishAsync(operationsResult.Errors.Count == 0, new
                 {
                     operationsResult.SanctionsWritten,
@@ -249,9 +244,10 @@ namespace Enforcer5.Storage
                 Console.WriteLine(
                     $"Operations {(operationsReconcile ? "reconciliation" : "backfill")}: " +
                     $"sanctions={operationsResult.SanctionsWritten}, global={operationsResult.GlobalSanctionsWritten}, " +
-                    $"reports={operationsResult.ReportsWritten}, stats={operationsResult.UserStatisticsWritten + operationsResult.GroupUserStatisticsWritten}, " +
+                    $"reports={operationsResult.ReportsWritten}, last-seen={operationsResult.LastSeenApplied}, " +
+                    $"counters={operationsResult.ModerationCountersWritten}, " +
                     $"audit={operationsResult.AuditEventsWritten}, mismatches={operationsService.ReconciliationMismatches}, " +
-                    $"errors={operationsResult.Errors.Count}");
+                    $"errors={operationsResult.Errors.Count}, warnings={operationsResult.DataQualityIssues.Count}");
                 return operationsResult.Errors.Count == 0 ? 0 : 1;
                 }
                 catch (Exception e)

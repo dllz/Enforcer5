@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Enforcer5.Helpers;
 
@@ -8,11 +9,33 @@ namespace Enforcer5.Storage.Operations
 {
     internal static class LegacyOperationParsers
     {
+        /// <summary>
+        /// Formats observed in the legacy estate, in resolution order.
+        /// <para>
+        /// The <c>globalBan.time</c> field alone contains at least three shapes - month-first
+        /// (<c>12/17/2024 5:37:48 PM</c>), day-first (<c>13/06/2016 09:30:30 PM</c>) and year-first
+        /// (<c>2020/06/18 11:44:56 AM</c>) - because the value was written with whatever culture the
+        /// writing host had at the time. Month-first is listed before day-first because it is the
+        /// dominant shape, so a value that could be read either way resolves that way; see
+        /// <see cref="IsDayMonthAmbiguous"/>, which flags exactly those.
+        /// </para>
+        /// </summary>
         private static readonly string[] LegacyDateFormats =
         {
             "h:mm:ss dd-MM-yyyy", "hh:mm:ss dd-MM-yyyy",
             "M/d/yyyy h:mm:ss tt", "M/d/yyyy h:mm:ss", "MM/dd/yyyy HH:mm:ss",
-            "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-ddTHH:mm:ss"
+            "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-ddTHH:mm:ss",
+            // Day-first with a meridiem. Without these, 197 global bans in the production copy
+            // failed to parse and were dropped - and for globalBan absence means *allowed*, so a
+            // dropped record is a silent security false-negative rather than a missing statistic.
+            "d/M/yyyy h:mm:ss tt", "dd/MM/yyyy hh:mm:ss tt", "d/M/yyyy H:mm:ss",
+            // Year-first with slashes.
+            "yyyy/M/d h:mm:ss tt", "yyyy/MM/dd HH:mm:ss", "yyyy/M/d H:mm:ss",
+            // Prose, written by a display formatter and stored verbatim. In Redis this spans two
+            // lines - "On Saturday, 22 October 2016\nAt 16:09:11" - and accounts for 113 of the
+            // global bans that previously failed to parse outright.
+            "'On' dddd, d MMMM yyyy 'At' H:mm:ss", "'On' dddd, d MMMM yyyy 'At' HH:mm:ss",
+            "'On' dddd, MMMM d, yyyy 'At' H:mm:ss"
         };
 
         internal static LegacyParseResult<LegacyTempBan> ParseTempBan(string expiryField,
@@ -98,20 +121,65 @@ namespace Enforcer5.Storage.Operations
         internal static LegacyParseResult<LegacyTimestamp> ParseTimestamp(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return Malformed<LegacyTimestamp>("timestamp", value);
-            if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture,
+            // Some values were written by a display formatter and span two lines. Collapsing
+            // whitespace lets one format string cover them; DateTimeStyles.AllowWhiteSpaces does
+            // not, because it does not treat a newline between components as a single separator.
+            var normalized = CollapseWhitespace(value);
+            if (DateTimeOffset.TryParse(normalized, CultureInfo.InvariantCulture,
                     DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.RoundtripKind, out var offset) &&
-                HasExplicitOffset(value))
+                HasExplicitOffset(normalized))
                 return LegacyParseResult<LegacyTimestamp>.Success(new LegacyTimestamp(offset.UtcDateTime, offset));
 
-            if (DateTime.TryParseExact(value, LegacyDateFormats, CultureInfo.InvariantCulture,
+            if (DateTime.TryParseExact(normalized, LegacyDateFormats, CultureInfo.InvariantCulture,
                     DateTimeStyles.AllowWhiteSpaces, out var wallClock) ||
-                DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out wallClock))
+                DateTime.TryParse(normalized, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out wallClock))
             {
                 wallClock = DateTime.SpecifyKind(wallClock, DateTimeKind.Unspecified);
                 var instant = InterpretLegacyLocalTime(wallClock);
-                return LegacyParseResult<LegacyTimestamp>.Success(new LegacyTimestamp(wallClock, instant));
+                var timestamp = new LegacyTimestamp(wallClock, instant);
+                // The value parsed, but the estate mixes writer cultures, so a slash date whose
+                // first two components are both 1-12 could legitimately be read either way. It is
+                // resolved month-first and reported, rather than silently trusted - the difference
+                // is up to eleven months on a moderation record.
+                return IsDayMonthAmbiguous(normalized)
+                    ? LegacyParseResult<LegacyTimestamp>.Ambiguous(timestamp, new FormatException(
+                        $"Timestamp '{value}' is day/month ambiguous; read as month-first."))
+                    : LegacyParseResult<LegacyTimestamp>.Success(timestamp);
             }
             return Malformed<LegacyTimestamp>("timestamp", value);
+        }
+
+        private static string CollapseWhitespace(string value)
+        {
+            var builder = new StringBuilder(value.Length);
+            var pendingSpace = false;
+            foreach (var character in value.Trim())
+            {
+                if (char.IsWhiteSpace(character)) { pendingSpace = builder.Length > 0; continue; }
+                if (pendingSpace) { builder.Append(' '); pendingSpace = false; }
+                builder.Append(character);
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// True when a slash-separated date could be read either day-first or month-first.
+        /// <para>
+        /// Only the genuinely undecidable cases qualify: if either component exceeds 12 the reading
+        /// is forced, and if the two are equal the reading does not matter.
+        /// </para>
+        /// </summary>
+        private static bool IsDayMonthAmbiguous(string value)
+        {
+            var first = value.IndexOf('/');
+            if (first <= 0) return false;
+            var second = value.IndexOf('/', first + 1);
+            if (second < 0) return false;
+            return int.TryParse(value.AsSpan(0, first), NumberStyles.None, CultureInfo.InvariantCulture,
+                       out var left) &&
+                   int.TryParse(value.AsSpan(first + 1, second - first - 1), NumberStyles.None,
+                       CultureInfo.InvariantCulture, out var right) &&
+                   left is >= 1 and <= 12 && right is >= 1 and <= 12 && left != right;
         }
 
         internal static LegacyParseResult<DateTimeOffset> ParseTicks(string value)

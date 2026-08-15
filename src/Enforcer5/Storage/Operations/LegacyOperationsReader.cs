@@ -30,27 +30,21 @@ namespace Enforcer5.Storage.Operations
                 {
                     var values = await Task.WhenAll(
                         Redis.db.HashGetAllAsync($"globalBan:{userId}"),
-                        Redis.db.HashGetAsync($"chat:{userId}", "msgs").ContinueWith(value =>
-                            new[] { new HashEntry("msgs", value.Result) }, cancellationToken),
                         // ban:{userId} is user-tier and had no migration path at all before this,
                         // so 121,061 keys of moderation history would have been left behind.
                         Redis.db.HashGetAllAsync($"ban:{userId}"));
-                    return (UserId: userId, Global: values[0], Messages: values[1][0].Value,
-                        Moderation: values[2]);
+                    return (UserId: userId, Global: values[0], Moderation: values[1]);
                 }).ToArray();
                 foreach (var read in await Task.WhenAll(reads))
                 {
                     ReadGlobalSanction(read.UserId, read.Global, snapshot);
-                    ReadUserStatistics(read.UserId, read.Messages, snapshot, capturedAt);
                     ReadModerationCounters(read.UserId, read.Moderation, snapshot);
                 }
             }
-            var statistics = await ReadExistingGroupStatisticsAsync(groupIds, snapshot, capturedAt,
-                cancellationToken);
             foreach (var groupId in groupIds)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await ReadGroupAsync(groupId, statistics, snapshot, capturedAt);
+                await ReadGroupAsync(groupId, snapshot, capturedAt);
                 if (reportMessageIds != null && reportMessageIds.TryGetValue(groupId, out var ids))
                     foreach (var messageId in ids.Distinct()) await ReadReportAsync(groupId, messageId, snapshot);
             }
@@ -89,7 +83,22 @@ namespace Enforcer5.Storage.Operations
                 snapshot.AuditEvents.Add(new AuditEvent(0, Editions.Shared, "legacy_global_sanction",
                     null, null, userId, parsed.Value.Reason, parsed.Value.CreatedAt ?? DateTimeOffset.UnixEpoch,
                     $"redis:audit:{key}"));
-            if (!parsed.IsSuccess) snapshot.Errors.Add(WithKey(key, null, parsed.Error));
+            Record(snapshot, parsed.Status, key, parsed.Error);
+        }
+
+        /// <summary>
+        /// Routes a non-success parse to the right list: an ambiguous record was still migrated and
+        /// is a data-quality issue, a malformed one was not and is an error.
+        /// </summary>
+        private static void Record(OperationsBackfillSnapshot snapshot, LegacyParseStatus status,
+            string key, Exception error)
+        {
+            // Built only once the status is known to be non-success: a successful parse carries no
+            // error, and wrapping a null one throws.
+            if (status == LegacyParseStatus.Success) return;
+            var wrapped = WithKey(key, null, error);
+            if (status == LegacyParseStatus.Ambiguous) snapshot.DataQualityIssues.Add(wrapped);
+            else snapshot.Errors.Add(wrapped);
         }
 
         /// <summary>
@@ -114,18 +123,7 @@ namespace Enforcer5.Storage.Operations
             }
         }
 
-        private static void ReadUserStatistics(long userId, RedisValue value,
-            OperationsBackfillSnapshot snapshot,
-            DateTimeOffset capturedAt)
-        {
-            if (!value.HasValue) return;
-            if (TryNonNegativeInt64(value, out var messages))
-                snapshot.UserStatistics.Add(new UserStatistic(userId, messages, capturedAt));
-            else snapshot.Errors.Add(WithKey($"chat:{userId}", "msgs", new FormatException("Message count is not a non-negative integer.")));
-        }
-
         private static async Task ReadGroupAsync(long groupId,
-            IReadOnlyDictionary<long, Dictionary<long, long>> statistics,
             OperationsBackfillSnapshot snapshot, DateTimeOffset capturedAt)
         {
             var bannedKey = $"chat:{groupId}:bannedlist";
@@ -164,69 +162,27 @@ namespace Enforcer5.Storage.Operations
                 catch (ArgumentOutOfRangeException e) { snapshot.Errors.Add(WithKey($"chat:{groupId}:tempmuted", entry.Name, e)); }
             }
 
-            var last = Hash(await Redis.db.HashGetAllAsync($"chat:{groupId}:userlast"));
-            var users = statistics.TryGetValue(groupId, out var counts)
-                ? counts.Keys.Concat(last.Keys.Select(value => long.TryParse(value,
-                    NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : 0))
-                    .Where(value => value != 0).Distinct()
-                : last.Keys.Select(value => long.TryParse(value, NumberStyles.Integer,
-                    CultureInfo.InvariantCulture, out var id) ? id : 0).Where(value => value != 0);
-            foreach (var userId in users)
+            // One HGETALL per group, not a keyspace walk. The message counts that used to be read
+            // alongside this came from a full SCAN of *:users:* - 19.4M keys walked per invocation,
+            // because MATCH filters after the walk - and are now loaded set-wise by Storage/Loading.
+            // Only the last-seen timestamps are unique to this path.
+            foreach (var entry in await Redis.db.HashGetAllAsync($"chat:{groupId}:userlast"))
             {
-                var messages = counts != null && counts.TryGetValue(userId, out var count) ? count : 0L;
-                DateTimeOffset? lastAt = null;
-                if (last.TryGetValue(userId.ToString(CultureInfo.InvariantCulture), out var ticks))
+                if (!long.TryParse(entry.Name.ToString(), NumberStyles.Integer,
+                        CultureInfo.InvariantCulture, out var userId) || userId == 0)
                 {
-                    var parsed = LegacyOperationParsers.ParseTicks(ticks);
-                    if (!parsed.IsSuccess) snapshot.Errors.Add(WithKey($"chat:{groupId}:userlast", userId, parsed.Error));
-                    else lastAt = parsed.Value;
+                    snapshot.Errors.Add(WithKey($"chat:{groupId}:userlast", entry.Name,
+                        new FormatException("Last-seen user id is invalid.")));
+                    continue;
                 }
-                snapshot.GroupUserStatistics.Add(new GroupUserStatistic(groupId, userId, messages, lastAt, capturedAt));
+                var parsed = LegacyOperationParsers.ParseTicks(entry.Value.ToString());
+                if (!parsed.IsSuccess)
+                {
+                    snapshot.Errors.Add(WithKey($"chat:{groupId}:userlast", entry.Name, parsed.Error));
+                    continue;
+                }
+                snapshot.GroupUserLastSeen.Add(new GroupUserLastSeen(groupId, userId, parsed.Value));
             }
-        }
-
-        private static async Task<IReadOnlyDictionary<long, Dictionary<long, long>>>
-            ReadExistingGroupStatisticsAsync(IReadOnlySet<long> groupIds, OperationsBackfillSnapshot snapshot,
-                DateTimeOffset capturedAt, CancellationToken cancellationToken)
-        {
-            var result = new Dictionary<long, Dictionary<long, long>>();
-            var cursor = "0";
-            const string script = @"
-local scan = redis.call('SCAN', ARGV[1], 'MATCH', '*:users:*', 'COUNT', 5000)
-local values = {}
-for _, key in ipairs(scan[2]) do
-  local count = redis.call('HGET', key, 'msgs')
-  if count then table.insert(values, key); table.insert(values, count) end
-end
-return {scan[1], values}";
-            do
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var response = (RedisResult[])await Redis.db.ScriptEvaluateAsync(script,
-                    values: new RedisValue[] { cursor });
-                cursor = response[0].ToString();
-                var values = (RedisResult[])response[1];
-                for (var i = 0; i + 1 < values.Length; i += 2)
-                {
-                    var key = values[i].ToString();
-                    var first = key.IndexOf(":users:", StringComparison.Ordinal);
-                    if (first <= 0 || !long.TryParse(key.AsSpan(0, first), NumberStyles.Integer,
-                            CultureInfo.InvariantCulture, out var groupId) || !groupIds.Contains(groupId) ||
-                        !long.TryParse(key.AsSpan(first + 7), NumberStyles.Integer,
-                            CultureInfo.InvariantCulture, out var userId)) continue;
-                    if (!long.TryParse(values[i + 1].ToString(), NumberStyles.None,
-                            CultureInfo.InvariantCulture, out var count) || count < 0)
-                    {
-                        snapshot.Errors.Add(WithKey(key, "msgs",
-                            new FormatException("Message count is not a non-negative integer.")));
-                        continue;
-                    }
-                    if (!result.TryGetValue(groupId, out var group))
-                        result[groupId] = group = new Dictionary<long, long>();
-                    group[userId] = count;
-                }
-            } while (!string.Equals(cursor, "0", StringComparison.Ordinal));
-            return result;
         }
 
         private static async Task<IReadOnlyCollection<long>> ReadUserIdsAsync(string key)
@@ -267,7 +223,7 @@ return {scan[1], values}";
             snapshot.AuditEvents.Add(new AuditEvent(0, Editions.Shared, "legacy_report", groupId,
                 null, parsed.Value.ReportedUserId, parsed.Value.Status,
                 parsed.Value.CreatedAt ?? DateTimeOffset.UnixEpoch, $"redis:audit:{key}"));
-            if (!parsed.IsSuccess) snapshot.Errors.Add(WithKey(key, null, parsed.Error));
+            Record(snapshot, parsed.Status, key, parsed.Error);
 
             // Delivery payloads are transient Redis synchronization state and are intentionally
             // not copied into PostgreSQL. Old Telegram.Bot JSON shapes may no longer deserialize.

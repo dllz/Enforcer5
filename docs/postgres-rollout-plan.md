@@ -595,7 +595,7 @@ when the bot is re-added.
 | - | Per-group state machine, `migbuf`, crawler - the whole of Stage C | **Not built** |
 | - | Sanction `active`-state remodel, without which the loader can resurrect an unban | **Already satisfied.** `sanctions` and `global_sanctions` were always status rows (`active`/`due`/`revoked`/`completed`) and are never hard-deleted - verified, no `DELETE FROM` exists for either. |
 | H6 | `ban:{userId}` (121,061 keys) still not migrated by anything | **Fixed.** `account_moderation_counters` plus a reader, repository and backfill path. Absolute values are carried, never increments, so a re-run converges. Regression tested. |
-| - | Operations domain migration has never completed a full run | **Outstanding since the original handoff** |
+| - | Operations domain migration has never completed a full run | **Done.** Completed twice against the full rehearsal copy - 54m42s then 38m39s - with zero blocking errors and identical counts, so it converges rather than duplicating. See section 17. |
 | - | Reconciliation never run twice clean across all domains | **Outstanding** |
 | - | Rollback never rehearsed | **Outstanding** |
 
@@ -800,3 +800,79 @@ with PostgreSQL I/O rather than with the Redis version.
 Note also that the inventory does **not** need to run inside the quiesce window: it is a documented
 superset that tolerates concurrent mutation, and consumers verify existence rather than trusting it.
 Only the user-tier load belongs in the pause.
+
+---
+
+## 17. Operations - the domain that had never finished
+
+It has now completed a full run twice against the rehearsal copy.
+
+```text
+run 1   54m42s   errors 197   global 1,646
+run 2   38m39s   errors   0   global 1,843     warnings 310
+```
+
+Run 2 wrote identical sanction, report, counter and audit counts to run 1, so the domain converges
+rather than duplicating. Run 2 is faster because the upserts had nothing to change.
+
+### 17.1 Why it never finished
+
+Two causes, both structural.
+
+**~12.1M single-row transactions.** `UserStatistics` (4,752,053) and `GroupUserStatistics`
+(7,383,778) were written one row at a time, and each row opened a connection, began a transaction
+and resolved two principals first. Those two populations are now loaded set-wise by the Stage B
+loader, which also computes the unattributed residual - and the per-row upsert overwrote
+`message_count` *without* recomputing that residual, so it could silently break the invariant.
+
+All that remains of the statistics path is the last-seen timestamp from `chat:{groupId}:userlast`,
+which is genuinely unique to this domain. It is applied as one `COPY` plus one set-based `UPDATE`:
+7,377,061 rows.
+
+**Six full keyspace passes per run.** `user:*`, `globalBan:*` and `flagged:*` from
+`MigrationCommand`, plus a full `SCAN` of `*:users:*` inside the reader, each walking all 19.4M keys
+because `MATCH` filters after the walk. All are now served from the recorded inventory.
+
+### 17.2 Two data-loss findings
+
+**197 global bans were being dropped.** Every one failed to parse its `time` field, and for
+`globalBan` **absence means allowed** - so these were silent security false-negatives, not missing
+statistics. The cause is that the field holds at least four shapes, because the value was written
+with whatever culture the writing host had at the time:
+
+```text
+12/17/2024 5:37:48 PM                     month-first, handled
+2020/06/18 11:44:56 AM                    year-first, handled
+13/08/2019 09:05:37 AM                    day-first with meridiem     84 keys - no format matched
+On Saturday, 22 October 2016\nAt 16:09:11 prose, spanning two lines   113 keys - no format matched
+```
+
+The prose shape was written by a display formatter and stored verbatim, newline included. Both are
+now parsed, and all 1,843 `globalBan` keys migrate.
+
+**310 timestamps are genuinely undecidable.** A slash date whose first two components are both 1-12
+can be read either way, and the estate demonstrably contains both orderings - `12/17/2024` can only
+be month-first, `13/06/2016` can only be day-first. These are resolved month-first, because that is
+the dominant shape, and recorded as **warnings** rather than silently trusted. The spread is up to
+eleven months on a moderation record.
+
+### 17.3 Errors and warnings are now separate
+
+They used to be one list, which had two bad consequences: a single questionable value failed the
+whole run, *and* it silently disabled reconciliation, which skips all removals whenever any error is
+present. Since the operations snapshot always had errors at full scale, operations reconciliation
+had in practice never compared anything while reporting `mismatches=0`.
+
+`Errors` now means "could not be read, not migrated" and fails the run. `DataQualityIssues` means
+"read and migrated, but the source is defective or undecidable" and is recorded at `warning`
+severity. That distinction is what makes the reconciliation gate in section 13 meaningful.
+
+### 17.4 Still row-at-a-time
+
+Reports (310,317), audit events (322,721), moderation counters (140,023) and sanctions (12,404) are
+still written one row at a time, each resolving principals first. That is the remaining 38 minutes.
+It completes, so it is no longer a blocker, but it is the obvious next optimisation and it is the
+same staging-plus-set-based-merge shape the loader already uses.
+
+Note also that `global_sanctions` holds 1,760 rows against 1,843 migrated keys. The 83-row gap is
+consistent across both runs and is not yet explained - it should be before Stage B is called done.

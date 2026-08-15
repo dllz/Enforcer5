@@ -443,25 +443,59 @@ SELECT message_count FROM group_account_message_totals
             await transaction.CommitAsync(token);
         }
 
-        internal Task UpsertAsync(UserStatistic value, CancellationToken token = default) =>
-            UpsertAccountTotalAsync(value.UserId, value.Messages, value.CapturedAt, token);
-
-        internal async Task UpsertAsync(GroupUserStatistic value, CancellationToken token = default)
+        /// <summary>
+        /// Applies last-seen timestamps for a whole batch in one statement.
+        /// <para>
+        /// This replaced two per-row upserts covering 4,752,053 user totals and 7,383,778 per-group
+        /// totals. Each was a connection, a transaction and two principal resolutions, so the pair
+        /// cost roughly 12.1M transactions - the single reason this domain had never completed a
+        /// run. The counts themselves are now loaded set-wise by <c>Storage/Loading</c>, which also
+        /// computes the unattributed residual; the per-row upsert overwrote <c>message_count</c>
+        /// without recomputing that residual, so it could silently break the invariant.
+        /// </para>
+        /// <para>
+        /// Only rows that already exist are touched. A last-seen timestamp for a user with no
+        /// message total is not evidence of a total, and inventing a zero row would be inventing
+        /// data.
+        /// </para>
+        /// </summary>
+        internal async Task<int> ApplyLastSeenAsync(IReadOnlyCollection<GroupUserLastSeen> values,
+            CancellationToken token = default)
         {
+            if (values.Count == 0) return 0;
             await using var connection = await Database.OpenConnectionAsync(token);
             await using var transaction = await connection.BeginTransactionAsync(token);
-            var groupId = await OperationsPrincipalResolver.ResolveGroupAsync(connection, transaction,
-                value.GroupId, value.CapturedAt, token);
-            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
-                value.UserId, value.CapturedAt, token);
             await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO group_account_message_totals (group_id, account_id, message_count, last_message_at, captured_at)
-VALUES (@GroupId, @AccountId, @MessageCount, @LastMessageAt, @CapturedAt)
-ON CONFLICT (group_id, account_id) DO UPDATE SET message_count = EXCLUDED.message_count,
-    last_message_at = EXCLUDED.last_message_at, captured_at = EXCLUDED.captured_at", new { GroupId = groupId,
-                    principal.AccountId, MessageCount = value.Messages, value.LastMessageAt, value.CapturedAt },
-                transaction, cancellationToken: token));
+CREATE TEMP TABLE stage_last_seen (telegram_chat_id bigint, telegram_user_id bigint,
+    last_message_at timestamptz) ON COMMIT DROP", transaction: transaction, cancellationToken: token));
+
+            await using (var writer = await connection.BeginBinaryImportAsync(
+                             "COPY stage_last_seen (telegram_chat_id, telegram_user_id, last_message_at) " +
+                             "FROM STDIN (FORMAT BINARY)", token))
+            {
+                foreach (var value in values)
+                {
+                    await writer.StartRowAsync(token);
+                    await writer.WriteAsync(value.GroupId, NpgsqlTypes.NpgsqlDbType.Bigint, token);
+                    await writer.WriteAsync(value.UserId, NpgsqlTypes.NpgsqlDbType.Bigint, token);
+                    await writer.WriteAsync(value.LastMessageAt.UtcDateTime,
+                        NpgsqlTypes.NpgsqlDbType.TimestampTz, token);
+                }
+                await writer.CompleteAsync(token);
+            }
+
+            var applied = await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE group_account_message_totals t
+   SET last_message_at = s.last_message_at
+  FROM stage_last_seen s
+  JOIN telegram_accounts a ON a.telegram_user_id = s.telegram_user_id
+  JOIN telegram_chats c ON c.telegram_chat_id = s.telegram_chat_id
+  JOIN groups g ON g.chat_id = c.chat_id
+ WHERE t.group_id = g.group_id AND t.account_id = a.account_id
+   AND t.last_message_at IS DISTINCT FROM s.last_message_at",
+                transaction: transaction, cancellationToken: token));
             await transaction.CommitAsync(token);
+            return applied;
         }
 
         /// <summary>
@@ -492,21 +526,6 @@ ON CONFLICT (edition) DO NOTHING", value,
                 cancellationToken: token)) == 1;
         }
 
-        private async Task UpsertAccountTotalAsync(long telegramUserId, long messages,
-            DateTimeOffset capturedAt, CancellationToken token)
-        {
-            await using var connection = await Database.OpenConnectionAsync(token);
-            await using var transaction = await connection.BeginTransactionAsync(token);
-            var principal = await OperationsPrincipalResolver.ResolveUserAsync(connection, transaction,
-                telegramUserId, capturedAt, token);
-            await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO account_message_totals (account_id, message_count, captured_at)
-VALUES (@AccountId, @Messages, @CapturedAt)
-ON CONFLICT (account_id) DO UPDATE SET message_count = EXCLUDED.message_count,
-    captured_at = EXCLUDED.captured_at", new { principal.AccountId, Messages = messages, CapturedAt = capturedAt },
-                transaction, cancellationToken: token));
-            await transaction.CommitAsync(token);
-        }
     }
 
     internal sealed class AuditEventRepository : OperationRepository

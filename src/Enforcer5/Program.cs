@@ -43,7 +43,9 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine($"[FATAL] Migration command failed: {e.Message}");
+                    // Full trace, not just the message. A migration that fails after an hour is not
+                    // cheap to reproduce, so the one chance to capture where it failed matters.
+                    Console.Error.WriteLine($"[FATAL] Migration command failed: {e}");
                     Environment.ExitCode = 1;
                 }
                 return;

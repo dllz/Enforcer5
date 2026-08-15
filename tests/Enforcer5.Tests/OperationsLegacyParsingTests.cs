@@ -112,6 +112,54 @@ public sealed class OperationsLegacyParsingTests
         Assert.Equal(new DateTimeOffset(2026, 8, 7, 10, 0, 0, TimeSpan.Zero), result.Value.Instant);
     }
 
+    /// <summary>
+    /// The estate mixes writer cultures: <c>globalBan.time</c> alone holds month-first, day-first
+    /// and year-first values, because each was written with whatever culture the host had at the
+    /// time. Day-first with a meridiem had no matching format, so 197 global bans in the production
+    /// copy failed to parse and were dropped - and for a global ban absence means *allowed*, which
+    /// makes a dropped record a silent security false-negative.
+    /// </summary>
+    [Theory]
+    [InlineData("13/06/2016 09:30:30 PM", 2016, 6, 13, 21)]
+    [InlineData("12/17/2024 5:37:48 PM", 2024, 12, 17, 17)]
+    [InlineData("2020/06/18 11:44:56 AM", 2020, 6, 18, 11)]
+    // Written by a display formatter and stored verbatim, newline and all. 113 of the 197
+    // unparseable global bans were this shape, which no format string covered.
+    [InlineData("On Saturday, 22 October 2016\nAt 16:09:11", 2016, 10, 22, 16)]
+    [InlineData("On Friday, 28 October 2016\r\nAt 13:08:41", 2016, 10, 28, 13)]
+    public void EveryObservedLegacyDateShapeParses(string value, int year, int month, int day, int hour)
+    {
+        var result = LegacyOperationParsers.ParseTimestamp(value);
+
+        Assert.NotEqual(LegacyParseStatus.Malformed, result.Status);
+        Assert.Equal(new DateTime(year, month, day, hour, 0, 0),
+            result.Value.WallClock.Date.AddHours(result.Value.WallClock.Hour));
+    }
+
+    [Fact]
+    public void ADateThatCouldBeReadEitherWayIsResolvedButReported()
+    {
+        // 05/06 could be 5 June or May 6 - an eleven-month spread on a moderation record. It is
+        // resolved month-first because that is the dominant shape in the data, but reported rather
+        // than silently trusted. It is still migrated: Ambiguous carries a value, Malformed does not.
+        var result = LegacyOperationParsers.ParseTimestamp("05/06/2016 09:30:30 PM");
+
+        Assert.Equal(LegacyParseStatus.Ambiguous, result.Status);
+        Assert.NotNull(result.Value);
+        Assert.Equal(5, result.Value.WallClock.Month);
+        Assert.Equal(6, result.Value.WallClock.Day);
+    }
+
+    [Fact]
+    public void ADateThatCanOnlyBeReadOneWayIsNotReportedAsAmbiguous()
+    {
+        // Either component exceeding 12 forces the reading, and equal components make it moot.
+        Assert.Equal(LegacyParseStatus.Success,
+            LegacyOperationParsers.ParseTimestamp("13/06/2016 09:30:30 PM").Status);
+        Assert.Equal(LegacyParseStatus.Success,
+            LegacyOperationParsers.ParseTimestamp("06/06/2016 09:30:30 PM").Status);
+    }
+
     [Fact]
     public void LocalDateTimeTicksUseConfiguredLegacyTimezone()
     {

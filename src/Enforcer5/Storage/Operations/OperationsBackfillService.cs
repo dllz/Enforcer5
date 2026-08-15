@@ -39,7 +39,11 @@ namespace Enforcer5.Storage.Operations
                 throw new InvalidOperationException("Operations backfill requires RedisPrimaryPostgresShadow mode.");
             var snapshot = await _reader.ReadAsync(knownGroupIds, knownUserIds, reportMessageIds,
                 cancellationToken, includeGlobalData);
-            var result = new OperationsBackfillResult { Errors = snapshot.Errors.ToArray() };
+            var result = new OperationsBackfillResult
+            {
+                Errors = snapshot.Errors.ToArray(),
+                DataQualityIssues = snapshot.DataQualityIssues.ToArray()
+            };
             if (reconcile)
                 ReconciliationMismatches = await ReconcileAsync(
                     _database, knownGroupIds, knownUserIds, reportMessageIds,
@@ -52,8 +56,11 @@ namespace Enforcer5.Storage.Operations
                 await _reports.UpsertAsync(value with { Id = 0 }, cancellationToken);
                 result.ReportsWritten++;
             }
-            foreach (var value in snapshot.UserStatistics) { await _statistics.UpsertAsync(value, cancellationToken); result.UserStatisticsWritten++; }
-            foreach (var value in snapshot.GroupUserStatistics) { await _statistics.UpsertAsync(value, cancellationToken); result.GroupUserStatisticsWritten++; }
+            // Last-seen timestamps go in as one statement. This replaced two per-row loops covering
+            // 4,752,053 user totals and 7,383,778 per-group totals - roughly 12.1M transactions,
+            // which is why this domain had never finished. The counts are owned by Storage/Loading.
+            result.LastSeenApplied = await _statistics.ApplyLastSeenAsync(snapshot.GroupUserLastSeen,
+                cancellationToken);
             // Absolute values, so a re-run converges rather than double-counting.
             foreach (var value in snapshot.ModerationCounters)
             {
