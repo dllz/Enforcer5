@@ -56,6 +56,50 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => x.LeaseExpiresAt).HasFilter("lease_expires_at IS NOT NULL");
             });
 
+            modelBuilder.Entity<MigrationScanGenerationEntity>(entity =>
+            {
+                entity.ToTable("migration_scan_generations", table =>
+                {
+                    table.HasCheckConstraint("migration_scan_generations_status_check",
+                        "status IN ('running', 'completed', 'failed')");
+                    table.HasCheckConstraint("migration_scan_generations_counts_check",
+                        "key_count >= 0 AND unclassified_count >= 0");
+                    // Stage C's freshness rule compares against completed_at, so a generation that
+                    // claims completion without one would silently authorise a cutover on a partial
+                    // inventory.
+                    table.HasCheckConstraint("migration_scan_generations_completed_check",
+                        "(status = 'completed') = (completed_at IS NOT NULL)");
+                });
+                entity.HasKey(x => x.GenerationId);
+                entity.Property(x => x.GenerationId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.StartedAt).HasDefaultValueSql("now()");
+                entity.Property(x => x.Status).IsRequired().HasDefaultValue("running");
+                entity.Property(x => x.KeyCount).HasDefaultValue(0L);
+                entity.Property(x => x.UnclassifiedCount).HasDefaultValue(0L);
+                // Finding the newest usable generation is the hot query for the freshness rule.
+                entity.HasIndex(x => x.CompletedAt, "migration_scan_generations_completed_idx")
+                    .HasFilter("status = 'completed'");
+            });
+
+            modelBuilder.Entity<MigrationKeyInventoryEntity>(entity =>
+            {
+                entity.ToTable("migration_key_inventory");
+                // SCAN can return the same key more than once, so the natural key doubles as the
+                // deduplication mechanism on the way in.
+                entity.HasKey(x => new { x.GenerationId, x.RedisKey });
+                entity.Property(x => x.RedisKey).IsRequired();
+                entity.Property(x => x.KeyClass).IsRequired();
+                entity.HasOne<MigrationScanGenerationEntity>().WithMany()
+                    .HasForeignKey(x => x.GenerationId).OnDelete(DeleteBehavior.Cascade);
+                // The per-group lookup that replaces a full SCAN MATCH per group.
+                entity.HasIndex(x => new { x.GenerationId, x.TelegramChatId },
+                        "migration_key_inventory_group_idx")
+                    .HasFilter("telegram_chat_id IS NOT NULL");
+                // The loader streams a whole class at a time.
+                entity.HasIndex(x => new { x.GenerationId, x.KeyClass },
+                    "migration_key_inventory_class_idx");
+            });
+
             modelBuilder.Entity<MigrationRun>(entity =>
             {
                 entity.ToTable("migration_runs", table => table.HasCheckConstraint("migration_runs_status_check", "status IN ('running', 'completed', 'failed')"));

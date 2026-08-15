@@ -1499,6 +1499,39 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.MigrationKeyInventoryEntity", b =>
+                {
+                    b.Property<long>("GenerationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("generation_id");
+
+                    b.Property<string>("RedisKey")
+                        .HasColumnType("text")
+                        .HasColumnName("redis_key");
+
+                    b.Property<string>("KeyClass")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("key_class");
+
+                    b.Property<long?>("TelegramChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_chat_id");
+
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
+                    b.HasKey("GenerationId", "RedisKey");
+
+                    b.HasIndex(new[] { "GenerationId", "KeyClass" }, "migration_key_inventory_class_idx");
+
+                    b.HasIndex(new[] { "GenerationId", "TelegramChatId" }, "migration_key_inventory_group_idx")
+                        .HasFilter("telegram_chat_id IS NOT NULL");
+
+                    b.ToTable("migration_key_inventory", (string)null);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.MigrationRun", b =>
                 {
                     b.Property<long>("Id")
@@ -1543,6 +1576,67 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("migration_runs", null, t =>
                         {
                             t.HasCheckConstraint("migration_runs_status_check", "status IN ('running', 'completed', 'failed')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MigrationScanGenerationEntity", b =>
+                {
+                    b.Property<long>("GenerationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("generation_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("GenerationId"));
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("Cursor")
+                        .HasColumnType("text")
+                        .HasColumnName("cursor");
+
+                    b.Property<long>("KeyCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("key_count");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("running")
+                        .HasColumnName("status");
+
+                    b.Property<long>("UnclassifiedCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("unclassified_count");
+
+                    b.HasKey("GenerationId");
+
+                    b.HasIndex(new[] { "CompletedAt" }, "migration_scan_generations_completed_idx")
+                        .HasFilter("status = 'completed'");
+
+                    b.ToTable("migration_scan_generations", null, t =>
+                        {
+                            t.HasCheckConstraint("migration_scan_generations_completed_check", "(status = 'completed') = (completed_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("migration_scan_generations_counts_check", "key_count >= 0 AND unclassified_count >= 0");
+
+                            t.HasCheckConstraint("migration_scan_generations_status_check", "status IN ('running', 'completed', 'failed')");
                         });
                 });
 
@@ -2485,6 +2579,15 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("MigrationRunId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MigrationKeyInventoryEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.MigrationScanGenerationEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GenerationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.ReportEntity", b =>

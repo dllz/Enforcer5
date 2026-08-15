@@ -130,6 +130,46 @@ public sealed class SchemaModelTests
         Assert.True(reconcile);
     }
 
+    [Fact]
+    public void KeyspaceInventoryDeduplicatesOnTheNaturalKeyAndIsScopedToAGeneration()
+    {
+        using var context = CreateContext();
+        var inventory = context.Model.FindEntityType(typeof(MigrationKeyInventoryEntity))!;
+
+        Assert.Equal("migration_key_inventory", inventory.GetTableName());
+        // SCAN can return the same key more than once within a single pass, so the natural key is
+        // what makes an insert idempotent. A surrogate key would have let duplicates through.
+        Assert.Equal(["GenerationId", "RedisKey"],
+            inventory.FindPrimaryKey()!.Properties.Select(x => x.Name));
+        // Every row belongs to a generation, and dropping a generation must take its keys with it -
+        // a stale inventory is worse than none, because Stage C's freshness rule would trust it.
+        var generationLink = Assert.Single(inventory.GetForeignKeys());
+        Assert.Equal(typeof(MigrationScanGenerationEntity), generationLink.PrincipalEntityType.ClrType);
+        Assert.Equal(DeleteBehavior.Cascade, generationLink.DeleteBehavior);
+        // The per-group lookup exists to replace a full SCAN MATCH per group, which walks the whole
+        // keyspace and is quadratic under a crawler.
+        Assert.Contains(inventory.GetIndexes(),
+            index => index.Name == "migration_key_inventory_group_idx");
+    }
+
+    [Fact]
+    public void AScanGenerationCannotClaimCompletionWithoutATimestamp()
+    {
+        using var context = CreateContext();
+        // Check constraints are not carried in the read-optimized runtime model.
+        var generation = context.GetService<IDesignTimeModel>().Model
+            .FindEntityType(typeof(MigrationScanGenerationEntity))!;
+
+        Assert.Equal("migration_scan_generations", generation.GetTableName());
+        Assert.Equal(["GenerationId"], generation.FindPrimaryKey()!.Properties.Select(x => x.Name));
+        // Stage C only cuts a group over if the inventory is newer than the moment it started
+        // draining, and completed_at is the value that rule reads. A generation that reported
+        // completion without one would authorise a cutover against a partial inventory.
+        Assert.Contains(generation.GetCheckConstraints(),
+            check => check.Name == "migration_scan_generations_completed_check");
+        Assert.Equal("running", generation.FindProperty("Status")!.GetDefaultValue());
+    }
+
     [Theory]
     [InlineData("RedisPrimaryPostgresShadow")]
     [InlineData("PostgresPrimaryRedisMirror")]

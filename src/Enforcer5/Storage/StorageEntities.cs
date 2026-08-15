@@ -44,6 +44,103 @@ namespace Enforcer5.Storage
         public DateTimeOffset UpdatedAt { get; set; }
     }
 
+    /// <summary>
+    /// One full pass over the Redis keyspace.
+    /// <para>
+    /// The migration needs to know not just what keys exist but <em>as of when</em>. Stage C's
+    /// freshness rule is that a group may only cut over if the inventory is newer than the moment it
+    /// entered <c>Draining</c> - from that point the drain buffer captures every new key, so the
+    /// inventory only has to cover everything before that instant. <see cref="CompletedAt"/> is the
+    /// value that rule compares against, which is why a generation is only usable once finished.
+    /// </para>
+    /// <para>
+    /// <c>SCAN</c> guarantees a key present at both the start and the end of iteration is returned
+    /// at least once, but says nothing about keys deleted midway. The inventory is therefore a
+    /// <em>superset</em> that may contain dead keys, and every consumer must verify existence rather
+    /// than trust it.
+    /// </para>
+    /// </summary>
+    internal sealed class MigrationScanGenerationEntity
+    {
+        public long GenerationId { get; set; }
+        public DateTimeOffset StartedAt { get; set; }
+        /// <summary>Null until the pass finishes. An incomplete generation must never be used.</summary>
+        public DateTimeOffset? CompletedAt { get; set; }
+        public string Status { get; set; }
+        /// <summary>Total keys returned, including duplicates and keys that classified as unknown.</summary>
+        public long KeyCount { get; set; }
+        /// <summary>Keys the classifier did not recognise. A sharp rise means a new key shape.</summary>
+        public long UnclassifiedCount { get; set; }
+        /// <summary>Resume point, so an interrupted scan continues instead of restarting.</summary>
+        public string Cursor { get; set; }
+        public string LastError { get; set; }
+    }
+
+    /// <summary>
+    /// One classified Redis key, as observed by a <see cref="MigrationScanGenerationEntity"/>.
+    /// <para>
+    /// This lives in PostgreSQL rather than Redis deliberately. Production Redis holds 4.18 GB of
+    /// 5.78 GB with <c>maxmemory 0</c>, so an 8.1M-member index would have consumed a large fraction
+    /// of the remaining headroom - and with no configured limit the failure mode is the OOM killer
+    /// taking the process, not a rejected write.
+    /// </para>
+    /// <para>
+    /// It also removes the O(keyspace)-per-group problem: without it, migrating one group means a
+    /// full <c>SCAN MATCH</c>, which walks the entire keyspace because <c>MATCH</c> filters after
+    /// the walk. Under a crawler that is quadratic.
+    /// </para>
+    /// </summary>
+    internal sealed class MigrationKeyInventoryEntity
+    {
+        public long GenerationId { get; set; }
+        public string RedisKey { get; set; }
+        /// <summary>See <see cref="MigrationKeyClasses"/>.</summary>
+        public string KeyClass { get; set; }
+        /// <summary>Telegram chat id the key belongs to, where the shape carries one.</summary>
+        public long? TelegramChatId { get; set; }
+        /// <summary>Telegram user id the key belongs to, where the shape carries one.</summary>
+        public long? TelegramUserId { get; set; }
+    }
+
+    /// <summary>
+    /// The key shapes the inventory classifier recognises.
+    /// <para>
+    /// Deliberately not a database check constraint: a new Redis key shape should show up as a
+    /// rising <see cref="MigrationScanGenerationEntity.UnclassifiedCount"/> to be investigated, not
+    /// as a failed scan.
+    /// </para>
+    /// </summary>
+    internal static class MigrationKeyClasses
+    {
+        /// <summary><c>user:{userId}</c> - the user record.</summary>
+        internal const string User = "user";
+        /// <summary><c>chat:{userId}</c> - the user's global lifetime message total.</summary>
+        internal const string UserMessageTotal = "user-message-total";
+        /// <summary><c>{groupId}:users:{userId}</c> - per-group message counter.</summary>
+        internal const string GroupStatistics = "group-statistics";
+        /// <summary><c>chat:{groupId}:{suffix}</c> - settings, roles, policies, sanction sets.</summary>
+        internal const string GroupScoped = "group-scoped";
+        /// <summary><c>flagged:{groupId}:{messageId}</c> and its reply key.</summary>
+        internal const string Report = "report";
+        /// <summary><c>globalBan:{userId}</c>.</summary>
+        internal const string GlobalBan = "global-ban";
+        /// <summary><c>ban:{userId}</c> - lifetime moderation counters.</summary>
+        internal const string ModerationCounters = "moderation-counters";
+        /// <summary>Bot-wide singletons: <c>bot:general</c>, <c>bot:groupsid</c>, and friends.</summary>
+        internal const string BotGlobal = "bot-global";
+        /// <summary>Recognised but deliberately not migrated - ephemeral, TTL-bounded state.</summary>
+        internal const string Ephemeral = "ephemeral";
+        /// <summary>Not recognised. Counted, kept, and never silently discarded.</summary>
+        internal const string Unclassified = "unclassified";
+    }
+
+    internal static class MigrationScanStatuses
+    {
+        internal const string Running = "running";
+        internal const string Completed = "completed";
+        internal const string Failed = "failed";
+    }
+
     internal sealed class MigrationRun
     {
         public long Id { get; set; }
