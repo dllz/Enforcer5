@@ -1492,3 +1492,80 @@ sees whatever exists at copy time and the drain buffer covers everything after. 
 anyway made every cutover demand a fresh 15-minute keyspace scan first - which is what the first run
 did, refusing with *"inventory is older than the drain start"*. The inventory is still what the
 crawler uses to choose candidates; staleness there only lags the candidate list.
+
+---
+
+## 23. Rehearsed on Redis 6.0.9
+
+The rehearsal now runs the **production Redis version**, from the production dump. The container's
+`dump.rdb` was `REDIS0009` and had never been rewritten - the 7.x container ran with no save points -
+so it loaded straight into 6.0.9 and reports `Loading RDB produced by version 6.0.9`.
+
+```text
+redis_version    6.0.9
+keys            19,043,477
+used_memory      4.19 GB      production measured 4.18 GB
+maxmemory        0            noeviction - production's actual configuration
+```
+
+The ~364k keys the 7.x instance held beyond this were `compat:group-settings:*:revision` markers
+created by earlier migration runs. Regenerable, and discarding them is the cleaner start.
+
+### 23.1 Re-measured
+
+```text
+keyspace inventory      21m50s on 6.0.9      15m28s on 7.4.10     ~41% slower
+unclassified keys            2                    1,330           lang: and groupBan: now classified
+```
+
+The two remaining unclassified keys are the bare `antinamelengthsettings` and
+`antitextlengthsettings` orphans from section 16.1 - settings hashes written with no chat prefix.
+
+### 23.2 The crawler, and what H7 actually cost
+
+First cutover of a **single, empty** group: **136 seconds**. Almost all of it was
+`LegacyGroupScopeReader`'s `SCAN MATCH flagged:{g}:*`, which walks all 19M keys because `MATCH`
+filters after the walk - per group. Sourcing report ids from the recorded inventory instead:
+
+```text
+per group        136s  ->  0.3s        with the scan removed
+100 groups              26.3s
+100 groups >=100 keys   59.9s          0.6s each
+```
+
+That is H7 closed in practice, not just in principle. Under a crawler the scan was quadratic.
+
+### 23.3 The outlier
+
+The largest group in the estate, **528,313 keys**:
+
+```text
+cut over in            151.9s
+reconciliation         clean in all four domains
+member statistics      528,056 rows in PostgreSQL
+                       528,056 group-statistics keys in Redis      exact match
+```
+
+528,056 is the figure section 6.4 predicted for this group. The copy ran outside any lock, so freeze
+duration stayed proportional to the drain buffer rather than to group size - which is the property
+that makes the outliers no worse than the median.
+
+### 23.4 State after the run
+
+```text
+groups migrated         204        including the outlier
+stranded leases           0
+recorded errors           0
+drain buffers left        0
+```
+
+### 23.5 What this does and does not prove
+
+It proves the mechanism: lease, copy, drain, verify, flip, and rollback all work against real data
+at both ends of the size distribution, with reconciliation as the gate.
+
+It does **not** prove behaviour under load. Every group here was cut over with no live traffic, so
+every drain was empty - `0 drained keys` throughout. The drain path, the buffer cap, and the
+abort-and-revert on overflow have unit coverage but have never run against a group that was being
+written to. That is the next thing to rehearse, and it needs a load generator rather than a bigger
+dataset.

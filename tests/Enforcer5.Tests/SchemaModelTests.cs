@@ -207,6 +207,18 @@ public sealed class SchemaModelTests
         Assert.False(EnforcerMigrationCommand.IsGroupCutover(["migrate", "group", "nan"], out _, out _));
         Assert.False(EnforcerMigrationCommand.IsGroupCutover(["migrate", "group", "0"], out _, out _));
 
+        Assert.True(EnforcerMigrationCommand.IsCrawl(["migrate", "crawl", "100"], out var budget, out var floor));
+        Assert.Equal(100, budget);
+        Assert.Equal(0, floor);
+        // Smallest-first means the head of the queue is thousands of near-empty chat ids, so a
+        // floor is how the outliers get scheduled deliberately rather than met by accident.
+        Assert.True(EnforcerMigrationCommand.IsCrawl(
+            ["migrate", "crawl", "100", "--min-keys", "10000"], out _, out var big));
+        Assert.Equal(10000, big);
+        Assert.False(EnforcerMigrationCommand.IsCrawl(["migrate", "crawl", "0"], out _, out _));
+        Assert.False(EnforcerMigrationCommand.IsCrawl(["migrate", "crawl", "-5"], out _, out _));
+        Assert.False(EnforcerMigrationCommand.IsCrawl(["migrate", "crawl", "10", "--min", "5"], out _, out _));
+
         Assert.True(EnforcerMigrationCommand.IsTempBanIndex(["migrate", "tempban-index"], out var dry));
         Assert.False(dry);
         Assert.True(EnforcerMigrationCommand.IsTempBanIndex(

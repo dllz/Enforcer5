@@ -62,6 +62,28 @@ namespace Enforcer5.Storage
         }
 
         /// <summary>
+        /// <c>migrate crawl &lt;count&gt;</c> - cut over the next N groups, smallest first.
+        /// <para>
+        /// The same crawler the bot runs on a timer, driven once so a rehearsal is bounded and
+        /// measurable rather than open-ended.
+        /// </para>
+        /// </summary>
+        internal static bool IsCrawl(string[] args, out int budget, out int minimumKeys)
+        {
+            budget = 0;
+            minimumKeys = 0;
+            if (args == null || args.Length is not (3 or 5) ||
+                !string.Equals(args[0], "migrate", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(args[1], "crawl", StringComparison.OrdinalIgnoreCase) ||
+                !int.TryParse(args[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out budget) ||
+                budget <= 0) return false;
+            if (args.Length == 3) return true;
+            return string.Equals(args[3], "--min-keys", StringComparison.OrdinalIgnoreCase) &&
+                   int.TryParse(args[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out minimumKeys) &&
+                   minimumKeys >= 0;
+        }
+
+        /// <summary>
         /// <c>migrate group &lt;chatId&gt; [--rollback]</c> - cut one group over, or put it back.
         /// <para>
         /// Runs alongside the live bots rather than requiring them stopped. That is the whole point
@@ -154,6 +176,25 @@ namespace Enforcer5.Storage
                 await tracker.FailAsync(e);
                 throw;
             }
+        }
+
+        private static async Task<int> RunCrawlAsync(int budget, int minimumKeys)
+        {
+            if (!Redis.Start()) throw new InvalidOperationException("Redis is unavailable.");
+            await using var database = PostgresDatabase.FromConfiguration();
+            await Cutover.GroupMigrationStateStore.PrimeAsync(database);
+
+            var owner = $"{Environment.MachineName}-crawl-{Environment.ProcessId}";
+            var crawler = new Cutover.GroupCutoverCrawler(database, owner);
+            var started = DateTimeOffset.UtcNow;
+            var migrated = await crawler.RunOnceAsync(budget, minimumKeys);
+            var elapsed = DateTimeOffset.UtcNow - started;
+
+            Console.WriteLine($"Crawl: {migrated}/{budget} group(s) cut over in " +
+                              $"{elapsed.TotalSeconds:N1}s" +
+                              (migrated > 0 ? $" ({elapsed.TotalSeconds / migrated:N1}s each)." : "."));
+            Console.WriteLine(await crawler.DescribeProgressAsync());
+            return migrated == budget ? 0 : 1;
         }
 
         /// <summary>
@@ -266,6 +307,8 @@ namespace Enforcer5.Storage
             if (IsTempBanIndex(args, out var applyIndex)) return await RunTempBanIndexAsync(applyIndex);
             if (IsGroupCutover(args, out var cutoverChatId, out var rollback))
                 return await RunGroupCutoverAsync(cutoverChatId, rollback);
+            if (IsCrawl(args, out var crawlBudget, out var crawlMinKeys))
+                return await RunCrawlAsync(crawlBudget, crawlMinKeys);
             if (IsUserTierMigration(args, out var userTierReconcile))
                 return await RunUserTierAsync(userTierReconcile);
             MigrationCommandOptionsParser.TryParse(args, out var options);

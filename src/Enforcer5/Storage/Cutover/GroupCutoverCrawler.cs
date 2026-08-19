@@ -75,12 +75,25 @@ namespace Enforcer5.Storage.Cutover
         /// <summary>
         /// One pass: fast-tracked groups first, then the coldest groups the scan knows about.
         /// </summary>
-        internal async Task<int> RunOnceAsync(int budget, CancellationToken cancellationToken = default)
+        internal async Task<int> RunOnceAsync(int budget, CancellationToken cancellationToken = default) =>
+            await RunOnceAsync(budget, 0, cancellationToken);
+
+        /// <summary>
+        /// One pass, optionally skipping groups below a key count.
+        /// <para>
+        /// <paramref name="minimumKeys"/> exists because smallest-first means the head of the queue
+        /// is thousands of near-empty chat ids - useful for burn-down, useless for proving the
+        /// machinery handles a real group. It is also how an operator would schedule the hundred or
+        /// so outliers into a quiet window rather than meeting them by accident.
+        /// </para>
+        /// </summary>
+        internal async Task<int> RunOnceAsync(int budget, int minimumKeys,
+            CancellationToken cancellationToken = default)
         {
             if (QuiesceBarrier.IsQuiescing) return 0;
 
             var migrated = 0;
-            foreach (var telegramChatId in await NextBatchAsync(budget, cancellationToken))
+            foreach (var telegramChatId in await NextBatchAsync(budget, minimumKeys, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 // Gated at the top of each group rather than around the batch, so a quiesce waits
@@ -102,7 +115,7 @@ namespace Enforcer5.Storage.Cutover
         /// outlier.
         /// </para>
         /// </summary>
-        private async Task<IReadOnlyList<long>> NextBatchAsync(int budget,
+        private async Task<IReadOnlyList<long>> NextBatchAsync(int budget, int minimumKeys,
             CancellationToken cancellationToken)
         {
             var batch = new List<long>(budget);
@@ -126,9 +139,11 @@ SELECT i.telegram_chat_id
    AND (s.state IS NULL OR s.state = 'Redis')
    AND (s.lease_expires_at IS NULL OR s.lease_expires_at < now())
  GROUP BY i.telegram_chat_id
+HAVING count(*) >= @MinimumKeys
  ORDER BY count(*), i.telegram_chat_id
  LIMIT @Limit",
-                new { Generation = generation.Value.GenerationId, Limit = budget - batch.Count },
+                new { Generation = generation.Value.GenerationId, Limit = budget - batch.Count,
+                    MinimumKeys = minimumKeys },
                 cancellationToken: cancellationToken));
 
             batch.AddRange(candidates.Where(x => !batch.Contains(x)));

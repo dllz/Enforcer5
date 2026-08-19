@@ -51,11 +51,37 @@ namespace Enforcer5.Storage.Cutover
 
         private readonly PostgresDatabase _database;
         private readonly string _owner;
+        private IReadOnlyDictionary<long, IReadOnlyCollection<long>> _reportIds;
 
         internal GroupCutoverService(PostgresDatabase database, string owner)
         {
             _database = database;
             _owner = owner;
+        }
+
+        /// <summary>
+        /// Report ids for the whole estate, read once from the inventory and reused for every group
+        /// this instance cuts over.
+        /// <para>
+        /// <c>LegacyGroupScopeReader</c> finds them with <c>SCAN MATCH flagged:{g}:*</c>, which walks
+        /// all 19M keys because <c>MATCH</c> filters after the walk - per group. That single scan was
+        /// almost the entire 136 seconds the first cutover took, for a group with nothing in it, and
+        /// under a crawler it is quadratic. This is section 9.2's H7, and reading the recorded
+        /// inventory instead is what makes a crawl viable.
+        /// </para>
+        /// </summary>
+        private async Task<IReadOnlyCollection<long>> ReportIdsAsync(long telegramChatId,
+            CancellationToken cancellationToken)
+        {
+            if (_reportIds == null)
+            {
+                var generation = await MigrationInventory.LatestAsync(_database, cancellationToken);
+                _reportIds = generation == null
+                    ? new Dictionary<long, IReadOnlyCollection<long>>()
+                    : await MigrationInventory.ReportMessageIdsAsync(_database,
+                        generation.Value.GenerationId, cancellationToken);
+            }
+            return _reportIds.TryGetValue(telegramChatId, out var ids) ? ids : Array.Empty<long>();
         }
 
         internal async Task<GroupCutoverResult> CutOverAsync(long telegramChatId,
@@ -142,7 +168,8 @@ namespace Enforcer5.Storage.Cutover
         private async Task CopyAsync(long telegramChatId, CancellationToken cancellationToken)
         {
             var scope = await new LegacyGroupScopeReader(Redis.db).ReadAsync(telegramChatId,
-                includeReports: true, cancellationToken);
+                includeReports: false, cancellationToken);
+            var reportIds = await ReportIdsAsync(telegramChatId, cancellationToken);
             var groups = new[] { telegramChatId };
 
             await new GroupSettingsMigrationService(_database).RunAsync(groups, false, cancellationToken);
@@ -151,7 +178,7 @@ namespace Enforcer5.Storage.Cutover
             await new ModerationBackfillService(_database).RunRedisPrimaryAsync(groups, false,
                 includeGlobalRoles: false, cancellationToken);
             await new OperationsBackfillService(_database).RunRedisPrimaryAsync(groups, scope.UserIds,
-                new Dictionary<long, IReadOnlyCollection<long>> { [telegramChatId] = scope.ReportMessageIds },
+                new Dictionary<long, IReadOnlyCollection<long>> { [telegramChatId] = reportIds },
                 false, cancellationToken, includeGlobalData: false);
         }
 
@@ -194,14 +221,15 @@ namespace Enforcer5.Storage.Cutover
             if (moderation.ReconciliationMismatches != 0) return moderation.ReconciliationMismatches;
 
             var scope = await new LegacyGroupScopeReader(Redis.db).ReadAsync(telegramChatId,
-                includeReports: true, cancellationToken);
+                includeReports: false, cancellationToken);
+            var reportIds = await ReportIdsAsync(telegramChatId, cancellationToken);
             var principal = new PrincipalContentBackfillService(_database);
             await principal.RunRedisPrimaryAsync(scope.UserIds, groups, true, cancellationToken);
             if (principal.ReconciliationMismatches != 0) return principal.ReconciliationMismatches;
 
             var operations = new OperationsBackfillService(_database);
             await operations.RunRedisPrimaryAsync(groups, scope.UserIds,
-                new Dictionary<long, IReadOnlyCollection<long>> { [telegramChatId] = scope.ReportMessageIds },
+                new Dictionary<long, IReadOnlyCollection<long>> { [telegramChatId] = reportIds },
                 true, cancellationToken, includeGlobalData: false);
             return operations.ReconciliationMismatches;
         }
