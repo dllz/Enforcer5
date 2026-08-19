@@ -29,6 +29,31 @@ namespace Enforcer5.Storage
             _worker ??= Task.Run(RunAsync);
         }
 
+        /// <summary>
+        /// Applies pending mirror entries until there are none left, and reports how many.
+        /// <para>
+        /// The background loop is the normal path, but a rollback needs the mirror <em>flushed</em>
+        /// before the flip, not merely running: any entry still pending when a group goes back to
+        /// Redis is a PostgreSQL write that Redis never received. This is also what makes the
+        /// rollback rehearsal deterministic rather than a race against a timer.
+        /// </para>
+        /// </summary>
+        internal async Task<int> DrainAsync(int maxEntries = 10_000,
+            CancellationToken cancellationToken = default)
+        {
+            var applied = 0;
+            while (applied < maxEntries)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var entry = await ClaimAsync();
+                if (entry == null) return applied;
+                await ApplyAsync(entry);
+                await CompleteAsync(entry.Id);
+                applied++;
+            }
+            return applied;
+        }
+
         internal void Stop(TimeSpan timeout)
         {
             _cts.Cancel();
