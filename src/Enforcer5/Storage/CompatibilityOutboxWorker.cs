@@ -246,6 +246,23 @@ RETURNING id, domain, operation, payload::text AS payload",
                     }
                     if (kind == "ban" || kind == "tempban")
                     {
+                        // Symmetric with the add below, which writes three keys. Removing only the
+                        // set left the expiry string and the global hash row behind, so Redis still
+                        // showed the user as tempbanned after an unban - a rollback would have
+                        // restored a ban that had been lifted, and any later re-read of Redis would
+                        // have resurrected it outright.
+                        //
+                        // The global row is found through the expiry string, which holds the hash
+                        // field verbatim. Without reading it first there is no way to know which
+                        // field to delete, which is exactly why RemoveTempBan does the same.
+                        var expiryKey = $"chat:{sanctionGroupId}:tempbanned:{userId}";
+                        var field = await Redis.db.StringGetAsync(expiryKey);
+                        if (field.HasValue)
+                        {
+                            await Redis.db.HashDeleteAsync("tempbanned", field.ToString());
+                            await Redis.db.HashDeleteAsync("tempbannedPremium", field.ToString());
+                        }
+                        await Redis.db.KeyDeleteAsync(expiryKey);
                         await Redis.db.SetRemoveAsync($"chat:{sanctionGroupId}:tempbanned", userId);
                         await Redis.db.SetRemoveAsync($"chat:{sanctionGroupId}:tempbannedPremium", userId);
                     }

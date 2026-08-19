@@ -1359,3 +1359,39 @@ behaviour Redis has today.
 
 **`--apply` has not been run** against the rehearsal copy. The dry run is reported above; writing to
 the dataset is a deliberate step, not a side effect of measuring.
+
+### 21.4 No, there is no final re-read of tempbans
+
+The obvious closing move once every group has cut over - re-read the tempbans from Redis one last
+time and call the domain done - is **not safe, and is not necessary**.
+
+**Not safe.** A re-read is a *write*. `SanctionRepository.UpsertAsync` resolves conflicts on
+`legacy_key` with `status = EXCLUDED.status`, and a record read out of Redis always looks active. So
+re-reading a legacy key whose row is currently `revoked` sets it back to `active` - **every tempban
+lifted after its group cut over would be resurrected.**
+
+That was made worse by an asymmetry in the mirror, now fixed. The add wrote three keys - the global
+hash row, the per-group set and the expiry string - but the resolve removed only the set. So after an
+unban Redis still showed the user as tempbanned via the two keys a re-read would consult. The same
+asymmetry also meant a *rollback* after an unban restored a ban that had been lifted. The resolve
+now removes all three, finding the global row through the expiry string exactly as `RemoveTempBan`
+does, because that string holds the hash field verbatim and there is otherwise no way to know which
+field to delete.
+
+**Not necessary.** Once a group is on PostgreSQL, every new tempban for it is written to PostgreSQL
+by the routed `RecordSanctionAsync` and projected back into Redis by the mirror. Redis is a
+*derivative* at that point, not an independent source, so a re-read cannot find anything PostgreSQL
+does not already have. Anything predating the cutover was copied by the cutover itself, which reads
+both sources unioned.
+
+**What to do instead: reconcile, do not re-read.** The distinction is the whole point.
+
+```text
+re-read    writes Redis into PostgreSQL   -> resurrects revoked sanctions
+reconcile  compares the two               -> reports divergence, changes nothing
+```
+
+Reconciliation's `missing` count - records present in Redis and absent from PostgreSQL - is exactly
+the question a final re-read was trying to answer, and it answers it without touching state. A
+tempban domain that reconciles with `missing = 0` twice is done. That is the gate, and it already
+exists.

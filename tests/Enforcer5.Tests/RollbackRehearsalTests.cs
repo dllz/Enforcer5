@@ -53,9 +53,13 @@ public sealed class RollbackRehearsalTests
 
             // The paths that were gated on the process-wide flag.
             await ReportPolicyStore.SetReporterBlockedAsync(chatId, userId, true);
-            await OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.Ban);
-            await OperationsStore.RecordSanctionResolvedAsync(chatId, userId, SanctionKinds.Ban);
             await OperationsStore.RecordMessageAsync(userId, chatId, DateTimeOffset.UtcNow);
+
+            // A tempban imposed and then lifted. This exercises all three keys the mirror writes,
+            // which is what makes the asymmetry detectable - the revoke used to remove only the set.
+            await OperationsStore.RecordSanctionAsync(chatId, userId, SanctionKinds.TempBan, null,
+                DateTimeOffset.UtcNow.AddDays(1));
+            await OperationsStore.RecordSanctionResolvedAsync(chatId, userId, SanctionKinds.TempBan);
 
             // --- flush the mirror, then roll back ------------------------------------------
             var applied = await new CompatibilityOutboxWorker(database).DrainAsync();
@@ -74,9 +78,15 @@ public sealed class RollbackRehearsalTests
             // Report policy - was unmirrored.
             Assert.True(await Redis.db.SetContainsAsync($"chat:{chatId}:reportblocked", userId));
 
-            // The ban was imposed and then lifted. Both halves have to have reached Redis: if only
-            // the ban mirrored, the rollback would leave a user banned who had been unbanned.
-            Assert.False(await Redis.db.SetContainsAsync($"chat:{chatId}:banned", userId));
+            // The tempban was imposed and then lifted, so every key the add wrote must be gone.
+            // Asserting on the set alone would have passed while the expiry string and the global
+            // hash row survived - and those two are precisely what a later re-read of Redis would
+            // consult, so leaving them is what would resurrect a lifted ban.
+            Assert.False(await Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId));
+            Assert.False(await Redis.db.KeyExistsAsync($"chat:{chatId}:tempbanned:{userId}"));
+            var globalRows = (await Redis.db.HashGetAllAsync("tempbanned"))
+                .Count(x => x.Value.ToString().StartsWith($"{chatId}:{userId}:", StringComparison.Ordinal));
+            Assert.Equal(0, globalRows);
 
             // Per-group message total - was unmirrored, along with the user total it moves with.
             Assert.Equal("1",
@@ -137,6 +147,7 @@ public sealed class RollbackRehearsalTests
             $"chat:{chatId}:settings", $"chat:{chatId}:warns", $"chat:{chatId}:totalWarns",
             $"chat:{chatId}:mod", $"chat:{chatId}:watch", $"chat:{chatId}:reportblocked",
             $"chat:{chatId}:banned", $"chat:{chatId}:userlast", $"chat:{chatId}:chatlast",
+            $"chat:{chatId}:tempbanned",
             $"compat:group-settings:{chatId}:settings:revision", GroupDrainBuffer.KeyFor(chatId)
         };
         try
@@ -150,7 +161,22 @@ public sealed class RollbackRehearsalTests
         }
         finally
         {
+            // The per-user expiry keys carry a generated id, so they are swept rather than listed.
+            var cursor = "0";
+            do
+            {
+                var page = (RedisResult[])await Redis.db.ExecuteAsync("SCAN", cursor, "MATCH",
+                    $"chat:{chatId}:tempbanned:*", "COUNT", 1000);
+                cursor = page[0].ToString();
+                foreach (var key in (RedisResult[])page[1]) keys.Add(key.ToString());
+            } while (cursor != "0");
+
             await Redis.db.KeyDeleteAsync(keys.ToArray());
+            foreach (var hash in new[] { "tempbanned", "tempbannedPremium" })
+                foreach (var entry in await Redis.db.HashGetAllAsync(hash))
+                    if (entry.Value.ToString().StartsWith($"{chatId}:", StringComparison.Ordinal))
+                        await Redis.db.HashDeleteAsync(hash, entry.Name);
+
             await admin.ExecuteAsync($"DROP SCHEMA \"{schema}\" CASCADE");
             GroupMigrationStateStore.ResetForTests();
         }
