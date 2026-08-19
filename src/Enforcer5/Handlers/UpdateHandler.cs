@@ -550,6 +550,10 @@ namespace Enforcer5.Handlers
                 if (updateMessage?.Chat.Type != ChatType.Private)
                 {
                     await PrincipalContentStore.ObserveGroupAsync(updateMessage.Chat);
+                    // Offers the group for priority cutover. No I/O and no blocking: a dictionary
+                    // lookup and a bounded enqueue, and a no-op entirely until traffic-triggered
+                    // cutover is switched on.
+                    Storage.Cutover.GroupCutoverCrawler.Observe(updateMessage.Chat.Id);
                     await RunPendingMigrations(ctx);
                 }
             }

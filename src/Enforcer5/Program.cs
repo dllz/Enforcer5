@@ -31,6 +31,8 @@ namespace Enforcer5
         private static System.Threading.Timer _postgresTempbanJob;
         private static PostgresDatabase _operationsDatabase;
         private static PostgresTempBanDueWorker _postgresTempBanWorker;
+        private static System.Threading.Timer _cutoverJob;
+        private static Storage.Cutover.GroupCutoverCrawler _cutoverCrawler;
         internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
         public static void Main(string[] args)
@@ -157,11 +159,25 @@ namespace Enforcer5
                 _postgresTempbanJob = new System.Threading.Timer(_ => Bot.Dispatch(
                     () => _postgresTempBanWorker.ProcessDueAsync(100, DateTimeOffset.UtcNow, Bot.ShutdownToken),
                     "PostgresTempBanWorker"), null, wait, wait);
+
+                // Stage C. Off unless deliberately enabled, so deploying this build changes nothing
+                // and the crawler cannot start moving groups on its own.
+                if (RegHelper.GetInt("GroupCutoverBudget", 0) > 0)
+                {
+                    _cutoverCrawler = new Storage.Cutover.GroupCutoverCrawler(_operationsDatabase,
+                        $"{Environment.MachineName}-{OperationsStore.CurrentEdition}");
+                    var crawlInterval = TimeSpan.FromSeconds(
+                        Math.Clamp(RegHelper.GetInt("GroupCutoverIntervalSeconds", 60), 5, 3600));
+                    _cutoverJob = new System.Threading.Timer(_ => Bot.Dispatch(
+                        () => _cutoverCrawler.RunOnceAsync(RegHelper.GetInt("GroupCutoverBudget", 0),
+                            Bot.ShutdownToken), "GroupCutoverCrawler"), null, crawlInterval, crawlInterval);
+                }
             }
             ShutdownRequested.Wait();
             _timer?.Dispose();
             _tempbanJob?.Dispose();
             _postgresTempbanJob?.Dispose();
+            _cutoverJob?.Dispose();
             _operationsDatabase?.DisposeAsync().AsTask().GetAwaiter().GetResult();
             // _operationsDatabase is a shared instance, so its own dispose is a no-op. The pools
             // themselves are process-owned and released here.
