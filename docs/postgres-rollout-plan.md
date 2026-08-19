@@ -692,8 +692,8 @@ when the bot is re-added.
 | - | Sanction `active`-state remodel, without which the loader can resurrect an unban | **Already satisfied.** `sanctions` and `global_sanctions` were always status rows (`active`/`due`/`revoked`/`completed`) and are never hard-deleted - verified, no `DELETE FROM` exists for either. |
 | H6 | `ban:{userId}` (121,061 keys) still not migrated by anything | **Fixed.** `account_moderation_counters` plus a reader, repository and backfill path. Absolute values are carried, never increments, so a re-run converges. Regression tested. |
 | - | Operations domain migration has never completed a full run | **Done.** Completed twice against the full rehearsal copy - 54m42s then 38m39s - with zero blocking errors and identical counts, so it converges rather than duplicating. See section 17. |
-| - | Reconciliation never run twice clean across all domains | **Outstanding** |
-| - | Rollback never rehearsed | **Outstanding** |
+| - | Reconciliation never run twice clean across all domains | **Three of four clean twice.** moderation, principal-content and group-settings all report zero mismatches on both passes. Operations reports 58 missing on pass 2 - see section 24. |
+| - | Rollback never rehearsed | **Rehearsed.** Flip, write, drain the mirror, flip back, verify Redis holds everything - with a negative control proving the test can fail. Section 20. Not yet rehearsed under live traffic. |
 
 ### Measurement caveat
 
@@ -1569,3 +1569,39 @@ every drain was empty - `0 drained keys` throughout. The drain path, the buffer 
 abort-and-revert on overflow have unit coverage but have never run against a group that was being
 written to. That is the next thing to rehearse, and it needs a load generator rather than a bigger
 dataset.
+
+---
+
+## 24. Reconciliation pass 2
+
+Run against Redis **6.0.9** with the production dump.
+
+```text
+moderation          mismatches = 0                                    clean
+principal-content   mismatches = 0                                    clean
+group-settings      443,920 / 443,920, mismatches = 0, failures = 0   clean
+operations          orphans = 4, missing = 58, value-mismatches = 0   see below
+```
+
+### 24.1 The 58, and why they are the point
+
+All 29 of the `missing` records are `redis:chat:{g}:tempbanned:{u}` - the per-group tempban keys that
+**only the section 21 union fix reads** - plus their 29 audit events. The last operations *backfill*
+predates that fix, so PostgreSQL genuinely does not hold them.
+
+So this is not a regression. It is the new two-directional compare doing exactly what it was built
+for: **the previous one-directional reconcile would have reported this clean**, because it only ever
+looked for PostgreSQL rows absent from Redis. A gap of 29 live tempbans would have passed the gate.
+
+None of the 29 belong to an already-migrated group. `orphans = 4` is drift from replacing the Redis
+container with the pristine dump, which holds ~364k fewer keys than the instance it replaced.
+
+**To close it:** re-run `migrate operations backfill`, which now unions both sources, then reconcile.
+Roughly fifty minutes each.
+
+### 24.2 Two operational lessons, both self-inflicted
+
+- **Do not build or test while a migration runs.** `dotnet test` rebuilds `Enforcer.dll`, and the
+  next `dotnet Enforcer.dll` invocation fails in the CLI parser rather than in the app.
+- **Check `pgrep -f 'Enforcer.dll migrate'` before touching a container.** Swapping the Redis
+  container killed an operations reconcile 62 minutes in, and group-settings before it started.
