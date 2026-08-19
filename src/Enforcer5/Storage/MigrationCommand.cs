@@ -61,6 +61,20 @@ namespace Enforcer5.Storage
         }
 
         /// <summary>
+        /// <c>migrate tempban-index [--apply]</c>. Dry run by default, because it writes to Redis.
+        /// </summary>
+        internal static bool IsTempBanIndex(string[] args, out bool apply)
+        {
+            apply = false;
+            if (args == null || args.Length is not (2 or 3) ||
+                !string.Equals(args[0], "migrate", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(args[1], "tempban-index", StringComparison.OrdinalIgnoreCase)) return false;
+            if (args.Length == 2) return true;
+            apply = string.Equals(args[2], "--apply", StringComparison.OrdinalIgnoreCase);
+            return apply;
+        }
+
+        /// <summary>
         /// <c>migrate inventory [--fresh]</c>. A bare run resumes an unfinished pass; <c>--fresh</c>
         /// forces a new generation, which is what Stage C needs when it wants an inventory strictly
         /// newer than a group's drain start.
@@ -120,6 +134,22 @@ namespace Enforcer5.Storage
         }
 
         /// <summary>
+        /// Materialises per-group tempban keys for anything held only in the process-wide hash, so
+        /// that per-group work stops needing to read the whole estate.
+        /// </summary>
+        private static async Task<int> RunTempBanIndexAsync(bool apply)
+        {
+            if (!Redis.Start()) throw new InvalidOperationException("Redis is unavailable.");
+            var result = await Loading.TempBanIndexMaterialiser.RunAsync(apply);
+            Console.WriteLine(
+                $"Tempban index{(apply ? string.Empty : " (dry run, pass --apply to write)")}: " +
+                $"global={result.GlobalEntries}, already-per-group={result.AlreadyPerGroup}, " +
+                $"materialised={result.Materialised}, lapsed={result.Lapsed}, " +
+                $"malformed={result.Malformed}, orphaned-duplicates={result.OrphanedDuplicates}");
+            return 0;
+        }
+
+        /// <summary>
         /// The Stage B user and global tier load. Requires a completed inventory generation - a
         /// partial one would silently migrate a subset and report success.
         /// </summary>
@@ -165,6 +195,7 @@ namespace Enforcer5.Storage
         {
             if (IsSchemaMigration(args)) return await RunSchemaAsync();
             if (IsInventoryScan(args, out var fresh)) return await RunInventoryAsync(fresh);
+            if (IsTempBanIndex(args, out var applyIndex)) return await RunTempBanIndexAsync(applyIndex);
             if (IsUserTierMigration(args, out var userTierReconcile))
                 return await RunUserTierAsync(userTierReconcile);
             MigrationCommandOptionsParser.TryParse(args, out var options);

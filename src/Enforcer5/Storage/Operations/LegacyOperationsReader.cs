@@ -19,8 +19,15 @@ namespace Enforcer5.Storage.Operations
             var capturedAt = DateTimeOffset.UtcNow;
             var groupIds = knownGroupIds.Distinct().ToHashSet();
             var userIds = knownUserIds.Distinct().ToArray();
-            await ReadTempBansAsync("tempbanned", Editions.Normal, groupIds, snapshot, capturedAt, cancellationToken);
-            await ReadTempBansAsync("tempbannedPremium", Editions.Premium, groupIds, snapshot, capturedAt, cancellationToken);
+            // The global hashes and the per-group keys have diverged in BOTH directions - measured
+            // on the production copy: 102 global pairs, 89 per-group, only 56 shared. Neither is a
+            // superset, so reading either alone loses tempbans. Reading the global hash alone, which
+            // is what this did, was silently dropping the 33 that exist only per group.
+            var seenTempBans = new HashSet<(long GroupId, long UserId)>();
+            await ReadTempBansAsync("tempbanned", Editions.Normal, groupIds, snapshot, capturedAt,
+                seenTempBans, cancellationToken);
+            await ReadTempBansAsync("tempbannedPremium", Editions.Premium, groupIds, snapshot, capturedAt,
+                seenTempBans, cancellationToken);
             if (includeGlobalData) await ReadBotBaselineAsync(OperationsStore.CurrentEdition, snapshot, capturedAt);
 
             if (includeGlobalData) foreach (var batch in userIds.Chunk(1000))
@@ -45,6 +52,7 @@ namespace Enforcer5.Storage.Operations
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await ReadGroupAsync(groupId, snapshot, capturedAt);
+                await ReadGroupTempBansAsync(groupId, snapshot, capturedAt, seenTempBans);
                 if (reportMessageIds != null && reportMessageIds.TryGetValue(groupId, out var ids))
                     foreach (var messageId in ids.Distinct()) await ReadReportAsync(groupId, messageId, snapshot);
             }
@@ -53,7 +61,8 @@ namespace Enforcer5.Storage.Operations
 
         private static async Task ReadTempBansAsync(string hash, string edition,
             IReadOnlySet<long> groupIds, OperationsBackfillSnapshot snapshot,
-            DateTimeOffset capturedAt, CancellationToken token)
+            DateTimeOffset capturedAt, HashSet<(long GroupId, long UserId)> seen,
+            CancellationToken token)
         {
             foreach (var entry in await Redis.db.HashGetAllAsync(hash))
             {
@@ -62,6 +71,7 @@ namespace Enforcer5.Storage.Operations
                 if (!parsed.IsSuccess) { snapshot.Errors.Add(WithKey(hash, entry.Name, parsed.Error)); continue; }
                 var value = parsed.Value;
                 if (!groupIds.Contains(value.GroupId)) continue;
+                if (!seen.Add((value.GroupId, value.UserId))) continue;
                 snapshot.Sanctions.Add(new Sanction(0, value.GroupId, value.UserId,
                     SanctionKinds.TempBan, SanctionStatuses.Active,
                     edition, null, null, capturedAt, value.ExpiresAt, null, null, null,
@@ -69,6 +79,69 @@ namespace Enforcer5.Storage.Operations
                 snapshot.AuditEvents.Add(new AuditEvent(0, edition, "legacy_tempban", value.GroupId,
                     null, value.UserId, entry.Value.ToString(), capturedAt,
                     $"redis:audit:{hash}:{entry.Name}"));
+            }
+        }
+
+        /// <summary>
+        /// Tempbans held only as per-group keys, which the global hashes have lost.
+        /// <para>
+        /// <c>chat:{g}:tempbanned:{u}</c> stores the same expiry the global hash uses as its field -
+        /// it is the link <c>RemoveTempBan</c> follows to delete the global entry - so when both
+        /// exist they agree and either may be used. What differs is which survive: the global hash
+        /// is keyed by expiry <em>second</em> across every group, so two bans expiring in the same
+        /// second collide and one is overwritten. That is very likely where the per-group-only
+        /// entries come from, and it is the same defect that produced the infinite collision loop.
+        /// </para>
+        /// <para>
+        /// The member set has no TTL and so accumulates users whose ban has long since lapsed. The
+        /// expiry string does have one, set to the ban duration, so its presence is the test for
+        /// whether a tempban is still live - a missing string means the ban ended and Redis cleaned
+        /// it up.
+        /// </para>
+        /// </summary>
+        private static async Task ReadGroupTempBansAsync(long groupId,
+            OperationsBackfillSnapshot snapshot, DateTimeOffset capturedAt,
+            HashSet<(long GroupId, long UserId)> seen)
+        {
+            foreach (var (setKey, edition) in new[]
+                     {
+                         ($"chat:{groupId}:tempbanned", Editions.Normal),
+                         ($"chat:{groupId}:tempbannedPremium", Editions.Premium)
+                     })
+            {
+                foreach (var member in await ReadUserIdsAsync(setKey))
+                {
+                    if (seen.Contains((groupId, member))) continue;
+
+                    var expiryKey = $"chat:{groupId}:tempbanned:{member}";
+                    var raw = await Redis.db.StringGetAsync(expiryKey);
+                    // Absent means the TTL lapsed, so the ban is over and the stale set member is
+                    // not evidence of anything.
+                    if (!raw.HasValue) continue;
+
+                    if (!long.TryParse(raw.ToString(), NumberStyles.None, CultureInfo.InvariantCulture,
+                            out var seconds))
+                    {
+                        snapshot.Errors.Add(WithKey(expiryKey, null,
+                            new FormatException($"Tempban expiry '{raw}' is not a unix timestamp.")));
+                        continue;
+                    }
+
+                    DateTimeOffset expiresAt;
+                    try { expiresAt = DateTimeOffset.FromUnixTimeSeconds(seconds); }
+                    catch (ArgumentOutOfRangeException e)
+                    {
+                        snapshot.Errors.Add(WithKey(expiryKey, null, e));
+                        continue;
+                    }
+
+                    seen.Add((groupId, member));
+                    snapshot.Sanctions.Add(new Sanction(0, groupId, member, SanctionKinds.TempBan,
+                        SanctionStatuses.Active, edition, null, null, capturedAt, expiresAt,
+                        null, null, null, $"redis:{expiryKey}"));
+                    snapshot.AuditEvents.Add(new AuditEvent(0, edition, "legacy_tempban", groupId,
+                        null, member, raw.ToString(), capturedAt, $"redis:audit:{expiryKey}"));
+                }
             }
         }
 

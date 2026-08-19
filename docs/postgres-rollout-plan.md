@@ -1269,3 +1269,80 @@ in the migration.
 **The mirror direction is not buffered.** `CompatibilityOutboxWorker` writes the same keys when
 projecting PostgreSQL back into Redis, and those writes are not user mutations - buffering them
 would make a migrated group appear to be mutating itself.
+
+---
+
+## 21. B1 - tempbans, and why "the global hash is redundant" was wrong
+
+Section 10 item 1 assumed the per-group keys "already carry the same data, so the global hash is a
+redundant secondary index". Measured on the production copy, that is not true:
+
+```text
+global (group, user) pairs         102
+per-group expiry keys               89
+  in both                           56
+  global only                       46
+  per-group only                    33
+```
+
+**Neither is a superset**, so "pick one" was never available. Worse, the migration read *only* the
+global hash, so it was silently dropping the **33 tempbans that exist only as per-group keys** - and
+none of them are lapsed, so every one is a live ban.
+
+### 21.1 Why they diverge
+
+The global hash is keyed by expiry **second**, with the group buried in the value. Two consequences,
+both observed:
+
+- **It loses entries.** Two bans expiring in the same second collide, and one is overwritten. That
+  is the same defect that produced the infinite collision loop, and it is the most plausible source
+  of the per-group-only entries.
+- **It leaks entries.** `RemoveTempBan` deletes the global row by following the per-group key, which
+  holds the global field verbatim. When that key's TTL lapses the link is gone and the global row is
+  orphaned forever - and every re-ban of that user adds another. One user in one group holds **30**
+  entries. Across `tempbanned`, 109 entries cover 76 distinct pairs.
+
+So the two stores are not two views of one truth. They are two partial, differently-damaged records.
+
+### 21.2 What was done
+
+**(a) The migration reads both, unioned on `(group, user)`.** A pair present in both is emitted once;
+a duplicate would be two sanction rows for one ban with different legacy keys. The per-group member
+set has no TTL and accumulates users whose ban lapsed long ago, so the *expiry string* is the test
+for whether a tempban is live - a missing string means Redis already cleaned it up and the stale set
+member is not evidence of anything.
+
+**(b) `migrate tempban-index [--apply]`** gives every global-only entry a per-group home, so that
+afterwards per-group work never has to read the global hash - closing H7 without changing runtime
+behaviour. It is additive and idempotent: an existing key is never rewritten, so a re-run converges
+and a live tempban is never handed a fresh expiry. The value written is the global field verbatim,
+because `RemoveTempBan` reads it to find the row to delete; writing anything else would orphan the
+global row on the next unban.
+
+Dry run against the production copy, which reconciles exactly with the independent measurement above:
+
+```text
+global entries          141
+already per-group        56     = the 56 present in both
+would materialise        46     = the 46 present only globally
+orphaned duplicates      39     = leaked rows for a pair already handled
+lapsed                    0
+malformed                 0
+```
+
+### 21.3 Not done, and deliberately
+
+**(c) The runtime shape is still wrong.** Keyed by expiry second with the group in the value, it is
+inherently both lossy and O(estate) for any per-group question. The fix is a sorted set - score =
+expiry, member = `{groupId}:{userId}` - which makes collisions impossible because members are
+unique, gives due entries in O(log N + M) via `ZRANGEBYSCORE`, and puts the group in the member so
+per-group extraction is a prefix match. That is a change to the live ban path and is not being made
+without a decision.
+
+**Expiry data quality is bad.** Of 141 entries, **0 have lapsed, 13 expire within ten years, and 128
+expire more than ten years out** - samples land in 2085 and 2969. Either the values are corrupt or
+users were banned until the thirtieth century. This needs a disposition before Stage B; the loader
+currently carries them as-is.
+
+**`--apply` has not been run** against the rehearsal copy. The dry run is reported above; writing to
+the dataset is a deliberate step, not a side effect of measuring.
