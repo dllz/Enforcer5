@@ -684,7 +684,7 @@ when the bot is re-added.
 | B2 | No per-group lease. `MigrationMaintenanceGuard` is one global lock requiring both bots stopped | **Fixed.** `migration_group_state` plus `GroupMigrationStateStore` provide an exclusive, expiry-reclaimable per-group lease; only the holder may advance a group. Regression tested. |
 | B3 | `StorageMode` is process-global across ~80 branch sites; per-group routing does not exist | **Fixed.** `StorageRouting` splits global-tier from per-group routing; all 78 call sites converted. The only remaining `StorageModeProvider` uses are the three backfill guards that legitimately require shadow mode. Regression tested. |
 | - | The real loader. What exists is a benchmark prototype in `tools/`, not wired into `MigrationCommand`, with no resumable checkpoints or run tracking | **Built.** `Storage/Loading/`, wired as `migrate inventory` and `migrate user-tier backfill`, resumable, run-tracked. Verified end to end on the full rehearsal dataset - section 16. |
-| - | Per-group state machine, `migbuf`, crawler - the whole of Stage C | **Not built** |
+| - | Per-group state machine, `migbuf`, crawler - the whole of Stage C | **Built, not exercised at scale.** `GroupDrainBuffer`, `GroupCutoverService`, `GroupCutoverCrawler`. Off by default. See section 19. |
 | - | Sanction `active`-state remodel, without which the loader can resurrect an unban | **Already satisfied.** `sanctions` and `global_sanctions` were always status rows (`active`/`due`/`revoked`/`completed`) and are never hard-deleted - verified, no `DELETE FROM` exists for either. |
 | H6 | `ban:{userId}` (121,061 keys) still not migrated by anything | **Fixed.** `account_moderation_counters` plus a reader, repository and backfill path. Absolute values are carried, never increments, so a re-run converges. Regression tested. |
 | - | Operations domain migration has never completed a full run | **Done.** Completed twice against the full rehearsal copy - 54m42s then 38m39s - with zero blocking errors and identical counts, so it converges rather than duplicating. See section 17. |
@@ -1091,3 +1091,92 @@ complete rather than merely self-consistent.
 
 **This is one pass. The gate is two.** The second pass is what demonstrates convergence - that a
 re-run changes nothing - and it has not been run yet.
+
+---
+
+## 19. Stage C - built, and off by default
+
+Three pieces: the drain buffer, the per-group state machine, and the crawler. Both switches are off
+unless deliberately set, so deploying this changes nothing.
+
+### 19.1 The drain buffer
+
+`migbuf:{groupId}`, a **list** rather than a stream. The group-settings outbox needs a consumer
+group because two writer tasks share it; a drain buffer is read only by the holder of the group's
+lease, so `RPUSH`/`LRANGE`/`LTRIM` is the whole protocol - and `XAUTOCLAIM`, which 6.0.9 does not
+have, never enters the picture.
+
+It carries **coordinates, not values**. Re-reading a key converges on current truth however many
+times it changed; replaying a delta after a crash double-counts. Same reasoning as the outbox.
+
+**Overflow abandons the cutover, never the user's write.** This is the deliberate opposite of
+`GroupSettingsStore`, where outbox backpressure fails the mutation. That is defensible for a shadow
+write; here the caller is a live moderation action, and failing it would make the migration a
+user-visible event. A lost cutover attempt costs nothing, so it is the cheap failure to take.
+
+The plan said the `migbuf` append would be *"the only Lua change in the whole rollout"*. That was
+only true if group settings were the only group-scoped mutation, and there are roughly sixty such
+write sites. What was actually done:
+
+- **Settings mutate through Lua**, so their append is atomic with the write. This is the only
+  group-scoped path where a crash cannot leave a hole in the buffer. The capacity argument is `0`
+  when the group is not being copied - every group, for almost all of the migration - so the common
+  path costs one integer comparison.
+- **Warnings, roles, policies and per-group statistics append after their write.** A crash in that
+  window loses the record of a mutation, which the **verify step catches**: reconciliation runs
+  before the flip and a mismatch sends the group back to `Redis`. That is what the `Failed -> Redis`
+  path is for, and it is why a failed cutover has to be free.
+
+### 19.2 The state machine
+
+`Redis -> Draining -> Verifying -> Postgres`, with `Failed -> Redis`. Redis stays authoritative until
+the final transition, so a failed attempt leaves the group being served correctly and the PostgreSQL
+rows inert - the next attempt overwrites them.
+
+The copy runs **outside any lock** and reuses the four existing per-domain backfills, which already
+accept a single group. One implementation of each domain's mapping, so a fix reaches both the bulk
+path and the cutover. Freeze duration is proportional to the drain buffer, never to group size,
+which is what makes the 528,056-key outlier no worse than the median.
+
+Two guards worth naming:
+
+- **The drain gives up** rather than looping forever. A group mutating faster than it can be drained
+  releases its lease instead of holding it indefinitely.
+- **The freshness rule is enforced.** A group whose inventory generation predates its drain start is
+  refused, because keys created between the two are in neither.
+
+Abandonment is the one transition that does not require the lease, because it is raised by the
+*writer* path which has none and cannot obtain one on the message hot path. It is safe only because
+it can exclusively move a group **back** to `Redis`; a group that has already flipped is serving
+reads from PostgreSQL and reverting it underneath them would lose writes. Guarded by
+`state <> 'Postgres'` and pinned by a test.
+
+### 19.3 The crawler
+
+Smallest-first from the inventory, plus a bounded fast-track queue fed by live traffic - the two
+producers meeting in the middle that section 6.3 describes. Smallest-first so burn-down moves early
+and any systematic defect surfaces on cheap groups rather than on the largest.
+
+`Observe()` sits on the message path and does no I/O: a dictionary lookup and a bounded enqueue. The
+bound matters - an unbounded queue on the hot path is a memory leak with extra steps, and once it is
+full the crawler is saturated anyway.
+
+It registers as a `Cursor`-class durable writer and gates **per group rather than per batch**, so a
+quiesce waits for one group instead of the whole budget.
+
+**Both halves are off by default.** The crawler needs `GroupCutoverBudget` to start at all, and
+traffic-triggered cutover needs `GroupTrafficCutoverEnabled` on top. Enabling both at once would put
+any systematic defect straight onto the busiest groups in the estate; the plan calls for several
+thousand clean crawler groups first.
+
+### 19.4 What is not done
+
+- **No group has been cut over at scale.** The machinery is tested for its safety properties -
+  refusal without an inventory, lease exclusion, failure leaving the group on Redis, abandonment not
+  un-flipping a migrated group - but an end-to-end cutover of a real group against the rehearsal
+  copy has not been run.
+- **The unrouted group-scoped write sites are not all wired.** The tempban complex in particular
+  (`chat:{id}:tempbanned`, the per-user TTL keys, and the process-wide `tempbanned` hash), plus
+  `userJoin`, `modlog`, mute keys and `Service.cs:333,337` which writes warns directly, bypassing
+  `WarningStore`. Each still needs an explicit buffered / excluded decision.
+- **Rollback has not been rehearsed.**
