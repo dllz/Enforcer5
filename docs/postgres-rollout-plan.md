@@ -1395,3 +1395,40 @@ Reconciliation's `missing` count - records present in Redis and absent from Post
 the question a final re-read was trying to answer, and it answers it without touching state. A
 tempban domain that reconciles with `missing = 0` twice is done. That is the gate, and it already
 exists.
+
+### 21.5 How long tempbans stay in Redis, and why
+
+Not "long term". They stay exactly as long as rollback does, and for the same reason - which makes
+them no different from any other mirrored domain.
+
+The lifecycle, once a group has cut over:
+
+```text
+global tempbanned hash     no reader for this group at all
+                           Methods.CheckTempBans skips groups PostgreSQL owns (Methods.cs:979),
+                           and PostgresTempBanDueWorker reads the sanctions table
+
+chat:{g}:tempbanned        read by the runtime ban paths and by a rollback
+chat:{g}:tempbanned:{u}    read by RemoveTempBan to find the global row to delete
+```
+
+So the per-group keys are live until the rollback horizon closes, and the global row exists purely so
+that a *rolled-back* group's tempbans can still be expired - `CheckTempBans` iterates that hash, so a
+group returned to Redis without its entries would never unban anyone.
+
+That horizon is `PostgresOnly`. It stops mirroring, Redis stops being current, and the tempban keys
+go stale along with the rest of the Redis read path - which is deleted after the soak. There is no
+separate "keep tempbans forever" decision to make; the answer falls out of the mode.
+
+**The mirror still had to write that global row safely, and did not.** The index is keyed by expiry
+second across every group, so two bans expiring in the same second contend for one field. The runtime
+ban path walks forward to a free slot; the mirror used a plain `HSET`. The entry it overwrote could
+belong to a group that had **not** migrated - whose entry is the one the Redis expiry worker still
+reads - so that user would simply never be unbanned.
+
+The mirror now claims a slot with the same walk-forward semantics, in Lua so the find-and-set is
+atomic, reusing a slot that already holds the identical value so a repeated mirror is idempotent
+rather than shifting the entry forward each time. The per-user key stores the slot actually claimed
+rather than the requested expiry, because `RemoveTempBan` reads it to find the row to delete.
+
+Both fixes are pinned by tests that were verified to fail against the previous behaviour.

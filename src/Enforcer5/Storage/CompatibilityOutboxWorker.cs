@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Dapper;
 using Enforcer5.Helpers;
 using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace Enforcer5.Storage
 {
@@ -18,6 +19,30 @@ namespace Enforcer5.Storage
         private static readonly Cutover.DurableWriter MirrorWriter =
             Cutover.QuiesceBarrier.Register("redis-rollback-mirror",
                 Cutover.WriterResumeClass.Cursor);
+
+        /// <summary>
+        /// Claims a free slot in the global tempban index, walking forward from the requested
+        /// expiry, and returns the second actually used.
+        /// <para>
+        /// The index is keyed by expiry second across every group, so two bans expiring in the same
+        /// second contend for one field. A slot already holding this exact value is reused, which
+        /// makes a repeated mirror of the same sanction idempotent rather than shifting it forward
+        /// each time.
+        /// </para>
+        /// </summary>
+        private const string ClaimTempBanSlotScript = @"
+local slot = tonumber(ARGV[1])
+local value = ARGV[2]
+local limit = tonumber(ARGV[3])
+for i = 0, limit do
+  local existing = redis.call('HGET', KEYS[1], tostring(slot))
+  if (not existing) or existing == value then
+    redis.call('HSET', KEYS[1], tostring(slot), value)
+    return slot
+  end
+  slot = slot + 1
+end
+return -1";
 
         internal CompatibilityOutboxWorker(PostgresDatabase database)
         {
@@ -278,9 +303,27 @@ RETURNING id, domain, operation, payload::text AS payload",
                     var groupKey = edition == "premium"
                         ? $"chat:{sanctionGroupId}:tempbannedPremium"
                         : $"chat:{sanctionGroupId}:tempbanned";
-                    await Redis.db.HashSetAsync(indexKey, expiry, $"{sanctionGroupId}:{userId}::");
+
+                    // The global index is keyed by expiry second across every group, so a plain
+                    // HSET here silently evicts whoever already occupies that second. The runtime
+                    // ban path walks forward to a free slot; this did not, and the entry it would
+                    // overwrite may belong to a group that has NOT migrated - whose entry is the
+                    // one the Redis expiry worker still reads. That user would then never be
+                    // unbanned.
+                    var slot = (long)await Redis.db.ScriptEvaluateAsync(ClaimTempBanSlotScript,
+                        new RedisKey[] { indexKey },
+                        new RedisValue[] { expiry, $"{sanctionGroupId}:{userId}::", 86_400 });
+                    if (slot < 0)
+                    {
+                        LogHelper.Error($"Mirroring tempban for {sanctionGroupId}:{userId} found no " +
+                                        "free slot in the global index; per-group keys written only.");
+                        slot = expiry;
+                    }
+
                     await Redis.db.SetAddAsync(groupKey, userId);
-                    await Redis.db.StringSetAsync($"chat:{sanctionGroupId}:tempbanned:{userId}", expiry,
+                    // Stores the slot actually claimed, not the requested expiry. RemoveTempBan
+                    // reads this to find the global row to delete, so a mismatch orphans it.
+                    await Redis.db.StringSetAsync($"chat:{sanctionGroupId}:tempbanned:{userId}", slot,
                         DateTimeOffset.FromUnixTimeSeconds(expiry) - DateTimeOffset.UtcNow);
                 }
                 return;

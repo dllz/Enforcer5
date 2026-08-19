@@ -120,6 +120,62 @@ public sealed class RollbackRehearsalTests
         });
     }
 
+    [RedisPostgresFact]
+    public async Task MirroringATempBanDoesNotEvictAnotherGroupsEntryFromTheGlobalIndex()
+    {
+        // The global index is keyed by expiry second across every group, so two bans expiring in
+        // the same second contend for one field. The runtime ban path walks forward to a free slot;
+        // the mirror used a plain HSET and did not. The entry it overwrote could belong to a group
+        // that has NOT migrated - whose entry is the one the Redis expiry worker still reads - so
+        // that user would never be unbanned.
+        var migrated = -1006600000000L - Random.Shared.NextInt64(1, 1_000_000);
+        var bystander = -1006600000000L - Random.Shared.NextInt64(1_000_001, 2_000_000);
+        var migratedUser = 877_000_000L + Random.Shared.NextInt64(1, 1_000_000);
+        var bystanderUser = 888_000_000L + Random.Shared.NextInt64(1, 1_000_000);
+
+        await InEnvironmentAsync(migrated, async (database, config) =>
+        {
+            GroupMigrationStateStore.ApplyLocal(migrated, GroupMigrationState.Postgres);
+            var expiresAt = DateTimeOffset.UtcNow.AddDays(1);
+            var second = expiresAt.ToUnixTimeSeconds();
+
+            // A group still on Redis already occupies that second.
+            await Redis.db.HashSetAsync("tempbanned", second, $"{bystander}:{bystanderUser}:Nick:Group");
+
+            await OperationsStore.RecordSanctionAsync(migrated, migratedUser, SanctionKinds.TempBan,
+                null, expiresAt);
+            await new CompatibilityOutboxWorker(database).DrainAsync();
+
+            try
+            {
+                // The bystander's entry must survive untouched - it is the one with a live reader.
+                Assert.Equal($"{bystander}:{bystanderUser}:Nick:Group",
+                    (await Redis.db.HashGetAsync("tempbanned", second)).ToString());
+
+                // And the mirrored ban must still be findable, in the next free slot.
+                var mirrored = (await Redis.db.HashGetAllAsync("tempbanned"))
+                    .Where(x => x.Value.ToString().StartsWith($"{migrated}:{migratedUser}:",
+                        StringComparison.Ordinal))
+                    .ToArray();
+                var slot = Assert.Single(mirrored);
+                Assert.NotEqual(second.ToString(), slot.Name.ToString());
+
+                // The per-user key stores the slot actually claimed, not the requested expiry -
+                // RemoveTempBan reads it to find the row to delete, so a mismatch orphans it.
+                Assert.Equal(slot.Name.ToString(),
+                    (await Redis.db.StringGetAsync($"chat:{migrated}:tempbanned:{migratedUser}")).ToString());
+            }
+            finally
+            {
+                await Redis.db.HashDeleteAsync("tempbanned", second.ToString());
+                foreach (var entry in await Redis.db.HashGetAllAsync("tempbanned"))
+                    if (entry.Value.ToString().StartsWith($"{migrated}:", StringComparison.Ordinal))
+                        await Redis.db.HashDeleteAsync("tempbanned", entry.Name);
+                await Redis.db.KeyDeleteAsync($"chat:{migrated}:tempbanned:{migratedUser}");
+            }
+        });
+    }
+
     private static async Task InEnvironmentAsync(long chatId,
         Func<PostgresDatabase, GlobalConfigScope, Task> body)
     {
