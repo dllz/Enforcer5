@@ -250,6 +250,10 @@ WHERE sanction_id = (SELECT sanction_id FROM sanctions WHERE group_id = @GroupId
                     occurredAt.LocalDateTime.Ticks),
                 Redis.db.StringSetAsync($"chat:{groupId}:chatlast",
                     occurredAt.LocalDateTime.Ticks));
+
+            // chat:{userId} is user-tier and is not buffered - it does not belong to this group.
+            await Cutover.GroupDrainBuffer.AppendAsync(groupId.Value, $"{groupId}:users:{userId}");
+            await Cutover.GroupDrainBuffer.AppendAsync(groupId.Value, $"chat:{groupId}:userlast");
         }
 
         private static bool ShadowEnabled =>

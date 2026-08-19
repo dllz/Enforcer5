@@ -90,7 +90,7 @@ SELECT EXISTS (
             var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
-                await SetRedisAsync(RedisKey(groupId, role), userId, active);
+                await SetRedisAsync(groupId, RedisKey(groupId, role), userId, active);
                 if (route.WritePostgres) await SetPostgresRoleAsync(groupId, userId, role, active);
                 return;
             }
@@ -115,7 +115,7 @@ SELECT EXISTS (
             var route = CurrentRoute(groupId);
             if (route.ReadRedis)
             {
-                await SetRedisAsync(RedisKey(groupId, DurableRole.ElevationBlocked), userId, active);
+                await SetRedisAsync(groupId, RedisKey(groupId, DurableRole.ElevationBlocked), userId, active);
                 if (route.WritePostgres) await SetPostgresElevationBlockAsync(groupId, userId, active);
                 return;
             }
@@ -135,10 +135,12 @@ SELECT EXISTS (
                 await repository.RevokeAsync(groupId, userId);
         }
 
-        private static async Task SetRedisAsync(string key, long userId, bool active)
+        private static async Task SetRedisAsync(long groupId, string key, long userId, bool active)
         {
             if (active) await Redis.db.SetAddAsync(key, userId);
             else await Redis.db.SetRemoveAsync(key, userId);
+            // Records the change for an in-flight copy. No-op unless this group is draining.
+            await Cutover.GroupDrainBuffer.AppendAsync(groupId, key);
         }
 
         private static RoleStoreRoute CurrentRoute(long groupId) => GetRoute(StorageRouting.EffectiveGroupMode(groupId),

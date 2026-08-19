@@ -4,12 +4,29 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
+using Enforcer5.Storage.Cutover;
 using StackExchange.Redis;
 
 namespace Enforcer5.Storage
 {
     internal static class GroupSettingsStore
     {
+        /// <summary>
+        /// Mutate, bump the revision, and record the change for both consumers, atomically.
+        /// <para>
+        /// <c>ARGV[8]</c> carries the drain-buffer capacity, or <c>0</c> when the group is not being
+        /// copied - which is every group for almost all of the migration, so the common path costs
+        /// one integer comparison. When a copy <em>is</em> in flight the mutated key is appended to
+        /// <c>KEYS[4]</c> in the same script as the mutation, which is the only way to guarantee the
+        /// copy cannot miss a write that happened while it ran.
+        /// </para>
+        /// <para>
+        /// Overflow of the drain buffer returns <c>-1</c> in the revision slot rather than an error:
+        /// the mutation has to succeed regardless, because it is a live moderation action, and the
+        /// caller abandons the cutover instead. That is the opposite choice from the outbox check
+        /// above, which rejects the mutation - defensible there because it guards a shadow write.
+        /// </para>
+        /// </summary>
         private const string MutateScript = @"
 if ARGV[4] == '1' and redis.call('XLEN', KEYS[3]) >= tonumber(ARGV[7]) then
   return redis.error_reply('group-settings PostgreSQL outbox capacity reached')
@@ -28,9 +45,19 @@ local revision = redis.call('INCR', KEYS[2])
 if ARGV[4] == '1' then
   redis.call('XADD', KEYS[3], '*', 'chatId', ARGV[5], 'settingGroup', ARGV[6])
 end
+local drained = 0
+local cap = tonumber(ARGV[8])
+if cap > 0 then
+  if redis.call('LLEN', KEYS[4]) >= cap then
+    drained = -1
+  else
+    redis.call('RPUSH', KEYS[4], KEYS[1])
+    drained = 1
+  end
+end
 local exists = redis.call('EXISTS', KEYS[1])
 local fields = redis.call('HGETALL', KEYS[1])
-return {result, revision, exists, fields}";
+return {result, revision, exists, fields, drained}";
 
         private const string ObserveScript = @"
 local revision = redis.call('INCR', KEYS[2])
@@ -266,13 +293,21 @@ return 1";
             if (ShadowEnabled) await EnsureWriterStartedAsync();
             var redisKey = $"chat:{chatId}:{settingGroup}";
             var revisionKey = $"compat:group-settings:{chatId}:{settingGroup}:revision";
+            var draining = StorageRouting.GroupRequiresDrainBuffer(chatId);
             var raw = (RedisResult[])await Redis.db.ScriptEvaluateAsync(MutateScript,
-                new RedisKey[] { redisKey, revisionKey, OutboxStream },
+                new RedisKey[]
+                {
+                    redisKey, revisionKey, OutboxStream, GroupDrainBuffer.KeyFor(chatId)
+                },
                 new RedisValue[]
                 {
                     operation, field, value, ShadowEnabled ? "1" : "0", chatId, settingGroup,
-                    OutboxCapacity
+                    OutboxCapacity, draining ? GroupDrainBuffer.Capacity : 0
                 });
+            // The mutation has already landed either way; only the cutover is in doubt.
+            if (draining && raw.Length > 4 && (long)raw[4] == -1)
+                await GroupMigrationStateStore.AbandonAsync(chatId,
+                    "drain buffer reached capacity during a settings mutation");
             return raw;
         }
 

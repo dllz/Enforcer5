@@ -166,6 +166,41 @@ UPDATE migration_group_state
             return updated;
         }
 
+        /// <summary>
+        /// Takes a group out of the migration without holding its lease.
+        /// <para>
+        /// Every other transition requires the lease, so that a stale migrator cannot disturb a
+        /// group another one is working on. Abandonment is the deliberate exception: it is raised
+        /// by the <em>writer</em> path when a mutation could not be buffered, which has no lease and
+        /// no way to obtain one on the message hot path. It is safe because it only ever moves a
+        /// group back to <see cref="GroupMigrationState.Redis"/> - the state that costs nothing and
+        /// that an interrupted cutover would reach anyway.
+        /// </para>
+        /// </summary>
+        internal static async Task AbandonAsync(PostgresDatabase database, long telegramChatId,
+            string reason, CancellationToken cancellationToken = default)
+        {
+            ApplyLocal(telegramChatId, GroupMigrationState.Redis);
+            await using var connection = await database.OpenConnectionAsync(cancellationToken);
+            await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE migration_group_state
+   SET state = 'Redis', last_error = @Reason, lease_owner = NULL, lease_expires_at = NULL,
+       chunk_cursor = 0, updated_at = now()
+ WHERE telegram_chat_id = @ChatId AND state <> 'Postgres'",
+                new { ChatId = telegramChatId, Reason = reason },
+                cancellationToken: cancellationToken));
+        }
+
+        /// <summary>
+        /// Abandonment from a call site that has no database handle, which is every runtime writer.
+        /// </summary>
+        internal static async Task AbandonAsync(long telegramChatId, string reason)
+        {
+            var connectionString = Helpers.RegHelper.GetRegValue("PostgresConnection");
+            if (string.IsNullOrWhiteSpace(connectionString)) return;
+            await AbandonAsync(PostgresDatabase.Shared(connectionString), telegramChatId, reason);
+        }
+
         /// <summary>Burn-down: how many groups sit in each state.</summary>
         internal static async Task<IReadOnlyDictionary<GroupMigrationState, int>> CountByStateAsync(
             PostgresDatabase database, CancellationToken cancellationToken = default)

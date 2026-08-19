@@ -90,6 +90,7 @@ namespace Enforcer5.Storage.Moderation
             var key = RedisKey(groupId, policy);
             if (enabled) await Redis.db.SetAddAsync(key, userId);
             else await Redis.db.SetRemoveAsync(key, userId);
+            await Cutover.GroupDrainBuffer.AppendAsync(groupId, key);
         }
 
         private static PolicyStoreRoute CurrentRoute(long groupId) => GetRoute(StorageRouting.EffectiveGroupMode(groupId),
