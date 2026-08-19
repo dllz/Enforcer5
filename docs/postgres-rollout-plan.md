@@ -1330,19 +1330,32 @@ lapsed                    0
 malformed                 0
 ```
 
-### 21.3 Not done, and deliberately
+### 21.3 Decisions taken
 
-**(c) The runtime shape is still wrong.** Keyed by expiry second with the group in the value, it is
-inherently both lossy and O(estate) for any per-group question. The fix is a sorted set - score =
-expiry, member = `{groupId}:{userId}` - which makes collisions impossible because members are
-unique, gives due entries in O(log N + M) via `ZRANGEBYSCORE`, and puts the group in the member so
-per-group extraction is a prefix match. That is a change to the live ban path and is not being made
-without a decision.
+**(c) The key shape does not change.** A sorted set scored by expiry, with member
+`{groupId}:{userId}`, would make collisions impossible and per-group extraction a prefix match. It
+was considered and **rejected**: it rewrites the live ban path, and the migration is not the right
+vehicle for changing how bans are stored. The hash stays as it is.
 
-**Expiry data quality is bad.** Of 141 entries, **0 have lapsed, 13 expire within ten years, and 128
-expire more than ten years out** - samples land in 2085 and 2969. Either the values are corrupt or
-users were banned until the thirtieth century. This needs a disposition before Stage B; the loader
-currently carries them as-is.
+The consequence has to be stated, because it changes what the other two fixes are for. The hash will
+**keep colliding and keep leaking**, so the two stores will keep diverging. That makes the union read
+in (a) the durable protection rather than a one-off repair, and it means (b) is a *periodic* step
+rather than a single migration task - anything the hash orphans after it runs is picked up by the
+union anyway, but the per-group index only stays complete if it is refreshed.
+
+The collision loop itself no longer spins forever, so the failure mode is bounded: entries are lost
+and orphaned, not hung.
+
+**Long expiries are kept.** Of 141 entries, 0 have lapsed, 13 expire within ten years, and 128 expire
+more than ten years out - samples in 2085 and 2969. They are **carried unchanged**: an expiry that
+has not arrived describes a ban still in force, and clamping it would silently shorten a real
+sanction. Each is recorded as a data-quality issue so the anomaly is visible, at *warning* severity
+rather than error - the record was read and migrated, its source is simply questionable, and that is
+exactly the distinction that keeps it out of the count which fails a run.
+
+Practically this is harmless on the PostgreSQL side: `PostgresTempBanDueWorker` claims sanctions
+whose `expires_at` has passed, so a year-2969 ban simply never becomes due - which is the same
+behaviour Redis has today.
 
 **`--apply` has not been run** against the rehearsal copy. The dry run is reported above; writing to
 the dataset is a deliberate step, not a side effect of measuring.

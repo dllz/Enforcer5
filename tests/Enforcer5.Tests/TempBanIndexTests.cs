@@ -77,6 +77,37 @@ public sealed class TempBanIndexTests
     }
 
     [RedisFact]
+    public async Task AnImplausibleExpiryIsRecordedButCarriedUnchanged()
+    {
+        // 128 of 141 entries on the production copy expire more than ten years out, some in 2969.
+        // The decision is to keep them: an expiry that has not arrived describes a ban still in
+        // force, and clamping it would silently shorten a real sanction. It is recorded so the
+        // anomaly is visible rather than quietly accepted.
+        var groupId = -1008700000000L - Random.Shared.NextInt64(1, 1_000_000);
+        var userId = 866_000_000L + Random.Shared.NextInt64(1, 1_000_000);
+
+        await InRedisAsync(groupId, async () =>
+        {
+            var year2969 = 31551037961L;
+            await Redis.db.HashSetAsync("tempbanned", year2969, $"{groupId}:{userId}:Nick:Group");
+
+            var snapshot = await new LegacyOperationsReader().ReadAsync(
+                new[] { groupId }, Array.Empty<long>(),
+                new Dictionary<long, IReadOnlyCollection<long>>(), default, includeGlobalData: false);
+
+            var tempban = Assert.Single(snapshot.Sanctions,
+                x => x.Kind == SanctionKinds.TempBan && x.UserId == userId);
+            // Carried unchanged - not clamped, not dropped.
+            Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(year2969), tempban.ExpiresAt);
+
+            // Recorded as a data-quality issue, not an error: it was read and migrated, its source
+            // is simply questionable. Errors are what fail a run.
+            Assert.Contains(snapshot.DataQualityIssues, x => x.Message.Contains("plausible ban length"));
+            Assert.Empty(snapshot.Errors);
+        });
+    }
+
+    [RedisFact]
     public async Task MaterialisingGivesGlobalOnlyEntriesAPerGroupHomeAndIsIdempotent()
     {
         var groupId = -1008900000000L - Random.Shared.NextInt64(1, 1_000_000);

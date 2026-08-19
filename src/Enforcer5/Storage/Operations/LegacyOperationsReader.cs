@@ -72,6 +72,7 @@ namespace Enforcer5.Storage.Operations
                 var value = parsed.Value;
                 if (!groupIds.Contains(value.GroupId)) continue;
                 if (!seen.Add((value.GroupId, value.UserId))) continue;
+                NoteImplausibleExpiry(snapshot, $"{hash}:{entry.Name}", value.ExpiresAt, capturedAt);
                 snapshot.Sanctions.Add(new Sanction(0, value.GroupId, value.UserId,
                     SanctionKinds.TempBan, SanctionStatuses.Active,
                     edition, null, null, capturedAt, value.ExpiresAt, null, null, null,
@@ -136,6 +137,7 @@ namespace Enforcer5.Storage.Operations
                     }
 
                     seen.Add((groupId, member));
+                    NoteImplausibleExpiry(snapshot, expiryKey, expiresAt, capturedAt);
                     snapshot.Sanctions.Add(new Sanction(0, groupId, member, SanctionKinds.TempBan,
                         SanctionStatuses.Active, edition, null, null, capturedAt, expiresAt,
                         null, null, null, $"redis:{expiryKey}"));
@@ -144,6 +146,34 @@ namespace Enforcer5.Storage.Operations
                 }
             }
         }
+
+        /// <summary>
+        /// A tempban expiring further out than any plausible ban length is recorded and then
+        /// carried unchanged.
+        /// <para>
+        /// Measured on the production copy, 128 of 141 entries expire more than ten years out, with
+        /// samples landing in 2085 and 2969. The decision is to keep them: an expiry that has not
+        /// arrived describes a ban that is still in force, and clamping it would silently shorten a
+        /// real sanction. Recording them means the anomaly is visible without the migration having
+        /// quietly taken a view on it.
+        /// </para>
+        /// <para>
+        /// Severity is a data-quality issue rather than an error, which is the distinction that
+        /// keeps them out of the count that fails a run: the record was read and migrated, its
+        /// source is simply questionable.
+        /// </para>
+        /// </summary>
+        private static void NoteImplausibleExpiry(OperationsBackfillSnapshot snapshot, string key,
+            DateTimeOffset expiresAt, DateTimeOffset capturedAt)
+        {
+            if (expiresAt - capturedAt <= ImplausibleTempBanHorizon) return;
+            snapshot.DataQualityIssues.Add(WithKey(key, null, new FormatException(
+                $"Tempban expires {expiresAt:yyyy-MM-dd}, beyond any plausible ban length. " +
+                "Carried unchanged.")));
+        }
+
+        /// <summary>Ten years - longer than the bot has existed, so nothing legitimate reaches it.</summary>
+        private static readonly TimeSpan ImplausibleTempBanHorizon = TimeSpan.FromDays(3650);
 
         private static void ReadGlobalSanction(long userId, HashEntry[] entries,
             OperationsBackfillSnapshot snapshot)
