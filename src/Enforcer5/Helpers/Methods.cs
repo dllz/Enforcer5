@@ -931,6 +931,8 @@ namespace Enforcer5.Helpers
              Redis.db.StringSetAsync(kvp.ToArray());
              Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
              Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
+             Storage.Cutover.GroupDrainBuffer.Append(chatId, hash);
+             Storage.Cutover.GroupDrainBuffer.Append(chatId, $"{hash}:{userId}");
         }
         // The timer fires every 30s and the scan is not instant. Without this, a slow run simply
         // overlaps the next one and they pile up.
@@ -1023,6 +1025,7 @@ namespace Enforcer5.Helpers
                     SanctionKinds.Ban, SanctionKinds.TempBan)
                     .GetAwaiter().GetResult();
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
+                Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:bannedlist");
                 return true;
 
             }
@@ -1531,10 +1534,12 @@ namespace Enforcer5.Helpers
                     if (newJoiner)
                     {
                         Redis.db.SetAddAsync($"chat:{chatId}:mutedJoiners", userId);
+                        Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:mutedJoiners");
                     }
                     else
                     {
                         Redis.db.SetAddAsync($"chat:{chatId}:muted", userId);
+                        Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:muted");
                     }
                 }
                 return res;
@@ -1590,6 +1595,8 @@ namespace Enforcer5.Helpers
                 {
                     Redis.db.SetRemoveAsync($"chat:{chatId}:muted", userId);
                     Redis.db.SetRemoveAsync($"chat:{chatId}:mutedJoiners", userId);
+                    Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:muted");
+                    Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:mutedJoiners");
                 }
                 return res;
             }

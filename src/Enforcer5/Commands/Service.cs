@@ -328,13 +328,18 @@ defSpamValue = 3;
             var currentMedia = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatid}:mediawarn", userId).Result);
             var currentWarn = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatid}:warns", userId).Result);
 
+            // Writes warn balances directly rather than through WarningStore, so it carries no
+            // routing of its own and has to record its own mutations for an in-flight copy.
             if (currentWarn < 0)
             {
                 Redis.db.HashSetAsync($"chat:{chatid}:warns", userId, 0);
-
+                Storage.Cutover.GroupDrainBuffer.Append(chatid, $"chat:{chatid}:warns");
             }
             if(currentMedia < 0)
+            {
                 Redis.db.HashSetAsync($"chat:{chatid}:mediawarn", userId, 0);
+                Storage.Cutover.GroupDrainBuffer.Append(chatid, $"chat:{chatid}:mediawarn");
+            }
         }
 
         public static void GenerateSettings(long chatId)

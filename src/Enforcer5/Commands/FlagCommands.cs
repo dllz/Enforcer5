@@ -409,6 +409,7 @@ namespace Enforcer5
                     }
                 }
                  Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+                Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:tempbanned");
             }
             if (res)
             {

@@ -1179,10 +1179,10 @@ thousand clean crawler groups first.
   refusal without an inventory, lease exclusion, failure leaving the group on Redis, abandonment not
   un-flipping a migrated group - but an end-to-end cutover of a real group against the rehearsal
   copy has not been run.
-- **The unrouted group-scoped write sites are not all wired.** The tempban complex in particular
-  (`chat:{id}:tempbanned`, the per-user TTL keys, and the process-wide `tempbanned` hash), plus
-  `userJoin`, `modlog`, mute keys and `Service.cs:333,337` which writes warns directly, bypassing
-  `WarningStore`. Each still needs an explicit buffered / excluded decision.
+- **A group's tempbans still live partly in the process-wide `tempbanned` hash**, which has no group
+  dimension, so extracting one group's tempbans means reading the whole hash. That is blocker B1 for
+  correctness and section 9.2 H7 for throughput, and it is the remaining structural problem in
+  Stage C.
 - **Rollback has not been rehearsed.**
 
 ---
@@ -1230,3 +1230,42 @@ directly.
 Rollback has still never been rehearsed end to end - flip a group, write to it, roll it back, and
 verify Redis holds everything. That remains the outstanding gate, and it is now the cheapest
 remaining way to find a defect of this class.
+
+### 19.5 Which group-scoped keys are buffered, and which are not
+
+Buffering a key only helps if the per-group copy actually reads it. The copy's scope is
+`LegacyGroupScopeReader` plus the four domain backfills, so that set - not "everything group-shaped"
+- is what has to be recorded. Every group-scoped key is now decided explicitly:
+
+**Buffered** - copied by the cutover, so a mutation during the copy must be replayed:
+
+```text
+chat:{g}:settings and the other 9 setting groups   atomic, inside the mutation Lua
+chat:{g}:warns  :prewarns  :mediawarn  :totalWarns  including Service.cs's direct write
+chat:{g}:auth  :mod  :deauth                        roles
+chat:{g}:watch  :reportblocked  :adminOff  :tagall2  policies
+chat:{g}:banned  :bannedlist  :bannedlist:{u}        bans
+chat:{g}:muted  :mutedJoiners  :tempmuted            mutes
+chat:{g}:tempbanned  :tempbannedPremium  :tempbanned:{u}
+{g}:users:{u}  and  chat:{g}:userlast                statistics
+```
+
+**Not buffered, deliberately** - nothing copies them, so recording a change would be recording it
+for no reader:
+
+| Key | Why |
+|---|---|
+| `chat:{g}:adminses:{u}` | Admin session cache, 5-30 minute TTL, rebuilt from Telegram. |
+| `chat:{g}:blockList`, `:blockList:{u}` | Elevation block, 31 minute TTL. |
+| `chat:{g}:spamList`, `spam:{g}:{u}` | Antispam markers, TTL-bounded and Redis-only for every edition, so no mixed state can arise. |
+| `chat:{g}:lastwelcome` | Transient welcome bookkeeping. |
+| `chat:{g}:modlog` | Not read by any migration domain. Migrating it is a separate decision, not a Stage C one. |
+| `chat:{g}:userJoin`, `{g}:userJoin` | Same - no domain copies join tracking. Note both key shapes exist. |
+
+The classifier reaches the same verdict independently: everything in the second table classifies as
+`ephemeral` or is absent from the copy scope, so the inventory and the drain buffer agree on what is
+in the migration.
+
+**The mirror direction is not buffered.** `CompatibilityOutboxWorker` writes the same keys when
+projecting PostgreSQL back into Redis, and those writes are not user mutations - buffering them
+would make a migrated group appear to be mutating itself.

@@ -313,9 +313,11 @@ namespace Enforcer5
                             }
 #if NORMAL
                              Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
+                             Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:tempbanned");
 #endif
 #if PREMIUM
                              Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
+                             Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:tempbannedPremium");
 #endif
                         }
                         if (isChatMember.Status == ChatMemberStatus.Member)
@@ -489,9 +491,11 @@ namespace Enforcer5
                 Redis.db.StringSetAsync($"chat:{chatId}:tempbanned:{userId}", unbanTime, TimeSpan.FromMinutes(time));
 #if NORMAL
                 Redis.db.SetAddAsync($"chat:{chatId}:tempbanned", userId);                    
+                Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:tempbanned");
 #endif
 #if PREMIUM
                      Redis.db.SetAddAsync($"chat:{chatId}:tempbannedPremium", userId);
+                     Storage.Cutover.GroupDrainBuffer.Append(chatId, $"chat:{chatId}:tempbannedPremium");
 #endif
                     return true;
                 }
