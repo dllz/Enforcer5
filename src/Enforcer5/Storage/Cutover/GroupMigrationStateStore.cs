@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Enforcer5.Helpers;
+using StackExchange.Redis;
 
 namespace Enforcer5.Storage.Cutover
 {
@@ -81,6 +82,66 @@ namespace Enforcer5.Storage.Cutover
             if (state == GroupMigrationState.Redis) Cache.TryRemove(telegramChatId, out _);
             else Cache[telegramChatId] = state;
         }
+
+        /// <summary>
+        /// Channel on which a state change is announced to every other process.
+        /// <para>
+        /// The cache is per process, and there is more than one: the two bot editions, plus any
+        /// migration command run alongside them. Without this, a group flipped by one process stays
+        /// <see cref="GroupMigrationState.Redis"/> in the others, which is the dangerous direction -
+        /// they would keep writing that group to Redis while PostgreSQL is authoritative, and those
+        /// writes are lost. The drain buffer does not cover it either, since the buffer is deleted
+        /// at the flip.
+        /// </para>
+        /// </summary>
+        private const string StateChannel = "enforcer:migration:group-state";
+
+        /// <summary>
+        /// Announces a state change. Best effort: a lost message is corrected by the periodic
+        /// re-prime, which is why <see cref="RefreshAsync"/> exists as well.
+        /// </summary>
+        private static async Task PublishAsync(long telegramChatId, GroupMigrationState state)
+        {
+            try
+            {
+                var connection = Helpers.Redis.Connection;
+                if (connection == null) return;
+                await connection.GetSubscriber().PublishAsync(
+                    RedisChannel.Literal(StateChannel), $"{telegramChatId}:{state}");
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Announcing group {telegramChatId} state failed: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Subscribes to state changes from other processes. Idempotent.
+        /// </summary>
+        internal static async Task SubscribeAsync()
+        {
+            var connection = Helpers.Redis.Connection;
+            if (connection == null) return;
+            await connection.GetSubscriber().SubscribeAsync(RedisChannel.Literal(StateChannel),
+                (_, value) =>
+                {
+                    var text = value.ToString();
+                    var separator = text.LastIndexOf(':');
+                    if (separator <= 0) return;
+                    if (!long.TryParse(text.AsSpan(0, separator), out var chatId)) return;
+                    if (!Enum.TryParse<GroupMigrationState>(text[(separator + 1)..], true, out var state))
+                        return;
+                    ApplyLocal(chatId, state);
+                });
+        }
+
+        /// <summary>
+        /// Re-reads every non-default state. The safety net under <see cref="PublishAsync"/>: pub/sub
+        /// delivery is at-most-once, so a process that was disconnected when a group flipped would
+        /// otherwise stay wrong until restart.
+        /// </summary>
+        internal static Task RefreshAsync(PostgresDatabase database,
+            CancellationToken cancellationToken = default) => PrimeAsync(database, cancellationToken);
 
         internal static void ResetForTests()
         {
@@ -162,7 +223,11 @@ UPDATE migration_group_state
                     LastError = lastError
                 }, cancellationToken: cancellationToken)) == 1;
 
-            if (updated) ApplyLocal(lease.TelegramChatId, state);
+            if (updated)
+            {
+                ApplyLocal(lease.TelegramChatId, state);
+                await PublishAsync(lease.TelegramChatId, state);
+            }
             return updated;
         }
 
@@ -189,6 +254,7 @@ UPDATE migration_group_state
  WHERE telegram_chat_id = @ChatId AND state <> 'Postgres'",
                 new { ChatId = telegramChatId, Reason = reason },
                 cancellationToken: cancellationToken));
+            await PublishAsync(telegramChatId, GroupMigrationState.Redis);
         }
 
         /// <summary>
@@ -199,6 +265,48 @@ UPDATE migration_group_state
             var connectionString = Helpers.RegHelper.GetRegValue("PostgresConnection");
             if (string.IsNullOrWhiteSpace(connectionString)) return;
             await AbandonAsync(PostgresDatabase.Shared(connectionString), telegramChatId, reason);
+        }
+
+        /// <summary>
+        /// Deliberately returns a group to Redis, including one that has already cut over.
+        /// <para>
+        /// Distinct from <see cref="AbandonAsync"/>, and the distinction matters. Abandonment is
+        /// raised by the writer path, holds no lease, and is only safe because it can exclusively
+        /// move a group <em>back from an in-flight state</em> - un-flipping a live group underneath
+        /// its readers would lose writes. A rollback is the opposite: an operator action that
+        /// specifically intends to un-flip, so it takes the lease first and is allowed to.
+        /// </para>
+        /// <para>
+        /// The caller is responsible for flushing the mirror first. Any outbox entry still pending
+        /// is a PostgreSQL write Redis has not received, and flipping before it drains loses exactly
+        /// those writes.
+        /// </para>
+        /// </summary>
+        /// <returns>False when another migrator holds the lease, in which case nothing changed.</returns>
+        internal static async Task<bool> RollBackAsync(PostgresDatabase database, long telegramChatId,
+            string owner, string reason, CancellationToken cancellationToken = default)
+        {
+            var lease = await TryAcquireLeaseAsync(database, telegramChatId, owner,
+                TimeSpan.FromMinutes(5), cancellationToken);
+            if (lease == null) return false;
+            try
+            {
+                await using var connection = await database.OpenConnectionAsync(cancellationToken);
+                await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE migration_group_state
+   SET state = 'Redis', last_error = @Reason, chunk_cursor = 0, migrated_at = NULL,
+       updated_at = now()
+ WHERE telegram_chat_id = @ChatId",
+                    new { ChatId = telegramChatId, Reason = reason },
+                    cancellationToken: cancellationToken));
+                ApplyLocal(telegramChatId, GroupMigrationState.Redis);
+                await PublishAsync(telegramChatId, GroupMigrationState.Redis);
+                return true;
+            }
+            finally
+            {
+                await ReleaseLeaseAsync(database, lease, CancellationToken.None);
+            }
         }
 
         /// <summary>Burn-down: how many groups sit in each state.</summary>

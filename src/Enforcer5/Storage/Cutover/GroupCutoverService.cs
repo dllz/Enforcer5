@@ -71,32 +71,27 @@ namespace Enforcer5.Storage.Cutover
             var drained = 0;
             try
             {
-                // The freshness rule: a group may only cut over against an inventory that is newer
-                // than the moment it started draining. From that instant the buffer captures every
-                // new key, so the inventory only has to cover everything before it.
-                var generation = await MigrationInventory.LatestAsync(_database, cancellationToken);
-                if (generation == null)
-                    return await FailAsync(lease, stopwatch, drained, "no completed keyspace inventory");
-
+                // No inventory-freshness gate, deliberately. Section 6.1's rule - that a group may
+                // only cut over against an inventory newer than its drain start - exists because
+                // the plan assumed the per-group copy would replay the recorded inventory, leaving
+                // a gap for keys created between the scan and the drain.
+                //
+                // This copy does not work that way. It reads Redis live through the same per-domain
+                // backfills the bulk path uses, so it sees whatever exists at copy time, and
+                // anything written during the copy is captured by the drain buffer. There is no
+                // window for the rule to close, and enforcing it would mean a fresh 15-minute
+                // keyspace scan before every single group.
+                //
+                // The inventory is still what the crawler uses to choose candidates; staleness
+                // there only means the candidate list lags, which costs nothing.
                 if (!await GroupMigrationStateStore.TransitionAsync(_database, lease,
                         GroupMigrationState.Draining, cancellationToken: cancellationToken))
                     return await FailAsync(lease, stopwatch, drained, "could not enter Draining");
-
-                var enteredDrainingAt = DateTimeOffset.UtcNow;
 
                 await CopyAsync(telegramChatId, cancellationToken);
                 drained = await DrainAsync(telegramChatId, cancellationToken);
                 if (drained < 0)
                     return await FailAsync(lease, stopwatch, 0, "drain did not converge");
-
-                if (generation.Value.CompletedAt < enteredDrainingAt)
-                {
-                    // The inventory predates the drain, so keys created between the two are in
-                    // neither. Re-scanning is the crawler's job; this group waits for the next
-                    // generation rather than cutting over against a hole.
-                    return await FailAsync(lease, stopwatch, drained,
-                        "inventory is older than the drain start");
-                }
 
                 if (!await GroupMigrationStateStore.TransitionAsync(_database, lease,
                         GroupMigrationState.Verifying, cancellationToken: cancellationToken))

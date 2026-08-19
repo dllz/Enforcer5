@@ -1432,3 +1432,63 @@ rather than shifting the entry forward each time. The per-user key stores the sl
 rather than the requested expiry, because `RemoveTempBan` reads it to find the row to delete.
 
 Both fixes are pinned by tests that were verified to fail against the previous behaviour.
+
+---
+
+## 22. Operating a cutover
+
+```bash
+migrate inventory [--fresh]              # one keyspace pass, feeds the crawler's candidate list
+migrate tempban-index [--apply]          # give global-only tempbans a per-group home
+migrate user-tier backfill               # Stage B, the whole user and global tier
+migrate group <chatId>                   # cut one group over
+migrate group <chatId> --rollback        # put one group back
+migrate <domain> backfill|reconcile      # group-settings, principal-content, moderation, operations
+```
+
+`migrate group` **runs alongside the live bots**. That is the point of the per-group lease: the copy
+holds no lock, and only the flip is exclusive. Measured on the rehearsal copy, a small group cuts
+over in **136s**, of which almost all is the four-domain reconcile that gates the flip.
+
+A failure is free and self-reporting - the group stays on Redis, the PostgreSQL rows it wrote are
+inert, and the lease is released so the next attempt retries immediately.
+
+### 22.1 Cross-process state, which nearly broke this
+
+`GroupMigrationStateStore`'s cache is **per process**, and there is more than one process: the two
+bot editions, plus any migration command run beside them. `PrimeAsync` ran once at start-up, so a
+group flipped by one process stayed `Redis` in the others - and that is the dangerous direction.
+Those processes would keep writing the group to Redis while PostgreSQL owned it, and the drain buffer
+does not help because it is deleted at the flip.
+
+Now: every transition is announced on `enforcer:migration:group-state`, every process subscribes at
+start-up, and a five-minute re-prime backs it up because pub/sub delivery is at-most-once.
+
+### 22.2 Rollback is not abandonment
+
+Two paths that look similar and must not be merged:
+
+| | Raised by | Lease | May un-flip a migrated group |
+|---|---|---|---|
+| `AbandonAsync` | the writer path, on a buffer failure | none | **No** - reverting a live group underneath its readers loses writes |
+| `RollBackAsync` | an operator | takes it | **Yes** - that is the entire intent |
+
+Conflating them made `migrate group --rollback` **silently do nothing while reporting success**,
+because the abandon path is guarded with `state <> 'Postgres'`. Found by running it. The command now
+refuses and exits non-zero if another migrator holds the lease, and flushes the mirror before
+flipping - any outbox entry still pending is a PostgreSQL write Redis has not received.
+
+### 22.3 Two more things the first real cutover found
+
+**`LegacyGroupScopeReader` required `bot:groupsid` membership** and threw otherwise, so a cutover of
+any of the 7,951 orphan groups failed outright - 21% of the estate, unreachable by Stage C. That is
+the same registry defect as sections 11 and 18.3, in a fourth place. The keys read are the evidence
+a group exists; the registry is not.
+
+**The section 6.1 freshness rule does not apply to this implementation.** It assumed the per-group
+copy would replay the recorded inventory, leaving a gap for keys created between the scan and the
+drain. This copy reads Redis **live** through the same per-domain backfills the bulk path uses, so it
+sees whatever exists at copy time and the drain buffer covers everything after. Enforcing the rule
+anyway made every cutover demand a fresh 15-minute keyspace scan first - which is what the first run
+did, refusing with *"inventory is older than the drain start"*. The inventory is still what the
+crawler uses to choose candidates; staleness there only lags the candidate list.

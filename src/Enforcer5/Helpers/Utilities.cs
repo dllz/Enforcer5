@@ -616,6 +616,11 @@ namespace Enforcer5.Helpers
             {
                 await Storage.Cutover.GroupMigrationStateStore.PrimeAsync(
                     Storage.PostgresDatabase.FromConfiguration(), ShutdownToken);
+                // Another process - the other edition, or a migration command run alongside - can
+                // flip a group at any time. Without this the cache silently goes stale in the
+                // dangerous direction: this process keeps writing the group to Redis while
+                // PostgreSQL owns it.
+                await Storage.Cutover.GroupMigrationStateStore.SubscribeAsync();
             }
             catch (Exception e)
             {
@@ -1129,6 +1134,12 @@ namespace Enforcer5.Helpers
         /// initializer: a failure there surfaces as a TypeInitializationException from whichever
         /// unrelated line first touches this class, with nothing logged.
         /// </summary>
+        /// <summary>
+        /// The multiplexer, for the few callers that need pub/sub rather than a database. Null until
+        /// <see cref="Start"/> has succeeded.
+        /// </summary>
+        internal static ConnectionMultiplexer Connection => _redis;
+
         public static IDatabase db
         {
             get

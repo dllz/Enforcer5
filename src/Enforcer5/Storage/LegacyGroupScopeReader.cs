@@ -46,8 +46,12 @@ namespace Enforcer5.Storage
             CancellationToken cancellationToken = default)
         {
             if (groupId == 0) throw new ArgumentOutOfRangeException(nameof(groupId), "Group id must be nonzero.");
-            if (!await _database.SetContainsAsync("bot:groupsid", groupId))
-                throw new InvalidOperationException($"Group '{groupId}' is not present in bot:groupsid.");
+            // Deliberately not gated on bot:groupsid membership. That set holds 36,441 members while
+            // 38,152 groups have data, because it was only ever written from one of the three code
+            // paths that can create a settings hash. Requiring membership made this throw for all
+            // 7,951 orphans - 21% of the estate - so a per-group cutover could never reach them and
+            // a --group migration of one simply failed. The keys read below are the evidence that a
+            // group exists; the registry is not.
 
             var userIds = new HashSet<long>();
             var reportMessageIds = new HashSet<long>();

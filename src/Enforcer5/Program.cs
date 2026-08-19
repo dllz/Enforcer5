@@ -32,6 +32,7 @@ namespace Enforcer5
         private static PostgresDatabase _operationsDatabase;
         private static PostgresTempBanDueWorker _postgresTempBanWorker;
         private static System.Threading.Timer _cutoverJob;
+        private static System.Threading.Timer _stateRefreshJob;
         private static Storage.Cutover.GroupCutoverCrawler _cutoverCrawler;
         internal static List<Language> LangaugeList = new List<Language>();
         public static DateTime MaxTime = DateTime.MinValue;
@@ -160,6 +161,13 @@ namespace Enforcer5
                     () => _postgresTempBanWorker.ProcessDueAsync(100, DateTimeOffset.UtcNow, Bot.ShutdownToken),
                     "PostgresTempBanWorker"), null, wait, wait);
 
+                // Pub/sub delivery is at-most-once, so a process disconnected at the moment a group
+                // flipped would stay wrong until restart. This is the safety net under it.
+                _stateRefreshJob = new System.Threading.Timer(_ => Bot.Dispatch(
+                    () => Storage.Cutover.GroupMigrationStateStore.RefreshAsync(_operationsDatabase,
+                        Bot.ShutdownToken), "GroupStateRefresh"), null,
+                    TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+
                 // Stage C. Off unless deliberately enabled, so deploying this build changes nothing
                 // and the crawler cannot start moving groups on its own.
                 if (RegHelper.GetInt("GroupCutoverBudget", 0) > 0)
@@ -178,6 +186,7 @@ namespace Enforcer5
             _tempbanJob?.Dispose();
             _postgresTempbanJob?.Dispose();
             _cutoverJob?.Dispose();
+            _stateRefreshJob?.Dispose();
             _operationsDatabase?.DisposeAsync().AsTask().GetAwaiter().GetResult();
             // _operationsDatabase is a shared instance, so its own dispose is a no-op. The pools
             // themselves are process-owned and released here.

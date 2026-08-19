@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -58,6 +59,28 @@ namespace Enforcer5.Storage
             var parsed = TryParseDomain(args, "user-tier", out var options);
             reconcile = options?.Reconcile == true;
             return parsed;
+        }
+
+        /// <summary>
+        /// <c>migrate group &lt;chatId&gt; [--rollback]</c> - cut one group over, or put it back.
+        /// <para>
+        /// Runs alongside the live bots rather than requiring them stopped. That is the whole point
+        /// of the per-group lease: the group is copied without a lock, and only the final flip is
+        /// exclusive. Other processes learn the new state over pub/sub.
+        /// </para>
+        /// </summary>
+        internal static bool IsGroupCutover(string[] args, out long chatId, out bool rollback)
+        {
+            chatId = 0;
+            rollback = false;
+            if (args == null || args.Length is not (3 or 4) ||
+                !string.Equals(args[0], "migrate", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(args[1], "group", StringComparison.OrdinalIgnoreCase) ||
+                !long.TryParse(args[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out chatId) ||
+                chatId == 0) return false;
+            if (args.Length == 3) return true;
+            rollback = string.Equals(args[3], "--rollback", StringComparison.OrdinalIgnoreCase);
+            return rollback;
         }
 
         /// <summary>
@@ -134,6 +157,51 @@ namespace Enforcer5.Storage
         }
 
         /// <summary>
+        /// Cuts a single group over, or rolls one back.
+        /// <para>
+        /// Safe to run while the bots are up. The copy holds no lock, the flip is guarded by the
+        /// group's lease, and the resulting state is announced so every other process stops treating
+        /// the group as Redis-owned.
+        /// </para>
+        /// </summary>
+        private static async Task<int> RunGroupCutoverAsync(long telegramChatId, bool rollback)
+        {
+            if (!Redis.Start()) throw new InvalidOperationException("Redis is unavailable.");
+            await using var database = PostgresDatabase.FromConfiguration();
+            await Cutover.GroupMigrationStateStore.PrimeAsync(database);
+
+            var owner = $"{Environment.MachineName}-cli-{Environment.ProcessId}";
+
+            if (rollback)
+            {
+                // Flush the mirror first. Any entry still pending is a PostgreSQL write that Redis
+                // has not received, and flipping before it drains loses exactly those writes.
+                var applied = await new CompatibilityOutboxWorker(database).DrainAsync();
+                var rolled = await Cutover.GroupMigrationStateStore.RollBackAsync(database,
+                    telegramChatId, owner, "manual rollback");
+                if (!rolled)
+                {
+                    Console.Error.WriteLine($"Group {telegramChatId} NOT rolled back: another " +
+                                            "migrator holds its lease. Nothing changed.");
+                    return 1;
+                }
+                Console.WriteLine($"Group {telegramChatId} rolled back to Redis " +
+                                  $"({applied} mirror entr{(applied == 1 ? "y" : "ies")} flushed first).");
+                return 0;
+            }
+
+            var result = await new Cutover.GroupCutoverService(database, owner)
+                .CutOverAsync(telegramChatId);
+
+            Console.WriteLine(result.Succeeded
+                ? $"Group {telegramChatId} cut over in {result.Elapsed.TotalSeconds:N1}s " +
+                  $"({result.DrainedKeys} drained key(s))."
+                : $"Group {telegramChatId} NOT cut over: {result.Failure}. " +
+                  "It remains on Redis and is unaffected.");
+            return result.Succeeded ? 0 : 1;
+        }
+
+        /// <summary>
         /// Materialises per-group tempban keys for anything held only in the process-wide hash, so
         /// that per-group work stops needing to read the whole estate.
         /// </summary>
@@ -196,6 +264,8 @@ namespace Enforcer5.Storage
             if (IsSchemaMigration(args)) return await RunSchemaAsync();
             if (IsInventoryScan(args, out var fresh)) return await RunInventoryAsync(fresh);
             if (IsTempBanIndex(args, out var applyIndex)) return await RunTempBanIndexAsync(applyIndex);
+            if (IsGroupCutover(args, out var cutoverChatId, out var rollback))
+                return await RunGroupCutoverAsync(cutoverChatId, rollback);
             if (IsUserTierMigration(args, out var userTierReconcile))
                 return await RunUserTierAsync(userTierReconcile);
             MigrationCommandOptionsParser.TryParse(args, out var options);

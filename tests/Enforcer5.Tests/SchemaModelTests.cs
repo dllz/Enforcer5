@@ -191,6 +191,32 @@ public sealed class SchemaModelTests
         Assert.False(EnforcerMigrationCommand.IsUserTierMigration(["migrate", "user-tier", "load"], out _));
     }
 
+    [Fact]
+    public void GroupCutoverAndTempBanIndexCommandsAreExplicit()
+    {
+        Assert.True(EnforcerMigrationCommand.IsGroupCutover(
+            ["migrate", "group", "-1001030085238"], out var chatId, out var rollback));
+        Assert.Equal(-1001030085238L, chatId);
+        Assert.False(rollback);
+        Assert.True(EnforcerMigrationCommand.IsGroupCutover(
+            ["migrate", "group", "-1001030085238", "--rollback"], out _, out var back));
+        Assert.True(back);
+        // A typo must not silently become a cutover.
+        Assert.False(EnforcerMigrationCommand.IsGroupCutover(
+            ["migrate", "group", "-1001030085238", "--revert"], out _, out _));
+        Assert.False(EnforcerMigrationCommand.IsGroupCutover(["migrate", "group", "nan"], out _, out _));
+        Assert.False(EnforcerMigrationCommand.IsGroupCutover(["migrate", "group", "0"], out _, out _));
+
+        Assert.True(EnforcerMigrationCommand.IsTempBanIndex(["migrate", "tempban-index"], out var dry));
+        Assert.False(dry);
+        Assert.True(EnforcerMigrationCommand.IsTempBanIndex(
+            ["migrate", "tempban-index", "--apply"], out var apply));
+        Assert.True(apply);
+        // Writing to Redis has to be asked for explicitly.
+        Assert.False(EnforcerMigrationCommand.IsTempBanIndex(
+            ["migrate", "tempban-index", "--force"], out _));
+    }
+
     [Theory]
     [InlineData("RedisPrimaryPostgresShadow")]
     [InlineData("PostgresPrimaryRedisMirror")]
