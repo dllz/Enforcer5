@@ -20,9 +20,11 @@ namespace Enforcer5.Storage.PrincipalContent
             NpgsqlTransaction transaction, string domain, string operation, object payload,
             CancellationToken cancellationToken)
         {
-            // Shared across user-tier and group-tier domains, and the group is only inside the
-            // payload. User-tier dominates here, so this follows the process-wide mirror flag.
-            if (!StorageRouting.RedisMirrorEnabled) return;
+            // Shared across user-tier and group-tier domains, so the flag has to be chosen per
+            // domain rather than once. Gating all of it on the process-wide flag meant group
+            // content and custom commands were not mirrored for a group that had cut over - the
+            // process-wide flag is false for the whole of Stage C - so rolling that group back
+            // would have lost every content and command change made since it flipped.
             var json = Newtonsoft.Json.Linq.JObject.FromObject(payload);
             var orderingKey = domain switch
             {
@@ -33,6 +35,12 @@ namespace Enforcer5.Storage.PrincipalContent
                 "custom-commands" => $"command:{json.Value<long>("chatId")}:{json.Value<string>("trigger")}",
                 _ => throw new InvalidOperationException($"Unsupported mirror domain '{domain}'.")
             };
+            var mirror = domain switch
+            {
+                "users" => StorageRouting.RedisMirrorEnabled,
+                _ => StorageRouting.GroupRedisMirrorEnabled(json.Value<long>("chatId"))
+            };
+            if (!mirror) return;
             await connection.ExecuteAsync(new CommandDefinition(@"
 INSERT INTO compatibility_outbox (id, domain, ordering_key, operation, payload, created_at, next_attempt_at)
 VALUES (@Id, @Domain, @OrderingKey, @Operation, CAST(@Payload AS jsonb), clock_timestamp(), clock_timestamp())",

@@ -79,7 +79,10 @@ namespace Enforcer5.Storage.Operations
 UPDATE sanctions SET status = 'revoked', resolved_at = now()
 WHERE group_id = @GroupId AND account_id = @AccountId AND kind = @Kind AND status IN ('active','due')",
                 new { GroupId = resolvedGroupId, account.AccountId, Kind = kind }, transaction);
-            if (StorageRouting.RedisMirrorEnabled)
+            // Group-scoped. The matching upsert path already uses the per-group flag; this one did
+            // not, so an unban on a cut-over group was applied in PostgreSQL and never mirrored -
+            // a rollback would have left the user still banned in Redis.
+            if (StorageRouting.GroupRedisMirrorEnabled(groupId))
                 await CompatibilityOutbox.EnqueueAsync(connection, transaction, "sanctions",
                     $"sanction:{groupId}:{userId}", "resolve",
                     new { groupId, userId, kind });

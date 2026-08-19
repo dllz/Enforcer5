@@ -447,7 +447,15 @@ ON CONFLICT (group_id, day) DO UPDATE SET message_count = group_daily_analytics.
             // bot:general is bot-wide with no group dimension. Section 12.2 records the decision to
             // freeze it in Redis for the duration rather than reconcile it, so the mirror carries
             // only the user and per-group totals.
-            if (StorageRouting.RedisMirrorEnabled)
+            //
+            // Gated on the group when there is one. RecordMessageAsync routes the user's lifetime
+            // total and the per-group total together - the invariant only holds if they move as a
+            // pair - so a cut-over group writes both to PostgreSQL, and both have to be mirrored
+            // for that group to be rollback-able. On the process-wide flag neither was.
+            var mirror = resolvedGroupId.HasValue
+                ? StorageRouting.GroupRedisMirrorEnabled(groupId.Value)
+                : StorageRouting.RedisMirrorEnabled;
+            if (mirror)
             {
                 // Project the resulting canonical values, not the delta. Replaying an increment
                 // after a crash would double-count; an absolute value converges. Read inside the

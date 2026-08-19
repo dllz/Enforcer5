@@ -52,7 +52,9 @@ WHERE group_id = @GroupId AND user_id = @UserId AND policy = @Policy), FALSE)",
             await using var database = PostgresDatabase.FromConfiguration();
             await new GroupUserPolicyRepository(database).UpsertAsync(new GroupUserPolicy(groupId,
                 userId, policy, enabled, DateTimeOffset.UtcNow));
-            if (StorageRouting.RedisMirrorEnabled) await SetRedisAsync(redisKey, userId, enabled);
+            // Group-scoped, so it follows the group's own mirror state. On the process-wide flag
+            // a cut-over group's report policies never reached Redis and a rollback would lose them.
+            if (StorageRouting.GroupRedisMirrorEnabled(groupId)) await SetRedisAsync(redisKey, userId, enabled);
         }
 
         private static Task SetRedisAsync(string key, long userId, bool enabled) => enabled

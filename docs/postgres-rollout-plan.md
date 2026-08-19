@@ -280,6 +280,10 @@ path. **Freeze duration must be proportional to the drain buffer, never to group
 `CompatibilityOutboxWorker` rebind fix matters - a stale one-shot binding would have silently
 mirrored to the wrong database.
 
+**Rollback from `PostgresOnly` is not a config change.** That mode stops mirroring, so Redis begins
+to rot the moment it is set. It is the point of no return, which is what the soak in step 3 exists
+to protect. Pinned by a test rather than left as a footnote.
+
 ---
 
 ## 8. The quiesce barrier
@@ -1180,3 +1184,49 @@ thousand clean crawler groups first.
   `userJoin`, `modlog`, mute keys and `Service.cs:333,337` which writes warns directly, bypassing
   `WarningStore`. Each still needs an explicit buffered / excluded decision.
 - **Rollback has not been rehearsed.**
+
+---
+
+## 20. Rollback - what is actually supported
+
+| Point | Rollback | Cost |
+|---|---|---|
+| Stage A | Set the shadow flag back to `false` | Free. Redis untouched and authoritative throughout. |
+| Stage B | Truncate the user tier and re-run | Free. Redis untouched; nothing has cut over. |
+| Stage C, before a group flips | `Failed -> Redis` | Free, and automatic. The group is still served from Redis; the PostgreSQL rows are inert and the next attempt overwrites them. |
+| Stage C, after a group flips | Set its state back to `Redis` | **Depends entirely on the mirror.** See below. |
+| Stage D | Set `StorageMode` back | Free, provided the mirror has been keeping Redis current. |
+| `PostgresOnly` | **Not a config change** | Mirroring stops, so Redis begins to rot immediately. This is the point of no return. |
+
+### 20.1 The gap that was there
+
+There are two mirror flags, and the difference is easy to miss:
+
+- `RedisMirrorEnabled` is **process-wide**, and is `false` for the whole of Stage C - the mode stays
+  `RedisPrimaryPostgresShadow` until the final flip.
+- `GroupRedisMirrorEnabled(chatId)` is per group, and is true as soon as *that* group cuts over.
+
+A group-scoped write gated on the process-wide flag therefore lands in PostgreSQL and is **never
+mirrored** while the group is migrated. Rolling that group back loses every such write. Four paths
+were on the wrong flag:
+
+| Path | What was lost on rollback |
+|---|---|
+| `OperationsStore.cs:82` | Sanction revocation. An unban on a migrated group would have left the user still banned in Redis. |
+| `ReportStorePolicies.cs:55` | `reportblocked` and `adminOff` policy changes. |
+| `OperationRepositories.cs:450` | The per-group message total - and the user total with it, since `RecordMessageAsync` routes the pair together. |
+| `PrincipalContentRepositories.cs:25` | Group content items and custom commands, because one shared helper gated every domain on the process-wide flag. |
+
+All four now follow the group's own mirror state. The shared helper chooses per domain rather than
+once, since it serves both tiers.
+
+This was invisible for two reasons worth noting: the process-wide mode is never
+`PostgresPrimaryRedisMirror` during Stage C, so no test that pins the shipped defaults would exercise
+it; and **rollback has never been rehearsed**. `RollbackMirrorRoutingTests` now pins the distinction
+directly.
+
+### 20.2 Still not done
+
+Rollback has still never been rehearsed end to end - flip a group, write to it, roll it back, and
+verify Redis holds everything. That remains the outstanding gate, and it is now the cheapest
+remaining way to find a defect of this class.
