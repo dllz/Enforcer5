@@ -14,5 +14,8 @@ namespace Enforcer5.Data
         // The lambda defers touching Redis.db until first use, after Redis.Start() has connected.
         internal static IInlineBotBlockRepository InlineBotBlocks { get; set; } =
             new RedisInlineBotBlockRepository(() => Redis.db);
+
+        internal static IChannelPostRepository ChannelPosts { get; set; } =
+            new RedisChannelPostRepository(() => Redis.db);
     }
 }

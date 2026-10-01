@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
@@ -72,6 +73,12 @@ namespace Enforcer5
 
                 }
             }
+            // Stored behind a repository rather than in chat:{id}:settings, so it is drawn on its own.
+            var channelPostsBlocked = Repositories.ChannelPosts.IsEnabledAsync(chatId).GetAwaiter().GetResult();
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "ChannelPostsButton"),
+                "menusettings:ChannelPosts"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, channelPostsBlocked ? "on" : "off"),
+                $"menuChannelPosts:{chatId}"));
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             return Key.CreateMarkupFromMenus(mainMenu, close);
@@ -125,6 +132,17 @@ namespace Enforcer5
 
         [Callback(Trigger = "menuArab", GroupAdminOnly = true)]
         public static void MenuArab(CallbackQuery call, string[] args) => CycleCharSetting(call, args, "Arab");
+
+        [Callback(Trigger = "menuChannelPosts", GroupAdminOnly = true)]
+        public static void MenuChannelPosts(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var repository = Repositories.ChannelPosts;
+            var enabled = repository.IsEnabledAsync(chatId).GetAwaiter().GetResult();
+            repository.SetEnabledAsync(chatId, !enabled).GetAwaiter().GetResult();
+            RedrawSettingsMenu(call, chatId, lang);
+        }
 
         /// <summary>
         /// Flips a yes/no setting in chat:{id}:settings and redraws the settings menu.

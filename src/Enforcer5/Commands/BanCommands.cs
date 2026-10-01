@@ -278,6 +278,19 @@ namespace Enforcer5
             {
                 try
                 {
+                    // A post made as a channel carries a shared placeholder sender, so the user
+                    // path below cannot handle it: ban the channel instead.
+                    switch (ChannelPosts.FromModerationCommand(update.Message, args.Length > 1 ? args[1] : null,
+                                update.Message.Chat.Id, out var channelId, out var channelTitle))
+                    {
+                        case ChannelTargetKind.Group:
+                            Bot.SendReply(Methods.GetLocaleString(lang.Doc, "cannotbanadmin"), update);
+                            return;
+                        case ChannelTargetKind.Channel:
+                            BanChannel(update, channelId, channelTitle, lang.Doc);
+                            return;
+                    }
+
                     var userid = Methods.GetUserId(update, args);
                     if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                         return;
@@ -288,7 +301,8 @@ namespace Enforcer5
                     if (res)
                     {
                         var chatId = update.Message.Chat.Id;
-                        var userId = update.Message.Chat.Id;
+                        // Was the chat id, so the tempban cleanup and ban stats below never matched.
+                        var userId = userid;
 #if NORMAL
                         var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
 #endif
@@ -305,7 +319,9 @@ namespace Enforcer5
 #endif
                             foreach (var mem in all)
                             {
-                                if ($"{chatId}:{userId}".Equals(mem.Value))
+                                // Values are "{chat}:{user}:{name}:{group}"; an exact match never hit,
+                                // so the tempban timer later unbanned someone who had been /banned.
+                                if (ChannelPosts.IsTempbanEntryFor(mem.Value, chatId, userId))
                                 {
 #if NORMAL
                                      Redis.db.HashDeleteAsync("tempbanned", mem.Name);
@@ -388,29 +404,55 @@ namespace Enforcer5
         public static void UnBan(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;
-            var userId = Methods.GetUserId(update, args);
-            var status = Bot.Api.GetChatMember(chatId, userId).Result.Status;
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            if (status == ChatMemberStatus.Kicked)
+
+            switch (ChannelPosts.FromModerationCommand(update.Message, args.Length > 1 ? args[1] : null,
+                        chatId, out var channelId, out var channelTitle))
             {
-                var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
-                if (isBanned.HasValue)
-                {
+                case ChannelTargetKind.Group:
+                    return; // anonymous admins are never banned
+                case ChannelTargetKind.Channel:
+                    UnbanChannel(update, channelId, channelTitle, lang);
+                    return;
+            }
+
+            // Every step used to fail silently: an unknown username or a failed lookup threw on the
+            // pool, and a user who was not banned got no answer at all.
+            long userId;
+            ChatMemberStatus status;
+            try
+            {
+                userId = Methods.GetUserId(update, args);
+                status = Bot.Api.GetChatMember(chatId, userId).GetAwaiter().GetResult().Status;
+            }
+            catch (Exception e)
+            {
+                Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
+                return;
+            }
+
+            if (status != ChatMemberStatus.Kicked)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "userNotBanned", Methods.GetNick(update.Message, args, userId)), update);
+                return;
+            }
+
+            var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
+            if (isBanned.HasValue)
+            {
 #if NORMAL
-                    Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
+                Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
 #endif
 #if PREMIUM
                 Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
-                }
-                var res = Methods.UnbanUser(chatId, userId, lang);
-                if (res)
-                {
-                     Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
-                    Service.LogCommand(update, update.Message.Text);
-                }
             }
-
+            var res = Methods.UnbanUser(chatId, userId, lang);
+            if (res)
+            {
+                Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
+                Service.LogCommand(update, update.Message.Text);
+            }
         }
 
         public static bool Tempban(long userId, long chatId, double time,

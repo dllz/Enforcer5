@@ -3,8 +3,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 #pragma warning disable CS4014
 #pragma warning disable CS0168
@@ -378,6 +380,72 @@ namespace Enforcer5
                 Bot.DeleteMessage(chatId, messageId);
             }, "BlockedInlineBot");
             return true;
+        }
+
+        /// <summary>
+        /// Posts made as a channel, when the chat has turned that off. The member behind the channel
+        /// is invisible to bots, so the message is deleted and the channel is banned from the chat;
+        /// if the ban fails, the delete still stands. Nothing is posted in the chat; the log channel
+        /// records it.
+        ///
+        /// Decides from the context, so it runs inline. The Telegram calls are dispatched, including
+        /// the linked-channel lookup when the short-lived cache is empty. If that lookup fails, the
+        /// message is deleted but the channel is not banned, in case it was the linked channel.
+        /// </summary>
+        internal static ChannelPostDecision ChannelPost(MessageContext ctx)
+        {
+            var message = ctx.Message;
+            var decision = ChannelPosts.Decide(message, ctx.ChatId, ctx.ChannelPosts);
+            if (decision != ChannelPostDecision.Remove && decision != ChannelPostDecision.RemoveUnlessLinked)
+                return decision;
+
+            var chatId = ctx.ChatId;
+            var channel = message.SenderChat;
+            var messageId = message.MessageId;
+            var lang = ctx.Lang;
+            var checkLinked = decision == ChannelPostDecision.RemoveUnlessLinked;
+
+            Bot.DispatchAction(() =>
+            {
+                var mayBan = true;
+                if (checkLinked)
+                {
+                    try
+                    {
+                        var linked = Bot.Api.GetChat(chatId).GetAwaiter().GetResult().LinkedChatId ?? 0;
+                        Repositories.ChannelPosts.SetLinkedChannelAsync(chatId, linked).GetAwaiter().GetResult();
+                        if (linked == channel.Id) return;
+                    }
+                    catch (Exception e)
+                    {
+                        LogHelper.Error($"Linked channel lookup for {chatId} failed, deleting without a ban: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                        mayBan = false;
+                    }
+                }
+
+                var deleted = TryTelegram(() => Bot.DeleteMessage(chatId, messageId), $"Deleting a channel post in {chatId}");
+                var banned = mayBan && TryTelegram(() => Bot.Api.BanChatSenderChat(chatId, channel.Id).Wait(),
+                    $"Banning channel {channel.Id} in {chatId}");
+                if (!deleted && !banned) return;
+
+                Service.LogBotAction(chatId, Methods.GetLocaleString(lang,
+                    banned ? "channelPostBanned" : "channelPostDeleted", ChannelPosts.Describe(channel)));
+            }, "ChannelPost");
+            return decision;
+        }
+
+        private static bool TryTelegram(Action call, string what)
+        {
+            try
+            {
+                call();
+                return true;
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"{what} failed: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                return false;
+            }
         }
 
         internal static async Task RightToLeft(MessageContext ctx)

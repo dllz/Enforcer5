@@ -137,6 +137,21 @@ namespace Enforcer5.Handlers
                     var moderate = ctx.IsGroup && ctx.Complete;
                     if (moderate)
                     {
+                        // First, because a post made as a channel carries Telegram's shared
+                        // placeholder as its sender: the per-user filters below would count every
+                        // channel poster as one user, and try to ban that placeholder.
+                        switch (OnMessage.ChannelPost(ctx))
+                        {
+                            case ChannelPostDecision.Remove:
+                            case ChannelPostDecision.RemoveUnlessLinked:
+                                return; // being deleted; the finally still awaits CollectStats
+                            case ChannelPostDecision.Exempt:
+                                moderate = false;
+                                break;
+                        }
+                    }
+                    if (moderate)
+                    {
                         background.Add(Methods.IsRekt(ctx));
                         background.Add(OnMessage.AntiFlood(ctx));
 

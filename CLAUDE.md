@@ -122,6 +122,10 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
 - Error handling uses typed `ApiRequestException` (`ErrorCode`, `Parameters.RetryAfter`),
   not message-string matching. Blocking calls wrap it in `AggregateException`, so use
   `Bot.AsApiError(e)` to unwrap.
+- A post made as a channel has `SenderChat` = the channel and `From` = Telegram's shared
+  placeholder `136817688`; the member behind it is never visible to bots. Act on the channel
+  (`BanChatSenderChat`), never on `From`. Anonymous admins have `SenderChat` = the group itself.
+  See `Models/ChannelPosts.cs`.
 
 ---
 

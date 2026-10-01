@@ -63,6 +63,12 @@ namespace Enforcer5.Models
         /// </summary>
         public IReadOnlyList<InlineBotBlock> InlineBotBlocks = Array.Empty<InlineBotBlock>();
 
+        /// <summary>
+        /// The chat's handling of the channel this message was posted as. Only read for posts made as
+        /// a channel (not anonymous admins); null otherwise.
+        /// </summary>
+        public ChannelPostPolicy ChannelPosts;
+
         /// <summary>Reads one field out of a fetched hash. Returns RedisValue.Null when absent.</summary>
         public static RedisValue Field(HashEntry[] entries, string name)
         {
@@ -130,6 +136,9 @@ namespace Enforcer5.Models
             var inlineBotBlocks = message.ViaBot != null
                 ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
                 : Task.FromResult<IReadOnlyList<InlineBotBlock>>(Array.Empty<InlineBotBlock>());
+            var channelPosts = message.SenderChat != null && message.SenderChat.Id != context.ChatId
+                ? Repositories.ChannelPosts.GetPolicyAsync(context.ChatId, message.SenderChat.Id)
+                : Task.FromResult<ChannelPostPolicy>(null);
 
             // Deliberately tolerant of individual failures. One slow settings hash must not discard
             // the whole update - that would silently drop commands under exactly the Redis
@@ -138,7 +147,7 @@ namespace Enforcer5.Models
             try
             {
                 await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks);
+                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks, channelPosts);
             }
             catch (Exception)
             {
@@ -156,10 +165,12 @@ namespace Enforcer5.Models
             context.SpamCount = Value(spamCount);
             context.Lang = Value(language)?.Doc;
             context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
+            context.ChannelPosts = Value(channelPosts);
 
             context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
-                               Ok(globalBan) && Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks);
+                               Ok(globalBan) && Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks) &&
+                               Ok(channelPosts);
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
