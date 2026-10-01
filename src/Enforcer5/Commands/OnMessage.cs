@@ -342,6 +342,44 @@ namespace Enforcer5
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Deletes a message sent via an inline bot on the chat's blocklist. Returns true when the
+        /// message matched, so the caller skips the other content filters and command dispatch for
+        /// a message that is going away.
+        ///
+        /// Exempt, and returning false so the message is processed as usual: the watch list, and
+        /// automatic forwards from the group's linked channel (deleting those breaks the channel's
+        /// comment thread). Admins are exempt too, but finding that out can mean a Telegram call,
+        /// so it happens in the dispatched action; their message is then kept, and it has still
+        /// skipped the other filters.
+        /// </summary>
+        internal static bool BlockedInlineBot(MessageContext ctx)
+        {
+            var message = ctx.Message;
+            var viaBot = message.ViaBot;
+            if (viaBot == null || ctx.InlineBotBlocks.Count == 0) return false;
+            if (ctx.Watched || message.IsAutomaticForward) return false;
+            if (InlineBotBlock.FirstMatch(ctx.InlineBotBlocks, viaBot.Username) == null) return false;
+
+            var chatId = ctx.ChatId;
+            // An anonymous admin posts as the group itself. Any other sender chat is a channel a
+            // member is posting as, which is never an admin, so it needs no lookup either.
+            var senderChat = message.SenderChat;
+            if (senderChat != null && senderChat.Id == chatId) return true;
+            var checkAdmin = senderChat == null;
+
+            var userId = ctx.UserId;
+            var messageId = message.MessageId;
+            Bot.DispatchAction(() =>
+            {
+                if (checkAdmin && Methods.IsGroupAdmin(userId, chatId)) return;
+                // Throws without the delete right; DispatchAction logs it. Nothing is sent to the
+                // chat: one notice per blocked message would double the noise during a raid.
+                Bot.DeleteMessage(chatId, messageId);
+            }, "BlockedInlineBot");
+            return true;
+        }
+
         internal static async Task RightToLeft(MessageContext ctx)
         {
             if (ctx.Watched) return;

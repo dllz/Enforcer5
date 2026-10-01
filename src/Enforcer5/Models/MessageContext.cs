@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -54,6 +56,12 @@ namespace Enforcer5.Models
         public HashEntry[] TextLength;      // chat:{id}:antitextlengthsettings
         public HashEntry[] GlobalBan;       // globalBan:{whoever IsRekt should check}
         public RedisValue SpamCount;        // spam:{chat}:{user}
+
+        /// <summary>
+        /// The chat's inline bot blocklist. Only read when the message was sent via an inline bot,
+        /// so ordinary messages pay nothing for it; empty otherwise.
+        /// </summary>
+        public IReadOnlyList<InlineBotBlock> InlineBotBlocks = Array.Empty<InlineBotBlock>();
 
         /// <summary>Reads one field out of a fetched hash. Returns RedisValue.Null when absent.</summary>
         public static RedisValue Field(HashEntry[] entries, string name)
@@ -119,6 +127,9 @@ namespace Enforcer5.Models
             var globalBan = db.HashGetAllAsync($"globalBan:{globalBanId}");
             var spamCount = db.StringGetAsync($"spam:{context.ChatId}:{context.UserId}");
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
+            var inlineBotBlocks = message.ViaBot != null
+                ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
+                : Task.FromResult<IReadOnlyList<InlineBotBlock>>(Array.Empty<InlineBotBlock>());
 
             // Deliberately tolerant of individual failures. One slow settings hash must not discard
             // the whole update - that would silently drop commands under exactly the Redis
@@ -127,7 +138,7 @@ namespace Enforcer5.Models
             try
             {
                 await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, globalBan, spamCount, language);
+                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks);
             }
             catch (Exception)
             {
@@ -144,10 +155,11 @@ namespace Enforcer5.Models
             context.GlobalBan = Value(globalBan);
             context.SpamCount = Value(spamCount);
             context.Lang = Value(language)?.Doc;
+            context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
 
             context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
-                               Ok(globalBan) && Ok(spamCount) && Ok(language);
+                               Ok(globalBan) && Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks);
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.

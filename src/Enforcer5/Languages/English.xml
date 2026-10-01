@@ -465,6 +465,39 @@
   <string key="bannedformedia">
     <value>{0} has been banned for sending illegal media</value>
   </string>
+  <string key="inlineBlockUsage">
+    <value>Give the inline bot's username, like @gif, or a regular expression between slashes, like /spam/. You can also reply to a message that was sent via the bot.</value>
+  </string>
+  <string key="inlineBlockInvalidUsername">
+    <value>{0} is not a valid bot username.</value>
+  </string>
+  <string key="inlineBlockInvalidPattern">
+    <value>That regular expression can't be used: {0}</value>
+  </string>
+  <string key="inlineBlockPatternTooLong">
+    <value>A regular expression can be at most {0} characters long.</value>
+  </string>
+  <string key="inlineBlockLimit">
+    <value>This group already has {0} entries on its inline bot blocklist, which is the maximum. Remove one with /unblockinline first.</value>
+  </string>
+  <string key="inlineBlockAdded">
+    <value>Messages sent via {0} will now be deleted.</value>
+  </string>
+  <string key="inlineBlockExists">
+    <value>{0} is already on the inline bot blocklist.</value>
+  </string>
+  <string key="inlineBlockRemoved">
+    <value>{0} has been removed from the inline bot blocklist.</value>
+  </string>
+  <string key="inlineBlockNotFound">
+    <value>{0} is not on the inline bot blocklist. Use /blockedinline to see the entries.</value>
+  </string>
+  <string key="inlineBlockList">
+    <value><![CDATA[<b>Blocked inline bots</b>:\n{0}]]></value>
+  </string>
+  <string key="inlineBlockListEmpty">
+    <value>No inline bots are blocked in this group.</value>
+  </string>
   <string key="kickedForNoEnglishScript">
     <value>{0} has been kicked for using non-Latin characters</value>
   </string>
@@ -1386,6 +1419,37 @@
       /{0} while replying to a user
       /{0} [User ID]
       /{0} [Username]
+    </value>
+  </string>
+  <string key="hcommandblockinline">
+    <value>
+      Deletes every message sent via an inline bot, for example GIFs sent with @gif. Admins and users excluded with /disablewatch are not affected. Enforcer needs the right to delete messages.
+
+      Give the bot's username to block that bot, or a regular expression between slashes to block every bot whose username matches it. Expressions ignore case, are matched against the username without the @, and match anywhere in it unless you anchor them with ^ and $.
+
+      Example:
+      /{0} @gif
+      /{0} while replying to a message sent via the bot
+      /{0} /^spam/ blocks every bot whose username starts with spam
+      /{0} /.*/ blocks all inline bots
+    </value>
+  </string>
+  <string key="hcommandunblockinline">
+    <value>
+      Removes an entry from the inline bot blocklist. Write it exactly as /blockedinline shows it.
+
+      Example:
+      /{0} @gif
+      /{0} /^spam/
+      /{0} while replying to a message sent via the bot
+    </value>
+  </string>
+  <string key="hcommandblockedinline">
+    <value>
+      Lists the inline bots blocked in this group.
+
+      Example:
+      /{0}
     </value>
   </string>
   <string key="hcommandunblockelevate">

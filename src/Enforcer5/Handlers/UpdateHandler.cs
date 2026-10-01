@@ -139,6 +139,12 @@ namespace Enforcer5.Handlers
                     {
                         background.Add(Methods.IsRekt(ctx));
                         background.Add(OnMessage.AntiFlood(ctx));
+
+                        // Ahead of the type switch, because most inline bot traffic is GIFs and
+                        // any type can be sent via a bot. A blocked bot's message is being
+                        // deleted, so nothing below should act on it; the finally still awaits
+                        // the work queued above.
+                        if (OnMessage.BlockedInlineBot(ctx)) return;
                     }
 
                     switch (update.Message.Type)

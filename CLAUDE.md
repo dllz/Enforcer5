@@ -48,6 +48,7 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/Updater.cs` | Staged-update support for DeployBot |
 | `src/Enforcer5/Helpers/MessageExtensions.cs` | Bridges 13.x shapes 22.x dropped (`NewChatMember`, `IsServiceMessage`) |
 | `src/Enforcer5/Handlers/UpdateHandler.cs` | Update routing, spam detection, command dispatch |
+| `src/Enforcer5/Data/` | Repository interfaces, their Redis implementations, and `Repositories` (the composition root) |
 | `src/Enforcer5/Commands/` | Commands, callbacks, inline queries, menus |
 | `src/Enforcer5/Attributes/` | `[Command]`, `[Callback]`, `[Query]` — bound by reflection at startup |
 | `src/Enforcer5/Languages/` | XML localisation, copied to output |
@@ -134,6 +135,15 @@ The instance is shared with blackwolf. Enforcer uses DB index 0 (`Constants.Enfo
 Message objects stashed in Redis (`messageObject{i}` in `FlagCommands`) were serialised by
 the 13.x types. The read path tolerates failures so pre-migration entries degrade rather
 than throw — keep that.
+
+### Repositories
+
+We are working towards a Postgres migration. **New** data access goes behind a repository
+interface in `Data/` (e.g. `IInlineBotBlockRepository`), with the Redis implementation
+next to it and wiring in `Data/Repositories`. Callers never touch `Redis.db` for that
+data. Commands are reflection-bound statics, so `Repositories` is a static composition
+root rather than constructor injection. The existing direct `Redis.db` calls move over
+when that code is touched.
 
 ---
 
