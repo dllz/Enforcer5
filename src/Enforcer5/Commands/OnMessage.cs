@@ -149,7 +149,7 @@ namespace Enforcer5
                     case "kick":
                         Methods.KickUser(groupId, userid, lang);
                         reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
-                        Service.LogBotAction(groupId, reply);
+                        Service.LogBotAction(groupId, reply, userid);
                         Bot.SendReply(reply, update);
                         return;
                     case "ban":
@@ -158,7 +158,7 @@ namespace Enforcer5
                         {
                             Methods.SaveBan(userid, "longmessages");
                             reply = Methods.GetLocaleString(lang, "banformesslength", userid);
-                            Service.LogBotAction(groupId, reply);
+                            Service.LogBotAction(groupId, reply, userid);
                             Bot.SendReply(reply, update);
                             return;
                         }
@@ -172,7 +172,7 @@ namespace Enforcer5
                         string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                         var message = Methods.GetLocaleString(lang, "tempbanformesslength",
                             $"{userid}", timeText);
-                        Service.LogBotAction(groupId, message);
+                        Service.LogBotAction(groupId, message, userid);
                         Commands.Tempban(userid, groupId, time, userid.ToString(), message: message);
                         break;
                     case "default":
@@ -207,7 +207,7 @@ namespace Enforcer5
                     case "kick":
                         Methods.KickUser(groupId, userid, lang);
                         reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
-                        Service.LogBotAction(groupId, reply);
+                        Service.LogBotAction(groupId, reply, userid);
                         Bot.SendReply(reply, update);
                         break;
                     case "ban":
@@ -216,7 +216,7 @@ namespace Enforcer5
                         {
                             Methods.SaveBan(userid, "namelength");
                             reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
-                            Service.LogBotAction(groupId, reply);
+                            Service.LogBotAction(groupId, reply, userid);
                             Bot.SendReply(reply, update);
                         }
                         break;
@@ -229,7 +229,7 @@ namespace Enforcer5
                         string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                         var message = Methods.GetLocaleString(lang, "tempbanfornamelength",
                             $"{userid}", timeText);
-                        Service.LogBotAction(groupId, message);
+                        Service.LogBotAction(groupId, message, userid);
                         Commands.Tempban(userid, groupId, time, userid.ToString(), message: message);
                         break;
                     case "default":
@@ -305,7 +305,7 @@ namespace Enforcer5
                         case "kick":
                             Methods.KickUser(chatId, message.From.Id, lang);
                             reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
-                            Service.LogBotAction(chatId, reply);
+                            Service.LogBotAction(chatId, reply, message.From.Id);
                             Bot.SendReply(reply, message);
                             break;
                         case "ban":
@@ -314,7 +314,7 @@ namespace Enforcer5
                             {
                                 Methods.SaveBan(message.From.Id, "media");
                                 reply = Methods.GetLocaleString(lang, "bannedformedia", name);
-                                Service.LogBotAction(chatId, reply);
+                                Service.LogBotAction(chatId, reply, message.From.Id);
                                 Methods.AddBanList(chatId, message.From.Id, message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedformedia", ""));
                                 Bot.SendReply(reply, message);
@@ -326,7 +326,7 @@ namespace Enforcer5
                             string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                             var messageText = Methods.GetLocaleString(lang, "tempbannedformedia",
                                 $"{name}, {message.From.Id}", timeText);
-                            Service.LogBotAction(chatId, messageText);
+                            Service.LogBotAction(chatId, messageText, message.From.Id);
                             Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText);
                             break;
                     }
@@ -373,7 +373,7 @@ namespace Enforcer5
                         case "kick":
                             Methods.KickUser(chatId, userId, lang);
                             reply = Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {userId}");
-                            Service.LogBotAction(chatId, reply);
+                            Service.LogBotAction(chatId, reply, userId);
                             Bot.Send(reply, update);
                             break;
                         case "ban":
@@ -384,7 +384,7 @@ namespace Enforcer5
                                 Methods.AddBanList(chatId, userId, update.Message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedForRtl", ""));
                                 reply = Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {userId}");
-                                Service.LogBotAction(chatId, reply);
+                                Service.LogBotAction(chatId, reply, userId);
                                 Bot.Send(reply, update);
                             }
                             break;
@@ -394,7 +394,7 @@ namespace Enforcer5
                             string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                             var message = Methods.GetLocaleString(lang, "tempbannedForRtl",
                                 $"{name}, {userId}", timeText);
-                            Service.LogBotAction(chatId, message);
+                            Service.LogBotAction(chatId, message, userId);
                             Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
                             break;
                     }
@@ -455,7 +455,7 @@ namespace Enforcer5
                         case "kick":
                             Methods.KickUser(chatId, userId, lang);
                             reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
-                            Service.LogBotAction(chatId, reply);
+                            Service.LogBotAction(chatId, reply, userId);
                             Bot.Send(reply, update);
                             break;
                         case "ban":
@@ -467,7 +467,7 @@ namespace Enforcer5
                                     Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
 
                                 reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");
-                                Service.LogBotAction(chatId, reply);
+                                Service.LogBotAction(chatId, reply, userId);
                                 Bot.Send(reply, update);
                             }
                             break;
@@ -476,7 +476,7 @@ namespace Enforcer5
                             var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
                             var message = Methods.GetLocaleString(lang, "tempbanForNoEnglishScript",
                                 $"{name}, {userId}", timeText);
-                            Service.LogBotAction(chatId, message);
+                            Service.LogBotAction(chatId, message, userId);
                             Commands.Tempban(userId, chatId, time, userId.ToString(), message: message);
                             break;
                     }

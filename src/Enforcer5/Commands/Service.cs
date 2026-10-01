@@ -406,9 +406,62 @@ defSpamValue = 3;
             }
         }
 
-        public static void LogBotAction(long chatId, string command)
+        public static void LogBotAction(long chatId, string command, long? targetId = null)
         {
-            LogCommand(chatId, -1, "Enforcer", Bot.Api.GetChat(chatId).Result.Title, command);
+            var target = targetId.HasValue ? GetCachedUserName(targetId.Value) : "";
+            LogCommand(chatId, -1, "Enforcer", GetCachedGroupName(chatId), command, target);
+        }
+
+        // Callbacks whose data is "trigger:chatId:userId", so args[2] is the affected user.
+        private static readonly HashSet<string> UserTargetCallbacks = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "banflag", "kickflag", "warnflag", "resetwarns", "removewarn", "resetPrewarns", "removePrewarn",
+            "userbuttonresetwarn", "userbuttonremwarns", "userbuttonbanuser", "userbuttonwarnuser",
+            "usermediaremwarns", "usermediaresetwarn"
+        };
+
+        /// <summary>
+        /// Logs an admin button press with the group name, the full callback data and, where the
+        /// callback carries one, the affected user. Names come from the Redis caches CollectStats
+        /// maintains, so no Telegram calls are made; the ID is the fallback.
+        /// </summary>
+        public static void LogCallback(long chatId, User admin, string callbackData)
+        {
+            var target = "";
+            var parts = callbackData.Split(':');
+            if (parts.Length >= 3 && UserTargetCallbacks.Contains(parts[0]) && long.TryParse(parts[2], out var targetId))
+                target = GetCachedUserName(targetId);
+            LogCommand(chatId, admin.Id, Methods.FormatHTML(admin.FirstName), GetCachedGroupName(chatId), Methods.FormatHTML(callbackData), target);
+        }
+
+        private static string GetCachedGroupName(long chatId)
+        {
+            try
+            {
+                var name = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
+                // LogCommand already appends "(chatId)", so an unknown name is just left blank.
+                return name.IsNullOrEmpty ? "" : Methods.FormatHTML(name.ToString());
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+
+        private static string GetCachedUserName(long userId)
+        {
+            try
+            {
+                var fields = Redis.db.HashGetAsync($"user:{userId}", new RedisValue[] { "name", "username" }).Result;
+                var name = fields[0].IsNullOrEmpty ? null : fields[0].ToString();
+                var username = fields[1].IsNullOrEmpty ? null : fields[1].ToString();
+                var label = string.Join(" ", new[] { name, username }.Where(s => s != null));
+                return string.IsNullOrEmpty(label) ? userId.ToString() : $"{Methods.FormatHTML(label)} ({userId})";
+            }
+            catch (Exception)
+            {
+                return userId.ToString();
+            }
         }
 
         public static void LogCommand(Update update, string command)
