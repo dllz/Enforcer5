@@ -387,7 +387,11 @@ namespace Enforcer5
                                         }
                                     }
                                 };
-                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                                // On a failed forward, still show the reporter's own text.
+                                var reportText = replyFailure && !string.IsNullOrEmpty(updateMessage.Text)
+                                    ? Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text)
+                                    : Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId);
+                                result = Bot.Send(reportText,
                                     mod
                                     , Key.CreateMarkupFromMenu(solvedMenu));
                             }
@@ -438,7 +442,11 @@ namespace Enforcer5
                                             : null
                                     }
                                 };
-                                result = Bot.Send(Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId),
+                                // On a failed forward, still show the reporter's own text.
+                                var reportText = replyFailure && !string.IsNullOrEmpty(updateMessage.Text)
+                                    ? Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text)
+                                    : Methods.GetLocaleString(lang, "reportAdmin", reporter, chatTitle, repId);
+                                result = Bot.Send(reportText,
                                     mod,
                                     Key.CreateMarkupFromMenu(solvedMenu));
                             }
