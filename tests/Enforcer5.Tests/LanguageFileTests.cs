@@ -19,25 +19,14 @@ namespace Enforcer5.Tests
     public class LanguageFileTests
     {
         // Gaps that predate these tests. The checks fail on any new gap, and also when one of
-        // these is fixed, so that the entry is removed and the list only ever shrinks.
-        //
-        // None of these keys has ever been in English.xml in git. They may exist only in the live
-        // copy on the server; if not, the commands using them fail after they have acted.
+        // these is fixed, so that the entry is removed and the list only ever shrinks. Both were
+        // emptied when the repo copy was synced with the live file in October 2026; keep them so.
         private static readonly string[] KnownMissingKeys =
         {
-            // /mute, /tempmute, /unmute
-            "muted", "temmpmuted", "unmuted", "cannotmuteadmin", "cannottempmuteadmin",
-            // prewarns
-            "prewarn", "resetPreWarn", "removePreWarn", "preWarnConverted", "getPreWarn",
-            "getgrouptotalwarn",
-            // premium purchase; its [Command] is commented out
-            "Purchase", "clickToGetPremium", "purchaseTitle", "purchasePremium",
         };
 
         private static readonly string[] KnownMissingHelp =
         {
-            "admins", "info", "listmutedjoiners", "mute", "prewarn", "remotedisablewatch", "report",
-            "settempmutetime", "tempmute", "unmute", "unmutenewjoiners", "unpingall",
         };
 
         private static XDocument _english;

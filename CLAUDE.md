@@ -180,6 +180,11 @@ restart or deployment. Both processes monitor the shared directory and atomicall
 their in-memory language snapshot when XML files change. Admin upload staging remains
 separate, while an accepted upload is atomically published to the shared directory.
 
+Because deployments never update the live XML, the repo's `English.xml` and the live one can
+drift apart. They had until October 2026: the live file had keys and text edits that git did
+not. Treat the repo file as the source: change text there, then upload that file with
+`/uploadlanguage`. Never upload an older repo copy over the live file without comparing them.
+
 DeployBot commands (run in blackwolf's deploy chat): `/enforcerstatus`,
 `/upgradeenforcer`, `/forceenforcer`, `/rollbackenforcer`, `/startenforcer`,
 `/stopenforcer`. They share blackwolf's `OpLock`, so werewolf and enforcer deploys cannot
@@ -225,8 +230,8 @@ What is covered, and where to add tests:
 - Moderation decisions: handlers that read only from `MessageContext` can be tested by
   building one by hand. Paths that reach `Bot.Api` or `Redis.db` cannot be tested yet.
 - `LanguageFileTests`: every literal key used in code exists in `English.xml`, there are no
-  duplicate keys, and every command has `hcommand` help. Pre-existing gaps are listed in the
-  test; it fails on a new gap and when a listed one is fixed, so the list only shrinks.
+  duplicate keys, and every command has `hcommand` help. Both checks pass with no exceptions;
+  the test has an (empty) known-gaps list that may only ever shrink.
 - `CommandRegistrationTests`: every `[Command]`/`[Callback]`/`[Query]` binds exactly as
   `Bot.Initialize` does it, and triggers are unique.
 
