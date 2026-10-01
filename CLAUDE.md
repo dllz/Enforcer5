@@ -53,6 +53,7 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Attributes/` | `[Command]`, `[Callback]`, `[Query]` — bound by reflection at startup |
 | `src/Enforcer5/Languages/` | XML localisation, copied to output |
 | `deploy/` | `setup.sh`, `enf.sh`, systemd unit templates |
+| `tests/Enforcer5.Tests/` | MSTest + Moq unit tests; run by the Docker build (see Testing) |
 
 ### Command dispatch
 
@@ -202,8 +203,35 @@ latter throws on Unix.
 
 ## Testing
 
-There are no unit tests. Verification is: build both configs, `docker build`, then run the
-container against a **test bot token and a scratch Redis DB**.
+```bash
+dotnet test Enforcer5.slnx               # Debug (NORMAL)
+dotnet test Enforcer5.slnx -c Premium    # PREMIUM code paths
+```
+
+`tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
+through `InternalsVisibleTo`. The whole suite runs in about a second.
+
+**The Docker build runs the tests** (`Dockerfile`, before `publish`), once per image and so
+once per config. A failing test fails the image build, so CI pushes nothing and DeployBot is
+not notified. This costs no separate CI job; the CI minute budget is limited, so keep these
+tests fast and self-contained: no network, no Redis, no Telegram, no sleeps. Anything slower
+belongs in a pre-commit hook, not in the image build.
+
+What is covered, and where to add tests:
+
+- Pure logic: parsing, matching, content-type classification. Test it directly.
+- Repositories (`Data/`): test the Redis implementation against a Moq `IDatabaseAsync`.
+  `StorageFormat_IsStable` pins the stored layout; changing it needs a data migration.
+- Moderation decisions: handlers that read only from `MessageContext` can be tested by
+  building one by hand. Paths that reach `Bot.Api` or `Redis.db` cannot be tested yet.
+- `LanguageFileTests`: every literal key used in code exists in `English.xml`, there are no
+  duplicate keys, and every command has `hcommand` help. Pre-existing gaps are listed in the
+  test; it fails on a new gap and when a listed one is fixed, so the list only shrinks.
+- `CommandRegistrationTests`: every `[Command]`/`[Callback]`/`[Query]` binds exactly as
+  `Bot.Initialize` does it, and triggers are unique.
+
+Beyond the unit tests, behaviour against Telegram still needs a manual run against a **test
+bot token and a scratch Redis DB**.
 
 Never point a second consumer at production Redis — two instances fight over
 `bot:last_update` and double-process every update.

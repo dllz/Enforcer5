@@ -39,4 +39,9 @@
     <Content Include="Languages\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Nearly everything is internal; the unit tests need to reach it. -->
+    <InternalsVisibleTo Include="Enforcer5.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -393,9 +393,6 @@
   <string key="linkButton">
     <value>Link</value>
   </string>
-  <string key="textButton">
-    <value>Text</value>
-  </string>
   <string key="doNothing">
     <value>I do not do anything</value>
   </string>
