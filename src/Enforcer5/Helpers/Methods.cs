@@ -1201,6 +1201,10 @@ namespace Enforcer5.Helpers
                 case MessageType.Photo:
                     return "image";
                     break;
+                // Telegram.Bot 22.x reports GIFs as Animation; 13.x reported them as a video/mp4
+                // Document, which is all the branch below handles.
+                case MessageType.Animation:
+                    return "gif";
                 case MessageType.Document:
                     if (msg.Document.MimeType == null) return "unknown";
                     if (msg.Document.MimeType.Equals("video/mp4"))

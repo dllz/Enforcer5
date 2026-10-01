@@ -163,6 +163,7 @@ namespace Enforcer5.Handlers
                             }
                             break;
                         case MessageType.Photo:
+                        case MessageType.Animation:
                         case MessageType.Audio:
                         case MessageType.Video:
                         case MessageType.Voice:
