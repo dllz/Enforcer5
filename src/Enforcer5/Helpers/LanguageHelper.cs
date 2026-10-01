@@ -142,7 +142,7 @@ namespace Enforcer5.Handlers
                 newFilePath = Path.Combine(path.FullName, pendingId + ".xml");
                 pendingNamePath = Path.Combine(path.FullName, pendingId + ".name");
                 using (var fs = new FileStream(newFilePath, FileMode.CreateNew))
-                    await Bot.Api.GetInfoAndDownloadFile(fileid, fs);
+                    await Bot.Files.DownloadAsync(fileid, fs);
                 //ok, we have the file.  Now we need to determine the language, scan it and the original file.
                 var newFileErrors = new List<LanguageError>();
                 //first, let's load up the English file, which is our master file

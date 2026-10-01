@@ -44,6 +44,7 @@ Restart=always
 RestartSec=5
 Environment=${APIKEY}=
 Environment=TelegramServerUrl=
+Environment=TelegramFileUrl=
 Environment=RedisConnection=
 Environment=RedisPassword=
 Environment=PaymentProviderToken=

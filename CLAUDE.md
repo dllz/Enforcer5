@@ -80,6 +80,7 @@ Production ships no JSON file; everything comes from the systemd unit.
 |---|---|
 | `EnforcerAPI` / `EnforcerPremiumAPI` | Bot token; which one is read is a compile-time choice |
 | `TelegramServerUrl` | Optional self-hosted Bot API server |
+| `TelegramFileUrl` | Optional. Where files sent to the bot are downloaded from, as `{TelegramFileUrl}/{token}/{file_path}`. Unset with a self-hosted server, it defaults to that server's host on port 80 plus `/file` (e.g. `http://192.168.0.51/file`); our Bot API server answers 404 on its own `/file/bot{token}/` route, and blackwolf uses the same port-80 address. Unset without a server, the official API is used |
 | `RedisConnection` / `RedisPassword` | Shared instance with blackwolf; DB index 0 |
 | `PaymentProviderToken` | Telegram Payments. Never commit this |
 | `ErrorChatId` | Errors and startup notices; falls back to `Constants.Devs[0]` |

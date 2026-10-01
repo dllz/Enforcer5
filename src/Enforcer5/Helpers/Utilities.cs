@@ -33,6 +33,9 @@ namespace Enforcer5.Helpers
     {
         internal static string TelegramAPIKey;
         public static TelegramBotClient Api;
+        /// <summary>Downloads files users send to the bot. Set up next to <see cref="Api"/>.</summary>
+        internal static ITelegramFileDownloader Files;
+        private static readonly HttpClient FileHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         public static User Me;
         public static DateTime StartTime = DateTime.UtcNow;
         public static bool Running = true;
@@ -346,6 +349,9 @@ namespace Enforcer5.Helpers
             Api = string.IsNullOrEmpty(serverUrl)
                 ? new TelegramBotClient(TelegramAPIKey)
                 : new TelegramBotClient(new TelegramBotClientOptions(TelegramAPIKey, serverUrl));
+            Files = new TelegramFileDownloader(Api, FileHttp,
+                TelegramFileDownloader.ResolveFileBaseUrl(RegHelper.GetRegValue("TelegramFileUrl"), serverUrl),
+                TelegramAPIKey);
 
             Me = await Api.GetMe();
             try { Console.Title = $"Enforcer {Me.Username}"; } catch (PlatformNotSupportedException) { }
