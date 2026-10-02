@@ -6,6 +6,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using StackExchange.Redis;
@@ -774,73 +775,21 @@ namespace Enforcer5
         public static void SetDefaultTempMute(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            long userId = 0;
             var chatId = update.Message.Chat.Id;
-            long time;
-            string length = "";
-            string units = "";
-            
-            if (args[1] != null)
+            switch (Duration.TryParse(args.Length > 1 ? args[1] : null, out var duration))
             {
-                if (args[1].Contains(' '))
-                {
-                    length = args[1].Split(' ')[0];
-                    
-                    try
-                    {
-                        units = args[1].Split(' ')[1];
-                    }
-                    catch (Exception e)
-                    {
-                        units = "min";
-                    }
-                }
-                else 
-                {
-                    length = args[1];
-                    units = "min";
-                }
-                if (long.TryParse(length, out time))
-                {
-                    time = long.Parse(length);
-                    if (time == 0)
-                    {
-                        time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
-                    }
-                }
-                else
-                {
-                    time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
-                }
-                double calculatedTime = 0;
-                switch (units)
-                {
-                    case "min":
-                    case "mins":
-                    case "minutes":
-                    case "minute":
-                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                        break;
-                    case "hour":
-                    case "hours":
-                        calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
-                        break;
-                    case "days":
-                    case "day":
-                        calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
-                        break;
-                    default:
-                        calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                        break;
-
-                }
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempMuteTime", calculatedTime);
-                Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
-                Service.LogCommand(update, update.Message.Text);
-            }
-            else
-            {
-                Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                case DurationParseResult.Empty:
+                    // Like /temptime: without an argument, show the current default.
+                    Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTime", Methods.GetGroupTempMuteTime(chatId)), update);
+                    return;
+                case DurationParseResult.Ok:
+                    Redis.db.HashSetAsync($"chat:{chatId}:otherSettings", "tempMuteTime", (int)duration.TotalMinutes);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
+                    Service.LogCommand(update, update.Message.Text);
+                    return;
+                default:
+                    Bot.SendReply(Methods.GetLocaleString(lang, "invalidDuration"), update);
+                    return;
             }
         }
 
@@ -866,37 +815,22 @@ namespace Enforcer5
         public static void GetMutedJoinersList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:mutedJoiners";
-            var mutedJoinerIds = Redis.db.SetMembers(hash);
-
-            if (mutedJoinerIds.Length == 0)
+            var chatId = update.Message.Chat.Id;
+            try
             {
-                Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+                var joiners = Repositories.Mutes.GetMutedJoinersAsync(chatId).GetAwaiter().GetResult();
+                // Drops joiners who were unmuted by hand in Telegram, or left, instead of failing on them.
+                var lines = StillMuted(chatId, joiners.Select(id => (id, "")));
+                if (lines.Count == 0)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+                    return;
+                }
+                Bot.SendReply(Methods.GetLocaleString(lang, "mutedList", string.Join("\n", lines)), update);
             }
-            else
+            catch (Exception e)
             {
-                List<string> userNames = new List<string>();
-                foreach (var id in mutedJoinerIds)
-                {
-                    var string_id = long.Parse(id.ToString())
-;                    var user = Bot.Api.GetChatMember(update.Message.Chat.Id, string_id).Result;
-                    var username = user.User.Username;
-                    userNames.Add(username);
-                }
-
-                
-                var text = string.Join("\n", userNames);
-
-                if (Methods.SendInPm(update.Message, "Muted"))
-                {
-                    lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                    Bot.SendToPm(Methods.GetLocaleString(lang, "mutedList", text), update);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
-                }
-                else
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "mutedList", text), update);
-                }
+                Methods.SendError(e.Message, update.Message, lang);
             }
         }
 
@@ -905,47 +839,34 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var chatId = update.Message.Chat.Id;
-            var hash = $"chat:{chatId}:mutedJoiners";
-            var joiners = Redis.db.SetMembers(hash);
-            List<long> failedToUnmute = new List<long>();
+            var joiners = Repositories.Mutes.GetMutedJoinersAsync(chatId).GetAwaiter().GetResult();
+            var failedToUnmute = new List<long>();
 
-            if (joiners.Length == 0)
+            if (joiners.Count == 0)
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "noMutedJoiners"), update);
+                return;
+            }
+
+            foreach (var joiner in joiners)
+            {
+                // Quiet: the failures are listed together below rather than one error each.
+                if (!Methods.UnmuteUser(chatId, joiner, lang, quiet: true))
+                {
+                    failedToUnmute.Add(joiner);
+                }
+            }
+
+            if (failedToUnmute.Count > 0)
+            {
+                var text = string.Join("\n", failedToUnmute.Select(id => DescribeUser(id, null)));
+                Bot.SendReply(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
             }
             else
             {
-                foreach(var joiner in joiners)
-                {
-                    var js = joiner.ToString();
-                    long joiner_id = long.Parse(joiner.ToString());
-                    var res = Methods.UnmuteUser(update.Message.Chat.Id, joiner_id, lang);
-                    if (!res)
-                    {
-                        failedToUnmute.Add(joiner_id);
-                    }
-                }
-                if (failedToUnmute.Count > 0)
-                {
-                    var text = string.Join("\n", failedToUnmute);
-
-                    if (Methods.SendInPm(update.Message, "Muted"))
-                    {
-                        lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-                        Bot.SendToPm(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
-                        Bot.SendReply(Methods.GetLocaleString(lang, "botPm", text), update);
-                    }
-                    else
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "failedUnmutedList", text), update);
-                    }
-                }
-                else
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "unmutedAllJoiners"), update);
-                }
-
+                Bot.SendReply(Methods.GetLocaleString(lang, "unmutedAllJoiners"), update);
             }
+            Service.LogCommand(update, update.Message.Text);
         }
 
 

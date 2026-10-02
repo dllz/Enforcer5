@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Handlers;
 using Telegram.Bot.Types;
 using Enforcer5.Helpers;
@@ -636,33 +637,52 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
+        /// <summary>
+        /// Who a mute command is about, or 0 when there is nobody to act on. A post made as a
+        /// channel, or by an anonymous admin, carries a placeholder sender that must not be muted
+        /// in its place, so those get an explanation instead. Like /ban, the bot and the admin
+        /// themselves are skipped silently: without a reply or an argument, GetUserId returns the
+        /// admin.
+        /// </summary>
+        private static long MuteTarget(Update update, string[] args, System.Xml.Linq.XDocument lang)
+        {
+            switch (ChannelPosts.FromModerationCommand(update.Message, args.Length > 1 ? args[1] : null,
+                        update.Message.Chat.Id, out _, out _))
+            {
+                case ChannelTargetKind.Group:
+                    Bot.SendReply(Methods.GetLocaleString(lang, "cannotmuteadmin"), update);
+                    return 0;
+                case ChannelTargetKind.Channel:
+                    Bot.SendReply(Methods.GetLocaleString(lang, "cannotMuteChannel"), update);
+                    return 0;
+            }
+
+            var userId = Methods.GetUserId(update, args);
+            if (userId == Bot.Me.Id || userId == update.Message.From.Id) return 0;
+            return userId;
+        }
+
         [Command(Trigger = "mute", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Mute(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             try
             {
-                var userId = Methods.GetUserId(update, args);
                 var chatId = update.Message.Chat.Id;
-                if (userId == Bot.Me.Id || userId == update.Message.From.Id)
-                    return;
+                var userId = MuteTarget(update, args, lang);
+                if (userId == 0) return;
 
-                if (Methods.MuteUser(chatId, userId, lang))
+                // On failure MuteUser has already told the chat why.
+                if (!Methods.MuteUser(chatId, userId, lang)) return;
+
+                object[] arguments =
                 {
-                    object[] arguments =
-                {
-                            Methods.GetNick(update.Message, args, userId),
-                            Methods.GetNick(update.Message, args, true)
+                    Methods.GetNick(update.Message, args, userId),
+                    Methods.GetNick(update.Message, args, true)
                 };
-                    Service.LogCommand(update, update.Message.Text);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "muted", arguments), update);
-                }
-                else
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
-                }
+                Service.LogCommand(update, update.Message.Text);
+                Bot.SendReply(Methods.GetLocaleString(lang, "muted", arguments), update);
             }
-
             catch (Exception e)
             {
                 Methods.SendError(e.Message, update.Message, lang);
@@ -672,68 +692,40 @@ namespace Enforcer5
         [Command(Trigger = "tempmute", GroupAdminOnly = true, InGroupOnly = true)]
         public static void TempMute(Update update, string[] args)
         {
-            var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            long userId = Methods.GetUserId(update, args);
-            var chatId = update.Message.Chat.Id;
-            long time;
-            string length = "";
-            string units = "";
-            
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                var chatId = update.Message.Chat.Id;
+                var userId = MuteTarget(update, args, lang);
+                if (userId == 0) return;
 
-            if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
-            {
-                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
-            }
-            if (time == 0)
-            {
-                time = Methods.GetGroupTempMuteTime(update.Message.Chat.Id);
-            }
-            double calculatedTime = 0;
-            switch (units)
-            {
-                case "min":
-                case "mins":
-                case "minutes":
-                case "minute":
-                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                    break;
-                case "hour":
-                case "hours":
-                    calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
-                    break;
-                case "days":
-                case "day":
-                    calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
-                    break;
-                default:
-                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                    break;
-            }
-            if (userId != 0)
-            {
-                // UTC only because we plug into telgeram API which assumes UTC timezone.
-                var unmuteTime = System.DateTime.UtcNow.AddSeconds(calculatedTime * 60);
-                var res = Methods.TempMuteUser(chatId, userId, unmuteTime, lang);
+                TimeSpan duration;
+                switch (Duration.TryParse(Duration.AfterTarget(update.Message, args.Length > 1 ? args[1] : null), out duration))
+                {
+                    case DurationParseResult.Ok:
+                        break;
+                    case DurationParseResult.Empty:
+                        duration = TimeSpan.FromMinutes(Methods.GetGroupTempMuteTime(chatId));
+                        break;
+                    default:
+                        Bot.SendReply(Methods.GetLocaleString(lang, "invalidDuration"), update);
+                        return;
+                }
+
+                // Pure UTC: Telegram reads untilDate as UTC.
+                var until = DateTime.UtcNow.Add(duration);
+                if (!Methods.TempMuteUser(chatId, userId, until, lang)) return;
+
                 Service.LogCommand(update, update.Message.Text);
-
-                if (res)
-                {
-                    string timeText = TimeSpan.FromMinutes(calculatedTime).ToString(@"dd\:hh\:mm");
-                    var nick = Methods.GetNick(update.Message, args, userId);
-                    Service.LogCommand(update, update.Message.Text);
-                    var hash = $"chat:{chatId}:tempmuted";
-                    Redis.db.HashSetAsync(hash, $"{userId}", unmuteTime.ToUnixTime());
-                    Bot.SendReply(Methods.GetLocaleString(lang, "temmpmuted", timeText, nick, userId), update);
-                }
-                else
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
-                }
+                Bot.SendReply(Methods.GetLocaleString(lang, "temmpmuted", Duration.ToDisplay(duration),
+                    Methods.GetNick(update.Message, args, userId), userId), update);
             }
-
+            catch (Exception e)
+            {
+                Methods.SendError(e.Message, update.Message, lang);
+            }
         }
-            
-    
+
         [Command(Trigger = "unmute", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Unmute(Update update, string[] args)
         {
@@ -741,25 +733,124 @@ namespace Enforcer5
             try
             {
                 var chatId = update.Message.Chat.Id;
-                var userId = Methods.GetUserId(update, args);
+                var userId = MuteTarget(update, args, lang);
+                if (userId == 0) return;
+
+                if (!Methods.UnmuteUser(chatId, userId, lang)) return;
+
                 object[] arguments =
                 {
-                            Methods.GetNick(update.Message, args, userId),
-                            Methods.GetNick(update.Message, args, true)
+                    Methods.GetNick(update.Message, args, userId),
+                    Methods.GetNick(update.Message, args, true)
                 };
-                if (Methods.UnmuteUser(chatId, userId, lang))
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "unmuted", arguments), update);
-                    Service.LogCommand(update, update.Message.Text);
-                } else
-                {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
-                }
+                Bot.SendReply(Methods.GetLocaleString(lang, "unmuted", arguments), update);
+                Service.LogCommand(update, update.Message.Text);
             }
             catch (Exception e)
             {
                 Methods.SendError(e.Message, update.Message, lang);
             }
+        }
+
+        [Command(Trigger = "mutelist", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void MuteList(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                var chatId = update.Message.Chat.Id;
+                var muted = Repositories.Mutes.GetMutedAsync(chatId).GetAwaiter().GetResult();
+                var now = DateTime.UtcNow;
+                var tempMuted = Repositories.Mutes.GetTempMutedAsync(chatId, now).GetAwaiter().GetResult();
+
+                var mutedLines = StillMuted(chatId, muted.Select(id => (id, "")));
+                var tempLines = StillMuted(chatId, tempMuted
+                    .OrderBy(t => t.UntilUtc)
+                    .Select(t => (t.UserId, $" - {Duration.ToDisplay(t.UntilUtc - now)}")));
+
+                if (mutedLines.Count == 0 && tempLines.Count == 0)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "noMutedUsers"), update);
+                    return;
+                }
+                Bot.SendReply(Methods.GetLocaleString(lang, "muteList",
+                    mutedLines.Count == 0 ? "-" : string.Join("\n", mutedLines),
+                    tempLines.Count == 0 ? "-" : string.Join("\n", tempLines)), update);
+            }
+            catch (Exception e)
+            {
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        [Command(Trigger = "tempbanlist", GroupAdminOnly = true, InGroupOnly = true)]
+        public static void TempbanList(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
+            try
+            {
+                var now = DateTime.UtcNow;
+                var tempbans = Repositories.Tempbans.GetActiveAsync(update.Message.Chat.Id, now).GetAwaiter().GetResult();
+                if (tempbans.Count == 0)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "noTempbans"), update);
+                    return;
+                }
+                // Tempbanned users are not in the chat, so names come from the bot's own records.
+                var lines = tempbans.Select(t =>
+                    $"{DescribeUser(t.UserId, null)} - {Duration.ToDisplay(t.UntilUtc - now)}");
+                Bot.SendReply(Methods.GetLocaleString(lang, "tempbanList", string.Join("\n", lines)), update);
+            }
+            catch (Exception e)
+            {
+                Methods.SendError(e.Message, update.Message, lang);
+            }
+        }
+
+        /// <summary>
+        /// One line per user that Telegram still shows as muted, each followed by its suffix. Users
+        /// it shows as free (unmuted by hand in Telegram, banned, or gone) are dropped from the
+        /// bot's records. If Telegram cannot be asked, the user is listed and kept.
+        /// </summary>
+        internal static List<string> StillMuted(long chatId, IEnumerable<(long UserId, string Suffix)> users)
+        {
+            var lines = new List<string>();
+            foreach (var (userId, suffix) in users)
+            {
+                User user = null;
+                try
+                {
+                    var member = Bot.Api.GetChatMember(chatId, userId).Result;
+                    user = member.User;
+                    if (!(member is ChatMemberRestricted restricted) || restricted.CanSendMessages)
+                    {
+                        Repositories.Mutes.ClearAsync(chatId, userId).GetAwaiter().GetResult();
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error($"Checking the mute of {userId} in {chatId} failed: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                }
+                lines.Add(DescribeUser(userId, user) + suffix);
+            }
+            return lines;
+        }
+
+        /// <summary>"Name @username (id)", HTML-escaped. Falls back to the stored name, then the id alone.</summary>
+        internal static string DescribeUser(long userId, User user)
+        {
+            string name;
+            if (user != null)
+            {
+                name = user.FirstName.FormatHTML();
+                if (!string.IsNullOrEmpty(user.Username)) name += $" @{user.Username}";
+            }
+            else
+            {
+                name = Methods.GetName(userId);
+            }
+            return string.IsNullOrWhiteSpace(name) ? $"{userId}" : $"{name} ({userId})";
         }
 
     }

@@ -885,46 +885,43 @@ namespace Enforcer5.Helpers
             CanManageTopics = false
         };
 
-        public static bool Mute(long chatId, long userId, DateTime untilDatetime = default(DateTime))
+        /// <summary>
+        /// Mutes the user, until <paramref name="untilDatetime"/> (UTC) if given, otherwise for good.
+        /// Throws on failure so callers can tell the admin why; see Methods.MuteUser.
+        /// </summary>
+        public static void Mute(long chatId, long userId, DateTime? untilDatetime = null)
         {
-            try
-            {
-                Bot.Api.RestrictChatMember(chatId, userId, MutedPermissions,
-                    untilDate: untilDatetime == default(DateTime) ? (DateTime?)null : untilDatetime).Wait();
-                return true;
-            }
-            catch (Exception e)
-            {
-                LogHelper.Error($"Mute failed in {chatId} for {userId}: {AsApiError(e)?.Message ?? e.Message}");
-                return false;
-            }
+            Bot.Api.RestrictChatMember(chatId, userId, MutedPermissions, untilDate: untilDatetime).Wait();
         }
 
-        public static bool Unmute(long chatId, long userId)
+        /// <summary>
+        /// Everything allowed. Telegram reads this as "lift the restriction": the user becomes a
+        /// normal member again and follows the group's own permissions from then on, including later
+        /// changes to them. Restricting to a copy of the group's permissions instead, as this used
+        /// to, leaves the user restricted with a snapshot that never follows those changes.
+        /// </summary>
+        private static readonly ChatPermissions UnrestrictedPermissions = new ChatPermissions
         {
-            try
-            {
-                // Restore the user to whatever the group's own default permissions are.
-                var chatPermissions = Bot.Api.GetChat(chatId).Result.Permissions ?? new ChatPermissions
-                {
-                    CanSendMessages = true,
-                    CanSendAudios = true,
-                    CanSendDocuments = true,
-                    CanSendPhotos = true,
-                    CanSendVideos = true,
-                    CanSendVideoNotes = true,
-                    CanSendVoiceNotes = true,
-                    CanSendOtherMessages = true,
-                    CanAddWebPagePreviews = true
-                };
-                Bot.Api.RestrictChatMember(chatId, userId, chatPermissions).Wait();
-                return true;
-            }
-            catch (Exception e)
-            {
-                LogHelper.Error($"Unmute failed in {chatId} for {userId}: {AsApiError(e)?.Message ?? e.Message}");
-                return false;
-            }
+            CanSendMessages = true,
+            CanSendAudios = true,
+            CanSendDocuments = true,
+            CanSendPhotos = true,
+            CanSendVideos = true,
+            CanSendVideoNotes = true,
+            CanSendVoiceNotes = true,
+            CanSendPolls = true,
+            CanSendOtherMessages = true,
+            CanAddWebPagePreviews = true,
+            CanChangeInfo = true,
+            CanInviteUsers = true,
+            CanPinMessages = true,
+            CanManageTopics = true
+        };
+
+        /// <summary>Lifts the user's restriction. Throws on failure; see Methods.UnmuteUser.</summary>
+        public static void Unmute(long chatId, long userId)
+        {
+            Bot.Api.RestrictChatMember(chatId, userId, UnrestrictedPermissions).Wait();
         }
     }
 

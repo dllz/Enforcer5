@@ -17,5 +17,15 @@ namespace Enforcer5.Data
 
         internal static IChannelPostRepository ChannelPosts { get; set; } =
             new RedisChannelPostRepository(() => Redis.db);
+
+        internal static IMuteRepository Mutes { get; set; } =
+            new RedisMuteRepository(() => Redis.db);
+
+        internal static ITempbanRepository Tempbans { get; set; } =
+#if PREMIUM
+            new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");
+#else
+            new RedisTempbanRepository(() => Redis.db, "tempbanned");
+#endif
     }
 }

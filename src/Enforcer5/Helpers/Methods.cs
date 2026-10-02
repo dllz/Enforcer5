@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Newtonsoft.Json;
@@ -1307,24 +1308,15 @@ namespace Enforcer5.Helpers
 
         public static int GetGroupTempbanTime(long chatId)
         {
-            int res = 1440;
             var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;
-            if (int.TryParse(time.ToString(), out res))
-            {
-                return res;
-            }
-            return res;
+            return Duration.StoredMinutesOrDefault(time.ToString());
         }
 
         public static int GetGroupTempMuteTime(long chatId)
         {
-            int res = 1440;
             var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempMuteTime").Result;
-            if (int.TryParse(time.ToString(), out res))
-            {
-                return res;
-            }
-            return res;
+            // Capped: past Telegram's limit the mute would silently become permanent.
+            return Duration.StoredMinutesOrDefault(time.ToString(), Duration.MaximumMinutes);
         }
 
         public static object GetUsername(long id)
@@ -1335,93 +1327,92 @@ namespace Enforcer5.Helpers
             return "No username found";
         }
 
+        /// <summary>
+        /// Mutes the user for good. On failure tells the chat why, except for Mute On Join
+        /// (<paramref name="newJoiner"/>), which would otherwise post an error on every join.
+        /// </summary>
         public static bool MuteUser(long chatId, long userId, XDocument doc, bool newJoiner = false)
         {
             try
             {
-                var res = Bot.Mute(chatId, userId);
-                if (res)
-                {   
-                    if (newJoiner)
-                    {
-                        Redis.db.SetAddAsync($"chat:{chatId}:mutedJoiners", userId);
-                    }
-                    else
-                    {
-                        Redis.db.SetAddAsync($"chat:{chatId}:muted", userId);
-                    }
-                }
-                return res;
+                Bot.Mute(chatId, userId);
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to mute chat member"))
-                {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
-                {
-                    Bot.Send(GetLocaleString(doc, "cannotmuteadmin"), chatId);
-                    return false;
-                }
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
-                return false;
+                return RestrictFailed(e, "Mute", chatId, userId, doc, "cannotmuteadmin", quiet: newJoiner);
             }
+            Remember(newJoiner
+                ? Repositories.Mutes.MarkJoinerMutedAsync(chatId, userId)
+                : Repositories.Mutes.MarkMutedAsync(chatId, userId), chatId, userId);
+            return true;
         }
 
+        /// <summary>Mutes the user until <paramref name="untilDateTime"/> (UTC), when Telegram lifts it.</summary>
         public static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
         {
             try
             {
-                var res = Bot.Mute(chatId, userId, untilDateTime);
-                return res;
+                Bot.Mute(chatId, userId, untilDateTime);
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to temp mute chat member"))
-                {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
-                {
-                    Bot.Send(GetLocaleString(doc, "cannottempmuteadmin"), chatId);
-                    return false;
-                }
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
-                return false;
+                return RestrictFailed(e, "Tempmute", chatId, userId, doc, "cannottempmuteadmin");
             }
+            Remember(Repositories.Mutes.MarkTempMutedAsync(chatId, userId, untilDateTime), chatId, userId);
+            return true;
         }
 
-        public static bool UnmuteUser(long chatId, long userId, XDocument doc)
+        /// <summary>Lifts any mute. <paramref name="quiet"/> leaves reporting failures to the caller.</summary>
+        public static bool UnmuteUser(long chatId, long userId, XDocument doc, bool quiet = false)
         {
             try
             {
-                ChatPermissions chatPermission = Bot.Api.GetChat(chatId).Result.Permissions;
-                var res = Bot.Unmute(chatId, userId);
-                if (res)
-                {
-                    Redis.db.SetRemoveAsync($"chat:{chatId}:muted", userId);
-                    Redis.db.SetRemoveAsync($"chat:{chatId}:mutedJoiners", userId);
-                }
-                return res;
+                Bot.Unmute(chatId, userId);
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to mute chat member"))
-                {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
-                {
-                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
-                    return false;
-                }
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
-                return false;
+                return RestrictFailed(e, "Unmute", chatId, userId, doc, "cannotmuteadmin", quiet);
             }
+            Remember(Repositories.Mutes.ClearAsync(chatId, userId), chatId, userId);
+            return true;
+        }
+
+        /// <summary>
+        /// The mute itself already succeeded, so failing to record it is logged rather than reported
+        /// as a failed mute.
+        /// </summary>
+        private static void Remember(Task record, long chatId, long userId)
+        {
+            try
+            {
+                record.GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error($"Recording the mute of {userId} in {chatId} failed: {e.Message}");
+            }
+        }
+
+        private static bool RestrictFailed(Exception e, string what, long chatId, long userId, XDocument doc,
+            string targetIsAdminKey, bool quiet = false)
+        {
+            var api = Bot.AsApiError(e);
+            var description = api?.Message ?? e.Message;
+            LogHelper.Error($"{what} failed in {chatId} for {userId}: {description}");
+            if (quiet) return false;
+            switch (RestrictFailures.Classify(description))
+            {
+                case RestrictFailure.BotNotAdmin:
+                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
+                    break;
+                case RestrictFailure.TargetIsAdmin:
+                    Bot.Send(GetLocaleString(doc, targetIsAdminKey), chatId);
+                    break;
+                default:
+                    SendError(api ?? e, chatId, doc);
+                    break;
+            }
+            return false;
         }
     }
 }

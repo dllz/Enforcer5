@@ -582,7 +582,7 @@
     <value>
       Can be used to temporary ban a user from a group, they will only be able to come back after the time is passed. The command works by banning the user from the group and then unbanning them after the stipulated time.
       Usage:
-      You need to reply to the user you want banned. Then when using the command put the number of minutes after the command is sent. If no time is stipulated the bot will ban the user for an hour.
+      You need to reply to the user you want banned. Then when using the command put the number of minutes after the command is sent. If no time is stipulated the bot uses the group's default from /temptime, or one day if none is set. /tempbanlist shows who is tempbanned and for how long.
 
       Example:
       /{0} 123 while replying to a user
@@ -1374,7 +1374,7 @@
   </string>
   <string key="hcommandtemptime">
     <value>
-      Set the default tempban time for a group. This time will be used when using /tempban with no time specified and when automatically tempbanning someone (for max warns, flood, etc.)
+      Set the default tempban time for a group. This time will be used when using /tempban with no time specified and when automatically tempbanning someone (for max warns, flood, etc.). Until you set one, the default is one day.
 
       Example:
       /{0} [time in minutes]
@@ -1533,7 +1533,7 @@
     <value>The default temporary mute time for this group has been updated.</value>
   </string>
   <string key="defaultMuteTime">
-    <value>The groups default tempban time is: {0} min</value>
+    <value>The group's default tempmute time is: {0} min</value>
   </string>
   <string key="noMutedJoiners">
     <value>There are no new users who were muted when joining.</value>
@@ -1558,6 +1558,24 @@
   </string>
   <string key ="temmpmuted">
     <value>{1} has been muted for {0} (days:hours:minutes)\nID: {2}</value>
+  </string>
+  <string key="muteList">
+    <value><![CDATA[<b>Muted</b>:\n{0}\n\n<b>Temporarily muted</b> (days:hours:minutes left):\n{1}]]></value>
+  </string>
+  <string key="noMutedUsers">
+    <value>Nobody in this group is muted. New members muted by Mute On Join are listed by /listmutedjoiners.</value>
+  </string>
+  <string key="tempbanList">
+    <value><![CDATA[<b>Temporarily banned</b> (days:hours:minutes left):\n{0}]]></value>
+  </string>
+  <string key="noTempbans">
+    <value>Nobody in this group is temporarily banned.</value>
+  </string>
+  <string key="cannotMuteChannel">
+    <value>I can't mute a channel, or someone posting as one. Use /ban to ban the channel instead.</value>
+  </string>
+  <string key="invalidDuration">
+    <value>I couldn't read that duration. Give a number of minutes, or a number followed by min, hours or days, for example 30, 2 hours or 1d. It must be between 1 minute and 365 days.</value>
   </string>
   <string key ="getgrouptotalwarn">
     <value>Total Warns: {0}</value>
@@ -1701,12 +1719,13 @@
   </string>
   <string key="hcommandtempmute">
     <value>
-      Mutes a user temporarily. They can talk again once the group's default tempmute time has passed, which admins set with /settempmutetime.
+      Mutes a user for a while. Give a duration after the user, or after the command when replying: a number of minutes, or a number followed by min, hours or days (30, 2 hours, 1d). Without one, the group's default from /settempmutetime is used, or one day if none is set. Telegram lifts the mute by itself when the time is up. The longest tempmute is 365 days.
 
       Example:
       /{0} while replying to a user
-      /{0} [User ID]
-      /{0} [Username]
+      /{0} 2 hours while replying to a user
+      /{0} [User ID] 30
+      /{0} [Username] 1 day
     </value>
   </string>
   <string key="hcommandunmute">
@@ -1719,11 +1738,28 @@
       /{0} [Username]
     </value>
   </string>
-  <string key="hcommandsettempmutetime">
+  <string key="hcommandmutelist">
     <value>
-      Sets the default time for /tempmute in this group. Give a number, optionally followed by min, hours or days. Without a unit, the number is taken as minutes.
+      Lists the users muted with /mute, and those muted with /tempmute together with the time they have left. Users who are no longer muted, for example because an admin unmuted them in Telegram, are left out. New members muted by Mute On Join are listed by /listmutedjoiners instead.
 
       Example:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandtempbanlist">
+    <value>
+      Lists the users temporarily banned from this group, with the time left until they can join again.
+
+      Example:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsettempmutetime">
+    <value>
+      Sets the default time for /tempmute in this group. Give a number of minutes, or a number followed by min, hours or days, up to 365 days. Without an argument, shows the current default. The default is one day until you set one.
+
+      Example:
+      /{0}
       /{0} 30
       /{0} 2 hours
       /{0} 1 day
