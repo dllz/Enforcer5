@@ -177,6 +177,15 @@ namespace Enforcer5.Handlers
                             // real command pays for a dispatch. The handlers are synchronous and
                             // can block behind Telegram, so they never run on a consumer.
                             var text = update.Message.Text;
+
+                            // A typed warn removal reason. The cheap test runs inline; the Redis
+                            // lookup only for replies to the bot, and off the consumer.
+                            if (ctx.IsGroup && WarnRemovals.MayBeReasonReply(update.Message, Bot.Me.Id))
+                            {
+                                var reply = update.Message;
+                                Bot.DispatchInteractive(() => WarnRemovals.AnswerFromReply(reply), "WarnReasonReply");
+                            }
+
                             if (text.StartsWith("/") || text.StartsWith("#") ||
                                 text.StartsWith("@admin") || text.StartsWith("@pingall"))
                             {

@@ -1790,6 +1790,158 @@
       /{0} https://t.me/addstickers/Animals
     </value>
   </string>
+  <string key="WarnReasonsButton">
+    <value>Warn removal reasons</value>
+  </string>
+  <string key="warnReasonModeOff">
+    <value>Off</value>
+  </string>
+  <string key="warnReasonModeWarns">
+    <value>Warns</value>
+  </string>
+  <string key="warnReasonModeWarnsAndPrewarns">
+    <value>Warns + pre-warns</value>
+  </string>
+  <string key="warnReasonModeAll">
+    <value>All</value>
+  </string>
+  <string key="warnKindWarn">
+    <value>Warns</value>
+  </string>
+  <string key="warnKindPrewarn">
+    <value>Pre-warns</value>
+  </string>
+  <string key="warnKindMedia">
+    <value>Media warns</value>
+  </string>
+  <string key="warnCountLine">
+    <value>{0}: {1}</value>
+  </string>
+  <string key="warnNothingToRemove">
+    <value>Nothing to remove for {0}. {1}: 0</value>
+  </string>
+  <string key="warnReasonPromptRemove">
+    <value>{0}, why are you removing a warn from {1}?</value>
+  </string>
+  <string key="warnReasonPromptReset">
+    <value>{0}, why are you resetting the warns of {1}?</value>
+  </string>
+  <string key="warnReasonPromptHint">
+    <value>Tap a reason, or reply to this message with your own. Nothing changes until you do; this question expires in 10 minutes.</value>
+  </string>
+  <string key="warnReasonCancel">
+    <value>Cancel</value>
+  </string>
+  <string key="warnReasonCancelled">
+    <value>Cancelled. Nothing was changed.</value>
+  </string>
+  <string key="warnReasonExpired">
+    <value>This question has expired and nothing was changed. Press the button again.</value>
+  </string>
+  <string key="warnReasonNotYours">
+    <value>Only {0} can answer this.</value>
+  </string>
+  <string key="warnReasonTooLong">
+    <value>A reason can be at most {0} characters long.</value>
+  </string>
+  <string key="warnChangeRemoved">
+    <value>{0} removed a warn from {1}.</value>
+  </string>
+  <string key="warnChangeReset">
+    <value>{0} reset the warns of {1}.</value>
+  </string>
+  <string key="warnChangeReason">
+    <value>Reason: {0}</value>
+  </string>
+  <string key="warnChangeNoReason">
+    <value>No reason given.</value>
+  </string>
+  <string key="logWarnRemoved">
+    <value>{0} ({1}) removed a warn from {2} in {3}.</value>
+  </string>
+  <string key="logWarnReset">
+    <value>{0} ({1}) reset the warns of {2} in {3}.</value>
+  </string>
+  <string key="warnReasonDefaults">
+    <value>Mistake|Appeal accepted|Wrong user|Warn served its time</value>
+  </string>
+  <string key="warnReasonUsage">
+    <value>Give the reason to add, at most {0} characters, like /addwarnreason AFK warn appealed.</value>
+  </string>
+  <string key="warnReasonDelUsage">
+    <value>Give the reason to remove, or its number from /warnreasons.</value>
+  </string>
+  <string key="warnReasonExists">
+    <value>"{0}" is already a warn removal reason.</value>
+  </string>
+  <string key="warnReasonLimit">
+    <value>This group already has {0} warn removal reasons, which is the maximum. Remove one with /delwarnreason first.</value>
+  </string>
+  <string key="warnReasonAdded">
+    <value>Added "{0}" to the warn removal reasons.</value>
+  </string>
+  <string key="warnReasonNotFound">
+    <value>"{0}" is not a warn removal reason. Use /warnreasons to see them.</value>
+  </string>
+  <string key="warnReasonRemoved">
+    <value>Removed "{0}" from the warn removal reasons.</value>
+  </string>
+  <string key="warnReasonList">
+    <value><![CDATA[<b>Warn removal reasons</b>:\n{0}]]></value>
+  </string>
+  <string key="warnReasonListDefaults">
+    <value>These are the default reasons. Change them with /addwarnreason and /delwarnreason.</value>
+  </string>
+  <string key="warnReasonListEmpty">
+    <value>This group has no saved warn removal reasons. Recently used reasons are still offered.</value>
+  </string>
+  <string key="hcommandremovewarn">
+    <value>
+      Removes one warn from the user you reply to. Add a reason after the command to have it shown in the group and in the log channel.
+
+      If "Warn removal reasons" is on in /menu and you give no reason, I ask for one first, with your group's reasons as buttons, and the warn is only removed once you answer.
+
+      Example:
+      /{0} Appeal accepted (as a reply)
+      /{0} (as a reply)
+    </value>
+  </string>
+  <string key="hcommandresetwarns">
+    <value>
+      Resets all warns of the user you reply to. Add a reason after the command to have it shown in the group and in the log channel.
+
+      If "Warn removal reasons" is on in /menu and you give no reason, I ask for one first, and the warns are only reset once you answer.
+
+      Example:
+      /{0} Wrong user (as a reply)
+      /{0} (as a reply)
+    </value>
+  </string>
+  <string key="hcommandaddwarnreason">
+    <value>
+      Adds a reason to the buttons offered when a warn is removed or reset. A group starts with a few default reasons; the first change replaces them with your own list. Up to 10 reasons, recently used ones are offered as well.
+
+      Example:
+      /{0} AFK warn appealed
+    </value>
+  </string>
+  <string key="hcommanddelwarnreason">
+    <value>
+      Removes a reason from the warn removal reasons. Give the reason or its number from /warnreasons.
+
+      Example:
+      /{0} Mistake
+      /{0} 2
+    </value>
+  </string>
+  <string key="hcommandwarnreasons">
+    <value>
+      Lists the reasons offered as buttons when a warn is removed or reset.
+
+      Example:
+      /{0}
+    </value>
+  </string>
   <string key="cannotmuteadmin">
     <value>I can not mute an admin</value>
   </string>

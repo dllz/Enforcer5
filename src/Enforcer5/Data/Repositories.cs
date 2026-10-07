@@ -18,6 +18,12 @@ namespace Enforcer5.Data
         internal static IStickerSetBlockRepository StickerSetBlocks { get; set; } =
             new RedisStickerSetBlockRepository(() => Redis.db);
 
+        internal static IWarnRepository Warns { get; set; } =
+            new RedisWarnRepository(() => Redis.db);
+
+        internal static IWarnReasonRepository WarnReasons { get; set; } =
+            new RedisWarnReasonRepository(() => Redis.db);
+
         internal static IChannelPostRepository ChannelPosts { get; set; } =
             new RedisChannelPostRepository(() => Redis.db);
 

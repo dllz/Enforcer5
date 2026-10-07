@@ -79,6 +79,11 @@ namespace Enforcer5
                 "menusettings:ChannelPosts"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, channelPostsBlocked ? "on" : "off"),
                 $"menuChannelPosts:{chatId}"));
+            var warnReasonMode = Repositories.WarnReasons.GetModeAsync(chatId).GetAwaiter().GetResult();
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnReasonsButton"),
+                "menusettings:WarnReasons"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"warnReasonMode{warnReasonMode}"),
+                $"menuWarnReasons:{chatId}"));
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             return Key.CreateMarkupFromMenus(mainMenu, close);

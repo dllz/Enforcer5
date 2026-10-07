@@ -858,58 +858,22 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
+        // The buttons under a /warn message. Reset has always cleared media warns as well.
         [Callback(Trigger = "resetwarns", GroupAdminOnly = true)]
-        public static void ResetWarns(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
-             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));            
-        }
+        public static void ResetWarns(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Warn, reset: true, alsoMediaWarns: true);
 
         [Callback(Trigger = "removewarn", GroupAdminOnly = true)]
-        public static void RemoveWarn(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:warns", userId, -1).Result;
-            var text = "";            
-                text = Methods.GetLocaleString(lang, "warnRemoved");
-            if (res < 0)
-            {
-                 Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
-            }
-             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-               text);
-        }
+        public static void RemoveWarn(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Warn, reset: false);
 
+        // The buttons under a /prewarn message and in the /user menu.
         [Callback(Trigger = "resetPrewarns", GroupAdminOnly = true)]
-        public static void ResetPreWarns(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
-            var userId = args[2];
-            Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:prewarns", userId);
-
-            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-               Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
-        }
+        public static void ResetPreWarns(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Prewarn, reset: true);
 
         [Callback(Trigger = "removePrewarn", GroupAdminOnly = true)]
-        public static void RemovePreWarn(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message, true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashIncrementAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, -1).Result;
-            var text = "";
-            text = Methods.GetLocaleString(lang, "warnRemoved");
-            if (res < 0)
-            {
-                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:prewarns", userId, 0);
-            }
-            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-              text);
-        }
+        public static void RemovePreWarn(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Prewarn, reset: false);
     }
 }

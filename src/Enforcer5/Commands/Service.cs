@@ -421,6 +421,17 @@ defSpamValue = 3;
         };
 
         /// <summary>
+        /// Callbacks that write their own, readable log entry once they have done something, so the
+        /// generic "pressed button X" entry would only duplicate it.
+        /// </summary>
+        private static readonly HashSet<string> SelfLoggingCallbacks = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "resetwarns", "removewarn", "resetPrewarns", "removePrewarn",
+            "userbuttonresetwarn", "userbuttonremwarns", "usermediaremwarns", "usermediaresetwarn",
+            "warnreason"
+        };
+
+        /// <summary>
         /// Logs an admin button press with the group name, the full callback data and, where the
         /// callback carries one, the affected user. Names come from the Redis caches CollectStats
         /// maintains, so no Telegram calls are made; the ID is the fallback.
@@ -429,18 +440,22 @@ defSpamValue = 3;
         {
             var target = "";
             var parts = callbackData.Split(':');
+            if (SelfLoggingCallbacks.Contains(parts[0])) return;
             if (parts.Length >= 3 && UserTargetCallbacks.Contains(parts[0]) && long.TryParse(parts[2], out var targetId))
                 target = GetCachedUserName(targetId);
             LogCommand(chatId, admin.Id, Methods.FormatHTML(admin.FirstName), GetCachedGroupName(chatId), Methods.FormatHTML(callbackData), target);
         }
 
-        private static string GetCachedGroupName(long chatId)
+        private static string GetCachedGroupName(long chatId) => Methods.FormatHTML(GetCachedGroupTitle(chatId));
+
+        /// <summary>The group's title from the stats cache, unescaped; empty if unknown.</summary>
+        internal static string GetCachedGroupTitle(long chatId)
         {
             try
             {
                 var name = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
                 // LogCommand already appends "(chatId)", so an unknown name is just left blank.
-                return name.IsNullOrEmpty ? "" : Methods.FormatHTML(name.ToString());
+                return name.IsNullOrEmpty ? "" : name.ToString();
             }
             catch (Exception)
             {
@@ -448,7 +463,13 @@ defSpamValue = 3;
             }
         }
 
-        private static string GetCachedUserName(long userId)
+        private static string GetCachedUserName(long userId) => Methods.FormatHTML(GetCachedUserLabel(userId));
+
+        /// <summary>
+        /// "Name @username (id)" from the stats cache, unescaped, for passing to GetLocaleString
+        /// (which escapes its arguments). Just the id if the user is not cached.
+        /// </summary>
+        internal static string GetCachedUserLabel(long userId)
         {
             try
             {
@@ -456,7 +477,7 @@ defSpamValue = 3;
                 var name = fields[0].IsNullOrEmpty ? null : fields[0].ToString();
                 var username = fields[1].IsNullOrEmpty ? null : fields[1].ToString();
                 var label = string.Join(" ", new[] { name, username }.Where(s => s != null));
-                return string.IsNullOrEmpty(label) ? userId.ToString() : $"{Methods.FormatHTML(label)} ({userId})";
+                return string.IsNullOrEmpty(label) ? userId.ToString() : $"{label} ({userId})";
             }
             catch (Exception)
             {
@@ -499,23 +520,30 @@ defSpamValue = 3;
                 replyto = Methods.GetLocaleString(lang, "noone");
             }
 
+            if (!isCallback)
+            {
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto));
+            }
+            else
+            {
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"));
+            }
+        }
+
+        /// <summary>
+        /// Posts <paramref name="text"/> (HTML) to the group's log channel, if it has one. If the bot
+        /// has lost access to the channel, the setting is removed and the group told. The text is
+        /// only built when there is a channel, and a failure building it is reported like a failed
+        /// send, as before this was split out of LogCommand.
+        /// </summary>
+        internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text)
+        {
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
-                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();              
+                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
                 try
                 {
-
-                    if (!isCallback)
-                    {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
-                            long.Parse(logChatID));
-                    }                    
-                    else
-                    {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"),
-                            long.Parse(logChatID));
-                    }
-               
+                    Bot.Send(text(), long.Parse(logChatID));
                 }
                 catch (Exception e)
                 {
@@ -528,8 +556,6 @@ defSpamValue = 3;
                     else Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
                 }
             }
-
-
         }
 
         public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")

@@ -880,27 +880,14 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
+        // The /user menu.
         [Callback(Trigger = "userbuttonresetwarn", GroupAdminOnly = true)]
-        public static void UserButtonRemWarns(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-             Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:warns", userId);            
-             Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "warnsReset", call.From.FirstName));
-        }
+        public static void UserButtonRemWarns(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Warn, reset: true);
 
         [Callback(Trigger = "userbuttonremwarns", GroupAdminOnly = true)]
-        public static void removeWarn(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:warns", userId).Result;
-            if (res < 0)
-                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:warns", userId, 0);
-            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
-        }
+        public static void removeWarn(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Warn, reset: false);
 
         [Callback(Trigger = "userbuttonbanuser", GroupAdminOnly = true)]
         public static void UserButtonsBanUser(CallbackQuery call, string[] args)
@@ -991,26 +978,13 @@ namespace Enforcer5
             }
         }
 
+        // The /media menu.
         [Callback(Trigger = "usermediaremwarns", GroupAdminOnly = true)]
-        public static void removeMediaWarn(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-            var res = Redis.db.HashDecrementAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId).Result;
-            if (res < 0)
-                Redis.db.HashSetAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId, 0);
-            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
-        }
+        public static void removeMediaWarn(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Media, reset: false);
 
         [Callback(Trigger = "usermediaresetwarn", GroupAdminOnly = true)]
-        public static void RESETmediawarn(CallbackQuery call, string[] args)
-        {
-            var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var userId = args[2];
-            Redis.db.HashDeleteAsync($"chat:{call.Message.Chat.Id}:mediawarn", userId);
-            Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                Methods.GetLocaleString(lang, "warnRemoved", call.From.FirstName));
-        }
+        public static void RESETmediawarn(CallbackQuery call, string[] args) =>
+            WarnRemovals.FromButton(call, args, WarnKind.Media, reset: true);
     }
 }
