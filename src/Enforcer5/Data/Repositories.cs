@@ -15,6 +15,9 @@ namespace Enforcer5.Data
         internal static IInlineBotBlockRepository InlineBotBlocks { get; set; } =
             new RedisInlineBotBlockRepository(() => Redis.db);
 
+        internal static IStickerSetBlockRepository StickerSetBlocks { get; set; } =
+            new RedisStickerSetBlockRepository(() => Redis.db);
+
         internal static IChannelPostRepository ChannelPosts { get; set; } =
             new RedisChannelPostRepository(() => Redis.db);
 

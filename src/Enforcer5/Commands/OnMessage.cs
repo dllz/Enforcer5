@@ -363,11 +363,36 @@ namespace Enforcer5
             if (ctx.Watched || message.IsAutomaticForward) return false;
             if (InlineBotBlock.FirstMatch(ctx.InlineBotBlocks, viaBot.Username) == null) return false;
 
+            DeleteUnlessAdmin(ctx, "BlockedInlineBot");
+            return true;
+        }
+
+        /// <summary>
+        /// Deletes a sticker from a pack on the chat's sticker pack blocklist. Same contract and
+        /// exemptions as <see cref="BlockedInlineBot"/>; returning true also keeps the media filter
+        /// from issuing a strike for a sticker that is being deleted anyway.
+        /// </summary>
+        internal static bool BlockedStickerSet(MessageContext ctx)
+        {
+            if (!ctx.StickerSetBlocked) return false;
+            if (ctx.Watched || ctx.Message.IsAutomaticForward) return false;
+
+            DeleteUnlessAdmin(ctx, "BlockedStickerSet");
+            return true;
+        }
+
+        /// <summary>
+        /// Silently deletes the message unless an admin sent it. Whether the sender is an admin can
+        /// take a Telegram call, so the check and the delete are dispatched.
+        /// </summary>
+        private static void DeleteUnlessAdmin(MessageContext ctx, string name)
+        {
+            var message = ctx.Message;
             var chatId = ctx.ChatId;
             // An anonymous admin posts as the group itself. Any other sender chat is a channel a
             // member is posting as, which is never an admin, so it needs no lookup either.
             var senderChat = message.SenderChat;
-            if (senderChat != null && senderChat.Id == chatId) return true;
+            if (senderChat != null && senderChat.Id == chatId) return;
             var checkAdmin = senderChat == null;
 
             var userId = ctx.UserId;
@@ -378,8 +403,7 @@ namespace Enforcer5
                 // Throws without the delete right; DispatchAction logs it. Nothing is sent to the
                 // chat: one notice per blocked message would double the noise during a raid.
                 Bot.DeleteMessage(chatId, messageId);
-            }, "BlockedInlineBot");
-            return true;
+            }, name);
         }
 
         /// <summary>

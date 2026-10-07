@@ -1692,6 +1692,104 @@
       /{0} while replying to a message sent via the bot
     </value>
   </string>
+  <string key="stickerBlockUsage">
+    <value>Give the sticker pack's name or link, like https://t.me/addstickers/Animals, or reply to a sticker from the pack. To find a pack's name without posting the sticker here, send the sticker to me in a private chat and reply to it with /stickerinfo.</value>
+  </string>
+  <string key="stickerSetInvalidName">
+    <value>{0} is not a sticker pack name or link.</value>
+  </string>
+  <string key="stickerNoSet">
+    <value>That sticker is not part of a pack, so it can't be blocked by pack.</value>
+  </string>
+  <string key="stickerSetNotFound">
+    <value>Telegram has no sticker pack called {0}.</value>
+  </string>
+  <string key="stickerSetIsEmoji">
+    <value>{0} is a custom emoji pack. Only sticker packs can be blocked.</value>
+  </string>
+  <string key="stickerBlockLimit">
+    <value>This group already has {0} sticker packs blocked, which is the maximum. Remove one with /unblocksticker first.</value>
+  </string>
+  <string key="stickerBlockAdded">
+    <value>Stickers from {0} will now be deleted.</value>
+  </string>
+  <string key="stickerBlockExists">
+    <value>{0} is already on the sticker pack blocklist.</value>
+  </string>
+  <string key="stickerBlockRemoved">
+    <value>{0} has been removed from the sticker pack blocklist.</value>
+  </string>
+  <string key="stickerBlockNotFound">
+    <value>{0} is not on the sticker pack blocklist. Use /blockedstickers to see the entries.</value>
+  </string>
+  <string key="stickerBlockList">
+    <value><![CDATA[<b>Blocked sticker packs</b>:\n{0}]]></value>
+  </string>
+  <string key="stickerBlockListEmpty">
+    <value>No sticker packs are blocked in this group.</value>
+  </string>
+  <string key="stickerInfoTitle">
+    <value><![CDATA[<b>{0}</b>]]></value>
+  </string>
+  <string key="stickerInfoName">
+    <value><![CDATA[Name: <code>{0}</code>]]></value>
+  </string>
+  <string key="stickerInfoLink">
+    <value>Link: {0}</value>
+  </string>
+  <string key="stickerInfoCount">
+    <value>Stickers: {0}</value>
+  </string>
+  <string key="stickerInfoEmojiPack">
+    <value>This is a custom emoji pack. Only sticker packs can be blocked.</value>
+  </string>
+  <string key="stickerInfoBlocked">
+    <value><![CDATA[Blocked in this group. To unblock it: <code>/unblocksticker {0}</code>]]></value>
+  </string>
+  <string key="stickerInfoNotBlocked">
+    <value><![CDATA[Not blocked in this group. To block it: <code>/blocksticker {0}</code>]]></value>
+  </string>
+  <string key="stickerInfoHowToBlock">
+    <value><![CDATA[To block it, send this in your group: <code>/blocksticker {0}</code>]]></value>
+  </string>
+  <string key="hcommandblocksticker">
+    <value>
+      Deletes every sticker from a sticker pack. Admins and users excluded with /disablewatch are not affected. Enforcer needs the right to delete messages. Custom emoji inside messages are not covered.
+
+      Give the pack's name or its t.me/addstickers link, or reply to a sticker from the pack. Use /stickerinfo in a private chat with me to find a pack's name.
+
+      Example:
+      /{0} https://t.me/addstickers/Animals
+      /{0} Animals
+      /{0} while replying to a sticker
+    </value>
+  </string>
+  <string key="hcommandunblocksticker">
+    <value>
+      Removes a pack from the sticker pack blocklist.
+
+      Example:
+      /{0} Animals
+      /{0} while replying to a sticker
+    </value>
+  </string>
+  <string key="hcommandblockedstickers">
+    <value>
+      Lists the sticker packs blocked in this group.
+
+      Example:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandstickerinfo">
+    <value>
+      Shows a sticker pack's name and link, and how to block it. In a private chat with me anyone can use it; in a group only admins can, and it also says whether the pack is blocked there.
+
+      Example:
+      /{0} while replying to a sticker
+      /{0} https://t.me/addstickers/Animals
+    </value>
+  </string>
   <string key="cannotmuteadmin">
     <value>I can not mute an admin</value>
   </string>

@@ -115,7 +115,31 @@ namespace Enforcer5.Tests
         [DataRow("inlineTestBlockedBy", "@spambot", "/^spam/, @spambot")]
         [DataRow("inlineTestNotBlocked", "@gif")]
         [DataRow("hcommandtestinline", "testinline")]
-        public void InlineBlockStrings_FormatWithTheirArguments(string key, params string[] args)
+        [DataRow("stickerBlockUsage")]
+        [DataRow("stickerSetInvalidName", "bad-name")]
+        [DataRow("stickerNoSet")]
+        [DataRow("stickerSetNotFound", "animals")]
+        [DataRow("stickerSetIsEmoji", "Hearts (hearts)")]
+        [DataRow("stickerBlockLimit", "50")]
+        [DataRow("stickerBlockAdded", "Cute Animals (animals)")]
+        [DataRow("stickerBlockExists", "animals")]
+        [DataRow("stickerBlockRemoved", "animals")]
+        [DataRow("stickerBlockNotFound", "animals")]
+        [DataRow("stickerBlockList", "animals\ncats")]
+        [DataRow("stickerBlockListEmpty")]
+        [DataRow("stickerInfoTitle", "Cute Animals")]
+        [DataRow("stickerInfoName", "Animals")]
+        [DataRow("stickerInfoLink", "https://t.me/addstickers/Animals")]
+        [DataRow("stickerInfoCount", "3")]
+        [DataRow("stickerInfoEmojiPack")]
+        [DataRow("stickerInfoBlocked", "animals")]
+        [DataRow("stickerInfoNotBlocked", "animals")]
+        [DataRow("stickerInfoHowToBlock", "animals")]
+        [DataRow("hcommandblocksticker", "blocksticker")]
+        [DataRow("hcommandunblocksticker", "unblocksticker")]
+        [DataRow("hcommandblockedstickers", "blockedstickers")]
+        [DataRow("hcommandstickerinfo", "stickerinfo")]
+        public void BlocklistStrings_FormatWithTheirArguments(string key, params string[] args)
         {
             var text = Methods.GetLocaleString(_english, key, args.Cast<object>().ToArray());
             Assert.IsFalse(string.IsNullOrWhiteSpace(text));

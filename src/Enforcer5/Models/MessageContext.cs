@@ -64,6 +64,12 @@ namespace Enforcer5.Models
         public IReadOnlyList<InlineBotBlock> InlineBotBlocks = Array.Empty<InlineBotBlock>();
 
         /// <summary>
+        /// The message is a sticker from a pack on the chat's sticker pack blocklist. Only looked up
+        /// for stickers that belong to a pack; false otherwise.
+        /// </summary>
+        public bool StickerSetBlocked;
+
+        /// <summary>
         /// The chat's handling of the channel this message was posted as. Only read for posts made as
         /// a channel (not anonymous admins); null otherwise.
         /// </summary>
@@ -136,6 +142,10 @@ namespace Enforcer5.Models
             var inlineBotBlocks = message.ViaBot != null
                 ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
                 : Task.FromResult<IReadOnlyList<InlineBotBlock>>(Array.Empty<InlineBotBlock>());
+            var stickerSet = StickerSetName.Normalise(message.Sticker?.SetName);
+            var stickerSetBlocked = stickerSet != null
+                ? Repositories.StickerSetBlocks.ContainsAsync(context.ChatId, stickerSet)
+                : Task.FromResult(false);
             var channelPosts = message.SenderChat != null && message.SenderChat.Id != context.ChatId
                 ? Repositories.ChannelPosts.GetPolicyAsync(context.ChatId, message.SenderChat.Id)
                 : Task.FromResult<ChannelPostPolicy>(null);
@@ -147,7 +157,8 @@ namespace Enforcer5.Models
             try
             {
                 await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks, channelPosts);
+                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks, channelPosts,
+                    stickerSetBlocked);
             }
             catch (Exception)
             {
@@ -166,11 +177,12 @@ namespace Enforcer5.Models
             context.Lang = Value(language)?.Doc;
             context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
             context.ChannelPosts = Value(channelPosts);
+            context.StickerSetBlocked = Value(stickerSetBlocked);
 
             context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
                                Ok(globalBan) && Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks) &&
-                               Ok(channelPosts);
+                               Ok(channelPosts) && Ok(stickerSetBlocked);
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
