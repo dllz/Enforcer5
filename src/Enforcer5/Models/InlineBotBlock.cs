@@ -98,17 +98,38 @@ namespace Enforcer5.Models
             if (blocks == null || string.IsNullOrEmpty(botUsername)) return null;
             foreach (var block in blocks)
             {
-                try
-                {
-                    if (block.Matches(botUsername)) return block;
-                }
-                catch (Exception e) when (e is ArgumentException || e is NotSupportedException ||
-                                          e is RegexMatchTimeoutException)
-                {
-                    LogHelper.Error($"Inline bot block {block} could not be evaluated: {e.Message}");
-                }
+                if (SafeMatches(block, botUsername)) return block;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Every entry that blocks <paramref name="botUsername"/>, in list order, for /testinline.
+        /// Entries that cannot be evaluated are skipped as in <see cref="FirstMatch"/>.
+        /// </summary>
+        public static IReadOnlyList<InlineBotBlock> AllMatches(IEnumerable<InlineBotBlock> blocks, string botUsername)
+        {
+            var matches = new List<InlineBotBlock>();
+            if (blocks == null || string.IsNullOrEmpty(botUsername)) return matches;
+            foreach (var block in blocks)
+            {
+                if (SafeMatches(block, botUsername)) matches.Add(block);
+            }
+            return matches;
+        }
+
+        private static bool SafeMatches(InlineBotBlock block, string botUsername)
+        {
+            try
+            {
+                return block.Matches(botUsername);
+            }
+            catch (Exception e) when (e is ArgumentException || e is NotSupportedException ||
+                                      e is RegexMatchTimeoutException)
+            {
+                LogHelper.Error($"Inline bot block {block} could not be evaluated: {e.Message}");
+                return false;
+            }
         }
 
         public override string ToString() =>

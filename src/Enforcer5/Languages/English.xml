@@ -1659,6 +1659,39 @@
       /{0}
     </value>
   </string>
+  <string key="inlineTestUsage">
+    <value>Give a bot's username, like @gif, to see which entries on this group's inline bot blocklist block it. To try a regular expression without adding it, put it first, between slashes, followed by up to {0} usernames, like /^spam/ @spambot @gif. You can also reply to a message that was sent via the bot.</value>
+  </string>
+  <string key="inlineTestTooMany">
+    <value>You can test at most {0} usernames at once.</value>
+  </string>
+  <string key="inlineTestPatternHeader">
+    <value>Testing {0}. It has not been added to the blocklist; use /blockinline for that.</value>
+  </string>
+  <string key="inlineTestMatch">
+    <value>{0}: matches, would be blocked</value>
+  </string>
+  <string key="inlineTestNoMatch">
+    <value>{0}: no match</value>
+  </string>
+  <string key="inlineTestBlockedBy">
+    <value>{0}: blocked by {1}</value>
+  </string>
+  <string key="inlineTestNotBlocked">
+    <value>{0}: not blocked</value>
+  </string>
+  <string key="hcommandtestinline">
+    <value>
+      Shows whether inline bots would be blocked, without changing anything. Use it to check a regular expression before you add it with /blockinline.
+
+      Give one or more bot usernames to see which entries on this group's blocklist block them. Put a regular expression between slashes first to test that expression instead of the blocklist; it is checked the same way /blockinline checks it, but not saved.
+
+      Example:
+      /{0} @gif
+      /{0} /^spam/ @spambot @gif
+      /{0} while replying to a message sent via the bot
+    </value>
+  </string>
   <string key="cannotmuteadmin">
     <value>I can not mute an admin</value>
   </string>

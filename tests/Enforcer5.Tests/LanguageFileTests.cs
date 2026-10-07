@@ -107,6 +107,14 @@ namespace Enforcer5.Tests
         [DataRow("hcommandblockinline", "blockinline")]
         [DataRow("hcommandunblockinline", "unblockinline")]
         [DataRow("hcommandblockedinline", "blockedinline")]
+        [DataRow("inlineTestUsage", "10")]
+        [DataRow("inlineTestTooMany", "10")]
+        [DataRow("inlineTestPatternHeader", "/^spam/")]
+        [DataRow("inlineTestMatch", "@spambot")]
+        [DataRow("inlineTestNoMatch", "@gif")]
+        [DataRow("inlineTestBlockedBy", "@spambot", "/^spam/, @spambot")]
+        [DataRow("inlineTestNotBlocked", "@gif")]
+        [DataRow("hcommandtestinline", "testinline")]
         public void InlineBlockStrings_FormatWithTheirArguments(string key, params string[] args)
         {
             var text = Methods.GetLocaleString(_english, key, args.Cast<object>().ToArray());
