@@ -33,6 +33,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 |---|------|--------|--------|
 | 1 | Foundation: connection, schema migrations, startup | `users`, `telegram_accounts`, `telegram_account_profiles`, `user_identity_links`, `telegram_chats`, `telegram_chat_profiles`, `groups`, `sanctions` | Built |
 | 2 | Ban history: every ban, tempban and unban Enforcer makes is written to `sanctions` | as above | Built |
+| 3 | Principals from traffic: names, usernames, languages, group titles and links, last seen / last message, observed user count | as above | Built |
 
 ### Step 2: ban history
 
@@ -45,6 +46,23 @@ for them. Reads go through `IBanHistoryRepository.GetHistoryAsync`; nothing disp
 
 Not recorded: kicks, mutes, channel bans (`BanChatSenderChat`), bans an admin makes in the Telegram
 app directly, and unbans of bans from before the history started (there is no row to close).
+
+### Step 3: principals from traffic
+
+`Helpers/PrincipalObserver` records, in memory, what every message, button press and inline query
+says about its accounts and chats (`Data/PrincipalObservations`), and writes it once a minute in one
+transaction (`Data/PostgresPrincipalRepository`): missing accounts, users, identity links, chats and
+groups are created; `last_seen_at` / `last_message_at` only move forward; a profile row is added
+only when a name, username, language or title changed, closing the previous one. Shutdown flushes
+too. `groups.observed_user_count` is `HLEN chat:{id}:userlast` and `public_link` is the group's
+t.me username link, else the link set with /setlink (`chat:{id}links`), both read from Redis at
+flush time. `active` turns false when the bot is seen leaving. Telegram's shared senders (channel
+posts, anonymous admins, linked-channel forwards) are not recorded as people; a channel posting
+is recorded as a chat. Measured on subprod: 2.5 s for a first batch of 20,000 accounts and 2,000
+groups, 0.8 s once they exist.
+
+Both this batch and the ban history take one advisory lock before creating accounts or links,
+so they never create two users for one new account.
 
 Not migrated yet, still Redis only: everything else, including tempban expiry, kicks, mutes,
 global bans, warnings and reports. Old Redis ban data is not imported: history starts when step 2

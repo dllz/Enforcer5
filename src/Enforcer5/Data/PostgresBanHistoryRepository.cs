@@ -36,6 +36,9 @@ namespace Enforcer5.Data
         {
             await using var connection = await Database.OpenConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
+            // The same lock as the observation batch, which also creates accounts and links.
+            await connection.ExecuteAsync(new CommandDefinition("SELECT pg_advisory_xact_lock(@Lock)",
+                new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
             var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, ban.ChatId,
                 chatType: ChatType(ban.ChatId));
             var target = await PrincipalResolver.EnsureUserAsync(connection, transaction, ban.UserId);

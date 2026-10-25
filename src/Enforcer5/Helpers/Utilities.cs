@@ -184,6 +184,8 @@ namespace Enforcer5.Helpers
             {
                 ErrorReporter.Report(e, "Drain on shutdown failed");
             }
+            // What was observed since the last minute's flush; FlushAsync never throws.
+            PrincipalObserver.FlushAsync().Wait(TimeSpan.FromSeconds(10));
         }
 
         /// <summary>

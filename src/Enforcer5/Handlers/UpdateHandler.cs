@@ -34,9 +34,11 @@ namespace Enforcer5.Handlers
             switch (update.Type)
             {
                 case UpdateType.CallbackQuery:
+                    PrincipalObserver.Observe(update);
                     Bot.DispatchInteractive(() => HandleCallback(update.CallbackQuery), "HandleCallback");
                     break;
                 case UpdateType.InlineQuery:
+                    PrincipalObserver.Observe(update);
                     Bot.DispatchInteractive(() => HandleInlineQuery(update.InlineQuery), "HandleInlineQuery");
                     break;
                 default:
@@ -115,6 +117,9 @@ namespace Enforcer5.Handlers
                     }
                     return;
                 }
+
+                // Names, titles and last-seen times for PostgreSQL; an in-memory write, flushed once a minute.
+                PrincipalObserver.Observe(update);
 
                 var background = new List<Task>();
                 Interlocked.Increment(ref Bot.MessagesProcessed);

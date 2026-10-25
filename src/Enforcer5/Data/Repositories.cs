@@ -34,6 +34,10 @@ namespace Enforcer5.Data
         internal static IBanHistoryRepository BanHistory { get; set; } =
             new PostgresBanHistoryRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Fed by Helpers/PrincipalObserver once PostgresStorage is ready.
+        internal static IPrincipalRepository Principals { get; set; } =
+            new PostgresPrincipalRepository(() => Storage.PostgresStorage.Database);
+
         internal static ITempbanRepository Tempbans { get; set; } =
 #if PREMIUM
             new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");

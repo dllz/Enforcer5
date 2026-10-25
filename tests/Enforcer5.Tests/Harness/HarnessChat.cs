@@ -42,7 +42,9 @@ namespace Enforcer5.Tests.Harness
         private int _nextUpdateId = 1;
 
         internal long ChatId { get; }
-        internal string Title { get; }
+        internal string Title { get; set; }
+        /// <summary>The group's public username, null for a private group.</summary>
+        internal string Username { get; set; }
         internal FakeTelegram Telegram { get; }
         internal Mock<IDatabase> Redis { get; } = new Mock<IDatabase>();
 
@@ -63,12 +65,14 @@ namespace Enforcer5.Tests.Harness
         }
 
         /// <summary>A new supergroup with a fresh PostgreSQL schema. Skips the test without a database.</summary>
-        internal static async Task<HarnessChat> StartAsync(long chatId = -1001234567890, string title = "Harness group")
+        internal static async Task<HarnessChat> StartAsync(long chatId = -1001234567890, string title = "Harness group",
+            string username = null)
         {
             var chat = new HarnessChat(chatId, title);
             try
             {
                 await chat.SetUpAsync();
+                chat.Username = username;
                 return chat;
             }
             catch
@@ -102,9 +106,10 @@ namespace Enforcer5.Tests.Harness
         }
 
         /// <summary>Adds someone to the chat as Telegram would know them.</summary>
-        internal HarnessUser Add(string firstName, MemberState state = MemberState.Member, string username = null, long? id = null)
+        internal HarnessUser Add(string firstName, MemberState state = MemberState.Member, string username = null, long? id = null,
+            string lastName = null, string languageCode = null)
         {
-            var user = new HarnessUser(id ?? 100000 + Telegram.NextMessageId(), firstName, username);
+            var user = new HarnessUser(id ?? 100000 + Telegram.NextMessageId(), firstName, username, lastName, languageCode);
             Telegram.SetMember(ChatId, user.Id, state);
             return user;
         }
@@ -118,7 +123,7 @@ namespace Enforcer5.Tests.Harness
             var message = new Message
             {
                 Id = Telegram.NextMessageId(),
-                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title },
+                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
                 From = from.ToUser(),
                 Date = DateTime.UtcNow,
                 Text = text,
@@ -130,6 +135,7 @@ namespace Enforcer5.Tests.Harness
             await UpdateHandler.RouteAsync(new Update { Id = _nextUpdateId++, Message = message }, DateTime.Now);
             await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
             await BanHistory.FlushAsync();
+            await PrincipalObserver.FlushAsync();
             return message;
         }
 
@@ -148,8 +154,10 @@ namespace Enforcer5.Tests.Harness
         }
     }
 
-    internal sealed record HarnessUser(long Id, string FirstName, string Username = null)
+    internal sealed record HarnessUser(long Id, string FirstName, string Username = null, string LastName = null,
+        string LanguageCode = null)
     {
-        internal User ToUser() => new User { Id = Id, FirstName = FirstName, Username = Username };
+        internal User ToUser() => new User { Id = Id, FirstName = FirstName, LastName = LastName, Username = Username,
+            LanguageCode = LanguageCode };
     }
 }
