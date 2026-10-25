@@ -193,7 +193,7 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            var res = Methods.BanUser(chatId, id, lang.Doc);
+                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns");
 
                             if (res)
                             {
@@ -309,7 +309,11 @@ namespace Enforcer5
 
                     var isChatMember = Bot.Api.GetChatMember(update.Message.Chat.Id, userid).Result;
                     
-                    var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc);
+                    // The same text AddBanList stores below: what the admin typed, or the message
+                    // the ban replied to.
+                    var banReason = !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
+                    var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc, banReason,
+                        update.Message.From.Id);
                     if (res)
                     {
                         var chatId = update.Message.Chat.Id;
@@ -462,7 +466,7 @@ namespace Enforcer5
                 Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
             }
-            var res = Methods.UnbanUser(chatId, userId, lang);
+            var res = Methods.UnbanUser(chatId, userId, lang, BanEnd.Unbanned, update.Message.From.Id);
             if (res)
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
@@ -470,8 +474,13 @@ namespace Enforcer5
             }
         }
 
+        /// <summary>
+        /// Tempbans for <paramref name="time"/> minutes. <paramref name="reason"/> and
+        /// <paramref name="actorId"/> (the admin, null when automatic) go to the ban history.
+        /// </summary>
         public static bool Tempban(long userId, long chatId, double time,
-            string nick = null, Update update = null, string message = null)
+            string nick = null, Update update = null, string message = null, string reason = null,
+            long? actorId = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
                 // Must be pure UTC: this value is both stored as the expiry key and handed to
@@ -479,7 +488,7 @@ namespace Enforcer5
                 var dataUnbanTime = System.DateTime.UtcNow.AddSeconds(time * 60);
             var unbanTime = dataUnbanTime.ToUnixTime();
                 var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
-            var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang);
+            var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang, reason, actorId);
                 var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
             if (isBanned.HasValue)
             {
@@ -641,7 +650,8 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId));
+                Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId),
+                    actorId: update.Message.From.Id);
                 Service.LogCommand(update, update.Message.Text);
             }
         }

@@ -909,7 +909,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var isChatMember = Bot.Api.GetChatMember(call.Message.Chat.Id,long.Parse(userId)).Result;
-            var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang);
+            var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang, null, call.From.Id);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {
@@ -964,7 +964,9 @@ namespace Enforcer5
                 {
                     try
                     {
-                         var res = Bot.Api.BanChatMember(call.Message.Chat.Id, userId);
+                         // Was never awaited, so a failed ban went unnoticed and was reported as done.
+                         Bot.Api.BanChatMember(call.Message.Chat.Id, userId).Wait();
+                         BanHistory.Banned(call.Message.Chat.Id, userId, BanKind.Ban, "Max warns", null);
                          var result = Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
                     }
                     catch (AggregateException e)

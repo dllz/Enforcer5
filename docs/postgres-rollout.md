@@ -32,6 +32,18 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 1 | Foundation: connection, schema migrations, startup | `users`, `telegram_accounts`, `telegram_account_profiles`, `user_identity_links`, `telegram_chats`, `telegram_chat_profiles`, `groups`, `sanctions` | Built |
 | 2 | Ban history: every ban, tempban and unban Enforcer makes is written to `sanctions` | as above | Built |
 
+### Step 2: ban history
+
+`Methods.BanUser`, `TempBanUser` and `UnbanUser` call `Helpers/BanHistory` once Telegram has
+accepted the action, so every ban Enforcer makes is recorded: `/ban`, `/tempban`, `/unban`, the
+report and user-menu buttons, max warns, the automatic flood/length/media/script bans and tempbans,
+global bans being enforced, and tempbans expiring (`completed`). The writes run on one background
+worker in order, retry twice, and report to the error chat if they still fail; the ban never waits
+for them. Reads go through `IBanHistoryRepository.GetHistoryAsync`; nothing displays them yet.
+
+Not recorded: kicks, mutes, channel bans (`BanChatSenderChat`), bans an admin makes in the Telegram
+app directly, and unbans of bans from before the history started (there is no row to close).
+
 Not migrated yet, still Redis only: everything else, including tempban expiry, kicks, mutes,
 global bans, warnings and reports. Old Redis ban data is not imported: history starts when step 2
 ships.

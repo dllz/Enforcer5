@@ -502,7 +502,7 @@ namespace Enforcer5
             var userLang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
-            var res = Methods.BanUser(chatId, userId, grouplang);
+            var res = Methods.BanUser(chatId, userId, grouplang, "Reported", call.From.Id);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {

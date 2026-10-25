@@ -827,7 +827,7 @@ namespace Enforcer5.Helpers
                 {
                     try
                     {
-                        var temp = BanUser(update.Message.Chat.Id, id, lang);
+                        var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}");
                         if (temp)
                         {
                             SaveBan(id, "ban");
@@ -853,12 +853,17 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool BanUser(long chatId, long userId, XDocument doc)
+        /// <summary>
+        /// Bans the user and records it in the ban history. <paramref name="actorId"/> is the admin
+        /// who asked for it; leave it null when Enforcer acts on its own.
+        /// </summary>
+        public static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null)
         {
             try
             {
                 Bot.Api.BanChatMember(chatId, userId).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
+                BanHistory.Banned(chatId, userId, BanKind.Ban, reason, actorId);
                 return true;
             }
             catch (Exception e)
@@ -881,12 +886,15 @@ namespace Enforcer5.Helpers
             }
         }
 
-        public static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
+        /// <summary>Tempbans the user until <paramref name="untilDateTime"/> (UTC); see BanUser.</summary>
+        public static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
+            string reason = null, long? actorId = null)
         {
             try
             {
                 Bot.Api.BanChatMember(chatId, userId, untilDateTime).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
+                BanHistory.Banned(chatId, userId, BanKind.Tempban, reason, actorId, untilDateTime);
                 return true;
             }
             catch (AggregateException e)
@@ -940,7 +948,7 @@ namespace Enforcer5.Helpers
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = long.Parse(subStrings[1]);
-                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc);
+                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc, BanEnd.Expired);
 #if NORMAL
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
                             Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
@@ -974,13 +982,19 @@ namespace Enforcer5.Helpers
             return epoch.AddSeconds(unixTime);
         }
 
-        public static bool UnbanUser(long chatId, long userId, XDocument doc)
+        /// <summary>
+        /// Lifts the user's ban and closes it in the ban history: as unbanned by
+        /// <paramref name="actorId"/>, or as expired when a tempban ran out.
+        /// </summary>
+        internal static bool UnbanUser(long chatId, long userId, XDocument doc, BanEnd end = BanEnd.Unbanned,
+            long? actorId = null)
         {
             try
             {
                 // 22.x throws on failure, so a single call replaces the old retry-until-true loop.
                 Bot.Api.UnbanChatMember(chatId, userId).Wait();
                 Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
+                BanHistory.Unbanned(chatId, userId, end, actorId);
                 return true;
 
             }
