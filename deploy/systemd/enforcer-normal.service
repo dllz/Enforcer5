@@ -13,6 +13,8 @@ Environment=TelegramServerUrl=
 Environment=TelegramFileUrl=
 Environment=RedisConnection=
 Environment=RedisPassword=
+# Optional. Empty keeps PostgreSQL features off; both editions share one database.
+Environment=PostgresConnection=
 Environment=PaymentProviderToken=
 Environment=ErrorChatId=
 Environment=DisplayTimeZone=Europe/Amsterdam

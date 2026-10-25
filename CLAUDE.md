@@ -48,7 +48,8 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/Updater.cs` | Staged-update support for DeployBot |
 | `src/Enforcer5/Helpers/MessageExtensions.cs` | Bridges 13.x shapes 22.x dropped (`NewChatMember`, `IsServiceMessage`) |
 | `src/Enforcer5/Handlers/UpdateHandler.cs` | Update routing, spam detection, command dispatch |
-| `src/Enforcer5/Data/` | Repository interfaces, their Redis implementations, and `Repositories` (the composition root) |
+| `src/Enforcer5/Data/` | Repository interfaces, their Redis and PostgreSQL implementations, and `Repositories` (the composition root) |
+| `src/Enforcer5/Storage/` | PostgreSQL: connection, EF Core schema model and migrations, startup migration runner |
 | `src/Enforcer5/Commands/` | Commands, callbacks, inline queries, menus |
 | `src/Enforcer5/Attributes/` | `[Command]`, `[Callback]`, `[Query]` — bound by reflection at startup |
 | `src/Enforcer5/Languages/` | XML localisation, copied to output |
@@ -82,6 +83,7 @@ Production ships no JSON file; everything comes from the systemd unit.
 | `TelegramServerUrl` | Optional self-hosted Bot API server |
 | `TelegramFileUrl` | Optional. Where files sent to the bot are downloaded from, as `{TelegramFileUrl}/{token}/{file_path}`. Unset with a self-hosted server, it defaults to that server's host on port 80 plus `/file` (e.g. `http://192.168.0.51/file`); our Bot API server answers 404 on its own `/file/bot{token}/` route, and blackwolf uses the same port-80 address. Unset without a server, the official API is used |
 | `RedisConnection` / `RedisPassword` | Shared instance with blackwolf; DB index 0 |
+| `PostgresConnection` | Optional. One database shared by both editions; empty turns every PostgreSQL feature off. See `docs/postgres-rollout.md` |
 | `PaymentProviderToken` | Telegram Payments. Never commit this |
 | `ErrorChatId` | Errors and startup notices; falls back to `Constants.Devs[0]` |
 | `LanguagesPath` | Live XML directory. Both production editions use `/opt/enforcer/Languages` |
@@ -150,6 +152,11 @@ next to it and wiring in `Data/Repositories`. Callers never touch `Redis.db` for
 data. Commands are reflection-bound statics, so `Repositories` is a static composition
 root rather than constructor injection. The existing direct `Redis.db` calls move over
 when that code is touched.
+
+The PostgreSQL migration goes **one domain at a time**, with Redis kept running; progress and
+setup are in `docs/postgres-rollout.md`. The approved schema lives on `feature/postgres-migration`
+(`docs/storage-erd.md`); copy tables from it unchanged rather than redesigning them. Do not port
+that branch wholesale: it was one large migration, which is what the staged rollout replaces.
 
 ---
 
@@ -235,6 +242,10 @@ update consumer sets and which flows into everything that update dispatches.
 dotnet test Enforcer5.slnx               # Debug (NORMAL)
 dotnet test Enforcer5.slnx -c Premium    # PREMIUM code paths
 ```
+
+PostgreSQL tests are skipped unless `ENFORCER_TEST_POSTGRES` holds a connection string; each test
+creates and drops a schema of its own. Run them against a scratch database whenever `Storage/` or
+a PostgreSQL repository changes.
 
 `tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
 through `InternalsVisibleTo`. The whole suite runs in about a second.

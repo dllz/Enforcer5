@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5;
 using Enforcer5.Handlers;
+using Enforcer5.Storage;
 
 namespace Enforcer5
 {
@@ -91,6 +92,10 @@ namespace Enforcer5
                 }
                 count++;
             }
+
+            // Optional and additive: Redis stays the store the bot runs on. Started before Telegram
+            // so the schema is usually ready by the first update, but nothing waits for it.
+            PostgresStorage.Start(Bot.ShutdownToken);
 
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();

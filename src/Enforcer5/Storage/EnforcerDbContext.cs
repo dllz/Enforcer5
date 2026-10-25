@@ -1,0 +1,150 @@
+using System;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
+
+namespace Enforcer5.Storage
+{
+    /// <summary>
+    /// Describes the PostgreSQL schema so EF Core can create and migrate it. Nothing queries
+    /// through this context at runtime; the repositories use Dapper.
+    /// <para>
+    /// Each rollout step adds its tables here and a migration under Migrations/ (generate with
+    /// <c>dotnet tool restore</c> then
+    /// <c>dotnet ef migrations add &lt;Name&gt; -p src/Enforcer5 -o Storage/Migrations</c>). Table and
+    /// constraint definitions are copied from the approved design on feature/postgres-migration.
+    /// </para>
+    /// </summary>
+    public sealed class EnforcerDbContext : DbContext
+    {
+        public EnforcerDbContext(DbContextOptions<EnforcerDbContext> options) : base(options) { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder) => ConfigureModel(modelBuilder);
+
+        internal static void ConfigureModel(ModelBuilder modelBuilder)
+        {
+            ConfigurePrincipals(modelBuilder);
+            ConfigureSanctions(modelBuilder);
+            UseSnakeCaseColumns(modelBuilder);
+        }
+
+        private static void ConfigurePrincipals(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UserEntity>(entity =>
+            {
+                entity.ToTable("users");
+                entity.HasKey(x => x.UserId);
+                entity.Property(x => x.UserId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+            });
+
+            modelBuilder.Entity<TelegramAccountEntity>(entity =>
+            {
+                entity.ToTable("telegram_accounts");
+                entity.HasKey(x => x.AccountId);
+                entity.Property(x => x.AccountId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.FirstSeenAt).HasDefaultValueSql("now()");
+                entity.Property(x => x.LastSeenAt).HasDefaultValueSql("now()");
+                entity.HasIndex(x => x.TelegramUserId).IsUnique();
+            });
+
+            modelBuilder.Entity<TelegramAccountProfileEntity>(entity =>
+            {
+                entity.ToTable("telegram_account_profiles", table => table.HasCheckConstraint("telegram_account_profiles_validity_check", "valid_to IS NULL OR valid_to > valid_from"));
+                entity.HasKey(x => x.ProfileId);
+                entity.Property(x => x.ProfileId).UseIdentityAlwaysColumn();
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(x => x.AccountId, "telegram_account_profiles_open_idx").IsUnique().HasFilter("valid_to IS NULL");
+                entity.HasIndex(x => x.Username, "telegram_account_profiles_username_ci_idx").HasFilter("username IS NOT NULL");
+            });
+
+            modelBuilder.Entity<UserIdentityLinkEntity>(entity =>
+            {
+                entity.ToTable("user_identity_links", table => table.HasCheckConstraint("user_identity_links_period_check", "unlinked_at IS NULL OR unlinked_at >= linked_at"));
+                entity.HasKey(x => x.IdentityLinkId);
+                entity.Property(x => x.IdentityLinkId).UseIdentityAlwaysColumn();
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.LinkedByUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UnlinkedByUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => x.AccountId, "user_identity_links_active_account_idx").IsUnique().HasFilter("unlinked_at IS NULL");
+                entity.HasIndex(x => new { x.UserId, x.AccountId, x.LinkedAt });
+            });
+
+            modelBuilder.Entity<TelegramChatEntity>(entity =>
+            {
+                entity.ToTable("telegram_chats", table => table.HasCheckConstraint("telegram_chats_type_check", "chat_type IN ('unknown', 'private', 'group', 'supergroup', 'channel')"));
+                entity.HasKey(x => x.ChatId);
+                entity.Property(x => x.ChatId).UseIdentityAlwaysColumn();
+                entity.HasIndex(x => x.TelegramChatId).IsUnique();
+            });
+
+            modelBuilder.Entity<GroupEntity>(entity =>
+            {
+                entity.ToTable("groups", table => table.HasCheckConstraint("groups_observed_user_count_check", "observed_user_count >= 0"));
+                entity.HasKey(x => x.GroupId);
+                entity.Property(x => x.GroupId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Active).HasDefaultValue(true);
+                entity.Property(x => x.ObservedUserCount).HasDefaultValue(0L);
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+                entity.HasIndex(x => x.ChatId).IsUnique();
+                entity.HasOne<TelegramChatEntity>().WithOne().HasForeignKey<GroupEntity>(x => x.ChatId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<TelegramChatProfileEntity>(entity =>
+            {
+                entity.ToTable("telegram_chat_profiles", table => table.HasCheckConstraint("telegram_chat_profiles_validity_check", "valid_to IS NULL OR valid_to > valid_from"));
+                entity.HasKey(x => x.ChatProfileId);
+                entity.Property(x => x.ChatProfileId).UseIdentityAlwaysColumn();
+                entity.HasOne<TelegramChatEntity>().WithMany().HasForeignKey(x => x.ChatId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(x => x.ChatId, "telegram_chat_profiles_open_idx").IsUnique().HasFilter("valid_to IS NULL");
+                entity.HasIndex(x => x.Username, "telegram_chat_profiles_username_ci_idx").HasFilter("username IS NOT NULL");
+            });
+        }
+
+        private static void ConfigureSanctions(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SanctionEntity>(entity =>
+            {
+                entity.ToTable("sanctions", table =>
+                {
+                    table.HasCheckConstraint("sanctions_kind_check", "kind IN ('ban', 'kick', 'mute', 'tempban', 'tempmute')");
+                    table.HasCheckConstraint("sanctions_status_check", "status IN ('active', 'due', 'revoked', 'completed')");
+                    table.HasCheckConstraint("sanctions_period_check", "(expires_at IS NULL OR expires_at >= imposed_at) AND (resolved_at IS NULL OR resolved_at >= imposed_at)");
+                    table.HasCheckConstraint("sanctions_claim_check", "(claimed_at IS NULL) = (claimed_by IS NULL)");
+                });
+                entity.HasKey(x => x.SanctionId);
+                entity.Property(x => x.SanctionId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserIdAtTime).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+                // The warning_events and reports foreign keys are added with those tables.
+                entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
+                entity.HasIndex(x => new { x.Edition, x.Status, x.ExpiresAt }, "sanctions_due_idx");
+                // Not in the approved design: the history lookup for one member of one group, which
+                // /status needs. The design's only group-side index leads with edition.
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.ImposedAt }, "sanctions_group_account_idx");
+            });
+        }
+
+        private static void UseSnakeCaseColumns(ModelBuilder modelBuilder)
+        {
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+                foreach (var property in entity.GetProperties())
+                    property.SetColumnName(ToSnakeCase(property.Name));
+        }
+
+        private static string ToSnakeCase(string value)
+        {
+            var result = new StringBuilder(value.Length + 8);
+            for (var i = 0; i < value.Length; i++)
+            {
+                if (i > 0 && char.IsUpper(value[i])) result.Append('_');
+                result.Append(char.ToLowerInvariant(value[i]));
+            }
+            return result.ToString();
+        }
+    }
+}

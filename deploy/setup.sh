@@ -47,6 +47,8 @@ Environment=TelegramServerUrl=
 Environment=TelegramFileUrl=
 Environment=RedisConnection=
 Environment=RedisPassword=
+# Optional. Empty keeps PostgreSQL features off; both editions share one database.
+Environment=PostgresConnection=
 Environment=PaymentProviderToken=
 Environment=ErrorChatId=
 Environment=DisplayTimeZone=Europe/Amsterdam
@@ -86,7 +88,8 @@ echo "=== Setup complete ==="
 echo ""
 echo "Next steps:"
 echo "1. Edit each /etc/systemd/system/enforcer-*.service"
-echo "   Set the API token, RedisConnection, RedisPassword, ErrorChatId, PaymentProviderToken"
+echo "   Set the API token, RedisConnection, RedisPassword, ErrorChatId, PaymentProviderToken,"
+echo "   and PostgresConnection (optional)"
 echo ""
 echo "2. Deploy the initial builds via the deploy bot:"
 echo "   /forceenforcer normal"
