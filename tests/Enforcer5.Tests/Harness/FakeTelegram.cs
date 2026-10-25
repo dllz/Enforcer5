@@ -72,6 +72,7 @@ namespace Enforcer5.Tests.Harness
             object response = request switch
             {
                 SendMessageRequest r => Sent(r),
+                SendDocumentRequest r => Record("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, NewMessage(r.ChatId, r.Caption)),
                 ForwardMessageRequest r => Record("forwardMessage", r.ChatId, null, null, r, NewMessage(r.ChatId)),
                 EditMessageTextRequest r => Record("editMessageText", r.ChatId, null, r.Text, r, NewMessage(r.ChatId, r.Text)),
                 DeleteMessageRequest r => Record("deleteMessage", r.ChatId, null, null, r, true),

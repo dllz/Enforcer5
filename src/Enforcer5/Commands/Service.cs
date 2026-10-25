@@ -123,17 +123,24 @@ defSpamValue = 3;
                     var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
                     if (!string.IsNullOrEmpty(type) && type.Equals("media"))
                     {
-                        var file_id = content;
-                        Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file_id)).Result;
+                        // /welcome saves the GIF in "media" (since January 2017; this read
+                        // "content", which holds the command's empty argument, so the GIF was
+                        // never sent). Welcomes saved before then kept it in "content".
+                        var media = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
+                        var fileId = !media.IsNullOrEmpty ? media.ToString() : content.IsNullOrEmpty ? null : content.ToString();
+                        // No GIF was ever saved: nothing to welcome with, and nothing for anyone to fix.
+                        if (fileId == null) return;
+                        Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(fileId)).Result;
 
                         Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
                     {
                         var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
-                        if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true"))
+                        var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
+                        // "true" with no GIF saved sends the text alone rather than failing.
+                        if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true") && !file.IsNullOrEmpty)
                         {
-                            var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
                             var text = GetCustomWelcome(message, content);
                             Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file), text).Result;
 
