@@ -68,14 +68,8 @@ ORDER BY ra.report_action_id", new { reportId })).ToArray();
             return (await connection.QueryAsync<long?>($"SELECT report_id FROM {table} ORDER BY 1")).ToArray();
         }
 
-        // A group with a link set (/setlink). Without one, a private group's report menu holds a null
-        // button that is reported as an error on every report (a separate, pre-existing bug).
-        private static async Task<HarnessChat> StartAsync()
-        {
-            var chat = await HarnessChat.StartAsync();
-            chat.Hashes[$"chat:{chat.ChatId}links", "link"] = "https://t.me/+harness";
-            return chat;
-        }
+        // A private group with no link set: the report menu has no go-to-chat button.
+        private static Task<HarnessChat> StartAsync() => HarnessChat.StartAsync();
 
         private static void AssertNoErrors(HarnessChat chat) =>
             Assert.AreEqual(0, chat.Errors.Count, "Errors reported:\n" + string.Join("\n", chat.Errors));
@@ -119,13 +113,17 @@ ORDER BY ra.report_action_id", new { reportId })).ToArray();
         public async Task ReportBan_IsLogged_AndSolvedWithTheCommand()
         {
             await using var chat = await StartAsync();
+            // With a link set (/setlink), the report menu also has a go-to-chat button.
+            chat.Hashes[$"chat:{chat.ChatId}links", "link"] = "https://t.me/+harness";
             var admin = chat.Add("Admin", MemberState.Administrator);
             var reporter = chat.Add("Reporter");
             var spammer = chat.Add("Spammer");
             var spam = await chat.SendAsync(spammer, "buy now");
             var reportMessage = await chat.SendAsync(reporter, "@admin spam", replyTo: spam);
 
-            await chat.PressAsync(admin, chat.Telegram.LastMessageTo(admin.Id), "banflag:");
+            var dm = chat.Telegram.LastMessageTo(admin.Id);
+            Assert.IsTrue(dm.ReplyMarkup.InlineKeyboard.SelectMany(r => r).Any(b => b.Url == "https://t.me/+harness" || b.Url?.StartsWith("https://t.me/") == true));
+            await chat.PressAsync(admin, dm, "banflag:");
             await chat.SendAsync(admin, $"/solved {reportMessage.MessageId}");
 
             var report = (await Reports(chat)).Single();

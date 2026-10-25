@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Collections.Generic;
 using Telegram.Bot.Types;
@@ -10,17 +11,18 @@ namespace Enforcer5.Helpers
         public static InlineKeyboardMarkup CreateMarkupFromMenu(Menu menu)
         {
             if (menu == null) return null;
+            var buttons = Present(menu);
             var col = menu.Columns - 1;
             //this is gonna be fun...
             var final = new List<InlineKeyboardButton[]>();
-            for (var i = 0; i < menu.Buttons.Count; i++)
+            for (var i = 0; i < buttons.Count; i++)
             {
                 var row = new List<InlineKeyboardButton>();
                 do
                 {
                     try
                     {
-                        var cur = menu.Buttons[i];
+                        var cur = buttons[i];
                         if (!string.IsNullOrEmpty(cur.Url))
                         {
                             row.Add(new InlineKeyboardButton(cur.Text)
@@ -36,18 +38,26 @@ namespace Enforcer5.Helpers
                     }
                     catch (Exception e)
                     {
-                        // A null or broken button is a bug in the menu builder; skip it and report.
+                        // A broken button is a bug in the menu builder; skip it and report.
                         ErrorReporter.Report(e, $"Building menu button {i}");
                     }       
                     i++;
-                    if (i == menu.Buttons.Count) break;
+                    if (i == buttons.Count) break;
                 } while (i % (col + 1) != 0);
                 i--;
                 final.Add(row.ToArray());
-                if (i == menu.Buttons.Count) break;
+                if (i == buttons.Count) break;
             }
             return new InlineKeyboardMarkup(final.ToArray());
         }
+
+        /// <summary>
+        /// The menu's buttons without the null entries: menus leave a slot null for an optional
+        /// button that does not apply (the report's go-to-chat link in a group with no link), so the
+        /// rest close up instead of the null being reported as a broken button.
+        /// </summary>
+        private static List<InlineButton> Present(Menu menu) =>
+            menu.Buttons?.Where(b => b != null).ToList() ?? new List<InlineButton>();
 
         public static InlineKeyboardMarkup CreateMarkupFromMenus(params Menu[] menus)
         {
@@ -56,15 +66,16 @@ namespace Enforcer5.Helpers
             var final = new List<InlineKeyboardButton[]>();
             for (int j = 0; j < menus.Length; j++)
             {
+                var buttons = Present(menus[j]);
                 var col = menus[j].Columns - 1;
-                for (var i = 0; i < menus[j].Buttons.Count; i++)
+                for (var i = 0; i < buttons.Count; i++)
                 {
                     var row = new List<InlineKeyboardButton>();
                     do
                     {
                         try
                         {
-                            var cur = menus[j].Buttons[i];
+                            var cur = buttons[i];
                             if (!string.IsNullOrEmpty(cur.Url))
                             {
                                 row.Add(new InlineKeyboardButton(cur.Text)
@@ -80,15 +91,15 @@ namespace Enforcer5.Helpers
                         }
                         catch (Exception e)
                         {
-                            // A null or broken button is a bug in the menu builder; skip it and report.
+                            // A broken button is a bug in the menu builder; skip it and report.
                             ErrorReporter.Report(e, $"Building menu button {i} of menu {j}");
                         }
                         i++;
-                        if (i == menus[j].Buttons.Count) break;
+                        if (i == buttons.Count) break;
                     } while (i % (col + 1) != 0);
                     i--;
                     final.Add(row.ToArray());
-                    if (i == menus[j].Buttons.Count) break;
+                    if (i == buttons.Count) break;
                 }
             }
             return new InlineKeyboardMarkup(final.ToArray());
