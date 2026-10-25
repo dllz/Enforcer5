@@ -36,6 +36,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 3 | Principals from traffic: names, usernames, languages, group titles and links, last seen / last message, observed user count | as above | Built |
 | 4 | Warn history: every warn, prewarn and media warn added, removed or reset, with the balance it leaves; max-warns bans point at their warn; tempbans whose unban fails at expiry still close | as above, `warning_balances`, `warning_events` | Built |
 | 5 | Kicks and mutes: every kick, mute, tempmute and unmute Enforcer makes is written to `sanctions`; the user-menu warn button bans at max warns when the group says so | as above | Built |
+| 6 | Reports: every report, each action an admin takes from its buttons (delete, warn, kick, ban; several per report), and who solved it; sanctions and warns taken from a report point at it | as above, `reports`, `report_actions` | Built |
 
 ### Step 2: ban history
 
@@ -112,6 +113,26 @@ The user-menu warn button ignored the group's max-warns action and always kicked
 of the setting called `ToString()` on the Task, since 2017). It now bans when the group says ban,
 through `Methods.BanUser` like `/warn`.
 
+### Step 6: reports
+
+`Helpers/ReportHistory` records a report when `/report`, `/admin` or `@admin` passes it on to the
+admins (where Redis creates `flagged:{chat}:{reportMessageId}`): the reporter, the reported member
+and message when the report replied to one, display names, and the time. A sender who is one of
+Telegram's shared placeholders (a channel post, an anonymous admin) is kept as a display name only.
+The admins' copies of the report (their chat and message ids) stay in Redis, as the approved design
+has it.
+
+The buttons under a report carry its message id as a fourth part (`banflag:{chat}:{user}:{report}`,
+likewise `kickflag`, `warnflag`, `delflag`); buttons sent before step 6 fall back to the newest open
+report against the member, or for delete the report on that message. Each action that succeeds is a
+`report_actions` row with the admin, and a ban, kick or warn also gets `report_id` (as does a
+max-warns ban or kick that a report's warn sets off). Acting does not resolve the report: the Solved
+button or `/solved` does, as `resolved` / `solved` with the solver, as in Redis.
+
+`report_actions` is not in the approved design, whose single `resolution_action` holds one action:
+Daniel asked (2026-10-25) for every action on a report to be kept while Solved stays its own step.
+Reports from before step 6 have no row, so actions on them and solving them write nothing.
+
 Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
-written, Redis decides), global bans and reports. Old Redis ban and warn data is not
+written, Redis decides), global bans, group settings and everything read back. Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.

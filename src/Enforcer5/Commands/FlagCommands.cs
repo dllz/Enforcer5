@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Newtonsoft.Json;
@@ -123,6 +124,7 @@ namespace Enforcer5
                      Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                      Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
                      Redis.db.HashSetAsync(hash, "Solved", 1);
+                    ReportHistory.Solved(chatid, msgid, update.Message.From);
                     var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                     var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
                     string text;
@@ -191,6 +193,7 @@ namespace Enforcer5
                              Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                              Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
                              Redis.db.HashSetAsync(hash, "Solved", 1);
+                            ReportHistory.Solved(chatid, msgid, update.Message.From);
                             var counter = int.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                             var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
                             string text;
@@ -339,11 +342,11 @@ namespace Enforcer5
                                     Buttons = new List<InlineButton>
                                     {
                                         new InlineButton(Methods.GetLocaleString(lang, "ban"),
-                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "kick"),
-                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "Warn"),
-                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "goToMessage"))
@@ -351,7 +354,7 @@ namespace Enforcer5
                                             Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), username: username)
                                         },
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),
-                                            $"delflag:{updateMessage.Chat.Id}:{currentMsgId}")
+                                            $"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}")
                                     }
                                 };
                                 result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
@@ -390,14 +393,14 @@ namespace Enforcer5
                                     Buttons = new List<InlineButton>
                                     {
                                         new InlineButton(Methods.GetLocaleString(lang, "ban"),
-                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"banflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "kick"),
-                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"kickflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "Warn"),
-                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}"),
+                                            $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}"),
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
@@ -474,6 +477,7 @@ namespace Enforcer5
             }
             if (alreadyReported.Result.IsNullOrEmpty)
             {
+                ReportHistory.Reported(updateMessage);
                 Redis.db.HashSetAsync(hash, "Solved", 0);
                 Redis.db.HashSetAsync(hash, "Created", time);
                 Redis.db.HashSetAsync(hash, "#Admin", count);
@@ -502,7 +506,9 @@ namespace Enforcer5
             var userLang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
-            var res = Methods.BanUser(chatId, userId, grouplang, "Reported", call.From.Id);
+            var report = FindReport(chatId, args, userId, null);
+            var res = Methods.BanUser(chatId, userId, grouplang, "Reported", call.From.Id, report: report);
+            if (res) ReportHistory.Acted(report, ReportAction.Banned, call.From.Id);
             var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
             if (isAlreadyTempbanned)
             {
@@ -536,7 +542,9 @@ namespace Enforcer5
             var userlang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
-             var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id);
+            var report = FindReport(chatId, args, userId, null);
+            var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id, report: report);
+            if (res) ReportHistory.Acted(report, ReportAction.Kicked, call.From.Id);
             if (res)
             {
                 Methods.SaveBan(userId, "kick");
@@ -555,8 +563,18 @@ namespace Enforcer5
             var callId = call.Id;
             var callFromId = call.From.Id;
             var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-            Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId, actorId: callFromId);
+            Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId, actorId: callFromId,
+                report: FindReport(chatId, args, userId, null));
         }
+
+        /// <summary>
+        /// The report a button belongs to. Buttons carry the report's message id as a fourth part
+        /// since the report history began; older ones name the member or message instead.
+        /// </summary>
+        private static ReportRef FindReport(long chatId, string[] args, long? targetUserId, long? targetMessageId) =>
+            ReportHistory.Find(chatId,
+                args.Length > 3 && long.TryParse(args[3], out var reportMessageId) ? reportMessageId : null,
+                targetUserId, targetMessageId);
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]
         public static void SolveFlag(CallbackQuery call, string[] args)
@@ -581,6 +599,7 @@ namespace Enforcer5
                  Redis.db.HashSetAsync(hash, "SolvedAt", solvedAt);
                  Redis.db.HashSetAsync(hash, "solvedBy", solvedBy);
                  Redis.db.HashSetAsync(hash, "Solved", 1);
+                ReportHistory.Solved(chatid, msgid, call.From);
                 var counter = long.Parse(Redis.db.HashGetAsync(hash, "#Admin").Result);
                 var reporter = Redis.db.HashGetAsync(hash, "Reporter").Result;
                 var repID = Redis.db.HashGetAsync(hash, "repID").Result;
@@ -638,7 +657,8 @@ namespace Enforcer5
         {
             var chatid = long.Parse(args[1]);
             var msgid = int.Parse(args[2]);
-            Bot.DeleteMessage(chatid, msgid);
+            var report = FindReport(chatid, args, null, msgid);
+            if (Bot.DeleteMessage(chatid, msgid)) ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
         }

@@ -76,6 +76,7 @@ namespace Enforcer5.Tests.Harness
                 EditMessageTextRequest r => Record("editMessageText", r.ChatId, null, r.Text, r, NewMessage(r.ChatId, r.Text)),
                 DeleteMessageRequest r => Record("deleteMessage", r.ChatId, null, null, r, true),
                 AnswerCallbackQueryRequest r => Record("answerCallbackQuery", null, null, r.Text, r, true),
+                GetChatAdministratorsRequest r => Record("getChatAdministrators", r.ChatId, null, null, r, Administrators(Id(r.ChatId))),
                 GetChatMemberRequest r => Record("getChatMember", r.ChatId, r.UserId, null, r, ChatMember(Id(r.ChatId), r.UserId)),
                 BanChatMemberRequest r => Record("banChatMember", r.ChatId, r.UserId, null, r, Ban(Id(r.ChatId), r.UserId)),
                 UnbanChatMemberRequest r => Record("unbanChatMember", r.ChatId, r.UserId, null, r, Unban(Id(r.ChatId), r.UserId)),
@@ -130,6 +131,16 @@ namespace Enforcer5.Tests.Harness
                 _ => throw new ApiRequestException("Bad Request: member not found", 400)
             };
         }
+
+        private ChatMember[] Administrators(long chatId) =>
+            new ChatMember[] { new ChatMemberAdministrator { User = Me, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = true } }
+                .Concat(_members.Where(m => m.Key.Chat == chatId && m.Key.User != Me.Id
+                        && m.Value is MemberState.Creator or MemberState.Administrator)
+                    .Select(m => ChatMember(chatId, m.Key.User)))
+                .ToArray();
+
+        /// <summary>The bot's last message to <paramref name="chatId"/> (a group, or an admin's private chat).</summary>
+        internal Message LastMessageTo(long chatId) => SentMessages.Last(m => m.Chat.Id == chatId);
 
         private bool BotCanRestrict(long chatId) => !_botCanRestrict.TryGetValue(chatId, out var can) || can;
 

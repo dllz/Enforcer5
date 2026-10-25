@@ -86,9 +86,8 @@ namespace Enforcer5.Storage
     /// <c>resolved_at</c>, so the rows for a group and account are its ban history.
     /// <para>
     /// <c>trigger_warning_event_id</c> is the warn that reached the group's maximum, for a max-warns
-    /// ban. <c>report_id</c> is in the approved design and kept, but its foreign key arrives with the
-    /// reports table in a later step. <c>claimed_at</c>/<c>claimed_by</c> belong to the tempban expiry worker, which also comes
-    /// later; tempban expiry is still driven from Redis.
+    /// ban. <c>report_id</c> is the report the sanction was taken from. <c>claimed_at</c>/<c>claimed_by</c>
+    /// belong to the tempban expiry worker, which comes later; tempban expiry is still driven from Redis.
     /// </para>
     /// </summary>
     internal sealed class SanctionEntity
@@ -128,8 +127,7 @@ namespace Enforcer5.Storage
 
     /// <summary>
     /// One change to a warn balance: <c>add</c>, <c>remove</c>, <c>reset</c> (or <c>decay</c>, which
-    /// nothing makes yet), with who made it and why. <c>report_id</c> gets its foreign key with the
-    /// reports table.
+    /// nothing makes yet), with who made it and why, and the report it was made from.
     /// </summary>
     internal sealed class WarningEventEntity
     {
@@ -145,5 +143,48 @@ namespace Enforcer5.Storage
         public string Reason { get; set; }
         public DateTimeOffset OccurredAt { get; set; }
         public string LegacyKey { get; set; }
+    }
+
+    /// <summary>
+    /// A report made with /report, /admin or @admin: who reported whom (the target is known only
+    /// when the report replied to a message), the report message and the reported message, and how
+    /// it was resolved. The Telegram message ids of the copies sent to admins stay in Redis, as the
+    /// approved design has it. The foreign keys to message_metadata in that design arrive with that
+    /// table.
+    /// </summary>
+    internal sealed class ReportEntity
+    {
+        public long ReportId { get; set; }
+        public long GroupId { get; set; }
+        public long? ReporterUserId { get; set; }
+        public long? ReporterAccountId { get; set; }
+        public string ReporterDisplay { get; set; }
+        public long? TargetUserId { get; set; }
+        public long? TargetAccountId { get; set; }
+        public string TargetDisplay { get; set; }
+        public long? SolverUserId { get; set; }
+        public string SolverDisplay { get; set; }
+        public long ReportMessageId { get; set; }
+        public long? TargetMessageId { get; set; }
+        public string Status { get; set; }
+        public string ResolutionAction { get; set; }
+        public DateTimeOffset ReportedAt { get; set; }
+        public DateTimeOffset? ResolvedAt { get; set; }
+        public string LegacyKey { get; set; }
+    }
+
+    /// <summary>
+    /// Every action an admin took from a report's buttons (delete, warn, kick, ban), several per
+    /// report if need be. Not in the approved design: added in step 6 because a report is resolved
+    /// only by its Solved button, and the actions taken before that would otherwise be lost (the
+    /// design's single resolution_action holds one).
+    /// </summary>
+    internal sealed class ReportActionEntity
+    {
+        public long ReportActionId { get; set; }
+        public long ReportId { get; set; }
+        public long? ActorUserId { get; set; }
+        public string Action { get; set; }
+        public DateTimeOffset OccurredAt { get; set; }
     }
 }

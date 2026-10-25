@@ -138,10 +138,10 @@ namespace Enforcer5
         /// <summary>
         /// Warns (or prewarns) the member. <paramref name="actorId"/> is the admin who asked, null
         /// when Enforcer warns on its own (flood, message or name length); <paramref name="reason"/>
-        /// goes to the warn history.
+        /// goes to the warn history; <paramref name="report"/> is the report it was given from.
         /// </summary>
-        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
-            long? actorId = null, string reason = null)
+        internal static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
+            long? actorId = null, string reason = null, ReportRef report = null)
         {
             try
             {
@@ -184,7 +184,8 @@ namespace Enforcer5
             }
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1 + preWarns).Result;
             var total = Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns).Result;
-            var warned = WarnHistory.Added(chatId, warnedId, WarnKind.Warn, 1 + preWarns, num, total, actorId, reason);
+            var warned = WarnHistory.Added(chatId, warnedId, WarnKind.Warn, 1 + preWarns, num, total, actorId, reason, report);
+            ReportHistory.Acted(report, ReportAction.Warned, actorId);
             var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
@@ -205,7 +206,7 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned);
+                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report);
 
                             if (res)
                             {
@@ -236,7 +237,7 @@ namespace Enforcer5
                         break;
                         
                     case "kick":
-                        Methods.KickUser(chatId, id, lang.Doc, "Max warns", trigger: warned);
+                        Methods.KickUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report);
                         name = targetnick;
                         if (update != null)
                         {

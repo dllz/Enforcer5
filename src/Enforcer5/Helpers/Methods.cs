@@ -74,10 +74,11 @@ namespace Enforcer5.Helpers
         /// Kicks the user (a ban lifted straight away) and records it in the sanction history.
         /// <paramref name="actorId"/> is the admin who asked for it, null when Enforcer acts on its
         /// own; <paramref name="trigger"/> is the warn that reached the maximum, for a max-warns kick.
-        /// <paramref name="record"/> false leaves it out of the history (/kickme).
+        /// <paramref name="record"/> false leaves it out of the history (/kickme); <paramref name="report"/>
+        /// is the report it was taken from.
         /// </summary>
         internal static bool KickUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            WarningRef trigger = null, bool record = true)
+            WarningRef trigger = null, bool record = true, ReportRef report = null)
         {
 
             try
@@ -86,7 +87,7 @@ namespace Enforcer5.Helpers
                 Bot.Api.BanChatMember(chatId, userId).Wait();
 
                 Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                if (record) BanHistory.Kicked(chatId, userId, reason, actorId, trigger);
+                if (record) BanHistory.Kicked(chatId, userId, reason, actorId, trigger, report);
                 var check = Bot.Api.GetChatMember(chatId, userId).Result;
                 var status = check.Status;
                 var count = 0;
@@ -867,13 +868,13 @@ namespace Enforcer5.Helpers
         /// the warn that reached the maximum, for a max-warns ban.
         /// </summary>
         internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            WarningRef trigger = null)
+            WarningRef trigger = null, ReportRef report = null)
         {
             try
             {
                 Bot.Api.BanChatMember(chatId, userId).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, SanctionKind.Ban, reason, actorId, trigger: trigger);
+                BanHistory.Banned(chatId, userId, SanctionKind.Ban, reason, actorId, trigger: trigger, report: report);
                 return true;
             }
             catch (Exception e)

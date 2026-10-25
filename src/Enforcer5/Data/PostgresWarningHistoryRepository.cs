@@ -59,14 +59,14 @@ namespace Enforcer5.Data
 
             var type = TypeValue(warn.Kind);
             var eventId = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
-INSERT INTO warning_events (group_id, account_id, user_id_at_time, actor_user_id, warning_type, operation,
-    quantity, reason, occurred_at)
-VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @Type, @Operation, @Quantity, @Reason, @At)
+INSERT INTO warning_events (group_id, account_id, user_id_at_time, actor_user_id, report_id, warning_type,
+    operation, quantity, reason, occurred_at)
+VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @ReportId, @Type, @Operation, @Quantity, @Reason, @At)
 RETURNING warning_event_id",
                 new
                 {
                     group.GroupId, target.AccountId, UserIdAtTime = target.UserId, ActorUserId = actorUserId, Type = type,
-                    Operation = OperationValue(warn.Operation), warn.Quantity, warn.Reason, warn.At
+                    warn.ReportId, Operation = OperationValue(warn.Operation), warn.Quantity, warn.Reason, warn.At
                 }, transaction));
 
             // Active copies Redis. Lifetime copies Redis's totalWarns where there is one, and

@@ -21,9 +21,10 @@ namespace Enforcer5.Data
     /// <paramref name="LifetimeAfter"/> is Redis's <c>totalWarns</c> where Redis keeps one (standard
     /// warns from /warn); when null the lifetime count adds <paramref name="Quantity"/> on an add.
     /// <paramref name="ActorId"/> is the admin's Telegram id, null when Enforcer acted on its own.
+    /// <paramref name="ReportId"/> is the report the warn was given from.
     /// </summary>
     internal sealed record WarnEvent(long ChatId, long UserId, WarnKind Kind, WarnOperation Operation, long Quantity,
-        long ActiveAfter, long? LifetimeAfter, string Reason, long? ActorId, DateTimeOffset At);
+        long ActiveAfter, long? LifetimeAfter, string Reason, long? ActorId, DateTimeOffset At, long? ReportId = null);
 
     /// <summary>One warn change from the history, newest first when listed.</summary>
     internal sealed record WarnRecord(long EventId, string WarningType, string Operation, long Quantity, string Reason,

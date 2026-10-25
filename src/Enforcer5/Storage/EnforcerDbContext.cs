@@ -23,6 +23,7 @@ namespace Enforcer5.Storage
         internal static void ConfigureModel(ModelBuilder modelBuilder)
         {
             ConfigurePrincipals(modelBuilder);
+            ConfigureReports(modelBuilder);
             ConfigureWarnings(modelBuilder);
             ConfigureSanctions(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
@@ -104,6 +105,44 @@ namespace Enforcer5.Storage
             });
         }
 
+        private static void ConfigureReports(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ReportEntity>(entity =>
+            {
+                entity.ToTable("reports", table =>
+                {
+                    table.HasCheckConstraint("reports_status_check", "status IN ('open', 'resolved')");
+                    table.HasCheckConstraint("reports_resolution_action_check", "resolution_action IS NULL OR resolution_action IN ('solved', 'dismissed', 'warned', 'kicked', 'banned', 'deleted')");
+                    table.HasCheckConstraint("reports_resolution_check", "(status = 'open' AND resolved_at IS NULL AND resolution_action IS NULL) OR (status = 'resolved' AND resolved_at IS NOT NULL AND resolution_action IS NOT NULL)");
+                });
+                entity.HasKey(x => x.ReportId);
+                entity.Property(x => x.ReportId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ReporterUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.SolverUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.ReporterAccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.TargetAccountId).OnDelete(DeleteBehavior.Restrict);
+                // The message_metadata foreign keys arrive with that table.
+                entity.HasIndex(x => new { x.GroupId, x.TargetMessageId }, "reports_open_target_idx").IsUnique().HasFilter("status = 'open' AND target_message_id IS NOT NULL");
+                entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
+                // Not in the approved design: finding the report a button or /solved names, which
+                // is identified by its message.
+                entity.HasIndex(x => new { x.GroupId, x.ReportMessageId }, "reports_group_message_idx");
+            });
+
+            modelBuilder.Entity<ReportActionEntity>(entity =>
+            {
+                entity.ToTable("report_actions", table =>
+                    table.HasCheckConstraint("report_actions_action_check", "action IN ('deleted', 'warned', 'kicked', 'banned')"));
+                entity.HasKey(x => x.ReportActionId);
+                entity.Property(x => x.ReportActionId).UseIdentityAlwaysColumn();
+                entity.HasOne<ReportEntity>().WithMany().HasForeignKey(x => x.ReportId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.Property(x => x.Action).IsRequired();
+            });
+        }
+
         private static void ConfigureWarnings(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<WarningBalanceEntity>(entity =>
@@ -132,7 +171,7 @@ namespace Enforcer5.Storage
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserIdAtTime).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
-                // The reports foreign key is added with that table.
+                entity.HasOne<ReportEntity>().WithMany().HasForeignKey(x => x.ReportId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasAlternateKey(x => new { x.GroupId, x.AccountId, x.WarningEventId });
                 entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
                 entity.HasIndex(x => new { x.GroupId, x.AccountId, x.OccurredAt });
@@ -160,7 +199,7 @@ namespace Enforcer5.Storage
                     .HasForeignKey(x => new { x.GroupId, x.AccountId, x.TriggerWarningEventId })
                     .HasPrincipalKey(x => new { x.GroupId, x.AccountId, x.WarningEventId })
                     .OnDelete(DeleteBehavior.Restrict);
-                // The reports foreign key is added with that table.
+                entity.HasOne<ReportEntity>().WithMany().HasForeignKey(x => x.ReportId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
                 entity.HasIndex(x => new { x.Edition, x.Status, x.ExpiresAt }, "sanctions_due_idx");
                 // Not in the approved design: the history lookup for one member of one group, which

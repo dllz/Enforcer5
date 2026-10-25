@@ -25,8 +25,8 @@ namespace Enforcer5.Helpers
         /// warn reached the maximum.
         /// </summary>
         internal static WarningRef Added(long chatId, long userId, WarnKind kind, long quantity, long activeAfter,
-            long? lifetimeAfter, long? actorId, string reason = null) =>
-            Record(chatId, userId, kind, WarnOperation.Add, quantity, activeAfter, lifetimeAfter, reason, actorId);
+            long? lifetimeAfter, long? actorId, string reason = null, ReportRef report = null) =>
+            Record(chatId, userId, kind, WarnOperation.Add, quantity, activeAfter, lifetimeAfter, reason, actorId, report);
 
         /// <summary>Some warns taken off; <paramref name="quantity"/> is how many.</summary>
         internal static void Removed(long chatId, long userId, WarnKind kind, long quantity, long activeAfter,
@@ -38,14 +38,15 @@ namespace Enforcer5.Helpers
             Record(chatId, userId, kind, WarnOperation.Reset, quantity, 0, null, reason, actorId);
 
         private static WarningRef Record(long chatId, long userId, WarnKind kind, WarnOperation operation, long quantity,
-            long activeAfter, long? lifetimeAfter, string reason, long? actorId)
+            long activeAfter, long? lifetimeAfter, string reason, long? actorId, ReportRef report = null)
         {
             var reference = new WarningRef();
             // Nothing changed (a reset of no warns): the schema only holds real changes.
             if (quantity <= 0) return reference;
             var warn = new WarnEvent(chatId, userId, kind, operation, quantity, activeAfter, lifetimeAfter,
                 HistoryWriter.Trim(reason), actorId, DateTimeOffset.UtcNow);
-            HistoryWriter.Enqueue(async () => reference.EventId = await Repositories.WarningHistory.RecordAsync(warn),
+            HistoryWriter.Enqueue(async () => reference.EventId =
+                    await Repositories.WarningHistory.RecordAsync(warn with { ReportId = report?.ReportId }),
                 $"Recording a {operation} of {quantity} {kind} for {userId} in {chatId}");
             return reference;
         }

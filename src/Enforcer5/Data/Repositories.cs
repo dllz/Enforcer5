@@ -37,6 +37,9 @@ namespace Enforcer5.Data
         internal static IWarningHistoryRepository WarningHistory { get; set; } =
             new PostgresWarningHistoryRepository(() => Storage.PostgresStorage.Database);
 
+        internal static IReportHistoryRepository ReportHistory { get; set; } =
+            new PostgresReportHistoryRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. Fed by Helpers/PrincipalObserver once PostgresStorage is ready.
         internal static IPrincipalRepository Principals { get; set; } =
             new PostgresPrincipalRepository(() => Storage.PostgresStorage.Database);

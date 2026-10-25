@@ -18,16 +18,16 @@ namespace Enforcer5.Helpers
         /// <summary>
         /// A ban Telegram has accepted. <paramref name="trigger"/> is the warn that reached the
         /// group's maximum, for a max-warns ban; it was queued first, so its id is known by the time
-        /// this is written.
+        /// this is written. <paramref name="report"/> is the report it was taken from, likewise.
         /// </summary>
         internal static void Banned(long chatId, long userId, SanctionKind kind, string reason, long? actorId,
-            DateTime? expiresUtc = null, WarningRef trigger = null) =>
-            Record(chatId, userId, kind, reason, actorId, expiresUtc, trigger, "ban");
+            DateTime? expiresUtc = null, WarningRef trigger = null, ReportRef report = null) =>
+            Record(chatId, userId, kind, reason, actorId, expiresUtc, trigger, report, "ban");
 
         /// <summary>A kick Telegram has accepted; see <see cref="Banned"/>.</summary>
         internal static void Kicked(long chatId, long userId, string reason, long? actorId,
-            WarningRef trigger = null) =>
-            Record(chatId, userId, SanctionKind.Kick, reason, actorId, null, trigger, "kick");
+            WarningRef trigger = null, ReportRef report = null) =>
+            Record(chatId, userId, SanctionKind.Kick, reason, actorId, null, trigger, report, "kick");
 
         /// <summary>
         /// A mute Telegram has accepted, until <paramref name="untilUtc"/> for a tempmute; see
@@ -35,7 +35,7 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static void Muted(long chatId, long userId, string reason, long? actorId, DateTime? untilUtc = null) =>
             Record(chatId, userId, untilUtc.HasValue ? SanctionKind.Tempmute : SanctionKind.Mute, reason, actorId,
-                untilUtc, null, "mute");
+                untilUtc, null, null, "mute");
 
         /// <summary>An unban Telegram has accepted, or a tempban that ran out.</summary>
         internal static void Unbanned(long chatId, long userId, BanEnd end, long? actorId)
@@ -54,13 +54,17 @@ namespace Enforcer5.Helpers
         }
 
         private static void Record(long chatId, long userId, SanctionKind kind, string reason, long? actorId,
-            DateTime? expiresUtc, WarningRef trigger, string what)
+            DateTime? expiresUtc, WarningRef trigger, ReportRef report, string what)
         {
             var ban = new BanEvent(chatId, userId, kind, HistoryWriter.Trim(reason), actorId, DateTimeOffset.UtcNow,
                 expiresUtc.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(expiresUtc.Value, DateTimeKind.Utc)) : null,
                 Edition);
             HistoryWriter.Enqueue(
-                () => Repositories.BanHistory.RecordBanAsync(ban with { TriggerWarningEventId = trigger?.EventId }),
+                () => Repositories.BanHistory.RecordBanAsync(ban with
+                {
+                    TriggerWarningEventId = trigger?.EventId,
+                    ReportId = report?.ReportId
+                }),
                 $"Recording the {what} of {userId} in {chatId}");
         }
     }

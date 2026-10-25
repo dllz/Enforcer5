@@ -86,6 +86,149 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.ReportActionEntity", b =>
+                {
+                    b.Property<long>("ReportActionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_action_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("ReportActionId"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<long?>("ActorUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<long>("ReportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_id");
+
+                    b.HasKey("ReportActionId");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("report_actions", null, t =>
+                        {
+                            t.HasCheckConstraint("report_actions_action_check", "action IN ('deleted', 'warned', 'kicked', 'banned')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportEntity", b =>
+                {
+                    b.Property<long>("ReportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("ReportId"));
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("LegacyKey")
+                        .HasColumnType("text")
+                        .HasColumnName("legacy_key");
+
+                    b.Property<long>("ReportMessageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_message_id");
+
+                    b.Property<DateTimeOffset>("ReportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reported_at");
+
+                    b.Property<long?>("ReporterAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reporter_account_id");
+
+                    b.Property<string>("ReporterDisplay")
+                        .HasColumnType("text")
+                        .HasColumnName("reporter_display");
+
+                    b.Property<long?>("ReporterUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reporter_user_id");
+
+                    b.Property<string>("ResolutionAction")
+                        .HasColumnType("text")
+                        .HasColumnName("resolution_action");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("SolverDisplay")
+                        .HasColumnType("text")
+                        .HasColumnName("solver_display");
+
+                    b.Property<long?>("SolverUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("solver_user_id");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<long?>("TargetAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_account_id");
+
+                    b.Property<string>("TargetDisplay")
+                        .HasColumnType("text")
+                        .HasColumnName("target_display");
+
+                    b.Property<long?>("TargetMessageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_message_id");
+
+                    b.Property<long?>("TargetUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("target_user_id");
+
+                    b.HasKey("ReportId");
+
+                    b.HasIndex("LegacyKey")
+                        .IsUnique()
+                        .HasFilter("legacy_key IS NOT NULL");
+
+                    b.HasIndex("ReporterAccountId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.HasIndex("SolverUserId");
+
+                    b.HasIndex("TargetAccountId");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.HasIndex(new[] { "GroupId", "ReportMessageId" }, "reports_group_message_idx");
+
+                    b.HasIndex(new[] { "GroupId", "TargetMessageId" }, "reports_open_target_idx")
+                        .IsUnique()
+                        .HasFilter("status = 'open' AND target_message_id IS NOT NULL");
+
+                    b.ToTable("reports", null, t =>
+                        {
+                            t.HasCheckConstraint("reports_resolution_action_check", "resolution_action IS NULL OR resolution_action IN ('solved', 'dismissed', 'warned', 'kicked', 'banned', 'deleted')");
+
+                            t.HasCheckConstraint("reports_resolution_check", "(status = 'open' AND resolved_at IS NULL AND resolution_action IS NULL) OR (status = 'resolved' AND resolved_at IS NOT NULL AND resolution_action IS NOT NULL)");
+
+                            t.HasCheckConstraint("reports_status_check", "status IN ('open', 'resolved')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.SanctionEntity", b =>
                 {
                     b.Property<long>("SanctionId")
@@ -168,6 +311,8 @@ namespace Enforcer5.Storage.Migrations
                     b.HasIndex("LegacyKey")
                         .IsUnique()
                         .HasFilter("legacy_key IS NOT NULL");
+
+                    b.HasIndex("ReportId");
 
                     b.HasIndex("UserIdAtTime");
 
@@ -536,6 +681,8 @@ namespace Enforcer5.Storage.Migrations
                         .IsUnique()
                         .HasFilter("legacy_key IS NOT NULL");
 
+                    b.HasIndex("ReportId");
+
                     b.HasIndex("UserIdAtTime");
 
                     b.HasIndex("GroupId", "AccountId", "OccurredAt");
@@ -559,6 +706,54 @@ namespace Enforcer5.Storage.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.ReportActionEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.ReportEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ReporterAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SolverUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TargetAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.SanctionEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -577,6 +772,11 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.ReportEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Enforcer5.Storage.UserEntity", null)
                         .WithMany()
@@ -666,6 +866,11 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.ReportEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Enforcer5.Storage.UserEntity", null)
                         .WithMany()
