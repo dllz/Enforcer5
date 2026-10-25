@@ -23,6 +23,7 @@ namespace Enforcer5.Storage
         internal static void ConfigureModel(ModelBuilder modelBuilder)
         {
             ConfigurePrincipals(modelBuilder);
+            ConfigureWarnings(modelBuilder);
             ConfigureSanctions(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
         }
@@ -103,6 +104,41 @@ namespace Enforcer5.Storage
             });
         }
 
+        private static void ConfigureWarnings(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<WarningBalanceEntity>(entity =>
+            {
+                entity.ToTable("warning_balances", table =>
+                {
+                    table.HasCheckConstraint("warning_balances_quantity_check", "active_quantity >= 0 AND lifetime_quantity >= 0");
+                    table.HasCheckConstraint("warning_balances_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
+                });
+                entity.HasKey(x => new { x.GroupId, x.UserId, x.WarningType });
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WarningEventEntity>(entity =>
+            {
+                entity.ToTable("warning_events", table =>
+                {
+                    table.HasCheckConstraint("warning_events_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
+                    table.HasCheckConstraint("warning_events_operation_check", "operation IN ('add', 'remove', 'reset', 'decay')");
+                    table.HasCheckConstraint("warning_events_quantity_check", "quantity > 0");
+                });
+                entity.HasKey(x => x.WarningEventId);
+                entity.Property(x => x.WarningEventId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserIdAtTime).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+                // The reports foreign key is added with that table.
+                entity.HasAlternateKey(x => new { x.GroupId, x.AccountId, x.WarningEventId });
+                entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.OccurredAt });
+            });
+        }
+
         private static void ConfigureSanctions(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<SanctionEntity>(entity =>
@@ -120,7 +156,11 @@ namespace Enforcer5.Storage
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserIdAtTime).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
-                // The warning_events and reports foreign keys are added with those tables.
+                entity.HasOne<WarningEventEntity>().WithMany()
+                    .HasForeignKey(x => new { x.GroupId, x.AccountId, x.TriggerWarningEventId })
+                    .HasPrincipalKey(x => new { x.GroupId, x.AccountId, x.WarningEventId })
+                    .OnDelete(DeleteBehavior.Restrict);
+                // The reports foreign key is added with that table.
                 entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
                 entity.HasIndex(x => new { x.Edition, x.Status, x.ExpiresAt }, "sanctions_due_idx");
                 // Not in the approved design: the history lookup for one member of one group, which

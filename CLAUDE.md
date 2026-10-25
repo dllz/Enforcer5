@@ -249,15 +249,18 @@ a PostgreSQL repository changes.
 
 ### Group-chat harness (`tests/Enforcer5.Tests/Harness/`)
 
-`HarnessChat` simulates a supergroup: messages go through the real `UpdateHandler.RouteAsync`,
-command dispatch and command code, against `FakeTelegram` (an `ITelegramBotClient` that answers
-from simulated member state, with Telegram's refusals such as 400 "member not found"). It waits
-for all dispatched work (`Bot.WaitIdleAsync`) and the ban history queue, then a scenario checks
-replies, Telegram calls, PostgreSQL rows and `Errors` (everything `ErrorReporter` saw).
+`HarnessChat` simulates a supergroup: messages, photos (`SendPhotoAsync`) and button presses
+(`PressAsync` on a bot message's buttons, `PressDataAsync` for raw callback data) go through the
+real `UpdateHandler.RouteAsync`, command dispatch and command code, against `FakeTelegram` (an
+`ITelegramBotClient` that answers from simulated member state, with Telegram's refusals such as 400
+"member not found"). It waits for all dispatched work (`Bot.WaitIdleAsync`) and the history queue,
+then a scenario checks replies, Telegram calls, Redis hashes, PostgreSQL rows and `Errors`
+(everything `ErrorReporter` saw). `ExpireTempbansAsync` runs the tempban expiry check.
 
 It is built for the PostgreSQL rollout and grows with it: every new PostgreSQL feature gets
 scenarios here (category `Harness`). Redis is a loose Moq stand-in (reads return nothing, writes
-are dropped), so scenarios do not cover Redis state. They need `ENFORCER_TEST_POSTGRES` and are
+are dropped) except for hashes (`FakeRedisHashes`, `chat.Hashes`), which keep their values, so warn
+counters and the tempban schedule work and a scenario seeds group settings there. They need `ENFORCER_TEST_POSTGRES` and are
 skipped otherwise, as in the Docker build. A request `FakeTelegram` does not know throws and shows
 up in `Errors`: add it to the fake when a scenario needs it.
 

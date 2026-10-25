@@ -46,6 +46,7 @@ namespace Enforcer5.Tests.Harness
         private readonly ConcurrentDictionary<(long Chat, long User), MemberState> _members = new();
         private readonly ConcurrentDictionary<long, bool> _botCanRestrict = new();
         private readonly ConcurrentQueue<TelegramCall> _calls = new();
+        private readonly ConcurrentQueue<Message> _sent = new();
         private int _nextMessageId = 1000;
 
         internal FakeTelegram(User me)
@@ -92,7 +93,17 @@ namespace Enforcer5.Tests.Harness
             return result;
         }
 
-        private Message Sent(SendMessageRequest r) => Record("sendMessage", r.ChatId, null, r.Text, r, NewMessage(r.ChatId, r.Text));
+        private Message Sent(SendMessageRequest r)
+        {
+            var message = NewMessage(r.ChatId, r.Text);
+            // Kept so a scenario can press the buttons under it.
+            message.ReplyMarkup = r.ReplyMarkup as Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup;
+            _sent.Enqueue(message);
+            return Record("sendMessage", r.ChatId, null, r.Text, r, message);
+        }
+
+        /// <summary>The messages the bot sent, oldest first, with their inline buttons.</summary>
+        internal IReadOnlyList<Message> SentMessages => _sent.ToList();
 
         private Message NewMessage(ChatId chat, string text = null) => new Message
         {

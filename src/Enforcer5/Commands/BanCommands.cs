@@ -79,7 +79,7 @@ namespace Enforcer5
         {
            if (update.Message.ReplyToMessage != null)
            {
-                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id));
+                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id), actorId: update.Message.From.Id);
                Service.LogCommand(update, update.Message.Text);
             }
            else 
@@ -89,7 +89,7 @@ namespace Enforcer5
                    var warnedid = Methods.GetUserId(update, args);
                    var chatid = update.Message.Chat.Id;
                    
-                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})");
+                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", actorId: update.Message.From.Id);
                     Service.LogCommand(update, update.Message.Text);
                }
                catch (Exception e)
@@ -108,7 +108,7 @@ namespace Enforcer5
         {
             if (update.Message.ReplyToMessage != null)
             {
-                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick: Methods.GetNick(update.Message, args, update.Message.From.Id), preWarn: true);
+                Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick: Methods.GetNick(update.Message, args, update.Message.From.Id), preWarn: true, actorId: update.Message.From.Id);
                 Service.LogCommand(update, update.Message.Text);
             }
             else
@@ -118,7 +118,7 @@ namespace Enforcer5
                     var warnedid = Methods.GetUserId(update, args);
                     var chatid = update.Message.Chat.Id;
 
-                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", preWarn: true);
+                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", preWarn: true, actorId: update.Message.From.Id);
                     Service.LogCommand(update, update.Message.Text);
                 }
                 catch (Exception e)
@@ -132,7 +132,13 @@ namespace Enforcer5
             }
         }
 
-        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false)
+        /// <summary>
+        /// Warns (or prewarns) the member. <paramref name="actorId"/> is the admin who asked, null
+        /// when Enforcer warns on its own (flood, message or name length); <paramref name="reason"/>
+        /// goes to the warn history.
+        /// </summary>
+        public static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
+            long? actorId = null, string reason = null)
         {
             try
             {
@@ -149,6 +155,7 @@ namespace Enforcer5
             if (preWarn)
             {
                 preWarns = Redis.db.HashIncrementAsync($"chat:{chatId}:prewarns", warnedId, 1).Result;
+                WarnHistory.Added(chatId, warnedId, WarnKind.Prewarn, 1, preWarns, null, actorId, reason);
                 var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, preWarns);
                 var solvedMenu = new Menu(2)
                 {
@@ -169,10 +176,12 @@ namespace Enforcer5
                 {
                     preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
                     Redis.db.HashSetAsync($"chat:{chatId}:prewarns", warnedId, 0);
+                    WarnHistory.Removed(chatId, warnedId, WarnKind.Prewarn, preWarns, 0, actorId, "Converted into warns");
                 }
             }
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1 + preWarns).Result;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns);
+            var total = Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns).Result;
+            var warned = WarnHistory.Added(chatId, warnedId, WarnKind.Warn, 1 + preWarns, num, total, actorId, reason);
             var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
@@ -193,7 +202,7 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns");
+                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned);
 
                             if (res)
                             {
@@ -243,6 +252,7 @@ namespace Enforcer5
                         break;
                 }
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
+                WarnHistory.Reset(chatId, id, WarnKind.Warn, num, null, "Max warns");
             }
             else
             {

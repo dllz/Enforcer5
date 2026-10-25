@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Enforcer5.Handlers;
 using Enforcer5.Helpers;
 using Enforcer5.Storage;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -20,8 +21,9 @@ namespace Enforcer5.Tests.Harness
     /// PostgreSQL and whether anything was reported as an error.
     /// <para>
     /// Built for the PostgreSQL rollout and grown with it, one domain at a time. Redis is a loose
-    /// stand-in that answers every read with "nothing stored" and drops writes, so scenarios cover
-    /// what PostgreSQL holds, not Redis state. PostgreSQL is a throwaway schema on the test
+    /// stand-in that answers reads with "nothing stored" and drops writes, except for hashes
+    /// (<see cref="FakeRedisHashes"/>), which keep their values: warn counters, the tempban
+    /// schedule and the per-group settings a scenario seeds. PostgreSQL is a throwaway schema on the test
     /// database (ENFORCER_TEST_POSTGRES); without one the scenarios are skipped.
     /// </para>
     /// <para>
@@ -47,6 +49,9 @@ namespace Enforcer5.Tests.Harness
         internal string Username { get; set; }
         internal FakeTelegram Telegram { get; }
         internal Mock<IDatabase> Redis { get; } = new Mock<IDatabase>();
+
+        /// <summary>The Redis hashes, to seed settings and check counters.</summary>
+        internal FakeRedisHashes Hashes { get; } = new FakeRedisHashes();
 
         /// <summary>Everything ErrorReporter saw while the harness ran.</summary>
         internal IReadOnlyList<string> Errors => _errors.ToList();
@@ -94,6 +99,7 @@ namespace Enforcer5.Tests.Harness
             Redis.Setup(r => r.SetContainsAsync(It.Is<RedisKey>(k => k == "premiumBot"), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
                 .ReturnsAsync(true);
 #endif
+            Hashes.Install(Redis);
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
             Bot.Api = Telegram;
             Bot.Me = BotUser;
@@ -132,11 +138,88 @@ namespace Enforcer5.Tests.Harness
                     ? new[] { new MessageEntity { Type = MessageEntityType.BotCommand, Offset = 0, Length = text.Split(' ')[0].Length } }
                     : null
             };
-            await UpdateHandler.RouteAsync(new Update { Id = _nextUpdateId++, Message = message }, DateTime.Now);
-            await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-            await BanHistory.FlushAsync();
-            await PrincipalObserver.FlushAsync();
+            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
             return message;
+        }
+
+        /// <summary>Posts a photo as <paramref name="from"/>; see <see cref="SendAsync"/>.</summary>
+        internal async Task<Message> SendPhotoAsync(HarnessUser from)
+        {
+            var message = new Message
+            {
+                Id = Telegram.NextMessageId(),
+                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
+                From = from.ToUser(),
+                Date = DateTime.UtcNow,
+                Photo = new[] { new PhotoSize { FileId = $"photo{Telegram.NextMessageId()}", FileUniqueId = "harness", Width = 1, Height = 1 } }
+            };
+            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
+            return message;
+        }
+
+        /// <summary>
+        /// Presses the button under <paramref name="message"/> (a message the bot sent) whose
+        /// callback data starts with <paramref name="dataPrefix"/>, as <paramref name="from"/>.
+        /// </summary>
+        internal async Task PressAsync(HarnessUser from, Message message, string dataPrefix)
+        {
+            var button = message.ReplyMarkup?.InlineKeyboard.SelectMany(row => row)
+                .FirstOrDefault(b => b.CallbackData?.StartsWith(dataPrefix, StringComparison.Ordinal) == true);
+            Assert.IsNotNull(button, $"No button starting with {dataPrefix} under: {message.Text}");
+            await PressDataAsync(from, message, button.CallbackData);
+        }
+
+        /// <summary>A button press with exactly <paramref name="data"/>, on <paramref name="message"/>.</summary>
+        internal async Task PressDataAsync(HarnessUser from, Message message, string data)
+        {
+            var query = new CallbackQuery
+            {
+                Id = $"cb{Telegram.NextMessageId()}",
+                From = from.ToUser(),
+                Message = message,
+                ChatInstance = "harness",
+                Data = data
+            };
+            await RouteAsync(new Update { Id = _nextUpdateId++, CallbackQuery = query });
+        }
+
+        /// <summary>The bot's last message to this chat, with its buttons.</summary>
+        internal Message LastBotMessage => Telegram.SentMessages.Last(m => m.Chat.Id == ChatId);
+
+        /// <summary>The edition's tempban schedule in Redis: unban time (unix) to "chat:user".</summary>
+#if PREMIUM
+        internal const string TempbanSchedule = "tempbannedPremium";
+#else
+        internal const string TempbanSchedule = "tempbanned";
+#endif
+
+        /// <summary>
+        /// Moves every tempban in the schedule into the past and runs the check the bot's timer
+        /// runs, then waits for what it set off.
+        /// </summary>
+        internal async Task ExpireTempbansAsync()
+        {
+            var due = 1;
+            foreach (var entry in Hashes.All(TempbanSchedule))
+            {
+                Hashes[TempbanSchedule, entry.Key] = null;
+                Hashes[TempbanSchedule, (due++).ToString()] = entry.Value;
+            }
+            Methods.CheckTempBans(null);
+            await WaitAsync();
+        }
+
+        private static async Task RouteAsync(Update update)
+        {
+            await UpdateHandler.RouteAsync(update, DateTime.Now);
+            await WaitAsync();
+        }
+
+        private static async Task WaitAsync()
+        {
+            await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
+            await HistoryWriter.FlushAsync();
+            await PrincipalObserver.FlushAsync();
         }
 
         /// <summary>The bot's messages to this chat, oldest first.</summary>

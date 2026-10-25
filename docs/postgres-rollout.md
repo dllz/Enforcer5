@@ -34,6 +34,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 1 | Foundation: connection, schema migrations, startup | `users`, `telegram_accounts`, `telegram_account_profiles`, `user_identity_links`, `telegram_chats`, `telegram_chat_profiles`, `groups`, `sanctions` | Built |
 | 2 | Ban history: every ban, tempban and unban Enforcer makes is written to `sanctions` | as above | Built |
 | 3 | Principals from traffic: names, usernames, languages, group titles and links, last seen / last message, observed user count | as above | Built |
+| 4 | Warn history: every warn, prewarn and media warn added, removed or reset, with the balance it leaves; max-warns bans point at their warn; tempbans whose unban fails at expiry still close | as above, `warning_balances`, `warning_events` | Built |
 
 ### Step 2: ban history
 
@@ -64,6 +65,30 @@ groups, 0.8 s once they exist.
 Both this batch and the ban history take one advisory lock before creating accounts or links,
 so they never create two users for one new account.
 
-Not migrated yet, still Redis only: everything else, including tempban expiry, kicks, mutes,
-global bans, warnings and reports. Old Redis ban data is not imported: history starts when step 2
-ships.
+### Step 4: warn history
+
+`Helpers/WarnHistory` records every change to a warn count once Redis has made it: `/warn` and
+`/prewarn` (and prewarns turned into warns at the next `/warn`, as a prewarning `remove`), the
+user-menu warn button, the warn button under a report, automatic warns (flood, message and name
+length, with that as the reason), media warns, `/removewarn`, `/resetwarns` and their buttons (with
+the admin's reason), and the reset at max warns or the media limit. Each change is a
+`warning_events` row; `warning_balances` holds the count it leaves. The balance copies the count
+Redis returned instead of adding to what PostgreSQL had, so a member's balance matches Redis from
+their first change on, without an import; members never touched since have no row. The lifetime
+count copies Redis's `totalWarns` for `/warn`, and otherwise counts the adds seen here (Redis keeps
+no total for prewarns, media warns or the user-menu button). The negative-count repair
+(`Service.removeWarn0`) is housekeeping and writes no event.
+
+Bans and warns share one ordered writer (`Helpers/HistoryWriter`), so a warn is written before the
+ban it caused: a max-warns or media-limit ban sets `sanctions.trigger_warning_event_id` to the warn
+that reached the limit.
+
+Tempbans have been written since step 2. Step 4 closes one gap: when the unban at expiry fails (the
+bot lost its rights, the group is gone), Redis still forgets the tempban and Telegram lifts it at
+its until date anyway, so the row is closed as `completed` instead of staying `active`. Tempbans
+from before step 2 are not imported; before expiry moves to PostgreSQL, check that the Redis
+schedule only holds tempbans from after step 2 shipped.
+
+Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
+written, Redis decides), kicks, mutes, global bans and reports. Old Redis ban and warn data is not
+imported: ban history starts when step 2 ships, warn history when step 4 does.

@@ -952,6 +952,8 @@ namespace Enforcer5
             }
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
+            // This button has never counted towards totalWarns, so the history counts the lifetime itself.
+            var warned = WarnHistory.Added(chatId, userId, WarnKind.Warn, 1, num, null, call.From.Id);
             var max = 3;
             int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result.ToString(), out max);
             
@@ -966,7 +968,7 @@ namespace Enforcer5
                     {
                          // Was never awaited, so a failed ban went unnoticed and was reported as done.
                          Bot.Api.BanChatMember(call.Message.Chat.Id, userId).Wait();
-                         BanHistory.Banned(call.Message.Chat.Id, userId, BanKind.Ban, "Max warns", null);
+                         BanHistory.Banned(call.Message.Chat.Id, userId, BanKind.Ban, "Max warns", null, trigger: warned);
                          var result = Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
                     }
                     catch (AggregateException e)
@@ -981,6 +983,7 @@ namespace Enforcer5
                     Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
                 }
                  Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
+                 WarnHistory.Reset(chatId, userId, WarnKind.Warn, num, null, "Max warns");
             }
             else
             {

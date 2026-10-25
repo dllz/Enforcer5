@@ -93,7 +93,7 @@ namespace Enforcer5
                                 }
                                 break;
                             case "warn":
-                                Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                                Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Flood");
                                 Methods.SaveBan(userid, "flood");
                                 break;
                             case "tempban":
@@ -169,7 +169,7 @@ namespace Enforcer5
                         }
                         break;
                     case "Warn":
-                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Long message");
                         return;
                     case "tempban":
                         var time = Methods.GetGroupTempbanTime(groupId);
@@ -226,7 +226,7 @@ namespace Enforcer5
                         }
                         break;
                     case "Warn":
-                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString());
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Name too long");
                         break;
                     case "tempban":
                         var time = Methods.GetGroupTempbanTime(groupId);
@@ -294,12 +294,14 @@ namespace Enforcer5
                 var configuredMax = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
                 var max = configuredMax.HasValue ? configuredMax : 2;
                 var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
+                var warned = WarnHistory.Added(chatId, message.From.Id, WarnKind.Media, 1, current, null, null, "Media");
 
                 var overLimit = current >= int.Parse(max);
                 var action = overLimit ? configuredAction : null;
                 if (overLimit)
                 {
                     Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
+                    WarnHistory.Reset(chatId, message.From.Id, WarnKind.Media, current, null, "Media limit");
                 }
 
                 if (overLimit)
@@ -314,7 +316,7 @@ namespace Enforcer5
                             Bot.SendReply(reply, message);
                             break;
                         case "ban":
-                            var res = Methods.BanUser(chatId, message.From.Id, lang, "Media");
+                            var res = Methods.BanUser(chatId, message.From.Id, lang, "Media", trigger: warned);
                             if (res)
                             {
                                 Methods.SaveBan(message.From.Id, "media");

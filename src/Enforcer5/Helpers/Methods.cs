@@ -855,15 +855,17 @@ namespace Enforcer5.Helpers
 
         /// <summary>
         /// Bans the user and records it in the ban history. <paramref name="actorId"/> is the admin
-        /// who asked for it; leave it null when Enforcer acts on its own.
+        /// who asked for it; leave it null when Enforcer acts on its own. <paramref name="trigger"/> is
+        /// the warn that reached the maximum, for a max-warns ban.
         /// </summary>
-        public static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null)
+        internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
+            WarningRef trigger = null)
         {
             try
             {
                 Bot.Api.BanChatMember(chatId, userId).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, BanKind.Ban, reason, actorId);
+                BanHistory.Banned(chatId, userId, BanKind.Ban, reason, actorId, trigger: trigger);
                 return true;
             }
             catch (Exception e)
@@ -948,7 +950,12 @@ namespace Enforcer5.Helpers
                             var subStrings = mem.Value.ToString().Split(':');
                             var chatId = long.Parse(subStrings[0]);
                             var userId = long.Parse(subStrings[1]);
-                            UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc, BanEnd.Expired);
+                            if (!UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc, BanEnd.Expired))
+                            {
+                                // Telegram lifts a tempban at its until date by itself, and Redis
+                                // forgets it below, so it has ended even when this unban failed.
+                                BanHistory.Unbanned(chatId, userId, BanEnd.Expired, null);
+                            }
 #if NORMAL
                             Redis.db.HashDeleteAsync("tempbanned", mem.Name);
                             Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);

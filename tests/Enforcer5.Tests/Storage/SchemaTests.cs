@@ -25,7 +25,8 @@ namespace Enforcer5.Tests.Storage
             CollectionAssert.AreEqual(new[]
             {
                 "groups", "sanctions", "telegram_account_profiles", "telegram_accounts",
-                "telegram_chat_profiles", "telegram_chats", "user_identity_links", "users"
+                "telegram_chat_profiles", "telegram_chats", "user_identity_links", "users",
+                "warning_balances", "warning_events"
             }, tables);
         }
 
@@ -48,6 +49,18 @@ namespace Enforcer5.Tests.Storage
             Assert.AreEqual("kind IN ('ban', 'kick', 'mute', 'tempban', 'tempmute')", checks["sanctions_kind_check"]);
             Assert.AreEqual("status IN ('active', 'due', 'revoked', 'completed')", checks["sanctions_status_check"]);
             Assert.AreEqual("sanction_id", sanctions.FindProperty(nameof(SanctionEntity.SanctionId)).GetColumnName());
+        }
+
+        [TestMethod]
+        public void Warnings_UseTheApprovedTypesAndOperations()
+        {
+            using var context = CreateContext();
+            var model = context.GetService<IDesignTimeModel>().Model;
+            var events = model.FindEntityType(typeof(WarningEventEntity)).GetCheckConstraints().ToDictionary(c => c.Name, c => c.Sql);
+            Assert.AreEqual("warning_type IN ('standard', 'prewarning', 'media')", events["warning_events_type_check"]);
+            Assert.AreEqual("operation IN ('add', 'remove', 'reset', 'decay')", events["warning_events_operation_check"]);
+            var balances = model.FindEntityType(typeof(WarningBalanceEntity)).GetCheckConstraints().ToDictionary(c => c.Name, c => c.Sql);
+            Assert.AreEqual("active_quantity >= 0 AND lifetime_quantity >= 0", balances["warning_balances_quantity_check"]);
         }
     }
 

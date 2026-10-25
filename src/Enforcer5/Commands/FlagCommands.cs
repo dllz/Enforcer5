@@ -555,7 +555,7 @@ namespace Enforcer5
             var callId = call.Id;
             var callFromId = call.From.Id;
             var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-            Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId);
+            Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId, actorId: callFromId);
         }
 
         [Callback(Trigger = "solveflag", GroupAdminOnly = true)]

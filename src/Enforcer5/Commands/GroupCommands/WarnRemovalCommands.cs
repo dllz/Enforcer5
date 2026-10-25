@@ -194,7 +194,7 @@ namespace Enforcer5
         private static void Complete(long chatId, XDocument lang, WarnChange change, long adminId, string adminName,
             string target, string reason, int sourceMessageId, bool sourceIsBotMessage)
         {
-            var left = ApplyAsync(Repositories.Warns, Repositories.WarnReasons, chatId, change, reason).GetAwaiter().GetResult();
+            var left = ApplyAsync(Repositories.Warns, Repositories.WarnReasons, chatId, change, reason, adminId).GetAwaiter().GetResult();
 
             var text = ResultText(lang, change, adminName, target, left, reason);
             var shown = false;
@@ -251,20 +251,30 @@ namespace Enforcer5
             return count;
         }
 
-        /// <summary>Makes the change and remembers the reason. Returns the count left.</summary>
+        /// <summary>
+        /// Makes the change, records it in the warn history as made by <paramref name="actorId"/>, and
+        /// remembers the reason. Returns the count left.
+        /// </summary>
         internal static async Task<long> ApplyAsync(IWarnRepository warns, IWarnReasonRepository reasons,
-            long chatId, WarnChange change, string reason)
+            long chatId, WarnChange change, string reason, long? actorId = null)
         {
             long left = 0;
+            var before = await warns.GetCountAsync(chatId, change.Kind, change.TargetId);
             if (change.Reset)
             {
                 await warns.ResetAsync(chatId, change.Kind, change.TargetId);
+                WarnHistory.Reset(chatId, change.TargetId, change.Kind, before, actorId, reason);
                 if (change.AlsoMediaWarns && change.Kind != WarnKind.Media)
+                {
+                    var media = await warns.GetCountAsync(chatId, WarnKind.Media, change.TargetId);
                     await warns.ResetAsync(chatId, WarnKind.Media, change.TargetId);
+                    WarnHistory.Reset(chatId, change.TargetId, WarnKind.Media, media, actorId, reason);
+                }
             }
             else
             {
                 left = await warns.RemoveOneAsync(chatId, change.Kind, change.TargetId);
+                WarnHistory.Removed(chatId, change.TargetId, change.Kind, before - left, left, actorId, reason);
             }
 
             if (reason != null) await reasons.AddRecentAsync(chatId, reason);

@@ -54,14 +54,15 @@ WHERE group_id = @GroupId AND account_id = @AccountId
   AND kind IN ('ban', 'tempban') AND status IN ('active', 'due')",
                 new { group.GroupId, target.AccountId, ban.At }, transaction));
             await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO sanctions (group_id, account_id, user_id_at_time, actor_user_id, kind, status, reason,
-    imposed_at, expires_at, edition)
-VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @Kind, 'active', @Reason,
-    @At, @ExpiresAt, @Edition)",
+INSERT INTO sanctions (group_id, account_id, user_id_at_time, actor_user_id, trigger_warning_event_id,
+    kind, status, reason, imposed_at, expires_at, edition)
+VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @TriggerWarningEventId,
+    @Kind, 'active', @Reason, @At, @ExpiresAt, @Edition)",
                 new
                 {
                     group.GroupId, target.AccountId, UserIdAtTime = target.UserId, ActorUserId = actorUserId,
-                    Kind = KindValue(ban.Kind), ban.Reason, ban.At, ban.ExpiresAt, ban.Edition
+                    ban.TriggerWarningEventId, Kind = KindValue(ban.Kind), ban.Reason, ban.At, ban.ExpiresAt,
+                    ban.Edition
                 }, transaction));
             await transaction.CommitAsync();
         }

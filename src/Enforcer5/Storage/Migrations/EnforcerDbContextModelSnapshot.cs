@@ -171,6 +171,8 @@ namespace Enforcer5.Storage.Migrations
 
                     b.HasIndex("UserIdAtTime");
 
+                    b.HasIndex("GroupId", "AccountId", "TriggerWarningEventId");
+
                     b.HasIndex(new[] { "Edition", "Status", "ExpiresAt" }, "sanctions_due_idx");
 
                     b.HasIndex(new[] { "GroupId", "AccountId", "ImposedAt" }, "sanctions_group_account_idx");
@@ -437,6 +439,117 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.WarningBalanceEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("WarningType")
+                        .HasColumnType("text")
+                        .HasColumnName("warning_type");
+
+                    b.Property<long>("ActiveQuantity")
+                        .HasColumnType("bigint")
+                        .HasColumnName("active_quantity");
+
+                    b.Property<long>("LifetimeQuantity")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lifetime_quantity");
+
+                    b.HasKey("GroupId", "UserId", "WarningType");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("warning_balances", null, t =>
+                        {
+                            t.HasCheckConstraint("warning_balances_quantity_check", "active_quantity >= 0 AND lifetime_quantity >= 0");
+
+                            t.HasCheckConstraint("warning_balances_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.WarningEventEntity", b =>
+                {
+                    b.Property<long>("WarningEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("warning_event_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("WarningEventId"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long?>("ActorUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("LegacyKey")
+                        .HasColumnType("text")
+                        .HasColumnName("legacy_key");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Operation")
+                        .HasColumnType("text")
+                        .HasColumnName("operation");
+
+                    b.Property<long>("Quantity")
+                        .HasColumnType("bigint")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<long?>("ReportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("report_id");
+
+                    b.Property<long?>("UserIdAtTime")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id_at_time");
+
+                    b.Property<string>("WarningType")
+                        .HasColumnType("text")
+                        .HasColumnName("warning_type");
+
+                    b.HasKey("WarningEventId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("LegacyKey")
+                        .IsUnique()
+                        .HasFilter("legacy_key IS NOT NULL");
+
+                    b.HasIndex("UserIdAtTime");
+
+                    b.HasIndex("GroupId", "AccountId", "OccurredAt");
+
+                    b.ToTable("warning_events", null, t =>
+                        {
+                            t.HasCheckConstraint("warning_events_operation_check", "operation IN ('add', 'remove', 'reset', 'decay')");
+
+                            t.HasCheckConstraint("warning_events_quantity_check", "quantity > 0");
+
+                            t.HasCheckConstraint("warning_events_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramChatEntity", null)
@@ -468,6 +581,12 @@ namespace Enforcer5.Storage.Migrations
                     b.HasOne("Enforcer5.Storage.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserIdAtTime")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.WarningEventEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId", "AccountId", "TriggerWarningEventId")
+                        .HasPrincipalKey("GroupId", "AccountId", "WarningEventId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -512,6 +631,46 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.WarningBalanceEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.WarningEventEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserIdAtTime")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

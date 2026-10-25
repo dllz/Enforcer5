@@ -24,9 +24,11 @@ namespace Enforcer5.Data
     /// <summary>
     /// A ban Enforcer made. <paramref name="ActorId"/> is the Telegram id of the admin who asked
     /// for it, or null when Enforcer acted on its own (flood, max warns, a global ban, ...).
+    /// <paramref name="TriggerWarningEventId"/> is the warn that reached the maximum, for a
+    /// max-warns ban.
     /// </summary>
     internal sealed record BanEvent(long ChatId, long UserId, BanKind Kind, string Reason, long? ActorId,
-        DateTimeOffset At, DateTimeOffset? ExpiresAt, string Edition);
+        DateTimeOffset At, DateTimeOffset? ExpiresAt, string Edition, long? TriggerWarningEventId = null);
 
     /// <summary>A ban being lifted.</summary>
     internal sealed record UnbanEvent(long ChatId, long UserId, BanEnd End, long? ActorId, DateTimeOffset At);

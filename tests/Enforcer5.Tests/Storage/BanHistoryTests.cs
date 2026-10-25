@@ -43,20 +43,20 @@ namespace Enforcer5.Tests.Storage
         public void Setup()
         {
             _savedRepository = Repositories.BanHistory;
-            _savedEnabled = BanHistory.Enabled;
-            _savedDelay = BanHistory.RetryDelay;
+            _savedEnabled = HistoryWriter.Enabled;
+            _savedDelay = HistoryWriter.RetryDelay;
             _fake = new FakeHistory();
             Repositories.BanHistory = _fake;
-            BanHistory.Enabled = () => true;
-            BanHistory.RetryDelay = TimeSpan.Zero;
+            HistoryWriter.Enabled = () => true;
+            HistoryWriter.RetryDelay = TimeSpan.Zero;
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             Repositories.BanHistory = _savedRepository;
-            BanHistory.Enabled = _savedEnabled;
-            BanHistory.RetryDelay = _savedDelay;
+            HistoryWriter.Enabled = _savedEnabled;
+            HistoryWriter.RetryDelay = _savedDelay;
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace Enforcer5.Tests.Storage
             BanHistory.Unbanned(-100, 1, BanEnd.Unbanned, 7);
             BanHistory.Banned(-100, 1, BanKind.Tempban, null, null, DateTime.UtcNow.AddHours(1));
             BanHistory.Unbanned(-100, 1, BanEnd.Expired, null);
-            await BanHistory.FlushAsync();
+            await HistoryWriter.FlushAsync();
 
             CollectionAssert.AreEqual(new[]
             {
@@ -80,29 +80,29 @@ namespace Enforcer5.Tests.Storage
         [TestMethod]
         public async Task Disabled_WritesNothing()
         {
-            BanHistory.Enabled = () => false;
+            HistoryWriter.Enabled = () => false;
             BanHistory.Banned(-100, 1, BanKind.Ban, "spam", 7);
-            BanHistory.Enabled = () => true;
-            await BanHistory.FlushAsync();
+            HistoryWriter.Enabled = () => true;
+            await HistoryWriter.FlushAsync();
             Assert.AreEqual(0, _fake.Calls.Count);
         }
 
         [TestMethod]
         public async Task TransientFailure_IsRetried()
         {
-            _fake.FailuresLeft = BanHistory.Attempts - 1;
+            _fake.FailuresLeft = HistoryWriter.Attempts - 1;
             BanHistory.Banned(-100, 1, BanKind.Ban, "spam", null);
-            await BanHistory.FlushAsync();
+            await HistoryWriter.FlushAsync();
             Assert.AreEqual(1, _fake.Calls.Count);
         }
 
         [TestMethod]
         public async Task PersistentFailure_IsDropped_AndLaterWritesContinue()
         {
-            _fake.FailuresLeft = BanHistory.Attempts;
+            _fake.FailuresLeft = HistoryWriter.Attempts;
             BanHistory.Banned(-100, 1, BanKind.Ban, "lost", null);
             BanHistory.Unbanned(-100, 2, BanEnd.Unbanned, 7);
-            await BanHistory.FlushAsync();
+            await HistoryWriter.FlushAsync();
             CollectionAssert.AreEqual(new[] { "unban Unbanned -100 2 7" }, _fake.Calls);
         }
 
@@ -110,7 +110,7 @@ namespace Enforcer5.Tests.Storage
         public async Task LongReasons_AreShortened()
         {
             BanHistory.Banned(-100, 1, BanKind.Ban, new string('x', 2000), null);
-            await BanHistory.FlushAsync();
+            await HistoryWriter.FlushAsync();
             Assert.IsTrue(_fake.Calls.Single().Length < 600);
         }
 

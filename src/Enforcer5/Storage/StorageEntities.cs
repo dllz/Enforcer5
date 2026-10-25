@@ -85,9 +85,9 @@ namespace Enforcer5.Storage
     /// <c>revoked</c> (an unban) or <c>completed</c> (a tempban that ran out) and fills
     /// <c>resolved_at</c>, so the rows for a group and account are its ban history.
     /// <para>
-    /// <c>trigger_warning_event_id</c> and <c>report_id</c> are in the approved design and kept, but
-    /// their foreign keys arrive with the warning and report tables in a later step.
-    /// <c>claimed_at</c>/<c>claimed_by</c> belong to the tempban expiry worker, which also comes
+    /// <c>trigger_warning_event_id</c> is the warn that reached the group's maximum, for a max-warns
+    /// ban. <c>report_id</c> is in the approved design and kept, but its foreign key arrives with the
+    /// reports table in a later step. <c>claimed_at</c>/<c>claimed_by</c> belong to the tempban expiry worker, which also comes
     /// later; tempban expiry is still driven from Redis.
     /// </para>
     /// </summary>
@@ -109,6 +109,41 @@ namespace Enforcer5.Storage
         public string Edition { get; set; }
         public DateTimeOffset? ClaimedAt { get; set; }
         public string ClaimedBy { get; set; }
+        public string LegacyKey { get; set; }
+    }
+
+    /// <summary>
+    /// A member's current and lifetime warn count of one type in one group: <c>standard</c>
+    /// (<c>chat:{id}:warns</c> / <c>totalWarns</c>), <c>prewarning</c> (<c>prewarns</c>) or
+    /// <c>media</c> (<c>mediawarn</c>).
+    /// </summary>
+    internal sealed class WarningBalanceEntity
+    {
+        public long GroupId { get; set; }
+        public long UserId { get; set; }
+        public string WarningType { get; set; }
+        public long ActiveQuantity { get; set; }
+        public long LifetimeQuantity { get; set; }
+    }
+
+    /// <summary>
+    /// One change to a warn balance: <c>add</c>, <c>remove</c>, <c>reset</c> (or <c>decay</c>, which
+    /// nothing makes yet), with who made it and why. <c>report_id</c> gets its foreign key with the
+    /// reports table.
+    /// </summary>
+    internal sealed class WarningEventEntity
+    {
+        public long WarningEventId { get; set; }
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public long? UserIdAtTime { get; set; }
+        public long? ActorUserId { get; set; }
+        public long? ReportId { get; set; }
+        public string WarningType { get; set; }
+        public string Operation { get; set; }
+        public long Quantity { get; set; }
+        public string Reason { get; set; }
+        public DateTimeOffset OccurredAt { get; set; }
         public string LegacyKey { get; set; }
     }
 }

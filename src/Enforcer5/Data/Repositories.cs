@@ -30,9 +30,12 @@ namespace Enforcer5.Data
         internal static IMuteRepository Mutes { get; set; } =
             new RedisMuteRepository(() => Redis.db);
 
-        // PostgreSQL. Only used once PostgresStorage is ready; see Helpers/BanHistory.
+        // PostgreSQL. Only used once PostgresStorage is ready; see Helpers/HistoryWriter.
         internal static IBanHistoryRepository BanHistory { get; set; } =
             new PostgresBanHistoryRepository(() => Storage.PostgresStorage.Database);
+
+        internal static IWarningHistoryRepository WarningHistory { get; set; } =
+            new PostgresWarningHistoryRepository(() => Storage.PostgresStorage.Database);
 
         // PostgreSQL. Fed by Helpers/PrincipalObserver once PostgresStorage is ready.
         internal static IPrincipalRepository Principals { get; set; } =
