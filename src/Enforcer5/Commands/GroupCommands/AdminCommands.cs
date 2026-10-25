@@ -865,7 +865,7 @@ namespace Enforcer5
             foreach (var joiner in joiners)
             {
                 // Quiet: the failures are listed together below rather than one error each.
-                if (!Methods.UnmuteUser(chatId, joiner, lang, quiet: true))
+                if (!Methods.UnmuteUser(chatId, joiner, lang, quiet: true, actorId: update.Message.From.Id))
                 {
                     failedToUnmute.Add(joiner);
                 }
@@ -959,27 +959,20 @@ namespace Enforcer5
             
             if (num >= max)
             {
-                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").ToString()
-                    : "kick";
+                // Read once, and awaited: the second read used to call ToString() on the Task, so
+                // type was never "ban" and this button always kicked, whatever the group had set.
+                var setting = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
+                var type = setting.HasValue ? setting.ToString() : "kick";
                 if (type.Equals("ban"))
                 {
-                    try
-                    {
-                         // Was never awaited, so a failed ban went unnoticed and was reported as done.
-                         Bot.Api.BanChatMember(call.Message.Chat.Id, userId).Wait();
-                         BanHistory.Banned(call.Message.Chat.Id, userId, BanKind.Ban, "Max warns", null, trigger: warned);
-                         var result = Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
-                    }
-                    catch (AggregateException e)
-                    {
-                        ErrorReporter.Report(e, $"Banning {userId} at max warns");
-                        Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", call.Message, lang);
-                    }
+                    // BanUser tells the group why on a refusal (bot not admin, target is admin), as
+                    // /warn's max-warns ban does.
+                    if (Methods.BanUser(chatId, userId, lang, "Max warns", trigger: warned))
+                        Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
                 }
                 else
                 {
-                    Methods.KickUser(call.Message.Chat.Id, userId, lang);
+                    Methods.KickUser(chatId, userId, lang, "Max warns", trigger: warned);
                     Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
                 }
                  Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);

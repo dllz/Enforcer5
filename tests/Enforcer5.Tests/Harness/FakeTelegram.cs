@@ -79,7 +79,7 @@ namespace Enforcer5.Tests.Harness
                 GetChatMemberRequest r => Record("getChatMember", r.ChatId, r.UserId, null, r, ChatMember(Id(r.ChatId), r.UserId)),
                 BanChatMemberRequest r => Record("banChatMember", r.ChatId, r.UserId, null, r, Ban(Id(r.ChatId), r.UserId)),
                 UnbanChatMemberRequest r => Record("unbanChatMember", r.ChatId, r.UserId, null, r, Unban(Id(r.ChatId), r.UserId)),
-                RestrictChatMemberRequest r => Record("restrictChatMember", r.ChatId, r.UserId, null, r, true),
+                RestrictChatMemberRequest r => Record("restrictChatMember", r.ChatId, r.UserId, null, r, Restrict(Id(r.ChatId), r.UserId, r.Permissions)),
                 _ => throw new ApiRequestException($"Harness: FakeTelegram does not answer {request.GetType().Name} yet", 400)
             };
             return Task.FromResult((TResponse)response);
@@ -141,6 +141,18 @@ namespace Enforcer5.Tests.Harness
             if (state is MemberState.Creator or MemberState.Administrator)
                 throw new ApiRequestException("Bad Request: user is an administrator of the chat", 400);
             SetMember(chatId, userId, MemberState.Kicked);
+            return true;
+        }
+
+        private bool Restrict(long chatId, long userId, ChatPermissions permissions)
+        {
+            if (!BotCanRestrict(chatId))
+                throw new ApiRequestException("Bad Request: not enough rights to restrict/unrestrict chat member", 400);
+            var state = GetMember(chatId, userId);
+            if (state is MemberState.Creator or MemberState.Administrator)
+                throw new ApiRequestException("Bad Request: user is an administrator of the chat", 400);
+            if (state is MemberState.Member or MemberState.Restricted)
+                SetMember(chatId, userId, permissions?.CanSendMessages == true ? MemberState.Member : MemberState.Restricted);
             return true;
         }
 

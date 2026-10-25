@@ -221,7 +221,7 @@ WHERE a.telegram_user_id = @telegramUserId ORDER BY p.valid_from", new { telegra
         public async Task AccountFromTheBanHistory_GetsItsProfile_NotASecondUser()
         {
             var bans = new PostgresBanHistoryRepository(() => _database);
-            await bans.RecordBanAsync(new BanEvent(-1001, 1, BanKind.Ban, null, null, T0, null, "normal"));
+            await bans.RecordBanAsync(new BanEvent(-1001, 1, SanctionKind.Ban, null, null, T0, null, "normal"));
             await Apply(T0, new[] { new AccountObservation(1, false, "Ann", "ann", null, T0) },
                 new[] { new ChatObservation(-1001, "supergroup", "Group", null, T0, true) });
             Assert.AreEqual(1L, await One<long>("SELECT count(*) FROM users"));

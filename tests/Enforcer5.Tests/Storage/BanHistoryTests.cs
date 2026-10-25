@@ -32,6 +32,8 @@ namespace Enforcer5.Tests.Storage
 
             public Task<IReadOnlyList<BanRecord>> GetHistoryAsync(long chatId, long userId, int limit) =>
                 throw new NotSupportedException();
+            public Task<IReadOnlyList<BanRecord>> GetSanctionsAsync(long chatId, long userId, int limit) => throw new NotSupportedException();
+            public Task<bool> RecordUnmuteAsync(UnmuteEvent unmute) => Task.FromResult(true);
         }
 
         private IBanHistoryRepository _savedRepository;
@@ -62,9 +64,9 @@ namespace Enforcer5.Tests.Storage
         [TestMethod]
         public async Task Writes_InTheOrderTheyHappened()
         {
-            BanHistory.Banned(-100, 1, BanKind.Ban, "spam", 7);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, "spam", 7);
             BanHistory.Unbanned(-100, 1, BanEnd.Unbanned, 7);
-            BanHistory.Banned(-100, 1, BanKind.Tempban, null, null, DateTime.UtcNow.AddHours(1));
+            BanHistory.Banned(-100, 1, SanctionKind.Tempban, null, null, DateTime.UtcNow.AddHours(1));
             BanHistory.Unbanned(-100, 1, BanEnd.Expired, null);
             await HistoryWriter.FlushAsync();
 
@@ -81,7 +83,7 @@ namespace Enforcer5.Tests.Storage
         public async Task Disabled_WritesNothing()
         {
             HistoryWriter.Enabled = () => false;
-            BanHistory.Banned(-100, 1, BanKind.Ban, "spam", 7);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, "spam", 7);
             HistoryWriter.Enabled = () => true;
             await HistoryWriter.FlushAsync();
             Assert.AreEqual(0, _fake.Calls.Count);
@@ -91,7 +93,7 @@ namespace Enforcer5.Tests.Storage
         public async Task TransientFailure_IsRetried()
         {
             _fake.FailuresLeft = HistoryWriter.Attempts - 1;
-            BanHistory.Banned(-100, 1, BanKind.Ban, "spam", null);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, "spam", null);
             await HistoryWriter.FlushAsync();
             Assert.AreEqual(1, _fake.Calls.Count);
         }
@@ -100,7 +102,7 @@ namespace Enforcer5.Tests.Storage
         public async Task PersistentFailure_IsDropped_AndLaterWritesContinue()
         {
             _fake.FailuresLeft = HistoryWriter.Attempts;
-            BanHistory.Banned(-100, 1, BanKind.Ban, "lost", null);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, "lost", null);
             BanHistory.Unbanned(-100, 2, BanEnd.Unbanned, 7);
             await HistoryWriter.FlushAsync();
             CollectionAssert.AreEqual(new[] { "unban Unbanned -100 2 7" }, _fake.Calls);
@@ -109,7 +111,7 @@ namespace Enforcer5.Tests.Storage
         [TestMethod]
         public async Task LongReasons_AreShortened()
         {
-            BanHistory.Banned(-100, 1, BanKind.Ban, new string('x', 2000), null);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, new string('x', 2000), null);
             await HistoryWriter.FlushAsync();
             Assert.IsTrue(_fake.Calls.Single().Length < 600);
         }
@@ -149,7 +151,7 @@ namespace Enforcer5.Tests.Storage
             if (_connectionString != null) await TestPostgres.DropSchemaAsync(_connectionString);
         }
 
-        private Task Ban(long chat, long user, DateTimeOffset at, BanKind kind = BanKind.Ban, long? actor = null,
+        private Task Ban(long chat, long user, DateTimeOffset at, SanctionKind kind = SanctionKind.Ban, long? actor = null,
             string reason = "spam", DateTimeOffset? expires = null) =>
             _repo.RecordBanAsync(new BanEvent(chat, user, kind, reason, actor, at, expires, "normal"));
 
@@ -175,7 +177,7 @@ namespace Enforcer5.Tests.Storage
         public async Task NewBan_ClosesTheOpenOne_NewestFirst()
         {
             await Ban(-1001, 5, T0, reason: "first");
-            await Ban(-1001, 5, T0.AddHours(1), BanKind.Tempban, reason: "second", expires: T0.AddHours(2));
+            await Ban(-1001, 5, T0.AddHours(1), SanctionKind.Tempban, reason: "second", expires: T0.AddHours(2));
 
             var history = await _repo.GetHistoryAsync(-1001, 5, 10);
             Assert.AreEqual(2, history.Count);
@@ -190,7 +192,7 @@ namespace Enforcer5.Tests.Storage
         [TestMethod]
         public async Task ExpiredTempban_IsCompleted()
         {
-            await Ban(-1001, 5, T0, BanKind.Tempban, expires: T0.AddMinutes(30));
+            await Ban(-1001, 5, T0, SanctionKind.Tempban, expires: T0.AddMinutes(30));
             Assert.IsTrue(await _repo.RecordUnbanAsync(new UnbanEvent(-1001, 5, BanEnd.Expired, null, T0.AddMinutes(30))));
             Assert.AreEqual("completed", (await _repo.GetHistoryAsync(-1001, 5, 10)).Single().Status);
         }
@@ -225,6 +227,56 @@ namespace Enforcer5.Tests.Storage
             await Ban(-1001, 5, T0.AddSeconds(5));
             await Ban(-1001, 5, T0.AddSeconds(3));
             Assert.AreEqual(3, (await _repo.GetHistoryAsync(-1001, 5, 10)).Count);
+        }
+
+        [TestMethod]
+        public async Task Kick_IsClosedAtOnce_AndLiftsAnOpenBan()
+        {
+            await Ban(-1001, 5, T0, reason: "old");
+            await Ban(-1001, 5, T0.AddHours(1), SanctionKind.Kick, actor: 9, reason: "rude");
+
+            var all = await _repo.GetSanctionsAsync(-1001, 5, 10);
+            Assert.AreEqual(("kick", "completed", "rude", (long?)9), (all[0].Kind, all[0].Status, all[0].Reason, all[0].ActorId));
+            Assert.AreEqual(T0.AddHours(1), all[0].ResolvedAt);
+            Assert.IsNull(all[0].ExpiresAt);
+            Assert.AreEqual(("ban", "revoked"), (all[1].Kind, all[1].Status));
+            // The ban history only lists bans.
+            Assert.AreEqual(1, (await _repo.GetHistoryAsync(-1001, 5, 10)).Count);
+        }
+
+        [TestMethod]
+        public async Task Mute_ThenUnmute_IsRevoked_AndLeavesBansAlone()
+        {
+            await Ban(-1001, 5, T0, reason: "banned");
+            await Ban(-1001, 5, T0.AddMinutes(1), SanctionKind.Mute, actor: 9, reason: "shouting");
+            Assert.IsTrue(await _repo.RecordUnmuteAsync(new UnmuteEvent(-1001, 5, 9, T0.AddMinutes(5))));
+
+            var all = await _repo.GetSanctionsAsync(-1001, 5, 10);
+            Assert.AreEqual(("mute", "revoked"), (all[0].Kind, all[0].Status));
+            Assert.AreEqual(T0.AddMinutes(5), all[0].ResolvedAt);
+            Assert.AreEqual(("ban", "active"), (all[1].Kind, all[1].Status));
+        }
+
+        [TestMethod]
+        public async Task NewMute_ClosesARunOutTempmuteAsCompleted_AndALiveOneAsRevoked()
+        {
+            await Ban(-1001, 5, T0, SanctionKind.Tempmute, expires: T0.AddMinutes(10));
+            await Ban(-1001, 5, T0.AddHours(1), SanctionKind.Tempmute, expires: T0.AddHours(3));
+            await Ban(-1001, 5, T0.AddHours(2), SanctionKind.Mute);
+
+            var all = await _repo.GetSanctionsAsync(-1001, 5, 10);
+            Assert.AreEqual(("mute", "active"), (all[0].Kind, all[0].Status));
+            Assert.AreEqual(("tempmute", "revoked", (DateTimeOffset?)T0.AddHours(2)), (all[1].Kind, all[1].Status, all[1].ResolvedAt));
+            Assert.AreEqual(("tempmute", "completed", (DateTimeOffset?)T0.AddMinutes(10)), (all[2].Kind, all[2].Status, all[2].ResolvedAt));
+        }
+
+        [TestMethod]
+        public async Task Unmute_WithoutARecordedMute_WritesNothing()
+        {
+            Assert.IsFalse(await _repo.RecordUnmuteAsync(new UnmuteEvent(-1001, 5, 9, T0)));
+            await Ban(-1001, 5, T0);
+            Assert.IsFalse(await _repo.RecordUnmuteAsync(new UnmuteEvent(-1001, 5, 9, T0.AddMinutes(1))));
+            Assert.AreEqual("active", (await _repo.GetSanctionsAsync(-1001, 5, 10)).Single().Status);
         }
     }
 }

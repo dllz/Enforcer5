@@ -70,7 +70,14 @@ namespace Enforcer5.Helpers
             return "";           
         }
 
-        public static bool KickUser(long chatId, long userId, XDocument doc)
+        /// <summary>
+        /// Kicks the user (a ban lifted straight away) and records it in the sanction history.
+        /// <paramref name="actorId"/> is the admin who asked for it, null when Enforcer acts on its
+        /// own; <paramref name="trigger"/> is the warn that reached the maximum, for a max-warns kick.
+        /// <paramref name="record"/> false leaves it out of the history (/kickme).
+        /// </summary>
+        internal static bool KickUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
+            WarningRef trigger = null, bool record = true)
         {
 
             try
@@ -79,6 +86,7 @@ namespace Enforcer5.Helpers
                 Bot.Api.BanChatMember(chatId, userId).Wait();
 
                 Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
+                if (record) BanHistory.Kicked(chatId, userId, reason, actorId, trigger);
                 var check = Bot.Api.GetChatMember(chatId, userId).Result;
                 var status = check.Status;
                 var count = 0;
@@ -865,7 +873,7 @@ namespace Enforcer5.Helpers
             {
                 Bot.Api.BanChatMember(chatId, userId).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, BanKind.Ban, reason, actorId, trigger: trigger);
+                BanHistory.Banned(chatId, userId, SanctionKind.Ban, reason, actorId, trigger: trigger);
                 return true;
             }
             catch (Exception e)
@@ -896,7 +904,7 @@ namespace Enforcer5.Helpers
             {
                 Bot.Api.BanChatMember(chatId, userId, untilDateTime).Wait();
                 Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, BanKind.Tempban, reason, actorId, untilDateTime);
+                BanHistory.Banned(chatId, userId, SanctionKind.Tempban, reason, actorId, untilDateTime);
                 return true;
             }
             catch (AggregateException e)
@@ -1354,7 +1362,9 @@ namespace Enforcer5.Helpers
         /// Mutes the user for good. On failure tells the chat why, except for Mute On Join
         /// (<paramref name="newJoiner"/>), which would otherwise post an error on every join.
         /// </summary>
-        public static bool MuteUser(long chatId, long userId, XDocument doc, bool newJoiner = false)
+        /// <para><paramref name="actorId"/> is the admin who asked; null when Enforcer acts on its own.</para>
+        public static bool MuteUser(long chatId, long userId, XDocument doc, bool newJoiner = false,
+            string reason = null, long? actorId = null)
         {
             try
             {
@@ -1367,11 +1377,13 @@ namespace Enforcer5.Helpers
             Remember(newJoiner
                 ? Repositories.Mutes.MarkJoinerMutedAsync(chatId, userId)
                 : Repositories.Mutes.MarkMutedAsync(chatId, userId), chatId, userId);
+            BanHistory.Muted(chatId, userId, newJoiner ? reason ?? "Mute On Join" : reason, actorId);
             return true;
         }
 
         /// <summary>Mutes the user until <paramref name="untilDateTime"/> (UTC), when Telegram lifts it.</summary>
-        public static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc)
+        public static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
+            string reason = null, long? actorId = null)
         {
             try
             {
@@ -1382,11 +1394,12 @@ namespace Enforcer5.Helpers
                 return RestrictFailed(e, "Tempmute", chatId, userId, doc, "cannottempmuteadmin");
             }
             Remember(Repositories.Mutes.MarkTempMutedAsync(chatId, userId, untilDateTime), chatId, userId);
+            BanHistory.Muted(chatId, userId, reason, actorId, untilDateTime);
             return true;
         }
 
         /// <summary>Lifts any mute. <paramref name="quiet"/> leaves reporting failures to the caller.</summary>
-        public static bool UnmuteUser(long chatId, long userId, XDocument doc, bool quiet = false)
+        public static bool UnmuteUser(long chatId, long userId, XDocument doc, bool quiet = false, long? actorId = null)
         {
             try
             {
@@ -1397,6 +1410,7 @@ namespace Enforcer5.Helpers
                 return RestrictFailed(e, "Unmute", chatId, userId, doc, "cannotmuteadmin", quiet);
             }
             Remember(Repositories.Mutes.ClearAsync(chatId, userId), chatId, userId);
+            BanHistory.Unmuted(chatId, userId, actorId);
             return true;
         }
 

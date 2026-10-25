@@ -405,7 +405,7 @@ namespace Enforcer5.Handlers
                     var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
                     if (muteOnJoin == "no")
                     {
-                        Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, true);
+                        Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, newJoiner: true);
                     }
                 }
 #if PREMIUM

@@ -46,6 +46,8 @@ namespace Enforcer5.Tests.Storage
 
             public Task<bool> RecordUnbanAsync(UnbanEvent unban) => Task.FromResult(true);
             public Task<IReadOnlyList<BanRecord>> GetHistoryAsync(long chatId, long userId, int limit) => throw new NotSupportedException();
+            public Task<IReadOnlyList<BanRecord>> GetSanctionsAsync(long chatId, long userId, int limit) => throw new NotSupportedException();
+            public Task<bool> RecordUnmuteAsync(UnmuteEvent unmute) => Task.FromResult(true);
         }
 
         private IWarningHistoryRepository _savedWarnings;
@@ -77,7 +79,7 @@ namespace Enforcer5.Tests.Storage
         public async Task MaxWarnsBan_PointsAtTheWarnWrittenBeforeIt()
         {
             var warned = WarnHistory.Added(-100, 1, WarnKind.Warn, 1, 3, 3, 7);
-            BanHistory.Banned(-100, 1, BanKind.Ban, "Max warns", null, trigger: warned);
+            BanHistory.Banned(-100, 1, SanctionKind.Ban, "Max warns", null, trigger: warned);
             WarnHistory.Reset(-100, 1, WarnKind.Warn, 3, null, "Max warns");
             await HistoryWriter.FlushAsync();
 
@@ -219,7 +221,7 @@ namespace Enforcer5.Tests.Storage
         {
             var warn = await Record(WarnKind.Warn, WarnOperation.Add, 1, 3, lifetime: 3);
             var bans = new PostgresBanHistoryRepository(() => _database);
-            await bans.RecordBanAsync(new BanEvent(-1001, 5, BanKind.Ban, "Max warns", null, T0, null, "normal", warn));
+            await bans.RecordBanAsync(new BanEvent(-1001, 5, SanctionKind.Ban, "Max warns", null, T0, null, "normal", warn));
 
             await using var connection = await _database.OpenConnectionAsync();
             Assert.AreEqual(warn, await connection.ExecuteScalarAsync<long?>("SELECT trigger_warning_event_id FROM sanctions"));
@@ -232,7 +234,7 @@ namespace Enforcer5.Tests.Storage
             var warn = await Record(WarnKind.Warn, WarnOperation.Add, 1, 3, user: 6);
             var bans = new PostgresBanHistoryRepository(() => _database);
             await Assert.ThrowsExceptionAsync<Npgsql.PostgresException>(() =>
-                bans.RecordBanAsync(new BanEvent(-1001, 5, BanKind.Ban, "Max warns", null, T0, null, "normal", warn)));
+                bans.RecordBanAsync(new BanEvent(-1001, 5, SanctionKind.Ban, "Max warns", null, T0, null, "normal", warn)));
         }
     }
 }

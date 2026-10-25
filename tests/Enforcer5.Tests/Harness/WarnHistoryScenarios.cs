@@ -123,7 +123,7 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
         }
 
         [TestMethod]
-        public async Task WarnToMax_WithKick_ResetsWithoutASanction()
+        public async Task WarnToMax_WithKick_LinksTheKickToTheWarn()
         {
             await using var chat = await HarnessChat.StartAsync();
             WarnSettings(chat, 1, "kick");
@@ -133,8 +133,10 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
 
             await chat.SendAsync(admin, "/warn", replyTo: message);
 
-            CollectionAssert.AreEqual(new[] { "standard add 1", "standard reset 1" }, Ops(await Events(chat)));
-            Assert.AreEqual(0, (await Sanctions(chat)).Length);
+            var events = await Events(chat);
+            CollectionAssert.AreEqual(new[] { "standard add 1", "standard reset 1" }, Ops(events));
+            var kick = (await Sanctions(chat)).Single();
+            Assert.AreEqual(("kick", "completed", "Max warns", (long?)events[0].Id), (kick.Kind, kick.Status, kick.Reason, kick.TriggerId));
             Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
             AssertNoErrors(chat);
         }
@@ -215,12 +217,11 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
         }
 
         [TestMethod]
-        public async Task UserMenuWarnButton_ToMax()
+        public async Task UserMenuWarnButton_ToMax_BansWhenTheGroupSaysBan()
         {
-            // The button reads the group's action without awaiting it, so it always kicks; the
-            // scenario uses kick until that is fixed.
+            // The button used to ignore the setting and always kick.
             await using var chat = await HarnessChat.StartAsync();
-            WarnSettings(chat, 1, "kick");
+            WarnSettings(chat, 1, "ban");
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = chat.Add("Member");
             var message = await chat.SendAsync(member, "rude");
@@ -230,7 +231,9 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
             var events = await Events(chat);
             CollectionAssert.AreEqual(new[] { "standard add 1", "standard reset 1" }, Ops(events));
             Assert.AreEqual((long?)admin.Id, events[0].ActorTelegramId);
-            Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            var ban = (await Sanctions(chat)).Single();
+            Assert.AreEqual(("ban", "active", (long?)events[0].Id), (ban.Kind, ban.Status, ban.TriggerId));
             // This button never counted towards Redis's totalWarns; the history counts it anyway.
             var balance = await BalanceOf(chat, member, "standard");
             Assert.AreEqual((0L, 1L), (balance.Active, balance.Lifetime));

@@ -75,7 +75,7 @@ namespace Enforcer5
                         switch (action)
                         {
                             case "kick":
-                                var res = Methods.KickUser(chatId, userid, lang);
+                                var res = Methods.KickUser(chatId, userid, lang, "Flood");
                                 if (res)
                                 {
                                     Methods.SaveBan(userid, "flood");
@@ -152,7 +152,7 @@ namespace Enforcer5
                 switch (action)
                 {
                     case "kick":
-                        Methods.KickUser(groupId, userid, lang);
+                        Methods.KickUser(groupId, userid, lang, "Long message");
                         reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
                         Service.LogBotAction(groupId, reply, userid);
                         Bot.SendReply(reply, update);
@@ -210,7 +210,7 @@ namespace Enforcer5
                 switch (action)
                 {
                     case "kick":
-                        Methods.KickUser(groupId, userid, lang);
+                        Methods.KickUser(groupId, userid, lang, "Name too long");
                         reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
                         Service.LogBotAction(groupId, reply, userid);
                         Bot.SendReply(reply, update);
@@ -310,7 +310,7 @@ namespace Enforcer5
                     switch (action)
                     {
                         case "kick":
-                            Methods.KickUser(chatId, message.From.Id, lang);
+                            Methods.KickUser(chatId, message.From.Id, lang, "Media", trigger: warned);
                             reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
                             Service.LogBotAction(chatId, reply, message.From.Id);
                             Bot.SendReply(reply, message);
@@ -506,7 +506,7 @@ namespace Enforcer5
                     switch (status)
                     {
                         case "kick":
-                            Methods.KickUser(chatId, userId, lang);
+                            Methods.KickUser(chatId, userId, lang, "Right-to-left text");
                             reply = Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {userId}");
                             Service.LogBotAction(chatId, reply, userId);
                             Bot.Send(reply, update);
@@ -588,7 +588,7 @@ namespace Enforcer5
                     switch (status)
                     {
                         case "kick":
-                            Methods.KickUser(chatId, userId, lang);
+                            Methods.KickUser(chatId, userId, lang, "Non-Latin script");
                             reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
                             Service.LogBotAction(chatId, reply, userId);
                             Bot.Send(reply, update);

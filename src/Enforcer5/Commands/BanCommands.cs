@@ -25,7 +25,8 @@ namespace Enforcer5
         public static void Kickme(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true);
-            var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc);
+            // Leaving by choice, not moderation: kept out of the sanction history.
+            var res = Methods.KickUser(update.Message.Chat.Id, update.Message.From.Id, lang.Doc, record: false);
             if (res)
             {
                 return;
@@ -43,7 +44,9 @@ namespace Enforcer5
                         var userid = Methods.GetUserId(update, args);
                         if (userid == Bot.Me.Id || userid == update.Message.From.Id)
                             return;
-                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc);
+                        // As /ban: what the admin typed, or the message the kick replied to.
+                        var reason = args.Length > 1 && !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
+                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc, reason, update.Message.From.Id);
                         
                         if (res)
                         {
@@ -233,7 +236,7 @@ namespace Enforcer5
                         break;
                         
                     case "kick":
-                        Methods.KickUser(chatId, id, lang.Doc);
+                        Methods.KickUser(chatId, id, lang.Doc, "Max warns", trigger: warned);
                         name = targetnick;
                         if (update != null)
                         {
@@ -709,7 +712,9 @@ namespace Enforcer5
                 if (userId == 0) return;
 
                 // On failure MuteUser has already told the chat why.
-                if (!Methods.MuteUser(chatId, userId, lang)) return;
+                // As /ban: what the admin typed, or the message the mute replied to.
+                var reason = args.Length > 1 && !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
+                if (!Methods.MuteUser(chatId, userId, lang, reason: reason, actorId: update.Message.From.Id)) return;
 
                 object[] arguments =
                 {
@@ -753,7 +758,9 @@ namespace Enforcer5
 
                 // Pure UTC: Telegram reads untilDate as UTC.
                 var until = DateTime.UtcNow.Add(duration);
-                if (!Methods.TempMuteUser(chatId, userId, until, lang)) return;
+                // The text after the target is the duration, so the reason is the replied-to message.
+                if (!Methods.TempMuteUser(chatId, userId, until, lang, update.Message.ReplyToMessage?.Text,
+                        update.Message.From.Id)) return;
 
                 Service.LogCommand(update, update.Message.Text);
                 Bot.SendReply(Methods.GetLocaleString(lang, "temmpmuted", Duration.ToDisplay(duration),
@@ -778,7 +785,7 @@ namespace Enforcer5
                 var userId = MuteTarget(update, args, lang);
                 if (userId == 0) return;
 
-                if (!Methods.UnmuteUser(chatId, userId, lang)) return;
+                if (!Methods.UnmuteUser(chatId, userId, lang, actorId: update.Message.From.Id)) return;
 
                 object[] arguments =
                 {

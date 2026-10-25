@@ -142,6 +142,25 @@ namespace Enforcer5.Tests.Harness
             return message;
         }
 
+        /// <summary>
+        /// <paramref name="user"/> joins the chat (a service message from them); see
+        /// <see cref="SendAsync"/>.
+        /// </summary>
+        internal async Task<Message> JoinAsync(HarnessUser user)
+        {
+            Telegram.SetMember(ChatId, user.Id, MemberState.Member);
+            var message = new Message
+            {
+                Id = Telegram.NextMessageId(),
+                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
+                From = user.ToUser(),
+                Date = DateTime.UtcNow,
+                NewChatMembers = new[] { user.ToUser() }
+            };
+            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
+            return message;
+        }
+
         /// <summary>Posts a photo as <paramref name="from"/>; see <see cref="SendAsync"/>.</summary>
         internal async Task<Message> SendPhotoAsync(HarnessUser from)
         {

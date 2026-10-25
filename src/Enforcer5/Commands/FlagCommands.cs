@@ -536,7 +536,7 @@ namespace Enforcer5
             var userlang = Methods.GetGroupLanguage(call.Message, false).Doc;
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
-             var res = Methods.KickUser(chatId, userId, lang);
+             var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id);
             if (res)
             {
                 Methods.SaveBan(userId, "kick");

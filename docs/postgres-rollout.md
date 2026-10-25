@@ -35,6 +35,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 2 | Ban history: every ban, tempban and unban Enforcer makes is written to `sanctions` | as above | Built |
 | 3 | Principals from traffic: names, usernames, languages, group titles and links, last seen / last message, observed user count | as above | Built |
 | 4 | Warn history: every warn, prewarn and media warn added, removed or reset, with the balance it leaves; max-warns bans point at their warn; tempbans whose unban fails at expiry still close | as above, `warning_balances`, `warning_events` | Built |
+| 5 | Kicks and mutes: every kick, mute, tempmute and unmute Enforcer makes is written to `sanctions`; the user-menu warn button bans at max warns when the group says so | as above | Built |
 
 ### Step 2: ban history
 
@@ -45,7 +46,7 @@ global bans being enforced, and tempbans expiring (`completed`). The writes run 
 worker in order, retry twice, and report to the error chat if they still fail; the ban never waits
 for them. Reads go through `IBanHistoryRepository.GetHistoryAsync`; nothing displays them yet.
 
-Not recorded: kicks, mutes, channel bans (`BanChatSenderChat`), bans an admin makes in the Telegram
+Not recorded (kicks and mutes are, from step 5): channel bans (`BanChatSenderChat`), bans an admin makes in the Telegram
 app directly, and unbans of bans from before the history started (there is no row to close).
 
 ### Step 3: principals from traffic
@@ -89,6 +90,28 @@ its until date anyway, so the row is closed as `completed` instead of staying `a
 from before step 2 are not imported; before expiry moves to PostgreSQL, check that the Redis
 schedule only holds tempbans from after step 2 shipped.
 
+### Step 5: kicks and mutes
+
+`Methods.KickUser`, `MuteUser`, `TempMuteUser` and `UnmuteUser` record what Telegram accepted in
+`sanctions`, with the admin who asked (null when Enforcer acted on its own) and the reason: what the
+admin typed after `/kick` or `/mute`, else the replied-to message (the replied-to message for
+`/tempmute`, whose text after the target is the duration); "Max warns", "Media", "Flood", "Long
+message", "Name too long", "Right-to-left text", "Non-Latin script", "Reported" and "Mute On Join"
+for the automatic ones. A max-warns or media-limit kick points at its warn, as bans do.
+
+- A kick is a `kick` row closed at once (`completed`, `resolved_at` = `imposed_at`). Kicking lifts a
+  ban in Telegram, so it also closes the member's open ban as `revoked`. `/kickme` is not recorded.
+- A mute is a `mute` row, a tempmute a `tempmute` row with `expires_at`. A new mute closes the open
+  one; `/unmute` and `/unmutenewjoiners` close it as `revoked`. Telegram lifts a tempmute by itself
+  and nothing observes that, so a tempmute stays `active` with `expires_at` in the past until the
+  next mute or unmute closes it as `completed` at its expiry; readers treat a past `expires_at` as
+  ended.
+- Not recorded: mutes lifted in the Telegram app, and members `/mutelist` finds unmuted.
+
+The user-menu warn button ignored the group's max-warns action and always kicked (its second read
+of the setting called `ToString()` on the Task, since 2017). It now bans when the group says ban,
+through `Methods.BanUser` like `/warn`.
+
 Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
-written, Redis decides), kicks, mutes, global bans and reports. Old Redis ban and warn data is not
+written, Redis decides), global bans and reports. Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
