@@ -78,6 +78,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, $"Banning channel {channelId}");
                 Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
                 return;
             }
@@ -96,6 +97,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, $"Unbanning channel {channelId}");
                 Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
                 return;
             }
@@ -166,6 +168,7 @@ namespace Enforcer5
             }
             catch (Exception)
             {
+                // Not an error: the bot may not be able to see the channel; callers handle null.
                 return null;
             }
         }

@@ -118,7 +118,7 @@ namespace Enforcer5.Models
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"Language lookup for {context.ChatId} failed: {e.Message}");
+                    ErrorReporter.Report(e, $"Language lookup for {context.ChatId}");
                 }
                 context.Complete = true; // no moderation runs in private chats
                 return context;
@@ -160,9 +160,11 @@ namespace Enforcer5.Models
                     nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks, channelPosts,
                     stickerSetBlocked);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Reported once below, with the consequence spelled out.
+                // WhenAll throws only when a read faulted or was cancelled, which is exactly when
+                // the context ends up incomplete below.
+                ErrorReporter.Report(e, $"Partial context for {context.ChatId}; skipping moderation for this message");
             }
 
             context.Settings = Value(settings);
@@ -187,9 +189,6 @@ namespace Enforcer5.Models
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
             context.Watched = Ok(watch) ? watch.Result : true;
-
-            if (!context.Complete)
-                LogHelper.Error($"Partial context for {context.ChatId}; skipping moderation for this message.");
 
             return context;
         }

@@ -41,7 +41,7 @@ namespace Enforcer5
             TaskScheduler.UnobservedTaskException += (sender, eventArgs) =>
             {
                 eventArgs.SetObserved();
-                LogHelper.Error($"Unobserved task exception: {eventArgs.Exception?.Flatten().Message}");
+                ErrorReporter.Report(eventArgs.Exception?.Flatten(), "Unobserved task exception");
             };
 
             AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
@@ -52,6 +52,7 @@ namespace Enforcer5
                     var msg = $"[FATAL] {DateTime.UtcNow:u}\n{e?.Message}\n{e?.StackTrace}\n\n";
                     Console.Error.WriteLine(msg);
                     LogHelper.AppendLog(Path.Combine(Bot.LogDirectory, "error.log"), msg);
+                    ErrorReporter.ReportFatal(e, eventArgs.IsTerminating ? "[FATAL] Unhandled exception, exiting" : "Unhandled exception");
                     if (eventArgs.IsTerminating)
                         Environment.Exit(5);
                 }
@@ -128,9 +129,9 @@ namespace Enforcer5
                     MessagesReceived.RemoveAt(60);
                 MessageRxPerSecond = MessagesProcessed.Max();
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
+                ErrorReporter.Report(e, "Stats timer");
             }
         }
     }

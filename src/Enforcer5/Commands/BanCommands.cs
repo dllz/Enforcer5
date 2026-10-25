@@ -60,11 +60,15 @@ namespace Enforcer5
  }
                     catch (Exception e)
                     {
+                        // An unknown @username is the admin's typo, not a bug.
+                        if (e.Message != "UnableToResolveUsername")
+                            ErrorReporter.Report(e, "Kicking a user");
                         Methods.SendError(e.Message, update.Message, lang.Doc);
                     }
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Kicking a user");
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
                 }
             
@@ -90,6 +94,9 @@ namespace Enforcer5
                }
                catch (Exception e)
                {
+                   // An unknown @username is the admin's typo, not a bug.
+                   if (e.Message != "UnableToResolveUsername")
+                       ErrorReporter.Report(e, "Warning a user");
                    var lang = Methods.GetGroupLanguage(update.Message,true);
                    Methods.SendError(e.Message, update.Message, lang.Doc);
                }
@@ -116,6 +123,9 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "Prewarning a user");
                     var lang = Methods.GetGroupLanguage(update.Message, true);
                     Methods.SendError(e.Message, update.Message, lang.Doc);
                 }
@@ -131,7 +141,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-
+                ErrorReporter.Report(e, $"Checking whether {warnedId} is an admin in {chatId} before a warn");
             }
             var lang = Methods.GetGroupLanguage(chatId);
             var preText = "";
@@ -208,6 +218,7 @@ namespace Enforcer5
                         }
                         catch (AggregateException e)
                         {
+                            ErrorReporter.Report(e, $"Banning {id} in {chatId} at max warns");
                             Methods.SendError(e.InnerExceptions[0], chatId, lang.Doc);
                         }
                         break;
@@ -373,17 +384,13 @@ namespace Enforcer5
                                     update.Message.ReplyToMessage.MessageId, disableNotification: true);
                             }
                         }
-                        catch (ApiRequestException e)
-                        {
-
-                        }
-                        catch (AggregateException e)
-                        {
-
-                        }
                         catch (Exception e)
                         {
-
+                            // Best effort. 403: the admin has not started the bot or blocked it;
+                            // 400: the message cannot be forwarded (protected content, deleted).
+                            var api = Bot.AsApiError(e);
+                            if (api?.ErrorCode != 403 && api?.ErrorCode != 400)
+                                ErrorReporter.Report(e, "Forwarding the banned message to the admin");
                         }
                          Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
                         Service.LogCommand(update, update.Message.Text);
@@ -391,12 +398,16 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "Banning a user");
                     Methods.SendError(e.Message, update.Message, lang.Doc);
                 }
             }
                                     
             catch (AggregateException e)
             {
+                ErrorReporter.Report(e, "Banning a user");
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang.Doc);
             }
         }
@@ -428,6 +439,9 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, $"Looking up the user to unban in {chatId}");
                 Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
                 return;
             }
@@ -551,6 +565,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        // No unit given after the length: not an error, minutes are the default.
                         units = "min";
                     }
                 }
@@ -568,6 +583,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        // No unit given after the length: not an error, minutes are the default.
                         units = "min";
                     }
 
@@ -685,6 +701,9 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, "Muting a user");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -722,6 +741,9 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, "Temporarily muting a user");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -748,6 +770,9 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, "Unmuting a user");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -779,6 +804,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Listing muted users");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -803,6 +829,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Listing tempbanned users");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -830,7 +857,7 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"Checking the mute of {userId} in {chatId} failed: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, $"Checking the mute of {userId} in {chatId}");
                 }
                 lines.Add(DescribeUser(userId, user) + suffix);
             }

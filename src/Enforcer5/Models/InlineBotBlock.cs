@@ -127,7 +127,7 @@ namespace Enforcer5.Models
             catch (Exception e) when (e is ArgumentException || e is NotSupportedException ||
                                       e is RegexMatchTimeoutException)
             {
-                LogHelper.Error($"Inline bot block {block} could not be evaluated: {e.Message}");
+                ErrorReporter.Report(e, $"Inline bot block {block} could not be evaluated");
                 return false;
             }
         }

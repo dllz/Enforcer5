@@ -30,6 +30,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Answering ping");
                 Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang.Doc);
             }
         }
@@ -138,6 +139,7 @@ namespace Enforcer5
                             }
                             catch (Exception e)
                             {
+                                // Not an error yet: fall back to the error chat's language.
                                 try
                                 {
                                     lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
@@ -145,6 +147,8 @@ namespace Enforcer5
                                 }
                                 catch (Exception ep)
                                 {
+                                    // Every command should have hcommand help (LanguageFileTests).
+                                    ErrorReporter.Report(ep, $"Help text for command {request}");
                                     text = Methods.GetLocaleString(lang, "helpOptionNotImplemented", request);
                                 }
                             }
@@ -182,6 +186,7 @@ namespace Enforcer5
 
                 catch (Exception e)
                 {
+                    // Not an error: the request is not a command, so there may be no help for it.
                     try
                     {
                         lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
@@ -189,7 +194,7 @@ namespace Enforcer5
                     }
                     catch (Exception ep)
                     {
-
+                        // Not an error: no help for this word, so show the help list instead.
                         text = Methods.GetLocaleString(lang, "helpNoRequest");
                         if(sendToPm)
                             Bot.SendToPm(Methods.GetLocaleString(lang, "gethelplist", Methods.GetHelpList(lang)), update);
@@ -214,13 +219,14 @@ namespace Enforcer5
             }
             catch (NullReferenceException e)
             {
+                // No language for this chat: fall back to the error chat's language.
                 try
                 {
                     lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                 }
                 catch (NullReferenceException exception)
                 {
-                    Console.WriteLine(exception);
+                    ErrorReporter.Report(exception, "Loading fallback language for donate");
                     return;
                 }
             }

@@ -119,6 +119,7 @@ namespace Enforcer5
                         }
                         catch (Exception e)
                         {
+                            // Not an error yet: fall back to the error chat's language.
                             try
                             {
                                 lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
@@ -131,7 +132,8 @@ namespace Enforcer5
                             }
                             catch (Exception ep)
                             {
-
+                                // The entry is left out of the results, but help text should exist for it.
+                                ErrorReporter.Report(ep, $"Inline help text for {request}");
                             }
                         }
 
@@ -155,6 +157,7 @@ namespace Enforcer5
                         }
                         catch (Exception e)
                         {
+                            // Not an error yet: fall back to the error chat's language.
                             try
                             {
                                 lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
@@ -167,7 +170,8 @@ namespace Enforcer5
                             }
                             catch (Exception ep)
                             {
-
+                                // The entry is left out of the results, but help text should exist for it.
+                                ErrorReporter.Report(ep, $"Inline help text for {request}");
                             }
                         }
 

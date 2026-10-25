@@ -55,7 +55,7 @@ namespace Enforcer5.Data
                 if (long.TryParse(entry.Name.ToString(), out var id))
                     channels.Add(new AllowedChannel(id, entry.Value.ToString()));
                 else
-                    LogHelper.Error($"Ignoring unreadable allowed channel '{entry.Name}' in {chatId}");
+                    ErrorReporter.Report($"Ignoring unreadable allowed channel '{entry.Name}' in {chatId}");
             }
             return channels;
         }

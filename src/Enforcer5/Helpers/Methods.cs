@@ -41,9 +41,9 @@ namespace Enforcer5.Helpers
                 {
                     _displayZone = TimeZoneInfo.FindSystemTimeZoneById(id);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Console.Error.WriteLine($"[WARN] Unknown DisplayTimeZone '{id}', falling back to UTC");
+                    ErrorReporter.Report(e, $"Unknown DisplayTimeZone '{id}', falling back to UTC");
                     _displayZone = TimeZoneInfo.Utc;
                 }
             }
@@ -108,6 +108,7 @@ namespace Enforcer5.Helpers
                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
+                ErrorReporter.Report(e, $"Kicking {userId} from {chatId}");
                 Methods.SendError(api ?? e, chatId, doc);
                 return false;
             }
@@ -124,7 +125,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                //fucked
+                ErrorReporter.Report(e, "Sending an error reply");
             }
         }
 
@@ -138,17 +139,9 @@ namespace Enforcer5.Helpers
             {
                  Bot.Api.SendMessage(chatid, GetLocaleString(doc, "Error", arguments));
             }
-            catch (ApiRequestException e)
-            {
-                Console.WriteLine(e);
-            }
-            catch (AggregateException e)
-            {
-                Console.WriteLine(e);
-            }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ErrorReporter.Report(e, $"Sending an error message to {chatid}");
             }
         }
         public static string FormatHTML(this string str)
@@ -183,6 +176,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (NullReferenceException e)
                 {
+                    ErrorReporter.Report(e, $"Resolving language for code '{language}'");
                     return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
                 }
             }
@@ -293,6 +287,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (NullReferenceException e)
                 {
+                    ErrorReporter.Report(e, $"Resolving language for code '{language}'");
                     return GetGroupLanguage(uMessage.Chat.Id);
                 }
             }
@@ -339,7 +334,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Failed to load language {language} with error {e}");
+                    ErrorReporter.Report(e, $"Loading language file {language}");
                 }
             }
             if (!languages.Any(x => x.Name == "English"))
@@ -368,7 +363,7 @@ namespace Enforcer5.Helpers
                 }   
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    ErrorReporter.Report(e, $"Formatting arguments for string {key}");
                 }
             }
             try
@@ -396,6 +391,8 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                // Not an error yet: the key may simply be untranslated, so fall back to English.
+                // If that fails too, the throw below names the key and the caller reports it.
                 try
                 {
                     //try the english string to be sure
@@ -440,6 +437,8 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
+                // Not an error yet: the key may simply be untranslated, so fall back to English.
+                // If that fails too, the throw below names the key and the caller reports it.
                 try
                 {
                     //try the english string to be sure
@@ -624,12 +623,12 @@ namespace Enforcer5.Helpers
                     }
                     catch (Exception exception)
                     {
-                        Bot.Send($"In adminlist\n{exception.Message}\n{exception.StackTrace}", Bot.ErrorChatId);
+                        ErrorReporter.Report(exception, $"Checking admin list of {group} for {user}");
                         return false;
                     }
                     
                 }
-                Bot.Send($"{e.Message}\n{e.StackTrace}", Bot.ErrorChatId);            
+                ErrorReporter.Report(e, $"Checking whether {user} is admin in {group}");
                 return false;
             }
         }
@@ -764,7 +763,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ErrorReporter.Report(e, $"Reading global ban record of {id}");
             }
             return false;
         }
@@ -843,13 +842,14 @@ namespace Enforcer5.Helpers
                             Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
                             return;
                         }
+                        ErrorReporter.Report(e, $"Enforcing global ban of {id} in {update.Message.Chat.Id}");
                         Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
                     }
                 }, "IsRekt");
             }
             catch (Exception e)
             {
-                LogHelper.Error($"IsRekt in {update.Message.Chat.Id} failed: {e.Message}");
+                ErrorReporter.Report(e, $"Checking global ban of {id} in {update.Message.Chat.Id}");
             }
         }
 
@@ -875,6 +875,7 @@ namespace Enforcer5.Helpers
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;
                 }
+                ErrorReporter.Report(e, $"Banning {userId} in {chatId}");
                 Methods.SendError(api ?? e, chatId, doc);
                 return false;
             }
@@ -900,6 +901,7 @@ namespace Enforcer5.Helpers
                     Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
                     return false;
                 }
+                ErrorReporter.Report(e, $"Tempbanning {userId} in {chatId}");
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
                 return false;
             }
@@ -951,15 +953,14 @@ namespace Enforcer5.Helpers
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
-                        Bot.Send($"{e.Message}", Constants.Devs[0]);
+                        ErrorReporter.Report(e, $"Lifting tempban {mem.Value}");
                     }
 
                 }
             }
             catch (Exception e)
             {
-                LogHelper.Error($"CheckTempBans failed: {e.Message}");
+                ErrorReporter.Report(e, "Checking tempbans");
             }
             finally
             {
@@ -990,6 +991,7 @@ namespace Enforcer5.Helpers
                     var temp = Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     return false;
                 }
+                ErrorReporter.Report(e, $"Unbanning {userId} in {chatId}");
                 Methods.SendError(e.InnerExceptions[0], chatId, doc);
                 return false;
             }
@@ -1389,7 +1391,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                LogHelper.Error($"Recording the mute of {userId} in {chatId} failed: {e.Message}");
+                ErrorReporter.Report(e, $"Recording the mute of {userId} in {chatId}");
             }
         }
 
@@ -1398,9 +1400,20 @@ namespace Enforcer5.Helpers
         {
             var api = Bot.AsApiError(e);
             var description = api?.Message ?? e.Message;
-            LogHelper.Error($"{what} failed in {chatId} for {userId}: {description}");
+            var failure = RestrictFailures.Classify(description);
+            if (failure == RestrictFailure.Other)
+            {
+                // Not one of the expected refusals: report it even when quiet, since a quiet
+                // caller only gets false back and cannot report the cause itself.
+                ErrorReporter.Report(e, $"{what} of {userId} in {chatId}");
+            }
+            else
+            {
+                // Expected refusal (bot not admin, target is admin): a group setup issue, not a bug.
+                LogHelper.Error($"{what} failed in {chatId} for {userId}: {description}");
+            }
             if (quiet) return false;
-            switch (RestrictFailures.Classify(description))
+            switch (failure)
             {
                 case RestrictFailure.BotNotAdmin:
                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);

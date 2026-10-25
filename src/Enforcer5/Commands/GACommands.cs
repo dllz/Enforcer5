@@ -59,12 +59,14 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        ErrorReporter.Report(e, "Dispatching language upload");
                         Bot.SendReply(e.ToString(), update);
                     }
                 }
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Uploading language");
                 Bot.Api.SendMessage(update.Message.Chat.Id, e.Message, parseMode: ParseMode.None);
             }
         }
@@ -105,6 +107,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
+                ErrorReporter.Report(e, "Sending language menu");
                 foreach (var ex in e.InnerExceptions)
                 {
                     var x = ex as ApiRequestException;
@@ -114,6 +117,7 @@ namespace Enforcer5
             }
             catch (ApiRequestException ex)
             {
+                ErrorReporter.Report(ex, "Sending language menu");
                  Bot.Send(ex.Message, update.Message.Chat.Id);
             }
         }
@@ -148,6 +152,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
+                ErrorReporter.Report(e, "Sending language menu");
                 foreach (var ex in e.InnerExceptions)
                 {
                     var x = ex as ApiRequestException;
@@ -157,6 +162,7 @@ namespace Enforcer5
             }
             catch (ApiRequestException ex)
             {
+                ErrorReporter.Report(ex, "Sending language menu");
                  Bot.Send(ex.Message, update.Message.Chat.Id);
             }
         }
@@ -176,7 +182,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ErrorReporter.Report(e, "Saving Redis before halt");
             }
             Environment.Exit(0);
         }
@@ -295,6 +301,9 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        // An unknown username is a typo, not a bug; the reply says so.
+                        if (e.Message != "UnableToResolveUsername")
+                            ErrorReporter.Report(e, $"Global ban of {username}");
                         Bot.SendReply(e.Message, update);
                     }
                 }
@@ -312,17 +321,10 @@ namespace Enforcer5
             if (args.Length == 2)
             {
                 var groupId = args[1];
-                try
-                {
-                    var id = long.Parse(groupId);
-                    Redis.db.SetAddAsync("bot:bannedGroups", id);
-                    Bot.SendReply("Group banned", update);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                // A bad id throws; the dispatcher reports it.
+                var id = long.Parse(groupId);
+                Redis.db.SetAddAsync("bot:bannedGroups", id);
+                Bot.SendReply("Group banned", update);
             }
         }
 
@@ -332,17 +334,10 @@ namespace Enforcer5
             if (args.Length == 2)
             {
                 var groupId = args[1];
-                try
-                {
-                    var id = long.Parse(groupId);
-                    Redis.db.SetRemoveAsync("bot:bannedGroups", id);
-                    Bot.SendReply("Group unbanned", update);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                // A bad id throws; the dispatcher reports it.
+                var id = long.Parse(groupId);
+                Redis.db.SetRemoveAsync("bot:bannedGroups", id);
+                Bot.SendReply("Group unbanned", update);
             }
         }
 
@@ -368,6 +363,9 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        // An id that is not a number is a typo, not a bug; the reply says so.
+                        if (!(e is FormatException || e is OverflowException))
+                            ErrorReporter.Report(e, $"Global ban of {username}");
                         Bot.SendReply(e.Message, update);
                     }
                 }
@@ -452,7 +450,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);                
+                ErrorReporter.Report(e, "Leaving chat");
             }
         }
 
@@ -518,6 +516,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Getting language code");
                 Bot.SendReply(e.Message, update);
             }
         }

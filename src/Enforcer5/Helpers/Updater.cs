@@ -57,9 +57,10 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"[ERROR] Failed to apply update: {e.Message}\n{e.StackTrace}");
+                ErrorReporter.Report(e, "Applying staged update");
                 // Clear the staging dir so we do not loop on a bad update.
-                try { Directory.Delete(updateDirectory, true); } catch { }
+                try { Directory.Delete(updateDirectory, true); }
+                catch (Exception ex) { ErrorReporter.Report(ex, "Clearing the failed update's staging dir"); }
             }
         }
 
@@ -87,7 +88,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine($"[ERROR] Update monitor: {e.Message}");
+                    ErrorReporter.Report(e, "Checking for a staged update");
                 }
             }
         }

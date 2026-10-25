@@ -199,8 +199,9 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                // The menu message may be too old to edit - fall back to sending a fresh one.
-                Console.WriteLine(e);
+                // The menu message may be too old to edit (400) - fall back to sending a fresh one.
+                if (Bot.AsApiError(e)?.ErrorCode != 400)
+                    ErrorReporter.Report(e, $"Redrawing the settings menu of {chatId}");
                 Bot.Send(call.Message.Text, call.From.Id, customMenu: keys);
             }
         }

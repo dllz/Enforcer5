@@ -119,7 +119,7 @@ namespace Enforcer5.Helpers
             // unequal, so every start re-parsed all the XML five seconds in - right into the
             // restart burst.
             string state = null;
-            try { state = GetLanguageDirectoryState(); } catch (Exception e) { }
+            try { state = GetLanguageDirectoryState(); } catch (Exception e) { ErrorReporter.Report(e, "Reading the language directory"); }
 
             while (true)
             {
@@ -134,7 +134,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"Failed to reload languages: {e.Message}");
+                    ErrorReporter.Report(e, "Failed to reload languages");
                 }
             }
         }
@@ -178,7 +178,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                LogHelper.Error($"Drain on shutdown failed: {e.Message}");
+                ErrorReporter.Report(e, "Drain on shutdown failed");
             }
         }
 
@@ -234,13 +234,16 @@ namespace Enforcer5.Helpers
                     {
                         while (_updates.Reader.TryRead(out var queued))
                         {
+                            // Flows into everything this update dispatches, so any error report
+                            // can say which chat and command it came from.
+                            ErrorReporter.Current = ErrorContext.From(queued.Update);
                             try
                             {
                                 await UpdateHandler.RouteAsync(queued.Update, queued.ReceivedAt);
                             }
                             catch (Exception e)
                             {
-                                LogHelper.Error($"Update {queued.Update?.Id} failed: {AsApiError(e)?.Message ?? e.Message}");
+                                ErrorReporter.Report(e, $"Update {queued.Update?.Id}");
                             }
                         }
                     }
@@ -248,7 +251,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"Update consumer faulted, restarting: {e.Message}");
+                    ErrorReporter.Report(e, "Update consumer faulted, restarting");
                     // Guard against a fault that reproduces immediately turning this into a spin.
                     try { await Task.Delay(1000); } catch { }
                 }
@@ -295,7 +298,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"{name} could not be queued: {e.Message}");
+                    ErrorReporter.Report(e, "could not be queued", name, "");
                     return;
                 }
                 try
@@ -304,7 +307,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"{name} failed: {AsApiError(e)?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, null, name, "");
                 }
                 finally
                 {
@@ -332,7 +335,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"{name} failed: {AsApiError(e)?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, null, name, "");
                 }
             });
         }
@@ -478,10 +481,7 @@ namespace Enforcer5.Helpers
             public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source,
                 CancellationToken cancellationToken)
             {
-                if (exception is ApiRequestException api)
-                    LogHelper.Error($"Polling [{source}] {api.ErrorCode}: {api.Message}");
-                else
-                    LogHelper.Error($"Polling [{source}]: {exception.Message}\n{exception.StackTrace}");
+                ErrorReporter.Report(exception, $"Polling [{source}]");
 
                 // A failing poll must not turn into a tight loop.
                 if (source == HandleErrorSource.PollingError)
@@ -563,8 +563,8 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                // Last-resort path: never recurse back into the error channel.
-                LogHelper.Error($"CatchSend to {id} failed: {AsApiError(e)?.Message ?? e.Message}");
+                // ErrorReporter talks to the API directly, so this cannot recurse.
+                ErrorReporter.Report(e, $"CatchSend to {id} failed");
             }
             return result;
         }
@@ -594,8 +594,9 @@ namespace Enforcer5.Helpers
                     Bot.SendReply(Methods.GetLocaleString(lang, "botNotStarted"), chatId, messageId, Key.CreateMarkupFromMenu(startMe));
                 result = null;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                ErrorReporter.Report(e, $"SendToPm to {pmId} failed, sending in the group instead");
                 result = CatchSend(message, chatId, menu, parseMode, messageId);
             }
             return result;
@@ -649,7 +650,7 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    LogHelper.Error($"Send to {id} failed: {api?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, $"Send to {id} failed");
                     result = null;
                 }
             }
@@ -732,7 +733,7 @@ namespace Enforcer5.Helpers
                 }
                 else
                 {
-                    LogHelper.Error($"SendReply to {chatid} failed: {api?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, $"SendReply to {chatid} failed");
                     result = null;
                 }
             }
@@ -773,8 +774,8 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                // Last-resort path: never recurse back into the error channel.
-                LogHelper.Error($"CatchSendAsync to {id} failed: {AsApiError(e)?.Message ?? e.Message}");
+                // ErrorReporter talks to the API directly, so this cannot recurse.
+                ErrorReporter.Report(e, $"CatchSendAsync to {id} failed");
                 return null;
             }
         }
@@ -808,7 +809,7 @@ namespace Enforcer5.Helpers
                     return null;
                 }
 
-                LogHelper.Error($"SendAsync to {id} failed: {api?.Message ?? e.Message}");
+                ErrorReporter.Report(e, $"SendAsync to {id} failed");
                 return null;
             }
         }
@@ -861,7 +862,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                LogHelper.Error($"Failed to send invoice to {userId}: {AsApiError(e)?.Message ?? e.Message}");
+                ErrorReporter.Report(e, $"Failed to send invoice to {userId}");
                 Bot.CatchSend("Sorry, something went wrong creating your invoice. Please try again.", userId);
             }
         }
@@ -999,7 +1000,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"[ERROR] Redis connection failed: {e.Message}");
+                ErrorReporter.Report(e, "Redis connection failed");
                 return false;
             }
         }

@@ -209,7 +209,8 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"Editing warn message {sourceMessageId} in {chatId} failed: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                    // Falls back to a new reply below.
+                    ErrorReporter.Report(e, $"Editing warn message {sourceMessageId}");
                 }
             }
             if (!shown) Bot.SendReply(text, chatId, sourceMessageId);
@@ -227,8 +228,12 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                // Without the delete right the question and reply just stay in the chat.
-                LogHelper.Error($"Could not delete message {messageId} in {chatId}: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                // Without the delete right the question and reply just stay in the chat; not an error.
+                var api = Bot.AsApiError(e);
+                if (api != null && api.Message.Contains("message can't be deleted"))
+                    LogHelper.Error($"Could not delete message {messageId} in {chatId}: {api.Message}");
+                else
+                    ErrorReporter.Report(e, $"Deleting warn prompt message {messageId}");
             }
         }
 

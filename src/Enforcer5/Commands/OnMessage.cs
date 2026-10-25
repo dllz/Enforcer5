@@ -111,6 +111,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
+                        ErrorReporter.Report(e, $"Flood action {action} on {userid} in {chatId}");
                     }
                 }, "AntiFlood");
             }
@@ -142,7 +143,9 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    //moving on
+                    // Moving on to the action regardless. An already deleted message counts as
+                    // success in DeleteMessage, so this is e.g. a missing delete right.
+                    ErrorReporter.Report(e, $"Deleting an over-long message in {groupId}");
                 }
 
                 string reply;
@@ -253,7 +256,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                LogHelper.Error($"AntiNameLength in {ctx.ChatId} failed: {e.Message}\n{e.StackTrace}");
+                ErrorReporter.Report(e, $"AntiNameLength in {ctx.ChatId}");
             }
             try
             {
@@ -262,7 +265,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                LogHelper.Error($"AntiTextLenght in {ctx.ChatId} failed: {e.Message}\n{e.StackTrace}");
+                ErrorReporter.Report(e, $"AntiTextLenght in {ctx.ChatId}");
             }
         }
 
@@ -442,7 +445,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
-                        LogHelper.Error($"Linked channel lookup for {chatId} failed, deleting without a ban: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                        ErrorReporter.Report(e, $"Linked channel lookup for {chatId}, deleting without a ban");
                         mayBan = false;
                     }
                 }
@@ -467,7 +470,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
-                LogHelper.Error($"{what} failed: {Bot.AsApiError(e)?.Message ?? e.Message}");
+                ErrorReporter.Report(e, what);
                 return false;
             }
         }
@@ -531,7 +534,7 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"RightToLeft action in {chatId} failed: {e.Message}\n{e.StackTrace}");
+                    ErrorReporter.Report(e, $"RightToLeft action in {chatId}");
                 }
             }, "RightToLeft");
         }
@@ -613,7 +616,7 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    LogHelper.Error($"CharacterDetection action in {chatId} failed: {e.Message}");
+                    ErrorReporter.Report(e, $"CharacterDetection action in {chatId}");
                 }
             }, "CharacterDetection");
         }

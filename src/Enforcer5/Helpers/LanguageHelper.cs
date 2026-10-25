@@ -226,11 +226,16 @@ namespace Enforcer5.Handlers
             }
             catch(System.Xml.XmlException XmlExc)
             {
+                // Not a bug: the uploaded file is not well-formed XML, and the uploader is told why.
                 DeletePendingLanguage(newFilePath, pendingNamePath);
                 Bot.Api.SendMessage(id, "<b>XML error occured! Aborting upload!</b>\n\nError details:\n" + XmlExc.Message, replyParameters: new ReplyParameters { MessageId = msgID }, parseMode: ParseMode.Html);
             }
             catch(Exception exc)
             {
+                // InvalidDataException is our own rejection of a bad filename, already explained
+                // to the uploader; anything else is a failure in the upload itself.
+                if (!(exc is InvalidDataException))
+                    ErrorReporter.Report(exc, $"Validating language upload {newFileCorrectName}");
                 DeletePendingLanguage(newFilePath, pendingNamePath);
                 Bot.Api.SendMessage(id, "Error occured! Exception:\n\n" + exc, replyParameters: new ReplyParameters { MessageId = msgID });
             }
@@ -367,6 +372,7 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, $"Sending language base {choice}");
                 Bot.Api.SendMessage(id, e.Message);
             }
         }
@@ -409,8 +415,9 @@ namespace Enforcer5.Handlers
                 if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) File.Delete(filePath);
                 if (!string.IsNullOrEmpty(namePath) && File.Exists(namePath)) File.Delete(namePath);
             }
-            catch
+            catch (Exception e)
             {
+                ErrorReporter.Report(e, $"Deleting pending language file {filePath}");
             }
         }
 

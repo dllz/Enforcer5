@@ -37,7 +37,7 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    ErrorReporter.Report(e, $"Reading the join counter of {message.Chat.Id}");
                 }
 
             }
@@ -65,8 +65,7 @@ defSpamValue = 3;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    
+                    ErrorReporter.Report(e, $"Reading the join counter of {message.NewChatMember.Id} in {message.Chat.Id}");
                 }
                 
             }
@@ -94,8 +93,7 @@ defSpamValue = 3;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-
+                    ErrorReporter.Report(e, $"Reading the join counter of {message.NewChatMember.Id}");
                 }
             }
             else
@@ -158,13 +156,14 @@ defSpamValue = 3;
                         }
                         catch (NullReferenceException e)
                         {
+                            ErrorReporter.Report(e, $"Loading the language of {message.Chat.Id} for the welcome, using the default");
                             try
                             {
                                 lang = Methods.GetGroupLanguage(Bot.ErrorChatId).Doc;
                             }
                             catch (NullReferenceException exception)
                             {
-                                Console.WriteLine(exception);
+                                ErrorReporter.Report(exception, "Loading the default language for the welcome");
                                 return;
                             }
                         }
@@ -457,8 +456,9 @@ defSpamValue = 3;
                 // LogCommand already appends "(chatId)", so an unknown name is just left blank.
                 return name.IsNullOrEmpty ? "" : name.ToString();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ErrorReporter.Report(ex, $"Reading the cached title of {chatId}");
                 return "";
             }
         }
@@ -479,8 +479,9 @@ defSpamValue = 3;
                 var label = string.Join(" ", new[] { name, username }.Where(s => s != null));
                 return string.IsNullOrEmpty(label) ? userId.ToString() : $"{label} ({userId})";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ErrorReporter.Report(ex, $"Reading the cached name of {userId}");
                 return userId.ToString();
             }
         }
@@ -550,10 +551,15 @@ defSpamValue = 3;
                     List<string> removeTriggers = new List<string> { "bot was kicked from the", "bot is not a member of the", "bot was blocked by" };
                     if (e is AggregateException && ((AggregateException)e).InnerExceptions.Any(x => removeTriggers.Any(y => x.Message.Contains(y))))
                     {
+                        // The bot lost access to the log channel: a setup change, handled here.
                         Redis.db.HashDeleteAsync($"chat:{chatId}:settings", "logchat");
                         Bot.Send(Methods.GetLocaleString(lang, "logchannelAutoRemoved"), chatId);
                     }
-                    else Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
+                    else
+                    {
+                        ErrorReporter.Report(e, $"Posting to the log channel of {chatId}");
+                        Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
+                    }
                 }
             }
         }
@@ -583,6 +589,7 @@ defSpamValue = 3;
                 }
                 catch (Exception e)
                 {
+                    ErrorReporter.Report(e, "Posting to the dev log channel");
                     Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
                 }
             }

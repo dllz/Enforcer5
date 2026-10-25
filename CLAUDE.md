@@ -209,6 +209,24 @@ Server-side: `enf status`, `enf restart <config|all>`, `enf logs <config> [servi
 Don't add colour codes or `Console.Title` reads; the former is noise in journald and the
 latter throws on Unix.
 
+### Error reporting
+
+Every error goes through `ErrorReporter.Report(e, "what was being attempted")`
+(`Helpers/ErrorReporter.cs`). It writes the full exception to the log and sends a short
+summary to `ErrorChatId`: the error, the chat, user and message text of the update being
+handled, and the top stack frames. The update comes from `ErrorReporter.Current`, which the
+update consumer sets and which flows into everything that update dispatches.
+
+- **Report from every catch that handles a failure.** Don't add `Console.WriteLine(e)`, bare
+  `LogHelper.Error` or empty catches for errors. A catch for an expected outcome (an admin
+  typing an unknown @username, "message to delete not found", a 403 from a user who blocked
+  the bot) does not report, and says why in a comment.
+- It never throws and never blocks. It sends through `Bot.Api` directly, not `Bot.Send`, so a
+  failing send cannot loop back into it. It is safe on the per-message path.
+- `ErrorThrottle` limits the chat to one report per distinct error per 10 minutes (numbers
+  are ignored when comparing, so the same failure in many chats counts once) and 20 reports a
+  minute. Anything held back is counted in the next report, and is always in the log.
+
 ---
 
 ## Testing

@@ -112,6 +112,7 @@ namespace Enforcer5
                     }
                     else
                     {
+                        ErrorReporter.Report(e, "Forwarding saved message to PM");
                         var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
                         Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                     }
@@ -141,7 +142,10 @@ namespace Enforcer5
                     if (e.InnerExceptions[0].Message.Equals("Bad Request: message can't be deleted"))
                         Bot.SendReply(Methods.GetLocaleString(lang, "botNotAdmin"), update.Message);
                     else
+                    {
+                        ErrorReporter.Report(e, $"Deleting message {msgID}");
                         Methods.SendError(e.InnerException, chatId, lang);
+                    }
                 }
             }
         }
@@ -188,6 +192,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Replying with id");
                     var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
@@ -200,6 +205,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Replying with id");
                     var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
@@ -244,6 +250,7 @@ namespace Enforcer5
             }
             catch (AggregateException e)
             {
+                ErrorReporter.Report(e, "Sending user info to PM");
                 Methods.SendError($"{e.InnerExceptions[0].Message}\n{e.StackTrace}", update.Message, lang);
             }
         }
@@ -399,8 +406,8 @@ namespace Enforcer5
                 }
                 catch (ApiRequestException e)
                 {
+                    ErrorReporter.Report(e, "Sending extra media");
                     Methods.SendError($"Extra corrupted please recreate it, Error message for dev: {e.Message}", update.Message, lang);
-                    // Bot.Send($"@falconza #theOne shit happened\n{e.Message}\n\n{e.StackTrace}", Bot.ErrorChatId);
                 }
             }
         }

@@ -223,7 +223,7 @@ namespace Enforcer5.Handlers
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.Error($"HandleUpdate for {update.Message?.Chat.Id} failed: {ex.Message}\n{ex.StackTrace}");
+                    ErrorReporter.Report(ex, "HandleUpdate");
                 }
                 finally
                 {
@@ -235,7 +235,7 @@ namespace Enforcer5.Handlers
                     }
                     catch (Exception e)
                     {
-                        LogHelper.Error($"Message handler in {update.Message?.Chat.Id} failed: {e.Message}");
+                        ErrorReporter.Report(e, "Message handler");
                     }
                 }
             }
@@ -415,7 +415,7 @@ namespace Enforcer5.Handlers
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            ErrorReporter.Report(e, "Tempbanning a mass-added member");
                         }
                     }
                     try
@@ -424,14 +424,14 @@ namespace Enforcer5.Handlers
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        ErrorReporter.Report(e, "Tempbanning a mass-adder");
                     }
                 }
 #endif
             }
             catch (Exception e)
             {
-                LogHelper.Error($"NewChatMembers in {update.Message.Chat.Id} failed: {e.Message}");
+                ErrorReporter.Report(e, "NewChatMembers");
             }
         }
 
@@ -444,7 +444,7 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
-                // ignored
+                ErrorReporter.Report(e, "Counting a command for spam detection");
             }
         }
 
@@ -457,10 +457,9 @@ namespace Enforcer5.Handlers
 
 
             }
-            catch
+            catch (Exception e)
             {
-                // ignored
-
+                ErrorReporter.Report(e, "Counting a message for spam detection");
             }
         }
 
@@ -578,9 +577,10 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
-                // Never Telegram-send from here: this runs per message, so a systematic fault used
-                // to produce one send per message, hit 429, and sleep pool threads for a minute.
-                LogHelper.Error($"CollectStats for {updateMessage?.Chat.Id} failed: {e.Message}");
+                // Never Bot.Send from here: this runs per message, so a systematic fault used to
+                // produce one send per message, hit 429, and sleep pool threads for a minute.
+                // ErrorReporter is safe: it is throttled and never blocks.
+                ErrorReporter.Report(e, "CollectStats");
             }
         }
            
@@ -669,8 +669,7 @@ namespace Enforcer5.Handlers
                                         }
                                         catch (Exception e)
                                         {
-                                            Console.WriteLine(e);
-                                            
+                                            ErrorReporter.Report(e, "Spam warning");
                                         }
                                         temp[key].NotifiedAdmin = true;
                                     }
@@ -701,8 +700,7 @@ namespace Enforcer5.Handlers
                                     }
                                     catch (Exception e)
                                     {
-                                        Console.WriteLine(e);
-
+                                        ErrorReporter.Report(e, "Spam ban notice");
                                     }
                                 }
 
@@ -711,13 +709,13 @@ namespace Enforcer5.Handlers
                         }
                         catch (Exception e)
                         {
-                            //Console.WriteLine(e.Message);
+                            ErrorReporter.Report(e, $"Spam detection for {key}");
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    //Console.WriteLine(e.Message);
+                    ErrorReporter.Report(e, "Spam detection");
                 }
                 Thread.Sleep(1000);
             }
@@ -744,9 +742,9 @@ namespace Enforcer5.Handlers
                     {
                         matchedTrigger = Bot.Queries.First(x => x.Trigger.Contains(com[0]));
                     }
-                    catch (Exception e)
+                    catch (InvalidOperationException)
                     {
-                        //nothing happens                        
+                        // No inline query matches; handled as an unknown query below.
                     }                   
                 }
                 if (matchedTrigger == null)
@@ -809,7 +807,7 @@ namespace Enforcer5.Handlers
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                ErrorReporter.Report(e, "Inline query");
             }
         }
 
@@ -877,21 +875,13 @@ namespace Enforcer5.Handlers
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                            ErrorReporter.Report(e, $"Callback {callbacks.Trigger}");
                         }                         
                     }
                 }
-                catch (ApiRequestException e)
-                {
-                    Console.WriteLine(e);
-                }
-                catch (AggregateException e)
-                {
-                    Console.WriteLine(e);
-                }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    ErrorReporter.Report(e, "Callback");
                 }
             }
         }

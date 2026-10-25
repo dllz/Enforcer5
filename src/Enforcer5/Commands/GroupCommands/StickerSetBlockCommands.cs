@@ -170,11 +170,12 @@ namespace Enforcer5
                 var api = Bot.AsApiError(e);
                 if (api?.ErrorCode == 400)
                 {
+                    // Telegram says the pack does not exist: a typo, handled by the caller.
                     notFound = true;
                 }
                 else
                 {
-                    LogHelper.Error($"Sticker set lookup for {name} failed: {api?.Message ?? e.Message}");
+                    ErrorReporter.Report(e, $"Sticker set lookup for {name}");
                 }
                 return null;
             }

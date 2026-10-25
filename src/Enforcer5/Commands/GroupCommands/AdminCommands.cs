@@ -39,6 +39,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Saving rules");
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -66,6 +67,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Adding a rule");
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -92,6 +94,7 @@ namespace Enforcer5
                 }
                 catch (AggregateException e)
                 {
+                    ErrorReporter.Report(e, "Saving about text");
                     Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -132,6 +135,9 @@ namespace Enforcer5
                 }
                 else
                 {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "Showing user menu");
                     Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -203,6 +209,7 @@ namespace Enforcer5
                         }
                         else
                         {
+                            ErrorReporter.Report(e, "Saving extra");
                             Methods.SendError($"{e.Message}", update.Message, lang);
                         }
                     }
@@ -259,6 +266,7 @@ namespace Enforcer5
                             }
                             else
                             {
+                                ErrorReporter.Report(e, "Saving extra");
                                 Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
@@ -293,6 +301,7 @@ namespace Enforcer5
                             }
                             else
                             {
+                                ErrorReporter.Report(e, "Saving extra");
                                 Methods.SendError($"{e.Message}", update.Message, lang);
                             }
                         }
@@ -330,6 +339,7 @@ namespace Enforcer5
                     }
                     else
                     {
+                        ErrorReporter.Report(e, "Saving extra");
                         Methods.SendError($"{e.Message}", update.Message, lang);
                     }
                 }
@@ -582,6 +592,7 @@ namespace Enforcer5
                         }
                         catch (AggregateException e)
                         {
+                            ErrorReporter.Report(e, "Setting custom welcome");
                             Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                             Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
                             Bot.SendReply(e.Message, update);
@@ -662,11 +673,13 @@ namespace Enforcer5
                 }
                 catch (Exception e)
                 {
+                    ErrorReporter.Report(e, "Checking user status");
                     Methods.SendError(e.Message, update.Message, lang);
                 }
             }
             catch (AggregateException e)
             {
+                ErrorReporter.Report(e, "Checking user status");
                 Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", update.Message, lang);
             }
         }
@@ -830,6 +843,7 @@ namespace Enforcer5
             }
             catch (Exception e)
             {
+                ErrorReporter.Report(e, "Listing muted joiners");
                 Methods.SendError(e.Message, update.Message, lang);
             }
         }
@@ -955,6 +969,7 @@ namespace Enforcer5
                     }
                     catch (AggregateException e)
                     {
+                        ErrorReporter.Report(e, $"Banning {userId} at max warns");
                         Methods.SendError($"{e.InnerExceptions[0]}\n{e.StackTrace}", call.Message, lang);
                     }
                 }

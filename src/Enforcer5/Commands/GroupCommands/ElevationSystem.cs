@@ -61,6 +61,9 @@ namespace Enforcer5
                 }
                 else
                 {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "Elevating user");
                     Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
                 }
             }
@@ -94,6 +97,9 @@ namespace Enforcer5
                 }
                 else
                 {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "De-elevating user");
                     Methods.SendError($"{e.Message}\n{e.StackTrace}", update.Message, lang);
                 }
             }

@@ -93,7 +93,7 @@ namespace Enforcer5.Data
             foreach (var member in members)
             {
                 if (long.TryParse(member.ToString(), out var id)) ids.Add(id);
-                else LogHelper.Error($"Ignoring unreadable entry '{member}' in {key} for {chatId}");
+                else ErrorReporter.Report($"Ignoring unreadable entry '{member}' in {key} for {chatId}");
             }
             return ids;
         }

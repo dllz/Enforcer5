@@ -225,17 +225,9 @@ namespace Enforcer5
                                          $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
                                     }                                    
                                 }
-                                catch (ApiRequestException e)
-                                {
-
-                                }
-                                catch (AggregateException e)
-                                {
-
-                                }
                                 catch (Exception e)
                                 {
-
+                                    ErrorReporter.Report(e, $"Marking report {msgid} in {chatid} solved for admin {i}");
                                 }
                             }                                                       
                              Bot.Send(Methods.GetLocaleString(lang, "markSolved"), chatid);
@@ -313,23 +305,16 @@ namespace Enforcer5
                         {
                             var resulted = Bot.Api.ForwardMessage(mod, chatId, currentMsgId).Result;
                         }
-                        catch (ApiRequestException e)
-                        {
-                            currentMsgId = repId;
-                            replyFailure = true;
-                            Console.WriteLine(e.Message + e.StackTrace);
-                        }
-                        catch (AggregateException e)
-                        {
-                            currentMsgId = repId;
-                            replyFailure = true;
-                            Console.WriteLine(e.Message + e.StackTrace);
-                        }
                         catch (Exception e)
                         {
                             currentMsgId = repId;
                             replyFailure = true;
-                            Console.WriteLine(e.Message + e.StackTrace);
+                            // Handled by the fallback below. 403: the admin has not started the
+                            // bot or blocked it; 400: the message cannot be forwarded (protected
+                            // content, deleted). Anything else is unexpected.
+                            var api = Bot.AsApiError(e);
+                            if (api?.ErrorCode != 403 && api?.ErrorCode != 400)
+                                ErrorReporter.Report(e, $"Forwarding report {repId} in {chatId} to admin {mod}");
                         }
                         if (replyFailure && updateMessage.ReplyToMessage != null)
                         {
@@ -470,17 +455,9 @@ namespace Enforcer5
                             count++;
                         }
                     }
-                    catch (ApiRequestException e)
-                    {
-                        Console.WriteLine(e.Message + e.StackTrace);
-                    }
-                    catch (AggregateException e)
-                    {
-                        Console.WriteLine(e.Message + e.StackTrace);
-                    }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message + e.StackTrace);
+                        ErrorReporter.Report(e, $"Sending report {repId} in {chatId} to admin {mod}");
                     }
                 }
                 
@@ -641,7 +618,7 @@ namespace Enforcer5
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        ErrorReporter.Report(e, $"Marking report {msgid} in {chatid} solved for admin {noti.adminChatId}");
                     }
                 }
                  Bot.Api.AnswerCallbackQuery(call.Id,

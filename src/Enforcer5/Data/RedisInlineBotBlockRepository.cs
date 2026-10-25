@@ -41,7 +41,7 @@ namespace Enforcer5.Data
                 }
                 else
                 {
-                    LogHelper.Error($"Ignoring unreadable inline bot block '{member}' in {chatId}");
+                    ErrorReporter.Report($"Ignoring unreadable inline bot block '{member}' in {chatId}");
                 }
             }
             return blocks;

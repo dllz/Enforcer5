@@ -52,7 +52,7 @@ namespace Enforcer5.Data
             }
             catch (JsonException e)
             {
-                LogHelper.Error($"Unreadable warn reasons in {chatId}, using the defaults: {e.Message}");
+                ErrorReporter.Report(e, $"Unreadable warn reasons in {chatId}, using the defaults");
                 return null;
             }
         }
@@ -96,7 +96,7 @@ namespace Enforcer5.Data
             }
             catch (JsonException e)
             {
-                LogHelper.Error($"Unreadable pending warn removal {promptMessageId} in {chatId}: {e.Message}");
+                ErrorReporter.Report(e, $"Unreadable pending warn removal {promptMessageId} in {chatId}");
                 return null;
             }
         }

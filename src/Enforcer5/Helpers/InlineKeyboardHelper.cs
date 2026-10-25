@@ -36,7 +36,8 @@ namespace Enforcer5.Helpers
                     }
                     catch (Exception e)
                     {
-                        //isNull
+                        // A null or broken button is a bug in the menu builder; skip it and report.
+                        ErrorReporter.Report(e, $"Building menu button {i}");
                     }       
                     i++;
                     if (i == menu.Buttons.Count) break;
@@ -79,7 +80,8 @@ namespace Enforcer5.Helpers
                         }
                         catch (Exception e)
                         {
-                            //isNull
+                            // A null or broken button is a bug in the menu builder; skip it and report.
+                            ErrorReporter.Report(e, $"Building menu button {i} of menu {j}");
                         }
                         i++;
                         if (i == menus[j].Buttons.Count) break;
