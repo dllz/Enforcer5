@@ -32,7 +32,11 @@ namespace Enforcer5.Helpers
     internal static class Bot
     {
         internal static string TelegramAPIKey;
-        public static TelegramBotClient Api;
+        /// <summary>
+        /// The Telegram client. An interface so the group-chat harness in the tests can stand in for
+        /// Telegram; every call is an extension method over ITelegramBotClient.SendRequest anyway.
+        /// </summary>
+        public static ITelegramBotClient Api;
         /// <summary>Downloads files users send to the bot. Set up next to <see cref="Api"/>.</summary>
         internal static ITelegramFileDownloader Files;
         private static readonly HttpClient FileHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
@@ -288,30 +292,57 @@ namespace Enforcer5.Helpers
             Run(_interactiveGate, work, name);
         }
 
+        // Work started by Run and Dispatch that has not finished yet. Lets the test harness wait until
+        // everything an update set off is done; costs one interlocked add per dispatch.
+        private static int _inFlight;
+
+        /// <summary>Waits until no dispatched work is running. For the test harness.</summary>
+        internal static async Task WaitIdleAsync(TimeSpan timeout)
+        {
+            var deadline = DateTime.UtcNow + timeout;
+            // Twice idle in a row: work that just finished may be about to dispatch more.
+            var idleTicks = 0;
+            while (idleTicks < 2)
+            {
+                if (DateTime.UtcNow > deadline)
+                    throw new TimeoutException($"{Volatile.Read(ref _inFlight)} dispatched tasks still running");
+                idleTicks = Volatile.Read(ref _inFlight) == 0 ? idleTicks + 1 : 0;
+                await Task.Delay(10);
+            }
+        }
+
         private static void Run(SemaphoreSlim gate, Action work, string name)
         {
+            Interlocked.Increment(ref _inFlight);
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await gate.WaitAsync();
-                }
-                catch (Exception e)
-                {
-                    ErrorReporter.Report(e, "could not be queued", name, "");
-                    return;
-                }
-                try
-                {
-                    work();
-                }
-                catch (Exception e)
-                {
-                    ErrorReporter.Report(e, null, name, "");
+                    try
+                    {
+                        await gate.WaitAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorReporter.Report(e, "could not be queued", name, "");
+                        return;
+                    }
+                    try
+                    {
+                        work();
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorReporter.Report(e, null, name, "");
+                    }
+                    finally
+                    {
+                        gate.Release();
+                    }
                 }
                 finally
                 {
-                    gate.Release();
+                    Interlocked.Decrement(ref _inFlight);
                 }
             });
         }
@@ -327,6 +358,7 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static void Dispatch(Func<Task> work, [CallerMemberName] string name = "")
         {
+            Interlocked.Increment(ref _inFlight);
             _ = Task.Run(async () =>
             {
                 try
@@ -337,38 +369,23 @@ namespace Enforcer5.Helpers
                 {
                     ErrorReporter.Report(e, null, name, "");
                 }
+                finally
+                {
+                    Interlocked.Decrement(ref _inFlight);
+                }
             });
         }
 
 
-        public static async Task Initialize(string updateid = null)
+        /// <summary>
+        /// Binds the [Command], [Callback] and [Query] methods by reflection. Idempotent, so the
+        /// test harness can call it without Initialize.
+        /// </summary>
+        internal static void BindHandlers()
         {
-#if PREMIUM
-            TelegramAPIKey = RegHelper.GetRequired("EnforcerPremiumAPI");
-#else
-            TelegramAPIKey = RegHelper.GetRequired("EnforcerAPI");
-#endif
-            var serverUrl = RegHelper.GetRegValue("TelegramServerUrl");
-            Api = string.IsNullOrEmpty(serverUrl)
-                ? new TelegramBotClient(TelegramAPIKey)
-                : new TelegramBotClient(new TelegramBotClientOptions(TelegramAPIKey, serverUrl));
-            Files = new TelegramFileDownloader(Api, FileHttp,
-                TelegramFileDownloader.ResolveFileBaseUrl(RegHelper.GetRegValue("TelegramFileUrl"), serverUrl),
-                TelegramAPIKey);
-
-            Me = await Api.GetMe();
-            try { Console.Title = $"Enforcer {Me.Username}"; } catch (PlatformNotSupportedException) { }
-            LogHelper.Info($"Connected as @{Me.Username}");
-            StartTime = DateTime.UtcNow;
-
-            // Resume from the offset we persisted, so a restart neither reprocesses nor skips updates.
-            long offset;
-            var storedOffset = Redis.db.StringGetAsync(OffsetKey).Result;
-            if (!storedOffset.HasValue || !long.TryParse(storedOffset.ToString(), out offset))
-                offset = 0;
-
-            LogHelper.Info($"Database offset is {offset}");
-            Send($"Bot Started:\n{Methods.DisplayNow():hh:mm:ss dd-MM-yyyy}", ErrorChatId);
+            Commands.Clear();
+            CallBacks.Clear();
+            Queries.Clear();
             //load the commands list
             foreach (var m in typeof(Commands).GetMethods())
             {
@@ -431,6 +448,37 @@ namespace Enforcer5.Helpers
                     }
                 }
             }
+        }
+
+        public static async Task Initialize(string updateid = null)
+        {
+#if PREMIUM
+            TelegramAPIKey = RegHelper.GetRequired("EnforcerPremiumAPI");
+#else
+            TelegramAPIKey = RegHelper.GetRequired("EnforcerAPI");
+#endif
+            var serverUrl = RegHelper.GetRegValue("TelegramServerUrl");
+            Api = string.IsNullOrEmpty(serverUrl)
+                ? new TelegramBotClient(TelegramAPIKey)
+                : new TelegramBotClient(new TelegramBotClientOptions(TelegramAPIKey, serverUrl));
+            Files = new TelegramFileDownloader(Api, FileHttp,
+                TelegramFileDownloader.ResolveFileBaseUrl(RegHelper.GetRegValue("TelegramFileUrl"), serverUrl),
+                TelegramAPIKey);
+
+            Me = await Api.GetMe();
+            try { Console.Title = $"Enforcer {Me.Username}"; } catch (PlatformNotSupportedException) { }
+            LogHelper.Info($"Connected as @{Me.Username}");
+            StartTime = DateTime.UtcNow;
+
+            // Resume from the offset we persisted, so a restart neither reprocesses nor skips updates.
+            long offset;
+            var storedOffset = Redis.db.StringGetAsync(OffsetKey).Result;
+            if (!storedOffset.HasValue || !long.TryParse(storedOffset.ToString(), out offset))
+                offset = 0;
+
+            LogHelper.Info($"Database offset is {offset}");
+            Send($"Bot Started:\n{Methods.DisplayNow():hh:mm:ss dd-MM-yyyy}", ErrorChatId);
+            BindHandlers();
             // Now we can start receiving. ReceiveAsync runs the long-polling loop until cancelled;
             // it restarts internally on transient errors, so no watchdog timer is needed.
             LogHelper.Info($"Starting ID = {offset + 1}");
@@ -945,6 +993,9 @@ namespace Enforcer5.Helpers
                 return _db;
             }
         }
+
+        /// <summary>Points Redis.db at a stand-in, for the test harness. Never called by the bot.</summary>
+        internal static void UseForTests(IDatabase database) => _db = database;
 
         public static void SaveRedis()
         {

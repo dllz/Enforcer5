@@ -24,6 +24,8 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
   `SchemaModelTests.Migrations_MatchTheModel` fails if the model changed without one.
 - PostgreSQL tests run when `ENFORCER_TEST_POSTGRES` holds a connection string (each test uses a
   throwaway schema). Without it they are skipped, as in the Docker build.
+- Every step adds scenarios to the group-chat harness (`tests/Enforcer5.Tests/Harness/`, see
+  CLAUDE.md "Testing"): the feature driven through real commands, checked in PostgreSQL.
 
 ## Steps
 

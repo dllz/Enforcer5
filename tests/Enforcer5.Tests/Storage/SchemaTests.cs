@@ -66,16 +66,21 @@ namespace Enforcer5.Tests.Storage
             if (string.IsNullOrWhiteSpace(baseConnection))
                 Assert.Inconclusive($"Set {ConnectionVariable} to run the PostgreSQL tests.");
             var schema = $"enforcer_test_{Guid.NewGuid():N}";
-            await using var admin = new NpgsqlConnection(baseConnection);
+            await using var admin = new NpgsqlConnection(Unpooled(baseConnection));
             await admin.OpenAsync();
             await admin.ExecuteAsync($"CREATE SCHEMA \"{schema}\"");
-            return new NpgsqlConnectionStringBuilder(baseConnection) { SearchPath = schema }.ConnectionString;
+            return new NpgsqlConnectionStringBuilder(Unpooled(baseConnection)) { SearchPath = schema }.ConnectionString;
         }
+
+        // Each schema is its own connection string and so its own pool, and pooled connections stay
+        // open after the test. Subprod caps the role's connections, so tests do not pool.
+        private static string Unpooled(string connectionString) =>
+            new NpgsqlConnectionStringBuilder(connectionString) { Pooling = false }.ConnectionString;
 
         internal static async Task DropSchemaAsync(string connectionString)
         {
             var schema = new NpgsqlConnectionStringBuilder(connectionString).SearchPath;
-            await using var admin = new NpgsqlConnection(Environment.GetEnvironmentVariable(ConnectionVariable));
+            await using var admin = new NpgsqlConnection(Unpooled(Environment.GetEnvironmentVariable(ConnectionVariable)));
             await admin.OpenAsync();
             await admin.ExecuteAsync($"DROP SCHEMA \"{schema}\" CASCADE");
         }

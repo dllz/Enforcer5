@@ -65,6 +65,12 @@ namespace Enforcer5.Helpers
             set => _current.Value = value;
         }
 
+        /// <summary>
+        /// Called with every report before throttling, for the test harness (a scenario that should
+        /// run cleanly asserts nothing was reported). Null in the bot.
+        /// </summary>
+        internal static Action<string> Observer { get; set; }
+
         /// <summary>Reports an exception. <paramref name="what"/> says what was being attempted.</summary>
         internal static void Report(Exception e, string what = null,
             [CallerMemberName] string member = "", [CallerFilePath] string file = "")
@@ -73,6 +79,7 @@ namespace Enforcer5.Helpers
             {
                 var where = Where(member, file);
                 LogHelper.Error($"{where}{(what != null ? $" ({what})" : "")}: {e}");
+                Observer?.Invoke($"{where}{(what != null ? $" ({what})" : "")}: {Unwrap(e)?.GetType().Name}: {Unwrap(e)?.Message}");
                 var root = Unwrap(e);
                 var key = $"{where}|{root?.GetType().Name}|{Normalise(root?.Message)}";
                 Send(key, s => Format(where, what, e, Current, s.Suppressed, s.Dropped, Edition));
@@ -91,6 +98,7 @@ namespace Enforcer5.Helpers
             {
                 var where = Where(member, file);
                 LogHelper.Error($"{where}: {message}");
+                Observer?.Invoke($"{where}: {message}");
                 var key = $"{where}|message|{Normalise(message)}";
                 Send(key, s => Format(where, message, null, Current, s.Suppressed, s.Dropped, Edition));
             }

@@ -103,7 +103,9 @@ namespace Enforcer5.Helpers
         private static void EnsureWorker()
         {
             if (Interlocked.Exchange(ref _started, 1) != 0) return;
-            Bot.Dispatch(async () =>
+            // Its own long-running task, not Bot.Dispatch: it never finishes, and Dispatch counts
+            // work in flight (Bot.WaitIdleAsync). FlushAsync is how callers wait for it.
+            Task.Factory.StartNew(async () =>
             {
                 await foreach (var write in _queue.Reader.ReadAllAsync())
                 {
@@ -116,7 +118,9 @@ namespace Enforcer5.Helpers
                         ErrorReporter.Report(e, "Ban history worker");
                     }
                 }
-            }, "BanHistory");
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap()
+                .ContinueWith(t => ErrorReporter.Report(t.Exception, "Ban history worker stopped"),
+                    TaskContinuationOptions.OnlyOnFaulted);
         }
 
         /// <summary>Waits until everything queued so far is written. For tests.</summary>

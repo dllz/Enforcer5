@@ -247,6 +247,20 @@ PostgreSQL tests are skipped unless `ENFORCER_TEST_POSTGRES` holds a connection 
 creates and drops a schema of its own. Run them against a scratch database whenever `Storage/` or
 a PostgreSQL repository changes.
 
+### Group-chat harness (`tests/Enforcer5.Tests/Harness/`)
+
+`HarnessChat` simulates a supergroup: messages go through the real `UpdateHandler.RouteAsync`,
+command dispatch and command code, against `FakeTelegram` (an `ITelegramBotClient` that answers
+from simulated member state, with Telegram's refusals such as 400 "member not found"). It waits
+for all dispatched work (`Bot.WaitIdleAsync`) and the ban history queue, then a scenario checks
+replies, Telegram calls, PostgreSQL rows and `Errors` (everything `ErrorReporter` saw).
+
+It is built for the PostgreSQL rollout and grows with it: every new PostgreSQL feature gets
+scenarios here (category `Harness`). Redis is a loose Moq stand-in (reads return nothing, writes
+are dropped), so scenarios do not cover Redis state. They need `ENFORCER_TEST_POSTGRES` and are
+skipped otherwise, as in the Docker build. A request `FakeTelegram` does not know throws and shows
+up in `Errors`: add it to the fake when a scenario needs it.
+
 `tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
 through `InternalsVisibleTo`. The whole suite runs in about a second.
 

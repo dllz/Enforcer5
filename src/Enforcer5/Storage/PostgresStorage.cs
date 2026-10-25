@@ -20,6 +20,9 @@ namespace Enforcer5.Storage
 
         internal static bool Ready => _database != null;
 
+        /// <summary>Sets (or with null clears) the database, for the test harness.</summary>
+        internal static void UseForTests(PostgresDatabase database) => _database = database;
+
         /// <summary>
         /// Brings the schema up to date in the background, retrying every minute until it succeeds,
         /// so a database that is down at startup does not need a restart once it is back. Never
