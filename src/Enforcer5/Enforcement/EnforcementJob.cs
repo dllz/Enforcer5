@@ -110,6 +110,8 @@ namespace Enforcer5.Enforcement
         [JsonIgnore] internal WarningRef Trigger;
         [JsonIgnore] internal ReportRef Report;
         [JsonIgnore] internal ErrorContext Context;
+        /// <summary>Deletes folded into this one (see EnforcementQueue), finished with it.</summary>
+        [JsonIgnore] internal List<EnforcementJob> Riders = new();
 
         /// <summary>Another job with the same key while this one waits is the same job.</summary>
         [JsonIgnore]

@@ -87,6 +87,8 @@ namespace Enforcer5.Helpers
             return Answered(result, chatId, doc, "cannotbanadmin");
         }
 
+        private static readonly ConcurrentDictionary<long, DateTime> ToldNoRights = new ConcurrentDictionary<long, DateTime>();
+
         /// <summary>
         /// Tells the chat why a job was refused, as the code calling Telegram directly used to, and
         /// says whether it went through (or certainly will). <paramref name="targetIsAdminKey"/> is
@@ -99,6 +101,9 @@ namespace Enforcer5.Helpers
             switch (result.Refusal)
             {
                 case Refusal.BotNotAdmin:
+                    // Once per chat in a while: during a raid every ban would otherwise say it.
+                    if (ToldNoRights.TryGetValue(chatId, out var told) && Clock.UtcNow - told < TimeSpan.FromMinutes(10)) break;
+                    ToldNoRights[chatId] = Clock.UtcNow;
                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     break;
                 case Refusal.TargetIsAdmin:
@@ -800,7 +805,8 @@ namespace Enforcer5.Helpers
                 {
                     try
                     {
-                        var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}");
+                        // A known spammer: their messages go in the same call as the ban.
+                        var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}", revokeMessages: true);
                         if (temp)
                         {
                             SaveBan(id, "ban");
@@ -832,9 +838,11 @@ namespace Enforcer5.Helpers
         /// the warn that reached the maximum, for a max-warns ban.
         /// </summary>
         internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            WarningRef trigger = null, ReportRef report = null)
+            WarningRef trigger = null, ReportRef report = null, bool revokeMessages = false)
         {
-            var result = EnforcementQueue.Run(EnforcementJob.Ban(chatId, userId).For(reason, actorId, trigger, report));
+            // revokeMessages: the same call deletes everything they posted in the chat, for spammers.
+            var result = EnforcementQueue.Run(EnforcementJob.Ban(chatId, userId, revokeMessages: revokeMessages)
+                .For(reason, actorId, trigger, report));
             return Answered(result, chatId, doc, "cannotbanadmin");
         }
 

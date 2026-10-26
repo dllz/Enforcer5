@@ -223,5 +223,65 @@ namespace Enforcer5.Tests.Enforcement
             Assert.AreEqual(1, bot.Telegram.Calls.Count);
             AssertNoErrors(bot);
         }
+
+        [TestMethod]
+        public async Task AKnownAdmin_IsNotAskedAboutAgain()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided);
+            bot.Telegram.SetMember(Raided, 7, MemberState.Administrator);
+
+            await bot.RunAsync(EnforcementJob.Ban(Raided, 7));
+            var again = await bot.RunAsync(EnforcementJob.Mute(Raided, 7));
+            var kick = await bot.RunAsync(EnforcementJob.Kick(Raided, 7));
+
+            Assert.AreEqual(Refusal.TargetIsAdmin, again.Refusal);
+            Assert.AreEqual(Refusal.TargetIsAdmin, kick.Refusal);
+            Assert.AreEqual(1, bot.Telegram.Calls.Count, "only the first reached Telegram");
+
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(11));
+            bot.Telegram.SetMember(Raided, 7, MemberState.Member); // demoted meanwhile
+            Assert.AreEqual(EnforcementOutcome.Done, (await bot.RunAsync(EnforcementJob.Ban(Raided, 7))).Outcome, "believed for ten minutes only");
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task Deletes_InOneChat_GoOutAHundredAtATime()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            for (var i = 0; i < 150; i++) bot.Telegram.Posted(Raided, 1000 + i, 1);
+            bot.Telegram.StartFullStorm(TimeSpan.FromSeconds(10), retryAfter: 10); // let them pile up
+
+            for (var i = 0; i < 150; i++) bot.Submit(EnforcementJob.Delete(Raided, 1000 + i));
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(1));
+
+            Assert.AreEqual(0, bot.Telegram.MessagesFrom(Raided, 1).Count, "all gone");
+            Assert.AreEqual(2, bot.Telegram.Accepted.Count(c => c.Method == "deleteMessages"), "100, then the other 50");
+            Assert.AreEqual(0, EnforcementQueue.Count);
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task WithoutRights_EveryCallerHearsAtOnce_ButTelegramIsAskedAboutOnceAMinute()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            var members = Enumerable.Range(1, 20).Select(i => (long)i).ToArray();
+            bot.Group(Raided, members);
+            bot.Telegram.SetBotCanRestrict(Raided, false);
+
+            var results = new System.Collections.Generic.List<EnforcementResult>();
+            foreach (var m in members) results.Add(await bot.RunAsync(EnforcementJob.Ban(Raided, m)));
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(3));
+
+            Assert.IsTrue(results.All(r => r.Refusal == Refusal.BotNotAdmin));
+            Assert.IsTrue(bot.Telegram.Calls.Count <= 5, $"{bot.Telegram.Calls.Count} calls");
+
+            bot.Telegram.SetBotCanRestrict(Raided, true);
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(3));
+            Assert.IsTrue(members.All(m => bot.Telegram.GetMember(Raided, m) == MemberState.Kicked), "all carried out once the rights were back");
+            AssertNoErrors(bot);
+        }
     }
 }

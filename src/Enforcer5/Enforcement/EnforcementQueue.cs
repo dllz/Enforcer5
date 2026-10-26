@@ -44,8 +44,17 @@ namespace Enforcer5.Enforcement
         private static readonly Dictionary<long, List<EnforcementJob>> ByChat = new();
         private static readonly Dictionary<string, EnforcementJob> ByKey = new();
         private static readonly HashSet<long> Running = new();
-        // A chat Telegram answered 429 for moderation: nothing there is tried before this.
+        // A chat Telegram answered 429 for moderation: nothing there is tried before this. Also used
+        // while the bot lacks its rights there: one probe a minute, not one call per job.
         private static readonly Dictionary<long, DateTime> ChatNotBefore = new();
+        // Chats where Telegram said the bot lacks the rights, since when.
+        private static readonly Dictionary<long, DateTime> NoRightsSince = new();
+        // (chat, user) Telegram said is an admin there, until when that is believed.
+        private static readonly Dictionary<(long Chat, long User), DateTime> KnownAdmins = new();
+        private static readonly TimeSpan KnownAdminFor = TimeSpan.FromMinutes(10);
+
+        /// <summary>Most messages Telegram deletes in one deleteMessages call.</summary>
+        internal const int MaxDeleteBatch = 100;
         private static long _sequence;
         private static long _nextChatTurn;
         private static CancellationTokenSource _wake;
@@ -103,8 +112,20 @@ namespace Enforcer5.Enforcement
         {
             var now = Clock.UtcNow;
             EnforcementJob existing = null;
+            var refusedForNow = false;
             lock (Lock)
             {
+                // Telegram already said this person is an admin there: asking again is a wasted call.
+                if (job.TargetId != 0 && job.Kind is not (EnforcementKind.Delete or EnforcementKind.SetChatPermissions) &&
+                    KnownAdmins.TryGetValue((job.ChatId, job.TargetId), out var adminUntil))
+                {
+                    if (adminUntil > now) return Task.FromResult(EnforcementResult.Refuse(Refusal.TargetIsAdmin));
+                    KnownAdmins.Remove((job.ChatId, job.TargetId));
+                }
+                // The bot lacks its rights there: queued all the same, to be carried out once an
+                // admin fixes them, but the caller hears it at once.
+                refusedForNow = NoRightsSince.ContainsKey(job.ChatId);
+
                 var key = job.DedupeKey;
                 // Only the same job as the person's latest: after "ban, unban", a new ban is a new job.
                 if (key != null && ByKey.TryGetValue(key, out existing) && IsLatestFor(existing)) { }
@@ -133,6 +154,7 @@ namespace Enforcer5.Enforcement
                 // Still carried out from memory; only a restart before then would lose it.
                 ErrorReporter.Report(e, $"Journaling {job}");
             }
+            if (refusedForNow) CompleteOnce(job, EnforcementResult.Refuse(Refusal.BotNotAdmin));
             Wake();
             return job.Completion.Task;
         }
@@ -170,6 +192,10 @@ namespace Enforcer5.Enforcement
         private static async Task RunAsync(CancellationToken stop)
         {
             await LoadJournalAsync();
+            // Started before Telegram is connected, so the journal is loaded early; nothing can be
+            // carried out until it is.
+            while (Bot.Api == null && !stop.IsCancellationRequested)
+                await Clock.WaitAsync(TimeSpan.FromSeconds(1), stop);
             while (!stop.IsCancellationRequested)
             {
                 var wake = new CancellationTokenSource();
@@ -252,12 +278,28 @@ namespace Enforcer5.Enforcement
                 var job = NextIn(ByChat[chat], now, ref nextDue);
                 if (job == null) continue;
                 if (Running.Count + ready.Count >= MaxConcurrent) break;
+                if (job.Kind == EnforcementKind.Delete) Batch(job, ByChat[chat], now);
                 ready.Add(job);
             }
             sleep = nextDue == DateTime.MaxValue ? TimeSpan.FromMinutes(5) : nextDue - now;
             if (sleep < TimeSpan.Zero) sleep = TimeSpan.Zero;
             if (ready.Count > 0 && sleep > TimeSpan.FromSeconds(1)) sleep = TimeSpan.FromSeconds(1);
             return ready;
+        }
+
+        // With the lock held. Folds the chat's other due deletes into this one: up to 100 messages
+        // go in one deleteMessages call. The others ride along and finish with it.
+        private static void Batch(EnforcementJob lead, List<EnforcementJob> jobs, DateTime now)
+        {
+            lead.MessageIds ??= new List<int>();
+            foreach (var other in jobs.Where(j => j != lead && j.Kind == EnforcementKind.Delete && j.DueUtc <= now).ToList())
+            {
+                var ids = other.MessageIds ?? new List<int>();
+                if (lead.MessageIds.Count + ids.Count > MaxDeleteBatch) break;
+                lead.MessageIds.AddRange(ids.Where(id => !lead.MessageIds.Contains(id)));
+                lead.Riders.Add(other);
+                Remove(other);
+            }
         }
 
         // The chat's next job: by priority, then first come, first served, except that a person's
@@ -301,6 +343,7 @@ namespace Enforcer5.Enforcement
                 case AttemptKind.Success:
                     EnforcementExecutor.Record(job);
                     result = EnforcementResult.Done;
+                    lock (Lock) NoRightsSince.Remove(job.ChatId);
                     break;
                 case AttemptKind.RateLimited:
                     job.DueUtc = now + attempt.RetryIn;
@@ -325,12 +368,22 @@ namespace Enforcer5.Enforcement
                     // that long. The submitter hears now, so the group is told at once.
                     job.RefusedSinceUtc ??= now;
                     LogHelper.Error($"{job}: the bot lacks the rights ({attempt.Error?.Message})");
+                    lock (Lock)
+                    {
+                        if (!NoRightsSince.ContainsKey(job.ChatId)) NoRightsSince[job.ChatId] = now;
+                        ChatNotBefore[job.ChatId] = now + RightsRetry;
+                    }
                     if (now - job.RefusedSinceUtc.Value < RightsGrace)
                     {
                         job.DueUtc = now + RightsRetry;
                         keep = true;
                     }
                     CompleteOnce(job, EnforcementResult.Refuse(Refusal.BotNotAdmin, attempt.Error));
+                    break;
+                case AttemptKind.Refused when attempt.Refusal == Refusal.TargetIsAdmin:
+                    lock (Lock) KnownAdmins[(job.ChatId, job.TargetId)] = now + KnownAdminFor;
+                    LogHelper.Info($"{job}: the target is an admin");
+                    result = EnforcementResult.Refuse(Refusal.TargetIsAdmin, attempt.Error);
                     break;
                 case AttemptKind.Refused:
                     if (attempt.Refusal == Refusal.Other)
@@ -345,6 +398,8 @@ namespace Enforcer5.Enforcement
             {
                 if (keep) await Journal.SaveAsync(job);
                 else await Journal.RemoveAsync(job.Id);
+                // Deletes that rode along are in the lead job now (saved above when it stays).
+                foreach (var rider in job.Riders) await Journal.RemoveAsync(rider.Id);
             }
             catch (Exception e)
             {
@@ -357,11 +412,21 @@ namespace Enforcer5.Enforcement
                 Running.Remove(job.ChatId);
             }
             if (result.HasValue) CompleteOnce(job, result.Value);
+            if (!keep) job.Riders.Clear();
             Wake();
         }
 
-        private static void CompleteOnce(EnforcementJob job, EnforcementResult result) =>
+        private static void CompleteOnce(EnforcementJob job, EnforcementResult result)
+        {
             job.Completion?.TrySetResult(result);
+            foreach (var rider in job.Riders) rider.Completion?.TrySetResult(result);
+        }
+
+        /// <summary>The bot was told it lacks its rights in <paramref name="chatId"/> and has not succeeded there since.</summary>
+        internal static bool LacksRights(long chatId)
+        {
+            lock (Lock) return NoRightsSince.ContainsKey(chatId);
+        }
 
         /// <summary>
         /// Stops the worker and forgets everything in memory, as a crash would; the journal stays.
@@ -379,6 +444,8 @@ namespace Enforcer5.Enforcement
                 ByKey.Clear();
                 Running.Clear();
                 ChatNotBefore.Clear();
+                NoRightsSince.Clear();
+                KnownAdmins.Clear();
                 _loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             }
         }
