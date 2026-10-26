@@ -140,6 +140,8 @@ namespace Enforcer5.Helpers
 
         public static void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
         {
+            // A 429 means the chat is rate limited: posting about it would only add to that.
+            if (Bot.IsRateLimited(Bot.AsApiError(exceptionInnerException))) return;
             object[] arguments =
                 {
                     exceptionInnerException.Message

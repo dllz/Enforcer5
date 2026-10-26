@@ -81,7 +81,11 @@ namespace Enforcer5.Helpers
                 LogHelper.Error($"{where}{(what != null ? $" ({what})" : "")}: {e}");
                 Observer?.Invoke($"{where}{(what != null ? $" ({what})" : "")}: {Unwrap(e)?.GetType().Name}: {Unwrap(e)?.Message}");
                 var root = Unwrap(e);
-                var key = $"{where}|{root?.GetType().Name}|{Normalise(root?.Message)}";
+                // A 429 is Telegram's rate limit, wherever it surfaced: one report per window for
+                // all of them, with the count, rather than one per call site.
+                var key = root is ApiRequestException { ErrorCode: 429 }
+                    ? "telegram-429"
+                    : $"{where}|{root?.GetType().Name}|{Normalise(root?.Message)}";
                 Send(key, s => Format(where, what, e, Current, s.Suppressed, s.Dropped, Edition));
             }
             catch

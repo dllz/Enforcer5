@@ -37,6 +37,29 @@ namespace Enforcer5.Helpers
         /// Telegram; every call is an extension method over ITelegramBotClient.SendRequest anyway.
         /// </summary>
         public static ITelegramBotClient Api;
+
+        /// <summary>Pacing and 429 state for <see cref="Api"/>; see <see cref="TelegramGateway"/>.</summary>
+        internal static FloodControl Flood = new FloodControl();
+
+        /// <summary>
+        /// Points <see cref="Api"/> at <paramref name="client"/>, behind the gateway that keeps the bot
+        /// under Telegram's limits, with fresh flood state. The test harness calls it with its fake.
+        /// </summary>
+        internal static void UseClient(ITelegramBotClient client)
+        {
+            var flood = new FloodControl();
+            flood.Flooded += OnFlooded;
+            Flood = flood;
+            Api = new TelegramGateway(client, flood);
+        }
+
+        // Every 429 Telegram sends us. The log has each one; the error chat gets them summed up,
+        // since ErrorReporter files all 429s under one key.
+        private static void OnFlooded(Lane lane, string method, string chat, int seconds)
+        {
+            LogHelper.Info($"429 on {method} ({lane}) in {(chat.Length == 0 ? "the whole bot" : chat)}: paused {seconds}s");
+            FloodSignal.Publish(lane, chat, Clock.UtcNow.AddSeconds(seconds));
+        }
         /// <summary>Downloads files users send to the bot. Set up next to <see cref="Api"/>.</summary>
         internal static ITelegramFileDownloader Files;
         private static readonly HttpClient FileHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
@@ -305,6 +328,12 @@ namespace Enforcer5.Helpers
         /// <summary>True inside work started by Run, Dispatch or StartService.</summary>
         internal static bool InDispatch => _inDispatch.Value;
 
+        // Background loops started by StartService; they never finish while the bot runs.
+        private static int _services;
+
+        /// <summary>Dispatched work that has not finished, background loops left out. For the harness.</summary>
+        internal static int PendingWork => Volatile.Read(ref _inFlight) - Volatile.Read(ref _services);
+
         /// <summary>
         /// Waits until no dispatched work is running: everything still in flight is waiting on the
         /// clock (<see cref="Clock.Parked"/>). For the test harness, which then moves its clock on.
@@ -333,6 +362,7 @@ namespace Enforcer5.Helpers
         internal static void StartService(Func<CancellationToken, Task> loop, CancellationToken stop, [CallerMemberName] string name = "")
         {
             Interlocked.Increment(ref _inFlight);
+            Interlocked.Increment(ref _services);
             _ = Task.Run(async () =>
             {
                 _inDispatch.Value = true;
@@ -358,6 +388,7 @@ namespace Enforcer5.Helpers
                 }
                 finally
                 {
+                    Interlocked.Decrement(ref _services);
                     Interlocked.Decrement(ref _inFlight);
                 }
             });
@@ -516,10 +547,13 @@ namespace Enforcer5.Helpers
             TelegramAPIKey = RegHelper.GetRequired("EnforcerAPI");
 #endif
             var serverUrl = RegHelper.GetRegValue("TelegramServerUrl");
-            Api = string.IsNullOrEmpty(serverUrl)
+            // RetryCount stays 0: 429s are handled by the gateway, per chat and lane, not by the
+            // client sleeping inside a request.
+            var client = string.IsNullOrEmpty(serverUrl)
                 ? new TelegramBotClient(TelegramAPIKey)
                 : new TelegramBotClient(new TelegramBotClientOptions(TelegramAPIKey, serverUrl));
-            Files = new TelegramFileDownloader(Api, FileHttp,
+            UseClient(client);
+            Files = new TelegramFileDownloader(client, FileHttp,
                 TelegramFileDownloader.ResolveFileBaseUrl(RegHelper.GetRegValue("TelegramFileUrl"), serverUrl),
                 TelegramAPIKey);
 
@@ -638,22 +672,13 @@ namespace Enforcer5.Helpers
                    (api.Message.Contains("chat not found") || api.Message.Contains("user is deactivated"));
         }
 
+        /// <summary>True for a 429, Telegram's or one the gateway answered itself.</summary>
+        internal static bool IsRateLimited(ApiRequestException api) => api?.ErrorCode == 429;
+
         /// <summary>True when the message body failed Telegram's HTML/Markdown parser.</summary>
         private static bool IsParseFailure(ApiRequestException api)
         {
             return api != null && api.ErrorCode == 400 && api.Message.Contains("can't parse entities");
-        }
-
-        /// <summary>
-        /// Sleeps for the interval Telegram asked for on a 429, or a sane default. Honour the full
-        /// RetryAfter - backing off for less just earns another 429. This parks the calling thread,
-        /// so hot-path callers use WaitOutRateLimitAsync; the fix for the thread-starvation this
-        /// caused is fewer callers, not a shorter wait.
-        /// </summary>
-        private static void WaitOutRateLimit(ApiRequestException api)
-        {
-            var seconds = api?.Parameters?.RetryAfter ?? 5;
-            Thread.Sleep(TimeSpan.FromSeconds(Math.Min(seconds, 60)));
         }
 
         private static Message CatchSend(string message, long id, InlineKeyboardMarkup customMenu = null,
@@ -666,6 +691,10 @@ namespace Enforcer5.Helpers
                 result = Bot.Api.SendMessage(id, message, parsemode,
                     replyParameters: messageId == -1 ? null : new ReplyParameters { MessageId = messageId },
                     replyMarkup: customMenu).Result;
+            }
+            catch (Exception e) when (IsRateLimited(AsApiError(e)))
+            {
+                // Rate limited: logged by the gateway, nothing more to do for a fallback send.
             }
             catch (Exception e)
             {
@@ -730,10 +759,12 @@ namespace Enforcer5.Helpers
             {
                 var api = AsApiError(e);
 
-                if (api?.ErrorCode == 429)
+                if (IsRateLimited(api))
                 {
-                    WaitOutRateLimit(api);
-                    result = CatchSend(message, id, customMenu, parseMode);
+                    // The gateway already waited out a short 429 and tried once more. Never sleep
+                    // here: that held an enforcement permit for up to a minute.
+                    Announcements.Defer(id, message, parseMode, customMenu);
+                    result = null;
                 }
                 else if (IsParseFailure(api))
                 {
@@ -814,10 +845,10 @@ namespace Enforcer5.Helpers
             {
                 var api = AsApiError(e);
 
-                if (api?.ErrorCode == 429)
+                if (IsRateLimited(api))
                 {
-                    WaitOutRateLimit(api);
-                    result = CatchSend(message, chatid, keyboard, ParseMode.Html, msgid);
+                    Announcements.Defer(chatid, message, ParseMode.Html, keyboard);
+                    result = null;
                 }
                 else if (IsParseFailure(api))
                 {
@@ -861,13 +892,6 @@ namespace Enforcer5.Helpers
         // undo the point of the conversion.
         // ---------------------------------------------------------------------------------------
 
-        /// <summary>Awaits the interval Telegram asked for on a 429, without parking a thread.</summary>
-        private static Task WaitOutRateLimitAsync(ApiRequestException api)
-        {
-            var seconds = api?.Parameters?.RetryAfter ?? 5;
-            return Task.Delay(TimeSpan.FromSeconds(Math.Min(seconds, 60)));
-        }
-
         private static async Task<Message> CatchSendAsync(string message, long id, InlineKeyboardMarkup customMenu = null,
             ParseMode parsemode = ParseMode.None, int messageId = -1)
         {
@@ -877,6 +901,11 @@ namespace Enforcer5.Helpers
                 return await Api.SendMessage(id, message, parsemode,
                     replyParameters: messageId == -1 ? null : new ReplyParameters { MessageId = messageId },
                     replyMarkup: customMenu);
+            }
+            catch (Exception e) when (IsRateLimited(AsApiError(e)))
+            {
+                // Rate limited: logged by the gateway, nothing more to do for a fallback send.
+                return null;
             }
             catch (Exception e)
             {
@@ -900,10 +929,10 @@ namespace Enforcer5.Helpers
             {
                 var api = AsApiError(e);
 
-                if (api?.ErrorCode == 429)
+                if (IsRateLimited(api))
                 {
-                    await WaitOutRateLimitAsync(api);
-                    return await CatchSendAsync(message, id, customMenu, parseMode);
+                    Announcements.Defer(id, message, parseMode, customMenu);
+                    return null;
                 }
                 if (IsParseFailure(api))
                 {

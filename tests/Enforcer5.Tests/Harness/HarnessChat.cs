@@ -146,7 +146,8 @@ namespace Enforcer5.Tests.Harness
                 .ReturnsAsync(true);
 #endif
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
-            Bot.Api = Telegram;
+            Bot.UseClient(Telegram);
+            Announcements.ResetForTests();
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
@@ -203,8 +204,24 @@ namespace Enforcer5.Tests.Harness
         internal async Task<Message> PostAsync(Message message)
         {
             Deliver(message);
-            await SettleAsync();
+            await CompleteAsync();
             return message;
+        }
+
+        /// <summary>
+        /// Lets simulated time run until everything dispatched has finished, background loops left
+        /// out: messages waiting for their slot under Telegram's limits go out, as they would while
+        /// the members typed their next line. At most <paramref name="limit"/> (10 minutes).
+        /// </summary>
+        internal async Task CompleteAsync(TimeSpan? limit = null)
+        {
+            var until = Clock.GetUtcNow() + (limit ?? TimeSpan.FromMinutes(10));
+            await SettleAsync();
+            while (Bot.PendingWork > 0 && Clock.NextDue is { } next && next <= until)
+            {
+                Clock.AdvanceTo(next);
+                await SettleAsync();
+            }
         }
 
         /// <summary>
@@ -227,7 +244,7 @@ namespace Enforcer5.Tests.Harness
         {
             var message = Join(user);
             Deliver(message);
-            await SettleAsync();
+            await CompleteAsync();
             return message;
         }
 
@@ -272,7 +289,7 @@ namespace Enforcer5.Tests.Harness
                 Data = data
             };
             Route(new Update { Id = _world.NextUpdateId++, CallbackQuery = query });
-            await SettleAsync();
+            await CompleteAsync();
         }
 
         /// <summary>The bot's last message to this chat, with its buttons.</summary>
@@ -298,7 +315,7 @@ namespace Enforcer5.Tests.Harness
                 Hashes[TempbanSchedule, (due++).ToString()] = entry.Value;
             }
             Bot.Dispatch(() => { Methods.CheckTempBans(null); return Task.CompletedTask; });
-            await SettleAsync();
+            await CompleteAsync();
         }
 
         // Each update runs as dispatched work, the way the consumers run it, so a wait on the
@@ -362,6 +379,7 @@ namespace Enforcer5.Tests.Harness
             if (!_owner) return;
             ErrorReporter.Observer = _world.PreviousObserver;
             Bot.Api = _world.PreviousApi;
+            Announcements.ResetForTests();
             Bot.Me = _world.PreviousMe;
             Enforcer5.Helpers.Clock.UseForTests(null);
             PostgresStorage.UseForTests(null);

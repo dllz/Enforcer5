@@ -50,7 +50,7 @@ namespace Enforcer5.Tests.Harness
     /// </summary>
     internal sealed class TelegramLimits
     {
-        internal bool Enabled = false;
+        internal bool Enabled = true;
         internal int ChatMessages = 3;
         internal TimeSpan ChatWindow = TimeSpan.FromSeconds(3);
         internal int GroupMessages = 20;
