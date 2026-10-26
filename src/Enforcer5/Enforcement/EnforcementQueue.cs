@@ -299,15 +299,18 @@ namespace Enforcer5.Enforcement
         // go in one deleteMessages call. The others ride along and finish with it.
         private static void Batch(EnforcementJob lead, List<EnforcementJob> jobs, DateTime now)
         {
-            lead.MessageIds ??= new List<int>();
+            // A new list, never the old one changed: the job may be being written to the journal
+            // on another thread right now (Submit journals outside the lock).
+            var merged = new List<int>(lead.MessageIds ?? new List<int>());
             foreach (var other in jobs.Where(j => j != lead && j.Kind == EnforcementKind.Delete && j.DueUtc <= now).ToList())
             {
                 var ids = other.MessageIds ?? new List<int>();
-                if (lead.MessageIds.Count + ids.Count > MaxDeleteBatch) break;
-                lead.MessageIds.AddRange(ids.Where(id => !lead.MessageIds.Contains(id)));
+                if (merged.Count + ids.Count > MaxDeleteBatch) break;
+                merged.AddRange(ids.Where(id => !merged.Contains(id)));
                 lead.Riders.Add(other);
                 Remove(other);
             }
+            lead.MessageIds = merged;
         }
 
         // The chat's next job: by priority, then first come, first served, except that a person's
