@@ -294,23 +294,73 @@ namespace Enforcer5.Helpers
             Run(_interactiveGate, work, name);
         }
 
-        // Work started by Run and Dispatch that has not finished yet. Lets the test harness wait until
-        // everything an update set off is done; costs one interlocked add per dispatch.
+        // Work started by Run, Dispatch and StartService that has not finished yet. Lets the test
+        // harness wait until everything an update set off is done; costs one interlocked add per
+        // dispatch.
         private static int _inFlight;
 
-        /// <summary>Waits until no dispatched work is running. For the test harness.</summary>
+        // Set inside dispatched work, so Clock can count it as parked while it waits on the clock.
+        private static readonly AsyncLocal<bool> _inDispatch = new AsyncLocal<bool>();
+
+        /// <summary>True inside work started by Run, Dispatch or StartService.</summary>
+        internal static bool InDispatch => _inDispatch.Value;
+
+        /// <summary>
+        /// Waits until no dispatched work is running: everything still in flight is waiting on the
+        /// clock (<see cref="Clock.Parked"/>). For the test harness, which then moves its clock on.
+        /// </summary>
         internal static async Task WaitIdleAsync(TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
-            // Twice idle in a row: work that just finished may be about to dispatch more.
+            // Idle several times in a row: work that just finished may be about to dispatch more,
+            // and a continuation may be queued but not running yet.
             var idleTicks = 0;
-            while (idleTicks < 2)
+            while (idleTicks < 3)
             {
                 if (DateTime.UtcNow > deadline)
-                    throw new TimeoutException($"{Volatile.Read(ref _inFlight)} dispatched tasks still running");
-                idleTicks = Volatile.Read(ref _inFlight) == 0 ? idleTicks + 1 : 0;
-                await Task.Delay(10);
+                    throw new TimeoutException(
+                        $"{Volatile.Read(ref _inFlight)} dispatched tasks still running, {Clock.Parked} of them waiting on the clock");
+                idleTicks = Volatile.Read(ref _inFlight) <= Clock.Parked ? idleTicks + 1 : 0;
+                await Task.Delay(idleTicks == 0 ? 5 : 2);
             }
+        }
+
+        /// <summary>
+        /// Starts a long-running background loop (the enforcement queue's worker, for one). It
+        /// counts as dispatched work for its whole life, so the harness sees it as busy unless it is
+        /// waiting on <see cref="Clock"/>. Never throws; a loop that faults is reported and restarted.
+        /// </summary>
+        internal static void StartService(Func<CancellationToken, Task> loop, CancellationToken stop, [CallerMemberName] string name = "")
+        {
+            Interlocked.Increment(ref _inFlight);
+            _ = Task.Run(async () =>
+            {
+                _inDispatch.Value = true;
+                try
+                {
+                    while (!stop.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            await loop(stop);
+                            return;
+                        }
+                        catch (OperationCanceledException) when (stop.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            ErrorReporter.Report(e, "Background loop faulted, restarting", name, "");
+                            await Clock.WaitAsync(TimeSpan.FromSeconds(1), stop);
+                        }
+                    }
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _inFlight);
+                }
+            });
         }
 
         private static void Run(SemaphoreSlim gate, Action work, string name)
@@ -318,11 +368,16 @@ namespace Enforcer5.Helpers
             Interlocked.Increment(ref _inFlight);
             _ = Task.Run(async () =>
             {
+                _inDispatch.Value = true;
                 try
                 {
                     try
                     {
-                        await gate.WaitAsync();
+                        // Waiting for a permit is waiting on whoever holds it: when they are all
+                        // waiting on the clock, so is this.
+                        Clock.Park();
+                        try { await gate.WaitAsync(); }
+                        finally { Clock.Unpark(); }
                     }
                     catch (Exception e)
                     {
@@ -363,6 +418,7 @@ namespace Enforcer5.Helpers
             Interlocked.Increment(ref _inFlight);
             _ = Task.Run(async () =>
             {
+                _inDispatch.Value = true;
                 try
                 {
                     await work();

@@ -63,6 +63,18 @@ namespace Enforcer5.Tests.Harness
         internal IReadOnlyDictionary<string, string> All(string key) =>
             GetAll(key).ToDictionary(e => e.Name.ToString(), e => e.Value.ToString());
 
+        /// <summary>Removes the whole hash; true when there was one.</summary>
+        internal bool DeleteKey(string key)
+        {
+            lock (_lock) return _hashes.Remove(key);
+        }
+
+        /// <summary>True when the hash has at least one field.</summary>
+        internal bool Exists(string key)
+        {
+            lock (_lock) return _hashes.TryGetValue(key, out var hash) && hash.Count > 0;
+        }
+
         private RedisValue Get(RedisKey key, RedisValue field)
         {
             lock (_lock)

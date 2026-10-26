@@ -20,60 +20,92 @@ namespace Enforcer5.Tests.Harness
     /// scenario checks what the bot replied, which Telegram calls it made, what it wrote to
     /// PostgreSQL and whether anything was reported as an error.
     /// <para>
-    /// Built for the PostgreSQL rollout and grown with it, one domain at a time. Redis is a loose
-    /// stand-in that answers reads with "nothing stored" and drops writes, except for hashes
-    /// (<see cref="FakeRedisHashes"/>), which keep their values: warn counters, the tempban
-    /// schedule and the per-group settings a scenario seeds. PostgreSQL is a throwaway schema on the test
-    /// database (ENFORCER_TEST_POSTGRES); without one the scenarios are skipped.
+    /// Time is simulated (<see cref="FakeClock"/>): it stands still while an update is handled, and
+    /// only moves when the scenario calls <see cref="AdvanceAsync"/>, which fires every timer due on
+    /// the way and waits for what each one sets off. Telegram enforces its limits on that clock and
+    /// answers 429 when the bot goes over them (<see cref="FakeTelegram.Limits"/>), or when a scenario
+    /// starts a storm.
     /// </para>
     /// <para>
-    /// The bot is static throughout, so a harness takes over Bot.Api, Redis.db and PostgresStorage
-    /// for its lifetime and gives them back on Dispose. Scenarios must not run in parallel.
+    /// Redis is a loose stand-in that answers reads with "nothing stored" and drops writes, except for
+    /// hashes (<see cref="FakeRedisHashes"/>) and strings, sets and sorted sets
+    /// (<see cref="FakeRedisKeys"/>), which keep their values, with expiry on the simulated clock.
+    /// PostgreSQL is a throwaway schema on the test database (ENFORCER_TEST_POSTGRES); without one the
+    /// scenarios are skipped.
+    /// </para>
+    /// <para>
+    /// The bot is static throughout, so a harness takes over Bot.Api, Redis.db, the clock and
+    /// PostgresStorage for its lifetime and gives them back on Dispose. Scenarios must not run in
+    /// parallel. <see cref="Group"/> adds more chats to the same simulated bot.
     /// </para>
     /// </summary>
     internal sealed class HarnessChat : IAsyncDisposable
     {
         internal static readonly User BotUser = new User { Id = 777000111, IsBot = true, FirstName = "Enforcer", Username = "EnforcerHarnessBot" };
 
-        private readonly ConcurrentQueue<string> _errors = new();
-        private readonly Action<string> _previousObserver;
-        private readonly Telegram.Bot.ITelegramBotClient _previousApi;
-        private readonly User _previousMe;
-        private string _connectionString;
-        private PostgresDatabase _database;
-        private int _nextUpdateId = 1;
+        private readonly World _world;
+        private readonly bool _owner;
+
+        /// <summary>What every chat of one harness shares: the bot, Telegram, Redis, PostgreSQL, the clock.</summary>
+        private sealed class World
+        {
+            internal readonly ConcurrentQueue<string> Errors = new();
+            internal Action<string> PreviousObserver;
+            internal Telegram.Bot.ITelegramBotClient PreviousApi;
+            internal User PreviousMe;
+            internal string ConnectionString;
+            internal PostgresDatabase Database;
+            internal int NextUpdateId = 1;
+            internal FakeClock Clock;
+            internal FakeTelegram Telegram;
+            internal Mock<IDatabase> Redis = new Mock<IDatabase>();
+            internal FakeRedisHashes Hashes = new FakeRedisHashes();
+            internal FakeRedisKeys Keys;
+        }
 
         internal long ChatId { get; }
         internal string Title { get; set; }
         /// <summary>The group's public username, null for a private group.</summary>
         internal string Username { get; set; }
-        internal FakeTelegram Telegram { get; }
-        internal Mock<IDatabase> Redis { get; } = new Mock<IDatabase>();
+        internal FakeTelegram Telegram => _world.Telegram;
+        internal Mock<IDatabase> Redis => _world.Redis;
+        internal FakeClock Clock => _world.Clock;
 
         /// <summary>The Redis hashes, to seed settings and check counters.</summary>
-        internal FakeRedisHashes Hashes { get; } = new FakeRedisHashes();
+        internal FakeRedisHashes Hashes => _world.Hashes;
+
+        /// <summary>The Redis strings, sets and sorted sets.</summary>
+        internal FakeRedisKeys Keys => _world.Keys;
 
         /// <summary>Everything ErrorReporter saw while the harness ran.</summary>
-        internal IReadOnlyList<string> Errors => _errors.ToList();
+        internal IReadOnlyList<string> Errors => _world.Errors.ToList();
 
         /// <summary>The database the scenario's PostgreSQL writes went to.</summary>
-        internal PostgresDatabase Database => _database;
+        internal PostgresDatabase Database => _world.Database;
 
-        private HarnessChat(long chatId, string title)
+        private HarnessChat(World world, long chatId, string title, bool owner)
         {
+            _world = world;
             ChatId = chatId;
             Title = title;
-            Telegram = new FakeTelegram(BotUser);
-            _previousApi = Bot.Api;
-            _previousMe = Bot.Me;
-            _previousObserver = ErrorReporter.Observer;
+            _owner = owner;
         }
 
         /// <summary>A new supergroup with a fresh PostgreSQL schema. Skips the test without a database.</summary>
         internal static async Task<HarnessChat> StartAsync(long chatId = -1001234567890, string title = "Harness group",
             string username = null)
         {
-            var chat = new HarnessChat(chatId, title);
+            var clock = FakeClock.StartingNow();
+            var world = new World
+            {
+                Clock = clock,
+                Telegram = new FakeTelegram(BotUser, clock),
+                PreviousApi = Bot.Api,
+                PreviousMe = Bot.Me,
+                PreviousObserver = ErrorReporter.Observer
+            };
+            world.Keys = new FakeRedisKeys(clock, world.Hashes);
+            var chat = new HarnessChat(world, chatId, title, owner: true);
             try
             {
                 await chat.SetUpAsync();
@@ -87,30 +119,40 @@ namespace Enforcer5.Tests.Harness
             }
         }
 
+        /// <summary>Another group served by the same simulated bot.</summary>
+        internal HarnessChat Group(long chatId, string title = "Another group", string username = null)
+        {
+            var chat = new HarnessChat(_world, chatId, title, owner: false) { Username = username };
+            Telegram.SetMember(chatId, BotUser.Id, MemberState.Administrator);
+            return chat;
+        }
+
         private async Task SetUpAsync()
         {
-            _connectionString = await Storage.TestPostgres.CreateSchemaAsync();
-            await SchemaMigrationRunner.ApplyAsync(_connectionString);
-            _database = new PostgresDatabase(_connectionString);
-            PostgresStorage.UseForTests(_database);
+            _world.ConnectionString = await Storage.TestPostgres.CreateSchemaAsync();
+            await SchemaMigrationRunner.ApplyAsync(_world.ConnectionString);
+            _world.Database = new PostgresDatabase(_world.ConnectionString);
+            PostgresStorage.UseForTests(_world.Database);
             // Global bans run from memory, loaded from PostgreSQL (empty here) as at startup.
             GlobalBans.ResetForTests();
             await GlobalBans.ReloadAsync();
 
+            Enforcer5.Helpers.Clock.UseForTests(Clock);
+            Hashes.Install(Redis);
+            Keys.Install(Redis);
 #if PREMIUM
             // The premium edition only serves groups on its list.
             Redis.Setup(r => r.SetContainsAsync(It.Is<RedisKey>(k => k == "premiumBot"), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
                 .ReturnsAsync(true);
 #endif
-            Hashes.Install(Redis);
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
             Bot.Api = Telegram;
             Bot.Me = BotUser;
-            Bot.StartTime = DateTime.UtcNow.AddMinutes(-1);
+            Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
             if (!Program.LangaugeList.Any())
                 Methods.IntialiseLanguages();
-            ErrorReporter.Observer = report => _errors.Enqueue(report);
+            ErrorReporter.Observer = report => _world.Errors.Enqueue(report);
             Telegram.SetMember(ChatId, BotUser.Id, MemberState.Administrator);
         }
 
@@ -123,26 +165,58 @@ namespace Enforcer5.Tests.Harness
             return user;
         }
 
+        private Chat ThisChat => new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username };
+
+        /// <summary>A text message from <paramref name="from"/>, not yet sent.</summary>
+        internal Message Text(HarnessUser from, string text, Message replyTo = null) => new Message
+        {
+            Id = Telegram.NextMessageId(),
+            Chat = ThisChat,
+            From = from.ToUser(),
+            Date = Clock.UtcNow,
+            Text = text,
+            ReplyToMessage = replyTo,
+            Entities = text.StartsWith("/")
+                ? new[] { new MessageEntity { Type = MessageEntityType.BotCommand, Offset = 0, Length = text.Split(' ')[0].Length } }
+                : null
+        };
+
+        /// <summary>A photo from <paramref name="from"/>, not yet sent. The same unique id is the same image.</summary>
+        internal Message Photo(HarnessUser from, string uniqueId = "harness", string caption = null) => new Message
+        {
+            Id = Telegram.NextMessageId(),
+            Chat = ThisChat,
+            From = from.ToUser(),
+            Date = Clock.UtcNow,
+            Caption = caption,
+            Photo = new[] { new PhotoSize { FileId = $"photo{Telegram.NextMessageId()}", FileUniqueId = uniqueId, Width = 1, Height = 1 } }
+        };
+
         /// <summary>
         /// Posts <paramref name="text"/> as <paramref name="from"/> and waits until everything it set
         /// off is done, PostgreSQL writes included. Returns the message, so others can reply to it.
         /// </summary>
-        internal async Task<Message> SendAsync(HarnessUser from, string text, Message replyTo = null)
+        internal Task<Message> SendAsync(HarnessUser from, string text, Message replyTo = null) =>
+            PostAsync(Text(from, text, replyTo));
+
+        /// <summary>Sends a message built with <see cref="Text"/> or <see cref="Photo"/>; see <see cref="SendAsync"/>.</summary>
+        internal async Task<Message> PostAsync(Message message)
         {
-            var message = new Message
-            {
-                Id = Telegram.NextMessageId(),
-                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
-                From = from.ToUser(),
-                Date = DateTime.UtcNow,
-                Text = text,
-                ReplyToMessage = replyTo,
-                Entities = text.StartsWith("/")
-                    ? new[] { new MessageEntity { Type = MessageEntityType.BotCommand, Offset = 0, Length = text.Split(' ')[0].Length } }
-                    : null
-            };
-            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
+            Deliver(message);
+            await SettleAsync();
             return message;
+        }
+
+        /// <summary>
+        /// Hands <paramref name="message"/> to the bot without waiting, as Telegram would deliver it
+        /// in a burst. Call <see cref="SettleAsync"/> or <see cref="AdvanceAsync"/> afterwards.
+        /// </summary>
+        internal void Deliver(Message message)
+        {
+            message.Date = Clock.UtcNow;
+            if (message.From != null && message.NewChatMembers == null)
+                Telegram.Posted(ChatId, message.MessageId, message.From.Id);
+            Route(new Update { Id = _world.NextUpdateId++, Message = message });
         }
 
         /// <summary>
@@ -151,33 +225,28 @@ namespace Enforcer5.Tests.Harness
         /// </summary>
         internal async Task<Message> JoinAsync(HarnessUser user)
         {
-            Telegram.SetMember(ChatId, user.Id, MemberState.Member);
-            var message = new Message
-            {
-                Id = Telegram.NextMessageId(),
-                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
-                From = user.ToUser(),
-                Date = DateTime.UtcNow,
-                NewChatMembers = new[] { user.ToUser() }
-            };
-            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
+            var message = Join(user);
+            Deliver(message);
+            await SettleAsync();
             return message;
         }
 
-        /// <summary>Posts a photo as <paramref name="from"/>; see <see cref="SendAsync"/>.</summary>
-        internal async Task<Message> SendPhotoAsync(HarnessUser from)
+        /// <summary>The service message for <paramref name="user"/> joining, not yet sent; marks them a member.</summary>
+        internal Message Join(HarnessUser user, HarnessUser addedBy = null)
         {
-            var message = new Message
+            Telegram.SetMember(ChatId, user.Id, MemberState.Member);
+            return new Message
             {
                 Id = Telegram.NextMessageId(),
-                Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup, Title = Title, Username = Username },
-                From = from.ToUser(),
-                Date = DateTime.UtcNow,
-                Photo = new[] { new PhotoSize { FileId = $"photo{Telegram.NextMessageId()}", FileUniqueId = "harness", Width = 1, Height = 1 } }
+                Chat = ThisChat,
+                From = (addedBy ?? user).ToUser(),
+                Date = Clock.UtcNow,
+                NewChatMembers = new[] { user.ToUser() }
             };
-            await RouteAsync(new Update { Id = _nextUpdateId++, Message = message });
-            return message;
         }
+
+        /// <summary>Posts a photo as <paramref name="from"/>; see <see cref="SendAsync"/>.</summary>
+        internal Task<Message> SendPhotoAsync(HarnessUser from, string uniqueId = "harness") => PostAsync(Photo(from, uniqueId));
 
         /// <summary>
         /// Presses the button under <paramref name="message"/> (a message the bot sent) whose
@@ -202,7 +271,8 @@ namespace Enforcer5.Tests.Harness
                 ChatInstance = "harness",
                 Data = data
             };
-            await RouteAsync(new Update { Id = _nextUpdateId++, CallbackQuery = query });
+            Route(new Update { Id = _world.NextUpdateId++, CallbackQuery = query });
+            await SettleAsync();
         }
 
         /// <summary>The bot's last message to this chat, with its buttons.</summary>
@@ -227,36 +297,77 @@ namespace Enforcer5.Tests.Harness
                 Hashes[TempbanSchedule, entry.Key] = null;
                 Hashes[TempbanSchedule, (due++).ToString()] = entry.Value;
             }
-            Methods.CheckTempBans(null);
-            await WaitAsync();
+            Bot.Dispatch(() => { Methods.CheckTempBans(null); return Task.CompletedTask; });
+            await SettleAsync();
         }
 
-        private static async Task RouteAsync(Update update)
+        // Each update runs as dispatched work, the way the consumers run it, so a wait on the
+        // clock inside it never blocks the scenario.
+        private void Route(Update update)
         {
-            await UpdateHandler.RouteAsync(update, DateTime.Now);
-            await WaitAsync();
+            var received = Clock.UtcNow;
+            Bot.Dispatch(() =>
+            {
+                ErrorReporter.Current = ErrorContext.From(update);
+                return UpdateHandler.RouteAsync(update, received);
+            }, "HarnessRoute");
         }
 
-        private static async Task WaitAsync()
+        /// <summary>
+        /// Waits until everything dispatched is done or waiting on the clock, firing timers that are
+        /// already due, PostgreSQL writes included. Time does not move.
+        /// </summary>
+        internal async Task SettleAsync()
         {
-            await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-            await HistoryWriter.FlushAsync();
-            await PrincipalObserver.FlushAsync();
+            while (true)
+            {
+                await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
+                await HistoryWriter.FlushAsync();
+                await PrincipalObserver.FlushAsync();
+                var next = Clock.NextDue;
+                if (next == null || next > Clock.GetUtcNow())
+                {
+                    // Flushing may have dispatched more; once more to be sure.
+                    await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
+                    if (Clock.NextDue is { } again && again <= Clock.GetUtcNow()) continue;
+                    return;
+                }
+                Clock.AdvanceTo(Clock.GetUtcNow());
+            }
+        }
+
+        /// <summary>
+        /// Lets <paramref name="by"/> of simulated time pass: each timer fires at its due time, and
+        /// what it sets off runs to completion (or to its next wait) before time moves on.
+        /// </summary>
+        internal async Task AdvanceAsync(TimeSpan by)
+        {
+            var target = Clock.GetUtcNow() + by;
+            await SettleAsync();
+            while (Clock.NextDue is { } next && next <= target)
+            {
+                Clock.AdvanceTo(next);
+                await SettleAsync();
+            }
+            Clock.AdvanceTo(target);
+            await SettleAsync();
         }
 
         /// <summary>The bot's messages to this chat, oldest first.</summary>
         internal IReadOnlyList<string> Replies =>
-            Telegram.Calls.Where(c => c.Method == "sendMessage" && c.ChatId == ChatId).Select(c => c.Text).ToList();
+            Telegram.Accepted.Where(c => c.Method == "sendMessage" && c.ChatId == ChatId).Select(c => c.Text).ToList();
 
         public async ValueTask DisposeAsync()
         {
-            ErrorReporter.Observer = _previousObserver;
-            Bot.Api = _previousApi;
-            Bot.Me = _previousMe;
+            if (!_owner) return;
+            ErrorReporter.Observer = _world.PreviousObserver;
+            Bot.Api = _world.PreviousApi;
+            Bot.Me = _world.PreviousMe;
+            Enforcer5.Helpers.Clock.UseForTests(null);
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
-            if (_database != null) await _database.DisposeAsync();
-            if (_connectionString != null) await Storage.TestPostgres.DropSchemaAsync(_connectionString);
+            if (_world.Database != null) await _world.Database.DisposeAsync();
+            if (_world.ConnectionString != null) await Storage.TestPostgres.DropSchemaAsync(_world.ConnectionString);
         }
     }
 
