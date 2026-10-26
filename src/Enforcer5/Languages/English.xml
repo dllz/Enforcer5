@@ -2171,4 +2171,79 @@
   <string key="commandsSlowLane">
     <value>{0}, you kept sending commands while asked to slow down, so you are in the slow lane: I answer one command, button or report from you every {1} minutes. After {2} minutes without trying you are back to normal.</value>
   </string>
+  <string key="raidPossible">
+    <value>⚠️ Possible raid: {0} people joined in the last minute, and {1} new members are posting the same thing, flooding or posting links. What should I do?</value>
+  </string>
+  <string key="raidActive">
+    <value>🚨 Raid mode is on. Everyone who joins is muted for {3} hours, and new members who spam are banned with their messages.
+Joined: {0} · muted: {1} · banned: {2}</value>
+  </string>
+  <string key="raidLocked">
+    <value>The group is locked: only admins can post until the raid is over.</value>
+  </string>
+  <string key="raidEnded">
+    <value>Raid mode is over. Joined: {0} · muted: {1} · banned: {2}. The people muted on joining are let go after {3} hours, or now with the button. If the group was locked, its permissions are back as they were; please check them.</value>
+  </string>
+  <string key="raidNotOn">
+    <value>Raid mode is not on here.</value>
+  </string>
+  <string key="raidModeUnknown">
+    <value>Use /raidmode human, /raidmode auto or /raidmode off.</value>
+  </string>
+  <string key="raidModeIs">
+    <value>Raid detection here: {0}</value>
+  </string>
+  <string key="raidModeHuman">
+    <value>human (I tag the admins and ask what to do)</value>
+  </string>
+  <string key="raidModeAuto">
+    <value>auto (I act at once and tell the admins)</value>
+  </string>
+  <string key="raidModeOff">
+    <value>off (only /raid)</value>
+  </string>
+  <string key="raidDone">
+    <value>Done.</value>
+  </string>
+  <string key="raidSuspectLink">
+    <value>{0} is new here and posted nothing but a link. Admins, is it spam?</value>
+  </string>
+  <string key="raidLockButton">
+    <value>🔒 Lock the group</value>
+  </string>
+  <string key="raidMuteJoinersButton">
+    <value>🔇 Mute new joiners</value>
+  </string>
+  <string key="raidBanSuspectsButton">
+    <value>⛔ Ban the spammers</value>
+  </string>
+  <string key="raidIgnoreButton">
+    <value>Ignore</value>
+  </string>
+  <string key="raidEndButton">
+    <value>End raid mode</value>
+  </string>
+  <string key="raidReleaseButton">
+    <value>Unmute the new joiners now</value>
+  </string>
+  <string key="raidBanButton">
+    <value>Ban</value>
+  </string>
+  <string key="hcommandraid">
+    <value>
+      Turns raid mode on: the group is locked so only admins can post, everyone who joins is muted for a day, and new members who spam are banned with their messages. It ends by itself after ten quiet minutes, or with /{0} off. Admins only.
+
+      Example:
+      /{0}
+      /{0} off
+    </value>
+  </string>
+  <string key="hcommandraidmode">
+    <value>
+      Sets how raids are handled here. human (the default): I tag the admins when a raid looks likely and ask what to do. auto: I turn raid mode on at once and tell the admins. off: no raid detection and no link reports, /raid still works. Without a word, says which is set. Admins only.
+
+      Example:
+      /{0} auto
+    </value>
+  </string>
 </strings>

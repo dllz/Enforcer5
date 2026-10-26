@@ -108,6 +108,8 @@ namespace Enforcer5
             CommandGate.StartPruning(Bot.ShutdownToken);
             // Each group's normal for the trust levels, from PostgreSQL once it is ready.
             MemberTrust.Start(Bot.ShutdownToken);
+            // Raid detection, and raids still on from before a restart.
+            Raids.RaidGuard.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

@@ -166,6 +166,7 @@ namespace Enforcer5.Handlers
                     {
                         background.Add(Methods.IsRekt(ctx));
                         background.Add(OnMessage.AntiFlood(ctx));
+                        background.Add(Raids.RaidGuard.OnMessageAsync(ctx));
 
                         // Ahead of the type switch, because most inline bot traffic is GIFs and
                         // any type can be sent via a bot. A blocked bot's message, or a sticker from
@@ -334,6 +335,9 @@ namespace Enforcer5.Handlers
                 if (command != null)
                 {
                     Log(update, "text", command);
+                    // A burst of reports is a sign of a raid, whether or not this one gets through.
+                    if (update.Message.Chat.Type != ChatType.Private)
+                        Raids.RaidGuard.OnReport(update.Message.Chat.Id);
                     if (!CommandGate.Admit(update.Message))
                     {
                         return;

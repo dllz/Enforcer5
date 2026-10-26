@@ -162,6 +162,8 @@ namespace Enforcer5.Tests.Harness
             Telegram.SetMember(ChatId, BotUser.Id, MemberState.Administrator);
             Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
+            Enforcer5.Raids.RaidGuard.ResetForTests();
+            Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             await SettleAsync();
         }
 
@@ -171,10 +173,13 @@ namespace Enforcer5.Tests.Harness
         /// </summary>
         internal async Task CrashAndRestartAsync()
         {
+            _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
+            Enforcer5.Raids.RaidGuard.ResetForTests();
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
+            Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             await SettleAsync();
         }
 
