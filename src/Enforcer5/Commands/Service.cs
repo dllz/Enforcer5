@@ -9,6 +9,7 @@ using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
 #pragma warning disable CS4014
 namespace Enforcer5
@@ -442,14 +443,45 @@ defSpamValue = 3;
         /// callback carries one, the affected user. Names come from the Redis caches CollectStats
         /// maintains, so no Telegram calls are made; the ID is the fallback.
         /// </summary>
-        public static void LogCallback(long chatId, User admin, string callbackData)
+        public static void LogCallback(long chatId, User admin, string callbackData, Message buttonMessage = null)
         {
             var target = "";
             var parts = callbackData.Split(':');
             if (SelfLoggingCallbacks.Contains(parts[0])) return;
             if (parts.Length >= 3 && UserTargetCallbacks.Contains(parts[0]) && long.TryParse(parts[2], out var targetId))
                 target = GetCachedUserName(targetId);
-            LogCommand(chatId, admin.Id, Methods.FormatHTML(admin.FirstName), GetCachedGroupName(chatId), Methods.FormatHTML(callbackData), target);
+            LogCommand(chatId, admin.Id, Methods.FormatHTML(admin.FirstName), GetCachedGroupName(chatId), Methods.FormatHTML(callbackData), target,
+                linkMessageId: CallbackLinkMessageId(chatId, parts, buttonMessage));
+        }
+
+        // Report buttons, with the position of the report's message id in their callback data.
+        private static readonly Dictionary<string, int> ReportCallbacks = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["banflag"] = 3, ["kickflag"] = 3, ["warnflag"] = 3, ["delflag"] = 3, ["solveflag"] = 2
+        };
+
+        /// <summary>
+        /// The group message a button press's log entry links to: the report, for the buttons on a
+        /// report (which admins press in their PM); otherwise the message the button was on, if that
+        /// is in the group. Null when there is nothing in the group to link to.
+        /// </summary>
+        internal static long? CallbackLinkMessageId(long chatId, string[] parts, Message buttonMessage)
+        {
+            if (ReportCallbacks.TryGetValue(parts[0], out var index) && parts.Length > index
+                && long.TryParse(parts[index], out var reportId))
+                return reportId;
+            return buttonMessage != null && buttonMessage.Chat.Id == chatId ? buttonMessage.MessageId : null;
+        }
+
+        /// <summary>
+        /// A "Go to message" button for a log channel post, or null if the message cannot be linked:
+        /// only supergroups have message links (t.me/c/...), which work for any member.
+        /// </summary>
+        internal static InlineKeyboardMarkup LogLinkButton(XDocument lang, long chatId, long? messageId)
+        {
+            if (messageId is not > 0 || !chatId.ToString().StartsWith("-100")) return null;
+            var url = Methods.GetChatMessageLink(chatId, messageId.Value.ToString());
+            return new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(Methods.GetLocaleString(lang, "goToMessage"), url));
         }
 
         private static string GetCachedGroupName(long chatId) => Methods.FormatHTML(GetCachedGroupTitle(chatId));
@@ -498,11 +530,12 @@ defSpamValue = 3;
                 var adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
+                var messageId = update.Message.MessageId;
                 if(update.Message.ReplyToMessage != null)
-                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})", linkMessageId: messageId);
                 else
                 {
-                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, linkMessageId: messageId);
                 }                                           
         }
 
@@ -520,7 +553,8 @@ defSpamValue = 3;
         }
 
 
-        public static void LogCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false)
+        public static void LogCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false,
+            long? linkMessageId = null)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -530,11 +564,11 @@ defSpamValue = 3;
 
             if (!isCallback)
             {
-                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto));
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto), linkMessageId);
             }
             else
             {
-                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"));
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"), linkMessageId);
             }
         }
 
@@ -542,16 +576,17 @@ defSpamValue = 3;
         /// Posts <paramref name="text"/> (HTML) to the group's log channel, if it has one. If the bot
         /// has lost access to the channel, the setting is removed and the group told. The text is
         /// only built when there is a channel, and a failure building it is reported like a failed
-        /// send, as before this was split out of LogCommand.
+        /// send, as before this was split out of LogCommand. With <paramref name="linkMessageId"/>
+        /// the post gets a button to that message in the group.
         /// </summary>
-        internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text)
+        internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text, long? linkMessageId = null)
         {
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
                 var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
                 try
                 {
-                    Bot.Send(text(), long.Parse(logChatID));
+                    Bot.Send(text(), long.Parse(logChatID), LogLinkButton(lang, chatId, linkMessageId));
                 }
                 catch (Exception e)
                 {

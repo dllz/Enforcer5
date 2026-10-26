@@ -217,7 +217,7 @@ namespace Enforcer5
 
             var group = Service.GetCachedGroupTitle(chatId);
             Service.SendToLogChannel(chatId, lang,
-                () => LogText(lang, change, adminName, adminId, target, group, chatId, left, reason));
+                () => LogText(lang, change, adminName, adminId, target, group, chatId, left, reason), sourceMessageId);
         }
 
         private static void TryDelete(long chatId, int messageId)

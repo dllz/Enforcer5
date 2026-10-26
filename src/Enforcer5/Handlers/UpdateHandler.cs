@@ -864,7 +864,7 @@ namespace Enforcer5.Handlers
                                 }
                                 if (callbacks.GroupAdminOnly)
                                 {
-                                    Service.LogCallback(long.Parse(args[1]), update.From, update.Data);
+                                    Service.LogCallback(long.Parse(args[1]), update.From, update.Data, update.Message);
                                 }
                             }
                         }
