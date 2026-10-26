@@ -22,6 +22,87 @@ namespace Enforcer5.Storage.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
+                {
+                    b.Property<long>("GlobalSanctionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("global_sanction_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("GlobalSanctionId"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long?>("ActorUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset>("ImposedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("imposed_at");
+
+                    b.Property<string>("Kind")
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("LegacyKey")
+                        .HasColumnType("text")
+                        .HasColumnName("legacy_key");
+
+                    b.Property<DateTimeOffset?>("NotifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("notified_at");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("ResolutionReason")
+                        .HasColumnType("text")
+                        .HasColumnName("resolution_reason");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<long?>("UserIdAtTime")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id_at_time");
+
+                    b.HasKey("GlobalSanctionId");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("LegacyKey")
+                        .IsUnique()
+                        .HasFilter("legacy_key IS NOT NULL");
+
+                    b.HasIndex("UserIdAtTime");
+
+                    b.HasIndex(new[] { "AccountId" }, "global_sanctions_active_idx")
+                        .IsUnique()
+                        .HasFilter("status = 'active'");
+
+                    b.ToTable("global_sanctions", null, t =>
+                        {
+                            t.HasCheckConstraint("global_sanctions_kind_check", "kind IN ('ban', 'mute')");
+
+                            t.HasCheckConstraint("global_sanctions_period_check", "(expires_at IS NULL OR expires_at >= imposed_at) AND (resolved_at IS NULL OR resolved_at >= imposed_at)");
+
+                            t.HasCheckConstraint("global_sanctions_status_check", "status IN ('active', 'revoked', 'completed')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupEntity", b =>
                 {
                     b.Property<long>("GroupId")
@@ -695,6 +776,25 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("warning_events_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
                         });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserIdAtTime")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GroupEntity", b =>

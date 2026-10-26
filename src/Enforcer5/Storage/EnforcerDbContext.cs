@@ -26,6 +26,7 @@ namespace Enforcer5.Storage
             ConfigureReports(modelBuilder);
             ConfigureWarnings(modelBuilder);
             ConfigureSanctions(modelBuilder);
+            ConfigureGlobalSanctions(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
         }
 
@@ -205,6 +206,26 @@ namespace Enforcer5.Storage
                 // Not in the approved design: the history lookup for one member of one group, which
                 // /status needs. The design's only group-side index leads with edition.
                 entity.HasIndex(x => new { x.GroupId, x.AccountId, x.ImposedAt }, "sanctions_group_account_idx");
+            });
+        }
+
+        private static void ConfigureGlobalSanctions(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<GlobalSanctionEntity>(entity =>
+            {
+                entity.ToTable("global_sanctions", table =>
+                {
+                    table.HasCheckConstraint("global_sanctions_kind_check", "kind IN ('ban', 'mute')");
+                    table.HasCheckConstraint("global_sanctions_status_check", "status IN ('active', 'revoked', 'completed')");
+                    table.HasCheckConstraint("global_sanctions_period_check", "(expires_at IS NULL OR expires_at >= imposed_at) AND (resolved_at IS NULL OR resolved_at >= imposed_at)");
+                });
+                entity.HasKey(x => x.GlobalSanctionId);
+                entity.Property(x => x.GlobalSanctionId).UseIdentityAlwaysColumn();
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserIdAtTime).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => x.AccountId, "global_sanctions_active_idx").IsUnique().HasFilter("status = 'active'");
+                entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
             });
         }
 

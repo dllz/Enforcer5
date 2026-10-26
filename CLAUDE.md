@@ -1,6 +1,6 @@
 # Enforcer — Telegram group management bot
 
-Single .NET 10 console app. Redis is the only datastore. Deployed on Linux under systemd,
+Single .NET 10 console app. Redis is the main datastore; PostgreSQL is being rolled in one domain at a time, and global bans already live only there (`docs/postgres-rollout.md`). Deployed on Linux under systemd,
 alongside blackwolf, and managed by **blackwolf's DeployBot** (see below).
 
 ## Build

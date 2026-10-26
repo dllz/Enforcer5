@@ -112,6 +112,35 @@ namespace Enforcer5.Storage
     }
 
     /// <summary>
+    /// A global ban: banned in every group Enforcer moderates, by a global admin. One row per ban;
+    /// lifting it (<c>/unrekt</c>) sets <c>status</c> to <c>revoked</c> with <c>resolved_at</c> and
+    /// <c>resolution_reason</c>, and at most one row per account is <c>active</c>. Since step 7 this
+    /// table is what global bans run on; the old <c>globalBan:{id}</c> Redis hashes were imported
+    /// once (<c>legacy_key</c>) and are no longer read or written.
+    /// <para>
+    /// <c>notified_at</c> is not in the approved design: when the support chat was last told that
+    /// this banned account is there (Redis kept it as a <c>notified</c> field), so it is told once
+    /// per ban.
+    /// </para>
+    /// </summary>
+    internal sealed class GlobalSanctionEntity
+    {
+        public long GlobalSanctionId { get; set; }
+        public long AccountId { get; set; }
+        public long? UserIdAtTime { get; set; }
+        public long? ActorUserId { get; set; }
+        public string Kind { get; set; }
+        public string Status { get; set; }
+        public string Reason { get; set; }
+        public DateTimeOffset ImposedAt { get; set; }
+        public DateTimeOffset? ExpiresAt { get; set; }
+        public DateTimeOffset? ResolvedAt { get; set; }
+        public string ResolutionReason { get; set; }
+        public string LegacyKey { get; set; }
+        public DateTimeOffset? NotifiedAt { get; set; }
+    }
+
+    /// <summary>
     /// A member's current and lifetime warn count of one type in one group: <c>standard</c>
     /// (<c>chat:{id}:warns</c> / <c>totalWarns</c>), <c>prewarning</c> (<c>prewarns</c>) or
     /// <c>media</c> (<c>mediawarn</c>).

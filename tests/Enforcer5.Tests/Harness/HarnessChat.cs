@@ -93,6 +93,9 @@ namespace Enforcer5.Tests.Harness
             await SchemaMigrationRunner.ApplyAsync(_connectionString);
             _database = new PostgresDatabase(_connectionString);
             PostgresStorage.UseForTests(_database);
+            // Global bans run from memory, loaded from PostgreSQL (empty here) as at startup.
+            GlobalBans.ResetForTests();
+            await GlobalBans.ReloadAsync();
 
 #if PREMIUM
             // The premium edition only serves groups on its list.
@@ -251,6 +254,7 @@ namespace Enforcer5.Tests.Harness
             Bot.Api = _previousApi;
             Bot.Me = _previousMe;
             PostgresStorage.UseForTests(null);
+            GlobalBans.ResetForTests();
             if (_database != null) await _database.DisposeAsync();
             if (_connectionString != null) await Storage.TestPostgres.DropSchemaAsync(_connectionString);
         }

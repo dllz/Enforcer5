@@ -54,7 +54,8 @@ namespace Enforcer5.Models
         public HashEntry[] Char;            // chat:{id}:char
         public HashEntry[] NameLength;      // chat:{id}:antinamelengthsettings
         public HashEntry[] TextLength;      // chat:{id}:antitextlengthsettings
-        public HashEntry[] GlobalBan;       // globalBan:{whoever IsRekt should check}
+        /// <summary>The active global ban on whoever IsRekt checks (from Helpers/GlobalBans), or null.</summary>
+        public GlobalBanRecord GlobalBan;
         public RedisValue SpamCount;        // spam:{chat}:{user}
 
         /// <summary>
@@ -136,7 +137,6 @@ namespace Enforcer5.Models
             var characters = db.HashGetAllAsync($"chat:{context.ChatId}:char");
             var nameLength = db.HashGetAllAsync($"chat:{context.ChatId}:antinamelengthsettings");
             var textLength = db.HashGetAllAsync($"chat:{context.ChatId}:antitextlengthsettings");
-            var globalBan = db.HashGetAllAsync($"globalBan:{globalBanId}");
             var spamCount = db.StringGetAsync($"spam:{context.ChatId}:{context.UserId}");
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
             var inlineBotBlocks = message.ViaBot != null
@@ -157,7 +157,7 @@ namespace Enforcer5.Models
             try
             {
                 await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, globalBan, spamCount, language, inlineBotBlocks, channelPosts,
+                    nameLength, textLength, spamCount, language, inlineBotBlocks, channelPosts,
                     stickerSetBlocked);
             }
             catch (Exception e)
@@ -174,7 +174,7 @@ namespace Enforcer5.Models
             context.Char = Value(characters);
             context.NameLength = Value(nameLength);
             context.TextLength = Value(textLength);
-            context.GlobalBan = Value(globalBan);
+            context.GlobalBan = GlobalBans.Get(globalBanId);
             context.SpamCount = Value(spamCount);
             context.Lang = Value(language)?.Doc;
             context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
@@ -183,7 +183,7 @@ namespace Enforcer5.Models
 
             context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
-                               Ok(globalBan) && Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks) &&
+                               Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks) &&
                                Ok(channelPosts) && Ok(stickerSetBlocked);
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather

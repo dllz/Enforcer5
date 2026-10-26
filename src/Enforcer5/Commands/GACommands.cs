@@ -267,10 +267,8 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                 Bot.SendReply($"{userId} has been rekt for {moti}", update);
+                 if (TryRekt(userId, moti, update))
+                     Bot.SendReply($"{userId} has been rekt for {moti}", update);
             }
             else
             {
@@ -294,10 +292,8 @@ namespace Enforcer5
                     try
                     {
                         var userId = Methods.ResolveIdFromusername(username);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                        idlist = $"{idlist}, {userId}";
+                        if (TryRekt(userId, moti, update))
+                            idlist = $"{idlist}, {userId}";
                     }
                     catch (Exception e)
                     {
@@ -356,10 +352,8 @@ namespace Enforcer5
                     try
                     {
                         var userId = long.Parse(username);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 1);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "motivation", moti);
-                        Redis.db.HashSetAsync($"globalBan:{userId}", "time", System.DateTime.UtcNow.ToString());
-                        idlist = $"{idlist}, {userId}";
+                        if (TryRekt(userId, moti, update))
+                            idlist = $"{idlist}, {userId}";
                     }
                     catch (Exception e)
                     {
@@ -428,10 +422,21 @@ namespace Enforcer5
             }
             if (userId != 0)
             {
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "banned", 0);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanMotivation", moti);
-                 Redis.db.HashSetAsync($"globalBan:{userId}", "unbanTime", System.DateTime.UtcNow.ToString());
-                 Bot.SendReply($"{userId} has been unrekt for {moti}", update);
+                 if (!GlobalBansReady(update)) return;
+                 bool lifted;
+                 try
+                 {
+                     lifted = GlobalBans.UnbanAsync(userId, moti).GetAwaiter().GetResult();
+                 }
+                 catch (Exception e)
+                 {
+                     ErrorReporter.Report(e, $"Lifting the global ban of {userId}");
+                     Bot.SendReply($"Could not save lifting the global ban of {userId}: {e.Message}", update);
+                     return;
+                 }
+                 Bot.SendReply(lifted
+                     ? $"{userId} has been unrekt for {moti}"
+                     : $"{userId} has no global ban", update);
             }
             else
             {
@@ -454,28 +459,72 @@ namespace Enforcer5
             }
         }
 
+        /// <summary>How many active global bans /rektlist lists, newest first; a message holds 4096 characters.</summary>
+        internal const int RektListShown = 30;
+
         [Command(Trigger = "rektlist", GlobalAdminOnly = true)]
         public static void GlobalBanList(Update update, string[] args)
         {
-            var bans = Redis.db.HashScan("globalBan", default(RedisValue), Int32.MaxValue, 1L);
-            var ids = bans.Select(id => id.Name).ToList();
-            var basicID = new List<long>();
-            foreach (var id in ids)
+            if (!GlobalBansReady(update)) return;
+            IReadOnlyList<Data.GlobalBanRecord> bans;
+            try
             {
-                basicID.Add(long.Parse(id.ToString().Split(':')[1]));
+                bans = Data.Repositories.GlobalBans.GetActiveAsync().GetAwaiter().GetResult();
             }
-            var banInfo = new List<string>();
-            foreach (var user in basicID)
+            catch (Exception e)
             {
-                var entry = Redis.db.HashGetAllAsync($"globalBan:{user}").Result;
-                if (entry.Where(i => i.Name.Equals("banned")).Select(e => e.Name).Equals(1))
-                {
-                    var motivation = entry.Where(e => e.Name.Equals("motivation")).Select(i => i.Value);
-                    var time = entry.Where(i => i.Name.Equals("time")).Select(e => e.Value);
-                    banInfo.Add($"User: {user} for {motivation} at {time}");
-                }
+                ErrorReporter.Report(e, "Listing global bans");
+                Bot.SendReply($"Could not read the global bans: {e.Message}", update);
+                return;
             }
-             Bot.SendReply(String.Join("\n", banInfo), update);
+            Bot.SendReply(FormatRektList(bans), update);
+        }
+
+        /// <summary>The /rektlist reply: the count, then the newest bans (HTML).</summary>
+        internal static string FormatRektList(IReadOnlyList<Data.GlobalBanRecord> bans)
+        {
+            if (bans.Count == 0) return "No active global bans.";
+            var lines = bans.Take(RektListShown).Select(b =>
+                $"{b.UserId}: {System.Net.WebUtility.HtmlEncode(Shorten(b.Reason, 80))} ({b.ImposedAt:yyyy-MM-dd})");
+            var header = bans.Count > RektListShown
+                ? $"{bans.Count} active global bans, newest {RektListShown}:"
+                : $"{bans.Count} active global bans:";
+            return header + "\n" + string.Join("\n", lines);
+        }
+
+        private static string Shorten(string text, int length)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return "(no reason)";
+            text = text.Replace('\n', ' ').Trim();
+            return text.Length <= length ? text : text.Substring(0, length - 1) + "…";
+        }
+
+        /// <summary>
+        /// Global bans live only in PostgreSQL. Says so, and returns false, while it is not ready
+        /// (not configured, or the schema not up to date yet).
+        /// </summary>
+        private static bool GlobalBansReady(Update update)
+        {
+            if (Storage.PostgresStorage.Ready) return true;
+            Bot.SendReply("Global bans are stored in PostgreSQL, which is not ready. Nothing was changed.", update);
+            return false;
+        }
+
+        /// <summary>Bans one account everywhere. False, with a reply saying why, if it was not saved.</summary>
+        private static bool TryRekt(long userId, string reason, Update update)
+        {
+            if (!GlobalBansReady(update)) return false;
+            try
+            {
+                GlobalBans.BanAsync(userId, reason, update.Message.From.Id).GetAwaiter().GetResult();
+                return true;
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Global ban of {userId}");
+                Bot.SendReply($"Could not save the global ban of {userId}: {e.Message}", update);
+                return false;
+            }
         }
 
         [Command(Trigger = "mediaid", DevOnly = true, RequiresReply = true)]
@@ -528,11 +577,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var userid = Methods.GetUserId(update, args);
             var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
-            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{userid}").Result;
-            foreach (var mem in isBanned)
-            {
-                text = $"{text}\n{mem.Name}: {mem.Value}";
-            }
+            text = $"{text}{FormatGlobalBan(userid)}";
             var msgs = Redis.db.HashGetAsync($"chat:{userid}", "msgs").Result;
             text = $"{text}\nUser has said {msgs} ever";
             if (update.Message.Chat.Type != ChatType.Private)
@@ -541,6 +586,38 @@ namespace Enforcer5
                 text = $"{text}\n The user is a {status.Status.ToString()} in this chat";
             }
              Bot.SendReply(text, update);
+        }
+
+        /// <summary>
+        /// The /getuser lines about the member's most recent global ban (HTML), each starting with a
+        /// newline; empty when there never was one. Global bans live only in PostgreSQL.
+        /// </summary>
+        internal static string FormatGlobalBan(long userId)
+        {
+            if (!Storage.PostgresStorage.Ready) return "\nGlobal ban: unknown (PostgreSQL is not ready)";
+            Data.GlobalBanRecord ban;
+            try
+            {
+                ban = Data.Repositories.GlobalBans.GetLatestAsync(userId).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Reading the global ban of {userId}");
+                return "\nGlobal ban: unknown (could not read it)";
+            }
+            return FormatGlobalBan(ban);
+        }
+
+        internal static string FormatGlobalBan(Data.GlobalBanRecord ban)
+        {
+            if (ban == null) return "";
+            var text = ban.Status == "active"
+                ? $"\nGlobal ban: active since {ban.ImposedAt:yyyy-MM-dd HH:mm} UTC"
+                : $"\nGlobal ban: lifted {ban.ResolvedAt:yyyy-MM-dd HH:mm} UTC";
+            text += $"\nGlobal ban reason: {System.Net.WebUtility.HtmlEncode(ban.Reason ?? "(none)")}";
+            if (ban.Status != "active")
+                text += $"\nLifted because: {System.Net.WebUtility.HtmlEncode(ban.ResolutionReason ?? "(none)")}";
+            return text;
         }
 
         [Command(Trigger = "whois")]

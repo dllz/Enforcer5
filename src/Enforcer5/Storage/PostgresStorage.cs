@@ -6,9 +6,10 @@ using Enforcer5.Helpers;
 namespace Enforcer5.Storage
 {
     /// <summary>
-    /// Process-wide PostgreSQL state. PostgreSQL is optional and additive while the rollout is in
-    /// progress: Redis stays the store everything runs on, and every PostgreSQL-backed feature is
-    /// off until <see cref="Ready"/>. An empty <c>PostgresConnection</c> means it never is.
+    /// Process-wide PostgreSQL state. While the rollout is in progress Redis stays the store most
+    /// things run on, and every PostgreSQL-backed feature is off until <see cref="Ready"/>. An
+    /// empty <c>PostgresConnection</c> means it never is, which since step 7 also means no global
+    /// bans (they live only here; see <see cref="Helpers.GlobalBans"/>).
     /// </summary>
     internal static class PostgresStorage
     {

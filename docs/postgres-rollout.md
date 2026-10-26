@@ -37,6 +37,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 4 | Warn history: every warn, prewarn and media warn added, removed or reset, with the balance it leaves; max-warns bans point at their warn; tempbans whose unban fails at expiry still close | as above, `warning_balances`, `warning_events` | Built |
 | 5 | Kicks and mutes: every kick, mute, tempmute and unmute Enforcer makes is written to `sanctions`; the user-menu warn button bans at max warns when the group says so | as above | Built |
 | 6 | Reports: every report, each action an admin takes from its buttons (delete, warn, kick, ban; several per report), and who solved it; sanctions and warns taken from a report point at it | as above, `reports`, `report_actions` | Built |
+| 7 | Global bans, **cut over**: PostgreSQL is the only store; `/getrekt`, `/getrektu`, `/getrekti`, `/unrekt`, `/rektlist`, `/getuser` and the check on every message use it; old Redis records imported once with SQL | as above, `global_sanctions` | Built |
 
 ### Step 2: ban history
 
@@ -132,6 +133,38 @@ button or `/solved` does, as `resolved` / `solved` with the solver, as in Redis.
 `report_actions` is not in the approved design, whose single `resolution_action` holds one action:
 Daniel asked (2026-10-25) for every action on a report to be kept while Solved stays its own step.
 Reports from before step 6 have no row, so actions on them and solving them write nothing.
+
+### Step 7: global bans (cut over)
+
+The first domain that runs on PostgreSQL alone. Global bans are a global admin's tool (one person
+uses them), small (about 1,900 Redis records) and need no group data, so they moved in one step
+instead of being written to both stores first.
+
+- `global_sanctions` is copied from the approved design, plus `notified_at` (when the support chat
+  was last told the banned account is there; Redis kept a `notified` field). At most one row per
+  account is `active`.
+- `/getrekt`, `/getrektu` and `/getrekti` write a row, with the global admin as actor; a ban on an
+  account that already has one closes the old row (`revoked`, "Replaced by a new global ban").
+  `/unrekt` closes the active row as `revoked` with its reason. The commands wait for the write and
+  say so when it fails or PostgreSQL is not ready; nothing is written to Redis any more.
+- The check on every message (`Methods.IsRekt`) reads `Helpers/GlobalBans`, an in-memory set of
+  the active bans: loaded once PostgreSQL is ready, updated at once by this process's own commands,
+  and reloaded every minute, so a ban made in the other edition is enforced within a minute. No
+  message waits on the database. Until the first load nothing is enforced, and with no
+  `PostgresConnection` global bans are off entirely (reported at startup). A failed reload keeps the
+  last set.
+- The support chat is told once per ban (`notified_at`), as before once per record.
+- `/rektlist` lists the active bans (count and the newest 30; it never worked against Redis), and
+  `/getuser` shows the member's latest ban.
+- The `globalBan:{id}` hashes stay in Redis untouched as a backup, but nothing reads or writes them.
+  Rolling back to a build before step 7 goes back to them, without any ban made since.
+
+The Redis records were imported once by a SQL script generated from them (`legacy_key`
+`redis:globalBan:{id}`; not in the repo, as it holds account ids), run by hand right after this
+step was deployed. Their `time` / `unbanTime` fields were written with whatever culture the host
+had, so the script parses the shapes the old migration branch found (month-, day- and year-first,
+and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose time could not be
+read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
 written, Redis decides), global bans, group settings and everything read back. Old Redis ban and warn data is not

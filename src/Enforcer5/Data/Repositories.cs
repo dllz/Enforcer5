@@ -40,6 +40,10 @@ namespace Enforcer5.Data
         internal static IReportHistoryRepository ReportHistory { get; set; } =
             new PostgresReportHistoryRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL only, no Redis copy: global bans run on it. Read through Helpers/GlobalBans.
+        internal static IGlobalBanRepository GlobalBans { get; set; } =
+            new PostgresGlobalBanRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. Fed by Helpers/PrincipalObserver once PostgresStorage is ready.
         internal static IPrincipalRepository Principals { get; set; } =
             new PostgresPrincipalRepository(() => Storage.PostgresStorage.Database);

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Enforcer5.Data
 {
-    /// <summary>The sanction kinds the history records. Global bans come later.</summary>
+    /// <summary>The sanction kinds the history records. Global bans have their own table (IGlobalBanRepository).</summary>
     internal enum SanctionKind
     {
         Ban,

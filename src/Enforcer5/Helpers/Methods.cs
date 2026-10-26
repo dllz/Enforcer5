@@ -756,27 +756,6 @@ namespace Enforcer5.Helpers
             return string.Join("\n", completedList);
         }
 
-        public static Boolean IsRekt(long id)
-        {
-            var isBanned = Redis.db.HashGetAllAsync($"globalBan:{id}").Result;
-            try
-            {
-                long banned = 0;
-                if (isBanned.Length > 0)
-                    banned = long.Parse(isBanned[0].Value);
-                if (banned == 1)
-                {
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Reading global ban record of {id}");
-            }
-            return false;
-        }
-
         /// <summary>
         /// Enforces the global ban list. This was previously `async void` with its Redis reads
         /// sitting outside the try, so a Redis timeout escaped onto the thread pool as an unhandled
@@ -790,9 +769,9 @@ namespace Enforcer5.Helpers
                 return;
             if (ctx.Watched) return;
 
-            // The context fetched globalBan for the joining user on a join message, the sender
-            // otherwise - matching who we report on below.
-            var isBanned = ctx.GlobalBan;
+            // The context looked up the joining user on a join message, the sender otherwise -
+            // matching who we report on below.
+            var ban = ctx.GlobalBan;
             var name = update.Message.From.FirstName;
             var id = update.Message.From.Id;
             if (update.Message.NewChatMember != null)
@@ -803,27 +782,20 @@ namespace Enforcer5.Helpers
 
             try
             {
-                long banned = 0;
-                if (isBanned != null && isBanned.Length > 0)
-                    banned = long.Parse(isBanned[0].Value);
-                if (banned != 1) return;
+                if (ban == null) return;
 
-                // Records are written as banned/motivation/time. A short one is malformed; the old
-                // code reached the same outcome by indexing past the end and being caught below.
-                if (isBanned.Length < 3) return;
-
-                var reason = isBanned[1].Value;
+                var reason = ban.Reason;
                 if (update.Message.Chat.Id == Constants.SupportId)
                 {
-                    var notified = isBanned.Where(e => e.Name.Equals("notified")).FirstOrDefault().Value;
-                    if (!notified.HasValue)
+                    // Once per ban: a new ban after an unban is told again.
+                    if (!ban.NotifiedAt.HasValue)
                     {
                         // Mark notified only after the notice has gone out; setting it here would
                         // suppress the record forever if the dispatched send never ran.
                         Bot.DispatchAction(() =>
                         {
                             Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
-                            Redis.db.HashSetAsync($"globalBan:{id}", "notified", "value");
+                            GlobalBans.MarkNotifiedAsync(id).GetAwaiter().GetResult();
                         }, "IsRekt");
                     }
                     return;

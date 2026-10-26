@@ -96,6 +96,8 @@ namespace Enforcer5
             // Optional and additive: Redis stays the store the bot runs on. Started before Telegram
             // so the schema is usually ready by the first update, but nothing waits for it.
             PostgresStorage.Start(Bot.ShutdownToken);
+            // Global bans live only in PostgreSQL: loaded once it is ready, then kept in memory.
+            GlobalBans.Start(Bot.ShutdownToken);
 
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();
