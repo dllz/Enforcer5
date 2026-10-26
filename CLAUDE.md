@@ -324,7 +324,11 @@ rights and crashes, checking every rule after each. It runs 3 seeds by default. 
 change to `Helpers/TelegramGateway`, `FloodControl`, `Enforcement/`, `CommandLimiter` or `Raids/`,
 run 500:** `ENFORCER_CHAOS_RUNS=500 enf-sql subprod --run -- dotnet test Enforcer5.slnx --filter
 FullyQualifiedName~ChaosScenarios` (about an hour). A failure names its seed; replay it alone with
-`ENFORCER_CHAOS_SEED=<seed>`.
+`ENFORCER_CHAOS_SEED=<seed>`; `ENFORCER_CHAOS_PROGRESS=<file>` logs each seed as it finishes.
+
+The PostgreSQL tests reuse migrated schemas (`TestPostgres.MigratedSchemaAsync`, emptied between
+tests) and turn `synchronous_commit` off: subprod takes 250-800 ms to flush a commit, which made a
+single raid scenario take minutes.
 
 `tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
 through `InternalsVisibleTo`. Without the database the suite runs in about six seconds.
