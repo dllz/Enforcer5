@@ -657,7 +657,10 @@ namespace Enforcer5.Helpers
                 // would exit(5) and look like a crash to DeployBot. Writer completion ends this.
                 try
                 {
-                    await _updates.Writer.WriteAsync((update, DateTime.Now), CancellationToken.None);
+                    // UTC, like Message.Date: the flood and length checks measure the difference.
+                    // DateTime.Now was local time, so on a server not on UTC every message looked
+                    // hours old and those checks never ran.
+                    await _updates.Writer.WriteAsync((update, Clock.UtcNow), CancellationToken.None);
                 }
                 catch (ChannelClosedException)
                 {

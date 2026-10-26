@@ -56,7 +56,6 @@ namespace Enforcer5.Models
         public HashEntry[] TextLength;      // chat:{id}:antitextlengthsettings
         /// <summary>The active global ban on whoever IsRekt checks (from Helpers/GlobalBans), or null.</summary>
         public GlobalBanRecord GlobalBan;
-        public RedisValue SpamCount;        // spam:{chat}:{user}
 
         /// <summary>
         /// The chat's inline bot blocklist. Only read when the message was sent via an inline bot,
@@ -137,7 +136,6 @@ namespace Enforcer5.Models
             var characters = db.HashGetAllAsync($"chat:{context.ChatId}:char");
             var nameLength = db.HashGetAllAsync($"chat:{context.ChatId}:antinamelengthsettings");
             var textLength = db.HashGetAllAsync($"chat:{context.ChatId}:antitextlengthsettings");
-            var spamCount = db.StringGetAsync($"spam:{context.ChatId}:{context.UserId}");
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
             var inlineBotBlocks = message.ViaBot != null
                 ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
@@ -157,7 +155,7 @@ namespace Enforcer5.Models
             try
             {
                 await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, spamCount, language, inlineBotBlocks, channelPosts,
+                    nameLength, textLength, language, inlineBotBlocks, channelPosts,
                     stickerSetBlocked);
             }
             catch (Exception e)
@@ -175,7 +173,6 @@ namespace Enforcer5.Models
             context.NameLength = Value(nameLength);
             context.TextLength = Value(textLength);
             context.GlobalBan = GlobalBans.Get(globalBanId);
-            context.SpamCount = Value(spamCount);
             context.Lang = Value(language)?.Doc;
             context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
             context.ChannelPosts = Value(channelPosts);
@@ -183,7 +180,7 @@ namespace Enforcer5.Models
 
             context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
-                               Ok(spamCount) && Ok(language) && Ok(inlineBotBlocks) &&
+                               Ok(language) && Ok(inlineBotBlocks) &&
                                Ok(channelPosts) && Ok(stickerSetBlocked);
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather

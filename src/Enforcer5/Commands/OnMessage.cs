@@ -27,8 +27,8 @@ namespace Enforcer5
         internal static async Task AntiFlood(MessageContext ctx)
         {
             var update = ctx.Update;
-            // Measured from receipt, not from now: queue time must not count here.
-            var time = (ctx.ReceivedAt - update.Message.Date);
+            // Measured from receipt, not from now: queue time must not count here. Both are UTC.
+            var time = ctx.ReceivedAt - update.Message.Date.ToUniversalTime();
             if (time.TotalSeconds > 7)
             {
                 return;
@@ -53,20 +53,36 @@ namespace Enforcer5
                 return;
             }
 
-            var msgs = ctx.SpamCount;
-            int num = msgs.HasValue ? int.Parse(msgs.ToString()) : 0;
-            if (num == 0) num = 1;
-            var maxTime = TimeSpan.FromSeconds(6);
-            Redis.db.StringSetAsync($"spam:{chatId}:{ctx.UserId}", num + 1, maxTime);
+            if (!int.TryParse(ctx.FloodSetting("MaxFlood").ToString(), out var maxmsgs)) return;
 
-            int maxmsgs;
-            if (int.TryParse(ctx.FloodSetting("MaxFlood").ToString(), out maxmsgs) && num == maxmsgs + 1)
+            // One atomic count per window of FloodWindow from the first message. It used to be read
+            // with the context and written back as count + 1, so with 32 consumers two messages read
+            // the same count and one was lost; and every message renewed the expiry.
+            var userid = ctx.UserId;
+            var messageId = update.Message.MessageId;
+            FloodTracker.Seen(chatId, userid, messageId);
+            var num = await FloodTracker.CountAsync(chatId, userid);
+            if (num <= maxmsgs) return;
+            var action = ctx.FloodSetting("ActionFlood").ToString();
+            if (num > maxmsgs + 1)
             {
-                var action = ctx.FloodSetting("ActionFlood").ToString();
+                // Already being dealt with: whatever else they send in this window goes too. A ban
+                // takes everything they posted anyway.
+                if (action != "ban")
+                    await Enforcement.EnforcementQueue.SubmitAsync(Enforcement.EnforcementJob.Delete(chatId, messageId));
+                return;
+            }
+
+            {
                 var name = update.Message.From.FirstName;
                 if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
-                var userid = ctx.UserId;
                 var groupId = chatId;
+                // The flood itself goes, whatever the action: in one call for up to 100 messages.
+                var flood = FloodTracker.Recent(chatId, userid);
+                if (action != "ban" && flood.Length > 0)
+                    await Enforcement.EnforcementQueue.SubmitAsync(Enforcement.EnforcementJob.Delete(chatId, flood));
+                // Raid detection sees every flood, whatever the group does about it.
+                FloodTracker.OnFlood(chatId, userid);
 
                 Bot.DispatchAction(() =>
                 {
@@ -83,7 +99,8 @@ namespace Enforcer5
                                 }
                                 break;
                             case "ban":
-                                res = Methods.BanUser(chatId, userid, lang, "Flood");
+                                // Banned with everything they posted, in the same call.
+                                res = Methods.BanUser(chatId, userid, lang, "Flood", revokeMessages: true);
                                 if (res)
                                 {
                                     Methods.SaveBan(userid, "flood");

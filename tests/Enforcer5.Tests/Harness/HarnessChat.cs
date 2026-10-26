@@ -150,6 +150,7 @@ namespace Enforcer5.Tests.Harness
             Bot.UseClient(Telegram);
             Announcements.ResetForTests();
             CommandGate.ResetForTests();
+            FloodTracker.ResetForTests();
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
