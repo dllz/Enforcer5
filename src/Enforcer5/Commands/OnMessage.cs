@@ -83,6 +83,8 @@ namespace Enforcer5
                     await Enforcement.EnforcementQueue.SubmitAsync(Enforcement.EnforcementJob.Delete(chatId, flood));
                 // Raid detection sees every flood, whatever the group does about it.
                 FloodTracker.OnFlood(chatId, userid);
+                // In raid mode an untrusted flooder is banned by the raid, with their messages.
+                if (await Raids.RaidGuard.WillHandleFloodAsync(chatId, userid)) return;
 
                 Bot.DispatchAction(() =>
                 {

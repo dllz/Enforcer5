@@ -408,7 +408,9 @@ namespace Enforcer5.Tests.Harness
             if (!_owner) return;
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
-            try { await SettleAsync(); } catch (TimeoutException) { }
+            // Let whatever still waits on this clock run out, so nothing is left holding a permit or
+            // a static for the next scenario.
+            try { await HarnessTime.CompleteAsync(Clock, TimeSpan.FromHours(2)); } catch (TimeoutException) { }
             ErrorReporter.Observer = _world.PreviousObserver;
             Bot.Api = _world.PreviousApi;
             Announcements.ResetForTests();

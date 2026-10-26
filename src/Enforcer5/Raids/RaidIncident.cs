@@ -47,6 +47,8 @@ namespace Enforcer5.Raids
         /// <summary>Who joined during it, for the quarantine and the release button.</summary>
         public HashSet<long> Joiners { get; set; } = new();
         public HashSet<long> Quarantined { get; set; } = new();
+        /// <summary>Content seen from several untrusted members in this incident: anyone untrusted posting it later is a suspect too.</summary>
+        public HashSet<string> SpamKeys { get; set; } = new();
 
         internal string ToJson() => JsonConvert.SerializeObject(this);
         internal static RaidIncident FromJson(string json) => JsonConvert.DeserializeObject<RaidIncident>(json);

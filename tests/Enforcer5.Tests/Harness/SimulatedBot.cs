@@ -102,7 +102,8 @@ namespace Enforcer5.Tests.Harness
         {
             _queueStop.Cancel();
             EnforcementQueue.ResetForTests();
-            try { await SettleAsync(); } catch (TimeoutException) { }
+            // Let whatever still waits on this clock run out, so nothing is left for the next test.
+            try { await HarnessTime.CompleteAsync(Clock, TimeSpan.FromHours(2)); } catch (TimeoutException) { }
             Announcements.ResetForTests();
             ErrorReporter.Observer = _previousObserver;
             Bot.Api = _previousApi;

@@ -330,8 +330,12 @@ namespace Enforcer5.Enforcement
             return best;
         }
 
+        // Bumped by a (simulated) crash, so work picked before it does not run after it.
+        private static int _generation;
+
         private static async Task CarryOutAsync(EnforcementJob job)
         {
+            var generation = Volatile.Read(ref _generation);
             if (job.Context != null) ErrorReporter.Current = job.Context;
             Attempt attempt;
             try
@@ -343,6 +347,8 @@ namespace Enforcer5.Enforcement
                 attempt = Attempt.Transient(e);
             }
 
+            // The process "died" meanwhile: what it was doing is gone with it; the journal has the job.
+            if (generation != Volatile.Read(ref _generation)) return;
             var now = Clock.UtcNow;
             EnforcementResult? result = null;
             var keep = false;
@@ -442,6 +448,7 @@ namespace Enforcer5.Enforcement
         /// </summary>
         internal static void CrashForTests()
         {
+            Interlocked.Increment(ref _generation);
             lock (Lock)
             {
                 _stop?.Cancel();

@@ -73,7 +73,8 @@ namespace Enforcer5.Raids
                 {
                     await Clock.WaitAsync(TimeSpan.FromSeconds(15), ct);
                     if (ct.IsCancellationRequested) return;
-                    Tick();
+                    try { Tick(); }
+                    catch (Exception e) { ErrorReporter.Report(e, "Raid check"); }
                 }
             }, stop, "RaidGuard");
         }
@@ -187,19 +188,21 @@ namespace Enforcer5.Raids
                 var user = message.From.Id;
                 var now = Clock.UtcNow;
                 var print = MessageFingerprint.Of(message);
-                var key = print.TextHash != null ? "t:" + print.TextHash : print.MediaUniqueId != null ? "m:" + print.MediaUniqueId : null;
+                var key = ContentKey(message, print);
 
                 IReadOnlyCollection<long> posters = Array.Empty<long>();
                 DateTime? joinedAt;
+                var knownSpam = false;
                 lock (Lock)
                 {
                     var signs = SignsFor(chatId);
                     if (key != null) posters = signs.Posted(key, user, now);
                     joinedAt = signs.JoinedAt(user, now);
+                    knownSpam = key != null && Incidents.TryGetValue(chatId, out var i) && i.SpamKeys.Contains(key);
                 }
                 var postedSoon = joinedAt.HasValue && now - joinedAt.Value <= Limits.PostSoonAfterJoin;
                 var sameContent = posters.Count >= Limits.SameContentUsers;
-                if (!sameContent && !print.BareLink && !postedSoon)
+                if (!sameContent && !print.BareLink && !postedSoon && !knownSpam)
                 {
                     RaidTelemetry.Message(chatId, user, print, null);
                     return;
@@ -221,6 +224,13 @@ namespace Enforcer5.Raids
                         signs.SameContentUsers = Math.Max(signs.SameContentUsers, untrusted.Count);
                         signs.SameContentFromUntrusted(now);
                         newSuspects.AddRange(untrusted);
+                        RememberSpam(chatId, key);
+                    }
+                    else if (knownSpam && senderUntrusted)
+                    {
+                        // The raid's content, however long after the others.
+                        signs.SameContentFromUntrusted(now);
+                        newSuspects.Add(user);
                     }
                     if (print.BareLink && senderUntrusted)
                     {
@@ -239,6 +249,23 @@ namespace Enforcer5.Raids
             }
         }
 
+        /// <summary>
+        /// What makes two messages "the same" for raid detection: the text, if it is long enough to
+        /// mean something or carries a link (three newcomers saying "hello" is no raid), or the file,
+        /// except stickers, which everyone shares. Null when the message cannot be compared.
+        /// </summary>
+        internal static string ContentKey(Message message, MessageFingerprint print)
+        {
+            if (print.MediaUniqueId != null)
+                return message.Sticker != null ? null : "m:" + print.MediaUniqueId;
+            if (print.TextHash == null) return null;
+            var letters = (message.Text ?? message.Caption ?? "").Count(char.IsLetter);
+            return letters >= MinComparableLetters || print.LinkCount > 0 ? "t:" + print.TextHash : null;
+        }
+
+        /// <summary>Texts shorter than this (in letters) are not compared, links aside.</summary>
+        internal const int MinComparableLetters = 20;
+
         private static async Task OnFloodAsync(long chatId, long userId)
         {
             if (!IsActive(chatId) && ModeOf(chatId) == RaidMode.Off) return;
@@ -246,6 +273,21 @@ namespace Enforcer5.Raids
             lock (Lock) SignsFor(chatId).Flooded(userId, Clock.UtcNow);
             Suspected(chatId, new[] { userId }, null);
             Evaluate(chatId);
+        }
+
+        /// <summary>
+        /// True when raid mode is banning spammers in the chat and <paramref name="userId"/> is untrusted:
+        /// their flood is the raid's to deal with (a ban with their messages), not the group's own flood
+        /// action as well.
+        /// </summary>
+        internal static async Task<bool> WillHandleFloodAsync(long chatId, long userId)
+        {
+            lock (Lock)
+            {
+                if (!Incidents.TryGetValue(chatId, out var i) || i.Phase != RaidPhase.Active || !i.Actions.HasFlag(RaidActions.BanSuspects))
+                    return false;
+            }
+            return await TrustOfAsync(chatId, userId) == TrustLevel.New;
         }
 
         /// <summary>An @admin report in a group: a burst of them is a sign.</summary>
@@ -279,9 +321,10 @@ namespace Enforcer5.Raids
         private static void Suspected(long chatId, IEnumerable<long> users, Message message)
         {
             var ban = new List<long>();
+            RaidIncident incident;
             lock (Lock)
             {
-                if (!Incidents.TryGetValue(chatId, out var incident))
+                if (!Incidents.TryGetValue(chatId, out incident))
                 {
                     // Remembered for when an incident starts within the minute.
                     foreach (var u in users) PendingSuspects(chatId).Add(u);
@@ -298,10 +341,26 @@ namespace Enforcer5.Raids
                 }
                 incident.LastActivityUtc = Clock.UtcNow;
             }
+            // Kept with the incident, so a restart before the admins answer still knows them.
+            Save(incident);
             foreach (var u in ban) BanSuspect(chatId, u);
         }
 
         private static readonly Dictionary<long, HashSet<long>> Pending = new();
+        private static readonly Dictionary<long, HashSet<string>> PendingSpamKeys = new();
+
+        // With the lock held. Content that marked several untrusted members, kept with the incident
+        // (or for the incident about to start).
+        private static void RememberSpam(long chatId, string key)
+        {
+            if (key == null) return;
+            if (Incidents.TryGetValue(chatId, out var incident)) incident.SpamKeys.Add(key);
+            else
+            {
+                if (!PendingSpamKeys.TryGetValue(chatId, out var set)) PendingSpamKeys[chatId] = set = new HashSet<string>();
+                if (set.Count < 100) set.Add(key);
+            }
+        }
 
         private static HashSet<long> PendingSuspects(long chatId)
         {
@@ -335,8 +394,10 @@ namespace Enforcer5.Raids
             {
                 if (mode == RaidMode.Off) return;
                 RaidTelemetry.Signal(chatId, score, reasons);
+                // Auto mode: a raid gets everything; a possible one only holds new joiners back,
+                // and nobody is banned until it is clearly a raid.
                 if (mode == RaidMode.Auto)
-                    Activate(chatId, score >= Limits.RaidScore ? RaidActions.All : RaidActions.Quarantine | RaidActions.BanSuspects, "auto", null);
+                    Activate(chatId, score >= Limits.RaidScore ? RaidActions.All : RaidActions.Quarantine, "auto", null);
                 else
                     Alert(chatId, score, reasons);
             }
@@ -344,11 +405,11 @@ namespace Enforcer5.Raids
             {
                 Activate(chatId, RaidActions.All, "auto", null);
             }
-            else if (incident.Phase == RaidPhase.Active && score >= Limits.RaidScore && !incident.Actions.HasFlag(RaidActions.Lock) &&
-                     (incident.Trigger == "auto" || incident.Trigger == "command"))
+            else if (incident.Phase == RaidPhase.Active && score >= Limits.RaidScore && incident.Actions != RaidActions.All &&
+                     incident.Trigger == "auto")
             {
-                // It got worse: close the door.
-                Activate(chatId, RaidActions.Lock, incident.Trigger, null);
+                // It got worse: close the door and ban.
+                Activate(chatId, RaidActions.All, incident.Trigger, null);
             }
         }
 
@@ -357,6 +418,7 @@ namespace Enforcer5.Raids
             var now = Clock.UtcNow;
             var incident = new RaidIncident { ChatId = chatId, Phase = phase, Trigger = trigger, StartedUtc = now, LastActivityUtc = now };
             if (Pending.Remove(chatId, out var pending)) foreach (var u in pending) incident.Suspects.Add(u);
+            if (PendingSpamKeys.Remove(chatId, out var keys)) foreach (var k in keys) incident.SpamKeys.Add(k);
             Incidents[chatId] = incident;
             return incident;
         }
@@ -489,7 +551,12 @@ namespace Enforcer5.Raids
                 foreach (var key in TrustSeen.Where(p => now - p.Value.At > TrustFor).Select(p => p.Key).ToList())
                     TrustSeen.Remove(key);
             }
-            foreach (var i in quiet) End(i.ChatId, null, quietly: i.Phase == RaidPhase.Alert);
+            // One failing incident must not stop the others ending, or restart the loop.
+            foreach (var i in quiet)
+            {
+                try { End(i.ChatId, null, quietly: i.Phase == RaidPhase.Alert); }
+                catch (Exception e) { ErrorReporter.Report(e, $"Ending the raid in {i.ChatId}"); }
+            }
             foreach (var chat in notices.Except(quiet.Select(i => i.ChatId))) UpdateNotice(chat, force: false, tagAdmins: false);
         }
 
@@ -674,7 +741,9 @@ namespace Enforcer5.Raids
                         continue;
                     }
                     var incident = RaidIncident.FromJson(json.ToString());
-                    lock (Lock) Incidents[chatId] = incident;
+                    // Never over one in memory: that one is newer (the loop restarting after a fault
+                    // loads again).
+                    lock (Lock) Incidents.TryAdd(chatId, incident);
                 }
             }
             catch (Exception e)
@@ -694,6 +763,7 @@ namespace Enforcer5.Raids
                 TrustSeen.Clear();
                 Modes.Clear();
                 Pending.Clear();
+                PendingSpamKeys.Clear();
             }
             Limits = new RaidLimits();
         }
