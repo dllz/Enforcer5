@@ -169,3 +169,24 @@ read is still imported, with the import time. Absence means allowed, so nothing 
 Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
 written, Redis decides), global bans, group settings and everything read back. Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
+
+## Not built yet: sharing 429s and enforcement across bot processes
+
+Telegram's limits count per bot token. Each process keeps its own pacing and 429 pauses
+(`Helpers/FloodControl`), and each edition carries out its own enforcement queue
+(`Enforcement/EnforcementQueue`, journal `enforcement:{edition}:jobs`). Nothing is shared between
+the editions or between processes on one token today. The seam for it is in place and a no-op:
+
+- `Helpers/FloodSignal` (`IFloodSignal`): the gateway publishes every 429 it gets
+  (`Publish(lane, chat, pausedUntil)`); a subscriber hands pauses heard from elsewhere to
+  `FloodControl.ImposePause`. The intended implementation is Redis pub/sub on one channel per bot
+  token, carrying lane, chat and until time (no message content).
+- Cross-bot enforcement: when one edition is rate limited in a group where the other is also an
+  admin, the other could carry out its jobs. The intended shape is a Redis stream per group (or one
+  shared stream with a consumer group per edition), with jobs in the journal's JSON form, claimed
+  with `XAUTOCLAIM` after a timeout so a job is carried out by exactly one edition. That needs
+  Redis 6.2 or later; check the server version first. The journal stays the source of truth until
+  then.
+
+This belongs to the PostgreSQL branch, where the two editions already share a database and start
+sharing state; it is not required by anything built so far.
