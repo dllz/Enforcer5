@@ -397,6 +397,130 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.RaidEventEntity", b =>
+                {
+                    b.Property<long>("EventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("event_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("EventId"));
+
+                    b.Property<string>("Actor")
+                        .HasColumnType("text")
+                        .HasColumnName("actor");
+
+                    b.Property<string>("Detail")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("detail");
+
+                    b.Property<long>("IncidentId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("incident_id");
+
+                    b.Property<string>("Kind")
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<long>("OffsetMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("offset_ms");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex(new[] { "IncidentId", "OffsetMs" }, "raid_events_timeline_idx");
+
+                    b.ToTable("raid_events", null, t =>
+                        {
+                            t.HasCheckConstraint("raid_events_kind_check", "kind IN ('join', 'message', 'signal', 'action', 'rate_limit', 'phase')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RaidIncidentEntity", b =>
+                {
+                    b.Property<long>("IncidentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("incident_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("IncidentId"));
+
+                    b.Property<DateTimeOffset?>("ActivatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("activated_at");
+
+                    b.Property<int>("Banned")
+                        .HasColumnType("integer")
+                        .HasColumnName("banned");
+
+                    b.Property<string>("Edition")
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<string>("EndedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("ended_by");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("IncidentKey")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("incident_key");
+
+                    b.Property<int>("Joined")
+                        .HasColumnType("integer")
+                        .HasColumnName("joined");
+
+                    b.Property<DateTimeOffset?>("LockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_at");
+
+                    b.Property<int>("Muted")
+                        .HasColumnType("integer")
+                        .HasColumnName("muted");
+
+                    b.Property<int>("PeakScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("peak_score");
+
+                    b.Property<string>("PhaseReached")
+                        .HasColumnType("text")
+                        .HasColumnName("phase_reached");
+
+                    b.PrimitiveCollection<string[]>("Reasons")
+                        .HasColumnType("text[]")
+                        .HasColumnName("reasons");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Trigger")
+                        .HasColumnType("text")
+                        .HasColumnName("trigger");
+
+                    b.HasKey("IncidentId");
+
+                    b.HasIndex("IncidentKey")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "GroupId", "StartedAt" }, "raid_incidents_group_time_idx");
+
+                    b.ToTable("raid_incidents", null, t =>
+                        {
+                            t.HasCheckConstraint("raid_incidents_ended_by_check", "ended_by IS NULL OR ended_by IN ('quiet', 'admin', 'ignored')");
+
+                            t.HasCheckConstraint("raid_incidents_phase_check", "phase_reached IN ('alert', 'active')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.ReportActionEntity", b =>
                 {
                     b.Property<long>("ReportActionId")
@@ -1093,6 +1217,24 @@ namespace Enforcer5.Storage.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RaidEventEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.RaidIncidentEntity", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RaidIncidentEntity", b =>
+                {
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
                         .WithMany()
                         .HasForeignKey("GroupId")

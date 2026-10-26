@@ -53,6 +53,9 @@ namespace Enforcer5.Data
         internal static IRaidCaptureRepository RaidCapture { get; set; } =
             new PostgresRaidCaptureRepository(() => Storage.PostgresStorage.Database);
 
+        internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
+            new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
+
         internal static ITempbanRepository Tempbans { get; set; } =
 #if PREMIUM
             new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");

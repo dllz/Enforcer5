@@ -59,6 +59,7 @@ namespace Enforcer5.Helpers
         {
             LogHelper.Info($"429 on {method} ({lane}) in {(chat.Length == 0 ? "the whole bot" : chat)}: paused {seconds}s");
             FloodSignal.Publish(lane, chat, Clock.UtcNow.AddSeconds(seconds));
+            Raids.RaidTelemetry.RateLimited(lane, chat, seconds);
         }
         /// <summary>Downloads files users send to the bot. Set up next to <see cref="Api"/>.</summary>
         internal static ITelegramFileDownloader Files;

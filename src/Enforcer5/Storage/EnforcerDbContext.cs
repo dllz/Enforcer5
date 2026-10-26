@@ -283,6 +283,33 @@ namespace Enforcer5.Storage
                 entity.HasKey(x => x.GroupId);
                 entity.HasOne<GroupEntity>().WithOne().HasForeignKey<GroupStatsEntity>(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<RaidIncidentEntity>(entity =>
+            {
+                entity.ToTable("raid_incidents", table =>
+                {
+                    table.HasCheckConstraint("raid_incidents_phase_check", "phase_reached IN ('alert', 'active')");
+                    table.HasCheckConstraint("raid_incidents_ended_by_check", "ended_by IS NULL OR ended_by IN ('quiet', 'admin', 'ignored')");
+                });
+                entity.HasKey(x => x.IncidentId);
+                entity.Property(x => x.IncidentId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.IncidentKey).IsRequired();
+                entity.HasIndex(x => x.IncidentKey).IsUnique();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Reasons).HasColumnType("text[]");
+                entity.HasIndex(x => new { x.GroupId, x.StartedAt }, "raid_incidents_group_time_idx");
+            });
+
+            modelBuilder.Entity<RaidEventEntity>(entity =>
+            {
+                entity.ToTable("raid_events", table =>
+                    table.HasCheckConstraint("raid_events_kind_check", "kind IN ('join', 'message', 'signal', 'action', 'rate_limit', 'phase')"));
+                entity.HasKey(x => x.EventId);
+                entity.Property(x => x.EventId).UseIdentityAlwaysColumn();
+                entity.HasOne<RaidIncidentEntity>().WithMany().HasForeignKey(x => x.IncidentId).OnDelete(DeleteBehavior.Cascade);
+                entity.Property(x => x.Detail).HasColumnType("jsonb");
+                entity.HasIndex(x => new { x.IncidentId, x.OffsetMs }, "raid_events_timeline_idx");
+            });
         }
 
         private static void UseSnakeCaseColumns(ModelBuilder modelBuilder)

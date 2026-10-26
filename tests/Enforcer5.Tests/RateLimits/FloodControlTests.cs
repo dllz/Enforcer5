@@ -166,35 +166,37 @@ namespace Enforcer5.Tests.RateLimits
         [TestCleanup]
         public void Cleanup() => Clock.UseForTests(null);
 
-        // Runs the simulated clock until every task is done.
+        // Runs the simulated clock until every send is done, moving it on only once all of them are
+        // waiting on it (so a send whose turn has come goes at its own time, not later).
         private async Task Drive(params Task[] tasks)
         {
-            for (var i = 0; i < 100000 && !tasks.All(t => t.IsCompleted); i++)
-            {
-                await Task.Delay(1);
-                if (tasks.All(t => t.IsCompleted)) break;
-                if (_clock.NextDue is { } next) _clock.AdvanceTo(next);
-            }
+            await HarnessTime.CompleteAsync(_clock, TimeSpan.FromHours(1));
             Assert.IsTrue(tasks.All(t => t.IsCompleted), "Did not finish");
         }
 
-        private static async Task<bool> Sent(Task send)
+        // The send runs as dispatched work, as it does in the bot, so the harness can tell when it waits.
+        private static Task<bool> Sent(Func<Task> send)
         {
-            try
+            var result = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Bot.Dispatch(async () =>
             {
-                await send;
-                return true;
-            }
-            catch (ApiRequestException e) when (e.ErrorCode == 429)
-            {
-                return false;
-            }
+                try
+                {
+                    await send();
+                    result.SetResult(true);
+                }
+                catch (ApiRequestException e) when (e.ErrorCode == 429)
+                {
+                    result.SetResult(false);
+                }
+            });
+            return result.Task;
         }
 
         [TestMethod]
         public async Task ABurstToOneGroup_StaysUnderTelegramsLimits()
         {
-            var sends = Enumerable.Range(0, 30).Select(i => Sent(_gateway.SendMessage(Group, $"m{i}"))).ToArray();
+            var sends = Enumerable.Range(0, 30).Select(i => Sent(() => _gateway.SendMessage(Group, $"m{i}"))).ToArray();
             await Drive(sends);
 
             var delivered = sends.Count(s => s.Result);
@@ -208,7 +210,7 @@ namespace Enforcer5.Tests.RateLimits
         {
             _telegram.StartMessageStorm(TimeSpan.FromSeconds(5), retryAfter: 5);
 
-            var send = Sent(_gateway.SendMessage(Group, "hello"));
+            var send = Sent(() => _gateway.SendMessage(Group, "hello"));
             await Drive(send);
 
             Assert.IsTrue(send.Result);
@@ -221,9 +223,9 @@ namespace Enforcer5.Tests.RateLimits
             _telegram.SetMember(Group, 42, MemberState.Member);
             _telegram.StartMessageStorm(TimeSpan.FromMinutes(5), retryAfter: 300);
 
-            var first = Sent(_gateway.SendMessage(Group, "hello"));
+            var first = Sent(() => _gateway.SendMessage(Group, "hello"));
             await Drive(first);
-            var second = Sent(_gateway.SendMessage(Group, "again"));
+            var second = Sent(() => _gateway.SendMessage(Group, "again"));
             await Drive(second);
             await _gateway.BanChatMember(Group, 42);
 

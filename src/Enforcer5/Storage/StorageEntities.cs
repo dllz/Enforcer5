@@ -297,4 +297,43 @@ namespace Enforcer5.Storage
         public int EstablishedDays { get; set; }
         public double JoinsPerHour { get; set; }
     }
+
+    /// <summary>
+    /// One raid (or possible raid the admins were asked about), for telemetry and replay: how it
+    /// started and ended, how bad it got, what was done and how fast. Kept 90 days.
+    /// </summary>
+    internal sealed class RaidIncidentEntity
+    {
+        public long IncidentId { get; set; }
+        public string IncidentKey { get; set; }
+        public long GroupId { get; set; }
+        public string Edition { get; set; }
+        public string Trigger { get; set; }
+        public string PhaseReached { get; set; }
+        public DateTimeOffset StartedAt { get; set; }
+        public DateTimeOffset? ActivatedAt { get; set; }
+        public DateTimeOffset? LockedAt { get; set; }
+        public DateTimeOffset? EndedAt { get; set; }
+        public string EndedBy { get; set; }
+        public int PeakScore { get; set; }
+        public string[] Reasons { get; set; }
+        public int Joined { get; set; }
+        public int Muted { get; set; }
+        public int Banned { get; set; }
+    }
+
+    /// <summary>
+    /// The timeline of a raid: joins, messages, signs, actions, 429s, at their offset from its start
+    /// (negative for the joins that set it off). People are a hash that only means something within
+    /// the incident (<c>actor</c>), never an account id; messages are their fingerprint, never text.
+    /// </summary>
+    internal sealed class RaidEventEntity
+    {
+        public long EventId { get; set; }
+        public long IncidentId { get; set; }
+        public long OffsetMs { get; set; }
+        public string Kind { get; set; }
+        public string Actor { get; set; }
+        public string Detail { get; set; }
+    }
 }

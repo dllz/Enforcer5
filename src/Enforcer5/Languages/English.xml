@@ -2246,4 +2246,12 @@ Joined: {0} · muted: {1} · banned: {2}</value>
       /{0} auto
     </value>
   </string>
+  <string key="hcommandraidprofile">
+    <value>
+      For developers: sends a raid's profile as a file, the latest in the group or the one named, to replay in the tests.
+
+      Example:
+      /{0}
+    </value>
+  </string>
 </strings>

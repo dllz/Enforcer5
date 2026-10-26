@@ -25,7 +25,7 @@ namespace Enforcer5.Tests.Storage
             CollectionAssert.AreEqual(new[]
             {
                 "global_sanctions", "group_joins", "group_members", "group_stats", "groups", "message_fingerprints",
-                "report_actions", "reports", "sanctions", "telegram_account_profiles", "telegram_accounts",
+                "raid_events", "raid_incidents", "report_actions", "reports", "sanctions", "telegram_account_profiles", "telegram_accounts",
                 "telegram_chat_profiles", "telegram_chats", "user_identity_links", "users",
                 "warning_balances", "warning_events"
             }, tables);

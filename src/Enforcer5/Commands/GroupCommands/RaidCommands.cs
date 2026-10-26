@@ -58,6 +58,36 @@ namespace Enforcer5
         }
     }
 
+    public static partial class Commands
+    {
+        /// <summary>
+        /// /raidprofile [incident]: sends a raid's profile (the latest in this group, or the one named
+        /// by its key or number) as a JSON file, to replay in the test harness. Devs only: it is
+        /// telemetry, with no ids or text in it.
+        /// </summary>
+        [Command(Trigger = "raidprofile", DevOnly = true)]
+        public static void RaidProfileCommand(Update update, string[] args)
+        {
+            var wanted = args.Length > 1 ? args[1]?.Trim() : null;
+            long? chat = update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private ? null : update.Message.Chat.Id;
+            if (!Enforcer5.Storage.PostgresStorage.Ready)
+            {
+                Bot.SendReply("PostgreSQL is not ready, so there are no raid profiles.", update);
+                return;
+            }
+            var profile = Enforcer5.Data.Repositories.RaidTelemetry.GetProfileAsync(wanted, chat).GetAwaiter().GetResult();
+            if (profile == null)
+            {
+                Bot.SendReply("No raid profile found.", update);
+                return;
+            }
+            using var stream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(profile.ToJson()));
+            Bot.Api.SendDocument(update.Message.From.Id, InputFile.FromStream(stream, $"raid-{profile.IncidentKey}.json"),
+                caption: $"{profile.PhaseReached}, {profile.Trigger}, peak {profile.PeakScore}: {profile.Joined} joined, " +
+                         $"{profile.Muted} muted, {profile.Banned} banned, {profile.Events.Count} events").GetAwaiter().GetResult();
+        }
+    }
+
     public static partial class CallBacks
     {
         /// <summary>raid:{chat}:{lock|mute|ban|ignore|end|release}, under a raid alert, notice or summary.</summary>

@@ -127,6 +127,7 @@ namespace Enforcer5.Helpers
                 var now = DateTimeOffset.UtcNow;
                 await Repositories.RaidCapture.RecomputeNormsAsync(now);
                 await Repositories.RaidCapture.CleanUpAsync(now);
+                await Repositories.RaidTelemetry.CleanUpAsync(now);
             }
             finally
             {

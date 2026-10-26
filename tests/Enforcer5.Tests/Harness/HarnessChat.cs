@@ -153,6 +153,7 @@ namespace Enforcer5.Tests.Harness
             FloodTracker.ResetForTests();
             MemberEvents.ResetForTests();
             MemberTrust.SetNormsForTests(null);
+            Enforcer5.Raids.RaidTelemetry.ResetForTests();
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();

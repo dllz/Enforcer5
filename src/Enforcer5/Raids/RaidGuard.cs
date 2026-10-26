@@ -199,13 +199,18 @@ namespace Enforcer5.Raids
                 }
                 var postedSoon = joinedAt.HasValue && now - joinedAt.Value <= Limits.PostSoonAfterJoin;
                 var sameContent = posters.Count >= Limits.SameContentUsers;
-                if (!sameContent && !print.BareLink && !postedSoon) return;
+                if (!sameContent && !print.BareLink && !postedSoon)
+                {
+                    RaidTelemetry.Message(chatId, user, print, null);
+                    return;
+                }
 
                 // Who among them is untrusted.
                 var untrusted = new List<long>();
                 foreach (var poster in (sameContent ? posters : new[] { user }).Take(50))
                     if (await TrustOfAsync(chatId, poster) == TrustLevel.New) untrusted.Add(poster);
                 var senderUntrusted = untrusted.Contains(user);
+                RaidTelemetry.Message(chatId, user, print, senderUntrusted);
 
                 var newSuspects = new List<long>();
                 lock (Lock)
@@ -441,8 +446,15 @@ namespace Enforcer5.Raids
             Save(incident);
             var job = EnforcementJob.SetPermissions(chatId, EnforcementExecutor.NothingAllowed);
             job.Note.Reason = "Raid lock";
-            await EnforcementQueue.SubmitAsync(job);
             RaidTelemetry.Action(chatId, "lock", 0);
+            var done = await EnforcementQueue.SubmitAsync(job);
+            // When the door actually closed, for the telemetry: how long it took under the 429s.
+            // A continuation, not an await, so nothing sits waiting on the queue meanwhile.
+            _ = done.ContinueWith(t =>
+            {
+                if (t.Status == TaskStatus.RanToCompletion && t.Result.Outcome == EnforcementOutcome.Done)
+                    RaidTelemetry.Action(chatId, "locked", 0);
+            }, TaskScheduler.Default);
         }
 
         private static void Quarantine(long chatId, long userId)
@@ -502,7 +514,7 @@ namespace Enforcer5.Raids
             {
                 ErrorReporter.Report(e, $"Forgetting the raid in {chatId}");
             }
-            RaidTelemetry.Ended(incident, by);
+            RaidTelemetry.Ended(incident, by, ignored: quietly && by.HasValue);
             if (incident.Locked)
             {
                 var job = EnforcementJob.SetPermissions(chatId, incident.SavedPermissions ?? UsualPermissions);
