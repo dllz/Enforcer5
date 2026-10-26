@@ -104,6 +104,31 @@ namespace Enforcer5
             }
         }
 
+        /// <summary>
+        /// How far the member is trusted here (raid detection only ever counts new members), and
+        /// what that is based on: their messages, how long they have been here, and what this group
+        /// asks of an established member.
+        /// </summary>
+        private static string TrustText(long chatId, long userId, System.Xml.Linq.XDocument lang)
+        {
+            try
+            {
+                var d = MemberTrust.DescribeAsync(chatId, userId, () => Methods.IsGroupAdmin(userId, chatId)).GetAwaiter().GetResult();
+                var level = Methods.GetLocaleString(lang, $"trust{d.Level}");
+                var days = d.SinceUtc.HasValue
+                    ? Methods.GetLocaleString(lang, "trustDays", (int)(Clock.UtcNow - d.SinceUtc.Value).TotalDays)
+                    : Methods.GetLocaleString(lang, "trustDaysUnknown");
+                var text = Methods.GetLocaleString(lang, "trustLine", level, d.Messages, days, d.NeedMessages, d.NeedDays);
+                if (d.InSlowLane) text += "\n" + Methods.GetLocaleString(lang, "trustSlowLane");
+                return text;
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Working out the trust level of {userId} in {chatId}");
+                return "";
+            }
+        }
+
         [Command(Trigger = "user", InGroupOnly = true, GroupAdminOnly = true)]
         public static void User(Update update, string[] args)
         {
@@ -124,7 +149,8 @@ namespace Enforcer5
                     new InlineButton(Methods.GetLocaleString(lang, "resetPreWarn"), $"resetPrewarns:{update.Message.Chat.Id}:{userid}"),
                 };
 
-                var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang);
+                var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang)
+                           + "\n" + TrustText(update.Message.Chat.Id, userid, lang);
                 Bot.SendReply(text, update, Key.CreateMarkupFromMenu(userMenu));
             }
             catch (Exception e)

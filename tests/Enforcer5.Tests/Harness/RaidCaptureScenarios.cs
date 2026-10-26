@@ -142,5 +142,29 @@ SELECT a.telegram_user_id, f.sample_reason, f.bare_link, f.script FROM message_f
                 "a busy group: capped at 1000 messages; everyone first seen a day ago, so the shortest stay");
             AssertNoErrors(chat);
         }
-    }
+    
+        [TestMethod]
+        public async Task SlashUser_ShowsHowFarSomeoneIsTrusted()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var regular = chat.Add("Regular");
+            chat.Hashes[$"{chat.ChatId}:users:{regular.Id}", "msgs"] = "500";
+            var newcomer = chat.Add("Newcomer", MemberState.Left);
+            await chat.JoinAsync(newcomer);
+            await chat.SendAsync(newcomer, "hi");
+            var approved = chat.Add("Approved");
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", approved.Id.ToString());
+
+            await chat.SendAsync(admin, $"/user {regular.Id}");
+            StringAssert.Contains(chat.Replies.Last(), "Trust here: established. 500 messages, here since before this was recorded. Established here: 20 messages and 7 days.");
+            await chat.SendAsync(admin, $"/user {newcomer.Id}");
+            StringAssert.Contains(chat.Replies.Last(), "Trust here: new (counts towards raid detection). 1 messages, here 0 days.");
+            await chat.SendAsync(admin, $"/user {approved.Id}");
+            StringAssert.Contains(chat.Replies.Last(), "Trust here: approved");
+            await chat.SendAsync(admin, $"/user {admin.Id}");
+            StringAssert.Contains(chat.Replies.Last(), "Trust here: admin.");
+            AssertNoErrors(chat);
+        }
+}
 }

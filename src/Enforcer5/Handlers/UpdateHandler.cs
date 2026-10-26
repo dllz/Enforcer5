@@ -546,15 +546,19 @@ namespace Enforcer5.Handlers
                     if (updateMessage?.From != null)
                     {
                         Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
-                        var member = $"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}";
-                        var count = await Redis.db.HashIncrementAsync(member, "msgs");
-                        // When they first talked here, for the trust levels. Only known for members
-                        // whose first message comes after this was added; for the others, their
-                        // count says they are not new.
-                        if (count == 1)
-                            _ = Redis.db.HashSetAsync(member, "first", Clock.UtcNow.ToUnixTime(), When.NotExists);
+                        // Messages they wrote here: a join or leave is not one (it made every joiner
+                        // one message closer to established).
                         if (updateMessage.NewChatMembers == null && updateMessage.LeftChatMember == null)
+                        {
+                            var member = $"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}";
+                            var count = await Redis.db.HashIncrementAsync(member, "msgs");
+                            // When they first talked here, for the trust levels. Only known for members
+                            // whose first message comes after this was added; for the others, their
+                            // count says they are not new.
+                            if (count == 1)
+                                _ = Redis.db.HashSetAsync(member, "first", Clock.UtcNow.ToUnixTime(), When.NotExists);
                             RaidCapture.Message(updateMessage, count);
+                        }
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }

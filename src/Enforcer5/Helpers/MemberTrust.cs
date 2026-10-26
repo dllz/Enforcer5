@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
@@ -62,6 +63,26 @@ namespace Enforcer5.Helpers
             var level = Level(chatId, Long(values, 0), Long(values, 1), Long(values, 2), Clock.UtcNow);
             if (level == TrustLevel.New && isAdmin != null && isAdmin()) return TrustLevel.Admin;
             return level;
+        }
+
+        /// <summary>What /user shows: the level and what it is based on.</summary>
+        internal sealed record Description(TrustLevel Level, long Messages, DateTime? SinceUtc, int NeedMessages, int NeedDays, bool InSlowLane);
+
+        /// <summary>The member's level with the counts behind it, for /user. <paramref name="isAdmin"/> as in <see cref="OfAsync"/>.</summary>
+        internal static async Task<Description> DescribeAsync(long chatId, long userId, Func<bool> isAdmin)
+        {
+            var db = Redis.db;
+            var values = await db.HashGetAsync($"{chatId}:users:{userId}", new RedisValue[] { "msgs", "first", "joined" }) ?? Array.Empty<RedisValue>();
+            var level = await OfAsync(chatId, userId, isAdmin);
+            var first = Long(values, 1);
+            var joined = Long(values, 2);
+            var since = new[] { first, joined }.Where(v => v.HasValue).Select(v => v.Value).DefaultIfEmpty().Max();
+            var (needMessages, needDays) = Thresholds(chatId);
+            var slow = false;
+            try { slow = (await Repositories.SlowLane.GetAsync(userId))?.Active(Clock.UtcNow) == true; }
+            catch (Exception e) { ErrorReporter.Report(e, $"Reading the slow lane of {userId}"); }
+            return new Description(level, Long(values, 0) ?? 0,
+                since > 0 ? DateTimeOffset.FromUnixTimeSeconds(since).UtcDateTime : null, needMessages, needDays, slow);
         }
 
         /// <summary>The rule itself, for tests: established or new, from the counts.</summary>

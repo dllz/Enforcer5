@@ -2254,4 +2254,28 @@ Joined: {0} · muted: {1} · banned: {2}</value>
       /{0}
     </value>
   </string>
+  <string key="trustLine">
+    <value>Trust here: {0}. {1} messages, {2}. Established here: {3} messages and {4} days.</value>
+  </string>
+  <string key="trustAdmin">
+    <value>admin</value>
+  </string>
+  <string key="trustApproved">
+    <value>approved (on the auth or watch list)</value>
+  </string>
+  <string key="trustEstablished">
+    <value>established</value>
+  </string>
+  <string key="trustNew">
+    <value>new (counts towards raid detection)</value>
+  </string>
+  <string key="trustDays">
+    <value>here {0} days</value>
+  </string>
+  <string key="trustDaysUnknown">
+    <value>here since before this was recorded</value>
+  </string>
+  <string key="trustSlowLane">
+    <value>In the slow lane for command spam.</value>
+  </string>
 </strings>
