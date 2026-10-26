@@ -12,6 +12,9 @@ namespace Enforcer5.Tests
         /// otherwise resolves next to the test assembly. Must run before anything touches
         /// RegHelper, which reads the environment once in its static constructor.
         /// </summary>
+        [AssemblyCleanup]
+        public static void Cleanup() => Storage.TestPostgres.DropMigratedAsync().GetAwaiter().GetResult();
+
         [AssemblyInitialize]
         public static void Initialize(TestContext context)
         {

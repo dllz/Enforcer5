@@ -83,13 +83,64 @@ namespace Enforcer5.Tests.Storage
             await using var admin = new NpgsqlConnection(Unpooled(baseConnection));
             await admin.OpenAsync();
             await admin.ExecuteAsync($"CREATE SCHEMA \"{schema}\"");
-            return new NpgsqlConnectionStringBuilder(Unpooled(baseConnection)) { SearchPath = schema }.ConnectionString;
+            // synchronous_commit off: the test data is thrown away, and on subprod's disk waiting for
+            // each commit to be flushed costs 250-800 ms (measured 2026-10-26), against 3 ms without.
+            return new NpgsqlConnectionStringBuilder(Unpooled(baseConnection))
+            {
+                SearchPath = schema,
+                Options = "-c synchronous_commit=off"
+            }.ConnectionString;
         }
 
         // Each schema is its own connection string and so its own pool, and pooled connections stay
         // open after the test. Subprod caps the role's connections, so tests do not pool.
         private static string Unpooled(string connectionString) =>
             new NpgsqlConnectionStringBuilder(connectionString) { Pooling = false }.ConnectionString;
+
+        // Migrated schemas handed back by tests, emptied and ready for the next one. Migrating a
+        // fresh schema for every test took most of each harness scenario's time.
+        private static readonly System.Collections.Concurrent.ConcurrentBag<string> Migrated = new();
+        private static readonly System.Collections.Concurrent.ConcurrentBag<string> AllMigrated = new();
+
+        /// <summary>
+        /// A schema with every migration applied and no rows, for a test to use and hand back with
+        /// <see cref="ReleaseMigratedAsync"/>. Reused across tests; dropped when the run ends.
+        /// Skips the test without a database, like <see cref="CreateSchemaAsync"/>.
+        /// </summary>
+        internal static async Task<string> MigratedSchemaAsync()
+        {
+            if (Migrated.TryTake(out var reused)) return reused;
+            var connectionString = await CreateSchemaAsync();
+            await Enforcer5.Storage.SchemaMigrationRunner.ApplyAsync(connectionString);
+            AllMigrated.Add(connectionString);
+            return connectionString;
+        }
+
+        /// <summary>Empties a schema from <see cref="MigratedSchemaAsync"/> and keeps it for the next test.</summary>
+        internal static async Task ReleaseMigratedAsync(string connectionString)
+        {
+            var schema = new NpgsqlConnectionStringBuilder(connectionString).SearchPath;
+            await using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                var tables = (await connection.QueryAsync<string>(
+                    "SELECT quote_ident(table_name) FROM information_schema.tables " +
+                    "WHERE table_schema = @schema AND table_type = 'BASE TABLE' AND table_name <> '__EFMigrationsHistory'",
+                    new { schema })).ToList();
+                if (tables.Count > 0)
+                    await connection.ExecuteAsync($"TRUNCATE {string.Join(", ", tables)} RESTART IDENTITY CASCADE");
+            }
+            Migrated.Add(connectionString);
+        }
+
+        /// <summary>Drops every reused schema. Called once the test run is over.</summary>
+        internal static async Task DropMigratedAsync()
+        {
+            while (AllMigrated.TryTake(out var connectionString))
+            {
+                try { await DropSchemaAsync(connectionString); } catch { /* the run is over either way */ }
+            }
+        }
 
         internal static async Task DropSchemaAsync(string connectionString)
         {

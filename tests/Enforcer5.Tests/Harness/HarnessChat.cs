@@ -130,9 +130,12 @@ namespace Enforcer5.Tests.Harness
 
         private async Task SetUpAsync()
         {
-            _world.ConnectionString = await Storage.TestPostgres.CreateSchemaAsync();
-            await SchemaMigrationRunner.ApplyAsync(_world.ConnectionString);
-            _world.Database = new PostgresDatabase(_world.ConnectionString);
+            _world.ConnectionString = await Storage.TestPostgres.MigratedSchemaAsync();
+            // Pooled, a few connections, closed when the database is disposed at the end: opening an
+            // unpooled connection to subprod costs a few hundred milliseconds, and a raid writes
+            // hundreds of history rows.
+            _world.Database = new PostgresDatabase(new Npgsql.NpgsqlConnectionStringBuilder(_world.ConnectionString)
+                { Pooling = true, MinPoolSize = 0, MaxPoolSize = 4 }.ConnectionString);
             PostgresStorage.UseForTests(_world.Database);
             // Global bans run from memory, loaded from PostgreSQL (empty here) as at startup.
             GlobalBans.ResetForTests();
@@ -419,7 +422,7 @@ namespace Enforcer5.Tests.Harness
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
             if (_world.Database != null) await _world.Database.DisposeAsync();
-            if (_world.ConnectionString != null) await Storage.TestPostgres.DropSchemaAsync(_world.ConnectionString);
+            if (_world.ConnectionString != null) await Storage.TestPostgres.ReleaseMigratedAsync(_world.ConnectionString);
         }
     }
 

@@ -138,8 +138,7 @@ namespace Enforcer5.Tests.Storage
         [TestInitialize]
         public async Task Setup()
         {
-            _connectionString = await TestPostgres.CreateSchemaAsync();
-            await SchemaMigrationRunner.ApplyAsync(_connectionString);
+            _connectionString = await TestPostgres.MigratedSchemaAsync();
             _database = new PostgresDatabase(_connectionString);
             _repo = new PostgresBanHistoryRepository(() => _database);
         }
@@ -148,7 +147,7 @@ namespace Enforcer5.Tests.Storage
         public async Task Cleanup()
         {
             if (_database != null) await _database.DisposeAsync();
-            if (_connectionString != null) await TestPostgres.DropSchemaAsync(_connectionString);
+            if (_connectionString != null) await TestPostgres.ReleaseMigratedAsync(_connectionString);
         }
 
         private Task Ban(long chat, long user, DateTimeOffset at, SanctionKind kind = SanctionKind.Ban, long? actor = null,

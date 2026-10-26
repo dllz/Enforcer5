@@ -59,15 +59,30 @@ namespace Enforcer5.Tests.Harness
                 try
                 {
                     await RunAsync(seed);
+                    Progress($"{seed} ok");
+                }
+                catch (AssertInconclusiveException)
+                {
+                    throw; // no test database: skipped, as every harness scenario is
                 }
                 catch (Exception e)
                 {
-                    failures.Add($"Chaos seed {seed} failed (replay with ENFORCER_CHAOS_SEED={seed}): {e.Message}");
+                    failures.Add($"Chaos seed {seed} failed (replay with ENFORCER_CHAOS_SEED={seed}): {e.Message}" +
+                        (e is AssertFailedException ? "" : $"\n{e.GetType().Name}\n{e.StackTrace}"));
                     Console.Error.WriteLine(failures[^1]);
+                    Progress(failures[^1]);
                 }
             }
             if (failures.Count > 0)
                 Assert.Fail($"{failures.Count} of {seeds.Length} seeds failed:\n" + string.Join("\n", failures.Take(20)));
+        }
+
+        // ENFORCER_CHAOS_PROGRESS names a file each seed's result is added to as it finishes, to
+        // follow a long run; the test's own output only appears at the end.
+        private static void Progress(string line)
+        {
+            var path = Environment.GetEnvironmentVariable("ENFORCER_CHAOS_PROGRESS");
+            if (!string.IsNullOrEmpty(path)) System.IO.File.AppendAllText(path, line + Environment.NewLine);
         }
 
         private static async Task RunAsync(int seed)

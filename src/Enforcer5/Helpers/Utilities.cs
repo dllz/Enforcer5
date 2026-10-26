@@ -333,6 +333,18 @@ namespace Enforcer5.Helpers
             private int _outstanding;
             private bool _ended;
 
+            internal WorkUnit(string name)
+            {
+                Name = name;
+                Live[this] = 0;
+            }
+
+            /// <summary>What dispatched it, for the harness's timeout message.</summary>
+            internal string Name { get; }
+
+            /// <summary>Waiting on the clock now.</summary>
+            internal bool Waiting => Volatile.Read(ref _outstanding) > 0;
+
             internal void WaitStarted()
             {
                 lock (this)
@@ -358,7 +370,17 @@ namespace Enforcer5.Helpers
                     _ended = true;
                     if (_outstanding == 0) Interlocked.Decrement(ref _inFlight);
                 }
+                Live.TryRemove(this, out _);
             }
+        }
+
+        // Every piece of dispatched work not yet finished, for the harness's timeout message.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<WorkUnit, byte> Live = new();
+
+        /// <summary>What dispatched work is still running (not waiting on the clock), by name.</summary>
+        internal static string Busy()
+        {
+            return string.Join(", ", Live.Keys.Where(u => !u.Waiting).GroupBy(u => u.Name).Select(g => $"{g.Key} x{g.Count()}"));
         }
 
         // Set inside dispatched work, so Clock can count it as parked while it waits on the clock.
@@ -386,16 +408,19 @@ namespace Enforcer5.Helpers
         internal static async Task WaitIdleAsync(TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
-            // Idle several times in a row: work that just finished may be about to dispatch more,
-            // and a continuation may be queued but not running yet.
+            // The counts are exact at every moment (work is counted before it is dispatched, and
+            // a wait stops being parked inside the timer that ends it), so idle twice in a row a
+            // moment apart is enough. Checked often: the harness waits here thousands of times.
             var idleTicks = 0;
-            while (idleTicks < 3)
+            while (true)
             {
                 if (DateTime.UtcNow > deadline)
                     throw new TimeoutException(
-                        $"{Volatile.Read(ref _inFlight)} dispatched tasks still running, {Clock.Parked} of them waiting on the clock");
+                        $"{Volatile.Read(ref _inFlight)} dispatched tasks still running, {Clock.Parked} of them waiting on the clock; busy: {Busy()}");
                 idleTicks = Volatile.Read(ref _inFlight) <= Clock.Parked ? idleTicks + 1 : 0;
-                await Task.Delay(idleTicks == 0 ? 5 : 2);
+                if (idleTicks >= 2) return;
+                if (idleTicks == 1) await Task.Yield();
+                else await Task.Delay(1);
             }
         }
 
@@ -408,7 +433,7 @@ namespace Enforcer5.Helpers
         {
             Interlocked.Increment(ref _inFlight);
             Interlocked.Increment(ref _services);
-            var unit = new WorkUnit();
+            var unit = new WorkUnit(name);
             _ = Task.Run(async () =>
             {
                 _unit.Value = unit;
@@ -443,7 +468,7 @@ namespace Enforcer5.Helpers
         private static void Run(SemaphoreSlim gate, Action work, string name)
         {
             Interlocked.Increment(ref _inFlight);
-            var unit = new WorkUnit();
+            var unit = new WorkUnit(name);
             _ = Task.Run(async () =>
             {
                 _unit.Value = unit;
@@ -494,7 +519,7 @@ namespace Enforcer5.Helpers
         internal static void Dispatch(Func<Task> work, [CallerMemberName] string name = "")
         {
             Interlocked.Increment(ref _inFlight);
-            var unit = new WorkUnit();
+            var unit = new WorkUnit(name);
             _ = Task.Run(async () =>
             {
                 _unit.Value = unit;
