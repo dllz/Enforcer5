@@ -42,6 +42,24 @@ namespace Enforcer5.Helpers
 
         public async Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
+            // Many calls are not awaited (fire and forget). The dispatched work that made one counts
+            // as running until the call is done, not only while it waits for its slot: otherwise the
+            // test harness saw it as finished the moment its wait ended and moved time on before the
+            // request went out.
+            var unit = Bot.CurrentWork;
+            unit?.WaitStarted();
+            try
+            {
+                return await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                unit?.WaitEnded();
+            }
+        }
+
+        private async Task<TResponse> SendPacedAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
+        {
             var method = request.MethodName;
             var lane = FloodControl.LaneOf(method);
             if (lane == Lane.Other)

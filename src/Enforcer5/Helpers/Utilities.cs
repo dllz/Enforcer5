@@ -345,6 +345,7 @@ namespace Enforcer5.Helpers
             /// <summary>Waiting on the clock now.</summary>
             internal bool Waiting => Volatile.Read(ref _outstanding) > 0;
 
+            /// <summary>Keeps the work counted as running until <see cref="WaitEnded"/>, even after it ends.</summary>
             internal void WaitStarted()
             {
                 lock (this)
