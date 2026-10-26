@@ -433,7 +433,7 @@ namespace Enforcer5.Raids
                 incident.PeakScore = score;
                 incident.Reasons.AddRange(reasons);
             }
-            RaidTelemetry.Started(incident);
+            RaidTelemetry.Started(Snapshot(incident));
             Save(incident);
             Bot.Dispatch(() =>
             {
@@ -479,7 +479,7 @@ namespace Enforcer5.Raids
                     : new List<long>();
                 incident.Banned += ban.Count;
             }
-            if (firstTime) RaidTelemetry.Activated(incident, by);
+            if (firstTime) RaidTelemetry.Activated(Snapshot(incident), by);
             Save(incident);
             if (lockNow) Bot.Dispatch(() => LockAsync(incident), "RaidLock");
             foreach (var u in ban) BanSuspect(chatId, u);
@@ -581,7 +581,7 @@ namespace Enforcer5.Raids
             {
                 ErrorReporter.Report(e, $"Forgetting the raid in {chatId}");
             }
-            RaidTelemetry.Ended(incident, by, ignored: quietly && by.HasValue);
+            RaidTelemetry.Ended(Snapshot(incident), by, ignored: quietly && by.HasValue);
             if (incident.Locked)
             {
                 var job = EnforcementJob.SetPermissions(chatId, incident.SavedPermissions ?? UsualPermissions);
@@ -707,6 +707,13 @@ namespace Enforcer5.Raids
                 return Task.CompletedTask;
             }, "RaidLinkReport");
             RaidTelemetry.Action(chatId, "link_report", user);
+        }
+
+        // A copy for anything outside this class: the incident's sets and lists change under the
+        // lock while it runs, so nobody else may read them as they are.
+        private static RaidIncident Snapshot(RaidIncident incident)
+        {
+            lock (Lock) return RaidIncident.FromJson(incident.ToJson());
         }
 
         // ---------------------------------------------------------------- persistence
