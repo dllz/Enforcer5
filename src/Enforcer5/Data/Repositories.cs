@@ -1,3 +1,4 @@
+using System;
 using Enforcer5.Helpers;
 
 namespace Enforcer5.Data
@@ -54,6 +55,9 @@ namespace Enforcer5.Data
 #else
             new RedisTempbanRepository(() => Redis.db, "tempbanned");
 #endif
+
+        internal static ISlowLaneRepository SlowLane { get; set; } =
+            new RedisSlowLaneRepository(() => Redis.db, TimeSpan.FromHours(24));
 
         // Per edition: each carries out its own jobs. See Enforcement/EnforcementQueue.
         internal static IEnforcementJournal EnforcementJournal { get; set; } =

@@ -595,6 +595,11 @@ namespace Enforcer5.Helpers
             {
                 return true;
             }
+            // The "no" is cached too: without this every command from a non-admin asked Telegram.
+            if (isAdmin.Equals("false"))
+            {
+                return false;
+            }
             try
             {
                 var admin = Bot.Api.GetChatMember(group, user).Result;                

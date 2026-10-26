@@ -2162,4 +2162,13 @@
       /{0}
     </value>
   </string>
+  <string key="commandsSlowDown">
+    <value>{0}, slow down please. Try again in {1}.</value>
+  </string>
+  <string key="commandsPausedGroup">
+    <value>Too many commands here at once. Commands are paused for everyone except admins for {0}.</value>
+  </string>
+  <string key="commandsSlowLane">
+    <value>{0}, you kept sending commands while asked to slow down, so you are in the slow lane: I answer one command, button or report from you every {1} minutes. After {2} minutes without trying you are back to normal.</value>
+  </string>
 </strings>

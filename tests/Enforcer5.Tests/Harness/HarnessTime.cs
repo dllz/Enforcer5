@@ -13,25 +13,33 @@ namespace Enforcer5.Tests.Harness
     {
         /// <summary>
         /// Waits until everything dispatched is done or waiting on the clock, firing timers that are
-        /// already due, PostgreSQL writes included. Time does not move.
+        /// already due. Time does not move. <paramref name="flush"/> also waits for the PostgreSQL
+        /// writes, which costs a database round trip: leave it off between the messages of a burst.
         /// </summary>
-        internal static async Task SettleAsync(FakeClock clock)
+        internal static async Task SettleAsync(FakeClock clock, bool flush = true)
+        {
+            await RunDueAsync(clock);
+            if (flush) await FlushAsync(clock);
+        }
+
+        // Fires what is due now and waits until all dispatched work is idle again; no flushing,
+        // which costs a database round trip and is only needed before a scenario looks.
+        private static async Task RunDueAsync(FakeClock clock)
         {
             while (true)
             {
                 await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-                await HistoryWriter.FlushAsync();
-                await PrincipalObserver.FlushAsync();
-                var next = clock.NextDue;
-                if (next == null || next > clock.GetUtcNow())
-                {
-                    // Flushing may have dispatched more; once more to be sure.
-                    await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-                    if (clock.NextDue is { } again && again <= clock.GetUtcNow()) continue;
-                    return;
-                }
+                if (clock.NextDue is not { } next || next > clock.GetUtcNow()) return;
                 clock.AdvanceTo(clock.GetUtcNow());
             }
+        }
+
+        // PostgreSQL writes, which may set off more work, until nothing is left.
+        private static async Task FlushAsync(FakeClock clock)
+        {
+            await HistoryWriter.FlushAsync();
+            await PrincipalObserver.FlushAsync();
+            await RunDueAsync(clock);
         }
 
         /// <summary>
@@ -41,11 +49,11 @@ namespace Enforcer5.Tests.Harness
         internal static async Task AdvanceAsync(FakeClock clock, TimeSpan by)
         {
             var target = clock.GetUtcNow() + by;
-            await SettleAsync(clock);
+            await RunDueAsync(clock);
             while (clock.NextDue is { } next && next <= target)
             {
                 clock.AdvanceTo(next);
-                await SettleAsync(clock);
+                await RunDueAsync(clock);
             }
             clock.AdvanceTo(target);
             await SettleAsync(clock);
@@ -58,12 +66,13 @@ namespace Enforcer5.Tests.Harness
         internal static async Task CompleteAsync(FakeClock clock, TimeSpan? limit = null)
         {
             var until = clock.GetUtcNow() + (limit ?? TimeSpan.FromMinutes(10));
-            await SettleAsync(clock);
+            await RunDueAsync(clock);
             while (Bot.PendingWork > 0 && clock.NextDue is { } next && next <= until)
             {
                 clock.AdvanceTo(next);
-                await SettleAsync(clock);
+                await RunDueAsync(clock);
             }
+            await SettleAsync(clock);
         }
     }
 }

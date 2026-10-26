@@ -149,6 +149,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
             Bot.UseClient(Telegram);
             Announcements.ResetForTests();
+            CommandGate.ResetForTests();
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
@@ -285,6 +286,17 @@ namespace Enforcer5.Tests.Harness
             await PressDataAsync(from, message, button.CallbackData);
         }
 
+        /// <summary>A button press handed to the bot without waiting, as part of a burst; see <see cref="Deliver"/>.</summary>
+        internal void DeliverPress(HarnessUser from, Message message, string data) =>
+            Route(new Update
+            {
+                Id = _world.NextUpdateId++,
+                CallbackQuery = new CallbackQuery
+                {
+                    Id = $"cb{Telegram.NextMessageId()}", From = from.ToUser(), Message = message, ChatInstance = "harness", Data = data
+                }
+            });
+
         /// <summary>A button press with exactly <paramref name="data"/>, on <paramref name="message"/>.</summary>
         internal async Task PressDataAsync(HarnessUser from, Message message, string data)
         {
@@ -342,7 +354,7 @@ namespace Enforcer5.Tests.Harness
         /// Waits until everything dispatched is done or waiting on the clock, firing timers that are
         /// already due, PostgreSQL writes included. Time does not move.
         /// </summary>
-        internal Task SettleAsync() => HarnessTime.SettleAsync(Clock);
+        internal Task SettleAsync(bool flush = true) => HarnessTime.SettleAsync(Clock, flush);
 
         /// <summary>
         /// Lets <paramref name="by"/> of simulated time pass: each timer fires at its due time, and

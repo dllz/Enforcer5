@@ -52,6 +52,7 @@ namespace Enforcer5.Tests.Harness
             Bot.UseClient(bot.Telegram);
             Bot.Me = HarnessChat.BotUser;
             Announcements.ResetForTests();
+            CommandGate.ResetForTests();
             ErrorReporter.Observer = report => bot._errors.Enqueue(report);
             EnforcementQueue.ResetForTests();
             EnforcementQueue.Start(bot._queueStop.Token);

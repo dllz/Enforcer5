@@ -105,7 +105,7 @@ namespace Enforcer5
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();
             new Thread(Updater.MonitorUpdates) { IsBackground = true }.Start();
-            new Thread(UpdateHandler.SpamDetection) { IsBackground = true }.Start();
+            CommandGate.StartPruning(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

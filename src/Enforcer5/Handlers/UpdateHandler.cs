@@ -21,9 +21,6 @@ namespace Enforcer5.Handlers
 
     internal static class UpdateHandler
     {
-        // Written by the polling threads and read by SpamDetection() concurrently.
-        internal static ConcurrentDictionary<long, SpamDetector> UserMessages = new ConcurrentDictionary<long, SpamDetector>();
-
         /// <summary>
         /// Entry point for the update consumers. The consumer awaits this, so the work it covers is
         /// what bounds concurrency - which is why only Redis-bound work is awaited here. Callbacks
@@ -215,8 +212,6 @@ namespace Enforcer5.Handlers
                         case MessageType.NewChatMembers:
                             if (update.Message.NewChatMembers != null && update.Message.NewChatMembers.Length > 0)
                             {
-                                // ArabJoinDetection is started from inside, after the spammers
-                                // check, so a rate-limited joiner is skipped exactly as before.
                                 Bot.DispatchAction(() => HandleNewChatMembers(ctx), "HandleNewChatMembers");
                             }
                             break;
@@ -260,8 +255,8 @@ namespace Enforcer5.Handlers
                     x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
                 if (command != null)
                 {
-                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                    if (blocked.HasValue)
+                    // Every known command passes the limiter; unknown ones cost nothing and do nothing.
+                    if (!CommandGate.Admit(update.Message))
                     {
                         return;
                     }
@@ -313,8 +308,7 @@ namespace Enforcer5.Handlers
                 {
                     return;
                 }
-                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                if (blocked.HasValue)
+                if (!CommandGate.Admit(update.Message))
                 {
                     return;
                 }
@@ -330,9 +324,7 @@ namespace Enforcer5.Handlers
                 if (command != null)
                 {
                     Log(update, "text", command);
-                    AddCount(update.Message.From.Id, update.Message.Text);
-                    var blocked = Redis.db.StringGetAsync($"spammers{update.Message.From.Id}").Result;
-                    if (blocked.HasValue)
+                    if (!CommandGate.Admit(update.Message))
                     {
                         return;
                     }
@@ -374,11 +366,8 @@ namespace Enforcer5.Handlers
             var update = ctx.Update;
             try
             {
-                var blocked = Redis.db.StringGetAsync($"spammers{update.Message.NewChatMember.Id}").Result;
-                if (blocked.HasValue)
-                {
-                    return;
-                }
+                // No longer skipped for someone throttled for command spam: that skipped Mute On Join
+                // and the join checks for exactly the accounts most likely to be spammers.
                 Log(update, "chatMember");
                 var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
                 if (isBanned.HasValue)
@@ -390,8 +379,6 @@ namespace Enforcer5.Handlers
                     Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
 #endif
                 }
-                // Matches the original ordering: only reached once the joiner passed the
-                // spammers check above.
                 Bot.Dispatch(() => OnMessage.ArabJoinDetection(ctx));
                 if (update.Message.NewChatMember.Id == Bot.Me.Id)
                 {
@@ -437,34 +424,6 @@ namespace Enforcer5.Handlers
             catch (Exception e)
             {
                 ErrorReporter.Report(e, "NewChatMembers");
-            }
-        }
-
-        private static void AddCount(long id, string command)
-        {
-            try
-            {
-                UserMessages.TryAdd(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
-                UserMessages[id].Messages.Add(new UserMessage(command));
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, "Counting a command for spam detection");
-            }
-        }
-
-        private static void AddCount(int id, Message m)
-        {
-            try
-            {
-                UserMessages.TryAdd(id, new SpamDetector { Messages = new HashSet<UserMessage>() });
-               
-
-
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, "Counting a message for spam detection");
             }
         }
 
@@ -610,121 +569,6 @@ namespace Enforcer5.Handlers
             return input.Split(':');
         }
 
-         internal static void SpamDetection()
-        {
-            while (true)
-            {
-                try
-                {
-                    var temp = UserMessages.ToDictionary(entry => entry.Key, entry => entry.Value);
-                    //var quickRemove = BlockReplies.ToDictionary(entry => entry.Key, entry => entry.Value);
-                    //clone the dictionary
-                    foreach (var key in temp.Keys.ToList())
-                    {
-                        try
-                        {
-                            //drop older messages (1 minute)
-/*                            temp[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddMinutes(-1));
-#if NORMAL
-                            quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-10));
-#endif
-#if PREMIUM
-                            quickRemove[key].Messages.RemoveWhere(x => x.Time < DateTime.Now.AddSeconds(-4));
-#endif*/
-                            //comment this out - if we remove it, it doesn't keep the warns
-                            //if (temp[key].Messages.Count == 0)
-                            //{
-                            //    temp.Remove(key);
-                            //    continue;
-                            //}
-                            //now count, notify if limit hit
-#if NORMAL
-                            if (temp[key].Messages.Count() < 5)
-                            {
-                                temp[key].NotifiedAdmin = false;
-                            }
-#endif
-#if PREMIUM
-                            if (temp[key].Messages.Count() < 10)
-                            {
-                                temp[key].NotifiedAdmin = false;
-                            }
-#endif
-#if NORMAL
-                            if (temp[key].Messages.Count() >= 5) // 20 in a minute
-                            {
-#endif
-#if PREMIUM
-                            if (temp[key].Messages.Count() >= 10) // 20 in a minute
-                            {
-#endif
-#if NORMAL
-                                if (temp[key].Messages.Count < 10)
-                                {
-#endif
-#if PREMIUM
-                                if (temp[key].Messages.Count < 15)
-                                {
-#endif
-                                    if (temp[key].NotifiedAdmin == false)
-                                    {
-                                        try
-                                        {
-                                            Bot.Send($"Please do not spam me. Next time is automated ban.", key);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            ErrorReporter.Report(e, "Spam warning");
-                                        }
-                                        temp[key].NotifiedAdmin = true;
-                                    }
-                                    //Send($"User {key} has been warned for spamming: {temp[key].Warns}\n{temp[key].Messages.GroupBy(x => x.Command).Aggregate("", (a, b) => a + "\n" + b.Count() + " " + b.Key)}",
-                                    //    Para);                                    
-                                    continue;
-                                }
-                                var number = 11;
-#if PREMIUM
-                                number = 15;
-#endif
-                        if ((temp[key].Warns >= 3 || temp[key].Messages.Count > number))
-                                {
-                                    Redis.db.StringSetAsync($"spammers{key}", key, TimeSpan.FromMinutes(10));
-                                    Console.WriteLine($"{key} - Banned for 10 minutes");
-                                    temp[key].Warns = 1;
-                                    temp[key].NotifiedAdmin = false;
-                                    try
-                                    {
-                                        Bot.Send("You have been banned for 10 minutes due to spam", long.Parse(key.ToString()));
-                                        // Deliberate pacing for Telegram's rate limits, and it costs
-                                        // nothing: SpamDetection owns a dedicated thread, so this
-                                        // never holds a thread-pool worker.
-                                        Thread.Sleep(10000);
-                                        Bot.Send(
-                                            $"{long.Parse(key.ToString())}, {Methods.GetName(long.Parse(key.ToString()))}, {Methods.GetUsername(long.Parse(key.ToString()))} has been spam banned for 10 minutes.",
-                                            Bot.ErrorChatId);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        ErrorReporter.Report(e, "Spam ban notice");
-                                    }
-                                }
-
-                                temp[key].Messages.Clear();
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            ErrorReporter.Report(e, $"Spam detection for {key}");
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    ErrorReporter.Report(e, "Spam detection");
-                }
-                Thread.Sleep(1000);
-            }
-        }
         internal static Message Send(string message, long id,
             InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html)
         {
@@ -838,11 +682,9 @@ namespace Enforcer5.Handlers
                                 StringComparison.CurrentCultureIgnoreCase));
                     if (callbacks != null)
                     {                                               
-                        var blocked = Redis.db.StringGetAsync($"spammers{update.From.Id}").Result;
-                        if (blocked.HasValue)
+                        if (!CommandGate.Admit(update))
                         {
                             return;
-                            ;
                         }
                         if (callbacks.DevOnly & !Constants.Devs.Contains(update.From.Id))
                         {

@@ -33,7 +33,7 @@ namespace Enforcer5.Tests.Harness
             foreach (var member in members)
             {
                 chat.Deliver(chat.Text(admin, $"/kick {member.Id}"));
-                await chat.SettleAsync();
+                await chat.SettleAsync(flush: false);
             }
 
             Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Left), "every kick went through");
@@ -61,7 +61,7 @@ namespace Enforcer5.Tests.Harness
             foreach (var member in members)
             {
                 chat.Deliver(chat.Text(admin, $"/ban {member.Id} spam"));
-                await chat.SettleAsync();
+                await chat.SettleAsync(flush: false);
             }
             Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Member), "nothing yet");
 

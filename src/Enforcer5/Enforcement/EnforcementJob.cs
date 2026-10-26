@@ -97,6 +97,8 @@ namespace Enforcer5.Enforcement
         /// <summary>How far a two-call job (a kick) got: 1 once the ban went through.</summary>
         public int Stage { get; set; }
         public int Attempts { get; set; }
+        /// <summary>Not to be carried out before this time: a notice deleted once it has said its piece.</summary>
+        public DateTime? NotBeforeUtc { get; set; }
         public DateTime CreatedUtc { get; set; }
         public DateTime DueUtc { get; set; }
         /// <summary>When Telegram first said the bot lacks the right, while the job waits for it to come back.</summary>

@@ -95,7 +95,15 @@ namespace Enforcer5.Enforcement
             try
             {
                 var done = SubmitAsync(job).GetAwaiter().GetResult();
-                return Clock.Wait(done, CallerWait) ? done.Result : EnforcementResult.Queued;
+                // Real enforcement is what the bot is for: the command that asked for it costs
+                // nothing. Given back as soon as it is queued, so an admin banning raiders quickly
+                // is not slowed while Telegram catches up. The same job already queued, or one
+                // refused at once, was a wasted call and is not.
+                var isNew = job.Completion != null;
+                if (isNew && !(done.IsCompleted && !done.Result.Succeeded)) CommandGate.RefundCurrent();
+                var result = Clock.Wait(done, CallerWait) ? done.Result : EnforcementResult.Queued;
+                if (!result.Succeeded && result.Refusal != Refusal.BotNotAdmin) CommandGate.ChargeBackCurrent();
+                return result;
             }
             catch (Exception e)
             {
@@ -135,7 +143,7 @@ namespace Enforcer5.Enforcement
                     job.Completion = new TaskCompletionSource<EnforcementResult>(TaskCreationOptions.RunContinuationsAsynchronously);
                     job.Context ??= ErrorReporter.Current;
                     job.CreatedUtc = now;
-                    job.DueUtc = now;
+                    job.DueUtc = job.NotBeforeUtc is { } notBefore && notBefore > now ? notBefore : now;
                     job.Sequence = ++_sequence;
                     job.Note.TriggerEventId ??= job.Trigger?.EventId;
                     job.Note.ReportId ??= job.Report?.ReportId;

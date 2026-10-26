@@ -52,7 +52,8 @@ namespace Enforcer5.Helpers
             if (wake.IsCancellationRequested) return Task.FromResult(true);
             if (delay <= TimeSpan.Zero) return Task.FromResult(false);
 
-            var tracked = Bot.InDispatch;
+            var unit = Bot.CurrentWork;
+            var tracked = unit != null;
             var done = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var finished = 0;
             ITimer timer = null;
@@ -64,13 +65,21 @@ namespace Enforcer5.Helpers
             void Finish(bool woken)
             {
                 if (Interlocked.Exchange(ref finished, 1) != 0) return;
-                if (tracked) Interlocked.Decrement(ref _parked);
+                if (tracked)
+                {
+                    Interlocked.Decrement(ref _parked);
+                    unit.WaitEnded();
+                }
                 timer?.Dispose();
                 registration.Dispose();
                 done.TrySetResult(woken);
             }
 
-            if (tracked) Interlocked.Increment(ref _parked);
+            if (tracked)
+            {
+                unit.WaitStarted();
+                Interlocked.Increment(ref _parked);
+            }
             timer = _provider.CreateTimer(_ => Finish(false), null, delay, Timeout.InfiniteTimeSpan);
             if (Volatile.Read(ref finished) != 0) timer.Dispose();
             if (wake.CanBeCanceled) registration = wake.Register(() => Finish(true));

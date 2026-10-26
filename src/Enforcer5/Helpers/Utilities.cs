@@ -322,17 +322,61 @@ namespace Enforcer5.Helpers
         // dispatch.
         private static int _inFlight;
 
+        /// <summary>
+        /// One piece of dispatched work, for the harness's bookkeeping. Work that ends while a wait
+        /// it started is still pending (a Telegram call it did not await, waiting for its slot) stays
+        /// counted until that wait is over, so the harness never takes the waiting call for nothing.
+        /// </summary>
+        internal sealed class WorkUnit
+        {
+            private int _outstanding;
+            private bool _ended;
+
+            internal void WaitStarted()
+            {
+                lock (this)
+                {
+                    if (_ended && _outstanding == 0) Interlocked.Increment(ref _inFlight);
+                    _outstanding++;
+                }
+            }
+
+            internal void WaitEnded()
+            {
+                lock (this)
+                {
+                    _outstanding--;
+                    if (_ended && _outstanding == 0) Interlocked.Decrement(ref _inFlight);
+                }
+            }
+
+            internal void End()
+            {
+                lock (this)
+                {
+                    _ended = true;
+                    if (_outstanding == 0) Interlocked.Decrement(ref _inFlight);
+                }
+            }
+        }
+
         // Set inside dispatched work, so Clock can count it as parked while it waits on the clock.
-        private static readonly AsyncLocal<bool> _inDispatch = new AsyncLocal<bool>();
+        private static readonly AsyncLocal<WorkUnit> _unit = new AsyncLocal<WorkUnit>();
 
         /// <summary>True inside work started by Run, Dispatch or StartService.</summary>
-        internal static bool InDispatch => _inDispatch.Value;
+        internal static bool InDispatch => _unit.Value != null;
+
+        /// <summary>The dispatched work this flow belongs to, or null.</summary>
+        internal static WorkUnit CurrentWork => _unit.Value;
 
         // Background loops started by StartService; they never finish while the bot runs.
         private static int _services;
 
         /// <summary>Dispatched work that has not finished, background loops left out. For the harness.</summary>
         internal static int PendingWork => Volatile.Read(ref _inFlight) - Volatile.Read(ref _services);
+
+        /// <summary>Dispatched work started and not finished, background loops included. For the harness.</summary>
+        internal static int InFlight => Volatile.Read(ref _inFlight);
 
         /// <summary>
         /// Waits until no dispatched work is running: everything still in flight is waiting on the
@@ -363,9 +407,10 @@ namespace Enforcer5.Helpers
         {
             Interlocked.Increment(ref _inFlight);
             Interlocked.Increment(ref _services);
+            var unit = new WorkUnit();
             _ = Task.Run(async () =>
             {
-                _inDispatch.Value = true;
+                _unit.Value = unit;
                 try
                 {
                     while (!stop.IsCancellationRequested)
@@ -389,7 +434,7 @@ namespace Enforcer5.Helpers
                 finally
                 {
                     Interlocked.Decrement(ref _services);
-                    Interlocked.Decrement(ref _inFlight);
+                    unit.End();
                 }
             });
         }
@@ -397,9 +442,10 @@ namespace Enforcer5.Helpers
         private static void Run(SemaphoreSlim gate, Action work, string name)
         {
             Interlocked.Increment(ref _inFlight);
+            var unit = new WorkUnit();
             _ = Task.Run(async () =>
             {
-                _inDispatch.Value = true;
+                _unit.Value = unit;
                 try
                 {
                     try
@@ -430,7 +476,7 @@ namespace Enforcer5.Helpers
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref _inFlight);
+                    unit.End();
                 }
             });
         }
@@ -447,9 +493,10 @@ namespace Enforcer5.Helpers
         internal static void Dispatch(Func<Task> work, [CallerMemberName] string name = "")
         {
             Interlocked.Increment(ref _inFlight);
+            var unit = new WorkUnit();
             _ = Task.Run(async () =>
             {
-                _inDispatch.Value = true;
+                _unit.Value = unit;
                 try
                 {
                     await work();
@@ -460,7 +507,7 @@ namespace Enforcer5.Helpers
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref _inFlight);
+                    unit.End();
                 }
             });
         }

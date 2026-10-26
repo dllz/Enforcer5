@@ -131,7 +131,10 @@ namespace Enforcer5.Tests.Enforcement
 
             var calm = bot.Telegram.Accepted.Single(c => c.ChatId == Calm);
             Assert.IsTrue(calm.At - submitted <= TimeSpan.FromSeconds(1), $"the calm group waited {calm.At - submitted}");
-            Assert.IsTrue(raiders.All(r => bot.Telegram.GetMember(Raided, r) == MemberState.Kicked), "and the raid was dealt with");
+            Assert.IsTrue(raiders.All(r => bot.Telegram.GetMember(Raided, r) == MemberState.Kicked),
+                $"and the raid was dealt with: {raiders.Count(r => bot.Telegram.GetMember(Raided, r) == MemberState.Kicked)} of 300, " +
+                $"{EnforcementQueue.Count} queued, calls {string.Join(",", bot.Telegram.Calls.GroupBy(c => (c.Method, c.Refused)).Select(g => $"{g.Key}={g.Count()}"))}, " +
+                $"last call at {(bot.Telegram.Calls.Max(c => c.At) - submitted).TotalSeconds}s");
             Assert.AreEqual(0, bot.Telegram.LimitRefusals.Count, "under Telegram's moderation limit throughout");
             AssertNoErrors(bot);
         }
