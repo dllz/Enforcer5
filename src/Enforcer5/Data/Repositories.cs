@@ -49,6 +49,10 @@ namespace Enforcer5.Data
         internal static IPrincipalRepository Principals { get; set; } =
             new PostgresPrincipalRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Fed by Helpers/RaidCapture once PostgresStorage is ready.
+        internal static IRaidCaptureRepository RaidCapture { get; set; } =
+            new PostgresRaidCaptureRepository(() => Storage.PostgresStorage.Database);
+
         internal static ITempbanRepository Tempbans { get; set; } =
 #if PREMIUM
             new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");

@@ -69,6 +69,27 @@ namespace Enforcer5.Helpers
             ObservationBatch batch = null;
             try
             {
+                await FlushPrincipalsAsync();
+            }
+            finally
+            {
+                try
+                {
+                    // After the principals, so the accounts and groups it points at exist.
+                    await RaidCapture.FlushAsync();
+                }
+                finally
+                {
+                    FlushGate.Release();
+                }
+            }
+        }
+
+        private static async Task FlushPrincipalsAsync()
+        {
+            ObservationBatch batch = null;
+            try
+            {
                 var (taken, dropped) = Buffer.Take();
                 batch = taken;
                 if (dropped > 0)
@@ -82,10 +103,6 @@ namespace Enforcer5.Helpers
             {
                 ErrorReporter.Report(e, $"Writing {batch?.Accounts.Count} accounts and {batch?.Chats.Count} chats to PostgreSQL; retrying next minute");
                 if (batch != null) Buffer.Restore(batch);
-            }
-            finally
-            {
-                FlushGate.Release();
             }
         }
 

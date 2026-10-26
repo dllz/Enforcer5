@@ -167,6 +167,236 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupJoinEntity", b =>
+                {
+                    b.Property<long>("JoinId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("join_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("JoinId"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long?>("AddedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("added_by_account_id");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("InviteLink")
+                        .HasColumnType("text")
+                        .HasColumnName("invite_link");
+
+                    b.Property<string>("InviteLinkName")
+                        .HasColumnType("text")
+                        .HasColumnName("invite_link_name");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<string>("Source")
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.HasKey("JoinId");
+
+                    b.HasIndex("AddedByAccountId");
+
+                    b.HasIndex(new[] { "AccountId", "JoinedAt" }, "group_joins_account_idx");
+
+                    b.HasIndex(new[] { "GroupId", "JoinedAt" }, "group_joins_group_time_idx");
+
+                    b.HasIndex(new[] { "GroupId", "InviteLink" }, "group_joins_link_idx")
+                        .HasFilter("invite_link IS NOT NULL");
+
+                    b.ToTable("group_joins", null, t =>
+                        {
+                            t.HasCheckConstraint("group_joins_source_check", "source IN ('link', 'added', 'request', 'unknown')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupMemberEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long?>("AddedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("added_by_account_id");
+
+                    b.Property<DateTimeOffset?>("FirstMessageAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_message_at");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<string>("InviteLinkName")
+                        .HasColumnType("text")
+                        .HasColumnName("invite_link_name");
+
+                    b.Property<string>("JoinSource")
+                        .HasColumnType("text")
+                        .HasColumnName("join_source");
+
+                    b.Property<DateTimeOffset?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<DateTimeOffset?>("LastMessageAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_message_at");
+
+                    b.Property<DateTimeOffset?>("LeftAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("left_at");
+
+                    b.Property<long>("MessageCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("message_count");
+
+                    b.HasKey("GroupId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("AddedByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "JoinedAt" }, "group_members_joined_idx");
+
+                    b.HasIndex(new[] { "GroupId", "LastMessageAt" }, "group_members_last_message_idx");
+
+                    b.ToTable("group_members", null, t =>
+                        {
+                            t.HasCheckConstraint("group_members_count_check", "message_count >= 0");
+
+                            t.HasCheckConstraint("group_members_source_check", "join_source IS NULL OR join_source IN ('link', 'added', 'request', 'unknown')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupStatsEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<int>("ActiveMembers")
+                        .HasColumnType("integer")
+                        .HasColumnName("active_members");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("computed_at");
+
+                    b.Property<int>("EstablishedDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("established_days");
+
+                    b.Property<int>("EstablishedMessages")
+                        .HasColumnType("integer")
+                        .HasColumnName("established_messages");
+
+                    b.Property<double>("JoinsPerHour")
+                        .HasColumnType("double precision")
+                        .HasColumnName("joins_per_hour");
+
+                    b.Property<int>("MedianMessages")
+                        .HasColumnType("integer")
+                        .HasColumnName("median_messages");
+
+                    b.Property<double>("MedianTenureDays")
+                        .HasColumnType("double precision")
+                        .HasColumnName("median_tenure_days");
+
+                    b.HasKey("GroupId");
+
+                    b.ToTable("group_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MessageFingerprintEntity", b =>
+                {
+                    b.Property<long>("FingerprintId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("fingerprint_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("FingerprintId"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<bool>("BareLink")
+                        .HasColumnType("boolean")
+                        .HasColumnName("bare_link");
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("text")
+                        .HasColumnName("content_type");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<int>("LinkCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("link_count");
+
+                    b.Property<string>("MediaUniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("media_unique_id");
+
+                    b.Property<string>("SampleReason")
+                        .HasColumnType("text")
+                        .HasColumnName("sample_reason");
+
+                    b.Property<string>("Script")
+                        .HasColumnType("text")
+                        .HasColumnName("script");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<long>("TelegramMessageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_message_id");
+
+                    b.Property<string>("TextHash")
+                        .HasColumnType("text")
+                        .HasColumnName("text_hash");
+
+                    b.HasKey("FingerprintId");
+
+                    b.HasIndex(new[] { "AccountId", "SentAt" }, "message_fingerprints_account_idx");
+
+                    b.HasIndex(new[] { "GroupId", "SentAt" }, "message_fingerprints_group_time_idx");
+
+                    b.HasIndex(new[] { "GroupId", "MediaUniqueId" }, "message_fingerprints_media_idx")
+                        .HasFilter("media_unique_id IS NOT NULL");
+
+                    b.HasIndex(new[] { "GroupId", "TextHash" }, "message_fingerprints_text_idx")
+                        .HasFilter("text_hash IS NOT NULL");
+
+                    b.ToTable("message_fingerprints", null, t =>
+                        {
+                            t.HasCheckConstraint("message_fingerprints_reason_check", "sample_reason IN ('first', 'sample', 'raid')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.ReportActionEntity", b =>
                 {
                     b.Property<long>("ReportActionId")
@@ -803,6 +1033,70 @@ namespace Enforcer5.Storage.Migrations
                         .WithOne()
                         .HasForeignKey("Enforcer5.Storage.GroupEntity", "ChatId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupJoinEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AddedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupMemberEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AddedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupStatsEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Enforcer5.Storage.GroupStatsEntity", "GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MessageFingerprintEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using StackExchange.Redis;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -37,6 +38,11 @@ namespace Enforcer5.Handlers
                 case UpdateType.InlineQuery:
                     PrincipalObserver.Observe(update);
                     Bot.DispatchInteractive(() => HandleInlineQuery(update.InlineQuery), "HandleInlineQuery");
+                    break;
+                case UpdateType.ChatMember:
+                    // Joins and leaves, with the invite link used: for raid detection and its capture.
+                    PrincipalObserver.Observe(update);
+                    MemberEvents.FromChatMember(update.ChatMember);
                     break;
                 default:
                     if (update.Message == null) return;
@@ -132,6 +138,10 @@ namespace Enforcer5.Handlers
                     // allowed to fail: a timeout on one settings hash must not discard the whole
                     // update, which would silently drop commands.
                     var ctx = await MessageContext.BuildAsync(update, receivedAt);
+
+                    // Joins and leaves first, so raid detection counts this join before anything acts on it.
+                    if (ctx.IsGroup && (update.Message.NewChatMembers?.Length > 0 || update.Message.LeftChatMember != null))
+                        MemberEvents.FromServiceMessage(update.Message);
 
                     // Stats and commands run regardless; moderation only on a context we fully read.
                     background.Add(CollectStats(ctx));
@@ -532,7 +542,15 @@ namespace Enforcer5.Handlers
                     if (updateMessage?.From != null)
                     {
                         Redis.db.HashIncrementAsync($"chat:{updateMessage.From.Id}", "msgs");
-                        Redis.db.HashIncrementAsync($"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}", "msgs");
+                        var member = $"{updateMessage.Chat.Id}:users:{updateMessage.From.Id}";
+                        var count = await Redis.db.HashIncrementAsync(member, "msgs");
+                        // When they first talked here, for the trust levels. Only known for members
+                        // whose first message comes after this was added; for the others, their
+                        // count says they are not new.
+                        if (count == 1)
+                            _ = Redis.db.HashSetAsync(member, "first", Clock.UtcNow.ToUnixTime(), When.NotExists);
+                        if (updateMessage.NewChatMembers == null && updateMessage.LeftChatMember == null)
+                            RaidCapture.Message(updateMessage, count);
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }

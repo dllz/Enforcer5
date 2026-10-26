@@ -151,6 +151,8 @@ namespace Enforcer5.Tests.Harness
             Announcements.ResetForTests();
             CommandGate.ResetForTests();
             FloodTracker.ResetForTests();
+            MemberEvents.ResetForTests();
+            MemberTrust.SetNormsForTests(null);
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
@@ -271,6 +273,34 @@ namespace Enforcer5.Tests.Harness
                 NewChatMembers = new[] { user.ToUser() }
             };
         }
+
+        /// <summary>
+        /// The member update Telegram sends admins when <paramref name="user"/> joins: through
+        /// <paramref name="inviteLink"/> (named <paramref name="linkName"/>), added by
+        /// <paramref name="addedBy"/>, or neither. Not yet sent; see <see cref="Deliver(Update)"/>.
+        /// </summary>
+        internal Update MemberJoined(HarnessUser user, string inviteLink = null, string linkName = null, HarnessUser addedBy = null,
+            bool viaRequest = false)
+        {
+            Telegram.SetMember(ChatId, user.Id, MemberState.Member);
+            return new Update
+            {
+                Id = _world.NextUpdateId++,
+                ChatMember = new ChatMemberUpdated
+                {
+                    Chat = ThisChat,
+                    From = (addedBy ?? user).ToUser(),
+                    Date = Clock.UtcNow,
+                    OldChatMember = new ChatMemberLeft { User = user.ToUser() },
+                    NewChatMember = new ChatMemberMember { User = user.ToUser() },
+                    InviteLink = inviteLink == null ? null : new ChatInviteLink { InviteLink = inviteLink, Name = linkName, Creator = HarnessChat.BotUser },
+                    ViaJoinRequest = viaRequest
+                }
+            };
+        }
+
+        /// <summary>Hands any update to the bot without waiting.</summary>
+        internal void Deliver(Update update) => Route(update);
 
         /// <summary>Posts a photo as <paramref name="from"/>; see <see cref="SendAsync"/>.</summary>
         internal Task<Message> SendPhotoAsync(HarnessUser from, string uniqueId = "harness") => PostAsync(Photo(from, uniqueId));

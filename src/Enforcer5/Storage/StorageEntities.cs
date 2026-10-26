@@ -216,4 +216,85 @@ namespace Enforcer5.Storage
         public string Action { get; set; }
         public DateTimeOffset OccurredAt { get; set; }
     }
+
+    // Raid building blocks (not in the approved design; added 2026-10 for raid detection and the
+    // after-the-fact lookup: who joined with whom, from which link, saying what). See
+    // docs/postgres-rollout.md, step 8.
+
+    /// <summary>
+    /// One member of one group as the bot has seen them: when first seen there, the latest join
+    /// (how, and by whom if added), how many messages and when the first and last were. Counts start
+    /// from the Redis message counter the first time a member is written, so existing members are
+    /// not new. The basis of the trust levels.
+    /// </summary>
+    internal sealed class GroupMemberEntity
+    {
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public DateTimeOffset FirstSeenAt { get; set; }
+        public DateTimeOffset? JoinedAt { get; set; }
+        public string JoinSource { get; set; }
+        public string InviteLinkName { get; set; }
+        public long? AddedByAccountId { get; set; }
+        public long MessageCount { get; set; }
+        public DateTimeOffset? FirstMessageAt { get; set; }
+        public DateTimeOffset? LastMessageAt { get; set; }
+        public DateTimeOffset? LeftAt { get; set; }
+    }
+
+    /// <summary>
+    /// Every join: when, how (<c>link</c>, <c>added</c> by a member, <c>request</c> approved,
+    /// <c>unknown</c> when only the service message was seen), the invite link (its name and the link
+    /// itself, which belongs to the group) and who added them. Kept 180 days.
+    /// </summary>
+    internal sealed class GroupJoinEntity
+    {
+        public long JoinId { get; set; }
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public DateTimeOffset JoinedAt { get; set; }
+        public string Source { get; set; }
+        public string InviteLink { get; set; }
+        public string InviteLinkName { get; set; }
+        public long? AddedByAccountId { get; set; }
+    }
+
+    /// <summary>
+    /// What a message was like, never what it said: its type, a hash of its normalised text, the
+    /// id Telegram gives the same file everywhere, the script it was written in and its links. For
+    /// each member's first messages, a sample after that, and everything during a raid
+    /// (<c>sample_reason</c> <c>first</c>, <c>sample</c>, <c>raid</c>). Kept 30 days.
+    /// </summary>
+    internal sealed class MessageFingerprintEntity
+    {
+        public long FingerprintId { get; set; }
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public long TelegramMessageId { get; set; }
+        public DateTimeOffset SentAt { get; set; }
+        public string ContentType { get; set; }
+        public string TextHash { get; set; }
+        public string MediaUniqueId { get; set; }
+        public string Script { get; set; }
+        public int LinkCount { get; set; }
+        public bool BareLink { get; set; }
+        public string SampleReason { get; set; }
+    }
+
+    /// <summary>
+    /// A group's normal, recomputed nightly from <see cref="GroupMemberEntity"/>: what an established
+    /// member there looks like (messages and days, scaled to how active the group is) and how many
+    /// join in a usual hour.
+    /// </summary>
+    internal sealed class GroupStatsEntity
+    {
+        public long GroupId { get; set; }
+        public DateTimeOffset ComputedAt { get; set; }
+        public int ActiveMembers { get; set; }
+        public int MedianMessages { get; set; }
+        public double MedianTenureDays { get; set; }
+        public int EstablishedMessages { get; set; }
+        public int EstablishedDays { get; set; }
+        public double JoinsPerHour { get; set; }
+    }
 }

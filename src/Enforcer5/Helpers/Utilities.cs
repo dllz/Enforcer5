@@ -627,6 +627,8 @@ namespace Enforcer5.Helpers
                 AllowedUpdates = new[]
                 {
                     UpdateType.Message,
+                    // Joins and leaves with the invite link used; only sent to admins. Raid detection.
+                    UpdateType.ChatMember,
                     UpdateType.CallbackQuery,
                     UpdateType.InlineQuery,
                     UpdateType.PreCheckoutQuery,

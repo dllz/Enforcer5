@@ -27,6 +27,7 @@ namespace Enforcer5.Storage
             ConfigureWarnings(modelBuilder);
             ConfigureSanctions(modelBuilder);
             ConfigureGlobalSanctions(modelBuilder);
+            ConfigureRaidCapture(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
         }
 
@@ -226,6 +227,61 @@ namespace Enforcer5.Storage
                 entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasIndex(x => x.AccountId, "global_sanctions_active_idx").IsUnique().HasFilter("status = 'active'");
                 entity.HasIndex(x => x.LegacyKey).IsUnique().HasFilter("legacy_key IS NOT NULL");
+            });
+        }
+
+        private static void ConfigureRaidCapture(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<GroupMemberEntity>(entity =>
+            {
+                entity.ToTable("group_members", table =>
+                {
+                    table.HasCheckConstraint("group_members_count_check", "message_count >= 0");
+                    table.HasCheckConstraint("group_members_source_check",
+                        "join_source IS NULL OR join_source IN ('link', 'added', 'request', 'unknown')");
+                });
+                entity.HasKey(x => new { x.GroupId, x.AccountId });
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AddedByAccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.Property(x => x.MessageCount).HasDefaultValue(0L);
+                entity.HasIndex(x => new { x.GroupId, x.JoinedAt }, "group_members_joined_idx");
+                entity.HasIndex(x => new { x.GroupId, x.LastMessageAt }, "group_members_last_message_idx");
+            });
+
+            modelBuilder.Entity<GroupJoinEntity>(entity =>
+            {
+                entity.ToTable("group_joins", table =>
+                    table.HasCheckConstraint("group_joins_source_check", "source IN ('link', 'added', 'request', 'unknown')"));
+                entity.HasKey(x => x.JoinId);
+                entity.Property(x => x.JoinId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AddedByAccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.GroupId, x.JoinedAt }, "group_joins_group_time_idx");
+                entity.HasIndex(x => new { x.GroupId, x.InviteLink }, "group_joins_link_idx").HasFilter("invite_link IS NOT NULL");
+                entity.HasIndex(x => new { x.AccountId, x.JoinedAt }, "group_joins_account_idx");
+            });
+
+            modelBuilder.Entity<MessageFingerprintEntity>(entity =>
+            {
+                entity.ToTable("message_fingerprints", table =>
+                    table.HasCheckConstraint("message_fingerprints_reason_check", "sample_reason IN ('first', 'sample', 'raid')"));
+                entity.HasKey(x => x.FingerprintId);
+                entity.Property(x => x.FingerprintId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.GroupId, x.SentAt }, "message_fingerprints_group_time_idx");
+                entity.HasIndex(x => new { x.GroupId, x.TextHash }, "message_fingerprints_text_idx").HasFilter("text_hash IS NOT NULL");
+                entity.HasIndex(x => new { x.GroupId, x.MediaUniqueId }, "message_fingerprints_media_idx").HasFilter("media_unique_id IS NOT NULL");
+                entity.HasIndex(x => new { x.AccountId, x.SentAt }, "message_fingerprints_account_idx");
+            });
+
+            modelBuilder.Entity<GroupStatsEntity>(entity =>
+            {
+                entity.ToTable("group_stats");
+                entity.HasKey(x => x.GroupId);
+                entity.HasOne<GroupEntity>().WithOne().HasForeignKey<GroupStatsEntity>(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 

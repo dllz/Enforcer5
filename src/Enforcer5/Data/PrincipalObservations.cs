@@ -155,6 +155,16 @@ namespace Enforcer5.Data
                 Add(Account(inline.From, DateTimeOffset.UtcNow));
                 return;
             }
+            if (update.ChatMember is { } member)
+            {
+                // Someone joining, leaving or being let in: the member, whoever did it, and the group.
+                var when = new DateTimeOffset(DateTime.SpecifyKind(member.Date, DateTimeKind.Utc));
+                if (member.NewChatMember?.User != null) Add(Account(member.NewChatMember.User, null));
+                if (member.From != null && member.From.Id != member.NewChatMember?.User?.Id) Add(Account(member.From, null));
+                var t = ChatObservation.TypeOf(member.Chat.Type);
+                Add(new ChatObservation(member.Chat.Id, t, member.Chat.Title, member.Chat.Username, null, null));
+                return;
+            }
             var message = update.Message;
             if (message == null) return;
             var at = new DateTimeOffset(DateTime.SpecifyKind(message.Date, DateTimeKind.Utc));
