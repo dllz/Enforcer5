@@ -54,5 +54,9 @@ namespace Enforcer5.Data
 #else
             new RedisTempbanRepository(() => Redis.db, "tempbanned");
 #endif
+
+        // Per edition: each carries out its own jobs. See Enforcement/EnforcementQueue.
+        internal static IEnforcementJournal EnforcementJournal { get; set; } =
+            new RedisEnforcementJournal(() => Redis.db, Enforcer5.Helpers.BanHistory.Edition);
     }
 }

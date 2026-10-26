@@ -61,6 +61,7 @@ namespace Enforcer5.Tests.Harness
             internal Mock<IDatabase> Redis = new Mock<IDatabase>();
             internal FakeRedisHashes Hashes = new FakeRedisHashes();
             internal FakeRedisKeys Keys;
+            internal System.Threading.CancellationTokenSource QueueStop = new();
         }
 
         internal long ChatId { get; }
@@ -155,6 +156,22 @@ namespace Enforcer5.Tests.Harness
                 Methods.IntialiseLanguages();
             ErrorReporter.Observer = report => _world.Errors.Enqueue(report);
             Telegram.SetMember(ChatId, BotUser.Id, MemberState.Administrator);
+            Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
+            Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
+            await SettleAsync();
+        }
+
+        /// <summary>
+        /// The bot process dies and starts again: the enforcement queue loses everything in memory
+        /// and reloads its journal from Redis.
+        /// </summary>
+        internal async Task CrashAndRestartAsync()
+        {
+            Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
+            await SettleAsync();
+            _world.QueueStop = new System.Threading.CancellationTokenSource();
+            Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
+            await SettleAsync();
         }
 
         /// <summary>Adds someone to the chat as Telegram would know them.</summary>
@@ -213,16 +230,7 @@ namespace Enforcer5.Tests.Harness
         /// out: messages waiting for their slot under Telegram's limits go out, as they would while
         /// the members typed their next line. At most <paramref name="limit"/> (10 minutes).
         /// </summary>
-        internal async Task CompleteAsync(TimeSpan? limit = null)
-        {
-            var until = Clock.GetUtcNow() + (limit ?? TimeSpan.FromMinutes(10));
-            await SettleAsync();
-            while (Bot.PendingWork > 0 && Clock.NextDue is { } next && next <= until)
-            {
-                Clock.AdvanceTo(next);
-                await SettleAsync();
-            }
-        }
+        internal Task CompleteAsync(TimeSpan? limit = null) => HarnessTime.CompleteAsync(Clock, limit);
 
         /// <summary>
         /// Hands <paramref name="message"/> to the bot without waiting, as Telegram would deliver it
@@ -334,41 +342,13 @@ namespace Enforcer5.Tests.Harness
         /// Waits until everything dispatched is done or waiting on the clock, firing timers that are
         /// already due, PostgreSQL writes included. Time does not move.
         /// </summary>
-        internal async Task SettleAsync()
-        {
-            while (true)
-            {
-                await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-                await HistoryWriter.FlushAsync();
-                await PrincipalObserver.FlushAsync();
-                var next = Clock.NextDue;
-                if (next == null || next > Clock.GetUtcNow())
-                {
-                    // Flushing may have dispatched more; once more to be sure.
-                    await Bot.WaitIdleAsync(TimeSpan.FromSeconds(30));
-                    if (Clock.NextDue is { } again && again <= Clock.GetUtcNow()) continue;
-                    return;
-                }
-                Clock.AdvanceTo(Clock.GetUtcNow());
-            }
-        }
+        internal Task SettleAsync() => HarnessTime.SettleAsync(Clock);
 
         /// <summary>
         /// Lets <paramref name="by"/> of simulated time pass: each timer fires at its due time, and
         /// what it sets off runs to completion (or to its next wait) before time moves on.
         /// </summary>
-        internal async Task AdvanceAsync(TimeSpan by)
-        {
-            var target = Clock.GetUtcNow() + by;
-            await SettleAsync();
-            while (Clock.NextDue is { } next && next <= target)
-            {
-                Clock.AdvanceTo(next);
-                await SettleAsync();
-            }
-            Clock.AdvanceTo(target);
-            await SettleAsync();
-        }
+        internal Task AdvanceAsync(TimeSpan by) => HarnessTime.AdvanceAsync(Clock, by);
 
         /// <summary>The bot's messages to this chat, oldest first.</summary>
         internal IReadOnlyList<string> Replies =>
@@ -377,6 +357,9 @@ namespace Enforcer5.Tests.Harness
         public async ValueTask DisposeAsync()
         {
             if (!_owner) return;
+            _world.QueueStop.Cancel();
+            Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
+            try { await SettleAsync(); } catch (TimeoutException) { }
             ErrorReporter.Observer = _world.PreviousObserver;
             Bot.Api = _world.PreviousApi;
             Announcements.ResetForTests();

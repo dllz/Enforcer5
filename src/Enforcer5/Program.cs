@@ -99,6 +99,9 @@ namespace Enforcer5
             // Global bans live only in PostgreSQL: loaded once it is ready, then kept in memory.
             GlobalBans.Start(Bot.ShutdownToken);
 
+            // Bans, kicks, mutes and deletes: reloads what the journal holds from before a restart.
+            Enforcement.EnforcementQueue.Start(Bot.ShutdownToken);
+
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();
             new Thread(Updater.MonitorUpdates) { IsBackground = true }.Start();

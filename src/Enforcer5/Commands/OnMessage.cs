@@ -453,8 +453,8 @@ namespace Enforcer5
                 }
 
                 var deleted = TryTelegram(() => Bot.DeleteMessage(chatId, messageId), $"Deleting a channel post in {chatId}");
-                var banned = mayBan && TryTelegram(() => Bot.Api.BanChatSenderChat(chatId, channel.Id).Wait(),
-                    $"Banning channel {channel.Id} in {chatId}");
+                var banned = mayBan &&
+                             Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.BanSenderChat(chatId, channel.Id)).Succeeded;
                 if (!deleted && !banned) return;
 
                 Service.LogBotAction(chatId, Methods.GetLocaleString(lang,

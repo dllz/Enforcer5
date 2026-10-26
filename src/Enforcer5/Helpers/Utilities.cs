@@ -956,20 +956,16 @@ namespace Enforcer5.Helpers
         }
 
 
+        /// <summary>
+        /// Deletes a message through the enforcement queue. True once it is gone or certain to go;
+        /// a message already gone counts as deleted. Throws when the bot may not delete it, as it
+        /// always did.
+        /// </summary>
         public static Boolean DeleteMessage(long chatId, int msgid)
         {
-            try
-            {
-                Bot.Api.DeleteMessage(chatId, msgid).Wait();
-                return true;
-            }
-            catch (Exception e)
-            {
-                // Already gone is success as far as callers are concerned.
-                var api = AsApiError(e);
-                if (api != null && api.Message.ToLower().Contains("message to delete not found")) return true;
-                throw;
-            }
+            var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.Delete(chatId, msgid));
+            if (result.Succeeded) return true;
+            throw result.Error ?? new InvalidOperationException($"Deleting {msgid} in {chatId}: {result.Refusal}");
         }
 
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
@@ -1002,63 +998,6 @@ namespace Enforcer5.Helpers
             }
         }
 
-        /// <summary>Permissions granted to a fully muted user - everything off.</summary>
-        private static readonly ChatPermissions MutedPermissions = new ChatPermissions
-        {
-            CanSendMessages = false,
-            CanSendAudios = false,
-            CanSendDocuments = false,
-            CanSendPhotos = false,
-            CanSendVideos = false,
-            CanSendVideoNotes = false,
-            CanSendVoiceNotes = false,
-            CanSendPolls = false,
-            CanSendOtherMessages = false,
-            CanAddWebPagePreviews = false,
-            CanChangeInfo = false,
-            CanInviteUsers = false,
-            CanPinMessages = false,
-            CanManageTopics = false
-        };
-
-        /// <summary>
-        /// Mutes the user, until <paramref name="untilDatetime"/> (UTC) if given, otherwise for good.
-        /// Throws on failure so callers can tell the admin why; see Methods.MuteUser.
-        /// </summary>
-        public static void Mute(long chatId, long userId, DateTime? untilDatetime = null)
-        {
-            Bot.Api.RestrictChatMember(chatId, userId, MutedPermissions, untilDate: untilDatetime).Wait();
-        }
-
-        /// <summary>
-        /// Everything allowed. Telegram reads this as "lift the restriction": the user becomes a
-        /// normal member again and follows the group's own permissions from then on, including later
-        /// changes to them. Restricting to a copy of the group's permissions instead, as this used
-        /// to, leaves the user restricted with a snapshot that never follows those changes.
-        /// </summary>
-        private static readonly ChatPermissions UnrestrictedPermissions = new ChatPermissions
-        {
-            CanSendMessages = true,
-            CanSendAudios = true,
-            CanSendDocuments = true,
-            CanSendPhotos = true,
-            CanSendVideos = true,
-            CanSendVideoNotes = true,
-            CanSendVoiceNotes = true,
-            CanSendPolls = true,
-            CanSendOtherMessages = true,
-            CanAddWebPagePreviews = true,
-            CanChangeInfo = true,
-            CanInviteUsers = true,
-            CanPinMessages = true,
-            CanManageTopics = true
-        };
-
-        /// <summary>Lifts the user's restriction. Throws on failure; see Methods.UnmuteUser.</summary>
-        public static void Unmute(long chatId, long userId)
-        {
-            Bot.Api.RestrictChatMember(chatId, userId, UnrestrictedPermissions).Wait();
-        }
     }
 
     internal static class Redis

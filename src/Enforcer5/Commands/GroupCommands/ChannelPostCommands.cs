@@ -72,14 +72,12 @@ namespace Enforcer5
         private static void BanChannel(Update update, long channelId, string title, XDocument lang)
         {
             var channel = new AllowedChannel(channelId, title ?? LookUpTitle(channelId));
-            try
+            // Through the enforcement queue, which reports anything unexpected.
+            var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.BanSenderChat(update.Message.Chat.Id, channelId));
+            if (!result.Succeeded)
             {
-                Bot.Api.BanChatSenderChat(update.Message.Chat.Id, channelId).Wait();
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Banning channel {channelId}");
-                Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
+                Methods.SendError(Bot.AsApiError(result.Error)?.Message ?? result.Error?.Message ?? result.Refusal.ToString(),
+                    update.Message, lang);
                 return;
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "channelBanned", channel,
@@ -91,14 +89,12 @@ namespace Enforcer5
         private static void UnbanChannel(Update update, long channelId, string title, XDocument lang)
         {
             var channel = new AllowedChannel(channelId, title ?? LookUpTitle(channelId));
-            try
+            // Through the enforcement queue, which reports anything unexpected.
+            var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.UnbanSenderChat(update.Message.Chat.Id, channelId));
+            if (!result.Succeeded)
             {
-                Bot.Api.UnbanChatSenderChat(update.Message.Chat.Id, channelId).Wait();
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Unbanning channel {channelId}");
-                Methods.SendError(Bot.AsApiError(e)?.Message ?? e.Message, update.Message, lang);
+                Methods.SendError(Bot.AsApiError(result.Error)?.Message ?? result.Error?.Message ?? result.Refusal.ToString(),
+                    update.Message, lang);
                 return;
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "channelUnbanned", channel), update);

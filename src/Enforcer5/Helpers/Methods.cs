@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Data;
+using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Newtonsoft.Json;
@@ -80,48 +81,37 @@ namespace Enforcer5.Helpers
         internal static bool KickUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
             WarningRef trigger = null, bool record = true, ReportRef report = null)
         {
+            // A ban lifted at once, through the enforcement queue: two calls, retried until Telegram
+            // has taken them. It used to be a ban, up to ten membership checks and ten unbans.
+            var result = EnforcementQueue.Run(EnforcementJob.Kick(chatId, userId).For(reason, actorId, trigger, report, record));
+            return Answered(result, chatId, doc, "cannotbanadmin");
+        }
 
-            try
+        /// <summary>
+        /// Tells the chat why a job was refused, as the code calling Telegram directly used to, and
+        /// says whether it went through (or certainly will). <paramref name="targetIsAdminKey"/> is
+        /// the string for "that is an admin"; null says nothing.
+        /// </summary>
+        private static bool Answered(EnforcementResult result, long chatId, XDocument doc, string targetIsAdminKey, bool quiet = false)
+        {
+            if (result.Succeeded) return true;
+            if (quiet) return false;
+            switch (result.Refusal)
             {
-                // A kick is a ban followed by an unban; 22.x throws rather than returning false.
-                Bot.Api.BanChatMember(chatId, userId).Wait();
-
-                Redis.db.HashIncrementAsync("bot:general", "kick", 1); //Save the number of kicks made by the bot
-                if (record) BanHistory.Kicked(chatId, userId, reason, actorId, trigger, report);
-                var check = Bot.Api.GetChatMember(chatId, userId).Result;
-                var status = check.Status;
-                var count = 0;
-
-                while (status == ChatMemberStatus.Member && count < 10)
-                {
-                    check = Bot.Api.GetChatMember(chatId, userId).Result;
-                    status = check.Status;
-                    count++;
-                }
-                count = 0;
-                while (status != ChatMemberStatus.Left && count < 10)
-                {
-                    if (count == 9) Thread.Sleep(2000);
-                    Bot.Api.UnbanChatMember(chatId, userId);
-                    check = Bot.Api.GetChatMember(chatId, userId).Result;
-                    status = check.Status;
-                    count++;
-                }
-                return true;
-            }
-            catch (Exception e)
-            {
-                var api = Bot.AsApiError(e);
-                if (api != null && api.Message.Contains("Not enough rights"))
-                {
+                case Refusal.BotNotAdmin:
                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                ErrorReporter.Report(e, $"Kicking {userId} from {chatId}");
-                Methods.SendError(api ?? e, chatId, doc);
-                return false;
+                    break;
+                case Refusal.TargetIsAdmin:
+                    if (targetIsAdminKey != null) Bot.Send(GetLocaleString(doc, targetIsAdminKey), chatId);
+                    break;
+                case Refusal.NotFound:
+                    // The person is not (or no longer) in the chat: nothing to tell.
+                    break;
+                default:
+                    if (result.Error != null) SendError(result.Error, chatId, doc);
+                    break;
             }
-
+            return false;
         }
 
         // Not async void: an exception escaping one of these would reach the thread pool unhandled
@@ -844,60 +834,16 @@ namespace Enforcer5.Helpers
         internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
             WarningRef trigger = null, ReportRef report = null)
         {
-            try
-            {
-                Bot.Api.BanChatMember(chatId, userId).Wait();
-                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, SanctionKind.Ban, reason, actorId, trigger: trigger, report: report);
-                return true;
-            }
-            catch (Exception e)
-            {
-                var api = Bot.AsApiError(e);
-                var message = api?.Message ?? e.Message;
-                if (message.Contains("Not enough rights"))
-                {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                if (message.ToLower().Contains("user is an administrator of the chat"))
-                {
-                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
-                    return false;
-                }
-                ErrorReporter.Report(e, $"Banning {userId} in {chatId}");
-                Methods.SendError(api ?? e, chatId, doc);
-                return false;
-            }
+            var result = EnforcementQueue.Run(EnforcementJob.Ban(chatId, userId).For(reason, actorId, trigger, report));
+            return Answered(result, chatId, doc, "cannotbanadmin");
         }
 
         /// <summary>Tempbans the user until <paramref name="untilDateTime"/> (UTC); see BanUser.</summary>
         public static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
             string reason = null, long? actorId = null)
         {
-            try
-            {
-                Bot.Api.BanChatMember(chatId, userId, untilDateTime).Wait();
-                Redis.db.HashIncrementAsync("bot:general", "ban", 1); //Save the number of kicks made by the bot
-                BanHistory.Banned(chatId, userId, SanctionKind.Tempban, reason, actorId, untilDateTime);
-                return true;
-            }
-            catch (AggregateException e)
-            {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
-                {
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                if (e.InnerExceptions.Any(x => x.Message.ToLower().Contains("user is an administrator of the chat")))
-                {
-                    Bot.Send(GetLocaleString(doc, "cannotbanadmin"), chatId);
-                    return false;
-                }
-                ErrorReporter.Report(e, $"Tempbanning {userId} in {chatId}");
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
-                return false;
-            }
+            var result = EnforcementQueue.Run(EnforcementJob.Ban(chatId, userId, untilDateTime).For(reason, actorId));
+            return Answered(result, chatId, doc, "cannotbanadmin");
         }
 
         public static void AddBanList(long chatId, long userId, string name, string why)
@@ -979,28 +925,9 @@ namespace Enforcer5.Helpers
         internal static bool UnbanUser(long chatId, long userId, XDocument doc, BanEnd end = BanEnd.Unbanned,
             long? actorId = null)
         {
-            try
-            {
-                // 22.x throws on failure, so a single call replaces the old retry-until-true loop.
-                Bot.Api.UnbanChatMember(chatId, userId).Wait();
-                Redis.db.SetRemoveAsync($"chat:{chatId}:bannedlist", userId);
-                BanHistory.Unbanned(chatId, userId, end, actorId);
-                return true;
-
-            }
-            catch (AggregateException e)
-            {
-                if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
-                {
-                    var temp = Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    return false;
-                }
-                ErrorReporter.Report(e, $"Unbanning {userId} in {chatId}");
-                Methods.SendError(e.InnerExceptions[0], chatId, doc);
-                return false;
-            }
+            var result = EnforcementQueue.Run(EnforcementJob.Unban(chatId, userId, end).For(null, actorId));
+            return Answered(result, chatId, doc, null);
         }
-
         public static string GetMediaId(Message msg)
         {
             if (msg.ReplyToMessage != null)
@@ -1341,100 +1268,34 @@ namespace Enforcer5.Helpers
         public static bool MuteUser(long chatId, long userId, XDocument doc, bool newJoiner = false,
             string reason = null, long? actorId = null)
         {
-            try
-            {
-                Bot.Mute(chatId, userId);
-            }
-            catch (Exception e)
-            {
-                return RestrictFailed(e, "Mute", chatId, userId, doc, "cannotmuteadmin", quiet: newJoiner);
-            }
-            Remember(newJoiner
-                ? Repositories.Mutes.MarkJoinerMutedAsync(chatId, userId)
-                : Repositories.Mutes.MarkMutedAsync(chatId, userId), chatId, userId);
-            BanHistory.Muted(chatId, userId, newJoiner ? reason ?? "Mute On Join" : reason, actorId);
-            return true;
+            var job = EnforcementJob.Mute(chatId, userId).For(reason, actorId);
+            job.Note.NewJoiner = newJoiner;
+            return Restricted(EnforcementQueue.Run(job), "Mute", chatId, userId, doc, "cannotmuteadmin", quiet: newJoiner);
         }
 
         /// <summary>Mutes the user until <paramref name="untilDateTime"/> (UTC), when Telegram lifts it.</summary>
         public static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
             string reason = null, long? actorId = null)
         {
-            try
-            {
-                Bot.Mute(chatId, userId, untilDateTime);
-            }
-            catch (Exception e)
-            {
-                return RestrictFailed(e, "Tempmute", chatId, userId, doc, "cannottempmuteadmin");
-            }
-            Remember(Repositories.Mutes.MarkTempMutedAsync(chatId, userId, untilDateTime), chatId, userId);
-            BanHistory.Muted(chatId, userId, reason, actorId, untilDateTime);
-            return true;
+            var result = EnforcementQueue.Run(EnforcementJob.Mute(chatId, userId, untilDateTime).For(reason, actorId));
+            return Restricted(result, "Tempmute", chatId, userId, doc, "cannottempmuteadmin");
         }
 
         /// <summary>Lifts any mute. <paramref name="quiet"/> leaves reporting failures to the caller.</summary>
         public static bool UnmuteUser(long chatId, long userId, XDocument doc, bool quiet = false, long? actorId = null)
         {
-            try
-            {
-                Bot.Unmute(chatId, userId);
-            }
-            catch (Exception e)
-            {
-                return RestrictFailed(e, "Unmute", chatId, userId, doc, "cannotmuteadmin", quiet);
-            }
-            Remember(Repositories.Mutes.ClearAsync(chatId, userId), chatId, userId);
-            BanHistory.Unmuted(chatId, userId, actorId);
-            return true;
+            var result = EnforcementQueue.Run(EnforcementJob.Unmute(chatId, userId).For(null, actorId));
+            return Restricted(result, "Unmute", chatId, userId, doc, "cannotmuteadmin", quiet);
         }
 
-        /// <summary>
-        /// The mute itself already succeeded, so failing to record it is logged rather than reported
-        /// as a failed mute.
-        /// </summary>
-        private static void Remember(Task record, long chatId, long userId)
-        {
-            try
-            {
-                record.GetAwaiter().GetResult();
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Recording the mute of {userId} in {chatId}");
-            }
-        }
-
-        private static bool RestrictFailed(Exception e, string what, long chatId, long userId, XDocument doc,
+        private static bool Restricted(EnforcementResult result, string what, long chatId, long userId, XDocument doc,
             string targetIsAdminKey, bool quiet = false)
         {
-            var api = Bot.AsApiError(e);
-            var description = api?.Message ?? e.Message;
-            var failure = RestrictFailures.Classify(description);
-            if (failure == RestrictFailure.Other)
-            {
-                // Not one of the expected refusals: report it even when quiet, since a quiet
-                // caller only gets false back and cannot report the cause itself.
-                ErrorReporter.Report(e, $"{what} of {userId} in {chatId}");
-            }
-            else
-            {
-                // Expected refusal (bot not admin, target is admin): a group setup issue, not a bug.
-                LogHelper.Error($"{what} failed in {chatId} for {userId}: {description}");
-            }
-            if (quiet) return false;
-            switch (failure)
-            {
-                case RestrictFailure.BotNotAdmin:
-                    Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
-                    break;
-                case RestrictFailure.TargetIsAdmin:
-                    Bot.Send(GetLocaleString(doc, targetIsAdminKey), chatId);
-                    break;
-                default:
-                    SendError(api ?? e, chatId, doc);
-                    break;
-            }
+            if (result.Succeeded) return true;
+            // The queue reported anything unexpected; an expected refusal (bot not admin, target is
+            // admin) is a group setup issue, not a bug.
+            LogHelper.Error($"{what} failed in {chatId} for {userId}: {result.Refusal} {result.Error?.Message}");
+            return Answered(result, chatId, doc, targetIsAdminKey, quiet);
             return false;
         }
     }

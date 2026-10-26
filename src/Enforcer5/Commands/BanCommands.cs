@@ -395,8 +395,9 @@ namespace Enforcer5
                          Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                         try
                         {
-                            // Service messages (joins, title changes) cannot be forwarded.
-                            if (!update.Message.ReplyToMessage.IsServiceMessage)
+                            // Service messages (joins, title changes) cannot be forwarded, and a
+                            // ban by id or @username has no message to forward.
+                            if (update.Message.ReplyToMessage != null && !update.Message.ReplyToMessage.IsServiceMessage)
                             {
                                 Bot.Api.ForwardMessage(update.Message.From.Id, update.Message.Chat.Id,
                                     update.Message.ReplyToMessage.MessageId, disableNotification: true);

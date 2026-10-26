@@ -49,6 +49,32 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task BansDuringAStorm_AreCarriedOutAfterIt_AndRecordedOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var members = Enumerable.Range(0, 3).Select(i => chat.Add($"Member{i}")).ToList();
+            // Messages and moderation both refused; lookups (is this an admin?) still answered.
+            chat.Telegram.StartStorm(c => FakeTelegram.IsMessage(c.Method) || FakeTelegram.IsModeration(c.Method),
+                TimeSpan.FromMinutes(2), retryAfter: 60);
+
+            foreach (var member in members)
+            {
+                chat.Deliver(chat.Text(admin, $"/ban {member.Id} spam"));
+                await chat.SettleAsync();
+            }
+            Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Member), "nothing yet");
+
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(5));
+
+            Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Kicked));
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            var bans = await Dapper.SqlMapper.ExecuteScalarAsync<long>(connection, "SELECT count(*) FROM sanctions WHERE kind = 'ban'");
+            Assert.AreEqual(3L, bans, "each ban recorded once, when Telegram took it");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
         public async Task ABurstOfReplies_NeverEarnsALimit429()
         {
             await using var chat = await HarnessChat.StartAsync();
