@@ -47,7 +47,12 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/LogHelper.cs` | Rotating file log (10MB + one `.old`) written to the tmpfs `LogPath` |
 | `src/Enforcer5/Helpers/Updater.cs` | Staged-update support for DeployBot |
 | `src/Enforcer5/Helpers/MessageExtensions.cs` | Bridges 13.x shapes 22.x dropped (`NewChatMember`, `IsServiceMessage`) |
-| `src/Enforcer5/Handlers/UpdateHandler.cs` | Update routing, spam detection, command dispatch |
+| `src/Enforcer5/Handlers/UpdateHandler.cs` | Update routing, command dispatch |
+| `src/Enforcer5/Helpers/TelegramGateway.cs`, `FloodControl.cs` | Every Telegram call: pacing under Telegram's limits and 429 handling, per lane (see Rate limits) |
+| `src/Enforcer5/Helpers/Clock.cs` | Time for the new code; simulated in the harness |
+| `src/Enforcer5/Enforcement/` | The enforcement queue: every ban, kick, mute, unban, delete and permission change |
+| `src/Enforcer5/Helpers/CommandLimiter.cs`, `CommandGate.cs` | Command, button and @admin limits and the slow lane |
+| `src/Enforcer5/Raids/` | Raid detection, raid mode and raid telemetry; `Helpers/RaidCapture`, `MemberEvents`, `MemberTrust` feed it |
 | `src/Enforcer5/Data/` | Repository interfaces, their Redis and PostgreSQL implementations, and `Repositories` (the composition root) |
 | `src/Enforcer5/Storage/` | PostgreSQL: connection, EF Core schema model and migrations, startup migration runner |
 | `src/Enforcer5/Commands/` | Commands, callbacks, inline queries, menus |
@@ -130,6 +135,39 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
   See `Models/ChannelPosts.cs`.
 
 ---
+
+## Rate limits, enforcement and raids
+
+A raid can get a group deleted, so enforcement must never fail and Telegram must never be given a
+reason to refuse it. Four pieces, outermost first:
+
+- **`TelegramGateway`** wraps `Bot.Api`, so every call (the ~250 direct ones too) goes through
+  `FloodControl`. Lanes: *messages* (send/edit/forward/copy) are paced to 3 per 3s per chat, 20 a
+  minute per group and 25 a second bot-wide, below Telegram's 30, so moderation always has room; a
+  message whose slot is more than 10s away, or whose chat is paused longer than that, fails at once
+  with a 429 (`LocalRateLimitException`). *Moderation* (ban, restrict, delete, permissions) has its
+  own 25 a second and never waits behind a pause: after a 429 it fails at once and the queue retries
+  it. *Answers* to buttons and inline queries wait at most 3s. A 429 pauses that lane in that chat
+  for its `retry_after`. Never `Thread.Sleep` a 429 again: that held enforcement permits for a minute.
+- **`Announcements`**: a plain group message that hits a 429 goes out merged with the others once the
+  pause is over. Messages with buttons and private ones are dropped.
+- **`EnforcementQueue`**: every enforcement action is a job, journaled in Redis
+  (`enforcement:{edition}:jobs`) before the caller hears back, retried after a 429, carried out
+  after a restart. Chats take turns; within one, locks first, then bans and kicks, mutes, deletes,
+  unbans, but a person's jobs keep their order. Callers use `Methods.BanUser`/`KickUser`/... as
+  before; they wait up to 3s and treat "queued" as done. Telegram's "is an admin" is believed for 10
+  minutes and "no rights" makes the chat probed once a minute (jobs wait 10 minutes for the rights).
+  At least once: a job Telegram took just before a crash can run again after it; all are idempotent.
+- **`CommandGate`/`CommandLimiter`**: commands, buttons and @admin reports per user and per group,
+  with the slow lane (`slowlane:{user}` in Redis) instead of a ban. Real enforcement refunds the
+  command's cost, so admins banning raiders are never slowed.
+- **`RaidGuard`** (`Raids/`): signs per group from untrusted members only (`MemberTrust`: admins,
+  the `auth`/`watch` lists and established members never count), raid mode per `RaidMode` (human by
+  default, auto, off; `/raid`, `/raidmode`), state in Redis (`raid:{edition}:{chat}`). A restart
+  forgets the last minute of signs; spam posted then that had not yet added up to a sign is not
+  seen again (the chaos run allows for it).
+
+The cross-process seam (`IFloodSignal`) is a no-op; see `docs/postgres-rollout.md`.
 
 ## Redis
 
@@ -259,13 +297,37 @@ then a scenario checks replies, Telegram calls, Redis hashes, PostgreSQL rows an
 
 It is built for the PostgreSQL rollout and grows with it: every new PostgreSQL feature gets
 scenarios here (category `Harness`). Redis is a loose Moq stand-in (reads return nothing, writes
-are dropped) except for hashes (`FakeRedisHashes`, `chat.Hashes`), which keep their values, so warn
-counters and the tempban schedule work and a scenario seeds group settings there. They need `ENFORCER_TEST_POSTGRES` and are
-skipped otherwise, as in the Docker build. A request `FakeTelegram` does not know throws and shows
-up in `Errors`: add it to the fake when a scenario needs it.
+are dropped) except for hashes (`FakeRedisHashes`, `chat.Hashes`) and strings, sets and sorted sets
+(`FakeRedisKeys`, `chat.Keys`), which keep their values with expiry, so warn counters, the tempban
+schedule, the enforcement journal and the slow lane work and a scenario seeds group settings there.
+They need `ENFORCER_TEST_POSTGRES` and are skipped otherwise, as in the Docker build. A request
+`FakeTelegram` does not know throws and shows up in `Errors`: add it to the fake when a scenario
+needs it.
+
+**Time is simulated** (`FakeClock` behind `Helpers/Clock`). It stands still while an update is
+handled and only moves when the scenario says so (`AdvanceAsync`), firing each timer at its due time
+once all dispatched work is idle or waiting on the clock. `SendAsync`/`JoinAsync`/`PressAsync` let
+time run until their work is done; `Deliver` hands an update over without waiting, for bursts (follow
+with `SettleAsync(flush: false)`). New code that waits must wait on `Clock` (`Clock.Delay`,
+`Clock.WaitAsync`), never `Task.Delay` or `Thread.Sleep`, or the harness cannot see it waiting.
+
+**Telegram's limits are enforced** (`FakeTelegram.Limits`): going over answers 429, and
+`LimitRefusals` lists those; a scenario should end with none. `StartMessageStorm`,
+`StartFullStorm` and `StartStorm` inject 429s; `SetBotCanRestrict` takes the bot's rights away;
+`CrashAndRestartAsync` drops everything in memory and reloads from Redis. `Group` adds more chats to
+the same bot. `SimulatedBot` is the same without PostgreSQL or routing, for the enforcement queue
+tests that run in the Docker build.
+
+**Raids** (category `Raid`): `RaidScenarios`, `RaidTelemetryScenarios` (a recorded raid replays with
+`RaidReplay`), and **`ChaosScenarios`**: seeded random raids across several groups with storms, lost
+rights and crashes, checking every rule after each. It runs 3 seeds by default. **Before pushing a
+change to `Helpers/TelegramGateway`, `FloodControl`, `Enforcement/`, `CommandLimiter` or `Raids/`,
+run 500:** `ENFORCER_CHAOS_RUNS=500 enf-sql subprod --run -- dotnet test Enforcer5.slnx --filter
+FullyQualifiedName~ChaosScenarios` (about an hour). A failure names its seed; replay it alone with
+`ENFORCER_CHAOS_SEED=<seed>`.
 
 `tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
-through `InternalsVisibleTo`. The whole suite runs in about a second.
+through `InternalsVisibleTo`. Without the database the suite runs in about six seconds.
 
 **The Docker build runs the tests** (`Dockerfile`, before `publish`), once per image and so
 once per config. A failing test fails the image build, so CI pushes nothing and DeployBot is

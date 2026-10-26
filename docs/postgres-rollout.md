@@ -38,6 +38,8 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 5 | Kicks and mutes: every kick, mute, tempmute and unmute Enforcer makes is written to `sanctions`; the user-menu warn button bans at max warns when the group says so | as above | Built |
 | 6 | Reports: every report, each action an admin takes from its buttons (delete, warn, kick, ban; several per report), and who solved it; sanctions and warns taken from a report point at it | as above, `reports`, `report_actions` | Built |
 | 7 | Global bans, **cut over**: PostgreSQL is the only store; `/getrekt`, `/getrektu`, `/getrekti`, `/unrekt`, `/rektlist`, `/getuser` and the check on every message use it; old Redis records imported once with SQL | as above, `global_sanctions` | Built |
+| 8 | Raid building blocks: joins, members, message fingerprints, each group's normal, and the lookup for everyone resembling known raiders | `group_joins`, `group_members`, `message_fingerprints`, `group_stats` | Built |
+| 9 | Raid telemetry: every raid and possible raid, with its timeline, for tuning and replay | `raid_incidents`, `raid_events` | Built |
 
 ### Step 2: ban history
 
@@ -166,9 +168,48 @@ had, so the script parses the shapes the old migration branch found (month-, day
 and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose time could not be
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
-Not migrated yet, still Redis only: everything else, including tempban expiry (PostgreSQL is
+Not migrated yet, still Redis only: everything else (raid state and the slow lane included), including tempban expiry (PostgreSQL is
 written, Redis decides), global bans, group settings and everything read back. Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
+
+### Step 8: raid building blocks
+
+New tables, not in the approved design (Daniel, 2026-10-26: new features go on PostgreSQL). Written
+by `Helpers/RaidCapture` with the principal flush once a minute, after the principals so the
+accounts and groups exist; rows whose account or group is unknown are skipped.
+
+- `group_joins`: every join, with how (`link`, `added`, `request`, `unknown` when only the service
+  message was seen), the invite link and its name, and who added them. The service message and the
+  member update (`chat_member`, now among the allowed updates; only sent to admin bots) for one join
+  are one row. Kept 180 days.
+- `group_members`: one row per member per group: first seen, the latest join, message count (the
+  first write starts from Redis's `{chat}:users:{user}` `msgs`, so existing members are not new), first
+  and last message, left.
+- `message_fingerprints`: type, a hash of the text with case, spacing, punctuation and digits taken
+  out (never the text), the file's unique id, the script, link count and whether it is a bare link;
+  for a member's first 20 messages, 1 in 20 after, and every message during a raid. Kept 30 days.
+- `group_stats`: each group's normal, recomputed nightly at 03:00 UTC by whichever edition takes the
+  advisory lock: an established member has the median active member's messages (20 to 1000) and
+  days (3 to 30); fewer than 10 active members: 20 and 7. Also the usual joins an hour.
+- `IRaidCaptureRepository.FindSimilarAsync`: from a few known raiders, everyone in the group who
+  joined by the same link or adder, close in time, silent before joining, with a close account id,
+  the same language or script, the same text or image, bare links, or a similar name (`pg_trgm` when
+  installed, else the same first five letters), with the reasons. A building block: nothing calls
+  it from a command yet.
+
+The trust levels (`Helpers/MemberTrust`) read Redis, so raids are handled without PostgreSQL too:
+`msgs`, `first` (when they first talked, only for members whose first message came after this) and
+`joined` in `{chat}:users:{user}`, plus the `auth` and `watch` lists, against the norms above.
+
+### Step 9: raid telemetry
+
+`Raids/RaidTelemetry` records each incident in `raid_incidents` (trigger, phase reached, when raid
+mode went on and the group was actually locked, how it ended, peak score and reasons, counts) and its
+timeline in `raid_events` (joins, messages by fingerprint, signs, actions, 429s, in milliseconds from
+the start; the minute before it that set it off at negative offsets). People, invite links and
+content are short hashes salted with the incident, so they match within it and mean nothing outside
+it; no ids, no text. Kept 90 days. `/raidprofile` (devs) exports one as JSON; `RaidReplay` in the
+harness plays it into a fresh group, so detection can be tuned on real raids.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 
