@@ -52,6 +52,8 @@ namespace Enforcer5.Tests.Harness
             var seeds = seedSetting != null
                 ? new[] { int.Parse(seedSetting) }
                 : Enumerable.Range(0, runs).Select(i => from + i).ToArray();
+            // Every seed runs; the failures are listed together at the end.
+            var failures = new List<string>();
             foreach (var seed in seeds)
             {
                 try
@@ -60,9 +62,12 @@ namespace Enforcer5.Tests.Harness
                 }
                 catch (Exception e)
                 {
-                    throw new AssertFailedException($"Chaos seed {seed} failed (replay with ENFORCER_CHAOS_SEED={seed}): {e.Message}", e);
+                    failures.Add($"Chaos seed {seed} failed (replay with ENFORCER_CHAOS_SEED={seed}): {e.Message}");
+                    Console.Error.WriteLine(failures[^1]);
                 }
             }
+            if (failures.Count > 0)
+                Assert.Fail($"{failures.Count} of {seeds.Length} seeds failed:\n" + string.Join("\n", failures.Take(20)));
         }
 
         private static async Task RunAsync(int seed)

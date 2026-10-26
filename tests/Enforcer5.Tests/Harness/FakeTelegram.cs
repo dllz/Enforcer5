@@ -39,6 +39,10 @@ namespace Enforcer5.Tests.Harness
         /// <summary>The 429 came from an injected storm, not from going over a limit.</summary>
         internal bool Injected { get; init; }
         internal bool Refused => RetryAfter.HasValue;
+        /// <summary>Telegram's error, when it refused the call for another reason than a 429.</summary>
+        internal string Error { get; init; }
+        /// <summary>Telegram carried it out.</summary>
+        internal bool Succeeded => !Refused && Error == null;
     }
 
     /// <summary>
@@ -103,8 +107,8 @@ namespace Enforcer5.Tests.Harness
 
         internal IReadOnlyList<TelegramCall> Calls => _calls.ToList();
 
-        /// <summary>Calls Telegram accepted (not answered 429).</summary>
-        internal IReadOnlyList<TelegramCall> Accepted => _calls.Where(c => !c.Refused).ToList();
+        /// <summary>Calls Telegram carried out (not answered 429 or refused).</summary>
+        internal IReadOnlyList<TelegramCall> Accepted => _calls.Where(c => c.Succeeded).ToList();
 
         /// <summary>429s that came from going over a limit rather than from an injected storm.</summary>
         internal IReadOnlyList<TelegramCall> LimitRefusals => _calls.Where(c => c.Refused && !c.Injected).ToList();
@@ -180,6 +184,7 @@ namespace Enforcer5.Tests.Harness
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => NewMessage(r.ChatId, r.Text));
+                case EditMessageReplyMarkupRequest r: return Limited("editMessageReplyMarkup", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case DeleteMessageRequest r: return Limited("deleteMessage", r.ChatId, null, null, r, () => Delete(Id(r.ChatId), new[] { r.MessageId }));
                 case DeleteMessagesRequest r: return Limited("deleteMessages", r.ChatId, null, null, r, () => Delete(Id(r.ChatId), r.MessageIds.ToArray()));
                 case AnswerCallbackQueryRequest r: return Limited("answerCallbackQuery", null, null, r.Text, r, () => true);
@@ -236,8 +241,18 @@ namespace Enforcer5.Tests.Harness
                 throw new ApiRequestException($"Too Many Requests: retry after {retryAfter}", 429,
                     new ResponseParameters { RetryAfter = retryAfter });
             }
-            _calls.Enqueue(call);
-            return answer();
+            try
+            {
+                var result = answer();
+                _calls.Enqueue(call);
+                return result;
+            }
+            catch (ApiRequestException e)
+            {
+                // Telegram said no (not enough rights, user is an admin, ...): not carried out.
+                _calls.Enqueue(call with { Error = e.Message });
+                throw;
+            }
         }
 
         // Called with the lock held. Null when the call is within every limit (and counts it).
