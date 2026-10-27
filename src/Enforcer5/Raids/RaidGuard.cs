@@ -56,8 +56,6 @@ namespace Enforcer5.Raids
         private static readonly Dictionary<(long, long), (TrustLevel Level, DateTime At)> TrustSeen = new();
         private static readonly Dictionary<long, (RaidMode Mode, DateTime At)> Modes = new();
         private static readonly TimeSpan TrustFor = TimeSpan.FromMinutes(5);
-        // Who the admins are, per chat, and until when that is believed.
-        private static readonly Dictionary<long, (HashSet<long> Ids, DateTime Until)> Admins = new();
         // The chat's linked channel (0: none), and until when that is believed.
         private static readonly Dictionary<long, (long Id, DateTime Until)> LinkedChannels = new();
         // Members an admin let off (an ignored link report or alert): no suspects again until then.
@@ -478,36 +476,12 @@ namespace Enforcer5.Raids
             return level;
         }
 
-        /// <summary>The chat's admins, one Telegram call per ten minutes; none (for a minute) when Telegram will not say.</summary>
-        private static async Task<HashSet<long>> AdminIdsAsync(long chatId)
-        {
-            var now = Clock.UtcNow;
-            lock (Lock)
-            {
-                if (Admins.TryGetValue(chatId, out var known) && known.Until > now) return known.Ids;
-            }
-            HashSet<long> ids;
-            var until = now + TimeSpan.FromMinutes(10);
-            try
-            {
-                ids = (await Bot.Api.GetChatAdministrators(chatId)).Select(a => a.User.Id).ToHashSet();
-            }
-            catch (Exception e)
-            {
-                // Everyone untrusted counts as untrusted for a minute; established members still count as such.
-                LogHelper.Error($"Could not list the admins of {chatId} for raid detection: {e.Message}");
-                ids = new HashSet<long>();
-                until = now + TimeSpan.FromMinutes(1);
-            }
-            lock (Lock) Admins[chatId] = (ids, until);
-            return ids;
-        }
+        /// <summary>The chat's admins (<see cref="AdminDirectory"/>); none when Telegram has never said.</summary>
+        private static async Task<HashSet<long>> AdminIdsAsync(long chatId) =>
+            (await AdminDirectory.GetAsync(chatId))?.Select(a => a.User.Id).ToHashSet() ?? new HashSet<long>();
 
-        // From what is already known only, never a lookup: for the join path.
-        private static bool IsKnownAdmin(long chatId, long userId)
-        {
-            lock (Lock) return Admins.TryGetValue(chatId, out var known) && known.Until > Clock.UtcNow && known.Ids.Contains(userId);
-        }
+        // A join added by an admin, from the admin list at hand: the join path never waits on Telegram.
+        private static bool IsKnownAdmin(long chatId, long userId) => AdminDirectory.IsKnownAdmin(chatId, userId);
 
         // Untrusted members who showed raid signs, with the messages that showed them: banned at once
         // in raid mode, muted when auto mode is not yet sure, kept for the button otherwise.
@@ -990,7 +964,6 @@ namespace Enforcer5.Raids
                     TrustSeen.Remove(key);
                 foreach (var key in Cleared.Where(p => p.Value <= now).Select(p => p.Key).ToList()) Cleared.Remove(key);
                 foreach (var key in IgnoredUntil.Where(p => p.Value <= now).Select(p => p.Key).ToList()) IgnoredUntil.Remove(key);
-                foreach (var key in Admins.Where(p => p.Value.Until <= now).Select(p => p.Key).ToList()) Admins.Remove(key);
                 foreach (var key in LinkedChannels.Where(p => p.Value.Until <= now).Select(p => p.Key).ToList()) LinkedChannels.Remove(key);
                 foreach (var (chat, pending) in Pending.ToList())
                 {
@@ -1004,6 +977,7 @@ namespace Enforcer5.Raids
                 }
             }
             MentionResolver.Prune();
+            AdminDirectory.Prune();
             // One failing incident must not stop the others ending, or restart the loop.
             foreach (var i in quiet)
             {
@@ -1168,7 +1142,8 @@ namespace Enforcer5.Raids
         {
             try
             {
-                var admins = Bot.Api.GetChatAdministrators(chatId).GetAwaiter().GetResult();
+                var admins = AdminDirectory.Get(chatId);
+                if (admins == null) return "";
                 return string.Join(" ", admins.Where(a => !a.User.IsBot)
                     .Select(a => $"<a href=\"tg://user?id={a.User.Id}\">{a.User.FirstName.FormatHTML()}</a>"));
             }
@@ -1285,7 +1260,6 @@ namespace Enforcer5.Raids
                 Modes.Clear();
                 Pending.Clear();
                 PendingSpamKeys.Clear();
-                Admins.Clear();
                 LinkedChannels.Clear();
                 Cleared.Clear();
                 IgnoredUntil.Clear();
@@ -1293,6 +1267,7 @@ namespace Enforcer5.Raids
             }
             Limits = new RaidLimits();
             MentionResolver.ResetForTests();
+            AdminDirectory.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

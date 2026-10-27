@@ -492,7 +492,7 @@ namespace Enforcer5
 
         private static List<ChatMember> GetModId(long id)
         {
-            var res = Bot.Api.GetChatAdministrators(id).Result;
+            var res = AdminDirectory.Get(id) ?? Bot.Api.GetChatAdministrators(id).Result;
             return res.ToList();
         }
     }

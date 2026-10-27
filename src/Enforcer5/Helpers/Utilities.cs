@@ -658,6 +658,8 @@ namespace Enforcer5.Helpers
                     UpdateType.EditedMessage,
                     // Joins and leaves with the invite link used; only sent to admins. Raid detection.
                     UpdateType.ChatMember,
+                    // The bot's own status and rights, to know at once when an admin fixes them.
+                    UpdateType.MyChatMember,
                     UpdateType.CallbackQuery,
                     UpdateType.InlineQuery,
                     UpdateType.PreCheckoutQuery,

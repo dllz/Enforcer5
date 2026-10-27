@@ -47,6 +47,16 @@ namespace Enforcer5.Handlers
                     var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
                     if (editCtx.Complete) await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
+                case UpdateType.MyChatMember:
+                    // The bot's own status or rights changed: the admin list is asked again, and jobs
+                    // waiting for the rights are tried now rather than at the next probe.
+                    if (update.MyChatMember?.Chat is { } changed)
+                    {
+                        AdminDirectory.Forget(changed.Id);
+                        if (update.MyChatMember.NewChatMember is ChatMemberAdministrator { CanRestrictMembers: true })
+                            Enforcement.EnforcementQueue.RightsChanged(changed.Id);
+                    }
+                    break;
                 case UpdateType.ChatMember:
                     // Joins and leaves, with the invite link used: for raid detection and its capture.
                     PrincipalObserver.Observe(update);

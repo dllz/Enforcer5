@@ -499,6 +499,19 @@ namespace Enforcer5.Enforcement
             foreach (var rider in job.Riders) rider.Completion?.TrySetResult(result);
         }
 
+        /// <summary>The bot was made an admin with the right to restrict: what waits for the rights there is tried now.</summary>
+        internal static void RightsChanged(long chatId)
+        {
+            lock (Lock)
+            {
+                if (!NoRightsSince.Remove(chatId)) return;
+                ChatNotBefore.Remove(chatId);
+                if (ByChat.TryGetValue(chatId, out var jobs))
+                    foreach (var job in jobs.Where(j => j.RefusedSinceUtc != null)) job.DueUtc = Clock.UtcNow;
+            }
+            Wake();
+        }
+
         /// <summary>The bot was told it lacks its rights in <paramref name="chatId"/> and has not succeeded there since.</summary>
         internal static bool LacksRights(long chatId)
         {

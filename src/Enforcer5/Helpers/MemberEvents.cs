@@ -60,6 +60,14 @@ namespace Enforcer5.Helpers
                 var at = RaidCapture.Utc(update.Date);
                 var wasIn = IsIn(update.OldChatMember);
                 var isIn = IsIn(update.NewChatMember);
+                // Promoted or demoted: the admin list is right at once, not within the minute.
+                if (update.NewChatMember is ChatMemberAdministrator or ChatMemberOwner)
+                    AdminDirectory.Promoted(update.Chat.Id, update.NewChatMember);
+                else if (update.OldChatMember is ChatMemberAdministrator or ChatMemberOwner)
+                {
+                    AdminDirectory.Demoted(update.Chat.Id, user.Id);
+                    _ = Redis.db.KeyDeleteAsync($"chat:{update.Chat.Id}:adminses:{user.Id}", CommandFlags.FireAndForget);
+                }
                 // A mute lifted, by us or by hand: the queue no longer takes them as muted.
                 if (update.OldChatMember is ChatMemberRestricted && update.NewChatMember is not ChatMemberRestricted)
                     Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);

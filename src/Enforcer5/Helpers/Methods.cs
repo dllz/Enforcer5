@@ -587,58 +587,28 @@ namespace Enforcer5.Helpers
             return IsGroupAdmin(update.Message.From.Id, update.Message.Chat.Id);
         }
 
+        /// <summary>
+        /// An admin of the group by Telegram (<see cref="AdminDirectory"/>, at most a minute old and
+        /// updated at once when someone is promoted or demoted), or elevated there by an admin
+        /// (<c>chat:{group}:adminses:{user}</c> = true, written by /elevate). Anonymous admins post as
+        /// GroupAnonymousBot, which counts.
+        /// </summary>
         public static bool IsGroupAdmin(long user, long group)
         {
-            //fire off admin request
-            var isAdmin = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
-            if (isAdmin.Equals("true") || user == 1087968824)
-            {
-                return true;
-            }
-            // The "no" is cached too: without this every command from a non-admin asked Telegram.
-            if (isAdmin.Equals("false"))
-            {
-                return false;
-            }
+            if (user == 1087968824) return true;
+            // Only "true" means anything: older code also cached "false" here for five minutes, and
+            // /deelevate wrote a permanent "false" that hid a real admin promoted later.
+            var elevated = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
+            if (elevated.Equals("true")) return true;
             try
             {
-                var admin = Bot.Api.GetChatMember(group, user).Result;                
-                if (admin.Status == ChatMemberStatus.Administrator | admin.Status == ChatMemberStatus.Creator)
-                {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "true", TimeSpan.FromMinutes(10)).Result;
-                    return true;
-                }
-                else
-                {
-                    var set = Redis.db.StringSetAsync($"chat:{group}:adminses:{user}", "false", TimeSpan.FromMinutes(5)).Result;
-                    return false;
-                }
+                if (AdminDirectory.IsAdminAsync(group, user).GetAwaiter().GetResult() is { } known) return known;
+                // Telegram has never listed the admins here: ask about this one member.
+                var member = Bot.Api.GetChatMember(group, user).Result;
+                return member.Status is ChatMemberStatus.Administrator or ChatMemberStatus.Creator;
             }
             catch (Exception e)
             {
-                if (e.Message.Contains("Request timed out"))
-                {
-                    try
-                    {
-                        var Adminlist = Bot.Api.GetChatAdministrators(group).Result;
-                        bool found = false;
-                        foreach (var mem in Adminlist)
-                        {
-                            Redis.db.StringSetAsync($"chat:{group}:adminses:{mem.User.Id}", "true", TimeSpan.FromMinutes(10));
-                            if (mem.User.Id == user)
-                            {
-                                found = true;
-                            }                            
-                        }
-                        return found;
-                    }
-                    catch (Exception exception)
-                    {
-                        ErrorReporter.Report(exception, $"Checking admin list of {group} for {user}");
-                        return false;
-                    }
-                    
-                }
                 ErrorReporter.Report(e, $"Checking whether {user} is admin in {group}");
                 return false;
             }
@@ -656,7 +626,7 @@ namespace Enforcer5.Helpers
 
         public static string GetAdminList(long groupid, XDocument lang)
         {
-            var chatAdmins = Bot.Api.GetChatAdministrators(groupid).Result;
+            var chatAdmins = AdminDirectory.Get(groupid) ?? Bot.Api.GetChatAdministrators(groupid).Result;
             string creater = "Unknown";
             string adminList = "";
             foreach (var member in chatAdmins)

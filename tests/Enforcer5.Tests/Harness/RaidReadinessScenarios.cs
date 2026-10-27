@@ -581,5 +581,78 @@ namespace Enforcer5.Tests.Harness
                 "every bare-link raider dealt with, the lookups that hit the 429 counted as outside");
             AssertOnly429s(chat);
         }
+
+        // ------------------------------------------------------------ the admin list
+
+        private static Update Promotion(HarnessChat chat, HarnessUser user, bool promoted)
+        {
+            chat.Telegram.SetMember(chat.ChatId, user.Id, promoted ? MemberState.Administrator : MemberState.Member);
+            var member = user.ToUser();
+            return new Update
+            {
+                Id = 800000 + (int)(user.Id % 1000) + (promoted ? 0 : 500),
+                ChatMember = new ChatMemberUpdated
+                {
+                    Chat = new Chat { Id = chat.ChatId, Type = ChatType.Supergroup, Title = chat.Title },
+                    From = member,
+                    Date = DateTime.UtcNow,
+                    OldChatMember = promoted ? new ChatMemberMember { User = member } : new ChatMemberAdministrator { User = member },
+                    NewChatMember = promoted ? new ChatMemberAdministrator { User = member } : new ChatMemberMember { User = member }
+                }
+            };
+        }
+
+        [TestMethod]
+        public async Task DuringARaid_TheAdminListIsAskedOnceAMinute_AndNoMemberOneByOne()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            Regulars(chat, 3);
+            var raiders = await RaidAsync(chat, 20, TimeSpan.FromSeconds(1));
+            var alert = Alert(chat);
+            // Raiders press the admins' buttons and try the admins' commands.
+            foreach (var r in raiders)
+            {
+                chat.DeliverPress(r, alert, alert.ReplyMarkup.InlineKeyboard.First().First().CallbackData);
+                chat.Deliver(chat.Text(r, "/raid off"));
+            }
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+
+            Assert.IsNotNull(RaidGuard.IncidentIn(chat.ChatId), "no raider got through");
+            Assert.AreEqual(0, chat.Telegram.Calls.Count(c => c.Method == "getChatMember"), "nobody asked about one by one");
+            Assert.IsTrue(chat.Telegram.Calls.Count(c => c.Method == "getChatAdministrators") <= 2, "the list once, again after the minute at most");
+            await chat.PressAsync(admin, alert, $"raid:{chat.ChatId}:lock");
+            Assert.IsTrue(Locked(chat), "the real admin did");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
+        public async Task ANewAdmin_IsOneAtOnce_AndADemotedOneIsNot()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var helper = chat.Add("Helper");
+            await chat.SendAsync(admin, "/raidmode");
+            await chat.SendAsync(helper, "/raid");
+            Assert.IsNull(RaidGuard.IncidentIn(chat.ChatId), "not an admin yet");
+
+            chat.Deliver(Promotion(chat, helper, promoted: true));
+            await chat.SettleAsync();
+            await chat.SendAsync(helper, "/raid");
+            Assert.IsNotNull(RaidGuard.IncidentIn(chat.ChatId), "an admin the moment Telegram says so");
+            await chat.SendAsync(helper, "/raid off");
+
+            chat.Deliver(Promotion(chat, helper, promoted: false));
+            await chat.SettleAsync();
+            await chat.SendAsync(helper, "/raid");
+            Assert.IsNull(RaidGuard.IncidentIn(chat.ChatId), "and not once demoted");
+
+            // Promoted without the bot hearing of it: an admin within the minute.
+            chat.Telegram.SetMember(chat.ChatId, helper.Id, MemberState.Administrator);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(61));
+            await chat.SendAsync(helper, "/raid");
+            Assert.IsNotNull(RaidGuard.IncidentIn(chat.ChatId));
+            AssertOnly429s(chat);
+        }
     }
 }

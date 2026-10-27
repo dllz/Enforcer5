@@ -83,7 +83,8 @@ namespace Enforcer5
                 var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
                 if (role.Result.Status == ChatMemberStatus.Creator || priv)
                 {
-                    var set = Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "false").Result;
+                    // Removing the elevation; a "false" here used to hide a real admin as well.
+                    Redis.db.KeyDeleteAsync($"chat:{chat}:adminses:{userid}").Wait();
                     Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
                     Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
                     Service.LogCommand(update, update.Message.Text);
