@@ -57,6 +57,18 @@ namespace Enforcer5.Tests.Raids
         }
 
         [TestMethod]
+        public void AMention_IsALinkOnlyWhenItPointsOutside()
+        {
+            var mention = new MessageEntity { Type = MessageEntityType.Mention, Offset = 0, Length = 5 };
+            var alone = Text("@john", mention);
+            var withWords = Text("@john join now", mention);
+            Assert.AreEqual((0, false), MessageFingerprint.LinksIn(alone.Text, alone.Entities, _ => false), "a member: no link");
+            Assert.AreEqual((1, true), MessageFingerprint.LinksIn(alone.Text, alone.Entities, _ => true));
+            Assert.AreEqual((1, true), MessageFingerprint.LinksIn(withWords.Text, withWords.Entities, _ => true), "outside, with two words: still bare");
+            Assert.AreEqual((1, false), MessageFingerprint.LinksIn(withWords.Text, withWords.Entities, _ => null), "not looked up: bare only alone");
+        }
+
+        [TestMethod]
         public void LookalikeLettersAndMarks_HashTheSame()
         {
             var plain = MessageFingerprint.Hash("Earn money from home");

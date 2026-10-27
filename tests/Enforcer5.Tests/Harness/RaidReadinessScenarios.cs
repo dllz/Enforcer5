@@ -432,5 +432,154 @@ namespace Enforcer5.Tests.Harness
             Assert.IsTrue(entrants.All(u => chat.Telegram.GetMember(chat.ChatId, u.Id) != MemberState.Kicked), "nobody banned");
             AssertOnly429s(chat);
         }
+
+        // ------------------------------------------------------------ mentions: inside the group or outside it
+
+        private static Message LinkReport(HarnessChat chat) =>
+            chat.Telegram.SentMessages.LastOrDefault(m => m.Text?.Contains("posted nothing but a link") == true);
+
+        private static HarnessUser Member(HarnessChat chat, string name, string username)
+        {
+            var member = chat.Add(name, username: username);
+            chat.Hashes[$"{chat.ChatId}:users:{member.Id}", "msgs"] = "3";
+            chat.Hashes["bot:usernames", "@" + username] = member.Id.ToString();
+            return member;
+        }
+
+        [TestMethod]
+        public async Task ANewcomerPingingAMember_IsNoLink_ButAdvertisingAChannelIs()
+        {
+            await using var chat = await HarnessChat.StartAsync(username: "harnessgroup");
+            chat.Add("Admin", MemberState.Administrator);
+            Member(chat, "John", "john");
+            // Someone the bot knows, who is not in this group.
+            var stranger = chat.Group(-1009999).Add("Stranger", username: "scamdm");
+            chat.Hashes["bot:usernames", "@scamdm"] = stranger.Id.ToString();
+            chat.Telegram.AddPublicChat("cryptogems", -1007777);
+
+            var newcomer = chat.Add("Newcomer", MemberState.Left);
+            await chat.JoinAsync(newcomer);
+            await chat.PostAsync(WithMentions(chat, newcomer, "@john"));
+            await chat.PostAsync(WithMentions(chat, newcomer, "@harnessgroup"));
+            Assert.IsNull(LinkReport(chat), "a member and the group itself are inside");
+
+            var second = chat.Add("Second", MemberState.Left);
+            await chat.JoinAsync(second);
+            await chat.PostAsync(WithMentions(chat, second, "@cryptogems"));
+            Assert.IsNotNull(LinkReport(chat), "a channel elsewhere is advertising");
+
+            var third = chat.Add("Third", MemberState.Left);
+            await chat.JoinAsync(third);
+            await chat.PostAsync(WithMentions(chat, third, "@scamdm join now"));
+            StringAssert.Contains(LinkReport(chat).Text, "Third", "and so is someone who is not in the group");
+
+            var fourth = chat.Add("Fourth", MemberState.Left);
+            await chat.JoinAsync(fourth);
+            await chat.PostAsync(WithMentions(chat, fourth, "@nobodyknowsthisname"));
+            StringAssert.Contains(LinkReport(chat).Text, "Fourth", "and a name nobody knows");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
+        public async Task TheLinkedChannel_AndAMemberWhoNeverTalked_AreInside()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            chat.Telegram.AddPublicChat("ournews", -1005555);
+            chat.Telegram.SetLinkedChannel(chat.ChatId, -1005555);
+            // In the group, but has never posted here: Telegram says so.
+            var lurker = chat.Add("Lurker", username: "lurker");
+            chat.Hashes["bot:usernames", "@lurker"] = lurker.Id.ToString();
+
+            var newcomer = chat.Add("Newcomer", MemberState.Left);
+            await chat.JoinAsync(newcomer);
+            await chat.PostAsync(WithMentions(chat, newcomer, "@ournews"));
+            await chat.PostAsync(WithMentions(chat, newcomer, "@lurker"));
+
+            Assert.IsNull(LinkReport(chat));
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
+        public async Task AutoMode_NewcomersThankingAMemberAlike_AreNotSpammers()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            RaidGuard.SetMode(chat.ChatId, RaidMode.Auto);
+            Member(chat, "John", "john");
+            var newcomers = new List<HarnessUser>();
+            for (var i = 0; i < 6; i++)
+            {
+                var n = chat.Add($"Newcomer{i}", MemberState.Left);
+                newcomers.Add(n);
+                await chat.JoinAsync(n);
+                await chat.AdvanceAsync(TimeSpan.FromMinutes(2));
+            }
+            foreach (var n in newcomers)
+            {
+                chat.Deliver(WithMentions(chat, n, "Thank you @john for adding me to this lovely group today"));
+                await chat.AdvanceAsync(TimeSpan.FromSeconds(3));
+            }
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+
+            Assert.IsTrue(newcomers.All(n => chat.Telegram.GetMember(chat.ChatId, n.Id) == MemberState.Member), "nobody muted or banned");
+            Assert.IsTrue(newcomers.All(n => chat.Telegram.MessagesFrom(chat.ChatId, n.Id).Count == 1), "nothing deleted");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
+        public async Task AutoMode_ARaidAdvertisingOneChannel_LooksItUpOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            RaidGuard.SetMode(chat.ChatId, RaidMode.Auto);
+            Regulars(chat, 3);
+            chat.Telegram.AddPublicChat("cryptogems", -1007777);
+            var raiders = new List<HarnessUser>();
+            for (var i = 0; i < 25; i++)
+            {
+                var r = chat.Add($"Raider{i}", MemberState.Left);
+                raiders.Add(r);
+                chat.Deliver(chat.Join(r));
+                await chat.AdvanceAsync(TimeSpan.FromSeconds(1));
+                chat.Deliver(WithMentions(chat, r, $"Free signals every day at @cryptogems, join now {i}"));
+            }
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+
+            Assert.IsTrue(raiders.All(r => chat.Telegram.GetMember(chat.ChatId, r.Id) == MemberState.Kicked), "every raider banned");
+            Assert.AreEqual(1, chat.Telegram.Calls.Count(c => c.Method == "getChat" && (c.Request as Telegram.Bot.Requests.GetChatRequest)?.ChatId.Username != null),
+                "the channel looked up once, then known");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
+        public async Task MentionLookups_GoThroughAQueue_PacedAndThroughA429()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            RaidGuard.SetMode(chat.ChatId, RaidMode.Auto);
+            var raiders = new List<HarnessUser>();
+            for (var i = 0; i < 30; i++)
+            {
+                var r = chat.Add($"Raider{i}", MemberState.Left);
+                raiders.Add(r);
+                await chat.JoinAsync(r);
+            }
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(5));
+            chat.Telegram.StartStorm(c => c.Method == "getChat", TimeSpan.FromSeconds(2), retryAfter: 2);
+            // Each advertises a different account: thirty lookups at once.
+            foreach (var r in raiders) chat.Deliver(WithMentions(chat, r, $"@promo{r.Id}"));
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(1));
+
+            var lookups = chat.Telegram.Calls.Where(c => c.Method == "getChat" && (c.Request as Telegram.Bot.Requests.GetChatRequest)?.ChatId.Username != null)
+                .Select(c => c.At).OrderBy(t => t).ToList();
+            Assert.IsTrue(lookups.Count >= 30, "every name looked up");
+            Assert.IsTrue(chat.Telegram.Calls.Any(c => c.Method == "getChat" && c.RetryAfter != null), "the storm was hit");
+            var busiest = lookups.Max(t => lookups.Count(o => o >= t && o < t + TimeSpan.FromSeconds(1)));
+            Assert.IsTrue(busiest <= Enforcer5.Raids.MentionResolver.TelegramPerSecond, $"paced: {busiest} in a second");
+            Assert.IsTrue(raiders.All(r => chat.Telegram.GetMember(chat.ChatId, r.Id) is MemberState.Kicked or MemberState.Restricted),
+                "every bare-link raider dealt with, the lookups that hit the 429 counted as outside");
+            AssertOnly429s(chat);
+        }
     }
 }

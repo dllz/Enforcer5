@@ -220,8 +220,13 @@ namespace Enforcer5.Raids
         /// post edited into spam later is seen too. Cheap unless the message looks like a sign: the
         /// trust lookup (a few Redis reads) only happens for bare links, content several people
         /// posted, and joiners posting at once.
+        /// <para>
+        /// An @mention from an untrusted member is a link only when it points outside the group
+        /// (<see cref="MentionResolver"/>). When that is not known yet, the message is looked at again
+        /// once the lookup queue has answered (<paramref name="mentionsLookedUp"/>, as of <paramref name="at"/>).
+        /// </para>
         /// </summary>
-        internal static async Task OnMessageAsync(MessageContext ctx, bool edited = false)
+        internal static async Task OnMessageAsync(MessageContext ctx, bool edited = false, DateTime? at = null, bool mentionsLookedUp = false)
         {
             try
             {
@@ -231,8 +236,39 @@ namespace Enforcer5.Raids
                 var chatId = ctx.ChatId;
                 var active = IsActive(chatId);
                 if (!active && ModeOf(chatId) == RaidMode.Off) return;
-                var now = Clock.UtcNow;
-                var print = MessageFingerprint.Of(message);
+                var now = at ?? Clock.UtcNow;
+                Func<MessageEntity, bool?> mentionOutside = null;
+                var mentions = MentionResolver.MentionsIn(message);
+                if (mentions.Count > 0 && await TrustOfAsync(chatId, user) == TrustLevel.New)
+                {
+                    var chatUsername = message.Chat.Username;
+                    var unknown = mentions.Where(m => MentionResolver.Known(chatId, m, chatUsername) == null).ToList();
+                    if (unknown.Count > 0 && !mentionsLookedUp)
+                    {
+                        var lookups = unknown.Select(m => MentionResolver.ResolveAsync(chatId, m, chatUsername)).ToList();
+                        Bot.Dispatch(async () =>
+                        {
+                            // Parked: it only waits for the lookup queue, which is dispatched work of its own.
+                            Clock.Park();
+                            try { await Task.WhenAll(lookups); }
+                            finally { Clock.Unpark(); }
+                            await OnMessageAsync(ctx, edited, now, mentionsLookedUp: true);
+                        }, "RaidMentions");
+                        return;
+                    }
+                    var text = message.Text ?? message.Caption ?? "";
+                    mentionOutside = e =>
+                    {
+                        var mention = e.Type == MessageEntityType.TextMention && e.User != null
+                            ? new Mention(null, e.User.Id)
+                            : e.Offset >= 0 && e.Offset + e.Length <= text.Length && e.Length > 1
+                                ? new Mention(text.Substring(e.Offset + 1, e.Length - 1).ToLowerInvariant(), null)
+                                : null;
+                        // Still not known (the queue was full): outside, as advertising is.
+                        return mention == null || MentionResolver.Known(chatId, mention, chatUsername) != MentionPlace.Inside;
+                    };
+                }
+                var print = MessageFingerprint.Of(message, mentionOutside);
                 var key = ContentKey(message, print);
                 var harmful = key != null && IsHarmfulContent(message, print);
                 var sketch = key != null && print.MediaUniqueId == null ? MessageFingerprint.Sketch(message.Text ?? message.Caption) : null;
@@ -967,6 +1003,7 @@ namespace Enforcer5.Raids
                     if (keys.Count == 0) PendingSpamKeys.Remove(chat);
                 }
             }
+            MentionResolver.Prune();
             // One failing incident must not stop the others ending, or restart the loop.
             foreach (var i in quiet)
             {
@@ -1251,6 +1288,7 @@ namespace Enforcer5.Raids
                 SpamSketches.Clear();
             }
             Limits = new RaidLimits();
+            MentionResolver.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

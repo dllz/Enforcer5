@@ -38,7 +38,7 @@ namespace Enforcer5.Tests.Harness
             public RaidMode Mode;
             public int RaidStart;      // step the raid starts, -1 for none
             public int RaidSize;
-            public string Style;       // picture, text, link, flood
+            public string Style;       // picture, text, link, flood, mention
             public int PressAfter;     // human mode: steps until the admin locks
             public int? AlertSeenAt;
             public bool Pressed;
@@ -115,7 +115,7 @@ namespace Enforcer5.Tests.Harness
                     Mode = rnd.Next(2) == 0 ? RaidMode.Auto : RaidMode.Human,
                     RaidStart = rnd.Next(4) == 0 ? -1 : rnd.Next(2, 20),
                     RaidSize = rnd.Next(12, 40),
-                    Style = new[] { "picture", "text", "link", "flood" }[rnd.Next(4)],
+                    Style = new[] { "picture", "text", "link", "flood", "mention" }[rnd.Next(5)],
                     PressAfter = rnd.Next(1, 15)
                 };
                 RaidGuard.SetMode(chat.ChatId, plan.Mode);
@@ -196,6 +196,12 @@ namespace Enforcer5.Tests.Harness
                                 case "picture": chat.Deliver(chat.Photo(raider, uniqueId: $"scam{seed}")); break;
                                 case "text": chat.Deliver(chat.Text(raider, "Earn 500 dollars a day, message me now")); break;
                                 case "link": chat.Deliver(chat.Text(raider, "https://t.me/+cheapfollowers")); break;
+                                case "mention":
+                                    // A channel elsewhere, looked up once through the queue.
+                                    var ad = chat.Text(raider, $"Free signals at @promo{seed} join now");
+                                    ad.Entities = new[] { new Telegram.Bot.Types.MessageEntity { Type = Telegram.Bot.Types.Enums.MessageEntityType.Mention, Offset = 16, Length = $"@promo{seed}".Length } };
+                                    chat.Deliver(ad);
+                                    break;
                                 default:
                                     for (var m = 0; m < 6; m++) chat.Deliver(chat.Text(raider, $"buy now {m} {rnd.Next()}"));
                                     break;

@@ -22,6 +22,14 @@ group's `auth` or `watch` lists, not established members; `/user` shows anyone's
 A score of 2 is a possible raid, 4 a raid. Edited messages are checked too, and channels posting
 in the group are treated like newcomers (the group's linked channel never is).
 
+An @mention counts as a link only when it points outside the group: a channel, group or bot
+elsewhere, someone who is not a member, or a name nobody knows. A member, the group itself, its
+linked channel and @admin are conversation. A newcomer's mention is looked up through one queue for
+the whole bot (Redis first: `bot:usernames` and the member's `{chat}:users:{id}`; then Telegram, at
+most 10 lookups a second, pausing after a 429), and the answer is kept: outside for 6 hours, inside
+for an hour, a failed lookup (counted as outside) for a minute. During a raid the advertised name is
+looked up once; every later message with it is checked from memory.
+
 **Human mode** (default): the bot tags every admin with *Possible raid* and four buttons:
 
 - **Lock the group**: raid mode with everything: only admins can post, everyone joining is muted

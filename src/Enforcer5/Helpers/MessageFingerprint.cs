@@ -20,32 +20,39 @@ namespace Enforcer5.Helpers
         private static readonly Regex LinkPattern = new Regex(@"(https?://\S+|t\.me/\S+|telegram\.me/\S+|www\.\S+)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        internal static MessageFingerprint Of(Message message)
+        internal static MessageFingerprint Of(Message message) => Of(message, null);
+
+        /// <summary>
+        /// As <see cref="Of(Message)"/>, with what is known of where each @mention points
+        /// (<paramref name="mentionOutside"/>: true outside the group, false inside it, null not known).
+        /// A mention inside the group is a word like any other; one outside it is a link; one not known
+        /// is a link, but a bare link only when there is nothing else in the message.
+        /// </summary>
+        internal static MessageFingerprint Of(Message message, Func<MessageEntity, bool?> mentionOutside)
         {
             var text = message.Text ?? message.Caption ?? "";
             var entities = message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>();
-            // "@admin" is how members report, not a link to anywhere.
-            var linkEntities = entities.Count(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink ||
-                                                   e.Type == MessageEntityType.Mention && !IsReportMention(text, e));
-            var linkTexts = LinkPattern.Matches(text).Count;
-            var links = Math.Max(linkEntities, linkTexts);
+            var (links, bare) = LinksIn(text, entities, mentionOutside);
             return new MessageFingerprint(
                 ContentTypeOf(message),
                 Hash(text),
                 MediaIdOf(message),
                 ScriptOf(text),
                 links,
-                links > 0 && IsBareLink(text, entities));
+                bare);
         }
 
-        private static bool IsReportMention(string text, MessageEntity e)
+        /// <summary>"@admin" and the like: how members report, not a mention of anyone.</summary>
+        internal static bool IsReportMention(string text, MessageEntity e)
         {
-            if (e.Offset < 0 || e.Offset + e.Length > text.Length) return false;
+            if (e.Type != MessageEntityType.Mention || e.Offset < 0 || e.Offset + e.Length > text.Length) return false;
             var mention = text.Substring(e.Offset, e.Length);
             return mention.Equals("@admin", StringComparison.OrdinalIgnoreCase) ||
                    mention.Equals("@admins", StringComparison.OrdinalIgnoreCase) ||
                    mention.Equals("@pingall", StringComparison.OrdinalIgnoreCase);
         }
+
+        private static bool IsMention(MessageEntity e) => e.Type is MessageEntityType.Mention or MessageEntityType.TextMention;
 
         /// <summary>The kind of message, as the flood exceptions name them.</summary>
         internal static string ContentTypeOf(Message message)
@@ -130,22 +137,36 @@ namespace Enforcer5.Helpers
         /// True when the message is nothing but links, give or take two words; or nothing but a
         /// mention, as channel ads are ("@someone thanks" is a reply, not a link post).
         /// </summary>
-        internal static bool IsBareLink(string text, MessageEntity[] entities)
+        internal static bool IsBareLink(string text, MessageEntity[] entities) => LinksIn(text, entities, null).Bare;
+
+        /// <summary>
+        /// How many links the text has, and whether it is nothing but links give or take two words.
+        /// Mentions count by <paramref name="mentionOutside"/>, as in <see cref="Of(Message, Func{MessageEntity, bool?})"/>.
+        /// </summary>
+        internal static (int Links, bool Bare) LinksIn(string text, MessageEntity[] entities, Func<MessageEntity, bool?> mentionOutside)
         {
-            if (string.IsNullOrWhiteSpace(text)) return false;
-            var realLink = entities.Any(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink) || LinkPattern.IsMatch(text);
-            // Blank out the links and mentions Telegram marked (a word that links, a text link, is
-            // still a word), then any it did not, and see what is left.
+            if (string.IsNullOrWhiteSpace(text)) return (0, false);
+            bool? Place(MessageEntity e) => mentionOutside?.Invoke(e);
+            var mentions = entities.Where(e => IsMention(e) && !IsReportMention(text, e)).ToList();
+            var outside = mentions.Where(e => Place(e) == true).ToList();
+            var unknown = mentions.Where(e => Place(e) == null && e.Type == MessageEntityType.Mention).ToList();
+            var urlEntities = entities.Count(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink);
+            var urls = Math.Max(urlEntities, LinkPattern.Matches(text).Count);
+            var links = urls + outside.Count + unknown.Count;
+            if (links == 0) return (0, false);
+
+            // Blank out the links and the mentions pointing outside (or not known) and see what is
+            // left: a word that links (a text link), or a member mentioned, is still a word.
             var chars = text.ToCharArray();
-            foreach (var e in entities.Where(e => e.Type is MessageEntityType.Url or MessageEntityType.Mention))
+            foreach (var e in entities.Where(e => e.Type == MessageEntityType.Url).Concat(outside).Concat(unknown))
                 for (var i = e.Offset; i < e.Offset + e.Length && i < chars.Length; i++)
                     chars[i] = ' ';
             var rest = LinkPattern.Replace(new string(chars), " ");
-            // "join <link>" or "free <link> now" is still a bare link: at most two words around it.
             var words = rest.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Count(w => w.Any(char.IsLetter));
-            if (realLink) return words <= 2;
-            // Only mentions: a bare link when there is nothing else at all, and not a report.
-            return words == 0 && entities.Any(e => e.Type == MessageEntityType.Mention && !IsReportMention(text, e));
+            // "join <link>" or "free <link> now" is still a bare link: at most two words around it.
+            if (urls > 0 || outside.Count > 0) return (links, words <= 2);
+            // Only mentions nobody looked up: a bare link when there is nothing else at all.
+            return (links, words == 0);
         }
 
         /// <summary>The script most of the letters are in: latin, cyrillic, arabic, cjk, hangul, devanagari, thai, hebrew, greek, other; null without letters.</summary>

@@ -191,7 +191,7 @@ namespace Enforcer5.Tests.Harness
                 case AnswerInlineQueryRequest r: return Limited("answerInlineQuery", null, null, null, r, () => true);
                 case GetChatAdministratorsRequest r: return Limited("getChatAdministrators", r.ChatId, null, null, r, () => Administrators(Id(r.ChatId)));
                 case GetChatMemberRequest r: return Limited("getChatMember", r.ChatId, r.UserId, null, r, () => ChatMember(Id(r.ChatId), r.UserId));
-                case GetChatRequest r: return Limited("getChat", r.ChatId, null, null, r, () => ChatInfo(Id(r.ChatId)));
+                case GetChatRequest r: return Limited("getChat", r.ChatId, null, null, r, () => ChatInfo(r.ChatId));
                 case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages));
                 case UnbanChatMemberRequest r: return Limited("unbanChatMember", r.ChatId, r.UserId, null, r, () => Unban(Id(r.ChatId), r.UserId, r.OnlyIfBanned == true));
                 case RestrictChatMemberRequest r: return Limited("restrictChatMember", r.ChatId, r.UserId, null, r, () => Restrict(Id(r.ChatId), r.UserId, r.Permissions));
@@ -340,9 +340,27 @@ namespace Enforcer5.Tests.Harness
             _members.Where(m => m.Key.Chat == chatId && m.Key.User != Me.Id && m.Value is MemberState.Creator or MemberState.Administrator)
                 .Select(m => m.Key.User).ToList();
 
+        private readonly ConcurrentDictionary<string, (long Id, ChatType Type)> _publicChats = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<long, long> _linkedChannels = new();
+
+        /// <summary>A public channel or group elsewhere that getChat("@name") finds.</summary>
+        internal void AddPublicChat(string username, long id, ChatType type = ChatType.Channel) => _publicChats[username.TrimStart('@')] = (id, type);
+
+        /// <summary>The channel linked to a group.</summary>
+        internal void SetLinkedChannel(long chatId, long channelId) => _linkedChannels[chatId] = channelId;
+
+        private ChatFullInfo ChatInfo(ChatId chat)
+        {
+            if (chat.Username == null) return ChatInfo(Id(chat));
+            if (!_publicChats.TryGetValue(chat.Username.TrimStart('@'), out var found))
+                throw new ApiRequestException("Bad Request: chat not found", 400);
+            return new ChatFullInfo { Id = found.Id, Type = found.Type, Username = chat.Username.TrimStart('@') };
+        }
+
         private ChatFullInfo ChatInfo(long chatId) => new ChatFullInfo
         {
             Id = chatId,
+            LinkedChatId = _linkedChannels.TryGetValue(chatId, out var linked) ? linked : null,
             Type = chatId < 0 ? ChatType.Supergroup : ChatType.Private,
             Permissions = ChatPermissions(chatId) ?? new ChatPermissions
             {
