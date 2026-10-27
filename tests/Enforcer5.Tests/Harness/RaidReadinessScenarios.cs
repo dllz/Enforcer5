@@ -354,6 +354,8 @@ namespace Enforcer5.Tests.Harness
 
             Assert.IsTrue(channels.All(c => chat.Telegram.SenderChatBanned(chat.ChatId, c)), "every channel banned");
             Assert.AreEqual(0, chat.Telegram.MessagesFrom(chat.ChatId, placeholder.Id).Count, "their posts gone");
+            Assert.IsTrue(chat.Telegram.Calls.Count(c => c.Method == "getChat" && c.ChatId == chat.ChatId) <= 2,
+                "the group's details read once (and once more for the permissions before the lock), not per channel");
             AssertOnly429s(chat);
         }
 

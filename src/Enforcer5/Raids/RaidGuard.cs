@@ -56,8 +56,6 @@ namespace Enforcer5.Raids
         private static readonly Dictionary<(long, long), (TrustLevel Level, DateTime At)> TrustSeen = new();
         private static readonly Dictionary<long, (RaidMode Mode, DateTime At)> Modes = new();
         private static readonly TimeSpan TrustFor = TimeSpan.FromMinutes(5);
-        // The chat's linked channel (0: none), and until when that is believed.
-        private static readonly Dictionary<long, (long Id, DateTime Until)> LinkedChannels = new();
         // Members an admin let off (an ignored link report or alert): no suspects again until then.
         private static readonly Dictionary<(long, long), DateTime> Cleared = new();
         // An admin ignored an alert: no new one until then, unless it is clearly a raid.
@@ -849,7 +847,9 @@ namespace Enforcer5.Raids
             {
                 try
                 {
+                    // Read now, not from ChatDetails: these are what the group gets back.
                     var chat = await Bot.Api.GetChat(chatId);
+                    ChatDetails.Remember(chat);
                     lock (Lock) incident.SavedPermissions = chat.Permissions;
                 }
                 catch (Exception e)
@@ -924,27 +924,7 @@ namespace Enforcer5.Raids
             RaidTelemetry.Action(chatId, "ban", channelId);
         }
 
-        private static async Task<long> LinkedChannelAsync(long chatId)
-        {
-            var now = Clock.UtcNow;
-            lock (Lock)
-            {
-                if (LinkedChannels.TryGetValue(chatId, out var known) && known.Until > now) return known.Id;
-            }
-            long linked;
-            try
-            {
-                linked = (await Bot.Api.GetChat(chatId)).LinkedChatId ?? 0;
-            }
-            catch (Exception e)
-            {
-                // Not knowing, a channel is still banned: it posted the raid's spam.
-                LogHelper.Error($"Could not read the linked channel of {chatId}: {e.Message}");
-                return 0;
-            }
-            lock (Lock) LinkedChannels[chatId] = (linked, now + TimeSpan.FromMinutes(10));
-            return linked;
-        }
+        private static Task<long> LinkedChannelAsync(long chatId) => ChatDetails.LinkedChannelAsync(chatId);
 
         // ---------------------------------------------------------------- ending
 
@@ -964,7 +944,6 @@ namespace Enforcer5.Raids
                     TrustSeen.Remove(key);
                 foreach (var key in Cleared.Where(p => p.Value <= now).Select(p => p.Key).ToList()) Cleared.Remove(key);
                 foreach (var key in IgnoredUntil.Where(p => p.Value <= now).Select(p => p.Key).ToList()) IgnoredUntil.Remove(key);
-                foreach (var key in LinkedChannels.Where(p => p.Value.Until <= now).Select(p => p.Key).ToList()) LinkedChannels.Remove(key);
                 foreach (var (chat, pending) in Pending.ToList())
                 {
                     foreach (var u in pending.Where(p => now - p.Value.At > PendingFor).Select(p => p.Key).ToList()) pending.Remove(u);
@@ -978,6 +957,7 @@ namespace Enforcer5.Raids
             }
             MentionResolver.Prune();
             AdminDirectory.Prune();
+            ChatDetails.Prune();
             // One failing incident must not stop the others ending, or restart the loop.
             foreach (var i in quiet)
             {
@@ -1260,7 +1240,6 @@ namespace Enforcer5.Raids
                 Modes.Clear();
                 Pending.Clear();
                 PendingSpamKeys.Clear();
-                LinkedChannels.Clear();
                 Cleared.Clear();
                 IgnoredUntil.Clear();
                 SpamSketches.Clear();
@@ -1268,6 +1247,7 @@ namespace Enforcer5.Raids
             Limits = new RaidLimits();
             MentionResolver.ResetForTests();
             AdminDirectory.ResetForTests();
+            ChatDetails.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

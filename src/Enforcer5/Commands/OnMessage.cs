@@ -460,7 +460,11 @@ namespace Enforcer5
                 {
                     try
                     {
-                        var linked = Bot.Api.GetChat(chatId).GetAwaiter().GetResult().LinkedChatId ?? 0;
+                        // Shared with raid detection, one call at a time per group: a raid of channel posts
+                        // arriving before the first answer no longer asks once per post.
+                        var details = ChatDetails.GetAsync(chatId).GetAwaiter().GetResult()
+                                      ?? throw new InvalidOperationException("Telegram did not give the group's details");
+                        var linked = details.LinkedChatId ?? 0;
                         Repositories.ChannelPosts.SetLinkedChannelAsync(chatId, linked).GetAwaiter().GetResult();
                         if (linked == channel.Id) return;
                     }

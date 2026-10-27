@@ -214,11 +214,7 @@ namespace Enforcer5.Raids
             }
         }
 
-        private static async Task<long> LinkedChannelAsync(long chatId)
-        {
-            var info = await TelegramAsync(() => Bot.Api.GetChat(chatId));
-            return info.Failed || info.NotFound ? 0 : info.Value.LinkedChatId ?? 0;
-        }
+        private static Task<long> LinkedChannelAsync(long chatId) => ChatDetails.LinkedChannelAsync(chatId);
 
         /// <summary>Drops answers that have run out; the raid check calls it every 15 seconds.</summary>
         internal static void Prune()
