@@ -519,28 +519,20 @@ namespace Enforcer5
                     Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
 
                 // Two tempbans ending in the same second share a schedule slot, so the later one moves
-                // on a second. The step used to be discarded (DateTime is immutable), which spun this
-                // loop forever on Redis and held a dispatch worker for good.
+                // on a second. Claimed with HSETNX: a read then a write let two tempbans running side
+                // by side take the same slot, and the one overwritten was never lifted. (The step used
+                // to be discarded too, DateTime being immutable, which spun the loop forever.)
 #if NORMAL
-                var entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
-                    while (entry.HasValue)
-                    {
-                            dataUnbanTime = dataUnbanTime.AddSeconds(1);
-                        unbanTime = dataUnbanTime.ToUnixTime();
-                        entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
-                }
-                    Redis.db.HashSetAsync("tempbanned", unbanTime, hash);
+                const string schedule = "tempbanned";
 #endif
 #if PREMIUM
-                var entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
-                    while (entry.HasValue)
-                    {
-                            dataUnbanTime = dataUnbanTime.AddSeconds(1);
-                        unbanTime = dataUnbanTime.ToUnixTime();
-                        entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
-                }
-                      Redis.db.HashSetAsync("tempbannedPremium", unbanTime, hash);
+                const string schedule = "tempbannedPremium";
 #endif
+                while (!Redis.db.HashSetAsync(schedule, unbanTime, hash, StackExchange.Redis.When.NotExists).Result)
+                {
+                    dataUnbanTime = dataUnbanTime.AddSeconds(1);
+                    unbanTime = dataUnbanTime.ToUnixTime();
+                }
                 var timeBanned = TimeSpan.FromMinutes(time);
                     string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                     if (message == null)
