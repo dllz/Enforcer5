@@ -656,5 +656,43 @@ namespace Enforcer5.Tests.Harness
             Assert.IsNotNull(RaidGuard.IncidentIn(chat.ChatId));
             AssertOnly429s(chat);
         }
+
+        // ------------------------------------------------------------ quiet during a raid
+
+        [TestMethod]
+        public async Task DuringARaid_PerMemberNoticesKeepQuiet_TheLogChannelGetsADigest_AndNobodyIsWelcomed()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            const long logChannel = -1004444;
+            chat.Keys.AddToSet("logChatGroups", chat.ChatId.ToString());
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "logchat"] = logChannel.ToString();
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "maxlength"] = "50";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "maxlines"] = "20";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "action"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "Welcome"] = "no"; // "yes" switches it off
+            await chat.SendAsync(admin, "/raid");
+            // The admin's own command is logged at once, as always.
+            var logBefore = chat.Telegram.SentMessages.Count(m => m.Chat.Id == logChannel);
+
+            // Members posting over-long texts: kicked by the length check, as always.
+            var flooders = Regulars(chat, 6);
+            foreach (var f in flooders) chat.Deliver(chat.Text(f, new string('x', 30) + " " + new string('y', 40)));
+            chat.Deliver(chat.Join(chat.Add("Joiner", MemberState.Left)));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(10));
+
+            Assert.IsTrue(flooders.All(f => chat.Telegram.GetMember(chat.ChatId, f.Id) is MemberState.Left or MemberState.Kicked), "acted on");
+            Assert.IsFalse(chat.Telegram.SentMessages.Any(m => m.Chat.Id == chat.ChatId && flooders.Any(f => m.Text?.Contains(f.FirstName) == true)),
+                "no notice per member in the group");
+            Assert.IsFalse(chat.Telegram.SentMessages.Any(m => m.Chat.Id == chat.ChatId && m.Text?.Contains("Joiner") == true), "nobody welcomed");
+            Assert.AreEqual(logBefore, chat.Telegram.SentMessages.Count(m => m.Chat.Id == logChannel), "the bot's actions wait for the digest: " + string.Join(" / ", chat.Telegram.SentMessages.Where(m => m.Chat.Id == logChannel).Select(m => m.Text)));
+
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+            var log = chat.Telegram.SentMessages.Where(m => m.Chat.Id == logChannel).Skip(logBefore).ToList();
+            Assert.AreEqual(1, log.Count, "one digest post");
+            Assert.IsTrue(flooders.All(f => log[0].Text.Contains(f.Id.ToString())), "with every action in it");
+            AssertOnly429s(chat);
+        }
     }
 }

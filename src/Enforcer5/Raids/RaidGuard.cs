@@ -106,6 +106,15 @@ namespace Enforcer5.Raids
             lock (Lock) return Incidents.TryGetValue(chatId, out var i) && i.Phase == RaidPhase.Active;
         }
 
+        /// <summary>
+        /// True while there is a raid alert or raid mode in the chat: per-member notices, link reports,
+        /// the welcome and the log channel's single lines keep quiet or are gathered up.
+        /// </summary>
+        internal static bool Quiet(long chatId)
+        {
+            lock (Lock) return Incidents.ContainsKey(chatId);
+        }
+
         /// <summary>The incident in a chat, a copy for tests and /raid; null when there is none.</summary>
         internal static RaidIncident IncidentIn(long chatId)
         {
@@ -1146,8 +1155,8 @@ namespace Enforcer5.Raids
             var user = ctx.UserId;
             lock (Lock)
             {
-                if (Incidents.TryGetValue(chatId, out var i) && i.Phase == RaidPhase.Active && i.Actions.HasFlag(RaidActions.BanSuspects))
-                    return; // being banned already
+                // The alert or raid mode is about them already: they are among its suspects.
+                if (Incidents.ContainsKey(chatId)) return;
                 if (LinkReported.TryGetValue((chatId, user), out var at) && Clock.UtcNow - at < Limits.LinkReportEvery) return;
                 LinkReported[(chatId, user)] = Clock.UtcNow;
             }
@@ -1248,6 +1257,7 @@ namespace Enforcer5.Raids
             MentionResolver.ResetForTests();
             AdminDirectory.ResetForTests();
             ChatDetails.ResetForTests();
+            LogDigest.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

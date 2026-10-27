@@ -22,6 +22,12 @@ namespace Enforcer5
     /// Bot.DispatchAction. Awaiting it here would let one rate-limited chat park every consumer,
     /// fill the update queue, and stop the poll loop for every other chat.
     /// </summary>
+    /// <remarks>
+    /// While a raid alert or raid mode is on in a group (<see cref="Raids.RaidGuard.Quiet"/>), the
+    /// per-member notices here ("kicked for flooding", "media not allowed") are not posted: during a
+    /// raid there would be one per raider, using up the messages the raid notice needs, and the raid
+    /// notice has the counts. The actions themselves and the log channel are unchanged.
+    /// </remarks>
     public static class OnMessage
     {
         internal static async Task AntiFlood(MessageContext ctx)
@@ -97,7 +103,7 @@ namespace Enforcer5
                                 if (res)
                                 {
                                     Methods.SaveBan(userid, "flood");
-                                    Bot.Send(Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {userid}"), update);
+                                    if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(Methods.GetLocaleString(lang, "kickedForFlood", $"{name}, {userid}"), update);
                                 }
                                 break;
                             case "ban":
@@ -108,7 +114,7 @@ namespace Enforcer5
                                     Methods.SaveBan(userid, "flood");
                                     Methods.AddBanList(chatId, userid, update.Message.From.FirstName,
                                         Methods.GetLocaleString(lang, "bannedForFlood", ".."));
-                                    Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
+                                    if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(Methods.GetLocaleString(lang, "bannedForFlood", name), update);
                                 }
                                 break;
                             case "warn":
@@ -174,7 +180,7 @@ namespace Enforcer5
                         Methods.KickUser(groupId, userid, lang, "Long message");
                         reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
                         Service.LogBotAction(groupId, reply, userid);
-                        Bot.SendReply(reply, update);
+                        if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         return;
                     case "ban":
                         var res = Methods.BanUser(groupId, userid, lang, "Long message");
@@ -183,7 +189,7 @@ namespace Enforcer5
                             Methods.SaveBan(userid, "longmessages");
                             reply = Methods.GetLocaleString(lang, "banformesslength", userid);
                             Service.LogBotAction(groupId, reply, userid);
-                            Bot.SendReply(reply, update);
+                            if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                             return;
                         }
                         break;
@@ -232,7 +238,7 @@ namespace Enforcer5
                         Methods.KickUser(groupId, userid, lang, "Name too long");
                         reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
                         Service.LogBotAction(groupId, reply, userid);
-                        Bot.SendReply(reply, update);
+                        if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         break;
                     case "ban":
                         var res = Methods.BanUser(groupId, userid, lang, "Name too long");
@@ -241,7 +247,7 @@ namespace Enforcer5
                             Methods.SaveBan(userid, "namelength");
                             reply = Methods.GetLocaleString(lang, "banfornamelength", userid);
                             Service.LogBotAction(groupId, reply, userid);
-                            Bot.SendReply(reply, update);
+                            if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         }
                         break;
                     case "Warn":
@@ -332,7 +338,7 @@ namespace Enforcer5
                             Methods.KickUser(chatId, message.From.Id, lang, "Media", trigger: warned);
                             reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
                             Service.LogBotAction(chatId, reply, message.From.Id);
-                            Bot.SendReply(reply, message);
+                            if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, message);
                             break;
                         case "ban":
                             var res = Methods.BanUser(chatId, message.From.Id, lang, "Media", trigger: warned);
@@ -343,7 +349,7 @@ namespace Enforcer5
                                 Service.LogBotAction(chatId, reply, message.From.Id);
                                 Methods.AddBanList(chatId, message.From.Id, message.From.FirstName,
                                     Methods.GetLocaleString(lang, "bannedformedia", ""));
-                                Bot.SendReply(reply, message);
+                                if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, message);
                             }
                             break;
                         case "tempban":
@@ -359,7 +365,7 @@ namespace Enforcer5
                 }
                 else
                 {
-                    Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max), message);
+                    if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(Methods.GetLocaleString(lang, "mediaNotAllowed", current, max), message);
                 }
 
                 Bot.DeleteMessage(chatId, message.MessageId);
@@ -532,7 +538,7 @@ namespace Enforcer5
                             Methods.KickUser(chatId, userId, lang, "Right-to-left text");
                             reply = Methods.GetLocaleString(lang, "kickedForRtl", $"{name}, {userId}");
                             Service.LogBotAction(chatId, reply, userId);
-                            Bot.Send(reply, update);
+                            if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(reply, update);
                             break;
                         case "ban":
                             var res = Methods.BanUser(chatId, userId, lang, "Right-to-left text");
@@ -543,7 +549,7 @@ namespace Enforcer5
                                     Methods.GetLocaleString(lang, "bannedForRtl", ""));
                                 reply = Methods.GetLocaleString(lang, "bannedForRtl", $"{name}, {userId}");
                                 Service.LogBotAction(chatId, reply, userId);
-                                Bot.Send(reply, update);
+                                if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(reply, update);
                             }
                             break;
                         case "tempban":
@@ -614,7 +620,7 @@ namespace Enforcer5
                             Methods.KickUser(chatId, userId, lang, "Non-Latin script");
                             reply = Methods.GetLocaleString(lang, "kickedForNoEnglishScript", $"{name}, {userId}");
                             Service.LogBotAction(chatId, reply, userId);
-                            Bot.Send(reply, update);
+                            if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(reply, update);
                             break;
                         case "ban":
                             var res = Methods.BanUser(chatId, userId, lang, "Non-Latin script");
@@ -626,7 +632,7 @@ namespace Enforcer5
 
                                 reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");
                                 Service.LogBotAction(chatId, reply, userId);
-                                Bot.Send(reply, update);
+                                if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.Send(reply, update);
                             }
                             break;
                         case "tempban":

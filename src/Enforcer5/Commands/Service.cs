@@ -19,6 +19,8 @@ namespace Enforcer5
         public static void Welcome(Message message)
         {
             var chatId = message.Chat.Id;
+            // Nobody is welcomed into a raid: the joiners are its raiders, or muted until it is over.
+            if (Raids.RaidGuard.Quiet(chatId)) return;
             var welcomeOn = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Welcome").Result;
             if (welcomeOn.Equals("yes"))
                 return;
@@ -416,7 +418,7 @@ defSpamValue = 3;
         public static void LogBotAction(long chatId, string command, long? targetId = null)
         {
             var target = targetId.HasValue ? GetCachedUserName(targetId.Value) : "";
-            LogCommand(chatId, -1, "Enforcer", GetCachedGroupName(chatId), command, target);
+            LogCommand(chatId, -1, "Enforcer", GetCachedGroupName(chatId), command, target, digestDuringRaid: true);
         }
 
         // Callbacks whose data is "trigger:chatId:userId", so args[2] is the affected user.
@@ -554,7 +556,7 @@ defSpamValue = 3;
 
 
         public static void LogCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "", bool isCallback = false,
-            long? linkMessageId = null)
+            long? linkMessageId = null, bool digestDuringRaid = false)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (string.IsNullOrEmpty(replyto))
@@ -564,7 +566,8 @@ defSpamValue = 3;
 
             if (!isCallback)
             {
-                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto), linkMessageId);
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto), linkMessageId,
+                    digestDuringRaid);
             }
             else
             {
@@ -579,13 +582,21 @@ defSpamValue = 3;
         /// send, as before this was split out of LogCommand. With <paramref name="linkMessageId"/>
         /// the post gets a button to that message in the group.
         /// </summary>
-        internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text, long? linkMessageId = null)
+        internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text, long? linkMessageId = null,
+            bool digestDuringRaid = false)
         {
             if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
             {
                 var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
                 try
                 {
+                    // The bot's own actions during a raid: one post every LogDigest.Every with all of
+                    // them, not one per raider. What admins do is still posted at once.
+                    if (digestDuringRaid && Raids.RaidGuard.Quiet(chatId))
+                    {
+                        LogDigest.Add(chatId, long.Parse(logChatID), lang, text());
+                        return;
+                    }
                     Bot.Send(text(), long.Parse(logChatID), LogLinkButton(lang, chatId, linkMessageId));
                 }
                 catch (Exception e)
