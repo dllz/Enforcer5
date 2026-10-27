@@ -233,5 +233,75 @@ ORDER BY gs.global_sanction_id")).ToArray();
             Assert.IsNull(GlobalBans.Get(5550008));
             AssertNoErrors(chat);
         }
+
+        [TestMethod]
+        public async Task ARektedMemberOnTheWatchList_MayStay()
+        {
+            // By design: /disablewatch lets a group keep someone it vouches for.
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = GlobalAdmin(chat);
+            var vouched = chat.Add("Vouched");
+            await chat.SendAsync(admin, $"/getrekt {vouched.Id}:spam");
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", vouched.Id.ToString());
+
+            await chat.SendAsync(vouched, "hello");
+
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, vouched.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AWatchedMemberAddingARektedAccount_DoesNotBringItIn()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = GlobalAdmin(chat);
+            var watched = chat.Add("Watched");
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            var spammer = new HarnessUser(5550005, "Spammer");
+            await chat.SendAsync(admin, $"/getrekt {spammer.Id}:scam");
+
+            await chat.PostAsync(chat.Join(spammer, addedBy: watched));
+
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, spammer.Id), "the joiner's own entry counts, not the adder's");
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, watched.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ARektedAccountPutOnTheWatchListByIdFirst_MayBeAdded()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = GlobalAdmin(chat);
+            var member = chat.Add("Member");
+            var vouched = new HarnessUser(5550006, "Vouched");
+            await chat.SendAsync(admin, $"/getrekt {vouched.Id}:old ban");
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", vouched.Id.ToString());
+
+            await chat.PostAsync(chat.Join(vouched, addedBy: member));
+
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, vouched.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ARektedAccountAddedSecond_IsBannedToo()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = GlobalAdmin(chat);
+            var adder = chat.Add("Adder");
+            var normal = chat.Add("Normal", MemberState.Left);
+            var spammer = new HarnessUser(5550007, "Spammer");
+            await chat.SendAsync(admin, $"/getrekt {spammer.Id}:scam");
+            var join = chat.Join(normal, addedBy: adder);
+            chat.Telegram.SetMember(chat.ChatId, spammer.Id, MemberState.Member);
+            join.NewChatMembers = new[] { normal.ToUser(), spammer.ToUser() };
+
+            await chat.PostAsync(join);
+
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, spammer.Id), "only the first one added was looked up");
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, normal.Id));
+            CollectionAssert.AreEqual(new[] { "Global ban: scam" }, await GroupBanReasons(chat));
+            AssertNoErrors(chat);
+        }
     }
 }

@@ -737,77 +737,92 @@ namespace Enforcer5.Helpers
         /// exception and terminated the process. Reads now come from the message context and the
         /// whole body is guarded.
         /// </summary>
+        /// <summary>
+        /// Bans a globally banned member: the sender of a message, or everyone added in a join
+        /// message. The group's watch list (/disablewatch) lets a globally banned member stay, by
+        /// design: for a join that is the joiner's own entry, so a watched member cannot bring a
+        /// globally banned account in; it has to be put on the watch list by id first.
+        /// </summary>
         internal static async Task IsRekt(MessageContext ctx)
         {
             var update = ctx.Update;
             if (update.Message.Chat.Type != ChatType.Supergroup)
                 return;
-            if (ctx.Watched) return;
-
-            // The context looked up the joining user on a join message, the sender otherwise -
-            // matching who we report on below.
-            var ban = ctx.GlobalBan;
-            var name = update.Message.From.FirstName;
-            var id = update.Message.From.Id;
-            if (update.Message.NewChatMember != null)
-            {
-                name = update.Message.NewChatMember.FirstName;
-                id = update.Message.NewChatMember.Id;
-            }
 
             try
             {
-                if (ban == null) return;
-
-                var reason = ban.Reason;
-                if (update.Message.Chat.Id == Constants.SupportId)
+                var joiners = update.Message.NewChatMembers;
+                if (joiners is { Length: > 0 })
                 {
-                    // Once per ban: a new ban after an unban is told again.
-                    if (!ban.NotifiedAt.HasValue)
+                    // Each one, not only the first: adding a normal account first let the rest in.
+                    foreach (var joiner in joiners)
                     {
-                        // Mark notified only after the notice has gone out; setting it here would
-                        // suppress the record forever if the dispatched send never ran.
-                        Bot.DispatchAction(() =>
-                        {
-                            Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
-                            GlobalBans.MarkNotifiedAsync(id).GetAwaiter().GetResult();
-                        }, "IsRekt");
+                        var ban = GlobalBans.Get(joiner.Id);
+                        if (ban == null) continue;
+                        // The joiner's own watch entry, not the adder's (which is what ctx.Watched is).
+                        if (await Redis.db.SetContainsAsync($"chat:{ctx.ChatId}:watch", joiner.Id)) continue;
+                        EnforceGlobalBan(ctx, joiner.Id, joiner.FirstName, ban);
                     }
                     return;
                 }
 
-                Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
-                var lang = ctx.Lang;
-
-                Bot.DispatchAction(() =>
-                {
-                    try
-                    {
-                        // A known spammer: their messages go in the same call as the ban.
-                        var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}", revokeMessages: true);
-                        if (temp)
-                        {
-                            SaveBan(id, "ban");
-                            Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
-                            Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
-                        }
-                    }
-                    catch (AggregateException e)
-                    {
-                        if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
-                        {
-                            Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
-                            return;
-                        }
-                        ErrorReporter.Report(e, $"Enforcing global ban of {id} in {update.Message.Chat.Id}");
-                        Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
-                    }
-                }, "IsRekt");
+                if (ctx.Watched) return;
+                if (ctx.GlobalBan == null) return;
+                EnforceGlobalBan(ctx, update.Message.From.Id, update.Message.From.FirstName, ctx.GlobalBan);
             }
             catch (Exception e)
             {
-                ErrorReporter.Report(e, $"Checking global ban of {id} in {update.Message.Chat.Id}");
+                ErrorReporter.Report(e, $"Checking global bans in {update.Message.Chat.Id}");
             }
+        }
+
+        private static void EnforceGlobalBan(MessageContext ctx, long id, string name, GlobalBanRecord ban)
+        {
+            var update = ctx.Update;
+            var reason = ban.Reason;
+            if (update.Message.Chat.Id == Constants.SupportId)
+            {
+                // Once per ban: a new ban after an unban is told again.
+                if (!ban.NotifiedAt.HasValue)
+                {
+                    // Mark notified only after the notice has gone out; setting it here would
+                    // suppress the record forever if the dispatched send never ran.
+                    Bot.DispatchAction(() =>
+                    {
+                        Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
+                        GlobalBans.MarkNotifiedAsync(id).GetAwaiter().GetResult();
+                    }, "IsRekt");
+                }
+                return;
+            }
+
+            Console.WriteLine($"Global ban triggered by :{name} reason: {reason}");
+            var lang = ctx.Lang;
+
+            Bot.DispatchAction(() =>
+            {
+                try
+                {
+                    // A known spammer: their messages go in the same call as the ban.
+                    var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}", revokeMessages: true);
+                    if (temp)
+                    {
+                        SaveBan(id, "ban");
+                        Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
+                        Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                    }
+                }
+                catch (AggregateException e)
+                {
+                    if (e.InnerExceptions[0].Message.Equals("Bad Request: Not enough rights to kick/unban chat member"))
+                    {
+                        Bot.Send(GetLocaleString(lang, "botNotAdmin"), update.Message.Chat.Id);
+                        return;
+                    }
+                    ErrorReporter.Report(e, $"Enforcing global ban of {id} in {update.Message.Chat.Id}");
+                    Methods.SendError(e.InnerExceptions[0], update.Message.Chat.Id, lang);
+                }
+            }, "IsRekt");
         }
 
         /// <summary>
