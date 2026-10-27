@@ -51,6 +51,8 @@ namespace Enforcer5.Raids
         public HashSet<long> Quarantined { get; set; } = new();
         /// <summary>Content seen from several untrusted members in this incident: anyone untrusted posting it later is a suspect too.</summary>
         public HashSet<string> SpamKeys { get; set; } = new();
+        /// <summary>Plain text several untrusted members echoed: anyone untrusted posting it later is a weak suspect.</summary>
+        public HashSet<string> EchoKeys { get; set; } = new();
         /// <summary>The messages that made each suspect one (up to 20 each): deleted when they are muted, or when a channel is banned.</summary>
         public Dictionary<long, List<int>> SuspectMessages { get; set; } = new();
         /// <summary>Suspects who only posted the same plain text as other newcomers: banned only when an admin turned raid mode on.</summary>

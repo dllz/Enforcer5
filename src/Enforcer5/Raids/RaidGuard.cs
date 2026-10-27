@@ -66,7 +66,7 @@ namespace Enforcer5.Raids
         private static readonly Dictionary<long, DateTime> IgnoredUntil = new();
         private static readonly TimeSpan IgnoreFor = TimeSpan.FromMinutes(30);
         // The current incident's spam as text sketches, so a near copy is known spam however late.
-        private static readonly Dictionary<long, List<HashSet<int>>> SpamSketches = new();
+        private static readonly Dictionary<long, List<(HashSet<int> Sketch, bool Echo)>> SpamSketches = new();
         private static int _hooked;
 
 #if PREMIUM
@@ -239,17 +239,18 @@ namespace Enforcer5.Raids
 
                 IReadOnlyList<RaidSigns.Posting> same = Array.Empty<RaidSigns.Posting>();
                 DateTime? joinedAt;
-                var knownSpam = false;
+                var known = KnownContent.None;
                 lock (Lock)
                 {
                     var signs = SignsFor(chatId);
                     if (key != null) (key, same) = signs.Posted(key, sketch, user, message.MessageId, now, Limits.SimilarText);
                     joinedAt = signs.JoinedAt(user, now);
-                    knownSpam = key != null && IsKnownSpam(chatId, key, sketch);
+                    if (key != null) known = Known(chatId, key, sketch);
                 }
                 var posters = same.Select(p => p.User).Distinct().ToList();
                 var postedSoon = !edited && joinedAt.HasValue && now - joinedAt.Value <= Limits.PostSoonAfterJoin;
                 var sameContent = posters.Count >= Limits.SameContentUsers;
+                var knownSpam = known != KnownContent.None;
                 if (!sameContent && !print.BareLink && !postedSoon && !knownSpam)
                 {
                     RaidTelemetry.Message(chatId, user, print, null);
@@ -281,7 +282,7 @@ namespace Enforcer5.Raids
                         {
                             signs.SameContentUsers = Math.Max(signs.SameContentUsers, untrusted.Count);
                             foreach (var u in untrusted) Suspect(u);
-                            RememberSpam(chatId, key, sketch);
+                            RememberSpam(chatId, key, sketch, echo: false);
                         }
                         else
                         {
@@ -289,12 +290,13 @@ namespace Enforcer5.Raids
                             // a raid. Weak suspects: banned only when an admin says it is a raid.
                             signs.EchoUsers = Math.Max(signs.EchoUsers, untrusted.Count);
                             foreach (var u in untrusted) Suspect(u, echoers);
+                            RememberSpam(chatId, key, sketch, echo: true);
                         }
                     }
                     else if (knownSpam && senderUntrusted)
                     {
                         // The raid's content, however long after the others.
-                        Suspect(user);
+                        Suspect(user, known == KnownContent.Echo ? echoers : null);
                     }
                     if (print.BareLink && senderUntrusted)
                     {
@@ -341,13 +343,31 @@ namespace Enforcer5.Raids
             print.MediaUniqueId != null || print.LinkCount > 0 ||
             MessageFingerprint.Normalize(message.Text ?? message.Caption).Length >= Limits.LongTextLetters;
 
-        // With the lock held.
-        private static bool IsKnownSpam(long chatId, string key, HashSet<int> sketch)
+        private enum KnownContent { None, Echo, Spam }
+
+        // With the lock held. Content that marked several untrusted members before: harmful spam, or
+        // a plain text they echoed.
+        private static KnownContent Known(long chatId, string key, HashSet<int> sketch)
         {
-            if (Incidents.TryGetValue(chatId, out var i) && i.SpamKeys.Contains(key)) return true;
-            if (PendingSpamKeys.TryGetValue(chatId, out var pending) && pending.ContainsKey(key)) return true;
-            return sketch != null && SpamSketches.TryGetValue(chatId, out var sketches) &&
-                   sketches.Any(s => RaidSigns.Similar(s, sketch, Limits.SimilarText));
+            var echo = false;
+            if (Incidents.TryGetValue(chatId, out var i))
+            {
+                if (i.SpamKeys.Contains(key)) return KnownContent.Spam;
+                echo = i.EchoKeys.Contains(key);
+            }
+            if (PendingSpamKeys.TryGetValue(chatId, out var pending) && pending.TryGetValue(key, out var p))
+            {
+                if (!p.Echo) return KnownContent.Spam;
+                echo = true;
+            }
+            if (sketch != null && SpamSketches.TryGetValue(chatId, out var sketches))
+                foreach (var (known, isEcho) in sketches)
+                    if (RaidSigns.Similar(known, sketch, Limits.SimilarText))
+                    {
+                        if (!isEcho) return KnownContent.Spam;
+                        echo = true;
+                    }
+            return echo ? KnownContent.Echo : KnownContent.None;
         }
 
         /// <summary>
@@ -546,25 +566,36 @@ namespace Enforcer5.Raids
         }
 
         private static readonly Dictionary<long, Dictionary<long, PendingSuspect>> Pending = new();
-        private static readonly Dictionary<long, Dictionary<string, DateTime>> PendingSpamKeys = new();
+        private static readonly Dictionary<long, Dictionary<string, (DateTime At, bool Echo)>> PendingSpamKeys = new();
         /// <summary>How long suspects and spam seen before an incident wait for one to start.</summary>
         private static TimeSpan PendingFor => Limits.Window + Limits.Window;
 
         // With the lock held. Content that marked several untrusted members, kept with the incident
         // (or for the incident about to start).
-        private static void RememberSpam(long chatId, string key, HashSet<int> sketch)
+        private static void RememberSpam(long chatId, string key, HashSet<int> sketch, bool echo)
         {
             if (key == null) return;
             if (sketch != null)
             {
-                if (!SpamSketches.TryGetValue(chatId, out var sketches)) SpamSketches[chatId] = sketches = new List<HashSet<int>>();
-                if (sketches.Count < 50 && !sketches.Any(s => RaidSigns.Similar(s, sketch, Limits.SimilarText))) sketches.Add(sketch);
+                if (!SpamSketches.TryGetValue(chatId, out var sketches)) SpamSketches[chatId] = sketches = new List<(HashSet<int>, bool)>();
+                var same = sketches.FindIndex(k => RaidSigns.Similar(k.Sketch, sketch, Limits.SimilarText));
+                if (same < 0 && sketches.Count < 50) sketches.Add((sketch, echo));
+                else if (same >= 0 && !echo) sketches[same] = (sketches[same].Sketch, false);
             }
-            if (Incidents.TryGetValue(chatId, out var incident)) incident.SpamKeys.Add(key);
+            if (Incidents.TryGetValue(chatId, out var incident))
+            {
+                if (echo && !incident.SpamKeys.Contains(key)) incident.EchoKeys.Add(key);
+                else if (!echo)
+                {
+                    incident.SpamKeys.Add(key);
+                    incident.EchoKeys.Remove(key);
+                }
+            }
             else
             {
-                if (!PendingSpamKeys.TryGetValue(chatId, out var keys)) PendingSpamKeys[chatId] = keys = new Dictionary<string, DateTime>();
-                if (keys.Count < 100 || keys.ContainsKey(key)) keys[key] = Clock.UtcNow;
+                if (!PendingSpamKeys.TryGetValue(chatId, out var keys)) PendingSpamKeys[chatId] = keys = new Dictionary<string, (DateTime, bool)>();
+                var wasEcho = !keys.TryGetValue(key, out var k) || k.Echo;
+                if (keys.Count < 100 || keys.ContainsKey(key)) keys[key] = (Clock.UtcNow, echo && wasEcho);
             }
         }
 
@@ -657,7 +688,8 @@ namespace Enforcer5.Raids
                     AddMessages(incident, u, p.Messages);
                 }
             if (PendingSpamKeys.Remove(chatId, out var keys))
-                foreach (var k in keys.Where(k => now - k.Value <= PendingFor)) incident.SpamKeys.Add(k.Key);
+                foreach (var k in keys.Where(k => now - k.Value.At <= PendingFor))
+                    (k.Value.Echo ? incident.EchoKeys : incident.SpamKeys).Add(k.Key);
             Incidents[chatId] = incident;
             return incident;
         }
@@ -931,7 +963,7 @@ namespace Enforcer5.Raids
                 }
                 foreach (var (chat, keys) in PendingSpamKeys.ToList())
                 {
-                    foreach (var k in keys.Where(p => now - p.Value > PendingFor).Select(p => p.Key).ToList()) keys.Remove(k);
+                    foreach (var k in keys.Where(p => now - p.Value.At > PendingFor).Select(p => p.Key).ToList()) keys.Remove(k);
                     if (keys.Count == 0) PendingSpamKeys.Remove(chat);
                 }
             }

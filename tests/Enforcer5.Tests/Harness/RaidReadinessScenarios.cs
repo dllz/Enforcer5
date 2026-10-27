@@ -234,6 +234,34 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task HumanMode_ALatePosterOfTheRaidsPlainText_IsBannedOnceTheAdminsCalledItARaid()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            Regulars(chat, 3);
+            var raiders = new List<HarnessUser>();
+            for (var i = 0; i < 18; i++)
+            {
+                var r = chat.Add($"Raider{i}", MemberState.Left);
+                raiders.Add(r);
+                chat.Deliver(chat.Join(r));
+                await chat.AdvanceAsync(TimeSpan.FromSeconds(1));
+                if (i < 4) chat.Deliver(chat.Text(r, "Earn 500 dollars a day, message me now"));
+            }
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+            await chat.PressAsync(admin, Alert(chat), $"raid:{chat.ChatId}:lock");
+
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(3));
+            // The same text, from one of them, long after the first wave.
+            chat.Deliver(chat.Text(raiders[10], "Earn 700 dollars a day, message me now!"));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(10));
+
+            Assert.IsTrue(raiders.Take(4).All(r => chat.Telegram.GetMember(chat.ChatId, r.Id) == MemberState.Kicked), "the first posters");
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, raiders[10].Id), "and the late one");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
         public async Task ALinkPosterAnAdminIgnored_IsNotBannedInTheNextRaid()
         {
             await using var chat = await HarnessChat.StartAsync();
