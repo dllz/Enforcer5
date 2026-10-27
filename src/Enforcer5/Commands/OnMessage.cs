@@ -323,6 +323,11 @@ namespace Enforcer5
             var message = ctx.Message;
             var chatId = ctx.ChatId;
             var media = Methods.GetContentType(message);
+            // A link in a caption is a link: a photo captioned with one used to get past the link lock.
+            if (!ctx.MediaSetting(media).Equals("blocked") && ctx.MediaSetting("link").Equals("blocked") &&
+                (message.CaptionEntities ?? Array.Empty<Telegram.Bot.Types.MessageEntity>())
+                    .Any(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink))
+                media = "link";
             if (!ctx.MediaSetting(media).Equals("blocked")) return Task.CompletedTask;
 
             var lang = ctx.Lang;

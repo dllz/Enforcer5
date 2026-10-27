@@ -356,6 +356,25 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task Media_LinksBlocked_CatchesALinkInACaption()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:media", "link"] = "blocked";
+            chat.Hashes[$"chat:{chat.ChatId}:media", "action"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:warnsettings", "mediamax"] = "3";
+            var poster = chat.Add("Poster");
+
+            var linked = chat.Photo(poster, "a", caption: "join example.com");
+            linked.CaptionEntities = new[] { new MessageEntity { Type = MessageEntityType.Url, Offset = 5, Length = 11 } };
+            await chat.PostAsync(linked);
+            await chat.PostAsync(chat.Photo(poster, "b", caption: "just a photo"));
+
+            Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, poster.Id).Count, "the captioned link went, the plain photo stayed");
+            Assert.AreEqual("1", chat.Hashes[$"chat:{chat.ChatId}:mediawarn", poster.Id.ToString()], "one strike");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task Media_AllowedTypes_AndWatchedMembers_AreLeftAlone()
         {
             await using var chat = await HarnessChat.StartAsync();
