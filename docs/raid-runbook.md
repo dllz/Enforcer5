@@ -48,6 +48,10 @@ everything Lock does. A surge without harm never locks the group or bans anyone.
 Separately, a newcomer posting nothing but a link is reported to the admins with **Ban** and
 **Ignore** (in human and auto mode).
 
+While an alert or raid mode is on, the group stays quiet: no per-member notices from the
+automatic checks, no welcome, no single link reports, and the log channel gets one post every 30
+seconds with everything the bot did. What admins do is logged at once.
+
 Raid mode ends by itself after 10 minutes without signs or a stream of joins (3 a minute), with
 `/raid off`, or with the notice's **End raid mode** button. The group's own permissions are put
 back exactly as they were before the lock. The summary has **Unmute the new joiners now**, which
@@ -74,6 +78,9 @@ ends it.
 **The bot does nothing.** It needs to be an admin with the rights to ban, restrict, delete and
 change the group's permissions; without them it says so in the group once per 10 minutes, and the
 jobs wait 10 minutes for the rights to come back. Check `enf logs <config> app` for 429s.
+
+**A new admin is not recognised.** The admin list is kept 60 seconds and updated at once when
+Telegram reports a promotion, so this is at most a minute. `/elevate` still works on top of it.
 
 **The admins say they never got the alert.** It waits out 429s for up to half an hour; check the
 log for `RaidAlert`. In a group that hides its admins, tags may not reach everyone.
