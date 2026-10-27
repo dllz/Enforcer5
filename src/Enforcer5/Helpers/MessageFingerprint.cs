@@ -11,8 +11,8 @@ namespace Enforcer5.Helpers
     /// <summary>
     /// What a message is like, without what it says: enough to see that raiders all post the same
     /// text or image, write in the same script, or post nothing but a link. The text itself is never
-    /// kept; only a hash of it with case, spacing, punctuation and digits taken out, so "Join NOW!!"
-    /// and "join now 2" match.
+    /// kept; only a hash of it with case, spacing, punctuation, digits, accents and lookalike letters
+    /// taken out, so "Join NOW!!", "join now 2" and "Jоin now" (a Cyrillic о) match.
     /// </summary>
     internal sealed record MessageFingerprint(string ContentType, string TextHash, string MediaUniqueId, string Script,
         int LinkCount, bool BareLink)
@@ -24,7 +24,9 @@ namespace Enforcer5.Helpers
         {
             var text = message.Text ?? message.Caption ?? "";
             var entities = message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>();
-            var linkEntities = entities.Count(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink or MessageEntityType.Mention);
+            // "@admin" is how members report, not a link to anywhere.
+            var linkEntities = entities.Count(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink ||
+                                                   e.Type == MessageEntityType.Mention && !IsReportMention(text, e));
             var linkTexts = LinkPattern.Matches(text).Count;
             var links = Math.Max(linkEntities, linkTexts);
             return new MessageFingerprint(
@@ -34,6 +36,15 @@ namespace Enforcer5.Helpers
                 ScriptOf(text),
                 links,
                 links > 0 && IsBareLink(text, entities));
+        }
+
+        private static bool IsReportMention(string text, MessageEntity e)
+        {
+            if (e.Offset < 0 || e.Offset + e.Length > text.Length) return false;
+            var mention = text.Substring(e.Offset, e.Length);
+            return mention.Equals("@admin", StringComparison.OrdinalIgnoreCase) ||
+                   mention.Equals("@admins", StringComparison.OrdinalIgnoreCase) ||
+                   mention.Equals("@pingall", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>The kind of message, as the flood exceptions name them.</summary>
@@ -63,22 +74,66 @@ namespace Enforcer5.Helpers
             ?? message.Audio?.FileUniqueId
             ?? message.VideoNote?.FileUniqueId;
 
-        /// <summary>A short hash of the text with case, spaces, punctuation and digits taken out; null when nothing is left.</summary>
+        /// <summary>
+        /// The letters of the text, lower case, with accents and other marks taken off and letters
+        /// that only look Latin (Cyrillic "а", Greek "ο") made Latin: what spam is compared by, so
+        /// lookalike letters and decorations do not make it different. Empty when there are none.
+        /// </summary>
+        internal static string Normalize(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            var normal = new StringBuilder(text.Length);
+            foreach (var c in text.Normalize(NormalizationForm.FormKD))
+            {
+                if (!char.IsLetter(c)) continue; // marks, digits, spaces, punctuation, invisible characters
+                var lower = char.ToLowerInvariant(c);
+                normal.Append(Lookalikes.TryGetValue(lower, out var latin) ? latin : lower);
+            }
+            return normal.ToString();
+        }
+
+        // Letters from other scripts that pass for Latin ones.
+        private static readonly System.Collections.Generic.Dictionary<char, char> Lookalikes = new()
+        {
+            ['а'] = 'a', ['в'] = 'b', ['е'] = 'e', ['ё'] = 'e', ['к'] = 'k', ['м'] = 'm', ['н'] = 'h', ['о'] = 'o',
+            ['р'] = 'p', ['с'] = 'c', ['т'] = 't', ['у'] = 'y', ['х'] = 'x', ['ѕ'] = 's', ['і'] = 'i', ['ј'] = 'j',
+            ['ԁ'] = 'd', ['һ'] = 'h', ['ӏ'] = 'l', ['ԛ'] = 'q', ['ԝ'] = 'w',
+            ['α'] = 'a', ['β'] = 'b', ['ε'] = 'e', ['η'] = 'n', ['ι'] = 'i', ['κ'] = 'k', ['ν'] = 'v', ['ο'] = 'o',
+            ['ρ'] = 'p', ['τ'] = 't', ['υ'] = 'u', ['χ'] = 'x', ['ı'] = 'i'
+        };
+
+        /// <summary>A short hash of <see cref="Normalize"/>d text, so "Join NOW!!" and "join now 2" match; null when no letters are left.</summary>
         internal static string Hash(string text)
         {
-            if (string.IsNullOrEmpty(text)) return null;
-            var normal = new StringBuilder(text.Length);
-            foreach (var c in text.Normalize(NormalizationForm.FormKC))
-                if (char.IsLetter(c)) normal.Append(char.ToLowerInvariant(c));
+            var normal = Normalize(text);
             if (normal.Length == 0) return null;
-            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normal.ToString()));
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normal));
             return Convert.ToHexString(hash, 0, 12).ToLowerInvariant();
         }
 
-        /// <summary>True when the message is nothing but links (and mentions), give or take two words.</summary>
+        /// <summary>
+        /// The three-letter runs of the <see cref="Normalize"/>d text, hashed: two texts sharing most
+        /// of them are the same text with a word or a random ending changed. Kept in memory for a
+        /// minute only; null when there are no letters.
+        /// </summary>
+        internal static System.Collections.Generic.HashSet<int> Sketch(string text)
+        {
+            var normal = Normalize(text);
+            if (normal.Length < 3) return null;
+            var runs = new System.Collections.Generic.HashSet<int>();
+            for (var i = 0; i + 3 <= normal.Length; i++)
+                runs.Add(string.GetHashCode(normal.AsSpan(i, 3), StringComparison.Ordinal));
+            return runs;
+        }
+
+        /// <summary>
+        /// True when the message is nothing but links, give or take two words; or nothing but a
+        /// mention, as channel ads are ("@someone thanks" is a reply, not a link post).
+        /// </summary>
         internal static bool IsBareLink(string text, MessageEntity[] entities)
         {
             if (string.IsNullOrWhiteSpace(text)) return false;
+            var realLink = entities.Any(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink) || LinkPattern.IsMatch(text);
             // Blank out the links and mentions Telegram marked (a word that links, a text link, is
             // still a word), then any it did not, and see what is left.
             var chars = text.ToCharArray();
@@ -87,7 +142,10 @@ namespace Enforcer5.Helpers
                     chars[i] = ' ';
             var rest = LinkPattern.Replace(new string(chars), " ");
             // "join <link>" or "free <link> now" is still a bare link: at most two words around it.
-            return rest.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Count(w => w.Any(char.IsLetter)) <= 2;
+            var words = rest.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Count(w => w.Any(char.IsLetter));
+            if (realLink) return words <= 2;
+            // Only mentions: a bare link when there is nothing else at all, and not a report.
+            return words == 0 && entities.Any(e => e.Type == MessageEntityType.Mention && !IsReportMention(text, e));
         }
 
         /// <summary>The script most of the letters are in: latin, cyrillic, arabic, cjk, hangul, devanagari, thai, hebrew, greek, other; null without letters.</summary>

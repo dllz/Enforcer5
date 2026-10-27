@@ -46,6 +46,26 @@ namespace Enforcer5.Tests.Raids
             Assert.AreEqual(1, print.LinkCount);
         }
 
+        [TestMethod]
+        public void MentionsWithWords_AndReports_AreNoBareLinks()
+        {
+            var reply = MessageFingerprint.Of(Text("@someone thanks", new MessageEntity { Type = MessageEntityType.Mention, Offset = 0, Length = 9 }));
+            Assert.IsFalse(reply.BareLink, "a reply to someone");
+            var report = MessageFingerprint.Of(Text("@admin", new MessageEntity { Type = MessageEntityType.Mention, Offset = 0, Length = 6 }));
+            Assert.IsFalse(report.BareLink, "a report");
+            Assert.AreEqual(0, report.LinkCount, "and no link either");
+        }
+
+        [TestMethod]
+        public void LookalikeLettersAndMarks_HashTheSame()
+        {
+            var plain = MessageFingerprint.Hash("Earn money from home");
+            Assert.AreEqual(plain, MessageFingerprint.Hash("Еаrn mоnеy frоm homе"), "Cyrillic letters that look Latin");
+            Assert.AreEqual(plain, MessageFingerprint.Hash("E\u0332a\u0332rn mönéy from home"), "combining marks and accents");
+            Assert.AreEqual(plain, MessageFingerprint.Hash("Ｅａｒｎ money from home"), "full-width letters");
+            Assert.AreNotEqual(MessageFingerprint.Hash("Привет всем"), MessageFingerprint.Hash("Пока всем"), "Cyrillic text stays itself");
+        }
+
         [DataTestMethod]
         [DataRow("hello there", "latin")]
         [DataRow("سلام دوستان", "arabic")]
