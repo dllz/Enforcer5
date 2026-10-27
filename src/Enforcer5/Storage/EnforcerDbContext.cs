@@ -28,7 +28,70 @@ namespace Enforcer5.Storage
             ConfigureSanctions(modelBuilder);
             ConfigureGlobalSanctions(modelBuilder);
             ConfigureRaidCapture(modelBuilder);
+            ConfigureDetectionSettings(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
+        }
+
+        private const string DetectionActions = "'none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban'";
+
+        private static void ConfigureDetectionSettings(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<GroupSettingsEntity>(entity =>
+            {
+                // The approved design's constraints, for the columns that exist so far.
+                entity.ToTable("group_settings", table =>
+                {
+                    table.HasCheckConstraint("group_settings_version_check", "version > 0");
+                    table.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
+                    table.HasCheckConstraint("group_settings_actions_check", "warning_action IN ('none', 'kick', 'ban', 'mute', 'tempban', 'tempmute')");
+                });
+                entity.HasKey(x => x.GroupId);
+                entity.Property(x => x.WarningAction).IsRequired();
+                entity.Property(x => x.Version).HasDefaultValue(1L).IsConcurrencyToken();
+                entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithOne().HasForeignKey<GroupSettingsEntity>(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DetectionPolicyEntity>(entity =>
+            {
+                entity.ToTable("detection_policies", table =>
+                {
+                    table.HasCheckConstraint("detection_policies_action_check", $"action IS NULL OR action IN ({DetectionActions})");
+                    table.HasCheckConstraint("detection_policies_check_key_check", "check_key ~ '^[a-z][a-z0-9_:]*$'");
+                });
+                entity.HasKey(x => new { x.GroupId, x.CheckKey });
+                entity.Property(x => x.Settings).HasColumnType("jsonb").HasDefaultValueSql("'{}'::jsonb").IsRequired();
+                entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<GroupFilterEntity>(entity =>
+            {
+                entity.ToTable("group_filters", table =>
+                {
+                    table.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact')");
+                    table.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set')");
+                    table.HasCheckConstraint("group_filters_mode_check", "mode IN ('live', 'trial')");
+                    table.HasCheckConstraint("group_filters_action_check", $"action IS NULL OR action IN ({DetectionActions})");
+                    table.HasCheckConstraint("group_filters_preset_check", "(kind = 'preset') = (preset IS NOT NULL)");
+                    table.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact')) = (pattern IS NOT NULL)");
+                    table.HasCheckConstraint("group_filters_length_check", "kind <> 'length' OR target IN ('text', 'name')");
+                    table.HasCheckConstraint("group_filters_limits_check", "(max_characters IS NULL OR max_characters > 0) AND (max_lines IS NULL OR max_lines > 0)");
+                    table.HasCheckConstraint("group_filters_trial_check", "mode <> 'trial' OR trial_until IS NOT NULL");
+                    table.HasCheckConstraint("group_filters_hits_check", "hits >= 0");
+                });
+                entity.HasKey(x => x.FilterId);
+                entity.Property(x => x.FilterId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Mode).IsRequired().HasDefaultValue("live");
+                entity.Property(x => x.Hits).HasDefaultValue(0L);
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.CreatedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.Preset }, "group_filters_preset_idx").IsUnique().HasFilter("preset IS NOT NULL");
+                entity.HasIndex(x => new { x.GroupId, x.Target }, "group_filters_length_idx").IsUnique().HasFilter("kind = 'length'");
+                entity.HasIndex(x => new { x.GroupId, x.Target, x.Kind, x.Pattern }, "group_filters_pattern_idx").IsUnique().HasFilter("pattern IS NOT NULL");
+            });
         }
 
         private static void ConfigurePrincipals(ModelBuilder modelBuilder)

@@ -287,7 +287,8 @@ ORDER BY s.sanction_id")).ToArray();
             var talker = chat.Add("Talker");
 
             await chat.SendAsync(talker, "short and sweet");
-            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "enabled"] = "no";
+            // An admin turns it off (since Detection step 2 the settings are in PostgreSQL).
+            await chat.ChangeSettingsAsync(p => p with { TextLength = p.TextLength with { Enabled = false } });
             await chat.AdvanceAsync(TimeSpan.FromSeconds(11)); // past the busy-group settings snapshot
             await chat.SendAsync(talker, new string('a', 150));
 

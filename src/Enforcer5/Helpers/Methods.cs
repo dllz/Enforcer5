@@ -1247,27 +1247,19 @@ namespace Enforcer5.Helpers
         /// Warns that trigger the group's warn action. A missing, unreadable or non-positive value is
         /// the default: it used to read as 0, so the first warn (an automatic one too) was the last.
         /// </summary>
-        internal static int MaxWarns(long chatId) => MaxWarns(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result);
+        internal static int MaxWarns(long chatId) => Detection.DetectionSettings.For(chatId).Warns.MaxWarns;
 
+        /// <summary>The old <c>warnsettings</c> value read as above; used by the import.</summary>
         internal static int MaxWarns(StackExchange.Redis.RedisValue stored) =>
             int.TryParse(stored.ToString(), out var max) && max > 0 ? max : DefaultMaxWarns;
 
-        /// <summary>Stores the default maximum when the group has none, so the menu's + and - start from it.</summary>
-        internal static void EnsureMaxWarns(long chatId) =>
-            Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", "max", MaxWarns(chatId)).Wait();
+        /// <summary>What reaching the group's maximum of warns does: "kick" or "ban".</summary>
+        internal static string WarnAction(long chatId) => Detection.DetectionSettings.For(chatId).Warns.Action;
 
-        public static int GetGroupTempbanTime(long chatId)
-        {
-            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;
-            return Duration.StoredMinutesOrDefault(time.ToString());
-        }
+        public static int GetGroupTempbanTime(long chatId) => Detection.DetectionSettings.For(chatId).TempbanMinutes;
 
-        public static int GetGroupTempMuteTime(long chatId)
-        {
-            var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempMuteTime").Result;
-            // Capped: past Telegram's limit the mute would silently become permanent.
-            return Duration.StoredMinutesOrDefault(time.ToString(), Duration.MaximumMinutes);
-        }
+        /// <summary>Capped when stored: past Telegram's limit the mute would silently become permanent.</summary>
+        public static int GetGroupTempMuteTime(long chatId) => Detection.DetectionSettings.For(chatId).TempmuteMinutes;
 
         public static object GetUsername(long id)
         {

@@ -133,9 +133,10 @@ namespace Enforcer5.Tests.ChannelPostTests
         }
 
         [TestMethod]
-        public void CompositionRoot_UsesRedis()
+        public void CompositionRoot_UsesTheDetectionSettings()
         {
-            Assert.IsInstanceOfType(Repositories.ChannelPosts, typeof(RedisChannelPostRepository));
+            // Since Detection step 2; this one is only read by the import.
+            Assert.IsInstanceOfType(Repositories.ChannelPosts, typeof(PolicyChannelPostRepository));
         }
     }
 }

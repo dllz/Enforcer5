@@ -5,9 +5,9 @@ using StackExchange.Redis;
 namespace Enforcer5.Helpers
 {
     /// <summary>
-    /// A busy group's settings hashes (settings, flood, media, characters, name and text length),
-    /// kept for <see cref="SettingsFor"/>: seven reads per message are seven reads per
-    /// <see cref="SettingsFor"/> during a raid. Only a group with more than <see cref="BusyMessages"/>
+    /// A busy group's <c>chat:{id}:settings</c> hash, kept for <see cref="SettingsFor"/>: a read per
+    /// message is a read per <see cref="SettingsFor"/> during a raid. (The automatic checks' settings
+    /// are in memory already; see Detection/DetectionSettings.) Only a group with more than <see cref="BusyMessages"/>
     /// messages in the last <see cref="SettingsFor"/> is served from the snapshot, so in a normal
     /// group a change of settings applies to the very next message, as before; in a busy one, within
     /// <see cref="SettingsFor"/>. The per-member watch list is always read.
@@ -17,8 +17,7 @@ namespace Enforcer5.Helpers
         internal static TimeSpan SettingsFor = TimeSpan.FromSeconds(10);
         internal static int BusyMessages = 20;
 
-        internal sealed record Snapshot(HashEntry[] Settings, HashEntry[] Flood, HashEntry[] FloodExceptions, HashEntry[] Media,
-            HashEntry[] Char, HashEntry[] NameLength, HashEntry[] TextLength);
+        internal sealed record Snapshot(HashEntry[] Settings);
 
         private sealed class Entry
         {

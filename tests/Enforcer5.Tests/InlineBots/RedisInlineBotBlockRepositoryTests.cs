@@ -123,7 +123,8 @@ namespace Enforcer5.Tests.InlineBots
         {
             // The composition root builds this before Redis.Start() has connected.
             _ = new RedisInlineBotBlockRepository(() => throw new InvalidOperationException("not connected"));
-            Assert.IsInstanceOfType(Repositories.InlineBotBlocks, typeof(RedisInlineBotBlockRepository));
+            // Since Detection step 2 the blocklist is in the detection settings; this one is only read by the import.
+            Assert.IsInstanceOfType(Repositories.InlineBotBlocks, typeof(PolicyInlineBotBlockRepository));
         }
     }
 }

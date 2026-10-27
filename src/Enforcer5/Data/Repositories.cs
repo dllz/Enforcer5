@@ -12,12 +12,13 @@ namespace Enforcer5.Data
     /// </summary>
     internal static class Repositories
     {
-        // The lambda defers touching Redis.db until first use, after Redis.Start() has connected.
+        // The group's detection settings (PostgreSQL, cached; see Detection/DetectionSettings). The
+        // Redis implementations are only read by the import (Detection/LegacySettings).
         internal static IInlineBotBlockRepository InlineBotBlocks { get; set; } =
-            new RedisInlineBotBlockRepository(() => Redis.db);
+            new PolicyInlineBotBlockRepository();
 
         internal static IStickerSetBlockRepository StickerSetBlocks { get; set; } =
-            new RedisStickerSetBlockRepository(() => Redis.db);
+            new PolicyStickerSetBlockRepository();
 
         internal static IWarnRepository Warns { get; set; } =
             new RedisWarnRepository(() => Redis.db);
@@ -26,7 +27,7 @@ namespace Enforcer5.Data
             new RedisWarnReasonRepository(() => Redis.db);
 
         internal static IChannelPostRepository ChannelPosts { get; set; } =
-            new RedisChannelPostRepository(() => Redis.db);
+            new PolicyChannelPostRepository(() => Redis.db);
 
         internal static IMuteRepository Mutes { get; set; } =
             new RedisMuteRepository(() => Redis.db);

@@ -16,21 +16,12 @@ namespace Enforcer5
     {
         public static InlineKeyboardMarkup genFlood(long chatId, XDocument lang)
         {
-            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
+            var flood = Detection.DetectionSettings.For(chatId).Flood;
             var oneRow = new Menu(2);
-            if (flood.Equals("no"))
-            {
-                oneRow.Buttons.Add(new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}",
-                    $"floodstatus:{chatId}"));
-            }
-            else if (flood.Equals("yes"))
-            {
-                oneRow.Buttons.Add(new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}",
-                    $"floodstatus:{chatId}"));
-            }
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:flood").Result;
-            var action = settings.Where(e => e.Name.Equals("ActionFlood")).FirstOrDefault();
-            switch (action.Value.ToString())
+            oneRow.Buttons.Add(flood.Enabled
+                ? new InlineButton($"✅ | {Methods.GetLocaleString(lang, "on")}", $"floodstatus:{chatId}")
+                : new InlineButton($"❌ | {Methods.GetLocaleString(lang, "off")}", $"floodstatus:{chatId}"));
+            switch (flood.Action)
             {
                 case "kick":
                     oneRow.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"floodaction:{chatId}"));
@@ -44,36 +35,22 @@ namespace Enforcer5
                 case "tempban":
                     oneRow.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"floodaction:{chatId}"));
                     break;
-
             }
-            action = settings.Where(e => e.Name.Equals("MaxFlood")).FirstOrDefault();
             var twoRow = new Menu(3);
             twoRow.Buttons.Add(new InlineButton("➖", $"flooddim:{chatId}"));
-            twoRow.Buttons.Add(new InlineButton(action.Value, $"floodSettings:{chatId}"));
+            twoRow.Buttons.Add(new InlineButton(flood.MaxMessages?.ToString() ?? "-", $"floodSettings:{chatId}"));
             twoRow.Buttons.Add(new InlineButton("➕", $"floodraise:{chatId}"));
-            var exceptions = Redis.db.HashGetAllAsync($"chat:{chatId}:floodexceptions").Result;
+            // The default exceptions, any other type the group set, and text.
             var exeMenu = new Menu(2);
-            var textFound = false;
-            foreach (var mem in exceptions)
+            var types = Detection.FloodSettings.MenuTypes
+                .Concat(flood.Counted.Keys.Where(t => t != "text" && !Detection.FloodSettings.MenuTypes.Contains(t)))
+                .Append("text");
+            foreach (var type in types)
             {
-                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                    $"floodSettings:{mem.Name}"));
-                if (mem.Name.Equals("text"))
-                    textFound = true;
-                if (mem.Value.Equals("yes"))
-                {
-                    exeMenu.Buttons.Add(new InlineButton("✅", $"flood{mem.Name}:{chatId}"));
-                }
-                else
-                {
-                    exeMenu.Buttons.Add(new InlineButton("❌", $"flood{mem.Name}:{chatId}"));
-                }
-            }
-            if (!textFound)
-            {
-                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"textButton"),
-                    $"floodSettings:text"));
-                exeMenu.Buttons.Add(new InlineButton("❌", $"floodtext:{chatId}"));
+                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{type}Button"),
+                    $"floodSettings:{type}"));
+                exeMenu.Buttons.Add(new InlineButton(flood.IsExempt(type) || type == "text" && !flood.Counted.ContainsKey(type) ? "❌" : "✅",
+                    $"flood{type}:{chatId}"));
             }
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
@@ -98,24 +75,10 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var flood = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Flood").Result;
-            if (flood.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (flood.Equals("no"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:settings", "Flood", "yes");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
+            ChangeDetection(call, chatId, lang, p => p with { Flood = p.Flood with { Enabled = !p.Flood.Enabled } }, Commands.genFlood);
         }
 
-    [Callback(Trigger = "floodSettings", GroupAdminOnly = true)]
+        [Callback(Trigger = "floodSettings", GroupAdminOnly = true)]
         public static void floodSettings(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
@@ -123,23 +86,24 @@ namespace Enforcer5
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "doNothing"));
         }
 
+        /// <summary>The lowest flood limit the menu goes down to.</summary>
+        private const int MinimumFlood = 5;
+
         [Callback(Trigger = "flooddim", GroupAdminOnly = true)]
         public static void flooddim(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:flood", "MaxFlood").Result;
-            if (num > 4)
-            {
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
+            var max = Detection.DetectionSettings.For(chatId).Flood.MaxMessages ?? Detection.FloodSettings.DefaultMaxMessages;
+            if (max - 1 < MinimumFlood)
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
+                return;
             }
+            ChangeDetection(call, chatId, lang, p => p with
+            {
+                Flood = p.Flood with { MaxMessages = Math.Max(MinimumFlood, (p.Flood.MaxMessages ?? Detection.FloodSettings.DefaultMaxMessages) - 1) }
+            }, Commands.genFlood);
         }
 
         [Callback(Trigger = "floodraise", GroupAdminOnly = true)]
@@ -147,159 +111,51 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:flood", "MaxFlood");
-            var keys = Commands.genFlood(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            ChangeDetection(call, chatId, lang, p => p with
+            {
+                Flood = p.Flood with { MaxMessages = (p.Flood.MaxMessages ?? Detection.FloodSettings.DefaultMaxMessages - 1) + 1 }
+            }, Commands.genFlood);
         }
 
         [Callback(Trigger = "floodaction", GroupAdminOnly = true)]
         public static void floodaction(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
-            var option = "ActionFlood";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:flood", option).Result;
-            if (current.Equals("ban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "kick");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("kick"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "warn");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            } else if (current.Equals("warn"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "tempban");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }else if (current.Equals("tempban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:flood", option, "ban");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
+            ChangeDetection(call, chatId, lang,
+                p => p with { Flood = p.Flood with { Action = Next(p.Flood.Action, "kick", "warn", "tempban", "ban") } },
+                Commands.genFlood);
         }
 
         [Callback(Trigger = "floodtext", GroupAdminOnly = true)]
-        public static void floodtext(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "text";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
-            if (current.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
-                var keys = Commands.genFlood(call.From.Id, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
+        public static void floodtext(CallbackQuery call, string[] args) => ToggleFloodException(call, args, "text");
+
         [Callback(Trigger = "floodsticker", GroupAdminOnly = true)]
-        public static void floodsticker(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "sticker";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
-            if (current.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
+        public static void floodsticker(CallbackQuery call, string[] args) => ToggleFloodException(call, args, "sticker");
 
         [Callback(Trigger = "floodimage", GroupAdminOnly = true)]
-        public static void floodimage(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "image";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
-            if (current.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
+        public static void floodimage(CallbackQuery call, string[] args) => ToggleFloodException(call, args, "image");
 
         [Callback(Trigger = "floodvideo", GroupAdminOnly = true)]
-        public static void floodvideo(CallbackQuery call, string[] args)
-        {
-            var chatId = long.Parse(args[1]);
-            var option = "video";
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
-            if (current.Equals("yes"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-        }
+        public static void floodvideo(CallbackQuery call, string[] args) => ToggleFloodException(call, args, "video");
 
         [Callback(Trigger = "floodgif", GroupAdminOnly = true)]
-        public static void floodgif(CallbackQuery call, string[] args)
+        public static void floodgif(CallbackQuery call, string[] args) => ToggleFloodException(call, args, "gif");
+
+        /// <summary>
+        /// Counts <paramref name="type"/> towards flood, or stops counting it. Text the group never set
+        /// was shown as not counted and starts counted when pressed, as it always did.
+        /// </summary>
+        private static void ToggleFloodException(CallbackQuery call, string[] args, string type)
         {
             var chatId = long.Parse(args[1]);
-            var option = "gif";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:floodexceptions", option).Result;
-            if (current.Equals("yes"))
+            ChangeDetection(call, chatId, lang, p =>
             {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "no");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:floodexceptions", option, "yes");
-                var keys = Commands.genFlood(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
+                var counted = new Dictionary<string, bool>(p.Flood.Counted);
+                counted[type] = !(counted.TryGetValue(type, out var current) && current);
+                return p with { Flood = p.Flood with { Counted = counted } };
+            }, Commands.genFlood);
         }
     }
 }

@@ -17,9 +17,13 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antinamelengthsettings", "maxlength", chars);
-                Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
-                return;
+                // A limit that is not positive is the default, as it always read.
+                int? limit = chars > 0 && chars <= int.MaxValue ? (int)chars : null;
+                if (Detection.DetectionSettings.TryUpdate(update.Message.Chat.Id, p => p with { NameLength = p.NameLength with { MaxCharacters = limit } }) != null)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                    return;
+                }
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
         }
@@ -30,9 +34,13 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlength", chars);
-                Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
-                return;
+                // A limit that is not positive is the default, as it always read.
+                int? limit = chars > 0 && chars <= int.MaxValue ? (int)chars : null;
+                if (Detection.DetectionSettings.TryUpdate(update.Message.Chat.Id, p => p with { TextLength = p.TextLength with { MaxCharacters = limit } }) != null)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                    return;
+                }
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
         }
@@ -43,9 +51,13 @@ namespace Enforcer5
             long chars;
             if (Int64.TryParse(args[1], out chars))
             {
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:antitextlengthsettings", "maxlines", chars);
-                Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
-                return;
+                // A limit that is not positive is the default, as it always read.
+                int? limit = chars > 0 && chars <= int.MaxValue ? (int)chars : null;
+                if (Detection.DetectionSettings.TryUpdate(update.Message.Chat.Id, p => p with { TextLength = p.TextLength with { MaxLines = limit } }) != null)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "done"), update);
+                    return;
+                }
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
         }

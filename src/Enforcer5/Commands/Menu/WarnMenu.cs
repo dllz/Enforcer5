@@ -21,8 +21,9 @@ namespace Enforcer5
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
 
-            var max = Methods.MaxWarns(chatId);
-            var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
+            var warns = Detection.DetectionSettings.For(chatId).Warns;
+            var max = warns.MaxWarns;
+            var action = warns.Action;
             var editWarn = new Menu(3);
                      
             editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
@@ -51,20 +52,13 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Methods.EnsureMaxWarns(chatId);
-            var num = Redis.db.HashDecrementAsync($"chat:{chatId}:warnsettings", "max").Result;
-            if (num > 0)
-            {
-                var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else
+            if (Detection.DetectionSettings.For(chatId).Warns.MaxWarns <= 1)
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
-                Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+                return;
             }
+            ChangeDetection(call, chatId, lang,
+                p => p with { Warns = p.Warns with { MaxWarns = Math.Max(1, p.Warns.MaxWarns - 1) } }, Commands.genWarnMenu);
         }
 
         [Callback(Trigger = "menuRaiseWarn", GroupAdminOnly = true)]
@@ -72,36 +66,18 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Methods.EnsureMaxWarns(chatId);
-            Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max").Wait();
-            var keys = Commands.genWarnMenu(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            ChangeDetection(call, chatId, lang,
+                p => p with { Warns = p.Warns with { MaxWarns = Math.Min(short.MaxValue, p.Warns.MaxWarns + 1) } }, Commands.genWarnMenu);
         }
 
         [Callback(Trigger = "menuActionWarn", GroupAdminOnly = true)]
         public static void menuActionWarn(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
-            var option = "type";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", option).Result;
-            if (current.Equals("ban"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "kick");
-                var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
-            else if (current.Equals("kick"))
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", option, "ban");
-                var keys = Commands.genWarnMenu(chatId, lang);
-                Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
-                    replyMarkup: keys);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
-            }
+            ChangeDetection(call, chatId, lang,
+                p => p with { Warns = p.Warns with { Action = Next(p.Warns.Action, Detection.WarnSettings.Kick, Detection.WarnSettings.Ban) } },
+                Commands.genWarnMenu);
         }
     }
 }

@@ -824,7 +824,13 @@ namespace Enforcer5
                             "userNotAdmin"), update.Message);
                     return;
                 }
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:otherSettings", "tempbanTime", time);
+                // Stored as it is used: an unusable length is the default, as it always read.
+                var minutes = Duration.StoredMinutesOrDefault(time.ToString());
+                if (Detection.DetectionSettings.TryUpdate(update.Message.Chat.Id, p => p with { TempbanMinutes = minutes }) == null)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+                    return;
+                }
                 Bot.SendReply(Methods.GetLocaleString(lang, "defaultTimeSet"), update);
                 Service.LogCommand(update, update.Message.Text);
             }
@@ -842,7 +848,12 @@ namespace Enforcer5
                     Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTime", Methods.GetGroupTempMuteTime(chatId)), update);
                     return;
                 case DurationParseResult.Ok:
-                    Redis.db.HashSetAsync($"chat:{chatId}:otherSettings", "tempMuteTime", (int)duration.TotalMinutes);
+                    var minutes = Duration.StoredMinutesOrDefault(((int)duration.TotalMinutes).ToString(), Duration.MaximumMinutes);
+                    if (Detection.DetectionSettings.TryUpdate(chatId, p => p with { TempmuteMinutes = minutes }) == null)
+                    {
+                        Bot.SendReply(Methods.GetLocaleString(lang, "failed"), update);
+                        return;
+                    }
                     Bot.SendReply(Methods.GetLocaleString(lang, "defaultMuteTimeSet"), update);
                     Service.LogCommand(update, update.Message.Text);
                     return;
@@ -930,12 +941,6 @@ namespace Enforcer5
         }
 
 
-        public static void tempAddMuteOnJoinSetting(Update update, long chatId)
-        {
-            Redis.db.HashSetAsync($"chat:{chatId}:settings", "MuteOnJoin", "yes");
-            var text = "We have set Mute on join setting to 'no'. You can change this in the group settings menu.";
-            Bot.SendReply(text, update.Message);
-        }
     }
 
     public static partial class CallBacks
@@ -1004,10 +1009,7 @@ namespace Enforcer5
             
             if (num >= max)
             {
-                // Read once, and awaited: the second read used to call ToString() on the Task, so
-                // type was never "ban" and this button always kicked, whatever the group had set.
-                var setting = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
-                var type = setting.HasValue ? setting.ToString() : "kick";
+                var type = Methods.WarnAction(chatId);
                 if (type.Equals("ban"))
                 {
                     // BanUser tells the group why on a refusal (bot not admin, target is admin), as

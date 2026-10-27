@@ -20,14 +20,9 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
             var chatId = update.Message.Chat.Id;
             var deleteLastWelcome = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
-            var muteOnJoin = Redis.db.HashGet($"chat:{chatId}:settings", "MuteOnJoin");
             if (!deleteLastWelcome.HasValue)
             {
                 tempAddDeleteLastWelcomeSetting(update, chatId);
-            }
-            if (!muteOnJoin.HasValue)
-            {
-                tempAddMuteOnJoinSetting(update, chatId);
             }
             var menuText = Methods.GetLocaleString(lang, "mainMenu", update.Message.Chat.Title);
             var menu = genMenu(chatId, lang);
@@ -63,7 +58,9 @@ namespace Enforcer5
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
             var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
-            if(settings.Length < 9)
+            // A group whose settings were never generated. Flood and Mute On Join left this hash
+            // for PostgreSQL (Detection step 2), so a generated one has 8 fields now, not 9.
+            if(settings.Length < 8)
             {
                 Service.GenerateSettings(chatId);
                 settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;

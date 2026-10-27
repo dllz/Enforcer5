@@ -52,7 +52,8 @@ namespace Enforcer5
             var chatId = ctx.ChatId;
             AntiLength(ctx);
 
-            if (ctx.Setting("Flood").Equals("yes"))
+            var flood = ctx.Policy.Flood;
+            if (!flood.Enabled)
             {
                 return;
             }
@@ -64,7 +65,8 @@ namespace Enforcer5
                 return;
             }
 
-            if (!int.TryParse(ctx.FloodSetting("MaxFlood").ToString(), out var maxmsgs)) return;
+            // No limit (a missing or unreadable one in the old settings) means no flood checking.
+            if (flood.MaxMessages is not int maxmsgs) return;
 
             // One atomic count per window of FloodWindow from the first message. It used to be read
             // with the context and written back as count + 1, so with 32 consumers two messages read
@@ -77,7 +79,7 @@ namespace Enforcer5
             // Admins are exempt: only asked once someone is over the limit, from the admin list
             // shared with everything else (one call per group a minute at most).
             if (await Methods.IsGroupAdminAsync(userid, chatId)) return;
-            var action = ctx.FloodSetting("ActionFlood").ToString();
+            var action = flood.Action;
             if (num > maxmsgs + 1)
             {
                 // Already being dealt with: whatever else they send in this window goes too. A ban
@@ -92,9 +94,9 @@ namespace Enforcer5
                 if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
                 var groupId = chatId;
                 // The flood itself goes, whatever the action: in one call for up to 100 messages.
-                var flood = FloodTracker.Recent(chatId, userid);
-                if (action != "ban" && flood.Length > 0)
-                    await Enforcement.EnforcementQueue.SubmitAsync(Enforcement.EnforcementJob.Delete(chatId, flood));
+                var floodMessages = FloodTracker.Recent(chatId, userid);
+                if (action != "ban" && floodMessages.Length > 0)
+                    await Enforcement.EnforcementQueue.SubmitAsync(Enforcement.EnforcementJob.Delete(chatId, floodMessages));
                 // Raid detection sees every flood, whatever the group does about it.
                 FloodTracker.OnFlood(chatId, userid);
                 // In raid mode an untrusted flooder is banned by the raid, with their messages.
@@ -154,15 +156,15 @@ namespace Enforcer5
         {
             var update = ctx.Update;
             var groupId = ctx.ChatId;
-            var settings = ctx.TextLength;
-            if (!MessageContext.Field(settings, "enabled").Equals("yes")) return;
+            var settings = ctx.Policy.TextLength;
+            if (!settings.Enabled) return;
 
             var text = update.Message.Text;
-            var intml = Limit(MessageContext.Field(settings, "maxlength"), DefaultMaxTextLength);
-            var intmline = Limit(MessageContext.Field(settings, "maxlines"), DefaultMaxTextLines);
+            var intml = settings.MaxCharacters ?? DefaultMaxTextLength;
+            var intmline = settings.MaxLines ?? DefaultMaxTextLines;
             if (text.Length < intml && LineCount(text) < intmline) return;
 
-            var action = MessageContext.Field(settings, "action");
+            var action = settings.Action;
             var lang = ctx.Lang;
             var userid = ctx.UserId;
             Bot.DispatchAction(() =>
@@ -199,7 +201,7 @@ namespace Enforcer5
                             return;
                         }
                         break;
-                    case "Warn":
+                    case "warn":
                         Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Long message");
                         return;
                     case "tempban":
@@ -224,16 +226,16 @@ namespace Enforcer5
         {
             var update = ctx.Update;
             var groupId = ctx.ChatId;
-            var settings = ctx.NameLength;
-            if (!MessageContext.Field(settings, "enabled").Equals("yes")) return;
+            var settings = ctx.Policy.NameLength;
+            if (!settings.Enabled) return;
 
             var text = update.Message.From.FirstName;
             if (update.Message.From.LastName != null)
                 text = $"{text}{update.Message.From.LastName}";
-            var intml = Limit(MessageContext.Field(settings, "maxlength"), DefaultMaxNameLength);
+            var intml = settings.MaxCharacters ?? DefaultMaxNameLength;
             if (text.Length < intml) return;
 
-            var action = MessageContext.Field(settings, "action");
+            var action = settings.Action;
             var lang = ctx.Lang;
             var userid = ctx.UserId;
             Bot.DispatchAction(() =>
@@ -258,7 +260,7 @@ namespace Enforcer5
                             if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         }
                         break;
-                    case "Warn":
+                    case "warn":
                         Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Name too long");
                         break;
                     case "tempban":
@@ -291,9 +293,6 @@ namespace Enforcer5
         /// of a Regex.Split whose pattern captured each line, which counted every line about twice.
         /// </summary>
         internal static int LineCount(string text) => text.TrimEnd('\r', '\n').Split('\n').Length;
-
-        private static int Limit(StackExchange.Redis.RedisValue stored, int fallback) =>
-            stored.TryParse(out int limit) && limit > 0 ? limit : fallback;
 
         /// <summary>
         /// Decision only - every read comes from the context and the enforcement inside each branch
@@ -328,17 +327,19 @@ namespace Enforcer5
             var chatId = ctx.ChatId;
             var media = Methods.GetContentType(message);
             // A link in a caption is a link: a photo captioned with one used to get past the link lock.
-            if (!ctx.MediaSetting(media).Equals("blocked") && ctx.MediaSetting("link").Equals("blocked") &&
+            var settings = ctx.Policy.Media;
+            if (!settings.IsBlocked(media) && settings.IsBlocked("link") &&
                 (message.CaptionEntities ?? Array.Empty<Telegram.Bot.Types.MessageEntity>())
                     .Any(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink))
                 media = "link";
-            if (!ctx.MediaSetting(media).Equals("blocked")) return Task.CompletedTask;
+            if (!settings.IsBlocked(media)) return Task.CompletedTask;
 
             var lang = ctx.Lang;
             var name = $"{message.From.FirstName} [{message.From.Id}]";
             if (message.From.Username != null)
                 name = $"{name} (@{message.From.Username})";
-            var configuredAction = ctx.MediaSetting("action").ToString();
+            var configuredAction = settings.Action;
+            var max = settings.EffectiveWarnLimit;
 
             // The warn counter is incremented and reset in the same unit of work as the action it
             // gates. Doing the increment out here and dispatching only the action would let a
@@ -346,14 +347,10 @@ namespace Enforcer5
             Bot.DispatchAction(() =>
             {
                 if (Methods.IsGroupAdmin(message.From.Id, chatId)) return;
-                // Only needed once media is actually blocked, so it stays off the common path.
-                // This read used to be issued twice - once for HasValue and once for the value.
-                var configuredMax = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
-                var max = configuredMax.HasValue ? configuredMax : 2;
                 var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
                 var warned = WarnHistory.Added(chatId, message.From.Id, WarnKind.Media, 1, current, null, null, "Media");
 
-                var overLimit = current >= int.Parse(max);
+                var overLimit = current >= max;
                 var action = overLimit ? configuredAction : null;
                 if (overLimit)
                 {
@@ -544,8 +541,7 @@ namespace Enforcer5
 
             var update = ctx.Update;
             var chatId = ctx.ChatId;
-            var rtlStatus = ctx.CharSetting("Rtl");
-            var status = rtlStatus.HasValue ? rtlStatus.ToString() : "allowed";
+            var status = ctx.Policy.Scripts.Rtl ?? "allowed";
             if (!status.Equals("ban") && !status.Equals("kick")) return;
 
             var name = update.Message.From.FirstName;
@@ -609,7 +605,7 @@ namespace Enforcer5
         {
             var m = ctx.Message;
             var text = $"{m.Text} {m.From.FirstName} {m.From.LastName} {m.ForwardFrom?.FirstName} {m.ForwardFrom?.LastName} {m.From.Username} {m.ForwardFrom?.Username}";
-            await CharacterDetection(ctx, "Arab", ArabicChars, text);
+            await CharacterDetection(ctx, ArabicChars, text);
             await RightToLeft(ctx);
         }
 
@@ -623,24 +619,24 @@ namespace Enforcer5
             foreach (var joiner in ctx.Message.NewChatMembers ?? Array.Empty<Telegram.Bot.Types.User>())
             {
                 if (joiner.Id == Bot.Me.Id) continue;
-                await CharacterDetection(ctx, "Arab", ArabicChars, $"{joiner.FirstName} {joiner.LastName}", joiner);
+                await CharacterDetection(ctx, ArabicChars, $"{joiner.FirstName} {joiner.LastName}", joiner);
             }
         }
 
         /// <summary>
-        /// Applies the chat's chat:{id}:char/{setting} policy (kick/ban/tempban) if any character
+        /// Applies the chat's Arabic script preset (kick/ban/tempban) if any character
         /// in <paramref name="text"/> matches <paramref name="characterClass"/>, to
         /// <paramref name="target"/> (a joiner) or, without one, the message's sender.
         /// Users on the watch list and admins are exempt.
         /// </summary>
-        private static async Task CharacterDetection(MessageContext ctx, string setting, string characterClass, string text,
+        private static async Task CharacterDetection(MessageContext ctx, string characterClass, string text,
             Telegram.Bot.Types.User target = null)
         {
             if (target == null && ctx.Watched) return;
 
-            var status = ctx.CharSetting(setting).ToString();
-            if (string.IsNullOrEmpty(status)) status = "allowed";
-            if (status.Equals("allowed")) return;
+            // Joins run whether or not the context is complete; without settings nothing is set.
+            var status = ctx.Policy?.Scripts.Arabic;
+            if (status == null) return; // allowed
 
             // One match over the whole string; this used to run the regex once per character.
             if (!Regex.IsMatch(text, characterClass)) return;
@@ -701,8 +697,7 @@ namespace Enforcer5
 
         internal static bool isIgnored(MessageContext ctx, string msgType)
         {
-            var status = MessageContext.Field(ctx.FloodExceptions, msgType);
-            return status.HasValue && status.Equals("no");
+            return ctx.Policy.Flood.IsExempt(msgType);
         }
     }
 }

@@ -1,6 +1,6 @@
 # Enforcer — Telegram group management bot
 
-Single .NET 10 console app. Redis is the main datastore; PostgreSQL is being rolled in one domain at a time, and global bans already live only there (`docs/postgres-rollout.md`). Deployed on Linux under systemd,
+Single .NET 10 console app. Redis is the main datastore; PostgreSQL is being rolled in one domain at a time, and global bans and the automatic checks' settings already live only there (`docs/postgres-rollout.md`). New data goes to PostgreSQL; Redis is a cache and a communication system, not a store (Daniel, 2026-10-27). Deployed on Linux under systemd,
 alongside blackwolf, and managed by **blackwolf's DeployBot** (see below).
 
 ## Build
@@ -54,6 +54,7 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/CommandLimiter.cs`, `CommandGate.cs` | Command, button and @admin limits and the slow lane |
 | `src/Enforcer5/Raids/` | Raid detection, raid mode and raid telemetry; `Helpers/RaidCapture`, `MemberEvents`, `MemberTrust` feed it |
 | `src/Enforcer5/Data/` | Repository interfaces, their Redis and PostgreSQL implementations, and `Repositories` (the composition root) |
+| `src/Enforcer5/Detection/` | Detection v2 (`docs/detection-design.md`). So far: each group's settings of the automatic checks as one `DetectionPolicy`, from PostgreSQL through `DetectionSettings` (memory, Redis cache), imported once from the old hashes by `LegacySettings` |
 | `src/Enforcer5/Storage/` | PostgreSQL: connection, EF Core schema model and migrations, startup migration runner |
 | `src/Enforcer5/Commands/` | Commands, callbacks, inline queries, menus |
 | `src/Enforcer5/Attributes/` | `[Command]`, `[Callback]`, `[Query]` — bound by reflection at startup |

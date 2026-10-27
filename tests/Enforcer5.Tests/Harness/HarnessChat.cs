@@ -147,6 +147,7 @@ namespace Enforcer5.Tests.Harness
             await GlobalBans.ReloadAsync();
 
             Enforcer5.Helpers.Clock.UseForTests(Clock);
+            Enforcer5.Detection.DetectionSettings.ResetForTests();
             Hashes.Install(Redis);
             Keys.Install(Redis);
 #if PREMIUM
@@ -187,6 +188,8 @@ namespace Enforcer5.Tests.Harness
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
+            // What a group's settings were in memory; the Redis cache and PostgreSQL keep them.
+            Enforcer5.Detection.DetectionSettings.ResetForTests();
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
@@ -424,6 +427,14 @@ namespace Enforcer5.Tests.Harness
         /// </summary>
         internal Task AdvanceAsync(TimeSpan by) => HarnessTime.AdvanceAsync(Clock, by);
 
+        /// <summary>
+        /// Changes the group's detection settings as a menu would (in PostgreSQL, importing the seeded
+        /// Redis hashes first if the group has none yet).
+        /// </summary>
+        internal Task<Enforcer5.Detection.DetectionPolicy> ChangeSettingsAsync(
+            Func<Enforcer5.Detection.DetectionPolicy, Enforcer5.Detection.DetectionPolicy> change) =>
+            Enforcer5.Detection.DetectionSettings.UpdateAsync(ChatId, change);
+
         /// <summary>The bot's messages to this chat, oldest first.</summary>
         internal IReadOnlyList<string> Replies =>
             Telegram.Accepted.Where(c => c.Method == "sendMessage" && c.ChatId == ChatId).Select(c => c.Text).ToList();
@@ -444,6 +455,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Helpers.Clock.UseForTests(null);
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
+            Enforcer5.Detection.DetectionSettings.ResetForTests();
             if (_world.Database != null) await _world.Database.DisposeAsync();
             if (_world.ConnectionString != null) await Storage.TestPostgres.ReleaseMigratedAsync(_world.ConnectionString);
         }

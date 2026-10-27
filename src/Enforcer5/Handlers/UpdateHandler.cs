@@ -424,9 +424,9 @@ namespace Enforcer5.Handlers
                     Service.Welcome(update.Message);
                     // Everyone added in one go, not just the first: a mass add is how a raid gets
                     // round Mute On Join.
-                    var muteOnJoin = ctx.Complete ? ctx.Setting("MuteOnJoin") : Redis.db.HashGet($"chat:{chatId}:settings", "MuteOnJoin");
+                    var muteOnJoin = (ctx.Policy ?? Detection.DetectionSettings.For(chatId)).MuteOnJoin;
                     var lang = ctx.Lang ?? Methods.GetGroupLanguage(chatId).Doc;
-                    if (muteOnJoin == "no")
+                    if (muteOnJoin)
                     {
                         foreach (var joiner in joiners)
                             Methods.MuteUser(chatId, joiner.Id, lang, newJoiner: true);

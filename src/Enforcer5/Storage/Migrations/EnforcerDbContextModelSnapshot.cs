@@ -22,6 +22,51 @@ namespace Enforcer5.Storage.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Enforcer5.Storage.DetectionPolicyEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("CheckKey")
+                        .HasColumnType("text")
+                        .HasColumnName("check_key");
+
+                    b.Property<string>("Action")
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("Settings")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("settings")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<short?>("Weight")
+                        .HasColumnType("smallint")
+                        .HasColumnName("weight");
+
+                    b.HasKey("GroupId", "CheckKey");
+
+                    b.ToTable("detection_policies", null, t =>
+                        {
+                            t.HasCheckConstraint("detection_policies_action_check", "action IS NULL OR action IN ('none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban')");
+
+                            t.HasCheckConstraint("detection_policies_check_key_check", "check_key ~ '^[a-z][a-z0-9_:]*$'");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
                 {
                     b.Property<long>("GlobalSanctionId")
@@ -167,6 +212,119 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupFilterEntity", b =>
+                {
+                    b.Property<long>("FilterId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("filter_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("FilterId"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("CreatedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("created_by_account_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("enabled");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("Hits")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("hits");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<int?>("MaxCharacters")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_characters");
+
+                    b.Property<int?>("MaxLines")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_lines");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("live")
+                        .HasColumnName("mode");
+
+                    b.Property<string>("Pattern")
+                        .HasColumnType("text")
+                        .HasColumnName("pattern");
+
+                    b.Property<string>("Preset")
+                        .HasColumnType("text")
+                        .HasColumnName("preset");
+
+                    b.Property<string>("Target")
+                        .HasColumnType("text")
+                        .HasColumnName("target");
+
+                    b.Property<DateTimeOffset?>("TrialUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trial_until");
+
+                    b.HasKey("FilterId");
+
+                    b.HasIndex("CreatedByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "Target" }, "group_filters_length_idx")
+                        .IsUnique()
+                        .HasFilter("kind = 'length'");
+
+                    b.HasIndex(new[] { "GroupId", "Target", "Kind", "Pattern" }, "group_filters_pattern_idx")
+                        .IsUnique()
+                        .HasFilter("pattern IS NOT NULL");
+
+                    b.HasIndex(new[] { "GroupId", "Preset" }, "group_filters_preset_idx")
+                        .IsUnique()
+                        .HasFilter("preset IS NOT NULL");
+
+                    b.ToTable("group_filters", null, t =>
+                        {
+                            t.HasCheckConstraint("group_filters_action_check", "action IS NULL OR action IN ('none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban')");
+
+                            t.HasCheckConstraint("group_filters_hits_check", "hits >= 0");
+
+                            t.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact')");
+
+                            t.HasCheckConstraint("group_filters_length_check", "kind <> 'length' OR target IN ('text', 'name')");
+
+                            t.HasCheckConstraint("group_filters_limits_check", "(max_characters IS NULL OR max_characters > 0) AND (max_lines IS NULL OR max_lines > 0)");
+
+                            t.HasCheckConstraint("group_filters_mode_check", "mode IN ('live', 'trial')");
+
+                            t.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact')) = (pattern IS NOT NULL)");
+
+                            t.HasCheckConstraint("group_filters_preset_check", "(kind = 'preset') = (preset IS NOT NULL)");
+
+                            t.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set')");
+
+                            t.HasCheckConstraint("group_filters_trial_check", "mode <> 'trial' OR trial_until IS NOT NULL");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupJoinEntity", b =>
                 {
                     b.Property<long>("JoinId")
@@ -284,6 +442,54 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("group_members_count_check", "message_count >= 0");
 
                             t.HasCheckConstraint("group_members_source_check", "join_source IS NULL OR join_source IN ('link', 'added', 'request', 'unknown')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupSettingsEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<short>("MaximumWarnings")
+                        .HasColumnType("smallint")
+                        .HasColumnName("maximum_warnings");
+
+                    b.Property<int>("TempbanMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("tempban_minutes");
+
+                    b.Property<int>("TempmuteMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("tempmute_minutes");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("version");
+
+                    b.Property<string>("WarningAction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("warning_action");
+
+                    b.HasKey("GroupId");
+
+                    b.ToTable("group_settings", null, t =>
+                        {
+                            t.HasCheckConstraint("group_settings_actions_check", "warning_action IN ('none', 'kick', 'ban', 'mute', 'tempban', 'tempmute')");
+
+                            t.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
+
+                            t.HasCheckConstraint("group_settings_version_check", "version > 0");
                         });
                 });
 
@@ -1132,6 +1338,15 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.DetectionPolicyEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -1157,6 +1372,20 @@ namespace Enforcer5.Storage.Migrations
                         .WithOne()
                         .HasForeignKey("Enforcer5.Storage.GroupEntity", "ChatId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupFilterEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -1196,6 +1425,15 @@ namespace Enforcer5.Storage.Migrations
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
                         .WithMany()
                         .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupSettingsEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithOne()
+                        .HasForeignKey("Enforcer5.Storage.GroupSettingsEntity", "GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

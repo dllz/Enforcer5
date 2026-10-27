@@ -160,7 +160,8 @@ namespace Enforcer5.Tests.StickerSets
         public void Constructing_DoesNotTouchTheDatabase()
         {
             _ = new RedisStickerSetBlockRepository(() => throw new InvalidOperationException("not connected"));
-            Assert.IsInstanceOfType(Repositories.StickerSetBlocks, typeof(RedisStickerSetBlockRepository));
+            // Since Detection step 2 the blocklist is in the detection settings; this one is only read by the import.
+            Assert.IsInstanceOfType(Repositories.StickerSetBlocks, typeof(PolicyStickerSetBlockRepository));
         }
     }
 

@@ -18,12 +18,20 @@ namespace Enforcer5
         public static InlineKeyboardMarkup genGroupSettingsMenu(long chatId, XDocument lang)
         {
             var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
+            var policy = Detection.DetectionSettings.For(chatId);
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
+            // Flood and Mute On Join are in the detection settings (PostgreSQL) since Detection step 2.
+            void OnOff(string name, bool on)
+            {
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{name}Button"), $"menusettings:{name}"));
+                mainMenu.Buttons.Add(new InlineButton(on ? "✅" : "🚫", $"menu{name}:{chatId}"));
+            }
+            OnOff("Flood", policy.Flood.Enabled);
             foreach (var mem in settings)
             {
-                if (mem.Name.Equals("Flood") | mem.Name.Equals("Report") | mem.Name.Equals("Welcome") | mem.Name.Equals("DeleteLastWelcome") | mem.Name.Equals("MuteOnJoin"))
+                if (mem.Name.Equals("Report") | mem.Name.Equals("Welcome") | mem.Name.Equals("DeleteLastWelcome"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
                         $"menusettings:{mem.Name}"));
@@ -51,30 +59,28 @@ namespace Enforcer5
                     }
                 }
             }
-            settings = Redis.db.HashGetAllAsync($"chat:{chatId}:char").Result;
-            foreach (var mem in settings)
+            OnOff("MuteOnJoin", policy.MuteOnJoin);
+            foreach (var (name, action) in new[] { ("Arab", policy.Scripts.Arabic), ("Rtl", policy.Scripts.Rtl) })
             {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                    $"menusettings:{mem.Name}"));
-                switch (mem.Value.ToString())
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{name}Button"),
+                    $"menusettings:{name}"));
+                switch (action)
                 {
                     case "kick":
-                        mainMenu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"menu{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"menu{name}:{chatId}"));
                         break;
                     case "ban":
-                        mainMenu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"menu{mem.Name}:{chatId}"));
-                        break;
-                    case "allowed":
-                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"menu{name}:{chatId}"));
                         break;
                     case "tempban":
-                        mainMenu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"menu{mem.Name}:{chatId}"));
+                        mainMenu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"menu{name}:{chatId}"));
                         break;
-
+                    default:
+                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{name}:{chatId}"));
+                        break;
                 }
             }
-            // Stored behind a repository rather than in chat:{id}:settings, so it is drawn on its own.
-            var channelPostsBlocked = Repositories.ChannelPosts.IsEnabledAsync(chatId).GetAwaiter().GetResult();
+            var channelPostsBlocked = policy.ChannelPosts.Enabled;
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "ChannelPostsButton"),
                 "menusettings:ChannelPosts"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, channelPostsBlocked ? "on" : "off"),
@@ -103,7 +109,8 @@ namespace Enforcer5
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
         }
         [Callback(Trigger = "menuFlood", GroupAdminOnly = true)]
-        public static void MenuFlood(CallbackQuery call, string[] args) => ToggleSetting(call, args, "Flood");
+        public static void MenuFlood(CallbackQuery call, string[] args) =>
+            ChangeSettings(call, args, p => p with { Flood = p.Flood with { Enabled = !p.Flood.Enabled } });
 
         [Callback(Trigger = "menuReport", GroupAdminOnly = true)]
         public static void MenuReport(CallbackQuery call, string[] args) => ToggleSetting(call, args, "Report");
@@ -130,22 +137,34 @@ namespace Enforcer5
         public static void MenuAbout(CallbackQuery call, string[] args) => ToggleSetting(call, args, "About");
 
         [Callback(Trigger = "menuMuteOnJoin", GroupAdminOnly = true)]
-        public static void MenuMuteOnJoin(CallbackQuery call, string[] args) => ToggleSetting(call, args, "MuteOnJoin");
+        public static void MenuMuteOnJoin(CallbackQuery call, string[] args) =>
+            ChangeSettings(call, args, p => p with { MuteOnJoin = !p.MuteOnJoin });
+
+        // The script presets cycle ban -> kick -> allowed -> tempban -> ban, as they always did.
+        private static readonly string[] ScriptActions = { "kick", null, "tempban", "ban" };
 
         [Callback(Trigger = "menuRtl", GroupAdminOnly = true)]
-        public static void MenuRtl(CallbackQuery call, string[] args) => CycleCharSetting(call, args, "Rtl");
+        public static void MenuRtl(CallbackQuery call, string[] args) =>
+            ChangeSettings(call, args, p => p with { Scripts = p.Scripts with { Rtl = Next(p.Scripts.Rtl, ScriptActions) } });
 
         [Callback(Trigger = "menuArab", GroupAdminOnly = true)]
-        public static void MenuArab(CallbackQuery call, string[] args) => CycleCharSetting(call, args, "Arab");
+        public static void MenuArab(CallbackQuery call, string[] args) =>
+            ChangeSettings(call, args, p => p with { Scripts = p.Scripts with { Arabic = Next(p.Scripts.Arabic, ScriptActions) } });
 
         [Callback(Trigger = "menuChannelPosts", GroupAdminOnly = true)]
-        public static void MenuChannelPosts(CallbackQuery call, string[] args)
+        public static void MenuChannelPosts(CallbackQuery call, string[] args) =>
+            ChangeSettings(call, args, p => p with { ChannelPosts = p.ChannelPosts with { Enabled = !p.ChannelPosts.Enabled } });
+
+        /// <summary>Changes the group's detection settings and redraws the settings menu.</summary>
+        private static void ChangeSettings(CallbackQuery call, string[] args, Func<Detection.DetectionPolicy, Detection.DetectionPolicy> change)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var repository = Repositories.ChannelPosts;
-            var enabled = repository.IsEnabledAsync(chatId).GetAwaiter().GetResult();
-            repository.SetEnabledAsync(chatId, !enabled).GetAwaiter().GetResult();
+            if (Detection.DetectionSettings.TryUpdate(chatId, change) == null)
+            {
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                return;
+            }
             RedrawSettingsMenu(call, chatId, lang);
         }
 
@@ -164,27 +183,6 @@ namespace Enforcer5
             else return;
 
             Redis.db.HashSetAsync($"chat:{chatId}:settings", option, next);
-            RedrawSettingsMenu(call, chatId, lang);
-        }
-
-        /// <summary>
-        /// Advances a character-filter setting in chat:{id}:char through its
-        /// ban -> kick -> allowed -> tempban -> ban cycle and redraws the menu.
-        /// </summary>
-        private static void CycleCharSetting(CallbackQuery call, string[] args, string option)
-        {
-            var chatId = long.Parse(args[1]);
-            var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:char", option).Result;
-
-            string next;
-            if (current.Equals("ban")) next = "kick";
-            else if (current.Equals("kick")) next = "allowed";
-            else if (current.Equals("allowed")) next = "tempban";
-            else if (current.Equals("tempban")) next = "ban";
-            else return;
-
-            Redis.db.HashSetAsync($"chat:{chatId}:char", option, next);
             RedrawSettingsMenu(call, chatId, lang);
         }
 

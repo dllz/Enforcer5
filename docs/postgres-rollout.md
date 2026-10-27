@@ -40,6 +40,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 7 | Global bans, **cut over**: PostgreSQL is the only store; `/getrekt`, `/getrektu`, `/getrekti`, `/unrekt`, `/rektlist`, `/getuser` and the check on every message use it; old Redis records imported once with SQL | as above, `global_sanctions` | Built |
 | 8 | Raid building blocks: joins, members, message fingerprints, each group's normal, and the lookup for everyone resembling known raiders | `group_joins`, `group_members`, `message_fingerprints`, `group_stats` | Built |
 | 9 | Raid telemetry: every raid and possible raid, with its timeline, for tuning and replay | `raid_incidents`, `raid_events` | Built |
+| 10 | Detection settings, **cut over** (Detection v2 step 2): flood, flood exceptions, media locks, Arabic and right-to-left, text and name length, Mute On Join, max warns and their action, tempban and tempmute lengths, blocked inline bots and sticker packs, channel posts. PostgreSQL is the store, Redis a cache; each group's old hashes are imported on its first use | `group_settings` (the columns the checks use), `detection_policies`, `group_filters` | Built |
 
 ### Step 2: ban history
 
@@ -169,7 +170,7 @@ and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose t
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else (raid state and the slow lane included), including tempban expiry (PostgreSQL is
-written, Redis decides), global bans, group settings and everything read back. Old Redis ban and warn data is not
+written, Redis decides), global bans, group settings other than the detection settings (step 10) and everything read back. Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -210,6 +211,38 @@ the start; the minute before it that set it off at negative offsets). People, in
 content are short hashes salted with the incident, so they match within it and mean nothing outside
 it; no ids, no text. Kept 90 days. `/raidprofile` (devs) exports one as JSON; `RaidReplay` in the
 harness plays it into a fresh group, so detection can be tuned on real raids.
+
+### Step 10: detection settings
+
+The settings of the automatic checks moved to PostgreSQL in one step, as the first step of
+Detection v2 (`docs/detection-design.md`, sections 2 and 13). Daniel's rule (2026-10-27): Redis
+is a cache and a communication system, not a store, so nothing is written to the old hashes.
+
+- **Tables.** `group_settings` holds the approved design's columns that the checks use (max warns,
+  warn action, tempban and tempmute minutes) and a `version` every change bumps; its row says the
+  group was imported. `detection_policies` (one row per check: `flood`, `media`, `mute_on_join`,
+  `channel_posts`, with thresholds and lists in `settings` jsonb) and `group_filters` (the
+  `arabic` and `rtl` presets, the `text` and `name` length rules, blocked inline bots and sticker
+  packs) replace the design's `group_flood_exceptions`, `group_media_policies`,
+  `group_character_policies` and `group_length_policies` (approved 2026-10-27).
+- **Reading.** `Detection/DetectionSettings` keeps each group's settings in memory as one
+  immutable `DetectionPolicy`, caches it in Redis (`detect:policy:{chat}` and
+  `detect:policy:{chat}:version`, 30 days), compares the cached version every 10 s (how a change by
+  the other edition arrives) and reloads from PostgreSQL every 5 minutes. A group in neither memory
+  nor the cache waits up to 2 s for PostgreSQL; past that, or with PostgreSQL down, it is served
+  what its old hashes say until the load finishes.
+- **Import.** `Detection/LegacySettings` is the only code that knows the old encodings
+  (`Flood = "yes"` is off, `MuteOnJoin = "no"` is on, `Warn` with a capital W, a missing `mediamax`
+  is 2, ...). It runs once per group, on its first use after the deploy, in one transaction; a
+  second process importing at the same time gets the first one's rows.
+- **Writing.** The menus, `/temptime`, `/settempmutetime`, `/maxnl`, `/maxtl`, `/maxl`, the
+  block and allow commands and new groups (`Service.GenerateSettings`) change PostgreSQL through
+  `DetectionSettings.UpdateAsync` (optimistic on `version`). Without PostgreSQL a change is refused
+  ("Failed") and nothing changes.
+- **Rollback.** The old hashes are left in place but not kept up to date: a binary rollback finds
+  each group's settings as they were at this deploy.
+- The old one-off migration `Service.NewSetting2` (media defaults in Redis for groups missing from
+  `lenghtUpdate`) is emptied: only new groups reached it, and they get the same defaults.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

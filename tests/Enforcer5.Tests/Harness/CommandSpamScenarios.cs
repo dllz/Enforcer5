@@ -107,6 +107,7 @@ namespace Enforcer5.Tests.Harness
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
+            chat.Hashes[$"chat:{chat.ChatId}:flood", "MaxFlood"] = "5"; // imported on the first press
             // The flood settings menu, in the admin's private chat with the bot.
             var menu = new Telegram.Bot.Types.Message
             {
@@ -124,7 +125,7 @@ namespace Enforcer5.Tests.Harness
             }
             await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
 
-            var raised = int.Parse(chat.Hashes[$"chat:{chat.ChatId}:flood", "MaxFlood"]);
+            var raised = Enforcer5.Detection.DetectionSettings.For(chat.ChatId).Flood.MaxMessages.Value - 5;
             var bucket = (int)(Enforcer5.Helpers.CommandGate.Limiter.Limits.UserBurst / Enforcer5.Helpers.CommandGate.Limiter.Limits.ButtonCost);
             Assert.AreEqual(bucket, raised, "a bucket's worth of presses at half a command each");
             Assert.AreEqual(1, chat.Telegram.Accepted.Count(c => c.Method == "answerCallbackQuery" && c.Text?.Contains("slow down please") == true),

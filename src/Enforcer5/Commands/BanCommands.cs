@@ -196,9 +196,7 @@ namespace Enforcer5
             var max = Methods.MaxWarns(chatId);
             if (num >= max)
             {
-                var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue
-                    ? Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.ToString()
-                    : "kick";
+                var type = Methods.WarnAction(chatId);
                 var name = "";
                 switch(type)
                 {

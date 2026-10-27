@@ -11,7 +11,7 @@ namespace Enforcer5.Tests.RateLimits
     public class GroupSettingsTests
     {
         private FakeClock _clock;
-        private static readonly GroupSettings.Snapshot Some = new(new HashEntry[0], null, null, null, null, null, null);
+        private static readonly GroupSettings.Snapshot Some = new(new HashEntry[0]);
 
         [TestInitialize]
         public void Init()

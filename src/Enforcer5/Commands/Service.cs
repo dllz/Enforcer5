@@ -287,44 +287,15 @@ defSpamValue = 3;
             
         }
 
+        /// <summary>
+        /// An old one-off migration (marked done in the <c>lenghtUpdate</c> set) that set every media
+        /// type to allowed in Redis. Emptied with Detection step 2, as <see cref="NewSettings"/> was
+        /// before it: the media settings live in PostgreSQL, the groups it still reached are new ones
+        /// (which GenerateSettings gives the same defaults), and for any other group it would have
+        /// thrown away settings an admin chose.
+        /// </summary>
         public static void NewSetting2(long chatid)
         {
-           
-            object[,,] defaultSettings =
-            {
-                {
-                    { "media", "image", "allowed"},
-                    { "media", "audio", "allowed"},
-                    { "media", "video", "allowed"},
-                    { "media", "sticker", "allowed"},
-                    { "media", "gif", "allowed"},
-                    { "media", "voice", "allowed"},
-                    { "media", "contact", "allowed"},
-                    { "media", "file", "allowed"},
-                    { "media", "link", "allowed"},
-                    {"media", "action", "tempban" }
-                }
-            };
-
-
-            var num = 0;
-            for (int i = 0; i < defaultSettings.GetLength(0); i++)
-            {
-                for (int j = 0; j < defaultSettings.GetLength(1); j++)
-                {
-                    var hash = $"chat:{chatid}:{defaultSettings[i, j, 0]}";
-                    var value = defaultSettings[i, j, 1];
-                    var setting = defaultSettings[i, j, 2];
-                    if (int.TryParse(setting.ToString(), out num))
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
-                    }
-                    else if (setting is string)
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
-                    }
-                }
-            }
         }
 
         public static void removeWarn0(long chatid, long userId)
@@ -353,43 +324,16 @@ defSpamValue = 3;
                     {"settings", "Welcome", "yes"},
                     {"settings", "DeleteLastWelcome", "no"},
                     {"settings", "Extra", "yes"},
-                    {"settings", "Flood", "yes"},
                     {"settings", "Admin_mode", "no"},
-                    {"flood", "MaxFlood", 5},
-                    {"flood", "ActionFlood", "kick"},
-                    {"char", "Arab", "allowed"},
-                    {"char", "Rtl", "allowed"},
                     {"welcome", "type", "composed"},
                     {"welcome", "content", "no" },
-                    {"floodexceptions", "image", "yes"},
-                    {"floodexceptions", "video", "yes"},
-                    {"floodexceptions", "sticker", "yes"},
-                    {"floodexceptions", "gif", "yes"},
-                    {"warnsettings", "type", "ban"},
-                    {"warnsettings", "max", 5},
-                    {"warnsettings", "mediamax", 3},
-                    {"media", "image", "allowed"},
-                    {"media", "audio", "allowed"},
-                    {"media", "video", "allowed"},
-                    {"media", "sticker", "allowed"},
-                    {"media", "gif", "allowed"},
-                    {"media", "voice", "allowed"},
-                    {"media", "contact", "allowed"},
-                    {"media", "file", "allowed"},
-                    {"media", "link", "allowed"},
-                    {"media", "action", "tempban" },
-                    {"antitextlengthsettings", "enabled", "yes" },
-                    {"antitextlengthsettings", "maxlength", 1024 },
-                    {"antitextlengthsettings", "maxlines", 50 },
-                    {"antitextlengthsettings", "action", "kick" },
-                    {"antinamelengthsettings", "enabled", "yes" },
-                    {"antinamelengthsettings", "maxlength", 50 },
-                    {"antinamelengthsettings", "action", "kick" },
-
                 }
             };
 
             SetSettings(defaultSettings, chatId);
+            // Flood, media, scripts, lengths and warns live in PostgreSQL (Detection step 2):
+            // the same defaults, for the same settings, as this used to write to Redis.
+            Detection.DetectionSettings.TryUpdate(chatId, p => p.WithNewGroupDefaults());
 
         }
 

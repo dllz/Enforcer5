@@ -336,4 +336,64 @@ namespace Enforcer5.Storage
         public string Actor { get; set; }
         public string Detail { get; set; }
     }
+
+    /// <summary>
+    /// The columns of the approved <c>group_settings</c> that the automatic checks use (Detection v2
+    /// step 2), with the design's types and constraints. Its other columns (welcome, reports, the
+    /// private-only commands) arrive with their domains. The row's existence says the group's
+    /// settings were imported from Redis; <c>version</c> goes up with every change of the group's
+    /// detection settings, here or in <c>detection_policies</c> and <c>group_filters</c>.
+    /// </summary>
+    internal sealed class GroupSettingsEntity
+    {
+        public long GroupId { get; set; }
+        public short MaximumWarnings { get; set; }
+        public string WarningAction { get; set; }
+        public int TempbanMinutes { get; set; }
+        public int TempmuteMinutes { get; set; }
+        public long Version { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// One automatic check of one group (Detection v2, docs/detection-design.md section 12): whether
+    /// it is on, its action, its weight in the score, and its thresholds and lists as
+    /// <c>settings</c>. Replaces the approved design's <c>group_flood_exceptions</c> and
+    /// <c>group_media_policies</c> (Daniel, 2026-10-27).
+    /// </summary>
+    internal sealed class DetectionPolicyEntity
+    {
+        public long GroupId { get; set; }
+        public string CheckKey { get; set; }
+        public bool Enabled { get; set; }
+        public string Action { get; set; }
+        public short? Weight { get; set; }
+        public string Settings { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A rule of one group: a preset (Arabic script, right-to-left marks), a length rule (text,
+    /// name), an admin's regex, or an entry of a blocklist (inline bots by username or regex,
+    /// sticker packs by name). Replaces the approved design's <c>group_character_policies</c> and
+    /// <c>group_length_policies</c>. <c>mode</c> trial records what a rule would do without acting.
+    /// </summary>
+    internal sealed class GroupFilterEntity
+    {
+        public long FilterId { get; set; }
+        public long GroupId { get; set; }
+        public string Target { get; set; }
+        public string Kind { get; set; }
+        public string Preset { get; set; }
+        public string Pattern { get; set; }
+        public int? MaxCharacters { get; set; }
+        public int? MaxLines { get; set; }
+        public string Action { get; set; }
+        public bool Enabled { get; set; }
+        public string Mode { get; set; }
+        public DateTimeOffset? TrialUntil { get; set; }
+        public long? CreatedByAccountId { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public long Hits { get; set; }
+    }
 }

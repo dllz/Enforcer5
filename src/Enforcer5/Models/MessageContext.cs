@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Linq;
 using Enforcer5.Data;
+using Enforcer5.Detection;
 using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -48,12 +50,13 @@ namespace Enforcer5.Models
         public XDocument Lang;
 
         public HashEntry[] Settings;        // chat:{id}:settings
-        public HashEntry[] Flood;           // chat:{id}:flood
-        public HashEntry[] FloodExceptions; // chat:{id}:floodexceptions
-        public HashEntry[] Media;           // chat:{id}:media
-        public HashEntry[] Char;            // chat:{id}:char
-        public HashEntry[] NameLength;      // chat:{id}:antinamelengthsettings
-        public HashEntry[] TextLength;      // chat:{id}:antitextlengthsettings
+
+        /// <summary>
+        /// The settings of the automatic checks (flood, media, scripts, lengths, blocklists, channel
+        /// posts, Mute On Join), from PostgreSQL through <see cref="DetectionSettings"/>; never null
+        /// in a complete context.
+        /// </summary>
+        public DetectionPolicy Policy;
         /// <summary>The active global ban on whoever IsRekt checks (from Helpers/GlobalBans), or null.</summary>
         public GlobalBanRecord GlobalBan;
 
@@ -87,9 +90,6 @@ namespace Enforcer5.Models
         }
 
         public RedisValue Setting(string name) => Field(Settings, name);
-        public RedisValue FloodSetting(string name) => Field(Flood, name);
-        public RedisValue MediaSetting(string name) => Field(Media, name);
-        public RedisValue CharSetting(string name) => Field(Char, name);
 
         /// <summary>
         /// Issues every read the hot path needs at once. SE.Redis pipelines them onto the single
@@ -131,23 +131,12 @@ namespace Enforcer5.Models
             var watch = db.SetContainsAsync($"chat:{context.ChatId}:watch", context.UserId);
             // A busy group's settings come from a snapshot at most SettingsFor old (see GroupSettings).
             var cached = GroupSettings.Get(context.ChatId);
-            Task<HashEntry[]> Read(string key, Func<GroupSettings.Snapshot, HashEntry[]> part) =>
-                cached != null ? Task.FromResult(part(cached)) : db.HashGetAllAsync(key);
-            var settings = Read($"chat:{context.ChatId}:settings", c => c.Settings);
-            var flood = Read($"chat:{context.ChatId}:flood", c => c.Flood);
-            var floodExceptions = Read($"chat:{context.ChatId}:floodexceptions", c => c.FloodExceptions);
-            var media = Read($"chat:{context.ChatId}:media", c => c.Media);
-            var characters = Read($"chat:{context.ChatId}:char", c => c.Char);
-            var nameLength = Read($"chat:{context.ChatId}:antinamelengthsettings", c => c.NameLength);
-            var textLength = Read($"chat:{context.ChatId}:antitextlengthsettings", c => c.TextLength);
+            var settings = cached != null
+                ? Task.FromResult(cached.Settings)
+                : db.HashGetAllAsync($"chat:{context.ChatId}:settings");
+            // In memory nearly always; see DetectionSettings for when it reads Redis.
+            var policy = DetectionSettings.GetAsync(context.ChatId);
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
-            var inlineBotBlocks = message.ViaBot != null
-                ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
-                : Task.FromResult<IReadOnlyList<InlineBotBlock>>(Array.Empty<InlineBotBlock>());
-            var stickerSet = StickerSetName.Normalise(message.Sticker?.SetName);
-            var stickerSetBlocked = stickerSet != null
-                ? Repositories.StickerSetBlocks.ContainsAsync(context.ChatId, stickerSet)
-                : Task.FromResult(false);
             var channelPosts = message.SenderChat != null && message.SenderChat.Id != context.ChatId
                 ? Repositories.ChannelPosts.GetPolicyAsync(context.ChatId, message.SenderChat.Id)
                 : Task.FromResult<ChannelPostPolicy>(null);
@@ -158,9 +147,7 @@ namespace Enforcer5.Models
             // absent, which every consumer already treats as "not configured".
             try
             {
-                await Task.WhenAll(watch, settings, flood, floodExceptions, media, characters,
-                    nameLength, textLength, language, inlineBotBlocks, channelPosts,
-                    stickerSetBlocked);
+                await Task.WhenAll(watch, settings, policy, language, channelPosts);
             }
             catch (Exception e)
             {
@@ -170,27 +157,22 @@ namespace Enforcer5.Models
             }
 
             context.Settings = Value(settings);
-            context.Flood = Value(flood);
-            context.FloodExceptions = Value(floodExceptions);
-            context.Media = Value(media);
-            context.Char = Value(characters);
-            context.NameLength = Value(nameLength);
-            context.TextLength = Value(textLength);
+            context.Policy = Value(policy);
             context.GlobalBan = GlobalBans.Get(globalBanId);
             context.Lang = Value(language)?.Doc;
-            context.InlineBotBlocks = Value(inlineBotBlocks) ?? Array.Empty<InlineBotBlock>();
             context.ChannelPosts = Value(channelPosts);
-            context.StickerSetBlocked = Value(stickerSetBlocked);
+            if (context.Policy != null)
+            {
+                if (message.ViaBot != null) context.InlineBotBlocks = context.Policy.InlineBots;
+                var stickerSet = StickerSetName.Normalise(message.Sticker?.SetName);
+                context.StickerSetBlocked = stickerSet != null &&
+                                            context.Policy.StickerSets.Contains(stickerSet, StringComparer.Ordinal);
+            }
 
-            context.Complete = Ok(watch) && Ok(settings) && Ok(flood) && Ok(floodExceptions) &&
-                               Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
-                               Ok(language) && Ok(inlineBotBlocks) &&
-                               Ok(channelPosts) && Ok(stickerSetBlocked);
+            context.Complete = Ok(watch) && Ok(settings) && context.Policy != null && Ok(language) && Ok(channelPosts);
 
-            if (cached == null && Ok(settings) && Ok(flood) && Ok(floodExceptions) && Ok(media) && Ok(characters) &&
-                Ok(nameLength) && Ok(textLength))
-                GroupSettings.Store(context.ChatId, new GroupSettings.Snapshot(context.Settings, context.Flood, context.FloodExceptions,
-                    context.Media, context.Char, context.NameLength, context.TextLength));
+            if (cached == null && Ok(settings))
+                GroupSettings.Store(context.ChatId, new GroupSettings.Snapshot(context.Settings));
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
