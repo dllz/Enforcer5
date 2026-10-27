@@ -592,20 +592,30 @@ namespace Enforcer5
             await RightToLeft(ctx);
         }
 
-        internal static Task ArabJoinDetection(MessageContext ctx)
+        /// <summary>
+        /// The names of everyone in a join message, each checked and acted on as themselves: the
+        /// message's sender is whoever added them, who used to be the one kicked, and only the first
+        /// person added was looked at.
+        /// </summary>
+        internal static async Task ArabJoinDetection(MessageContext ctx)
         {
-            var text = $"{ctx.Message.NewChatMember.FirstName} {ctx.Message.NewChatMember.LastName}";
-            return CharacterDetection(ctx, "Arab", ArabicChars, text);
+            foreach (var joiner in ctx.Message.NewChatMembers ?? Array.Empty<Telegram.Bot.Types.User>())
+            {
+                if (joiner.Id == Bot.Me.Id) continue;
+                await CharacterDetection(ctx, "Arab", ArabicChars, $"{joiner.FirstName} {joiner.LastName}", joiner);
+            }
         }
 
         /// <summary>
         /// Applies the chat's chat:{id}:char/{setting} policy (kick/ban/tempban) if any character
-        /// in <paramref name="text"/> matches <paramref name="characterClass"/>.
-        /// Users on the watch list are exempt.
+        /// in <paramref name="text"/> matches <paramref name="characterClass"/>, to
+        /// <paramref name="target"/> (a joiner) or, without one, the message's sender.
+        /// Users on the watch list and admins are exempt.
         /// </summary>
-        private static async Task CharacterDetection(MessageContext ctx, string setting, string characterClass, string text)
+        private static async Task CharacterDetection(MessageContext ctx, string setting, string characterClass, string text,
+            Telegram.Bot.Types.User target = null)
         {
-            if (ctx.Watched) return;
+            if (target == null && ctx.Watched) return;
 
             var status = ctx.CharSetting(setting).ToString();
             if (string.IsNullOrEmpty(status)) status = "allowed";
@@ -616,15 +626,18 @@ namespace Enforcer5
 
             var chatId = ctx.ChatId;
             var lang = ctx.Lang;
-            var userId = ctx.UserId;
-            var name = ctx.Message.From.FirstName;
-            if (ctx.Message.From.Username != null) name = $"{name} (@{ctx.Message.From.Username})";
+            var person = target ?? ctx.Message.From;
+            var userId = person.Id;
+            var name = person.FirstName;
+            if (person.Username != null) name = $"{name} (@{person.Username})";
             var update = ctx.Update;
 
             Bot.DispatchAction(() =>
             {
                 try
                 {
+                    // A joiner's watch list entry is not in the context, which is the sender's.
+                    if (target != null && Redis.db.SetContainsAsync($"chat:{chatId}:watch", userId).Result) return;
                     if (Methods.IsGroupAdmin(userId, chatId)) return;
                     string reply;
                     switch (status)
@@ -640,7 +653,7 @@ namespace Enforcer5
                             if (res)
                             {
                                 Methods.SaveBan(userId, "arab");
-                                Methods.AddBanList(chatId, userId, ctx.Message.From.FirstName,
+                                Methods.AddBanList(chatId, userId, person.FirstName,
                                     Methods.GetLocaleString(lang, "bannedForNoEnglishScript", "."));
 
                                 reply = Methods.GetLocaleString(lang, "bannedForNoEnglishScript", $"{name}, {userId}");

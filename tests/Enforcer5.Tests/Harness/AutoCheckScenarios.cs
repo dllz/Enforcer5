@@ -381,6 +381,30 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task Arab_OnJoining_EveryoneAddedIsCheckedAsThemselves_NotTheMemberWhoAddedThem()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:char", "Arab"] = "kick";
+            var adder = chat.Add("Adder");
+            var latin = chat.Add("Latin", MemberState.Left);
+            var arabic = chat.Add("بدر", MemberState.Left);
+            var watched = chat.Add("سلام", MemberState.Left);
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            var join = chat.Join(latin, addedBy: adder);
+            foreach (var u in new[] { arabic, watched }) chat.Telegram.SetMember(chat.ChatId, u.Id, MemberState.Member);
+            join.NewChatMembers = new[] { latin.ToUser(), arabic.ToUser(), watched.ToUser() };
+
+            await chat.PostAsync(join);
+
+            Assert.AreEqual(MemberState.Member, State(chat, adder), "the adder is not the one with the name");
+            Assert.AreEqual(MemberState.Member, State(chat, latin));
+            Assert.AreEqual(MemberState.Left, State(chat, arabic), "the second person added is checked too");
+            Assert.AreEqual(MemberState.Member, State(chat, watched), "a joiner on the watch list is exempt");
+            Assert.AreEqual(arabic.Id, (await Sanctions(chat)).Single().Target);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task Arab_OnlySomeLettersCount_AndAllowedOrWatchedIsLeftAlone()
         {
             await using var chat = await HarnessChat.StartAsync();
