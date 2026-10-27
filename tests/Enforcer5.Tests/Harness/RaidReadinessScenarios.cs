@@ -694,5 +694,31 @@ namespace Enforcer5.Tests.Harness
             Assert.IsTrue(flooders.All(f => log[0].Text.Contains(f.Id.ToString())), "with every action in it");
             AssertOnly429s(chat);
         }
+
+        [TestMethod]
+        public async Task ARaidEndedWhileItsSaveWaited_StaysEnded_AfterARestart()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            RaidGuard.SetMode(chat.ChatId, RaidMode.Auto);
+            Regulars(chat, 3);
+            for (var i = 0; i < 20; i++)
+            {
+                var r = chat.Add($"Raider{i}", MemberState.Left);
+                chat.Deliver(chat.Join(r));
+                chat.Deliver(chat.Photo(r, uniqueId: "scam", caption: "FREE crypto t.me/scam"));
+            }
+            chat.Deliver(chat.Text(admin, "/raid off"));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+            await chat.SendAsync(admin, "/raid off");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            Assert.IsNull(chat.Keys[RaidGuard.IncidentKey(chat.ChatId)], "no save brought it back");
+            await chat.CrashAndRestartAsync();
+            Assert.IsNull(RaidGuard.IncidentIn(chat.ChatId), "not loaded again");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(1));
+            Assert.IsFalse(Locked(chat), "and the unlock went through");
+            AssertOnly429s(chat);
+        }
     }
 }

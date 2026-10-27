@@ -722,7 +722,7 @@ namespace Enforcer5.Raids
                 incident.Reasons.AddRange(reasons);
             }
             RaidTelemetry.Started(Snapshot(incident));
-            Save(incident);
+            SaveNow(incident);
             SendAlert(incident);
         }
 
@@ -834,7 +834,7 @@ namespace Enforcer5.Raids
                 }
             }
             if (firstTime) RaidTelemetry.Activated(Snapshot(incident), by);
-            Save(incident);
+            SaveNow(incident);
             if (lockNow) Bot.Dispatch(() => LockAsync(incident), "RaidLock");
             foreach (var (u, ids) in ban) BanSuspect(chatId, u, ids);
             foreach (var (u, ids) in mute) MuteSuspect(chatId, u, ids);
@@ -868,7 +868,7 @@ namespace Enforcer5.Raids
                     LogHelper.Error($"Could not read the permissions of {chatId} before locking: {e.Message}");
                 }
             }
-            Save(incident);
+            SaveNow(incident);
             var job = EnforcementJob.SetPermissions(chatId, EnforcementExecutor.NothingAllowed);
             job.Note.Reason = "Raid lock";
             RaidTelemetry.Action(chatId, "lock", 0);
@@ -999,6 +999,7 @@ namespace Enforcer5.Raids
                     IgnoredUntil[chatId] = now + IgnoreFor;
                 }
             }
+            Persisting.Wait();
             try
             {
                 Redis.db.KeyDeleteAsync(IncidentKey(chatId)).GetAwaiter().GetResult();
@@ -1014,6 +1015,10 @@ namespace Enforcer5.Raids
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Forgetting the raid in {chatId}");
+            }
+            finally
+            {
+                Persisting.Release();
             }
             RaidTelemetry.Ended(Snapshot(incident), by, ignored: quietly && by.HasValue);
             if (incident.Locked)
@@ -1190,18 +1195,55 @@ namespace Enforcer5.Raids
 
         // ---------------------------------------------------------------- persistence
 
+        // Writes to the incident's keys, one at a time: a delayed save must never land after End
+        // deleted them, or a restart would bring back a raid that is over.
+        private static readonly SemaphoreSlim Persisting = new(1, 1);
+        private static readonly HashSet<string> SavePending = new();
+        /// <summary>How long changes to an incident gather before they are written.</summary>
+        internal static TimeSpan SaveEvery = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// Saves the incident within <see cref="SaveEvery"/>: in a raid it changes with every suspect,
+        /// and writing the whole of it each time made the bytes written grow with the square of the
+        /// raid. What a restart must not lose at all (the incident starting, raid mode going on, the
+        /// permissions saved before the lock) goes through <see cref="SaveNow"/>.
+        /// </summary>
         private static void Save(RaidIncident incident)
         {
-            string json;
-            lock (Lock) json = incident.ToJson();
+            lock (Lock)
+            {
+                if (!SavePending.Add(incident.IncidentId)) return;
+            }
+            Bot.Dispatch(async () =>
+            {
+                await Clock.Delay(SaveEvery);
+                lock (Lock) SavePending.Remove(incident.IncidentId);
+                SaveNow(incident);
+            }, "RaidSave");
+        }
+
+        private static void SaveNow(RaidIncident incident)
+        {
+            Persisting.Wait();
             try
             {
+                string json;
+                lock (Lock)
+                {
+                    // Over already: End deleted it, and it stays deleted.
+                    if (!IsCurrent(incident)) return;
+                    json = incident.ToJson();
+                }
                 Redis.db.StringSetAsync(IncidentKey(incident.ChatId), json, null, false, When.Always, CommandFlags.None).GetAwaiter().GetResult();
                 Redis.db.SetAddAsync(ActiveSetKey, incident.ChatId).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Saving the raid in {incident.ChatId}");
+            }
+            finally
+            {
+                Persisting.Release();
             }
         }
 
@@ -1252,6 +1294,7 @@ namespace Enforcer5.Raids
                 Cleared.Clear();
                 IgnoredUntil.Clear();
                 SpamSketches.Clear();
+                SavePending.Clear();
             }
             Limits = new RaidLimits();
             MentionResolver.ResetForTests();

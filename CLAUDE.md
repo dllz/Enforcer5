@@ -170,6 +170,13 @@ reason to refuse it. Four pieces, outermost first:
   posted then that had not yet added up to a sign is not seen again (the chaos run allows for it).
   What admins do and what to check when one goes wrong: `docs/raid-runbook.md`.
 
+- **Caches that keep a raid from costing a call per raider**: `AdminDirectory` (each group's admins,
+  60 s, kept current from promotions and demotions in member updates; `chat:{g}:adminses:{u}` only
+  means elevated), `ChatDetails` (getChat, 10 min), `MentionResolver` (where an @mention points, one
+  lookup queue), `GroupSettings` (a busy group's settings hashes, 10 s), the queue's own record of
+  who it muted, and quiet mode (`RaidGuard.Quiet`: no per-member notices or welcome, the log channel
+  as a digest) while a raid alert or raid mode is on.
+
 The cross-process seam (`IFloodSignal`) is a no-op; see `docs/postgres-rollout.md`.
 
 ## Redis
