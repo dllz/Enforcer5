@@ -29,7 +29,68 @@ namespace Enforcer5.Storage
             ConfigureGlobalSanctions(modelBuilder);
             ConfigureRaidCapture(modelBuilder);
             ConfigureDetectionSettings(modelBuilder);
+            ConfigureDetectionLog(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
+        }
+
+        private const string LabelActions = "'ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine'";
+
+        private static void ConfigureDetectionLog(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<MemberLabelEntity>(entity =>
+            {
+                entity.ToTable("member_labels", table =>
+                {
+                    table.HasCheckConstraint("member_labels_label_check", "label IN ('bad', 'fine', 'undo')");
+                    table.HasCheckConstraint("member_labels_action_check", $"action IN ({LabelActions})");
+                    table.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established')");
+                    table.HasCheckConstraint("member_labels_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("member_labels_undone_check", "(undone_at IS NULL) = (undone_by_label_id IS NULL)");
+                });
+                entity.HasKey(x => x.LabelId);
+                entity.Property(x => x.LabelId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Label).IsRequired();
+                entity.Property(x => x.Action).IsRequired();
+                entity.Property(x => x.Source).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.DecidedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<MemberLabelEntity>().WithMany().HasForeignKey(x => x.UndoneByLabelId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.DecidedAt }, "member_labels_member_idx");
+                entity.HasIndex(x => new { x.GroupId, x.DecidedAt }, "member_labels_group_time_idx");
+                entity.HasIndex(x => x.LabelKey, "member_labels_key_idx").IsUnique().HasFilter("label_key IS NOT NULL");
+            });
+
+            modelBuilder.Entity<DetectionEntity>(entity =>
+            {
+                entity.ToTable("detections", table =>
+                {
+                    table.HasCheckConstraint("detections_phase_check", "phase IN ('inline', 'enriched')");
+                    table.HasCheckConstraint("detections_mode_check", "mode IN ('live', 'observe', 'trial')");
+                    table.HasCheckConstraint("detections_action_check", $"action IN ({DetectionActions})");
+                    table.HasCheckConstraint("detections_outcome_check", $"outcome IS NULL OR outcome IN ({LabelActions}, 'undone')");
+                    table.HasCheckConstraint("detections_trust_check", "trust_level IS NULL OR trust_level IN ('admin', 'approved', 'established', 'new')");
+                    table.HasCheckConstraint("detections_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("detections_score_check", "score_before >= 0 AND score_after >= score_before");
+                });
+                entity.HasKey(x => x.DetectionId);
+                entity.Property(x => x.DetectionId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Sign).IsRequired();
+                entity.Property(x => x.Phase).IsRequired();
+                entity.Property(x => x.Action).IsRequired();
+                entity.Property(x => x.Mode).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.Property(x => x.Evidence).HasColumnType("jsonb");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.DecidedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<MemberLabelEntity>().WithMany().HasForeignKey(x => x.LabelId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.DetectedAt }, "detections_member_idx");
+                entity.HasIndex(x => new { x.GroupId, x.DetectedAt }, "detections_group_time_idx");
+                entity.HasIndex(x => new { x.Sign, x.DetectedAt }, "detections_sign_time_idx");
+                entity.HasIndex(x => x.LabelId, "detections_label_idx").HasFilter("label_id IS NOT NULL");
+            });
         }
 
         private const string DetectionActions = "'none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban'";

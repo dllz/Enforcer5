@@ -156,7 +156,9 @@ namespace Enforcer5.Detection
             var stored = await Repository.LoadAsync(chatId);
             if (stored != null) return stored;
             var legacy = LegacySettings.Map(await LegacySettings.ReadAsync(Redis.db, chatId));
-            return await Repository.ImportAsync(chatId, legacy);
+            // A group's observe weeks start with its first use of the new settings.
+            var until = new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero) + EngineSettings.ObserveFor;
+            return await Repository.ImportAsync(chatId, legacy with { Engine = legacy.Engine with { ObserveUntil = until } });
         }
 
         /// <summary>

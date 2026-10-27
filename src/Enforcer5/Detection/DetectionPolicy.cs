@@ -32,7 +32,8 @@ namespace Enforcer5.Detection
         int TempmuteMinutes,
         IReadOnlyList<InlineBotBlock> InlineBots,
         IReadOnlyList<string> StickerSets,
-        ChannelPostSettings ChannelPosts)
+        ChannelPostSettings ChannelPosts,
+        EngineSettings Engine)
     {
         /// <summary>The actions an automatic check can take (design section 1).</summary>
         internal static readonly string[] Actions =
@@ -52,7 +53,8 @@ namespace Enforcer5.Detection
             TempmuteMinutes: Duration.DefaultMinutes,
             InlineBots: Array.Empty<InlineBotBlock>(),
             StickerSets: Array.Empty<string>(),
-            ChannelPosts: new ChannelPostSettings(false, Array.Empty<AllowedChannel>()));
+            ChannelPosts: new ChannelPostSettings(false, Array.Empty<AllowedChannel>()),
+            Engine: EngineSettings.Default);
 
         /// <summary>
         /// What <c>Service.GenerateSettings</c> gives a new group (or one reset with /menu): it sets
@@ -84,7 +86,8 @@ namespace Enforcer5.Detection
         {
             Version = 0,
             Flood = policy.Flood with { Counted = new SortedDictionary<string, bool>(policy.Flood.Counted.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
-            Media = policy.Media with { Blocked = new SortedDictionary<string, bool>(policy.Media.Blocked.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) }
+            Media = policy.Media with { Blocked = new SortedDictionary<string, bool>(policy.Media.Blocked.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
+            Engine = policy.Engine with { Signs = new SortedDictionary<string, SignPolicy>(policy.Engine.Signs.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) }
         };
     }
 
@@ -143,5 +146,41 @@ namespace Enforcer5.Detection
     internal sealed record ChannelPostSettings(bool Enabled, IReadOnlyList<AllowedChannel> Allowed)
     {
         internal bool IsAllowed(long channelId) => Allowed.Any(c => c.Id == channelId);
+    }
+
+    /// <summary>
+    /// How the Detection engine treats one group (design sections 1 and 3).
+    /// </summary>
+    /// <param name="ObserveUntil">
+    /// Until then the group is in observe mode: signs are recorded with what would have been done,
+    /// nothing is done. Null for a group the engine has not seen yet; it starts then
+    /// (<see cref="ObserveFor"/>). An admin going live sets it to now.
+    /// </param>
+    /// <param name="ReportAt">A member's score at which the admins get one report about them.</param>
+    /// <param name="MuteAt">A member's score at which they are muted, when <paramref name="MuteEnabled"/>.</param>
+    /// <param name="Signs">The group's own settings for a sign, by name; others use <see cref="SignCatalog"/>.</param>
+    internal sealed record EngineSettings(DateTimeOffset? ObserveUntil, int ReportAt, int MuteAt, bool MuteEnabled,
+        IReadOnlyDictionary<string, SignPolicy> Signs)
+    {
+        internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);
+
+        internal static EngineSettings Default { get; } =
+            new EngineSettings(null, 3, 6, false, new Dictionary<string, SignPolicy>());
+
+        internal bool Observing(DateTimeOffset now) => ObserveUntil == null || now < ObserveUntil;
+
+        /// <summary>What the group does with <paramref name="sign"/>: its own setting, else the catalog's.</summary>
+        internal SignPolicy For(string sign) =>
+            Signs.TryGetValue(sign, out var own) ? own : SignCatalog.Get(sign)?.Default ?? SignPolicy.Off;
+    }
+
+    /// <param name="Enabled">The sign is looked for at all.</param>
+    /// <param name="Action">One of <see cref="DetectionPolicy.Actions"/>.</param>
+    /// <param name="Weight">What it adds to the member's score.</param>
+    /// <param name="Delete">The message goes too, whatever the action.</param>
+    /// <param name="Report">The admins are told, whatever the score.</param>
+    internal sealed record SignPolicy(bool Enabled, string Action, int Weight, bool Delete = false, bool Report = false)
+    {
+        internal static SignPolicy Off { get; } = new SignPolicy(false, "none", 0);
     }
 }

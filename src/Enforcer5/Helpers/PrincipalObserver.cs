@@ -78,6 +78,7 @@ namespace Enforcer5.Helpers
                     // After the principals, so the accounts and groups it points at exist.
                     await RaidCapture.FlushAsync();
                     await Raids.RaidTelemetry.FlushAsync();
+                    await Detection.DetectionRecorder.FlushAsync();
                 }
                 finally
                 {

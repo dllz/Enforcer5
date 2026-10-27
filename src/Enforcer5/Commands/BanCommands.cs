@@ -667,6 +667,7 @@ namespace Enforcer5
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
             Bot.DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
+            Detection.Decisions.Deleted(update.Message.ReplyToMessage, update.Message.From.Id);
             Service.LogCommand(update, update.Message.Text);
         }
 

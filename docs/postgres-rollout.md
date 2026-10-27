@@ -41,6 +41,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 8 | Raid building blocks: joins, members, message fingerprints, each group's normal, and the lookup for everyone resembling known raiders | `group_joins`, `group_members`, `message_fingerprints`, `group_stats` | Built |
 | 9 | Raid telemetry: every raid and possible raid, with its timeline, for tuning and replay | `raid_incidents`, `raid_events` | Built |
 | 10 | Detection settings, **cut over** (Detection v2 step 2): flood, flood exceptions, media locks, Arabic and right-to-left, text and name length, Mute On Join, max warns and their action, tempban and tempmute lengths, blocked inline bots and sticker packs, channel posts. PostgreSQL is the store, Redis a cache; each group's old hashes are imported on its first use | `group_settings` (the columns the checks use), `detection_policies`, `group_filters` | Built |
+| 11 | Detection engine (Detection v2 step 3): every sign that fires, with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
 
 ### Step 2: ban history
 
@@ -51,8 +52,8 @@ global bans being enforced, and tempbans expiring (`completed`). The writes run 
 worker in order, retry twice, and report to the error chat if they still fail; the ban never waits
 for them. Reads go through `IBanHistoryRepository.GetHistoryAsync`; nothing displays them yet.
 
-Not recorded (kicks and mutes are, from step 5): channel bans (`BanChatSenderChat`), bans an admin makes in the Telegram
-app directly, and unbans of bans from before the history started (there is no row to close).
+Not recorded (kicks and mutes are, from step 5; bans an admin makes in the Telegram app itself are, from step 11):
+channel bans (`BanChatSenderChat`) and unbans of bans from before the history started (there is no row to close).
 
 ### Step 3: principals from traffic
 
@@ -243,6 +244,30 @@ is a cache and a communication system, not a store, so nothing is written to the
   each group's settings as they were at this deploy.
 - The old one-off migration `Service.NewSetting2` (media defaults in Redis for groups missing from
   `lenghtUpdate`) is emptied: only new groups reached it, and they get the same defaults.
+
+### Step 11: what Detection learns from
+
+Detection's goal is to learn each group's rules from its admins: what is allowed, what a bad action
+and a bad member look like (Daniel, 2026-10-27). So the engine records both sides.
+
+- **`detections`** (`Detection/DetectionEngine`, `DetectionRecorder`): every sign a check reports,
+  with its weight, the member's score before and after, the action the group's settings give it,
+  whether it was done (`live`) or only recorded (`observe`, a group's first 14 days; `trial` for a
+  rule on trial), the message's type, text hash and file id (never text), and the member's trust
+  level, message count and since when. Buffered, written with the principal flush once a minute,
+  dropped while PostgreSQL is down.
+- **`member_labels`** (`Detection/Decisions`): every decision about a member. Sources: `command`,
+  `button`, `report`, `app` (bans, kicks, mutes and their undoing made in the Telegram app, seen in
+  member updates, which the history never had before) and `auto` (the bot's own checks; its fixed
+  reason is kept, an admin's free text is not). With the message it was about (the one a command
+  replied to) as type, hash and file id. Mute On Join is not a decision about anyone and is left out.
+- **Linking.** A decision sets the outcome of the member's detections from the 24 hours before it;
+  a detection written after the decision (the minute's buffer) is linked when written. An admin's
+  decision with no detection before it is `missed`: a rule of the group no sign knows yet. An unban,
+  unmute or unwarn marks the decision it takes back `undone_at`, and its detections `undone`.
+- An app-made change reaches both editions when both are in the group: `label_key` and the
+  sanction's `legacy_key` (`app:{chat}:{user}:{date}:{action}`) make it one row.
+- Members' scores are kept in memory for 24 hours and rebuilt from `detections` after a restart.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

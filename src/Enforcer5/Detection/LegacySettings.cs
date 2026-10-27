@@ -116,7 +116,8 @@ namespace Enforcer5.Detection
                 InlineBots: stored.InlineBots.Distinct().ToList(),
                 StickerSets: stored.StickerSets.Distinct(StringComparer.Ordinal).ToList(),
                 ChannelPosts: new ChannelPostSettings(stored.ChannelPostsEnabled,
-                    stored.AllowedChannels.GroupBy(c => c.Id).Select(g => g.First()).ToList()));
+                    stored.AllowedChannels.GroupBy(c => c.Id).Select(g => g.First()).ToList()),
+                Engine: EngineSettings.Default);
         }
     }
 }

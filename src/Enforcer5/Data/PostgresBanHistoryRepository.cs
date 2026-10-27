@@ -60,6 +60,10 @@ WHERE s.group_id = @GroupId AND s.account_id = @AccountId
             // The same lock as the observation batch, which also creates accounts and links.
             await connection.ExecuteAsync(new CommandDefinition("SELECT pg_advisory_xact_lock(@Lock)",
                 new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
+            // A ban made in the Telegram app reaches both editions when both are in the group.
+            if (ban.Key != null && await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+                    "SELECT EXISTS (SELECT 1 FROM sanctions WHERE legacy_key = @Key)", new { ban.Key }, transaction)))
+                return;
             var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, ban.ChatId,
                 chatType: ChatType(ban.ChatId));
             var target = await PrincipalResolver.EnsureUserAsync(connection, transaction, ban.UserId);
@@ -87,16 +91,16 @@ WHERE group_id = @GroupId AND account_id = @AccountId
             var kick = ban.Kind == SanctionKind.Kick;
             await connection.ExecuteAsync(new CommandDefinition(@"
 INSERT INTO sanctions (group_id, account_id, user_id_at_time, actor_user_id, trigger_warning_event_id,
-    report_id, kind, status, reason, imposed_at, expires_at, resolved_at, edition)
+    report_id, kind, status, reason, imposed_at, expires_at, resolved_at, edition, legacy_key)
 VALUES (@GroupId, @AccountId, @UserIdAtTime, @ActorUserId, @TriggerWarningEventId,
-    @ReportId, @Kind, @Status, @Reason, @At, @ExpiresAt, @ResolvedAt, @Edition)",
+    @ReportId, @Kind, @Status, @Reason, @At, @ExpiresAt, @ResolvedAt, @Edition, @Key)",
                 new
                 {
                     group.GroupId, target.AccountId, UserIdAtTime = target.UserId, ActorUserId = actorUserId,
                     ban.TriggerWarningEventId, ban.ReportId, Kind = KindValue(ban.Kind),
                     Status = kick ? "completed" : "active", ban.Reason, ban.At,
                     ExpiresAt = kick ? null : ban.ExpiresAt, ResolvedAt = kick ? ban.At : (DateTimeOffset?)null,
-                    ban.Edition
+                    ban.Edition, ban.Key
                 }, transaction));
             await transaction.CommitAsync();
         }

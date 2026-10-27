@@ -211,7 +211,13 @@ namespace Enforcer5.Tests.Detection
             TempmuteMinutes = 15,
             InlineBots = new[] { new InlineBotBlock(InlineBotBlockKind.Username, "gif"), new InlineBotBlock(InlineBotBlockKind.Pattern, "^spam.*bot$") },
             StickerSets = new[] { "badpack", "worsepack" },
-            ChannelPosts = new ChannelPostSettings(true, new[] { new AllowedChannel(-1001, "News"), new AllowedChannel(-1002, "") })
+            ChannelPosts = new ChannelPostSettings(true, new[] { new AllowedChannel(-1001, "News"), new AllowedChannel(-1002, "") }),
+            Engine = new EngineSettings(new DateTimeOffset(2026, 11, 10, 12, 0, 0, TimeSpan.Zero), 4, 8, true,
+                new Dictionary<string, SignPolicy>
+                {
+                    ["link_outside"] = new SignPolicy(true, "delete", 3, Delete: true),
+                    ["name_keyword"] = new SignPolicy(false, "none", 0, Report: true)
+                })
         };
 
         [TestMethod]
@@ -329,6 +335,48 @@ namespace Enforcer5.Tests.Detection
                 () => DetectionSettings.Update(ChatId, p => p with { MuteOnJoin = true }));
             Assert.IsNull(DetectionSettings.TryUpdate(ChatId, p => p with { MuteOnJoin = true }));
             Assert.IsNull(_keys[DetectionSettings.CacheKey(ChatId)]);
+        }
+    }
+}
+
+namespace Enforcer5.Tests.Detection
+{
+    using Telegram.Bot.Types;
+
+    /// <summary>What an admin did in the Telegram app, from a member's status before and after.</summary>
+    [TestClass]
+    [TestCategory("Detection")]
+    public class DecisionChangeTests
+    {
+        private static readonly User U = new User { Id = 5, FirstName = "M" };
+        private static readonly DateTime Now = new DateTime(2026, 10, 28, 12, 0, 0, DateTimeKind.Utc);
+        private static ChatMember Member => new ChatMemberMember { User = U };
+        private static ChatMember Left => new ChatMemberLeft { User = U };
+        private static ChatMember Banned(DateTime? until = null) => new ChatMemberBanned { User = U, UntilDate = until };
+        private static ChatMember Restricted(bool canSend, bool isMember = true, DateTime? until = null) =>
+            new ChatMemberRestricted { User = U, CanSendMessages = canSend, IsMember = isMember, UntilDate = until };
+
+        [TestMethod]
+        public void Changes()
+        {
+            Assert.AreEqual("ban", Enforcer5.Detection.Decisions.Change(Member, Banned(), Now));
+            Assert.AreEqual("ban", Enforcer5.Detection.Decisions.Change(Member, Banned(Now.AddDays(400)), Now), "over a year is forever");
+            Assert.AreEqual("tempban", Enforcer5.Detection.Decisions.Change(Member, Banned(Now.AddDays(1)), Now));
+            Assert.AreEqual("unban", Enforcer5.Detection.Decisions.Change(Banned(), Left, Now));
+            Assert.AreEqual("kick", Enforcer5.Detection.Decisions.Change(Member, Left, Now));
+            Assert.AreEqual("mute", Enforcer5.Detection.Decisions.Change(Member, Restricted(false), Now));
+            Assert.AreEqual("unmute", Enforcer5.Detection.Decisions.Change(Restricted(false), Member, Now));
+            Assert.AreEqual("unmute", Enforcer5.Detection.Decisions.Change(Restricted(false), Restricted(true), Now));
+            Assert.IsNull(Enforcer5.Detection.Decisions.Change(Left, Member, Now), "a join");
+            Assert.IsNull(Enforcer5.Detection.Decisions.Change(Member, Restricted(true), Now), "no media is not a mute");
+            Assert.IsNull(Enforcer5.Detection.Decisions.Change(Banned(), Banned(), Now));
+        }
+
+        [TestMethod]
+        public void Stronger_FollowsTheOrderOfActions()
+        {
+            Assert.AreEqual("mute", Enforcer5.Detection.DetectionEngine.Stronger("score", "mute"));
+            Assert.AreEqual("ban", Enforcer5.Detection.DetectionEngine.Stronger("ban", "mute"));
         }
     }
 }

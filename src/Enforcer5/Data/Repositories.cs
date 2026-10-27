@@ -54,6 +54,10 @@ namespace Enforcer5.Data
         internal static IRaidCaptureRepository RaidCapture { get; set; } =
             new PostgresRaidCaptureRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. What Detection learns from: detections and decisions (Detection/Decisions).
+        internal static IDetectionLogRepository DetectionLog { get; set; } =
+            new PostgresDetectionLogRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

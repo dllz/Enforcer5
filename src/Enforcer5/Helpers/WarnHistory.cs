@@ -48,6 +48,14 @@ namespace Enforcer5.Helpers
             HistoryWriter.Enqueue(async () => reference.EventId =
                     await Repositories.WarningHistory.RecordAsync(warn with { ReportId = report?.ReportId }),
                 $"Recording a {operation} of {quantity} {kind} for {userId} in {chatId}");
+            // Warns are decisions Detection learns from; prewarns and media strikes are not decisions.
+            if (kind == WarnKind.Warn)
+            {
+                if (operation == WarnOperation.Add)
+                    Detection.Decisions.Sanction(chatId, userId, "warn", actorId, reason, report != null);
+                else if (actorId != null)
+                    Detection.Decisions.Undo(chatId, userId, "unwarn", actorId);
+            }
             return reference;
         }
     }

@@ -18,16 +18,22 @@ namespace Enforcer5.Helpers
     /// <summary>The update an error happened while handling, as far as the error chat needs it.</summary>
     internal sealed record ErrorContext(string Kind, long? ChatId, long? UserId, string Text)
     {
+        /// <summary>
+        /// The update itself. Detection's decision log reads it to know what an admin's action was
+        /// about (the message a command replied to) and how it was taken (command or button).
+        /// </summary>
+        internal Update Update { get; init; }
+
         internal static ErrorContext From(Update update)
         {
             if (update == null) return null;
             if (update.CallbackQuery is { } q)
-                return new ErrorContext("callback", q.Message?.Chat.Id, q.From?.Id, q.Data);
+                return new ErrorContext("callback", q.Message?.Chat.Id, q.From?.Id, q.Data) { Update = update };
             if (update.InlineQuery is { } iq)
-                return new ErrorContext("inline", null, iq.From?.Id, iq.Query);
+                return new ErrorContext("inline", null, iq.From?.Id, iq.Query) { Update = update };
             var m = update.Message ?? update.EditedMessage;
-            if (m == null) return new ErrorContext(update.Type.ToString(), null, null, null);
-            return new ErrorContext("message", m.Chat.Id, m.SenderChat?.Id ?? m.From?.Id, m.Text ?? m.Caption);
+            if (m == null) return new ErrorContext(update.Type.ToString(), null, null, null) { Update = update };
+            return new ErrorContext("message", m.Chat.Id, m.SenderChat?.Id ?? m.From?.Id, m.Text ?? m.Caption) { Update = update };
         }
     }
 

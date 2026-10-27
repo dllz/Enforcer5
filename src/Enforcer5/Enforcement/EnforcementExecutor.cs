@@ -223,7 +223,7 @@ namespace Enforcer5.Enforcement
                             job);
                         if (note.Record)
                             BanHistory.Muted(job.ChatId, job.TargetId, note.NewJoiner ? note.Reason ?? "Mute On Join" : note.Reason,
-                                note.ActorId, job.UntilUtc);
+                                note.ActorId, job.UntilUtc, decision: !note.NewJoiner);
                         break;
                     case EnforcementKind.Unmute:
                         Remember(Repositories.Mutes.ClearAsync(job.ChatId, job.TargetId), job);

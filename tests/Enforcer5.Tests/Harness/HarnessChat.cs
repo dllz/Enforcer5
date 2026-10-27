@@ -148,6 +148,7 @@ namespace Enforcer5.Tests.Harness
 
             Enforcer5.Helpers.Clock.UseForTests(Clock);
             Enforcer5.Detection.DetectionSettings.ResetForTests();
+            Enforcer5.Detection.DetectionEngine.ResetForTests();
             Hashes.Install(Redis);
             Keys.Install(Redis);
 #if PREMIUM
@@ -188,8 +189,10 @@ namespace Enforcer5.Tests.Harness
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
-            // What a group's settings were in memory; the Redis cache and PostgreSQL keep them.
+            // What a group's settings were in memory, and the members' scores; the Redis cache and
+            // PostgreSQL keep the rest.
             Enforcer5.Detection.DetectionSettings.ResetForTests();
+            Enforcer5.Detection.DetectionEngine.ResetForTests();
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
@@ -456,6 +459,7 @@ namespace Enforcer5.Tests.Harness
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
             Enforcer5.Detection.DetectionSettings.ResetForTests();
+            Enforcer5.Detection.DetectionEngine.ResetForTests();
             if (_world.Database != null) await _world.Database.DisposeAsync();
             if (_world.ConnectionString != null) await Storage.TestPostgres.ReleaseMigratedAsync(_world.ConnectionString);
         }

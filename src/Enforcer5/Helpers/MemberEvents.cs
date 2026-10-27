@@ -68,6 +68,8 @@ namespace Enforcer5.Helpers
                     AdminDirectory.Demoted(update.Chat.Id, user.Id);
                     _ = Redis.db.KeyDeleteAsync($"chat:{update.Chat.Id}:adminses:{user.Id}", CommandFlags.FireAndForget);
                 }
+                // An admin's ban, kick or mute made in the Telegram app: history and Detection.
+                Detection.Decisions.FromChatMember(update);
                 // A mute lifted, by us or by hand: the queue no longer takes them as muted.
                 if (update.OldChatMember is ChatMemberRestricted && update.NewChatMember is not ChatMemberRestricted)
                     Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);

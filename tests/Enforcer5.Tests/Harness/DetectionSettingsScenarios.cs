@@ -192,7 +192,8 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Service.GenerateSettings(chat.ChatId);
 
             var stored = await Stored(chat);
-            Assert.IsTrue(stored.SameSettingsAs(DetectionPolicy.Empty.WithNewGroupDefaults()));
+            Assert.IsNotNull(stored.Engine.ObserveUntil, "its observe weeks start");
+            Assert.IsTrue((stored with { Engine = EngineSettings.Default }).SameSettingsAs(DetectionPolicy.Empty.WithNewGroupDefaults()));
             Assert.IsNull(chat.Hashes[$"chat:{chat.ChatId}:settings", "Flood"], "no longer written to Redis");
             Assert.AreEqual("yes", chat.Hashes[$"chat:{chat.ChatId}:settings", "Rules"], "the rest still is");
             AssertNoErrors(chat);

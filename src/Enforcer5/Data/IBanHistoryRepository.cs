@@ -34,9 +34,13 @@ namespace Enforcer5.Data
     /// max-warns or media-limit sanction. <paramref name="ReportId"/> is the report it was taken
     /// from, for an action on a report.
     /// </summary>
+    /// <remarks>
+    /// <paramref name="Key"/> (stored as <c>legacy_key</c>) is set for a ban made in the Telegram app
+    /// itself, which both editions hear about: the second one finds the key and writes nothing.
+    /// </remarks>
     internal sealed record BanEvent(long ChatId, long UserId, SanctionKind Kind, string Reason, long? ActorId,
         DateTimeOffset At, DateTimeOffset? ExpiresAt, string Edition, long? TriggerWarningEventId = null,
-        long? ReportId = null);
+        long? ReportId = null, string Key = null);
 
     /// <summary>A ban being lifted.</summary>
     internal sealed record UnbanEvent(long ChatId, long UserId, BanEnd End, long? ActorId, DateTimeOffset At);

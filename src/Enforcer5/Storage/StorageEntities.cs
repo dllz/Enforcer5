@@ -396,4 +396,70 @@ namespace Enforcer5.Storage
         public DateTimeOffset CreatedAt { get; set; }
         public long Hits { get; set; }
     }
+
+    /// <summary>
+    /// One sign that fired for a member (Detection v2, design section 12), with the member's state at
+    /// that moment and what was done, or would have been done in observe mode. Never message text: the
+    /// message's type, a hash of its text and the file's unique id. <c>outcome</c> is what an admin (or
+    /// the bot) then decided about the member, from <c>member_labels</c> (<c>label_id</c>): the
+    /// training data.
+    /// </summary>
+    internal sealed class DetectionEntity
+    {
+        public long DetectionId { get; set; }
+        public long GroupId { get; set; }
+        public long? AccountId { get; set; }
+        public string Sign { get; set; }
+        public string Phase { get; set; }
+        public int Weight { get; set; }
+        public int ScoreBefore { get; set; }
+        public int ScoreAfter { get; set; }
+        public string Action { get; set; }
+        public bool Deleted { get; set; }
+        public bool Reported { get; set; }
+        public string Mode { get; set; }
+        public long? MessageId { get; set; }
+        public string MessageType { get; set; }
+        public string TextHash { get; set; }
+        public string MediaUniqueId { get; set; }
+        public string TrustLevel { get; set; }
+        public long? MemberMessages { get; set; }
+        public DateTimeOffset? MemberSince { get; set; }
+        public string Evidence { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset DetectedAt { get; set; }
+        public string Outcome { get; set; }
+        public long? LabelId { get; set; }
+        public long? DecidedByAccountId { get; set; }
+        public DateTimeOffset? DecidedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A decision about a member: a ban, kick, mute, warn or delete, or its undoing, with who took it
+    /// and how (<c>source</c>: command, button, report, app for the Telegram app itself, auto for the
+    /// bot's own checks). It is what Detection learns a group's rules from. <c>missed</c> is an
+    /// admin's decision no sign fired before; <c>undone_at</c> is set when it was taken back.
+    /// <c>label_key</c> makes a decision both editions saw one row.
+    /// </summary>
+    internal sealed class MemberLabelEntity
+    {
+        public long LabelId { get; set; }
+        public long GroupId { get; set; }
+        public long? AccountId { get; set; }
+        public string Label { get; set; }
+        public string Action { get; set; }
+        public string Source { get; set; }
+        public long? DecidedByAccountId { get; set; }
+        public long? MessageId { get; set; }
+        public string MessageType { get; set; }
+        public string TextHash { get; set; }
+        public string MediaUniqueId { get; set; }
+        public string Reason { get; set; }
+        public bool? Missed { get; set; }
+        public DateTimeOffset? UndoneAt { get; set; }
+        public long? UndoneByLabelId { get; set; }
+        public string LabelKey { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset DecidedAt { get; set; }
+    }
 }

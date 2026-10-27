@@ -30,6 +30,8 @@ namespace Enforcer5.Data
         internal const string Media = "media";
         internal const string MuteOnJoin = "mute_on_join";
         internal const string ChannelPosts = "channel_posts";
+        internal const string Engine = "engine";
+        internal const string SignPrefix = "sign:";
 
         internal const string Arabic = "arabic";
         internal const string RightToLeft = "rtl";
@@ -145,6 +147,34 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                 Allowed = policy.ChannelPosts.Allowed.Select(c => new ChannelJson { Id = c.Id, Title = c.Title }).ToList()
             });
 
+            await Check(Engine, true, null, new EngineJson
+            {
+                ObserveUntil = policy.Engine.ObserveUntil?.UtcDateTime,
+                ReportAt = policy.Engine.ReportAt,
+                MuteAt = policy.Engine.MuteAt,
+                MuteEnabled = policy.Engine.MuteEnabled
+            });
+            foreach (var (name, sign) in policy.Engine.Signs)
+            {
+                await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO detection_policies (group_id, check_key, enabled, action, weight, settings, updated_at)
+VALUES (@GroupId, @Key, @Enabled, @Action, @Weight, CAST(@Settings AS jsonb), now())
+ON CONFLICT (group_id, check_key) DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action,
+    weight = EXCLUDED.weight, settings = EXCLUDED.settings, updated_at = EXCLUDED.updated_at
+WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
+   OR detection_policies.action IS DISTINCT FROM EXCLUDED.action
+   OR detection_policies.weight IS DISTINCT FROM EXCLUDED.weight
+   OR detection_policies.settings IS DISTINCT FROM EXCLUDED.settings",
+                    new
+                    {
+                        GroupId = groupId, Key = SignPrefix + name, sign.Enabled, sign.Action, Weight = (short)Math.Clamp(sign.Weight, 0, short.MaxValue),
+                        Settings = JsonSerializer.Serialize(new SignJson { Delete = sign.Delete, Report = sign.Report }, Json)
+                    }, transaction));
+            }
+            await connection.ExecuteAsync(new CommandDefinition(@"
+DELETE FROM detection_policies WHERE group_id = @GroupId AND check_key LIKE 'sign:%' AND NOT (check_key = ANY(@Keys))",
+                new { GroupId = groupId, Keys = policy.Engine.Signs.Keys.Select(k => SignPrefix + k).ToArray() }, transaction));
+
             async Task Preset(string preset, string action) =>
                 await connection.ExecuteAsync(new CommandDefinition(@"
 INSERT INTO group_filters (group_id, kind, preset, enabled, action, mode, created_at)
@@ -205,7 +235,7 @@ WHERE c.telegram_chat_id = @ChatId", new { ChatId = chatId }, transaction));
             if (group == null) return null;
 
             var checks = (await connection.QueryAsync<CheckRow>(new CommandDefinition(@"
-SELECT check_key AS CheckKey, enabled AS Enabled, action AS Action, settings::text AS Settings
+SELECT check_key AS CheckKey, enabled AS Enabled, action AS Action, weight AS Weight, settings::text AS Settings
 FROM detection_policies WHERE group_id = @GroupId", new { group.GroupId }, transaction)))
                 .ToDictionary(r => r.CheckKey);
             var filters = (await connection.QueryAsync<FilterRow>(new CommandDefinition(@"
@@ -253,7 +283,23 @@ ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
                     .Select(f => f.Pattern).ToList(),
                 ChannelPosts: new ChannelPostSettings(
                     checks.TryGetValue(ChannelPosts, out var channelRow) && channelRow.Enabled,
-                    (channels.Allowed ?? new List<ChannelJson>()).Select(c => new AllowedChannel(c.Id, c.Title)).ToList()));
+                    (channels.Allowed ?? new List<ChannelJson>()).Select(c => new AllowedChannel(c.Id, c.Title)).ToList()),
+                Engine: EngineFrom(checks, Settings<EngineJson>(Engine)));
+        }
+
+        private static EngineSettings EngineFrom(Dictionary<string, CheckRow> checks, EngineJson engine)
+        {
+            var defaults = EngineSettings.Default;
+            var signs = new Dictionary<string, SignPolicy>();
+            foreach (var (key, row) in checks)
+            {
+                if (!key.StartsWith(SignPrefix, StringComparison.Ordinal)) continue;
+                var extra = row.Settings != null ? JsonSerializer.Deserialize<SignJson>(row.Settings, Json) ?? new SignJson() : new SignJson();
+                signs[key.Substring(SignPrefix.Length)] = new SignPolicy(row.Enabled, row.Action ?? "none", row.Weight ?? 0, extra.Delete, extra.Report);
+            }
+            return new EngineSettings(
+                engine.ObserveUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(engine.ObserveUntil.Value, DateTimeKind.Utc)) : null,
+                engine.ReportAt ?? defaults.ReportAt, engine.MuteAt ?? defaults.MuteAt, engine.MuteEnabled, signs);
         }
 
         private sealed class FloodJson
@@ -294,7 +340,22 @@ ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
             public string CheckKey { get; set; }
             public bool Enabled { get; set; }
             public string Action { get; set; }
+            public short? Weight { get; set; }
             public string Settings { get; set; }
+        }
+
+        private sealed class EngineJson
+        {
+            public DateTime? ObserveUntil { get; set; }
+            public int? ReportAt { get; set; }
+            public int? MuteAt { get; set; }
+            public bool MuteEnabled { get; set; }
+        }
+
+        private sealed class SignJson
+        {
+            public bool Delete { get; set; }
+            public bool Report { get; set; }
         }
 
         private sealed class FilterRow
