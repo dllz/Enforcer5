@@ -226,11 +226,12 @@ namespace Enforcer5.Tests.Harness
                 Assert.IsNull(RaidGuard.IncidentIn(chatId), "every raid ended once it stopped");
                 Assert.IsFalse(telegram.ChatPermissions(chatId)?.CanSendMessages == false, "and the group is open again");
 
-                // A kick is a ban lifted at once; what counts is bans that stayed.
+                // A kick is a ban lifted at once (the unban may wait out a 429 or its turn); what
+                // counts is bans that stayed. Banning someone a flood kicked a moment ago is fine.
                 var calls = telegram.Accepted.Where(c => c.ChatId == chatId).ToList();
                 var bans = calls.Where(c => c.Method == "banChatMember" &&
                                             !calls.Any(u => u.Method == "unbanChatMember" && u.UserId == c.UserId && u.At >= c.At &&
-                                                            u.At - c.At <= TimeSpan.FromSeconds(1)))
+                                                            u.At - c.At <= TimeSpan.FromMinutes(2)))
                     .GroupBy(c => c.UserId);
                 // A job Telegram took just before a crash, but not yet crossed off the journal, is
                 // carried out again after it (at least once, never lost): only then may a ban repeat.
