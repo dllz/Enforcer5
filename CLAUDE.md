@@ -138,6 +138,9 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
   placeholder `136817688`; the member behind it is never visible to bots. Act on the channel
   (`BanChatSenderChat`), never on `From`. Anonymous admins have `SenderChat` = the group itself.
   See `Models/ChannelPosts.cs`.
+- Messages from other bots (Bot-to-Bot Communication Mode) are dropped on arrival except from trusted
+  bots (`Helpers/BotSenderFilter.cs`: Esme, GroupAnonymousBot, Channel_Bot). Esme may run
+  `/uploadlanguage` without being in `langAdmins`; nothing else. `/cmd@bot` is matched without case.
 
 ---
 

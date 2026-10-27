@@ -43,6 +43,7 @@ namespace Enforcer5.Handlers
                     // A post edited into spam after it got past the checks: raid detection sees it again.
                     var edited = update.EditedMessage;
                     if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
+                    if (!BotSenderFilter.Accept(edited)) return;
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old to matter
                     var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
                     if (editCtx.Complete) await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
@@ -64,6 +65,8 @@ namespace Enforcer5.Handlers
                     break;
                 default:
                     if (update.Message == null) return;
+                    // Other bots' messages (Bot-to-Bot Communication Mode) are ignored, trusted ones aside.
+                    if (!BotSenderFilter.Accept(update.Message)) return;
                     if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
                         return; //toss it
                     await HandleUpdate(update, receivedAt);
@@ -279,11 +282,16 @@ namespace Enforcer5.Handlers
             if (update.Message.Text.StartsWith("/"))
             {
                 var args = GetParameters(update.Message.Text);
-                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                var address = CommandAddress.Parse(args[0], Bot.Me.Username);
+                if (!address.ForMe) return; // /cmd@otherbot
+                args[0] = address.Trigger;
                 var command = Bot.Commands.FirstOrDefault(
                     x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
+                if (command != null && !AnswersHere(command, address, update.Message.Chat.Id)) return;
                 if (command != null)
                 {
+                    // Esme (the relay bot) may run the language upload, and nothing else a bot could.
+                    var granted = BotSenderFilter.IsGrantedCommand(update.Message.From.Id, command.Trigger);
                     // Every known command passes the limiter; unknown ones cost nothing and do nothing.
                     if (!CommandGate.Admit(update.Message))
                     {
@@ -316,7 +324,7 @@ namespace Enforcer5.Handlers
                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "noReply"), update);
                         return;
                     }
-                    if (command.UploadAdmin && !Methods.IsLangAdmin(update.Message.From.Id))
+                    if (command.UploadAdmin && !granted && !Methods.IsLangAdmin(update.Message.From.Id))
                     {
                         return;
                     }
@@ -347,7 +355,9 @@ namespace Enforcer5.Handlers
             else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@pingall"))
             {
                 var args = GetParameters(update.Message.Text);
-                args[0] = args[0].Replace("@" + Bot.Me.Username, "");
+                var address = CommandAddress.Parse(args[0], Bot.Me.Username);
+                if (!address.ForMe) return;
+                args[0] = address.Trigger;
                 var command = Bot.Commands.FirstOrDefault(
                     x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
                 if (command != null)
@@ -608,6 +618,21 @@ namespace Enforcer5.Handlers
             }
         }
            
+        /// <summary>
+        /// Whether this edition answers <paramref name="command"/> here. A plain /uploadlanguage in the
+        /// translators group reaches both bots if both are in it; only premium answers, so one file is not
+        /// reviewed twice. Addressed to a bot (/uploadlanguage@enforcerbot), that bot answers.
+        /// </summary>
+        internal static bool AnswersHere(Models.Commands command, CommandAddress address, long chatId, bool premium = IsPremium) =>
+            premium || address.Addressed || chatId != Constants.TranslatorsId ||
+            !string.Equals(command.Trigger, "uploadlanguage", StringComparison.OrdinalIgnoreCase);
+
+#if PREMIUM
+        private const bool IsPremium = true;
+#else
+        private const bool IsPremium = false;
+#endif
+
         private static string[] GetParameters(string input)
         {
             if (input.Length == 0)

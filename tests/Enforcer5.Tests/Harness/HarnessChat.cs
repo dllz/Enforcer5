@@ -189,9 +189,9 @@ namespace Enforcer5.Tests.Harness
 
         /// <summary>Adds someone to the chat as Telegram would know them.</summary>
         internal HarnessUser Add(string firstName, MemberState state = MemberState.Member, string username = null, long? id = null,
-            string lastName = null, string languageCode = null)
+            string lastName = null, string languageCode = null, bool isBot = false)
         {
-            var user = new HarnessUser(id ?? 100000 + Telegram.NextMessageId(), firstName, username, lastName, languageCode);
+            var user = new HarnessUser(id ?? 100000 + Telegram.NextMessageId(), firstName, username, lastName, languageCode, isBot);
             Telegram.SetMember(ChatId, user.Id, state);
             return user;
         }
@@ -427,9 +427,9 @@ namespace Enforcer5.Tests.Harness
     }
 
     internal sealed record HarnessUser(long Id, string FirstName, string Username = null, string LastName = null,
-        string LanguageCode = null)
+        string LanguageCode = null, bool IsBot = false)
     {
         internal User ToUser() => new User { Id = Id, FirstName = FirstName, LastName = LastName, Username = Username,
-            LanguageCode = LanguageCode };
+            LanguageCode = LanguageCode, IsBot = IsBot };
     }
 }
