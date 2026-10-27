@@ -31,6 +31,8 @@ namespace Enforcer5.Raids
         public DateTime? ActiveSinceUtc { get; set; }
         public DateTime LastActivityUtc { get; set; }
         public bool Locked { get; set; }
+        /// <summary>An admin turned raid mode on or added to it (/raid, a button): they judged it a raid.</summary>
+        public bool AdminDecided { get; set; }
         /// <summary>The group's own permissions before the lock; null when not locked by us.</summary>
         public ChatPermissions SavedPermissions { get; set; }
         public int? NoticeMessageId { get; set; }
@@ -49,6 +51,16 @@ namespace Enforcer5.Raids
         public HashSet<long> Quarantined { get; set; } = new();
         /// <summary>Content seen from several untrusted members in this incident: anyone untrusted posting it later is a suspect too.</summary>
         public HashSet<string> SpamKeys { get; set; } = new();
+        /// <summary>The messages that made each suspect one (up to 20 each): deleted when they are muted, or when a channel is banned.</summary>
+        public Dictionary<long, List<int>> SuspectMessages { get; set; } = new();
+        /// <summary>Suspects who only posted the same plain text as other newcomers: banned only when an admin turned raid mode on.</summary>
+        public HashSet<long> WeakSuspects { get; set; } = new();
+        /// <summary>Suspects muted (auto mode before it is clearly a raid); banned too if it becomes one.</summary>
+        public HashSet<long> MutedSuspects { get; set; } = new();
+
+        /// <summary>What the incident's buttons carry, so a button from an earlier raid does nothing to this one.</summary>
+        [JsonIgnore]
+        internal string ShortId => IncidentId.Substring(0, 8);
 
         internal string ToJson() => JsonConvert.SerializeObject(this);
         internal static RaidIncident FromJson(string json) => JsonConvert.DeserializeObject<RaidIncident>(json);

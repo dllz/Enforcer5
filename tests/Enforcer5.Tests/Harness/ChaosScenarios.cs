@@ -41,7 +41,21 @@ namespace Enforcer5.Tests.Harness
             public string Style;       // picture, text, link, flood
             public int PressAfter;     // human mode: steps until the admin locks
             public int? AlertSeenAt;
+            public bool Pressed;
         }
+
+        // The admin presses the alert's lock button: its data as sent, which names the incident.
+        private static void PressLock(GroupPlan plan, Telegram.Bot.Types.Message alert)
+        {
+            var data = alert.ReplyMarkup?.InlineKeyboard.SelectMany(row => row)
+                .FirstOrDefault(b => b.CallbackData?.StartsWith($"raid:{plan.Chat.ChatId}:lock", StringComparison.Ordinal) == true)?.CallbackData;
+            if (data == null) return;
+            plan.Chat.DeliverPress(plan.Admin, alert, data);
+            plan.Pressed = true;
+        }
+
+        private static Telegram.Bot.Types.Message AlertIn(HarnessChat chat) =>
+            chat.Telegram.SentMessages.LastOrDefault(m => m.Chat.Id == chat.ChatId && m.Text?.Contains("Possible raid") == true);
 
         [TestMethod]
         public async Task SeededRaids_KeepEveryRule()
@@ -191,11 +205,11 @@ namespace Enforcer5.Tests.Harness
                     // Human mode: the admin answers the alert after a while.
                     if (plan.Mode == RaidMode.Human)
                     {
-                        var alert = chat.Telegram.SentMessages.LastOrDefault(m => m.Chat.Id == chat.ChatId && m.Text?.Contains("Possible raid") == true);
+                        var alert = AlertIn(chat);
                         if (alert != null)
                         {
                             plan.AlertSeenAt ??= step;
-                            if (step == plan.AlertSeenAt + plan.PressAfter) chat.DeliverPress(plan.Admin, alert, $"raid:{chat.ChatId}:lock");
+                            if (step == plan.AlertSeenAt + plan.PressAfter) PressLock(plan, alert);
                         }
                     }
                 }
@@ -204,7 +218,17 @@ namespace Enforcer5.Tests.Harness
 
             // Everything back to normal; time for the raids to end and the queue to drain.
             foreach (var plan in groups) first.Telegram.SetBotCanRestrict(plan.Chat.ChatId, true);
-            await first.AdvanceAsync(TimeSpan.FromMinutes(20));
+            // An alert that got through only now (it waited out a storm) is answered when it comes.
+            for (var t = 0; t < 40; t++)
+            {
+                foreach (var plan in groups.Where(p => p.Mode == RaidMode.Human && !p.Pressed && p.RaidStart >= 0))
+                    if (AlertIn(plan.Chat) is { } alert)
+                    {
+                        plan.AlertSeenAt ??= int.MaxValue;
+                        PressLock(plan, alert);
+                    }
+                await first.AdvanceAsync(TimeSpan.FromSeconds(30));
+            }
             Check(seed, first, groups, crashAt);
         }
 
@@ -241,7 +265,10 @@ namespace Enforcer5.Tests.Harness
                         .Select(c => $"{c.Method}{(c.Refused ? "(429)" : "")}{(c.Request is Telegram.Bot.Requests.BanChatMemberRequest b ? $"[revoke={b.RevokeMessages},until={b.UntilDate:HH:mm}]" : "")}@{(c.At - telegram.Calls[0].At).TotalSeconds:0}s")))));
 
                 var raidDetected = plan.Raiders.Count >= 15 || plan.Style == "flood" && plan.Spammed.Count >= 3;
-                if (!raidDetected || plan.Mode == RaidMode.Human && plan.AlertSeenAt == null) continue;
+                if (!raidDetected) continue;
+                // The admins must hear of a raid whatever Telegram or a crash did meanwhile.
+                Assert.IsTrue(plan.Mode != RaidMode.Human || plan.AlertSeenAt != null,
+                    $"the admins were never told of the raid ({plan.Style}, raid from step {plan.RaidStart}, crash at {crashAt})");
                 // A raid that was caught: everyone who spammed is out or muted.
                 // A restart forgets the last minute of signs: spam posted before a crash that had not
                 // yet added up to a sign is not seen again. Known limit; see RaidGuard.

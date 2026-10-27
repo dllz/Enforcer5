@@ -66,6 +66,17 @@ namespace Enforcer5.Tests.Raids
             Assert.AreNotEqual(MessageFingerprint.Hash("Привет всем"), MessageFingerprint.Hash("Пока всем"), "Cyrillic text stays itself");
         }
 
+        [TestMethod]
+        public void NearCopies_AreSimilar_OtherTextsAreNot()
+        {
+            var a = MessageFingerprint.Sketch("Earn five hundred dollars a day from home, message me now xkq");
+            var b = MessageFingerprint.Sketch("Earn five hundred dollars a day from home, message me now pzwt");
+            var c = MessageFingerprint.Sketch("Does anyone know when the next update is coming out?");
+            Assert.IsTrue(Enforcer5.Raids.RaidSigns.Similar(a, b, 0.7));
+            Assert.IsFalse(Enforcer5.Raids.RaidSigns.Similar(a, c, 0.7));
+            Assert.IsFalse(Enforcer5.Raids.RaidSigns.Similar(a, null, 0.7));
+        }
+
         [DataTestMethod]
         [DataRow("hello there", "latin")]
         [DataRow("سلام دوستان", "arabic")]

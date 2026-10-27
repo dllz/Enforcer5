@@ -23,6 +23,12 @@ namespace Enforcer5.Helpers
         /// <summary>A join, raised once per join; raid detection listens.</summary>
         internal static event Action<JoinEvent> Joined;
 
+        /// <summary>
+        /// A join already raised without detail turned out to be an approved join request (the member
+        /// update came after the service message): raid detection takes it back.
+        /// </summary>
+        internal static event Action<JoinEvent> Vetted;
+
         /// <summary>The service message for members joining or leaving.</summary>
         internal static void FromServiceMessage(Message message)
         {
@@ -92,7 +98,15 @@ namespace Enforcer5.Helpers
             RaidCapture.Joined(join.ChatId, join.UserId, join.At, join.Source,
                 join.InviteLink == null ? null : new ChatInviteLink { InviteLink = join.InviteLink, Name = join.InviteLinkName },
                 join.AddedBy);
-            if (seenBefore) return;
+            if (seenBefore)
+            {
+                if (detailed && !seen.Detailed && join.Source == "request")
+                {
+                    try { Vetted?.Invoke(join); }
+                    catch (Exception e) { ErrorReporter.Report(e, "Join listener"); }
+                }
+                return;
+            }
             // When they joined, for the trust levels when PostgreSQL is not there.
             _ = Redis.db.HashSetAsync($"{join.ChatId}:users:{join.UserId}", "joined", join.At.ToUnixTimeSeconds(), When.Always, CommandFlags.FireAndForget);
             try

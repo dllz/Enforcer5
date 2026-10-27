@@ -65,5 +65,55 @@ namespace Enforcer5.Tests.Raids
             signs.Flooded(2, Now);
             Assert.AreEqual(0, signs.Score(_limits, null).Score);
         }
+
+        [TestMethod]
+        public void TheSamePlainText_IsAnEcho_NotHarm()
+        {
+            var signs = new RaidSigns { EchoUsers = 5 };
+            var (score, reasons) = signs.Score(_limits, null);
+            Assert.AreEqual(1, score);
+            Assert.IsFalse(RaidSigns.Harmful(reasons));
+        }
+
+        [TestMethod]
+        public void ManyPostingTheSameSpam_IsARaidOnItsOwn()
+        {
+            var signs = new RaidSigns { SameContentUsers = 6 };
+            var (score, reasons) = signs.Score(_limits, null);
+            Assert.AreEqual(4, score);
+            Assert.IsTrue(RaidSigns.Harmful(reasons));
+        }
+
+        [TestMethod]
+        public void AJoinNowAndThen_DoesNotKeepRaidModeGoing()
+        {
+            var signs = new RaidSigns();
+            signs.Joined(1, Now);
+            Assert.IsFalse(signs.JoinsKeepItGoing(_limits, null));
+            signs.Joined(2, Now);
+            signs.Joined(3, Now);
+            Assert.IsTrue(signs.JoinsKeepItGoing(_limits, null));
+            Assert.IsFalse(signs.JoinsKeepItGoing(_limits, 120), "a group with two joins a minute needs more");
+        }
+
+        [TestMethod]
+        public void AnApprovedJoin_IsTakenBack()
+        {
+            var signs = new RaidSigns();
+            signs.Joined(1, Now);
+            signs.Joined(2, Now);
+            signs.Vetted(1);
+            Assert.AreEqual(1, signs.JoinCount);
+            Assert.IsNull(signs.JoinedAt(1, Now));
+        }
+
+        [TestMethod]
+        public void AutoMode_ActsOnPeopleOnlyForHarm()
+        {
+            Assert.AreEqual(RaidActions.Quarantine, RaidGuard.AutoActions(3, new[] { "joins", "echo" }));
+            Assert.AreEqual(RaidActions.Quarantine | RaidActions.MuteSuspects, RaidGuard.AutoActions(5, new[] { "joins", "echo", "posted_on_joining", "reports" }));
+            Assert.AreEqual(RaidActions.Quarantine | RaidActions.MuteSuspects, RaidGuard.AutoActions(3, new[] { "same_content" }));
+            Assert.AreEqual(RaidActions.All, RaidGuard.AutoActions(4, new[] { "same_content", "same_content_many" }));
+        }
     }
 }

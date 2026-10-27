@@ -654,6 +654,8 @@ namespace Enforcer5.Helpers
                 AllowedUpdates = new[]
                 {
                     UpdateType.Message,
+                    // Posts edited into spam, for raid detection.
+                    UpdateType.EditedMessage,
                     // Joins and leaves with the invite link used; only sent to admins. Raid detection.
                     UpdateType.ChatMember,
                     UpdateType.CallbackQuery,
@@ -742,7 +744,7 @@ namespace Enforcer5.Helpers
         }
 
         /// <summary>True when Telegram rejected the send because the bot cannot reach that user or chat.</summary>
-        private static bool IsUnreachable(ApiRequestException api)
+        internal static bool IsUnreachable(ApiRequestException api)
         {
             if (api == null) return false;
             // 403: bot blocked, kicked, or user deactivated. 400 + these descriptions: chat gone.
@@ -755,7 +757,7 @@ namespace Enforcer5.Helpers
         internal static bool IsRateLimited(ApiRequestException api) => api?.ErrorCode == 429;
 
         /// <summary>True when the message body failed Telegram's HTML/Markdown parser.</summary>
-        private static bool IsParseFailure(ApiRequestException api)
+        internal static bool IsParseFailure(ApiRequestException api)
         {
             return api != null && api.ErrorCode == 400 && api.Message.Contains("can't parse entities");
         }

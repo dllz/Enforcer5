@@ -39,6 +39,14 @@ namespace Enforcer5.Handlers
                     PrincipalObserver.Observe(update);
                     Bot.DispatchInteractive(() => HandleInlineQuery(update.InlineQuery), "HandleInlineQuery");
                     break;
+                case UpdateType.EditedMessage:
+                    // A post edited into spam after it got past the checks: raid detection sees it again.
+                    var edited = update.EditedMessage;
+                    if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
+                    if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old to matter
+                    var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
+                    if (editCtx.Complete) await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
+                    break;
                 case UpdateType.ChatMember:
                     // Joins and leaves, with the invite link used: for raid detection and its capture.
                     PrincipalObserver.Observe(update);

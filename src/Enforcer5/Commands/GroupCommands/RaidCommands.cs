@@ -90,41 +90,52 @@ namespace Enforcer5
 
     public static partial class CallBacks
     {
-        /// <summary>raid:{chat}:{lock|mute|ban|ignore|end|release}, under a raid alert, notice or summary.</summary>
+        /// <summary>
+        /// raid:{chat}:{lock|mute|ban|ignore|end|release}:{incident}, under a raid alert, notice or
+        /// summary. A button from an earlier incident does nothing: its raid is over.
+        /// </summary>
         [Callback(Trigger = "raid", GroupAdminOnly = true)]
         public static void RaidButton(CallbackQuery call, string[] args)
         {
             var chatId = long.Parse(args[1]);
             var action = args.Length > 2 ? args[2] : "";
+            var incidentId = args.Length > 3 ? args[3] : null;
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var admin = call.From.Id;
-            switch (action)
+            var current = RaidGuard.IncidentIn(chatId);
+            var answer = "raidDone";
+            if (action == "release")
             {
-                case "lock":
-                    RaidGuard.Activate(chatId, RaidActions.All, "button", admin);
-                    break;
-                case "mute":
-                    RaidGuard.Activate(chatId, RaidActions.Quarantine, "button", admin);
-                    break;
-                case "ban":
-                    RaidGuard.Activate(chatId, RaidActions.Quarantine | RaidActions.BanSuspects, "button", admin);
-                    break;
-                case "ignore":
-                    RaidGuard.End(chatId, admin, quietly: true);
-                    break;
-                case "end":
-                    RaidGuard.End(chatId, admin);
-                    break;
-                case "release":
-                    // The joiners the summary was about: still muted until Telegram lifts it, or now.
-                    var released = Enforcer5.Helpers.Redis.db.SetMembersAsync($"chat:{chatId}:mutedJoiners").GetAwaiter().GetResult()
-                        .Select(v => long.TryParse(v.ToString(), out var id) ? id : 0).Where(id => id != 0).ToList();
-                    RaidGuard.Release(chatId, released, admin);
-                    break;
+                if (incidentId == null || !RaidGuard.Release(chatId, incidentId, admin)) answer = "raidNotOn";
             }
-            // The buttons have done their job.
-            _ = Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "raidDone"));
-            if (call.Message != null && action is "lock" or "mute" or "ban" or "ignore" or "release")
+            else if (current == null || current.ShortId != incidentId)
+            {
+                answer = "raidNotOn";
+            }
+            else
+            {
+                switch (action)
+                {
+                    case "lock":
+                        RaidGuard.Activate(chatId, RaidActions.All, "button", admin);
+                        break;
+                    case "mute":
+                        RaidGuard.Activate(chatId, RaidActions.Quarantine, "button", admin);
+                        break;
+                    case "ban":
+                        RaidGuard.Activate(chatId, RaidActions.Quarantine | RaidActions.BanSuspects, "button", admin);
+                        break;
+                    case "ignore":
+                        RaidGuard.End(chatId, admin, quietly: true);
+                        break;
+                    case "end":
+                        RaidGuard.End(chatId, admin);
+                        break;
+                }
+            }
+            _ = Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, answer));
+            // The buttons have done their job, or belong to a raid that is over.
+            if (call.Message != null && (answer != "raidDone" || action is "lock" or "mute" or "ban" or "ignore" or "release"))
                 _ = Bot.Api.EditMessageReplyMarkup(call.Message.Chat.Id, call.Message.MessageId, null);
         }
 
@@ -143,6 +154,11 @@ namespace Enforcer5
                 var done = Methods.BanUser(chatId, userId, lang, "Spam link", call.From.Id, revokeMessages: true);
                 if (!done) return;
                 Methods.SaveBan(userId, "ban");
+            }
+            else
+            {
+                // An admin looked and let them be: not a suspect in this raid or the next.
+                RaidGuard.Clear(chatId, userId);
             }
             _ = Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "raidDone"));
             // The report itself has said its piece.
