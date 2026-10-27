@@ -391,30 +391,25 @@ namespace Enforcer5.Handlers
                 // No longer skipped for someone throttled for command spam: that skipped Mute On Join
                 // and the join checks for exactly the accounts most likely to be spammers.
                 Log(update, "chatMember");
-                var isBanned = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:tempbanned:{update.Message.NewChatMember}").Result;
-                if (isBanned.HasValue)
-                {
-#if NORMAL
-                    Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
-#endif
-#if PREMIUM
-                    Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
-#endif
-                }
+                var chatId = update.Message.Chat.Id;
+                var joiners = update.Message.NewChatMembers ?? Array.Empty<User>();
+                foreach (var joiner in joiners) ForgetTempban(chatId, joiner.Id);
                 Bot.Dispatch(() => OnMessage.ArabJoinDetection(ctx));
-                if (update.Message.NewChatMember.Id == Bot.Me.Id)
+                if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
                 }
                 else
                 {
                     Service.Welcome(update.Message);
-                    var hash = $"chat:{update.Message.Chat.Id}:settings";
-                    var muteOnJoin = Redis.db.HashGet(hash, "MuteOnJoin");
-                    var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
+                    // Everyone added in one go, not just the first: a mass add is how a raid gets
+                    // round Mute On Join.
+                    var muteOnJoin = ctx.Complete ? ctx.Setting("MuteOnJoin") : Redis.db.HashGet($"chat:{chatId}:settings", "MuteOnJoin");
+                    var lang = ctx.Lang ?? Methods.GetGroupLanguage(chatId).Doc;
                     if (muteOnJoin == "no")
                     {
-                        Methods.MuteUser(update.Message.Chat.Id, update.Message.NewChatMember.Id, lang, newJoiner: true);
+                        foreach (var joiner in joiners)
+                            Methods.MuteUser(chatId, joiner.Id, lang, newJoiner: true);
                     }
                 }
 #if PREMIUM
@@ -424,8 +419,8 @@ namespace Enforcer5.Handlers
                     {
                         try
                         {
+                            // No pause between them: the enforcement queue and the gateway pace the calls.
                             bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {update.Message.NewChatMembers[i].Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}", reason: "Added in a mass add");
-                            Thread.Sleep(2000);
                         }
                         catch (Exception e)
                         {
@@ -447,6 +442,27 @@ namespace Enforcer5.Handlers
             {
                 ErrorReporter.Report(e, "NewChatMembers");
             }
+        }
+
+        /// <summary>
+        /// Someone tempbanned here is back (an admin let them in early): their entry in the expiry
+        /// schedule goes, so the expiry check does not act on them later. The schedule is keyed by the
+        /// unban time, which two tempbans can share, so only an entry that names this chat and user is
+        /// removed.
+        /// </summary>
+        private static void ForgetTempban(long chatId, long userId)
+        {
+#if PREMIUM
+            const string index = "tempbannedPremium";
+#else
+            const string index = "tempbanned";
+#endif
+            var until = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
+            if (!until.HasValue) return;
+            var entry = Redis.db.HashGetAsync(index, until.ToString()).Result;
+            if (entry.HasValue && Data.RedisTempbanRepository.TryParseEntry(entry.ToString(), out var entryChat, out var entryUser) &&
+                entryChat == chatId && entryUser == userId)
+                Redis.db.HashDeleteAsync(index, until.ToString());
         }
 
         // One-time schema migrations. These were re-checked against Redis on every group message

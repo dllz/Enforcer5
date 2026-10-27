@@ -108,6 +108,41 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task MuteOnJoin_MutesEveryoneAddedAtOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "MuteOnJoin"] = "no";
+            var adder = chat.Add("Adder");
+            var added = Enumerable.Range(0, 5).Select(i => chat.Add($"Added{i}", MemberState.Left)).ToList();
+            var join = chat.Join(added[0], addedBy: adder);
+            foreach (var a in added) chat.Telegram.SetMember(chat.ChatId, a.Id, MemberState.Member);
+            join.NewChatMembers = added.Select(a => a.ToUser()).ToArray();
+
+            await chat.PostAsync(join);
+
+            Assert.IsTrue(added.All(a => chat.Telegram.GetMember(chat.ChatId, a.Id) == MemberState.Restricted), "all five, not just the first");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task SomeoneTempbannedComingBackEarly_LeavesTheSchedule_AndOnlyTheirEntry()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var back = chat.Add("Back", MemberState.Left);
+            var other = chat.Add("Other", MemberState.Kicked);
+            chat.Keys[$"chat:{chat.ChatId}:tempbanned:{back.Id}"] = "2000000000";
+            chat.Hashes[HarnessChat.TempbanSchedule, "2000000000"] = $"{chat.ChatId}:{back.Id}:Back:Group";
+            chat.Keys[$"chat:{chat.ChatId}:tempbanned:{other.Id}"] = "2000000100";
+            chat.Hashes[HarnessChat.TempbanSchedule, "2000000100"] = $"{chat.ChatId}:{other.Id}:Other:Group";
+
+            await chat.JoinAsync(back);
+
+            Assert.IsNull(chat.Hashes[HarnessChat.TempbanSchedule, "2000000000"], "their entry is gone");
+            Assert.IsNotNull(chat.Hashes[HarnessChat.TempbanSchedule, "2000000100"], "someone else's stays");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task MuteRefusedByTelegram_RecordsNothing()
         {
             await using var chat = await HarnessChat.StartAsync();
