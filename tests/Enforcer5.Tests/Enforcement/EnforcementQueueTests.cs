@@ -98,6 +98,35 @@ namespace Enforcer5.Tests.Enforcement
         }
 
         [TestMethod]
+        public async Task AMuteAnEarlierOneCovers_IsNotAskedAgain_ButAfterAnUnmuteItIs()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            var now = Helpers.Clock.UtcNow;
+            int Restricts() => bot.Telegram.Calls.Count(c => c.Method == "restrictChatMember");
+
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 1)); // Mute On Join: for good
+            Assert.AreEqual(EnforcementOutcome.Done, (await bot.RunAsync(EnforcementJob.Mute(Raided, 1, now.AddHours(24)))).Outcome);
+            Assert.AreEqual(1, Restricts(), "a quarantine after Mute On Join is covered");
+
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 2, now.AddHours(24)));
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 2, now.AddHours(24).AddMinutes(1)));
+            Assert.AreEqual(2, Restricts(), "a suspect's mute a moment after the quarantine is covered");
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 2));
+            Assert.AreEqual(3, Restricts(), "for good is longer than a day");
+
+            await bot.RunAsync(EnforcementJob.Unmute(Raided, 1));
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 1, now.AddHours(24)));
+            Assert.AreEqual(MemberState.Restricted, bot.Telegram.GetMember(Raided, 1), "muted again after the unmute");
+            Assert.AreEqual(5, Restricts());
+
+            EnforcementQueue.ForgetMute(Raided, 1); // an admin lifted it by hand
+            await bot.RunAsync(EnforcementJob.Mute(Raided, 1, now.AddHours(24)));
+            Assert.AreEqual(6, Restricts());
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
         public async Task AKickWhoseUnbanIsRateLimited_ResumesAtTheUnban()
         {
             await using var bot = await SimulatedBot.StartAsync();

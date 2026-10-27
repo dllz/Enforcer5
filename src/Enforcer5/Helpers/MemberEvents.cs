@@ -60,6 +60,9 @@ namespace Enforcer5.Helpers
                 var at = RaidCapture.Utc(update.Date);
                 var wasIn = IsIn(update.OldChatMember);
                 var isIn = IsIn(update.NewChatMember);
+                // A mute lifted, by us or by hand: the queue no longer takes them as muted.
+                if (update.OldChatMember is ChatMemberRestricted && update.NewChatMember is not ChatMemberRestricted)
+                    Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);
                 if (!wasIn && isIn)
                 {
                     var addedBy = update.From != null && update.From.Id != user.Id && !update.ViaJoinRequest ? update.From.Id : (long?)null;

@@ -1094,7 +1094,11 @@ namespace Enforcer5.Raids
         internal static bool Release(long chatId, string shortId, long by)
         {
             var key = ReleaseKey(chatId, shortId);
+            // Not those the group itself mutes on joining: it wants them muted until an admin says otherwise.
+            var groupMuted = Redis.db.SetMembersAsync($"chat:{chatId}:mutedJoiners").GetAwaiter().GetResult()
+                .Select(v => v.ToString()).ToHashSet();
             var users = Redis.db.SetMembersAsync(key).GetAwaiter().GetResult()
+                .Where(v => !groupMuted.Contains(v.ToString()))
                 .Select(v => long.TryParse(v.ToString(), out var id) ? id : 0).Where(id => id != 0).ToList();
             Redis.db.KeyDeleteAsync(key).GetAwaiter().GetResult();
             foreach (var u in users)

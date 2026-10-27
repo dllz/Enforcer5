@@ -52,6 +52,11 @@ namespace Enforcer5.Enforcement
         // (chat, user) Telegram said is an admin there, until when that is believed.
         private static readonly Dictionary<(long Chat, long User), DateTime> KnownAdmins = new();
         private static readonly TimeSpan KnownAdminFor = TimeSpan.FromMinutes(10);
+        // (chat, user) the queue muted: until when (null: for good), and until when that is believed.
+        // A raid mutes the same joiner up to three times (Mute On Join, quarantine, as a suspect);
+        // a mute that one already covers is not asked of Telegram again.
+        private static readonly Dictionary<(long Chat, long User), (DateTime? Until, DateTime Believed)> RecentlyMuted = new();
+        internal static readonly TimeSpan RecentlyMutedFor = TimeSpan.FromMinutes(10);
 
         /// <summary>Most messages Telegram deletes in one deleteMessages call.</summary>
         internal const int MaxDeleteBatch = 100;
@@ -146,6 +151,22 @@ namespace Enforcer5.Enforcement
                 // admin fixes them, but the caller hears it at once.
                 refusedForNow = NoRightsSince.ContainsKey(job.ChatId);
 
+                if (job.Kind == EnforcementKind.Mute && job.Note.ActorId == null)
+                {
+                    // The bot's own mute (on joining, raid quarantine, a raid suspect), never an admin's,
+                    // who may mean to change it. Muted already, for at least as long: done. Waiting to be
+                    // muted for that long: the same job.
+                    if (RecentlyMuted.TryGetValue((job.ChatId, job.TargetId), out var muted) && muted.Believed > now &&
+                        Covers(muted.Until, job.UntilUtc) && IsLatestDone(job.ChatId, job.TargetId))
+                        return Task.FromResult(EnforcementResult.Done);
+                    if (LatestFor(job.ChatId, job.TargetId) is { Kind: EnforcementKind.Mute } waiting && Covers(waiting.UntilUtc, job.UntilUtc))
+                        return waiting.Completion?.Task ?? Task.FromResult(EnforcementResult.Queued);
+                }
+                if (job.TargetId != 0 && job.Kind is not (EnforcementKind.Mute or EnforcementKind.Delete or EnforcementKind.SetChatPermissions))
+                {
+                    RecentlyMuted.Remove((job.ChatId, job.TargetId));
+                }
+
                 var key = job.DedupeKey;
                 // Only the same job as the person's latest: after "ban, unban", a new ban is a new job.
                 if (key != null && ByKey.TryGetValue(key, out existing) && IsLatestFor(existing)) { }
@@ -177,6 +198,29 @@ namespace Enforcer5.Enforcement
             if (refusedForNow) CompleteOnce(job, EnforcementResult.Refuse(Refusal.BotNotAdmin));
             Wake();
             return job.Completion.Task;
+        }
+
+        // A mute until <paramref name="known"/> covers one until <paramref name="wanted"/> (null: for
+        // good), give or take ten minutes, so a quarantine and a suspect's mute a moment later are one.
+        private static bool Covers(DateTime? known, DateTime? wanted) =>
+            known == null || wanted != null && known.Value >= wanted.Value - TimeSpan.FromMinutes(10);
+
+        // With the lock held. The person's latest job waiting in the chat, if any.
+        private static EnforcementJob LatestFor(long chatId, long targetId) =>
+            ByChat.TryGetValue(chatId, out var list)
+                ? list.Where(j => j.TargetId == targetId).OrderByDescending(j => j.Sequence).FirstOrDefault()
+                : null;
+
+        // With the lock held. Nothing waits for the person in the chat.
+        private static bool IsLatestDone(long chatId, long targetId) => LatestFor(chatId, targetId) == null;
+
+        /// <summary>
+        /// Telegram says the person is no longer muted (an admin lifted it by hand): a mute asked for
+        /// later is carried out, not taken as done.
+        /// </summary>
+        internal static void ForgetMute(long chatId, long userId)
+        {
+            lock (Lock) RecentlyMuted.Remove((chatId, userId));
         }
 
         // With the lock held.
@@ -372,7 +416,11 @@ namespace Enforcer5.Enforcement
                 case AttemptKind.Success:
                     EnforcementExecutor.Record(job);
                     result = EnforcementResult.Done;
-                    lock (Lock) NoRightsSince.Remove(job.ChatId);
+                    lock (Lock)
+                    {
+                        NoRightsSince.Remove(job.ChatId);
+                        if (job.Kind == EnforcementKind.Mute) RecentlyMuted[(job.ChatId, job.TargetId)] = (job.UntilUtc, now + RecentlyMutedFor);
+                    }
                     break;
                 case AttemptKind.RateLimited:
                     job.DueUtc = now + attempt.RetryIn;
@@ -476,6 +524,7 @@ namespace Enforcer5.Enforcement
                 ChatNotBefore.Clear();
                 NoRightsSince.Clear();
                 KnownAdmins.Clear();
+                RecentlyMuted.Clear();
                 _loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             }
         }
