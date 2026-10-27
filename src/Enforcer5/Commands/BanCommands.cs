@@ -186,7 +186,6 @@ namespace Enforcer5
             var total = Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns).Result;
             var warned = WarnHistory.Added(chatId, warnedId, WarnKind.Warn, 1 + preWarns, num, total, actorId, reason, report);
             ReportHistory.Acted(report, ReportAction.Warned, actorId);
-            var max = 3;
             if (warnedId == Bot.Me.Id)
                 return;
             if (num < 0)
@@ -194,7 +193,7 @@ namespace Enforcer5
                 Redis.db.HashSetAsync($"chat:{chatId}:warns", warnedId, 0);
             }
             var id = warnedId;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result.ToString(), out max);
+            var max = Methods.MaxWarns(chatId);
             if (num >= max)
             {
                 var type = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result.HasValue

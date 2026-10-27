@@ -980,8 +980,7 @@ namespace Enforcer5
             var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
             // This button has never counted towards totalWarns, so the history counts the lifetime itself.
             var warned = WarnHistory.Added(chatId, userId, WarnKind.Warn, 1, num, null, call.From.Id);
-            var max = 3;
-            int.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result.ToString(), out max);
+            var max = Methods.MaxWarns(chatId);
             
             if (num >= max)
             {

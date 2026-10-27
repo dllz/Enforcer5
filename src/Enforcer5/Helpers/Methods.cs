@@ -1225,6 +1225,22 @@ namespace Enforcer5.Helpers
         // Removed: the scheduled 45-minute self-restart. It existed because the old Windows host
         // needed an external supervisor to babysit the process; systemd's Restart=always covers it.
 
+        /// <summary>What new groups get (Service.GenerateSettings), and what a group without a usable stored maximum gets.</summary>
+        internal const int DefaultMaxWarns = 5;
+
+        /// <summary>
+        /// Warns that trigger the group's warn action. A missing, unreadable or non-positive value is
+        /// the default: it used to read as 0, so the first warn (an automatic one too) was the last.
+        /// </summary>
+        internal static int MaxWarns(long chatId) => MaxWarns(Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result);
+
+        internal static int MaxWarns(StackExchange.Redis.RedisValue stored) =>
+            int.TryParse(stored.ToString(), out var max) && max > 0 ? max : DefaultMaxWarns;
+
+        /// <summary>Stores the default maximum when the group has none, so the menu's + and - start from it.</summary>
+        internal static void EnsureMaxWarns(long chatId) =>
+            Redis.db.HashSetAsync($"chat:{chatId}:warnsettings", "max", MaxWarns(chatId)).Wait();
+
         public static int GetGroupTempbanTime(long chatId)
         {
             var time = Redis.db.HashGetAsync($"chat:{chatId}:otherSettings", "tempbanTime").Result;

@@ -21,7 +21,7 @@ namespace Enforcer5
             mainMenu.Columns = 2;
             mainMenu.Buttons = new List<InlineButton>();
 
-            var max = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "max").Result;
+            var max = Methods.MaxWarns(chatId);
             var action = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "type").Result;
             var editWarn = new Menu(3);
                      
@@ -51,6 +51,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
+            Methods.EnsureMaxWarns(chatId);
             var num = Redis.db.HashDecrementAsync($"chat:{chatId}:warnsettings", "max").Result;
             if (num > 0)
             {
@@ -71,7 +72,8 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max");
+            Methods.EnsureMaxWarns(chatId);
+            Redis.db.HashIncrementAsync($"chat:{chatId}:warnsettings", "max").Wait();
             var keys = Commands.genWarnMenu(chatId, lang);
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));

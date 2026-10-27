@@ -66,7 +66,6 @@ ORDER BY s.sanction_id")).ToArray();
         {
             await using var chat = await HarnessChat.StartAsync();
             FloodOn(chat, "warn");
-            chat.Hashes[$"chat:{chat.ChatId}:warnsettings", "max"] = "5"; // unset reads as 0: the first warn is the last
             var flooder = chat.Add("Flooder");
 
             for (var i = 0; i < 8; i++) chat.Deliver(chat.Text(flooder, $"spam {i}"));
@@ -148,6 +147,40 @@ ORDER BY s.sanction_id")).ToArray();
             AssertNoErrors(chat);
         }
 
+        [TestMethod]
+        public async Task Warns_WithNoMaximumStored_UseTheDefaultOfFive()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var message = await chat.SendAsync(member, "rude");
+
+            for (var i = 1; i <= 4; i++) await chat.SendAsync(admin, "/warn", replyTo: message);
+            Assert.AreEqual(MemberState.Member, State(chat, member), "four warns are not five");
+            await chat.SendAsync(admin, "/warn", replyTo: message);
+
+            Assert.AreNotEqual(MemberState.Member, State(chat, member), "the fifth is the last");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task Watched_IsExemptFromTheLengthChecksToo()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            TextLength(chat, "kick");
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "maxlength"] = "5";
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "action"] = "kick";
+            var watched = chat.Add("A long enough name");
+            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+
+            await chat.SendAsync(watched, new string('a', 150));
+
+            Assert.AreEqual(MemberState.Member, State(chat, watched));
+            Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, watched.Id).Count);
+            AssertNoErrors(chat);
+        }
+
         // ---------- Text length ----------
 
         private static void TextLength(HarnessChat chat, string action, int maxLength = 100, int maxLines = 50)
@@ -194,7 +227,6 @@ ORDER BY s.sanction_id")).ToArray();
             await using var chat = await HarnessChat.StartAsync();
             // The length menus store "Warn", the flood menu "warn"; each check only knows its own.
             TextLength(chat, "Warn");
-            chat.Hashes[$"chat:{chat.ChatId}:warnsettings", "max"] = "5";
             var talker = chat.Add("Talker");
 
             await chat.SendAsync(talker, new string('a', 150));
