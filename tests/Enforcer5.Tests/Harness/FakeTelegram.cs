@@ -125,6 +125,11 @@ namespace Enforcer5.Tests.Harness
         /// <summary>Every call answered after this many simulated seconds; zero by default.</summary>
         internal void SetLatency(TimeSpan latency) => _latency = latency;
 
+        private readonly ConcurrentDictionary<string, TimeSpan> _methodLatency = new();
+
+        /// <summary>Only <paramref name="method"/> (e.g. "getChat") answered after <paramref name="latency"/>.</summary>
+        internal void SetLatency(string method, TimeSpan latency) => _methodLatency[method] = latency;
+
         /// <summary>
         /// Answers 429 with <paramref name="retryAfter"/> to every call <paramref name="matches"/>
         /// accepts, for <paramref name="duration"/> of simulated time from now.
@@ -172,6 +177,8 @@ namespace Enforcer5.Tests.Harness
         public async Task<TResponse> SendRequest<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             if (_latency > TimeSpan.Zero) await Enforcer5.Helpers.Clock.Delay(_latency);
+            if (_methodLatency.TryGetValue(request.MethodName, out var slow) && slow > TimeSpan.Zero)
+                await Enforcer5.Helpers.Clock.Delay(slow);
             return (TResponse)Answer(request);
         }
 

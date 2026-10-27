@@ -720,5 +720,29 @@ namespace Enforcer5.Tests.Harness
             Assert.IsFalse(Locked(chat), "and the unlock went through");
             AssertOnly429s(chat);
         }
+
+        [TestMethod]
+        public async Task ARaidEndedWhileTheLockWasStillBeingPutIn_LeavesTheGroupOpen()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            RaidGuard.SetMode(chat.ChatId, RaidMode.Auto);
+            Regulars(chat, 3);
+            // Telegram slow to answer: reading the group's permissions before the lock takes a while.
+            chat.Telegram.SetLatency("getChat", TimeSpan.FromSeconds(3));
+            for (var i = 0; i < 20; i++)
+            {
+                var r = chat.Add($"Raider{i}", MemberState.Left);
+                chat.Deliver(chat.Join(r));
+                chat.Deliver(chat.Photo(r, uniqueId: "scam", caption: "FREE crypto t.me/scam"));
+            }
+            await chat.SettleAsync(flush: false);
+            Assert.IsNotNull(RaidGuard.IncidentIn(chat.ChatId), "raid mode is on");
+            RaidGuard.End(chat.ChatId, admin.Id);
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(2));
+
+            Assert.IsFalse(Locked(chat), "the unlock is never queued ahead of the lock");
+            AssertOnly429s(chat);
+        }
     }
 }

@@ -52,6 +52,10 @@ namespace Enforcer5.Raids
         private static readonly object Lock = new();
         private static readonly Dictionary<long, RaidSigns> Signs = new();
         private static readonly Dictionary<long, RaidIncident> Incidents = new();
+        // Per incident id, while its lock is being put in: true once the lock job is in the queue,
+        // false when the raid ended before it got there and no lock was asked for. The unlock waits
+        // for it, so it can never be queued ahead of the lock and leave the group locked.
+        private static readonly Dictionary<string, TaskCompletionSource<bool>> Locking = new();
         private static readonly Dictionary<(long, long), DateTime> LinkReported = new();
         private static readonly Dictionary<(long, long), (TrustLevel Level, DateTime At)> TrustSeen = new();
         private static readonly Dictionary<long, (RaidMode Mode, DateTime At)> Modes = new();
@@ -822,7 +826,11 @@ namespace Enforcer5.Raids
                 if (by.HasValue) incident.AdminDecided = true;
                 incident.LastActivityUtc = Clock.UtcNow;
                 lockNow = incident.Actions.HasFlag(RaidActions.Lock) && !incident.Locked;
-                if (lockNow) incident.Locked = true;
+                if (lockNow)
+                {
+                    incident.Locked = true;
+                    Locking[incident.IncidentId] = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                }
                 foreach (var s in incident.Suspects)
                 {
                     var ids = incident.SuspectMessages.TryGetValue(s, out var kept) ? kept.ToList() : new List<int>();
@@ -843,6 +851,21 @@ namespace Enforcer5.Raids
 
         // The group's own permissions are saved first, so they can be put back as they were.
         private static async Task LockAsync(RaidIncident incident)
+        {
+            var queued = false;
+            try
+            {
+                queued = await PutInLockAsync(incident);
+            }
+            finally
+            {
+                TaskCompletionSource<bool> locking;
+                lock (Lock) Locking.Remove(incident.IncidentId, out locking);
+                locking?.TrySetResult(queued);
+            }
+        }
+
+        private static async Task<bool> PutInLockAsync(RaidIncident incident)
         {
             var chatId = incident.ChatId;
             // A permission change still waiting in the queue (the last raid's unlock, held up by a 429)
@@ -868,6 +891,9 @@ namespace Enforcer5.Raids
                     LogHelper.Error($"Could not read the permissions of {chatId} before locking: {e.Message}");
                 }
             }
+            // Ended while the permissions were read: no lock, and so no unlock either.
+            lock (Lock)
+                if (!Incidents.TryGetValue(chatId, out var current) || current != incident) return false;
             SaveNow(incident);
             var job = EnforcementJob.SetPermissions(chatId, EnforcementExecutor.NothingAllowed);
             job.Note.Reason = "Raid lock";
@@ -880,6 +906,7 @@ namespace Enforcer5.Raids
                 if (t.Status == TaskStatus.RanToCompletion && t.Result.Outcome == EnforcementOutcome.Done)
                     RaidTelemetry.Action(chatId, "locked", 0);
             }, TaskScheduler.Default);
+            return true;
         }
 
         private static void Quarantine(long chatId, long userId)
@@ -1023,9 +1050,20 @@ namespace Enforcer5.Raids
             RaidTelemetry.Ended(Snapshot(incident), by, ignored: quietly && by.HasValue);
             if (incident.Locked)
             {
-                var job = EnforcementJob.SetPermissions(chatId, incident.SavedPermissions ?? UsualPermissions);
-                job.Note.Reason = "Raid over";
-                Bot.Dispatch(async () => await EnforcementQueue.SubmitAsync(job), "RaidUnlock");
+                Task<bool> locking;
+                lock (Lock) locking = Locking.TryGetValue(incident.IncidentId, out var pending) ? pending.Task : Task.FromResult(true);
+                Bot.Dispatch(async () =>
+                {
+                    Clock.Park();
+                    bool locked;
+                    try { locked = await locking; }
+                    finally { Clock.Unpark(); }
+                    if (!locked) return;
+                    // Read after the lock was queued: that is when the group's own permissions are known.
+                    var job = EnforcementJob.SetPermissions(chatId, incident.SavedPermissions ?? UsualPermissions);
+                    job.Note.Reason = "Raid over";
+                    await EnforcementQueue.SubmitAsync(job);
+                }, "RaidUnlock");
             }
             if (incident.NoticeMessageId is { } notice && !(quietly && by.HasValue))
             {
@@ -1286,6 +1324,8 @@ namespace Enforcer5.Raids
             {
                 Signs.Clear();
                 Incidents.Clear();
+                foreach (var l in Locking.Values) l.TrySetResult(false);
+                Locking.Clear();
                 LinkReported.Clear();
                 TrustSeen.Clear();
                 Modes.Clear();
