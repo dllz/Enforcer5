@@ -211,6 +211,21 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task TextLength_LinesAreCountedOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            TextLength(chat, "kick", maxLength: 1000, maxLines: 10);
+            var talker = chat.Add("Talker");
+
+            await chat.SendAsync(talker, string.Concat(Enumerable.Repeat("line\n", 6)) + "end");
+            Assert.AreEqual(MemberState.Member, State(chat, talker), "7 lines against a limit of 10");
+            await chat.SendAsync(talker, string.Concat(Enumerable.Repeat("line\n", 9)) + "end");
+
+            Assert.AreEqual(MemberState.Left, State(chat, talker), "10 lines reach it, as a length equal to the limit does");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task TextLength_UnderTheLimits_OrDisabled_LeavesItAlone()
         {
             await using var chat = await HarnessChat.StartAsync();

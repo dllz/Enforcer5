@@ -160,8 +160,7 @@ namespace Enforcer5
             var text = update.Message.Text;
             var intml = Limit(MessageContext.Field(settings, "maxlength"), DefaultMaxTextLength);
             var intmline = Limit(MessageContext.Field(settings, "maxlines"), DefaultMaxTextLines);
-            var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
-            if (text.Length < intml && lines.Length < intmline) return;
+            if (text.Length < intml && LineCount(text) < intmline) return;
 
             var action = MessageContext.Field(settings, "action");
             var lang = ctx.Lang;
@@ -282,6 +281,12 @@ namespace Enforcer5
         internal const int DefaultMaxTextLength = 1024;
         internal const int DefaultMaxTextLines = 50;
         internal const int DefaultMaxNameLength = 50;
+
+        /// <summary>
+        /// Lines as the reader sees them; a trailing line break adds none. This used to be the length
+        /// of a Regex.Split whose pattern captured each line, which counted every line about twice.
+        /// </summary>
+        internal static int LineCount(string text) => text.TrimEnd('\r', '\n').Split('\n').Length;
 
         private static int Limit(StackExchange.Redis.RedisValue stored, int fallback) =>
             stored.TryParse(out int limit) && limit > 0 ? limit : fallback;
