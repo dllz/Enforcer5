@@ -163,9 +163,12 @@ reason to refuse it. Four pieces, outermost first:
   command's cost, so admins banning raiders are never slowed.
 - **`RaidGuard`** (`Raids/`): signs per group from untrusted members only (`MemberTrust`: admins,
   the `auth`/`watch` lists and established members never count), raid mode per `RaidMode` (human by
-  default, auto, off; `/raid`, `/raidmode`), state in Redis (`raid:{edition}:{chat}`). A restart
-  forgets the last minute of signs; spam posted then that had not yet added up to a sign is not
-  seen again (the chaos run allows for it).
+  default, auto, off; `/raid`, `/raidmode`), state in Redis (`raid:{edition}:{chat}`). Only harm
+  (the same link, file or long text, floods, bare links) closes a group or touches people in auto
+  mode; a surge of joins or the same plain text only holds new joiners back. Buttons carry their
+  incident (`raid:{chat}:{action}:{incident}`). A restart forgets the last minute of signs; spam
+  posted then that had not yet added up to a sign is not seen again (the chaos run allows for it).
+  What admins do and what to check when one goes wrong: `docs/raid-runbook.md`.
 
 The cross-process seam (`IFloodSignal`) is a no-op; see `docs/postgres-rollout.md`.
 
