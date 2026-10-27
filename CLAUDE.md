@@ -253,6 +253,25 @@ drift apart. They had until October 2026: the live file had keys and text edits 
 not. Treat the repo file as the source: change text there, then upload that file with
 `/uploadlanguage`. Never upload an older repo copy over the live file without comparing them.
 
+### Language uploads (`LanguageUpload/`)
+
+Ported from blackwolf (`Werewolf Control/LanguageUpload/`, 2026-10). `/uploadlanguage` replying to an `.xml`
+or a `.zip` of them (Esme sends it in the translators group) posts **one** message; a language admin
+(`langAdmins`) or dev taps Review and decides in an **ephemeral** menu only they see (a normal message in
+private). The chat message is then edited into the result ("Uploaded 7 of 12"). A plain `/uploadlanguage`
+in the translators group is answered by premium only.
+
+| File | What it does |
+|---|---|
+| `BatchIntake.cs` | Upload → files. Zip: top-level `.xml` only, plain names, count/size limits counted on what unpacks |
+| `LanguageValidator.cs` | The checks, also used by /validatelanguages: language node and base length, clashes (fatal); placeholders, a key twice, GIF text over 200 (warnings); missing strings (info) |
+| `BatchBuilder.cs` | Checks each file against English, the live files and the other files of the upload |
+| `LanguageBatch.cs` | State: **Fatal** never uploads, **Warning** grouped by kind + key (accepting lets it through in every file), **Info** never blocks |
+| `BatchStore.cs` | `{TempLanguageFilesPath}/batches/<id>/`, one change at a time per batch, 24h |
+| `BatchMenu.cs` / `BatchReport.cs` / `IssueText.cs` | Pure rendering; callback data `lb:<id>:<op>:<n>` |
+| `LanguagePublisher.cs` | `.enforcer-languages.lock` beside the live folder (both editions), re-check, temp file + rename |
+| `LanguageUploads.cs` | Telegram glue: download, post, callbacks, ephemeral send/edit |
+
 DeployBot commands (run in blackwolf's deploy chat): `/enforcerstatus`,
 `/upgradeenforcer`, `/forceenforcer`, `/rollbackenforcer`, `/startenforcer`,
 `/stopenforcer`. They share blackwolf's `OpLock`, so werewolf and enforcer deploys cannot

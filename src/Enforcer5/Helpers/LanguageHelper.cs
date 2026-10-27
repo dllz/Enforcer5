@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
+using Enforcer5.LanguageUpload;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -46,14 +47,7 @@ namespace Enforcer5.Handlers
             foreach (var langfile in Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Where(x => !x.EndsWith("English.xml")).Select(x => new Language(x)))
                 if (langfile.Base == choice || choice == null)
                 {
-                    //first check the language node
-                    CheckLanguageNode(langfile, errors);
-
-                    //test the length
-                    TestLength(langfile, errors);
-
-                    //get the file errors
-                    GetFileErrors(langfile, errors, master);
+                    errors.AddRange(LanguageValidator.Check(langfile, master));
                 }
 
             //now pack up the errors and send
@@ -62,20 +56,20 @@ namespace Enforcer5.Handlers
             {
                 var langfile = new Language(Path.Combine(Bot.LanguageDirectory, $"{file}.xml"));
                 result += $"*{langfile.FileName}.xml* (Last updated: {langfile.LatestUpdate.ToString("MMM dd")})\n";
-                if (errors.Any(x => x.Level == ErrorLevel.Info))
+                if (errors.Any(x => x.Level == ErrorLevel.DuplicatedString))
                 {
                     result += "_Duplicated Strings: _";
-                    result = errors.Where(x => x.File == langfile.FileName && x.Level == ErrorLevel.Info).Aggregate(result, (current, fileError) => current + fileError.Key + ", ").TrimEnd(',', ' ') + "\n";
+                    result = errors.Where(x => x.File == langfile.FileName && x.Level == ErrorLevel.DuplicatedString).Aggregate(result, (current, fileError) => current + fileError.Key + ", ").TrimEnd(',', ' ') + "\n";
                 }
                 result += $"_Missing strings:_ {errors.Count(x => x.Level == ErrorLevel.MissingString && x.File == langfile.FileName)}\n";
-                if (errors.Any(x => x.File == langfile.FileName && x.Level == ErrorLevel.Error))
-                    result = errors.Where(x => x.File == langfile.FileName && x.Level == ErrorLevel.Error).Aggregate(result, (current, fileError) => current + $"_{fileError.Level} - {fileError.Key}_\n{fileError.Message}\n");
+                if (errors.Any(x => x.File == langfile.FileName && IsProblem(x)))
+                    result = errors.Where(x => x.File == langfile.FileName && IsProblem(x)).Aggregate(result, (current, fileError) => current + $"_{fileError.Level} - {fileError.Key}_\n{fileError.Message}\n");
                 result += "\n";
 
             }
             Bot.Api.SendMessage(id, result, parseMode: ParseMode.Markdown);
             var sortedfiles = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).Where(x => x.Base == (choice ?? x.Base)).OrderBy(x => x.LatestUpdate);
-            result = $"*Validation complete*\nErrors: {errors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
+            result = $"*Validation complete*\nErrors: {errors.Count(x => IsProblem(x))}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
             result += $"\nMost recently updated file: {sortedfiles.Last().FileName}.xml ({sortedfiles.Last().LatestUpdate.ToString("MMM dd")})\nLeast recently updated file: {sortedfiles.First().FileName}.xml ({sortedfiles.First().LatestUpdate.ToString("MMM dd")})";
 
             Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
@@ -89,238 +83,31 @@ namespace Enforcer5.Handlers
             //first, let's load up the English file, which is our master file
             var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
 
-            //first check the language node
-            CheckLanguageNode(langfile, errors);
-
-            //now test the length
-            TestLength(langfile, errors);
-
-            //get the errors
-            GetFileErrors(langfile, errors, master);
+            errors.AddRange(LanguageValidator.Check(langfile, master));
 
             //send the result
             var result = $"*{langfile.FileName}.xml* (Last updated: {langfile.LatestUpdate.ToString("MMM dd")})" + Environment.NewLine;
-            if (errors.Any(x => x.Level == ErrorLevel.Error))
+            if (errors.Any(x => IsProblem(x)))
             {
                 result += "_Errors:_\n";
-                result = errors.Where(x => x.Level == ErrorLevel.Error).Aggregate(result, (current, fileError) => current + $"{fileError.Key}\n{fileError.Message}\n\n");
+                result = errors.Where(x => IsProblem(x)).Aggregate(result, (current, fileError) => current + $"{fileError.Key}\n{fileError.Message}\n\n");
             }
             if (errors.Any(x => x.Level == ErrorLevel.MissingString))
             {
                 result += "_Missing Values:_\n";
                 result = errors.Where(x => x.Level == ErrorLevel.MissingString).Aggregate(result, (current, fileError) => current + $"{fileError.Key}\n");
             }
-            if (errors.Any(x => x.Level == ErrorLevel.Info))
+            if (errors.Any(x => x.Level == ErrorLevel.DuplicatedString))
             {
                 result += "\n_Duplicated Strings:_\n";
-                result = errors.Where(x => x.Level == ErrorLevel.Info).Aggregate(result, (current, fileError) => current + fileError.Key + ", ").TrimEnd(',', ' ');
+                result = errors.Where(x => x.Level == ErrorLevel.DuplicatedString).Aggregate(result, (current, fileError) => current + fileError.Key + ", ").TrimEnd(',', ' ');
             }
             result += "\n";
             //Program.Send(result, id);
             Thread.Sleep(500);
-            result += $"*Validation complete*.\nErrors: {errors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
+            result += $"*Validation complete*.\nErrors: {errors.Count(x => IsProblem(x))}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
             Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
 
-        }
-
-        // Task, not void: an exception escaping this (from the catch blocks, or DeletePendingLanguage)
-        // would reach the thread pool unhandled and terminate the process.
-        internal static async Task UploadFile(string fileid, long id, string newFileCorrectName, int msgID)
-        {
-            string newFilePath = null;
-            string pendingNamePath = null;
-            try
-            {
-                newFileCorrectName = Path.GetFileName(newFileCorrectName);
-                if (string.IsNullOrWhiteSpace(newFileCorrectName) ||
-                    !newFileCorrectName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Language uploads must have an XML filename.");
-                newFileCorrectName = Path.GetFileNameWithoutExtension(newFileCorrectName) + ".xml";
-
-                var path = Directory.CreateDirectory(Bot.TempLanguageDirectory);
-                var pendingId = Guid.NewGuid().ToString("N");
-                newFilePath = Path.Combine(path.FullName, pendingId + ".xml");
-                pendingNamePath = Path.Combine(path.FullName, pendingId + ".name");
-                using (var fs = new FileStream(newFilePath, FileMode.CreateNew))
-                    await Bot.Files.DownloadAsync(fileid, fs);
-                //ok, we have the file.  Now we need to determine the language, scan it and the original file.
-                var newFileErrors = new List<LanguageError>();
-                //first, let's load up the English file, which is our master file
-                var langs = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
-                var master = XDocument.Load(Path.Combine(Bot.LanguageDirectory, "English.xml"));
-                var newFile = new Language(newFilePath)
-                {
-                    FileName = Path.GetFileNameWithoutExtension(newFileCorrectName)
-                };
-
-                //make sure it has a complete langnode
-                CheckLanguageNode(newFile, newFileErrors);
-    
-                //test the length
-                TestLength(newFile, newFileErrors);
-    
-                //check uniqueness
-                var error = langs.FirstOrDefault(x =>
-                        (x.FileName == newFile.FileName && x.Name != newFile.Name) //check for matching filename and mismatching name
-                        || (x.Name == newFile.Name && (x.Base != newFile.Base)) //check for same name and mismatching base-variant
-                        || (x.Base == newFile.Base && x.FileName != newFile.FileName) //check for same base-variant and mismatching filename
-                                                                                                                      //if we want to have the possibility to rename the file, change previous line with FileName -> Name
-                        );
-                if (error != null)
-                {
-                    //problem....
-                    newFileErrors.Add(new LanguageError(newFile.FileName, "*Language Node*",
-                        $"ERROR: The following file partially matches the same language node. Please check the file name, and the language name, base and variant. Aborting.\n\n*{error.FileName}.xml*\n_Name:_{error.Name}\n_Base:_{error.Base}", ErrorLevel.Error));
-                }
-
-                //get the errors in it
-                GetFileErrors(newFile, newFileErrors, master);
-
-
-                //need to get the current file
-                var curFile = langs.FirstOrDefault(x => x.Name == newFile.Name);
-                var curFileErrors = new List<LanguageError>();
-
-                if (curFile != null)
-                {
-                    //test the length
-                    TestLength(curFile, curFileErrors);
-
-                    ////validate current file name / base / variants match
-                    //if (newFile.Base != lang.Base)
-                    //{
-                    //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Base! {newFile.Base} - {lang.Base}", ErrorLevel.Error));
-                    //}
-                    //if (newFile.Variant != lang.Variant)
-                    //{
-                    //    newFileErrors.Add(new LanguageError(curFileName, "Language Node", $"Mismatched Variant! {newFile.Variant} - {lang.Variant}", ErrorLevel.Error));
-                    //}
-
-                    //get the errors in it
-                    GetFileErrors(curFile, curFileErrors, master);
-                }
-
-                //send the validation result
-                Bot.Api.SendMessage(id, OutputResult(newFile, newFileErrors, curFile, curFileErrors), parseMode: ParseMode.Markdown);
-                Thread.Sleep(500);
-
-
-                if (newFileErrors.All(x => x.Level != ErrorLevel.Error))
-                {
-                    //load up each file and get the names
-                    File.WriteAllText(pendingNamePath, newFileCorrectName);
-                    var buttons = new[]
-                    {
-                    new InlineKeyboardButton($"New", $"upload:{id}:n{pendingId}"),
-                    new InlineKeyboardButton($"Old", $"upload:{id}:o{pendingId}")
-                };
-                    var menu = new InlineKeyboardMarkup(buttons.ToArray());
-                    Bot.Api.SendMessage(id, "Which file do you want to keep?", replyParameters: new ReplyParameters { MessageId = msgID },
-                        replyMarkup: menu);
-                }
-                else
-                {
-                    DeletePendingLanguage(newFilePath, pendingNamePath);
-                    Bot.Api.SendMessage(id, "Errors present, cannot upload.", replyParameters: new ReplyParameters { MessageId = msgID });
-                }
-            }
-            catch(System.Xml.XmlException XmlExc)
-            {
-                // Not a bug: the uploaded file is not well-formed XML, and the uploader is told why.
-                DeletePendingLanguage(newFilePath, pendingNamePath);
-                Bot.Api.SendMessage(id, "<b>XML error occured! Aborting upload!</b>\n\nError details:\n" + XmlExc.Message, replyParameters: new ReplyParameters { MessageId = msgID }, parseMode: ParseMode.Html);
-            }
-            catch(Exception exc)
-            {
-                // InvalidDataException is our own rejection of a bad filename, already explained
-                // to the uploader; anything else is a failure in the upload itself.
-                if (!(exc is InvalidDataException))
-                    ErrorReporter.Report(exc, $"Validating language upload {newFileCorrectName}");
-                DeletePendingLanguage(newFilePath, pendingNamePath);
-                Bot.Api.SendMessage(id, "Error occured! Exception:\n\n" + exc, replyParameters: new ReplyParameters { MessageId = msgID });
-            }
-        }
-
-
-
-        public static void UseNewLanguageFile(string pendingId, long id, int msgId)
-        {
-            var msg = "Moving file to production..\n";
-            msg += "Checking paths for duplicate language file...\n";
-            Bot.Api.EditMessageText(id, msgId, msg);
-            if (!Guid.TryParseExact(pendingId, "N", out _))
-                throw new InvalidDataException("Pending language upload is invalid.");
-
-            var tempPath = Bot.TempLanguageDirectory;
-            var newFilePath = Path.Combine(tempPath, pendingId + ".xml");
-            var pendingNamePath = Path.Combine(tempPath, pendingId + ".name");
-            if (!File.Exists(newFilePath) || !File.Exists(pendingNamePath))
-                throw new FileNotFoundException("Pending language upload has expired.");
-
-            var fileName = File.ReadAllText(pendingNamePath);
-            if (fileName != Path.GetFileName(fileName) ||
-                !fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Pending language filename is invalid.");
-
-            var langPath = Bot.LanguageDirectory;
-            var copyToPath = Path.Combine(langPath, fileName);
-            try
-            {
-                using (AcquireLanguageLock())
-                {
-                    var candidate = new Language(newFilePath)
-                    {
-                        FileName = Path.GetFileNameWithoutExtension(fileName)
-                    };
-                    var errors = new List<LanguageError>();
-                    CheckLanguageNode(candidate, errors);
-                    TestLength(candidate, errors);
-                    var master = XDocument.Load(Path.Combine(langPath, "English.xml"));
-                    GetFileErrors(candidate, errors, master);
-
-                    //check for existing file
-                    var langs = Directory.GetFiles(langPath, "*.xml").Select(x => new Language(x)).ToList();
-                    var conflict = langs.FirstOrDefault(x =>
-                        (x.FileName == candidate.FileName && x.Name != candidate.Name)
-                        || (x.Name == candidate.Name && x.Base != candidate.Base)
-                        || (x.Base == candidate.Base && x.FileName != candidate.FileName));
-                    if (errors.Any(x => x.Level == ErrorLevel.Error) || conflict != null)
-                    {
-                        if (conflict != null)
-                            msg += $"Found conflicting language file {conflict.FileName}.xml\n";
-                        msg += "The pending file is no longer valid. Aborting!";
-                        Bot.Api.EditMessageText(id, msgId, msg);
-                        return;
-                    }
-
-                    PublishLanguageFile(newFilePath, copyToPath);
-                }
-
-                msg += "File copied to bot\n";
-                //#if RELEASE
-                //            msg += $"File copied to bot 1\n";
-                //#elif RELEASE2
-                //            msg += $"File copied to bot 2\n";
-                //#endif
-                //Bot.Api.EditMessageText(id, msgId, msg);
-                //#if RELEASE
-                //            copyToPath = copyToPath.Replace("Werewolf 3.0", "Werewolf 3.0 Clone");
-                //            System.IO.File.Copy(newFilePath, copyToPath, true);
-                //            msg += $"File copied to bot 2\n";
-                //            Bot.Api.EditMessageText(id, msgId, msg);
-                //#endif
-                //var gitPath = Path.Combine(@"C:\Werewolf Source\Werewolf\Werewolf for Telegram\Languages", Path.GetFileName(copyToPath));
-                //File.Copy(newFilePath, gitPath, true);
-                Methods.IntialiseLanguages();
-                msg += "Shared language directory updated\n";
-                msg += "* Operation complete.*";
-
-                Bot.Api.EditMessageText(id, msgId, msg, parseMode: ParseMode.Markdown);
-            }
-            finally
-            {
-                DeletePendingLanguage(newFilePath, pendingNamePath);
-            }
         }
 
         public static void SendAllFiles(long id)
@@ -379,199 +166,9 @@ namespace Enforcer5.Handlers
 
         #region Helpers
 
-        internal static void DiscardPendingLanguage(string pendingId)
-        {
-            if (!Guid.TryParseExact(pendingId, "N", out _)) return;
-            var tempPath = Bot.TempLanguageDirectory;
-            DeletePendingLanguage(
-                Path.Combine(tempPath, pendingId + ".xml"),
-                Path.Combine(tempPath, pendingId + ".name"));
-        }
-
-        private static FileStream AcquireLanguageLock()
-        {
-            var parentDirectory = Directory.GetParent(
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(Bot.LanguageDirectory)))?.FullName
-                ?? Bot.LanguageDirectory;
-            var lockPath = Path.Combine(parentDirectory, ".enforcer-languages.lock");
-            var deadline = DateTime.UtcNow.AddSeconds(10);
-            while (true)
-            {
-                try
-                {
-                    return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-                }
-                catch (IOException) when (DateTime.UtcNow < deadline)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-        }
-
-        private static void DeletePendingLanguage(string filePath, string namePath)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) File.Delete(filePath);
-                if (!string.IsNullOrEmpty(namePath) && File.Exists(namePath)) File.Delete(namePath);
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Deleting pending language file {filePath}");
-            }
-        }
-
-        private static void PublishLanguageFile(string sourceFile, string destinationFile)
-        {
-            var destinationDirectory = Path.GetDirectoryName(destinationFile);
-            Directory.CreateDirectory(destinationDirectory);
-            var tempFile = Path.Combine(
-                destinationDirectory,
-                $".{Path.GetFileName(destinationFile)}.{Guid.NewGuid():N}.tmp");
-            try
-            {
-                File.Copy(sourceFile, tempFile);
-                _ = XDocument.Load(tempFile);
-                File.Move(tempFile, destinationFile, true);
-            }
-            finally
-            {
-                if (File.Exists(tempFile)) File.Delete(tempFile);
-            }
-        }
-
-        private static string GetLocaleString(string key, XDocument file)
-        {
-            var strings = file.Descendants("string").FirstOrDefault(x => x.Attribute("key").Value == key);
-            var values = strings.Descendants("value");
-            return values.First().Value;
-        }
-
-        private static void CheckLanguageNode(Language langfile, List<LanguageError> errors)
-        {
-            if (langfile.Name == null)
-                errors.Add(new LanguageError(langfile.FileName, "*Language Node*", "Language name is missing", ErrorLevel.Error));
-            if (langfile.Base == null)
-                errors.Add(new LanguageError(langfile.FileName, "*Language Node*", "Base is missing", ErrorLevel.Error));
-        }
-
-        private static string OutputResult(Language newFile, List<LanguageError> newFileErrors, Language curFile, List<LanguageError> curFileErrors)
-        {
-            var result = $"NEW FILE\n*{newFile.FileName}.xml - ({newFile.Name ?? ""})*" + Environment.NewLine;
-            if (newFileErrors.Any(x => x.Level == ErrorLevel.Error))
-            {
-                result += "_Errors:_\n";
-                result = newFileErrors.Where(x => x.Level == ErrorLevel.Error).Aggregate(result, (current, fileError) => current + $"{fileError.Key}\n{fileError.Message}\n\n");
-            }
-            if (newFileErrors.Any(x => x.Level == ErrorLevel.MissingString))
-            {
-                result += "_Missing Values:_\n";
-                result = newFileErrors.Where(x => x.Level == ErrorLevel.MissingString).Aggregate(result, (current, fileError) => current + $"{fileError.Key}\n");
-            }
-            if (newFileErrors.Any(x => x.Level == ErrorLevel.Info))
-            {
-                result += "\n_Warning:_\n";
-                result = newFileErrors.Where(x => x.Level == ErrorLevel.Info).Aggregate(result, (current, fileError) => current + $"{fileError.Message}\n");
-                //next line is there because ErrorLevel.Info is used only to check for duplicated strings. if we use ErrorLevel.Info for other things, this probably should be changed.
-                result += "The second instance of the string won't be used, unless you move one of the two values inside the other. Check the latest English file to see how this is fixed.\n\n";
-            }
-            if (newFileErrors.Count == 0)
-            {
-                result += "_No errors_\n";
-            }
-            if (curFile != null)
-            {
-                result += "\n\n";
-                result += $"OLD FILE (Last updated: {curFile.LatestUpdate.ToString("MMM dd")})\n*{curFile.FileName}.xml - ({curFile.Name})*\n";
-                result +=
-                    $"Errors: {curFileErrors.Count(x => x.Level == ErrorLevel.Error)}\nMissing strings: {curFileErrors.Count(x => x.Level == ErrorLevel.MissingString)}";
-            }
-            else
-            {
-                result += "\n\n*No old file, this is a new language*";
-                result += "\nPlease double check the filename, and the language name, base and variant, as you won't be able to change them.";
-                result += $"\n_Name:_ {newFile.Name ?? ""}";
-                result += $"\n_Base:_ {newFile.Base ?? ""}";
-                if (Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).All(x => x.Base != newFile.Base))
-                    result += " *(NEW)*";
-            }
-
-            return result;
-        }
-
-        private static void TestLength(Language file, List<LanguageError> fileErrors)
-        {
-            var test = $"setlang|-1001049529775|{file.Base ?? ""}|v";
-            var count = Encoding.UTF8.GetByteCount(test);
-            if (count > 64)
-                fileErrors.Add(new LanguageError(file.FileName, "*Language Node*", "Base and variant are too long. (*38 utf8 byte max*)", ErrorLevel.Error));
-        }
-
-        private static void GetFileErrors(Language file, List<LanguageError> fileErrors, XDocument master)
-        {
-            var masterStrings = master.Descendants("string");
-
-            //check for CultConvertSerialKiller & CupidChosen duplication
-            var dup = file.Doc.Descendants("string").Count(x => x.Attribute("key").Value == "CultConvertSerialKiller");
-            if (dup > 1)
-                fileErrors.Add(new LanguageError(file.FileName, "CultConvertSerialKiller", "CultConvertSerialKiller duplication", ErrorLevel.Info));
-            dup = file.Doc.Descendants("string").Count(x => x.Attribute("key").Value == "CupidChosen");
-            if (dup > 1)
-                fileErrors.Add(new LanguageError(file.FileName, "CupidChosen", "CupidChosen duplication", ErrorLevel.Info));
-
-            foreach (var str in masterStrings)
-            {
-                var key = str.Attribute("key").Value;
-                var isgif = str.Attributes().Any(x => x.Name == "isgif");
-                var deprecated = str.Attributes().Any(x => x.Name == "deprecated");
-                //get the english string
-                //get the locale values
-                var masterString = GetLocaleString(key, master);
-                var values = file.Doc.Descendants("string")
-                        .FirstOrDefault(x => x.Attribute("key").Value == key)?
-                        .Descendants("value");
-                if (values == null)
-                {
-                    if (!deprecated)
-                        fileErrors.Add(new LanguageError(file.FileName, key, $"Values missing"));
-                    continue;
-                }
-                //check master string for {#} values
-                int vars = 0;
-                if (masterString.Contains("{0}"))
-                    vars = 1;
-                if (masterString.Contains("{1}"))
-                    vars = 2;
-                if (masterString.Contains("{2}"))
-                    vars = 3;
-                if (masterString.Contains("{3}"))
-                    vars = 4;
-                if (masterString.Contains("{4}"))
-                    vars = 5;
-
-                foreach (var value in values)
-                {
-                    for (int i = 0; i <= 5 - 1; i++)
-                    {
-                        if (!value.Value.Contains("{" + i + "}") && vars - 1 >= i)
-                        {
-                            //missing a value....
-                            fileErrors.Add(new LanguageError(file.FileName, key, "Missing {" + i + "}", ErrorLevel.Error));
-                        }
-                        else if (value.Value.Contains("{" + i + "}") && vars - 1 < i)
-                        {
-                            fileErrors.Add(new LanguageError(file.FileName, key, "Extra {" + i + "}", ErrorLevel.Error));
-                        }
-                    }
-
-                    if (isgif && value.Value.Length > 200)
-                    {
-                        fileErrors.Add(new LanguageError(file.FileName, key, "GIF string length cannot exceed 200 characters", ErrorLevel.Error));
-                    }
-                }
-            }
-        }
-
+        /// <summary>Anything worse than a missing or doubled string: what /validatelanguages lists as an error.</summary>
+        private static bool IsProblem(LanguageError e) =>
+            e.Level is ErrorLevel.Error or ErrorLevel.GifTooLong or ErrorLevel.FatalError;
 
         #endregion
     }
@@ -594,6 +191,15 @@ namespace Enforcer5.Handlers
 
     public enum ErrorLevel
     {
-        Info, MissingString, Error
+        /// <summary>A key in the file twice (a warning in uploads).</summary>
+        DuplicatedString,
+        /// <summary>A string English has and the file does not; English is shown. Never blocks.</summary>
+        MissingString,
+        /// <summary>A placeholder ({0}) missing or extra (a warning in uploads).</summary>
+        Error,
+        /// <summary>A GIF's text over 200 characters (a warning in uploads).</summary>
+        GifTooLong,
+        /// <summary>The file cannot be used at all: language node, base length, a clash, unreadable.</summary>
+        FatalError
     }
 }

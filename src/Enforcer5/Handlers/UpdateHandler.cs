@@ -783,7 +783,8 @@ namespace Enforcer5.Handlers
                         {
                             if (!string.IsNullOrEmpty(args[1]))
                             {
-                                if (callbacks.GroupAdminOnly &
+                                // &&: the second part is only for buttons whose data starts with a chat id.
+                                if (callbacks.GroupAdminOnly &&
                                     !Methods.IsGroupAdmin(update.From.Id, long.Parse(args[1])))
                                 {
                                     

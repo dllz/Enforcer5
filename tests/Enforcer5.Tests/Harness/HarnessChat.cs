@@ -62,6 +62,8 @@ namespace Enforcer5.Tests.Harness
             internal FakeRedisHashes Hashes = new FakeRedisHashes();
             internal FakeRedisKeys Keys;
             internal System.Threading.CancellationTokenSource QueueStop = new();
+            internal FakeFiles Files = new FakeFiles();
+            internal ITelegramFileDownloader PreviousFiles;
         }
 
         internal long ChatId { get; }
@@ -77,6 +79,9 @@ namespace Enforcer5.Tests.Harness
 
         /// <summary>The Redis strings, sets and sorted sets.</summary>
         internal FakeRedisKeys Keys => _world.Keys;
+
+        /// <summary>Files members sent, as the bot downloads them.</summary>
+        internal FakeFiles Files => _world.Files;
 
         /// <summary>Everything ErrorReporter saw while the harness ran.</summary>
         internal IReadOnlyList<string> Errors => _world.Errors.ToList();
@@ -151,6 +156,8 @@ namespace Enforcer5.Tests.Harness
 #endif
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
             Bot.UseClient(Telegram);
+            _world.PreviousFiles = Bot.Files;
+            Bot.Files = Files;
             Announcements.ResetForTests();
             CommandGate.ResetForTests();
             FloodTracker.ResetForTests();
@@ -222,6 +229,21 @@ namespace Enforcer5.Tests.Harness
             Caption = caption,
             Photo = new[] { new PhotoSize { FileId = $"photo{Telegram.NextMessageId()}", FileUniqueId = uniqueId, Width = 1, Height = 1 } }
         };
+
+        /// <summary>A file from <paramref name="from"/>, not yet sent; the bot can download its content.</summary>
+        internal Message Document(HarnessUser from, string fileName, byte[] content)
+        {
+            var fileId = $"doc{Telegram.NextMessageId()}";
+            Files.Add(fileId, content);
+            return new Message
+            {
+                Id = Telegram.NextMessageId(),
+                Chat = ThisChat,
+                From = from.ToUser(),
+                Date = Clock.UtcNow,
+                Document = new Document { FileId = fileId, FileUniqueId = fileId, FileName = fileName, FileSize = content.Length }
+            };
+        }
 
         /// <summary>
         /// Posts <paramref name="text"/> as <paramref name="from"/> and waits until everything it set
@@ -416,6 +438,7 @@ namespace Enforcer5.Tests.Harness
             try { await HarnessTime.CompleteAsync(Clock, TimeSpan.FromHours(2)); } catch (TimeoutException) { }
             ErrorReporter.Observer = _world.PreviousObserver;
             Bot.Api = _world.PreviousApi;
+            Bot.Files = _world.PreviousFiles;
             Announcements.ResetForTests();
             Bot.Me = _world.PreviousMe;
             Enforcer5.Helpers.Clock.UseForTests(null);

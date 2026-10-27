@@ -190,7 +190,9 @@ namespace Enforcer5.Tests.Harness
                 case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => NewMessage(r.ChatId, r.Caption));
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
-                case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => NewMessage(r.ChatId, r.Text));
+                case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => Edited(r));
+                case EditEphemeralMessageTextRequest r: return Limited("editEphemeralMessageText", r.ChatId, r.ReceiverUserId, r.Text, r, () => EditEphemeral(r));
+                case DeleteEphemeralMessageRequest r: return Limited("deleteEphemeralMessage", r.ChatId, r.ReceiverUserId, null, r, () => DeleteEphemeral(r));
                 case EditMessageReplyMarkupRequest r: return Limited("editMessageReplyMarkup", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case DeleteMessageRequest r: return Limited("deleteMessage", r.ChatId, null, null, r, () => Delete(Id(r.ChatId), new[] { r.MessageId }));
                 case DeleteMessagesRequest r: return Limited("deleteMessages", r.ChatId, null, null, r, () => Delete(Id(r.ChatId), r.MessageIds.ToArray()));
@@ -326,10 +328,56 @@ namespace Enforcer5.Tests.Harness
 
         private Message Sent(SendMessageRequest r)
         {
+            if (r.EphemeralMessageParameters is { } ephemeral)
+                return SentEphemeral(r, ephemeral);
             var message = NewMessage(r.ChatId, r.Text);
             // Kept so a scenario can press the buttons under it.
             message.ReplyMarkup = r.ReplyMarkup as Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup;
             _sent.Enqueue(message);
+            return message;
+        }
+
+        private readonly ConcurrentDictionary<(long Chat, long Receiver, int Id), Message> _ephemeral = new();
+
+        // An ephemeral message: only its receiver sees it, and it has no ordinary message id.
+        private Message SentEphemeral(SendMessageRequest r, EphemeralMessageParameters ephemeral)
+        {
+            var message = NewMessage(r.ChatId, r.Text);
+            message.EphemeralMessageId = message.Id;
+            message.Id = 0;
+            message.ReplyMarkup = r.ReplyMarkup as Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup;
+            _ephemeral[(Id(r.ChatId), ephemeral.ReceiverUserId, message.EphemeralMessageId.Value)] = message;
+            return message;
+        }
+
+        private bool EditEphemeral(EditEphemeralMessageTextRequest r)
+        {
+            if (!_ephemeral.TryGetValue((Id(r.ChatId), r.ReceiverUserId, r.EphemeralMessageId), out var message))
+                throw new ApiRequestException("Bad Request: message to edit not found", 400);
+            message.Text = r.Text;
+            message.ReplyMarkup = r.ReplyMarkup;
+            return true;
+        }
+
+        private bool DeleteEphemeral(DeleteEphemeralMessageRequest r)
+        {
+            if (!_ephemeral.TryRemove((Id(r.ChatId), r.ReceiverUserId, r.EphemeralMessageId), out _))
+                throw new ApiRequestException("Bad Request: message to delete not found", 400);
+            return true;
+        }
+
+        /// <summary>The ephemeral messages <paramref name="receiverId"/> still sees in <paramref name="chatId"/>, oldest first.</summary>
+        internal IReadOnlyList<Message> EphemeralFor(long chatId, long receiverId) =>
+            _ephemeral.Where(e => e.Key.Chat == chatId && e.Key.Receiver == receiverId)
+                .OrderBy(e => e.Key.Id).Select(e => e.Value).ToList();
+
+        // An edit changes the message the scenario holds, as a client would show it.
+        private Message Edited(EditMessageTextRequest r)
+        {
+            var message = _sent.FirstOrDefault(m => m.Chat.Id == Id(r.ChatId) && m.Id == r.MessageId);
+            if (message == null) return NewMessage(r.ChatId, r.Text);
+            message.Text = r.Text;
+            message.ReplyMarkup = r.ReplyMarkup;
             return message;
         }
 

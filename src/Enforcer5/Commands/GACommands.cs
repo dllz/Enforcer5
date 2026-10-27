@@ -40,35 +40,9 @@ namespace Enforcer5
         [Command(Trigger = "uploadlanguage", UploadAdmin = true)]
         public static void UploadLang(Update update, string[] args)
         {
-            try
-            {
-                var id = update.Message.Chat.Id;
-                if (update.Message.ReplyToMessage?.Type != MessageType.Document)
-                {
-                     Bot.Send("Please reply to the file with /uploadlanguage", id);
-                    return;
-                }
-                var fileid = update.Message.ReplyToMessage.Document?.FileId;
-                if (fileid != null)
-                {
-                    try
-                    {
-                        var messageId = update.Message.MessageId;
-                        var fileName = update.Message.ReplyToMessage.Document.FileName;
-                        Bot.Dispatch(() => LanguageHelper.UploadFile(fileid, id, fileName, messageId));
-                    }
-                    catch (Exception e)
-                    {
-                        ErrorReporter.Report(e, "Dispatching language upload");
-                        Bot.SendReply(e.ToString(), update);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, "Uploading language");
-                Bot.Api.SendMessage(update.Message.Chat.Id, e.Message, parseMode: ParseMode.None);
-            }
+            // An .xml or a .zip of them; a language admin then decides in the Review menu (LanguageUpload/).
+            var message = update.Message;
+            Bot.Dispatch(() => LanguageUpload.LanguageUploads.StartAsync(message));
         }
 
         [Command(Trigger = "validatelanguages", Menu = Attributes.CommandMenu.Hidden)]
@@ -686,32 +660,16 @@ namespace Enforcer5
             LanguageHelper.SendFile(query.Message.Chat.Id, glang.Name);
         }
 
+        /// <summary>The Review menu of a language upload. Who may tap is checked inside, so others get an answer.</summary>
+        [Callback(Trigger = LanguageUpload.BatchMenu.Prefix)]
+        public static void LanguageUploadMenu(CallbackQuery query, string[] args) =>
+            LanguageUpload.LanguageUploads.HandleAsync(query, args).GetAwaiter().GetResult();
+
         [Callback(Trigger = "upload", UploadAdmin = true)]
         public static void uploadLang(CallbackQuery query, string[] args)
         {
-            var command = args[0];
-            var choice = "";
-            if (args.Length > 2)
-                choice = args[2];
-            if (choice == "current")
-            {
-                Bot.ReplyToCallback(query, "No action taken.");
-                Bot.Edit(query, "No action taken.");
-            }
-            else if (choice.Length == 33 && choice[0] == 'o')
-            {
-                LanguageHelper.DiscardPendingLanguage(choice.Substring(1));
-                Bot.ReplyToCallback(query, "No action taken.");
-                Bot.Edit(query, "No action taken.");
-            }
-            else if (choice.Length == 33 && choice[0] == 'n')
-            {
-                LanguageHelper.UseNewLanguageFile(choice.Substring(1), query.Message.Chat.Id, query.Message.MessageId);
-            }
-            else
-            {
-                Bot.ReplyToCallback(query, "Pending language upload is invalid or expired.");
-            }
-        }       
+            // New/Old buttons from before the Review menu: their pending files are no longer kept.
+            Bot.ReplyToCallback(query, "This upload is from an older version. Upload the file again.", edit: false, showAlert: true);
+        }
     }
 }
