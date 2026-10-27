@@ -206,12 +206,39 @@ namespace Enforcer5.Tests.Harness
                 case BanChatSenderChatRequest r: return Limited("banChatSenderChat", r.ChatId, r.SenderChatId, null, r, () => BanSenderChat(Id(r.ChatId), r.SenderChatId, true));
                 case UnbanChatSenderChatRequest r: return Limited("unbanChatSenderChat", r.ChatId, r.SenderChatId, null, r, () => BanSenderChat(Id(r.ChatId), r.SenderChatId, false));
                 case LeaveChatRequest r: return Limited("leaveChat", r.ChatId, null, null, r, () => true);
+                case GetMyCommandsRequest r: return Limited("getMyCommands", null, null, null, r, () => GetCommands(r.Scope, r.LanguageCode));
+                case SetMyCommandsRequest r: return Limited("setMyCommands", null, null, null, r, () => SetCommands(r.Scope, r.LanguageCode, r.Commands.ToArray()));
+                case DeleteMyCommandsRequest r: return Limited("deleteMyCommands", null, null, null, r, () => SetCommands(r.Scope, r.LanguageCode, null));
                 default:
                     throw new ApiRequestException($"Harness: FakeTelegram does not answer {request.GetType().Name} yet", 400);
             }
         }
 
         private static long Id(ChatId chat) => chat?.Identifier ?? 0;
+
+        private readonly ConcurrentDictionary<string, BotCommand[]> _commandMenus = new();
+
+        /// <summary>The menu set for a scope and language ("" for the default), keyed like "AllGroupChats" or "Chat:123".</summary>
+        internal static string MenuKey(BotCommandScope scope, string languageCode) =>
+            (scope is BotCommandScopeChat chat ? $"Chat:{chat.ChatId.Identifier}" : (scope?.Type ?? BotCommandScopeType.Default).ToString())
+            + "/" + (languageCode ?? "");
+
+        /// <summary>Every menu the bot has set, by <see cref="MenuKey"/>.</summary>
+        internal IReadOnlyDictionary<string, BotCommand[]> CommandMenus => _commandMenus;
+
+        /// <summary>Sets a menu as if from BotFather, for a scenario to start from.</summary>
+        internal void PresetCommands(BotCommandScope scope, string languageCode, params BotCommand[] commands) =>
+            _commandMenus[MenuKey(scope, languageCode)] = commands;
+
+        private BotCommand[] GetCommands(BotCommandScope scope, string languageCode) =>
+            _commandMenus.TryGetValue(MenuKey(scope, languageCode), out var commands) ? commands : Array.Empty<BotCommand>();
+
+        private bool SetCommands(BotCommandScope scope, string languageCode, BotCommand[] commands)
+        {
+            if (commands == null || commands.Length == 0) _commandMenus.TryRemove(MenuKey(scope, languageCode), out _);
+            else _commandMenus[MenuKey(scope, languageCode)] = commands;
+            return true;
+        }
 
         internal static bool IsMessage(string method) =>
             method.StartsWith("send", StringComparison.Ordinal) || method.StartsWith("edit", StringComparison.Ordinal) ||

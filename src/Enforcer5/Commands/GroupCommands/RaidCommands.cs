@@ -65,7 +65,7 @@ namespace Enforcer5
         /// by its key or number) as a JSON file, to replay in the test harness. Devs only: it is
         /// telemetry, with no ids or text in it.
         /// </summary>
-        [Command(Trigger = "raidprofile", DevOnly = true)]
+        [Command(Trigger = "raidprofile", DevOnly = true, Description = "Send a raid's profile file for the tests")]
         public static void RaidProfileCommand(Update update, string[] args)
         {
             var wanted = args.Length > 1 ? args[1]?.Trim() : null;

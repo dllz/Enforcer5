@@ -71,7 +71,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "validatelanguages")]
+        [Command(Trigger = "validatelanguages", Menu = Attributes.CommandMenu.Hidden)]
         public static void ValidateLangs(Update update, string[] args)
         {
             if (!Methods.IsLangAdmin(update.Message.From.Id) && update.Message.Chat.Id != Constants.TranslatorsId) return;
@@ -122,7 +122,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getlanguage")]
+        [Command(Trigger = "getlanguage", Menu = Attributes.CommandMenu.Hidden)]
         public static void GetLang(Update update, string[] args)
         {
             if (!Methods.IsLangAdmin(update.Message.From.Id) && update.Message.Chat.Id != Constants.TranslatorsId) return;
@@ -167,7 +167,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "halt", DevOnly = true)]
+        [Command(Trigger = "halt", DevOnly = true, Description = "Stop the bot")]
         public static void StopBot(Update update, string[] args)
         {
              Bot.SendReply("Stopping bot", update);
@@ -209,7 +209,7 @@ namespace Enforcer5
             Bot.SendReply("Done", update);
         }
 
-        [Command(Trigger = "remotedisablewatch", GlobalAdminOnly = true)]
+        [Command(Trigger = "remotedisablewatch", GlobalAdminOnly = true, Description = "Exempt a user in a group: user:group")]
         public static void RemoteDisbleMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
@@ -230,7 +230,7 @@ namespace Enforcer5
             //Service.LogCommand(update, update.Message.Text);
         }
 
-        [Command(Trigger = "getrekt", GlobalAdminOnly = true)]
+        [Command(Trigger = "getrekt", GlobalAdminOnly = true, Description = "Global ban: id:reason, or reply")]
         public static void GlobalBan(Update update, string[] args)
         {
             long userId = 0;
@@ -276,7 +276,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getrektu", GlobalAdminOnly = true)]
+        [Command(Trigger = "getrektu", GlobalAdminOnly = true, Description = "Global ban by @username: name:reason")]
         public static void GlobalBanListUsername(Update update, string[] args)
         {
             string moti = "";
@@ -311,7 +311,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "bangroup", DevOnly = true)]
+        [Command(Trigger = "bangroup", DevOnly = true, Description = "Stop serving a group: group id")]
         public static void BanGroup(Update update, string[] args)
         {
             if (args.Length == 2)
@@ -324,7 +324,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "unbangroup", DevOnly = true)]
+        [Command(Trigger = "unbangroup", DevOnly = true, Description = "Serve a banned group again: group id")]
         public static void UnbanGroup(Update update, string[] args)
         {
             if (args.Length == 2)
@@ -337,7 +337,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getrekti", GlobalAdminOnly = true)]
+        [Command(Trigger = "getrekti", GlobalAdminOnly = true, Description = "Global ban a list of ids: id,id:reason")]
         public static void GlobalBanListids(Update update, string[] args)
         {
             string moti = "";
@@ -371,21 +371,21 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true, Description = "Allow this group to use the premium bot")]
         public static void AllowPremiumBot(Update update, string[] args)
         {
              Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
              Bot.SendReply("Activated", update);
         }
 
-        [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true)]
+        [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true, Description = "Stop this group using the premium bot")]
         public static void BlockPremiumBot(Update update, string[] args)
         {
              Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
              Bot.SendReply("Deactivated", update);
         }
 
-        [Command(Trigger = "unrekt", GlobalAdminOnly = true)]
+        [Command(Trigger = "unrekt", GlobalAdminOnly = true, Description = "Lift a global ban: id:reason")]
         public static void Unrekt(Update update, string[] args)
         {
             long userId = 0;
@@ -444,7 +444,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "leave", DevOnly = true)]
+        [Command(Trigger = "leave", DevOnly = true, Description = "Make the bot leave a chat: chat id")]
         public static void LeaveChat(Update update, string[] args)
         {
             try
@@ -462,7 +462,7 @@ namespace Enforcer5
         /// <summary>How many active global bans /rektlist lists, newest first; a message holds 4096 characters.</summary>
         internal const int RektListShown = 30;
 
-        [Command(Trigger = "rektlist", GlobalAdminOnly = true)]
+        [Command(Trigger = "rektlist", GlobalAdminOnly = true, Description = "List the active global bans")]
         public static void GlobalBanList(Update update, string[] args)
         {
             if (!GlobalBansReady(update)) return;
@@ -527,7 +527,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "mediaid", DevOnly = true, RequiresReply = true)]
+        [Command(Trigger = "mediaid", DevOnly = true, RequiresReply = true, Description = "File id of the replied media")]
         public static void GetMediaId(Update update, string[] args)
         {
             var mediaID = Methods.GetMediaId(update.Message);
@@ -535,14 +535,14 @@ namespace Enforcer5
              Bot.SendReply($"Media: {mediaID}", update);
         }
 
-        [Command(Trigger = "msgid", DevOnly = true, RequiresReply = true)]
+        [Command(Trigger = "msgid", DevOnly = true, RequiresReply = true, Description = "Id of the replied message")]
         public static void GetMessageID(Update update, string[] args)
         {
            
             Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
         }
 
-        [Command(Trigger = "langcode")]
+        [Command(Trigger = "langcode", Menu = Attributes.CommandMenu.Devs, Description = "Language code of a user")]
         public static void GetUserLangCode(Update update, string[] args)
         {
             try
@@ -571,7 +571,7 @@ namespace Enforcer5
         }
 
 
-        [Command(Trigger = "getuser", GroupAdminOnly = true)]
+        [Command(Trigger = "getuser", GroupAdminOnly = true, Menu = Attributes.CommandMenu.Devs, Description = "A user's record with global ban and message count")]
         public static void GetUserDetails(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
@@ -620,7 +620,7 @@ namespace Enforcer5
             return text;
         }
 
-        [Command(Trigger = "whois")]
+        [Command(Trigger = "whois", Menu = Attributes.CommandMenu.Devs, Description = "Name, id and username of a user")]
         public static void WhoIs(Update update, string[] args)
         {
             var id = Methods.GetUserId(update, args);

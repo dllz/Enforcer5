@@ -13,7 +13,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        [Command(Trigger = "elevate", InGroupOnly = true)]
+        [Command(Trigger = "elevate", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void ElevateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
@@ -69,7 +69,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deelevate", InGroupOnly = true)]
+        [Command(Trigger = "deelevate", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void deElavateUser(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
@@ -114,7 +114,7 @@ namespace Enforcer5
             Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", log)}", update);
         }
 
-        [Command(Trigger = "auth", InGroupOnly = true)]
+        [Command(Trigger = "auth", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void AuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;
@@ -171,7 +171,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "deauth", InGroupOnly = true)]
+        [Command(Trigger = "deauth", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void deAuthUser(Update update, string[] args)
         {
             var chat = update.Message.Chat.Id;

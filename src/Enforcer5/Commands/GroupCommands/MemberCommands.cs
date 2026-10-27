@@ -71,14 +71,14 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "clearkeys", InGroupOnly = true)]
+        [Command(Trigger = "clearkeys", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void ClearKeyboard(Update update, string[] args)
         {
             Bot.Api.SendMessage(update.Message.Chat.Id, "Clearing keyboards",
                 replyMarkup: new ReplyKeyboardRemove());
         }
 
-        [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true)]
+        [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true, Menu = Attributes.CommandMenu.Hidden)]
         public static void SaveMessage(Update update, string[] args)
         {
             if (update.Message.ReplyToMessage != null)
@@ -120,7 +120,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "d", InGroupOnly = true, RequiresReply = true)]
+        [Command(Trigger = "d", InGroupOnly = true, RequiresReply = true, Menu = Attributes.CommandMenu.Hidden)]
         public static void DeleteOwnMessage(Update update, string[] args)
         {
             var msgID = update.Message.ReplyToMessage.MessageId;
@@ -234,7 +234,7 @@ namespace Enforcer5
             Bot.SendReply(text, update.Message.Chat.Id, msgToReplyTo);
         }
 
-        [Command(Trigger = "me")]
+        [Command(Trigger = "me", Menu = Attributes.CommandMenu.Private)]
         public static void Me(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,false).Doc;
@@ -412,7 +412,7 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "info", RequiresReply = true)]
+        [Command(Trigger = "info", RequiresReply = true, Menu = Attributes.CommandMenu.Groups)]
         public static void GetMessageInfo(Update update, string[] args)
         {
             if (update.Message.ReplyToMessage != null)

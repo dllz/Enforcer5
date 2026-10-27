@@ -74,7 +74,7 @@ namespace Enforcer5
             Service.LogCommand(update, update.Message.Text);
         }
 
-        [Command(Trigger = "admins", InGroupOnly = true)]
+        [Command(Trigger = "admins", InGroupOnly = true, Menu = Attributes.CommandMenu.Hidden)]
         public static void Admins(Update update, string[] args) => Admin(update, args);
 
         [Command(Trigger = "report", InGroupOnly = true)]

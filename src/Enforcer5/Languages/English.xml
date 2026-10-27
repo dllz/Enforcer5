@@ -2278,4 +2278,272 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="trustSlowLane">
     <value>In the slow lane for command spam.</value>
   </string>
+  <!-- Command menus: one short description per command in the menus Telegram shows (Helpers/CommandMenus). -->
+  <string key="cmdstart">
+    <value>Start the bot</value>
+  </string>
+  <string key="cmddonate">
+    <value>Support the bot's developers</value>
+  </string>
+  <string key="cmdme">
+    <value>Your warns, kicks and bans, sent in private</value>
+  </string>
+  <string key="cmdhelp">
+    <value>Help for a command: /help ban</value>
+  </string>
+  <string key="cmdhelplist">
+    <value>The help topics</value>
+  </string>
+  <string key="cmdid">
+    <value>This chat's ID, or the ID of the user you reply to</value>
+  </string>
+  <string key="cmdstickerinfo">
+    <value>A sticker pack's name and how to block it</value>
+  </string>
+  <string key="cmdsupport">
+    <value>Link to the support group</value>
+  </string>
+  <string key="cmdrules">
+    <value>The group's rules</value>
+  </string>
+  <string key="cmdadmin">
+    <value>Call the admins, or report the message you reply to</value>
+  </string>
+  <string key="cmdreport">
+    <value>Report a message to the admins</value>
+  </string>
+  <string key="cmdkickme">
+    <value>Remove yourself from the group</value>
+  </string>
+  <string key="cmdinfo">
+    <value>Details of the message you reply to</value>
+  </string>
+  <string key="cmdlink">
+    <value>The group's link</value>
+  </string>
+  <string key="cmdabout">
+    <value>The group's description</value>
+  </string>
+  <string key="cmdadminlist">
+    <value>The group's admins</value>
+  </string>
+  <string key="cmdextralist">
+    <value>The group's #extra commands</value>
+  </string>
+  <string key="cmdpingall">
+    <value>Ping everyone on the @pingall list</value>
+  </string>
+  <string key="cmdpingme">
+    <value>Add yourself to the @pingall list</value>
+  </string>
+  <string key="cmdunpingme">
+    <value>Remove yourself from the @pingall list</value>
+  </string>
+  <string key="cmdwarn">
+    <value>Warn a user</value>
+  </string>
+  <string key="cmdban">
+    <value>Ban a user</value>
+  </string>
+  <string key="cmdkick">
+    <value>Kick a user</value>
+  </string>
+  <string key="cmdmute">
+    <value>Mute a user</value>
+  </string>
+  <string key="cmdtempban">
+    <value>Ban a user for a while</value>
+  </string>
+  <string key="cmdunban">
+    <value>Unban a user or channel</value>
+  </string>
+  <string key="cmdmenu">
+    <value>Change the group's settings, in private</value>
+  </string>
+  <string key="cmdraid">
+    <value>Turn raid mode on, or off with /raid off</value>
+  </string>
+  <string key="cmdaddlogchannel">
+    <value>Log admin actions to a channel</value>
+  </string>
+  <string key="cmdaddrule">
+    <value>Add a rule</value>
+  </string>
+  <string key="cmdaddwarnreason">
+    <value>Add a reason for removing warns</value>
+  </string>
+  <string key="cmdadminoff">
+    <value>Stop sending reports to an admin</value>
+  </string>
+  <string key="cmdadminon">
+    <value>Send reports to an admin again</value>
+  </string>
+  <string key="cmdallowchannel">
+    <value>Let a channel post here</value>
+  </string>
+  <string key="cmdallowedchannels">
+    <value>Channels allowed to post here</value>
+  </string>
+  <string key="cmdauth">
+    <value>Make a user an owner for the bot</value>
+  </string>
+  <string key="cmdblockedinline">
+    <value>Blocked inline bots</value>
+  </string>
+  <string key="cmdblockedstickers">
+    <value>Blocked sticker packs</value>
+  </string>
+  <string key="cmdblockelevate">
+    <value>Stop an admin elevating others</value>
+  </string>
+  <string key="cmdblockinline">
+    <value>Block an inline bot</value>
+  </string>
+  <string key="cmdblocksticker">
+    <value>Block a sticker pack</value>
+  </string>
+  <string key="cmdcheck">
+    <value>How many messages a user has sent here</value>
+  </string>
+  <string key="cmdclearkeys">
+    <value>Remove a bot's button keyboard</value>
+  </string>
+  <string key="cmddashboard">
+    <value>The group's settings, in private</value>
+  </string>
+  <string key="cmddeauth">
+    <value>Take a user's owner rights for the bot away</value>
+  </string>
+  <string key="cmddeelevate">
+    <value>End a user's elevation</value>
+  </string>
+  <string key="cmddellogchannel">
+    <value>Stop logging to the log channel</value>
+  </string>
+  <string key="cmddelmsg">
+    <value>Delete the message you reply to</value>
+  </string>
+  <string key="cmddelwarnreason">
+    <value>Remove a reason for removing warns</value>
+  </string>
+  <string key="cmddisablewatch">
+    <value>Exempt a user from the automatic checks</value>
+  </string>
+  <string key="cmddisallowchannel">
+    <value>Stop a channel posting here</value>
+  </string>
+  <string key="cmdelevate">
+    <value>Give a user admin rights in the bot</value>
+  </string>
+  <string key="cmdelevatelog">
+    <value>Who was elevated, and by whom</value>
+  </string>
+  <string key="cmdenablewatch">
+    <value>Apply the automatic checks to a user again</value>
+  </string>
+  <string key="cmdextra">
+    <value>Save an #extra command</value>
+  </string>
+  <string key="cmdextradel">
+    <value>Delete an #extra command</value>
+  </string>
+  <string key="cmdlistmutedjoiners">
+    <value>Members muted on joining</value>
+  </string>
+  <string key="cmdmaxl">
+    <value>Maximum lines per message</value>
+  </string>
+  <string key="cmdmaxnl">
+    <value>Maximum name length</value>
+  </string>
+  <string key="cmdmaxtl">
+    <value>Maximum message length</value>
+  </string>
+  <string key="cmdmedia">
+    <value>Remove or reset a user's media warns</value>
+  </string>
+  <string key="cmdmutelist">
+    <value>Muted users</value>
+  </string>
+  <string key="cmdprewarn">
+    <value>Give a user a pre-warning</value>
+  </string>
+  <string key="cmdraidmode">
+    <value>How raids are handled: human, auto or off</value>
+  </string>
+  <string key="cmdremovewarn">
+    <value>Remove a warn</value>
+  </string>
+  <string key="cmdreportoff">
+    <value>Stop a user using @admin</value>
+  </string>
+  <string key="cmdreporton">
+    <value>Let a user use @admin again</value>
+  </string>
+  <string key="cmdresetsettings">
+    <value>Reset all the group's settings</value>
+  </string>
+  <string key="cmdresetwarns">
+    <value>Reset a user's warns</value>
+  </string>
+  <string key="cmdsetabout">
+    <value>Set the group's description</value>
+  </string>
+  <string key="cmdsetlink">
+    <value>Set the group's link</value>
+  </string>
+  <string key="cmdsetrules">
+    <value>Set the group's rules</value>
+  </string>
+  <string key="cmdsettempmutetime">
+    <value>Default time for /tempmute</value>
+  </string>
+  <string key="cmdsolved">
+    <value>Mark a report as solved</value>
+  </string>
+  <string key="cmdstatus">
+    <value>A user's status in the group</value>
+  </string>
+  <string key="cmdtempbanlist">
+    <value>Users banned for a while</value>
+  </string>
+  <string key="cmdtempmute">
+    <value>Mute a user for a while</value>
+  </string>
+  <string key="cmdtemptime">
+    <value>Default time for /tempban</value>
+  </string>
+  <string key="cmdtestinline">
+    <value>Test which inline bots would be blocked</value>
+  </string>
+  <string key="cmdunblockelevate">
+    <value>Let an admin elevate others again</value>
+  </string>
+  <string key="cmdunblockinline">
+    <value>Unblock an inline bot</value>
+  </string>
+  <string key="cmdunblocksticker">
+    <value>Unblock a sticker pack</value>
+  </string>
+  <string key="cmdunmute">
+    <value>Unmute a user</value>
+  </string>
+  <string key="cmdunmutenewjoiners">
+    <value>Unmute everyone muted on joining</value>
+  </string>
+  <string key="cmdunping">
+    <value>Remove someone from the @pingall list</value>
+  </string>
+  <string key="cmdunpingall">
+    <value>Clear the @pingall list</value>
+  </string>
+  <string key="cmduser">
+    <value>A user's warns, kicks and bans</value>
+  </string>
+  <string key="cmdwarnreasons">
+    <value>Reasons for removing warns</value>
+  </string>
+  <string key="cmdwelcome">
+    <value>Set the welcome message</value>
+  </string>
 </strings>

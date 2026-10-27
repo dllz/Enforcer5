@@ -14,7 +14,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        [Command(Trigger = "ping")]
+        [Command(Trigger = "ping", Menu = Attributes.CommandMenu.Hidden)]
         public static void Ping(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false);
@@ -35,14 +35,14 @@ namespace Enforcer5
             }
         }
 
-        [Command(Trigger = "getCommands")]
+        [Command(Trigger = "getCommands", Menu = Attributes.CommandMenu.Hidden)]
         public static void GetCommands(Update update, string[] args)
         {
             var comList = string.Join("\n", Bot.Commands.Select(e => e.Trigger));
              Bot.SendReply(comList, update);
         }
 
-        [Command(Trigger = "start")]
+        [Command(Trigger = "start", Menu = Attributes.CommandMenu.Private)]
         public static void BotStarted(Update update, string[] args)
         {
             if (update.Message.Chat.Type == ChatType.Private)
@@ -209,7 +209,7 @@ namespace Enforcer5
             }           
         }
 
-        [Command(Trigger = "donate")]
+        [Command(Trigger = "donate", Menu = Attributes.CommandMenu.Private)]
         public static void Donate(Update update, string[] args)
         {
             System.Xml.Linq.XDocument lang;

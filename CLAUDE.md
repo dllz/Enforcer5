@@ -68,6 +68,11 @@ you are already working; don't start a global rewrite.
 trimming and NativeAOT** — `PublishTrimmed` is off deliberately. A new command is just a
 new attributed static method; nothing needs registering.
 
+The command menus Telegram shows are set by the bot at startup (`Helpers/CommandMenus.cs`, as in
+blackwolf), not in BotFather, which they overwrite. A command in a public menu needs a short
+`cmd{trigger}` description in `English.xml` (a test checks); staff commands take the attribute's
+`Description`; `Menu = CommandMenu.…` places the exceptions (hidden, private only, admins).
+
 ---
 
 ## Configuration

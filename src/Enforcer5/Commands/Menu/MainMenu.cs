@@ -14,7 +14,7 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
-        [Command(Trigger = "menu", InGroupOnly = true)]
+        [Command(Trigger = "menu", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void Menu(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
@@ -36,7 +36,7 @@ namespace Enforcer5
             if (Methods.IsGroupAdmin(update)) Service.LogCommand(update, update.Message.Text);
         }
 
-        [Command(Trigger = "dashboard", InGroupOnly = true)]
+        [Command(Trigger = "dashboard", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
         public static void Dashboard(Update update, string[] args)
         {
             var chatId = update.Message.Chat.Id;

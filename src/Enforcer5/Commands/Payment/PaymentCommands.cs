@@ -12,7 +12,7 @@ namespace Enforcer5
 {
     public partial class Commands
     {
-       // [Command(Trigger = "getPremium", DevOnly = true)]
+       // [Command(Trigger = "getPremium", DevOnly = true, Description = "Premium payment test")]
         public static void GetPremium(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;

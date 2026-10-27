@@ -645,6 +645,8 @@ namespace Enforcer5.Helpers
             LogHelper.Info($"Database offset is {offset}");
             Send($"Bot Started:\n{Methods.DisplayNow():hh:mm:ss dd-MM-yyyy}", ErrorChatId);
             BindHandlers();
+            // The menus Telegram shows, from the commands' attributes; in the background, never in the way.
+            Dispatch(CommandMenus.SyncAndReportAsync, "CommandMenus");
             // Now we can start receiving. ReceiveAsync runs the long-polling loop until cancelled;
             // it restarts internally on transient errors, so no watchdog timer is needed.
             LogHelper.Info($"Starting ID = {offset + 1}");
