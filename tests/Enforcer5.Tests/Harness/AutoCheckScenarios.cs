@@ -263,6 +263,27 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task Length_AMissingLimit_IsTheDefault_NotZero()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "action"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "maxlength"] = "0";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "action"] = "kick";
+            var member = chat.Add("Bo");
+            var longName = chat.Add(new string('n', 60));
+
+            await chat.SendAsync(member, "hi");
+            await chat.SendAsync(longName, "hi");
+
+            Assert.AreEqual(MemberState.Member, State(chat, member), "a short name and a short text are fine");
+            Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, member.Id).Count);
+            Assert.AreEqual(MemberState.Left, State(chat, longName), "over the default of 50");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task NameLength_Ban_Bans()
         {
             await using var chat = await HarnessChat.StartAsync();

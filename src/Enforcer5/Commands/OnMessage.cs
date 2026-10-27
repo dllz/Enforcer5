@@ -158,10 +158,8 @@ namespace Enforcer5
             if (!MessageContext.Field(settings, "enabled").Equals("yes")) return;
 
             var text = update.Message.Text;
-            int intml;
-            int intmline;
-            MessageContext.Field(settings, "maxlength").TryParse(out intml);
-            MessageContext.Field(settings, "maxlines").TryParse(out intmline);
+            var intml = Limit(MessageContext.Field(settings, "maxlength"), DefaultMaxTextLength);
+            var intmline = Limit(MessageContext.Field(settings, "maxlines"), DefaultMaxTextLines);
             var lines = Regex.Split(text, "(.+?)(?:\r\n|\n)");
             if (text.Length < intml && lines.Length < intmline) return;
 
@@ -231,8 +229,7 @@ namespace Enforcer5
             var text = update.Message.From.FirstName;
             if (update.Message.From.LastName != null)
                 text = $"{text}{update.Message.From.LastName}";
-            int intml = 40;
-            MessageContext.Field(settings, "maxlength").TryParse(out intml);
+            var intml = Limit(MessageContext.Field(settings, "maxlength"), DefaultMaxNameLength);
             if (text.Length < intml) return;
 
             var action = MessageContext.Field(settings, "action");
@@ -278,6 +275,16 @@ namespace Enforcer5
                 }
             }, "AntiNameLength");
         }
+
+        // The limits a new group gets (Service.GenerateSettings), for a group whose limit is missing,
+        // unreadable or not positive. Such a limit used to read as 0, which made every message too
+        // long and every name too long.
+        internal const int DefaultMaxTextLength = 1024;
+        internal const int DefaultMaxTextLines = 50;
+        internal const int DefaultMaxNameLength = 50;
+
+        private static int Limit(StackExchange.Redis.RedisValue stored, int fallback) =>
+            stored.TryParse(out int limit) && limit > 0 ? limit : fallback;
 
         /// <summary>
         /// Decision only - every read comes from the context and the enforcement inside each branch
