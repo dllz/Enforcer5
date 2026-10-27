@@ -81,8 +81,11 @@ keys into the other 10 files.
    - the bot sends asynchronously through a queue and never waits on it; if it is down, only the
      vectors are missing
    - embed only non-established members' messages, everything during a raid, and detected messages
-   - PostgreSQL `pgvector` is available on the server but not installed (needs superuser
-     `CREATE EXTENSION vector`, Daniel); int8 vectors, 384 bytes
+    - PostgreSQL `pgvector` 0.8.6 is installed on the server (checked 2026-10-27), but not yet
+      enabled in `enforcer` or `enforcer_subprod`: `pg_extension` there lists no `vector`. It is
+      not a trusted extension, so the bot's migrations cannot enable it; Daniel runs
+      `CREATE EXTENSION vector;` as superuser in both databases before the first migration that
+      uses it. int8 vectors, 384 bytes
    - vectors are personal data (text can be roughly reconstructed from them): same retention,
      dropped on anonymisation
 
@@ -105,4 +108,4 @@ propose a design to Daniel covering: the data model (tables, retention, anonymis
 signals and their per-group settings, the score and reports, the edit record, `/filter`, the
 label pipeline, the embedding service's API and deployment, and a staged plan with the order of
 commits. Open questions to carry: retention numbers, privacy line, translating the existing ~40
-keys, pgvector, and whether the current local commits are pushed first.
+keys, enabling pgvector in both databases (see 6), and whether the current local commits are pushed first.
