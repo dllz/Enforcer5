@@ -243,6 +243,22 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        public async Task TextLength_WithNoActionChosen_AsksTheAdminsToChooseOne()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antitextlengthsettings", "maxlength"] = "10";
+            var talker = chat.Add("Talker");
+
+            await chat.SendAsync(talker, new string('a', 50));
+
+            Assert.AreEqual(MemberState.Member, State(chat, talker));
+            Assert.AreEqual(0, chat.Telegram.MessagesFrom(chat.ChatId, talker.Id).Count, "the long message still goes");
+            Assert.AreEqual(Enforcer5.Helpers.Methods.GetLocaleString(Enforcer5.Helpers.Methods.GetGroupLanguage(chat.ChatId).Doc, "actionNotSettext"), chat.Replies.Single());
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task TextLength_OnlyLooksAtText_NotCaptions()
         {
             await using var chat = await HarnessChat.StartAsync();

@@ -211,8 +211,10 @@ namespace Enforcer5
                         Service.LogBotAction(groupId, message, userid);
                         Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Long message");
                         break;
-                    case "default":
-                        Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
+                    default:
+                        // No action chosen (this was a case for the string "default", so it never
+                        // ran and the over-long message went without a word).
+                        if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSettext"), update);
                         break;
                 }
             }, "AntiTextLenght");
@@ -268,8 +270,10 @@ namespace Enforcer5
                         Service.LogBotAction(groupId, message, userid);
                         Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Name too long");
                         break;
-                    case "default":
-                        Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
+                    default:
+                        // No action chosen (this was a case for the string "default", so it never
+                        // ran and the over-long message went without a word).
+                        if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(Methods.GetLocaleString(lang, "actionNotSetname"), update);
                         break;
                 }
             }, "AntiNameLength");
