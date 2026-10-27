@@ -1258,6 +1258,7 @@ namespace Enforcer5.Raids
             AdminDirectory.ResetForTests();
             ChatDetails.ResetForTests();
             LogDigest.ResetForTests();
+            GroupSettings.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

@@ -129,13 +129,17 @@ namespace Enforcer5.Models
 
             var db = Redis.db;
             var watch = db.SetContainsAsync($"chat:{context.ChatId}:watch", context.UserId);
-            var settings = db.HashGetAllAsync($"chat:{context.ChatId}:settings");
-            var flood = db.HashGetAllAsync($"chat:{context.ChatId}:flood");
-            var floodExceptions = db.HashGetAllAsync($"chat:{context.ChatId}:floodexceptions");
-            var media = db.HashGetAllAsync($"chat:{context.ChatId}:media");
-            var characters = db.HashGetAllAsync($"chat:{context.ChatId}:char");
-            var nameLength = db.HashGetAllAsync($"chat:{context.ChatId}:antinamelengthsettings");
-            var textLength = db.HashGetAllAsync($"chat:{context.ChatId}:antitextlengthsettings");
+            // A busy group's settings come from a snapshot at most SettingsFor old (see GroupSettings).
+            var cached = GroupSettings.Get(context.ChatId);
+            Task<HashEntry[]> Read(string key, Func<GroupSettings.Snapshot, HashEntry[]> part) =>
+                cached != null ? Task.FromResult(part(cached)) : db.HashGetAllAsync(key);
+            var settings = Read($"chat:{context.ChatId}:settings", c => c.Settings);
+            var flood = Read($"chat:{context.ChatId}:flood", c => c.Flood);
+            var floodExceptions = Read($"chat:{context.ChatId}:floodexceptions", c => c.FloodExceptions);
+            var media = Read($"chat:{context.ChatId}:media", c => c.Media);
+            var characters = Read($"chat:{context.ChatId}:char", c => c.Char);
+            var nameLength = Read($"chat:{context.ChatId}:antinamelengthsettings", c => c.NameLength);
+            var textLength = Read($"chat:{context.ChatId}:antitextlengthsettings", c => c.TextLength);
             var language = Methods.GetGroupLanguageAsync(context.ChatId);
             var inlineBotBlocks = message.ViaBot != null
                 ? Repositories.InlineBotBlocks.GetAsync(context.ChatId)
@@ -182,6 +186,11 @@ namespace Enforcer5.Models
                                Ok(media) && Ok(characters) && Ok(nameLength) && Ok(textLength) &&
                                Ok(language) && Ok(inlineBotBlocks) &&
                                Ok(channelPosts) && Ok(stickerSetBlocked);
+
+            if (cached == null && Ok(settings) && Ok(flood) && Ok(floodExceptions) && Ok(media) && Ok(characters) &&
+                Ok(nameLength) && Ok(textLength))
+                GroupSettings.Store(context.ChatId, new GroupSettings.Snapshot(context.Settings, context.Flood, context.FloodExceptions,
+                    context.Media, context.Char, context.NameLength, context.TextLength));
 
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
