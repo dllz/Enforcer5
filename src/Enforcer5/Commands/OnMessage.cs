@@ -28,6 +28,11 @@ namespace Enforcer5
     /// raid there would be one per raider, using up the messages the raid notice needs, and the raid
     /// notice has the counts. The actions themselves and the log channel are unchanged.
     /// </remarks>
+    /// <remarks>
+    /// Admins (and anonymous admins, and members elevated with /elevate) are exempt from every
+    /// check here. Whether someone is one is only asked once a check is about to act, from the
+    /// shared <see cref="AdminDirectory"/>, so an ordinary message costs nothing extra.
+    /// </remarks>
     public static class OnMessage
     {
         internal static async Task AntiFlood(MessageContext ctx)
@@ -69,6 +74,9 @@ namespace Enforcer5
             FloodTracker.Seen(chatId, userid, messageId);
             var num = await FloodTracker.CountAsync(chatId, userid);
             if (num <= maxmsgs) return;
+            // Admins are exempt: only asked once someone is over the limit, from the admin list
+            // shared with everything else (one call per group a minute at most).
+            if (await Methods.IsGroupAdminAsync(userid, chatId)) return;
             var action = ctx.FloodSetting("ActionFlood").ToString();
             if (num > maxmsgs + 1)
             {
@@ -162,6 +170,7 @@ namespace Enforcer5
             var userid = ctx.UserId;
             Bot.DispatchAction(() =>
             {
+                if (Methods.IsGroupAdmin(userid, groupId)) return;
                 try
                 {
                     Bot.DeleteMessage(groupId, update.Message.MessageId);
@@ -231,6 +240,7 @@ namespace Enforcer5
             var userid = ctx.UserId;
             Bot.DispatchAction(() =>
             {
+                if (Methods.IsGroupAdmin(userid, groupId)) return;
                 string reply;
                 switch (action)
                 {
@@ -314,6 +324,7 @@ namespace Enforcer5
             // dropped action reset someone's strike count for free.
             Bot.DispatchAction(() =>
             {
+                if (Methods.IsGroupAdmin(message.From.Id, chatId)) return;
                 // Only needed once media is actually blocked, so it stays off the common path.
                 // This read used to be issued twice - once for HasValue and once for the value.
                 var configuredMax = Redis.db.HashGetAsync($"chat:{chatId}:warnsettings", "mediamax").Result;
@@ -531,6 +542,7 @@ namespace Enforcer5
             {
                 try
                 {
+                    if (Methods.IsGroupAdmin(userId, chatId)) return;
                     string reply;
                     switch (status)
                     {
@@ -613,6 +625,7 @@ namespace Enforcer5
             {
                 try
                 {
+                    if (Methods.IsGroupAdmin(userId, chatId)) return;
                     string reply;
                     switch (status)
                     {

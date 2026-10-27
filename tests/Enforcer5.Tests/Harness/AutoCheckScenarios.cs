@@ -440,6 +440,40 @@ ORDER BY s.sanction_id")).ToArray();
             AssertNoErrors(chat);
         }
 
+        // ---------- Admins ----------
+
+        [TestMethod]
+        public async Task Admins_AreExemptFromEveryAutomaticCheck()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "Flood"] = "no";
+            chat.Hashes[$"chat:{chat.ChatId}:flood", "MaxFlood"] = "3";
+            chat.Hashes[$"chat:{chat.ChatId}:flood", "ActionFlood"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:media", "image"] = "blocked";
+            chat.Hashes[$"chat:{chat.ChatId}:media", "action"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:warnsettings", "mediamax"] = "1";
+            TextLength(chat, "kick", maxLength: 20);
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "enabled"] = "yes";
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "maxlength"] = "5";
+            chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "action"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:char", "Arab"] = "kick";
+            chat.Hashes[$"chat:{chat.ChatId}:char", "Rtl"] = "kick";
+            var admin = chat.Add("A very long admin name", MemberState.Administrator);
+
+            await chat.SendPhotoAsync(admin, "pic");
+            await chat.SendAsync(admin, new string('a', 50));
+            await chat.SendAsync(admin, "سلام \u202E");
+            for (var i = 0; i < 6; i++) chat.Deliver(chat.Text(admin, $"announcement {i}"));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+
+            Assert.AreEqual(MemberState.Administrator, State(chat, admin));
+            Assert.AreEqual(9, chat.Telegram.MessagesFrom(chat.ChatId, admin.Id).Count, "nothing deleted");
+            Assert.AreEqual(0, chat.Telegram.Calls.Count(c => c.Method == "banChatMember"), "no kick tried");
+            Assert.AreEqual(0, chat.Replies.Count, "no notices");
+            Assert.AreEqual(0, chat.Hashes.All($"chat:{chat.ChatId}:mediawarn").Count, "no media strike");
+            AssertNoErrors(chat);
+        }
+
         // ---------- Blocked inline bots and sticker packs ----------
 
         [TestMethod]

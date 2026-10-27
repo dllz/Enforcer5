@@ -593,18 +593,21 @@ namespace Enforcer5.Helpers
         /// (<c>chat:{group}:adminses:{user}</c> = true, written by /elevate). Anonymous admins post as
         /// GroupAnonymousBot, which counts.
         /// </summary>
-        public static bool IsGroupAdmin(long user, long group)
+        public static bool IsGroupAdmin(long user, long group) => IsGroupAdminAsync(user, group).GetAwaiter().GetResult();
+
+        /// <inheritdoc cref="IsGroupAdmin(long, long)"/>
+        internal static async Task<bool> IsGroupAdminAsync(long user, long group)
         {
             if (user == 1087968824) return true;
             // Only "true" means anything: older code also cached "false" here for five minutes, and
             // /deelevate wrote a permanent "false" that hid a real admin promoted later.
-            var elevated = Redis.db.StringGetAsync($"chat:{group}:adminses:{user}").Result;
+            var elevated = await Redis.db.StringGetAsync($"chat:{group}:adminses:{user}");
             if (elevated.Equals("true")) return true;
             try
             {
-                if (AdminDirectory.IsAdminAsync(group, user).GetAwaiter().GetResult() is { } known) return known;
+                if (await AdminDirectory.IsAdminAsync(group, user) is { } known) return known;
                 // Telegram has never listed the admins here: ask about this one member.
-                var member = Bot.Api.GetChatMember(group, user).Result;
+                var member = await Bot.Api.GetChatMember(group, user);
                 return member.Status is ChatMemberStatus.Administrator or ChatMemberStatus.Creator;
             }
             catch (Exception e)
