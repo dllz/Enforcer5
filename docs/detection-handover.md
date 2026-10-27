@@ -1,4 +1,7 @@
-# Handover: member detection, labels and pattern learning (design not started)
+# Handover: member detection, labels and pattern learning
+
+**Superseded by `docs/detection-design.md`** (approved 2026-10-27), which is the design that is
+being built. This file is kept as the record of what was asked for.
 
 Written 2026-10-27 at the end of the raid-readiness work, for a fresh session to design the next
 stage. Nothing below is built yet. Raid mode itself is done; see `docs/raid-runbook.md` and the
@@ -81,11 +84,11 @@ keys into the other 10 files.
    - the bot sends asynchronously through a queue and never waits on it; if it is down, only the
      vectors are missing
    - embed only non-established members' messages, everything during a raid, and detected messages
-    - PostgreSQL `pgvector` 0.8.6 is installed on the server (checked 2026-10-27), but not yet
-      enabled in `enforcer` or `enforcer_subprod`: `pg_extension` there lists no `vector`. It is
-      not a trusted extension, so the bot's migrations cannot enable it; Daniel runs
-      `CREATE EXTENSION vector;` as superuser in both databases before the first migration that
-      uses it. int8 vectors, 384 bytes
+   - PostgreSQL `pgvector` 0.8.6 is installed on the server (checked 2026-10-27), but not yet
+     enabled in `enforcer` or `enforcer_subprod`: `pg_extension` there lists no `vector`. It is
+     not a trusted extension, so the bot's migrations cannot enable it; Daniel runs
+     `CREATE EXTENSION vector;` as superuser in both databases before the first migration that
+     uses it. pgvector has no int8 type: `halfvec` (see the design)
    - vectors are personal data (text can be roughly reconstructed from them): same retention,
      dropped on anonymisation
 
