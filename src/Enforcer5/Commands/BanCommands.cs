@@ -519,11 +519,14 @@ namespace Enforcer5
                     Methods.SaveBan(userId, "tempban");
                     Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
 
+                // Two tempbans ending in the same second share a schedule slot, so the later one moves
+                // on a second. The step used to be discarded (DateTime is immutable), which spun this
+                // loop forever on Redis and held a dispatch worker for good.
 #if NORMAL
                 var entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
                     while (entry.HasValue)
                     {
-                            dataUnbanTime.AddSeconds(1);
+                            dataUnbanTime = dataUnbanTime.AddSeconds(1);
                         unbanTime = dataUnbanTime.ToUnixTime();
                         entry = Redis.db.HashGetAsync("tempbanned", unbanTime).Result;
                 }
@@ -533,7 +536,7 @@ namespace Enforcer5
                 var entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
                     while (entry.HasValue)
                     {
-                            dataUnbanTime.AddSeconds(1);
+                            dataUnbanTime = dataUnbanTime.AddSeconds(1);
                         unbanTime = dataUnbanTime.ToUnixTime();
                         entry = Redis.db.HashGetAsync("tempbannedPremium", unbanTime).Result;
                 }

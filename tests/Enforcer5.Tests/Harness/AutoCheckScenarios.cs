@@ -95,6 +95,28 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
+        [Timeout(120000)] // this used to spin forever
+        public async Task TwoTempbansEndingInTheSameSecond_BothGetASlotInTheSchedule()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            FloodOn(chat, "tempban");
+            var first = chat.Add("First");
+            var second = chat.Add("Second");
+
+            for (var i = 0; i < 8; i++)
+            {
+                chat.Deliver(chat.Text(first, $"spam {i}"));
+                chat.Deliver(chat.Text(second, $"spam {i}"));
+            }
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
+
+            Assert.AreEqual(MemberState.Kicked, State(chat, first));
+            Assert.AreEqual(MemberState.Kicked, State(chat, second));
+            Assert.AreEqual(2, chat.Hashes.All(HarnessChat.TempbanSchedule).Count, "one slot each");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task Flood_ATypeOnTheExceptionList_IsNotCounted()
         {
             await using var chat = await HarnessChat.StartAsync();
@@ -649,9 +671,29 @@ ORDER BY s.sanction_id")).ToArray();
             AssertNoErrors(chat);
         }
 
-        // The premium mass-add rule (two hardcoded groups, UpdateHandler.HandleNewChatMembers) is not
-        // pinned here: it calls Commands.Tempban synchronously on the update consumer, which blocks on
-        // the enforcement queue's wait and so on the simulated clock, and the harness cannot advance
-        // time under a blocked consumer. The port (build step 4) dispatches it and adds its scenario.
+#if PREMIUM
+        // ---------- The premium mass-add rule (two hardcoded groups) ----------
+
+        [TestMethod]
+        [Timeout(120000)]
+        public async Task MassAdd_InOneOfTheTwoGroups_TempbansTheAddedAndTheAdder()
+        {
+            await using var chat = await HarnessChat.StartAsync(chatId: -1001060486754);
+            var adder = chat.Add("Adder");
+            var added = Enumerable.Range(0, 2).Select(i => chat.Add($"Added{i}", MemberState.Left)).ToList();
+            var join = chat.Join(added[0], addedBy: adder);
+            foreach (var a in added) chat.Telegram.SetMember(chat.ChatId, a.Id, MemberState.Member);
+            join.NewChatMembers = added.Select(a => a.ToUser()).ToArray();
+
+            await chat.PostAsync(join);
+
+            Assert.IsTrue(added.All(a => State(chat, a) == MemberState.Kicked));
+            Assert.AreEqual(MemberState.Kicked, State(chat, adder));
+            var reasons = (await Sanctions(chat)).Select(s => s.Reason).ToArray();
+            Assert.AreEqual(2, reasons.Count(r => r == "Added in a mass add"));
+            Assert.AreEqual(1, reasons.Count(r => r == "Mass-added members"));
+            AssertNoErrors(chat);
+        }
+#endif
     }
 }
