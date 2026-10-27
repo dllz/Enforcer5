@@ -657,11 +657,21 @@ namespace Enforcer5
         public static void DisbleMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var userId = update.Message.From.Id;
             var chatId = update.Message.Chat.Id;
-            if (update.Message.ReplyToMessage != null)
+            long userId;
+            try
             {
-                userId = update.Message.ReplyToMessage.From.Id;
+                // A reply, a user id or an @username (as the help always said), or the sender. By id is
+                // how a group lets in someone it vouches for before they join.
+                userId = Methods.GetUserId(update, args);
+            }
+            catch (Exception e)
+            {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, "Resolving the user for /disablewatch");
+                Methods.SendError(e.Message, update.Message, lang);
+                return;
             }
             Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
@@ -672,11 +682,21 @@ namespace Enforcer5
         public static void EnableMediaExcempt(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var userId = update.Message.From.Id;
             var chatId = update.Message.Chat.Id;
-            if (update.Message.ReplyToMessage != null)
+            long userId;
+            try
             {
-                userId = update.Message.ReplyToMessage.From.Id;
+                // A reply, a user id or an @username (as the help always said), or the sender. By id is
+                // how a group lets in someone it vouches for before they join.
+                userId = Methods.GetUserId(update, args);
+            }
+            catch (Exception e)
+            {
+                // An unknown @username is the admin's typo, not a bug.
+                if (e.Message != "UnableToResolveUsername")
+                    ErrorReporter.Report(e, "Resolving the user for /enablewatch");
+                Methods.SendError(e.Message, update.Message, lang);
+                return;
             }
             Redis.db.SetRemoveAsync($"chat:{chatId}:watch", userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);

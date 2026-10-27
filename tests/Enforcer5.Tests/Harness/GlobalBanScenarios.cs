@@ -303,5 +303,36 @@ ORDER BY gs.global_sanction_id")).ToArray();
             CollectionAssert.AreEqual(new[] { "Global ban: scam" }, await GroupBanReasons(chat));
             AssertNoErrors(chat);
         }
+
+        [TestMethod]
+        public async Task DisableWatch_ByIdOrUsername_ThenTheVouchedAccountMayBeAdded()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var global = GlobalAdmin(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var byId = new HarnessUser(5550008, "ById");
+            var byName = new HarnessUser(5550009, "ByName", Username: "VouchedName");
+            await chat.SendAsync(global, $"/getrekt {byId.Id}:old ban");
+            await chat.SendAsync(global, $"/getrekt {byName.Id}:old ban");
+            chat.Hashes["bot:usernames", "@vouchedname"] = byName.Id.ToString();
+
+            await chat.SendAsync(admin, $"/disablewatch {byId.Id}");
+            await chat.SendAsync(admin, "/disablewatch @VouchedName");
+            await chat.SendAsync(admin, "/disablewatch @nobodyknown");
+            var join = chat.Join(byId, addedBy: member);
+            chat.Telegram.SetMember(chat.ChatId, byName.Id, MemberState.Member);
+            join.NewChatMembers = new[] { byId.ToUser(), byName.ToUser() };
+            await chat.PostAsync(join);
+
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, byId.Id));
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, byName.Id));
+            CollectionAssert.AreEquivalent(new[] { byId.Id.ToString(), byName.Id.ToString() },
+                chat.Keys.Members($"chat:{chat.ChatId}:watch").ToArray(), "not the admin, and nothing for an unknown name");
+
+            await chat.SendAsync(admin, $"/enablewatch {byId.Id}");
+            CollectionAssert.AreEqual(new[] { byName.Id.ToString() }, chat.Keys.Members($"chat:{chat.ChatId}:watch").ToArray());
+            AssertNoErrors(chat);
+        }
     }
 }
