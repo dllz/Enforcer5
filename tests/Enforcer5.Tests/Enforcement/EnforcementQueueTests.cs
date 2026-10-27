@@ -80,6 +80,24 @@ namespace Enforcer5.Tests.Enforcement
         }
 
         [TestMethod]
+        public async Task AnUnlockSubmittedWhileTheLockWaits_IsNotTakenForTheLock()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            var open = new Telegram.Bot.Types.ChatPermissions { CanSendMessages = true };
+            bot.Telegram.StartStorm(c => c.Method == "setChatPermissions", TimeSpan.FromSeconds(30), retryAfter: 30);
+
+            await bot.RunAsync(EnforcementJob.SetPermissions(Raided, EnforcementExecutor.NothingAllowed));
+            await bot.RunAsync(EnforcementJob.SetPermissions(Raided, open));
+            Assert.AreEqual(true, EnforcementQueue.PendingPermissions(Raided)?.CanSendMessages, "what the chat will have");
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(1));
+
+            Assert.AreEqual(true, bot.Telegram.ChatPermissions(Raided)?.CanSendMessages, "open: the unlock ran after the lock");
+            Assert.IsNull(EnforcementQueue.PendingPermissions(Raided));
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
         public async Task AKickWhoseUnbanIsRateLimited_ResumesAtTheUnban()
         {
             await using var bot = await SimulatedBot.StartAsync();

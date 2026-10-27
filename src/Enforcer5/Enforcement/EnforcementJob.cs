@@ -115,11 +115,18 @@ namespace Enforcer5.Enforcement
         /// <summary>Deletes folded into this one (see EnforcementQueue), finished with it.</summary>
         [JsonIgnore] internal List<EnforcementJob> Riders = new();
 
-        /// <summary>Another job with the same key while this one waits is the same job.</summary>
+        /// <summary>
+        /// Another job with the same key while this one waits is the same job. Permission changes are
+        /// keyed by what they set: a raid's unlock is not the same job as its lock, and dropping it as
+        /// one left the group locked for good.
+        /// </summary>
         [JsonIgnore]
-        internal string DedupeKey => Kind == EnforcementKind.Delete
-            ? null
-            : $"{Kind}:{ChatId}:{TargetId}:{UntilUtc?.Ticks}";
+        internal string DedupeKey => Kind switch
+        {
+            EnforcementKind.Delete => null,
+            EnforcementKind.SetChatPermissions => $"{Kind}:{ChatId}:{JsonConvert.SerializeObject(Permissions)}",
+            _ => $"{Kind}:{ChatId}:{TargetId}:{UntilUtc?.Ticks}"
+        };
 
         /// <summary>Lower goes first within a chat: closing the door, then removing people, then cleaning up.</summary>
         [JsonIgnore]

@@ -87,6 +87,18 @@ namespace Enforcer5.Enforcement
         }
 
         /// <summary>
+        /// The permissions the chat will have once its queued permission changes are done (the latest
+        /// one submitted); null when none is waiting. What Telegram says now is out of date until then.
+        /// </summary>
+        internal static Telegram.Bot.Types.ChatPermissions PendingPermissions(long chatId)
+        {
+            lock (Lock)
+                return ByChat.TryGetValue(chatId, out var l)
+                    ? l.Where(j => j.Kind == EnforcementKind.SetChatPermissions).OrderByDescending(j => j.Sequence).FirstOrDefault()?.Permissions
+                    : null;
+        }
+
+        /// <summary>
         /// Submits a job and waits up to <see cref="CallerWait"/> for it. Blocking, for the
         /// synchronous command code. Never throws.
         /// </summary>
