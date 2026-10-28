@@ -117,7 +117,7 @@ namespace Enforcer5.Detection
                     {
                         var action = hit.Rule.Action ?? "none";
                         DetectionEngine.Checked(chatId, userId, message, SignCatalog.Get(hit.Rule.Sign), action,
-                            deleted: action == "delete" && !hit.Rule.OnTrial,
+                            deleted: action == "delete" && !hit.Rule.OnTrial, reported: action == "report" && !hit.Rule.OnTrial,
                             evidence: new { rule = hit.Rule.Kind == FilterRule.PresetKind ? hit.Rule.Preset : hit.Rule.Id.ToString(), target = hit.Target.ToString().ToLowerInvariant() },
                             weight: action is "score" or "report" ? 2 : null, trial: hit.Rule.OnTrial);
                     }
@@ -211,7 +211,10 @@ namespace Enforcer5.Detection
                     Service.LogBotAction(chatId, text, userId);
                     Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: text, reason: reason);
                     break;
-                // none, score and report: recorded above. Reports reach the admins with step 7.
+                case "report":
+                    DetectionReports.Report(chatId, userId, message?.MessageId, rule.Sign, person);
+                    break;
+                // none and score: recorded above.
             }
         }
     }

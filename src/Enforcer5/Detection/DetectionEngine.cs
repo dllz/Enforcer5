@@ -84,6 +84,9 @@ namespace Enforcer5.Detection
                 }
                 else if (Methods.IsGroupAdmin(userId, chatId)) return null;
 
+                // An admin marked them fine for this sign on a report.
+                if (await Fines.ExemptAsync(chatId, userId, sign.Name)) return null;
+
                 var now = Clock.UtcNow;
                 if (policy.Engine.ObserveUntil == null) StartObserving(chatId);
                 var mode = hit.Trial ? "trial"
@@ -113,7 +116,11 @@ namespace Enforcer5.Detection
                 var outcome = new DetectionOutcome(mode, action, deleted, reported, change.Before, change.After);
 
                 if (outcome.Acted)
-                    Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported));
+                    Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported)
+                    {
+                        Member = message?.From?.Id == userId ? message.From : null,
+                        Score = change.After
+                    });
 
                 Record(chatId, userId, message, sign, hit, weight, outcome, member, now);
                 return outcome;
@@ -216,7 +223,10 @@ namespace Enforcer5.Detection
             {
                 try
                 {
-                    stored = await Repositories.DetectionLog.RecentHitsAsync(chatId, userId, Clock.UtcNow - MemberScores.Window);
+                    // Not from before an admin marked them fine: that score was forgiven.
+                    var since = Clock.UtcNow - MemberScores.Window;
+                    if (await Fines.LastFineAsync(chatId, userId) is { } fined && fined > since) since = fined;
+                    stored = await Repositories.DetectionLog.RecentHitsAsync(chatId, userId, since);
                 }
                 catch (Exception e)
                 {
@@ -252,6 +262,8 @@ namespace Enforcer5.Detection
         {
             StartingObservation.Clear();
             MemberScores.ResetForTests();
+            Fines.ResetForTests();
+            DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();
         }

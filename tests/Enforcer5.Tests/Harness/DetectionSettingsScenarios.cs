@@ -124,8 +124,8 @@ namespace Enforcer5.Tests.Harness
             chat.Hashes[$"chat:{id}:char", "Arab"] = "allowed";
             var admin = chat.Add("Admin", MemberState.Administrator);
             var menu = Menu(chat, admin);
-            // off -> delete -> warn -> mute -> kick -> tempban -> ban
-            for (var i = 0; i < 6; i++) await chat.PressDataAsync(admin, menu, $"filterpreset:{id}:arabic");
+            // off -> report -> delete -> warn -> mute -> kick -> tempban -> ban
+            for (var i = 0; i < 7; i++) await chat.PressDataAsync(admin, menu, $"filterpreset:{id}:arabic");
             Assert.AreEqual("ban", (await Stored(chat)).Filters.PresetAction(FilterPresets.Arabic));
 
             await chat.CrashAndRestartAsync();

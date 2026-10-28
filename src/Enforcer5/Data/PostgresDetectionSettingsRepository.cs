@@ -158,7 +158,9 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                 ReportAt = policy.Engine.ReportAt,
                 MuteAt = policy.Engine.MuteAt,
                 MuteEnabled = policy.Engine.MuteEnabled,
-                RetentionDays = policy.Engine.RetentionDays
+                RetentionDays = policy.Engine.RetentionDays,
+                ReportTo = policy.Engine.ReportTo,
+                AdminChatId = policy.Engine.AdminChatId
             });
             foreach (var (name, sign) in policy.Engine.Signs)
             {
@@ -219,7 +221,10 @@ INSERT INTO group_filters (group_id, target, kind, pattern, enabled, action, mod
 VALUES (@GroupId, @Target, 'regex', @Pattern, @Enabled, @Action, @Mode, @TrialUntil,
     (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @CreatedBy), now())
 ON CONFLICT (group_id, target, kind, pattern) WHERE pattern IS NOT NULL
-DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action, mode = EXCLUDED.mode, trial_until = EXCLUDED.trial_until
+DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action, mode = EXCLUDED.mode, trial_until = EXCLUDED.trial_until,
+    -- A new trial is a new end to tell the admins about.
+    trial_notified_at = CASE WHEN group_filters.mode = EXCLUDED.mode AND group_filters.trial_until IS NOT DISTINCT FROM EXCLUDED.trial_until
+                             THEN group_filters.trial_notified_at END
 WHERE group_filters.enabled IS DISTINCT FROM EXCLUDED.enabled OR group_filters.action IS DISTINCT FROM EXCLUDED.action
    OR group_filters.mode IS DISTINCT FROM EXCLUDED.mode OR group_filters.trial_until IS DISTINCT FROM EXCLUDED.trial_until",
                     new
@@ -351,7 +356,9 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             return new EngineSettings(
                 engine.ObserveUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(engine.ObserveUntil.Value, DateTimeKind.Utc)) : null,
                 engine.ReportAt ?? defaults.ReportAt, engine.MuteAt ?? defaults.MuteAt, engine.MuteEnabled, signs,
-                engine.RetentionDays is { } days && EngineSettings.RetentionChoices.Contains(days) ? days : EngineSettings.DefaultRetentionDays);
+                engine.RetentionDays is { } days && EngineSettings.RetentionChoices.Contains(days) ? days : EngineSettings.DefaultRetentionDays,
+                EngineSettings.ReportChoices.Contains(engine.ReportTo) ? engine.ReportTo : EngineSettings.ToAdmins,
+                engine.AdminChatId);
         }
 
         private sealed class FloodJson
@@ -403,6 +410,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public int? MuteAt { get; set; }
             public bool MuteEnabled { get; set; }
             public int? RetentionDays { get; set; }
+            public string ReportTo { get; set; }
+            public long? AdminChatId { get; set; }
         }
 
         private sealed class SignJson

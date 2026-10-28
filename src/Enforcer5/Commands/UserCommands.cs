@@ -45,6 +45,13 @@ namespace Enforcer5
         [Command(Trigger = "start", Menu = Attributes.CommandMenu.Private)]
         public static void BotStarted(Update update, string[] args)
         {
+            // From a group's "Link admin chat" button: the bot was added to, or picked in, the admin chat.
+            if (update.Message.Chat.Type is ChatType.Group or ChatType.Supergroup && args.Length > 1 &&
+                args[1]?.StartsWith(Commands.AdminChatStart, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                Commands.LinkAdminChat(update.Message, args[1].Substring(Commands.AdminChatStart.Length).Trim());
+                return;
+            }
             if (update.Message.Chat.Type == ChatType.Private)
             {
                 if (!String.IsNullOrEmpty(args[1]))

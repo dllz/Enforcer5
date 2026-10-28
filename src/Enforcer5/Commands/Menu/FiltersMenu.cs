@@ -51,7 +51,7 @@ namespace Enforcer5
     public static partial class CallBacks
     {
         /// <summary>A preset's actions in menu order; one press moves to the next, after ban it is off again.</summary>
-        internal static readonly string[] PresetActions = { null, "delete", "warn", "mute", "kick", "tempban", "ban" };
+        internal static readonly string[] PresetActions = { null, "report", "delete", "warn", "mute", "kick", "tempban", "ban" };
 
         [Callback(Trigger = "filtersmenu", GroupAdminOnly = true)]
         public static void FiltersMenu(CallbackQuery call, string[] args)

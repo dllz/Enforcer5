@@ -370,7 +370,7 @@ defSpamValue = 3;
         {
             "banflag", "kickflag", "warnflag", "resetwarns", "removewarn", "resetPrewarns", "removePrewarn",
             "userbuttonresetwarn", "userbuttonremwarns", "userbuttonbanuser", "userbuttonwarnuser",
-            "usermediaremwarns", "usermediaresetwarn"
+            "usermediaremwarns", "usermediaresetwarn", Detection.DetectionReports.Trigger
         };
 
         /// <summary>

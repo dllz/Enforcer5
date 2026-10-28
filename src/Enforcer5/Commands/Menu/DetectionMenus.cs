@@ -164,6 +164,7 @@ namespace Enforcer5
             var more = new Menu(1);
             var filters = DetectionSettings.For(chatId).Filters.Rules.Count(r => r.Enabled && r.Action != null);
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionFiltersButton", filters), $"filtersmenu:{chatId}"));
+            more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionReportsButton"), $"reportsmenu:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionRetentionButton",
                 Methods.GetLocaleString(lang, $"retention{engine.RetentionDays}")), $"detectionretention:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));

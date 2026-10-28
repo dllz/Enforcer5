@@ -10,6 +10,12 @@ namespace Enforcer5.Detection
     {
         /// <summary>The reason recorded in <c>sanctions</c> and warns.</summary>
         internal string Reason => $"detect:{Sign}";
+
+        /// <summary>The member, when the message showed who they are; for the report.</summary>
+        internal Telegram.Bot.Types.User Member { get; init; }
+
+        /// <summary>Their score after the sign, for the report.</summary>
+        internal int Score { get; init; }
     }
 
     /// <summary>Carries out the engine's decisions. Replaceable in tests.</summary>
@@ -21,13 +27,17 @@ namespace Enforcer5.Detection
     /// <summary>
     /// Through the same paths as everything else: the enforcement queue (<c>Methods.*</c>), so raid
     /// mode, flood control and the journal apply. Runs dispatched; never blocks the caller.
-    /// Reports are recorded but not sent yet: they arrive with build step 7.
+    /// Reports go to the admins (<see cref="DetectionReports"/>); every action taken gets a line in the
+    /// group's log channel.
     /// </summary>
     internal sealed class EnforcerDetectionActions : IDetectionActions
     {
         public void Execute(DetectionAction action)
         {
+            if (action.Report)
+                DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score);
             if (action.Action is "none" or "score" or "report" && !action.Delete) return;
+            LogAction(action);
             Bot.DispatchAction(() =>
             {
                 try
@@ -65,6 +75,25 @@ namespace Enforcer5.Detection
                     ErrorReporter.Report(e, $"Detection action {action.Action} on {action.UserId} in {action.ChatId}");
                 }
             }, "DetectionAction");
+        }
+
+        /// <summary>One line in the group's log channel for what Detection did (design section 6).</summary>
+        private static void LogAction(DetectionAction action)
+        {
+            try
+            {
+                var lang = Methods.GetGroupLanguage(action.ChatId).Doc;
+                var what = action.Action is "none" or "score" or "report" ? "delete" : action.Action;
+                var name = action.Member != null ? action.Member.FirstName : action.UserId.ToString();
+                var label = DetectionReports.SignLabel(lang, action.Sign);
+                Service.LogBotAction(action.ChatId,
+                    Methods.GetLocaleString(lang, "detectionLogLine", Methods.GetLocaleString(lang, $"filterAction_{what}"),
+                        $"{name}, {action.UserId}", label), action.UserId);
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Logging the Detection action on {action.UserId} in {action.ChatId}");
+            }
         }
     }
 }

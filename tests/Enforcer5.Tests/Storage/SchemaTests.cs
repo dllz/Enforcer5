@@ -26,7 +26,8 @@ namespace Enforcer5.Tests.Storage
             {
                 "detection_policies", "detections", "global_sanctions", "group_filters", "group_joins", "group_members", "group_settings",
                 "group_stats", "groups", "member_labels", "message_fingerprints",
-                "raid_events", "raid_incidents", "report_actions", "reports", "sanctions", "telegram_account_profiles", "telegram_accounts",
+                "raid_events", "raid_incidents", "report_actions", "report_admin_optouts", "report_copies", "reports", "sanctions",
+                "telegram_account_profiles", "telegram_accounts",
                 "telegram_chat_profiles", "telegram_chats", "user_identity_links", "users",
                 "warning_balances", "warning_events"
             }, tables);

@@ -1048,6 +1048,12 @@ namespace Enforcer5.Raids
                 Persisting.Release();
             }
             RaidTelemetry.Ended(Snapshot(incident), by, ignored: quietly && by.HasValue);
+            // An admin said it was no raid: its suspects were fine (members only; a channel is no one to label).
+            if (quietly && by is { } admin)
+                foreach (var suspect in incident.Suspects.Where(s => s > 0))
+                    Detection.Decisions.Fine(chatId, suspect, admin, new[] { "raid" });
+            // Detection's reports held back while it was on, in one.
+            Detection.DetectionReports.RaidEnded(chatId);
             if (incident.Locked)
             {
                 Task<bool> locking;

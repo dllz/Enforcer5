@@ -65,6 +65,14 @@ namespace Enforcer5.Detection
             }
         }
 
+        /// <summary>The signs that make up their score now, oldest first.</summary>
+        internal static IReadOnlyList<string> Signs(long chatId, long userId)
+        {
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<string>();
+            var now = Clock.UtcNow;
+            lock (entry) return entry.Hits.Where(h => now - h.At < Window).Select(h => h.Sign).Distinct().ToList();
+        }
+
         internal static int Of(long chatId, long userId)
         {
             if (!Entries.TryGetValue((chatId, userId), out var entry)) return 0;
@@ -74,6 +82,16 @@ namespace Enforcer5.Detection
 
         /// <summary>Forgets the member's score (an admin said they are fine, or they became established).</summary>
         internal static void Clear(long chatId, long userId) => Entries.TryRemove((chatId, userId), out _);
+
+        /// <summary>
+        /// An admin marked them fine: their score starts again from nothing, and what <c>detections</c>
+        /// holds from before is not loaded back (the engine starts their score after the Fine).
+        /// </summary>
+        internal static void Forgive(long chatId, long userId)
+        {
+            var entry = new Entry { Loaded = true };
+            Entries[(chatId, userId)] = entry;
+        }
 
         private static void Prune(DateTime now)
         {

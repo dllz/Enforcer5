@@ -58,6 +58,10 @@ namespace Enforcer5.Data
         internal static IDetectionLogRepository DetectionLog { get; set; } =
             new PostgresDetectionLogRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Detection reports to admins, their copies and decisions (Detection/DetectionReports).
+        internal static IDetectionReportRepository DetectionReports { get; set; } =
+            new PostgresDetectionReportRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

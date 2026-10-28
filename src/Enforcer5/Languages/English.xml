@@ -2785,4 +2785,190 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="hcommandprivacy">
     <value>Shows what Enforcer keeps about groups and their members, what it is used for and how long it is kept. Works in groups and in private.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 Reports</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;Reports&lt;/b&gt;\nDetection tells admins about suspicious members: one report per member a day, edited as more is seen, with Ban, Mute and Fine buttons. Nothing is sent while the group is only watching, and during a raid the reports wait and come as one when it is over.\n\nSent to: {0}\nAdmin chat: {1}\nYou: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>admins, in private</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>the admin chat</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>the admin chat and admins in private</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>none linked</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>you get them in private</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>you turned them off</value>
+  </string>
+  <string key="reportsToButton">
+    <value>Sent to: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 Link admin chat</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>Unlink admin chat</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>Reports to me: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>Pick the admin chat</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>Tap the button below and pick the chat where your admins talk. Enforcer joins it, or uses it if it is there already, and the reports go there.\n\nThe button works once, for {0} minutes, and you have to be an admin of both chats.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>This link has expired or was used already. Open the Reports menu again for a new one.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>A group cannot be its own admin chat. Pick another chat.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>Only someone who is an admin both here and in the group can link this chat.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>This chat now gets the Detection reports of {0}.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;Detection&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>Member: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>What was seen:</value>
+  </string>
+  <string key="reportScore">
+    <value>Score: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 Ban</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 Mute</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ Fine</value>
+  </string>
+  <string key="reportDone">
+    <value>Done.</value>
+  </string>
+  <string key="reportGone">
+    <value>This report is too old to act on.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 Banned by {0}</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 Muted by {0}</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ Marked fine by {0}. These signs will not report them again for 30 days.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ Made live by {0}</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ Trial extended by {0}</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 Deleted by {0}</value>
+  </string>
+  <string key="reportSignRule">
+    <value>filter rule #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;Detection&lt;/b&gt; · {0}\nDuring the raid {1} members were flagged. Their reports were held back while it was on:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…and {0} more.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 Detection: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>Report</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>Tempmute</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;Filter rule #{0} has finished its trial&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\nIt matched {5} times, and {6} of those members were banned or removed later. Until you decide, it keeps recording only.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ Make it live</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ {0} more days</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 Delete it</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>link to another chat or website</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>mention of a chat outside the group</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>forward from a channel or hidden sender</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>first message was media</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>posted right after joining</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>same message as other new members</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>name like an admin's or a bot's</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>name with admin, support or official</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>link in their bio</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>mention in their bio</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>personal channel</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>points to a channel known for spam</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>media banned in this group</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>like a banned member's message</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>joined during a raid</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>edited into different media</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>edited long after posting</value>
+  </string>
+  <string key="filterAction_none">
+    <value>Nothing</value>
+  </string>
+  <string key="filterAction_score">
+    <value>Score</value>
+  </string>
 </strings>

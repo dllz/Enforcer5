@@ -110,6 +110,8 @@ namespace Enforcer5
             MemberTrust.Start(Bot.ShutdownToken);
             // Raid detection, and raids still on from before a restart.
             Raids.RaidGuard.Start(Bot.ShutdownToken);
+            // Filter rules whose trial ended: their admins are asked what to do with them.
+            Detection.FilterTrials.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

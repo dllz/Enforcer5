@@ -170,12 +170,32 @@ namespace Enforcer5.Detection
     /// one of <see cref="RetentionChoices"/>. Set in the Detection menu; carried out by the nightly job of
     /// build step 14.
     /// </param>
+    /// <param name="ReportTo">
+    /// Where the group's reports go (design section 6, build step 7): <see cref="ToAdmins"/> (each admin
+    /// who started the bot, in private, unless they opted out), <see cref="ToAdminChat"/> or
+    /// <see cref="ToBoth"/>. Without a linked admin chat they go to the admins.
+    /// </param>
+    /// <param name="AdminChatId">The group's admin chat, linked from the Reports menu; null for none.</param>
     internal sealed record EngineSettings(DateTimeOffset? ObserveUntil, int ReportAt, int MuteAt, bool MuteEnabled,
-        IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays)
+        IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays,
+        string ReportTo = EngineSettings.ToAdmins, long? AdminChatId = null)
     {
         internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);
         internal const int DefaultRetentionDays = 365;
         internal static readonly int[] RetentionChoices = { 90, 365, 730 };
+
+        internal const string ToAdmins = "admins";
+        internal const string ToAdminChat = "chat";
+        internal const string ToBoth = "both";
+        internal static readonly string[] ReportChoices = { ToAdmins, ToAdminChat, ToBoth };
+
+        /// <summary>Reports go to the admins in private: chosen, or the admin chat is chosen but none is linked.</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal bool ReportsToAdmins => ReportTo != ToAdminChat || AdminChatId == null;
+
+        /// <summary>The admin chat reports go to, or null.</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal long? ReportChat => ReportTo != ToAdmins ? AdminChatId : null;
 
         internal static EngineSettings Default { get; } =
             new EngineSettings(null, 3, 6, false, new Dictionary<string, SignPolicy>());

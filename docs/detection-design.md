@@ -190,9 +190,8 @@ extend / delete" with its hits and how many of those members were later banned.
 - A preset acts as soon as an admin switches it on; an own regex starts on trial for 7 days; neither
   waits for the group's observe weeks. A filter acts itself (one action, the strongest of the live
   rules that matched) and records every rule that matched as `filter:<preset>` or `filter:<id>`.
-- Not yet: `bio` and `channel` targets (step 11), the message when a trial ends (reports, step 7;
-  until then a rule whose trial is over keeps recording only, and `/filter list` says so), and
-  edits (step 8). The length rules keep their own menu and check.
+- Not yet: `bio` and `channel` targets (step 11) and edits (step 8). A rule whose trial is over keeps
+  recording only until an admin answers the end-of-trial notice (step 7) or uses `/filter`. The length rules keep their own menu and check.
 - A regex with spaces is written between slashes in `/filter try` (`/filter try /free +crypto/ text`).
 
 ## 6. Reports
@@ -211,6 +210,36 @@ extend / delete" with its hits and how many of those members were later banned.
 - Fine clears the member's score and exempts them from the same signs for 30 days.
 - During a raid the group's reports are held and summed up in one report when it ends.
 - The raid buttons, link-report buttons and `@admin` buttons also write labels from now on.
+
+**As built (step 7, 2026-10-28):**
+
+- `Detection/DetectionReports`. A report is the group, the member and when it was opened; its copies are
+  rows of `report_copies` (kind `member`), and the first decision is written on every copy, so a press on
+  a stale copy after a restart still finds it. The text is rebuilt from `detections` after a restart. It
+  lists the signs that made up the member's score and the one that fired, never message text.
+- Where they go: `EngineSettings.ReportTo` (`admins`, `chat`, `both`) and `AdminChatId`, in the engine's
+  `detection_policies` row. `chat` without a linked chat goes to the admins. Linking sets `chat`.
+  Opt-outs are `report_admin_optouts`, cached 10 minutes. The Reports screen is in /menu → Detection.
+- The admin chat link is `startgroup=adminchat_<token>`, the token in Redis for 10 minutes
+  (`detect:adminchat:{token}`). It is used up only by an admin of both chats, so someone else in the
+  chat cannot spend it.
+- A send or edit answered with 429 waits and tries again (6 tries), so a burst of reports to one admin
+  arrives late rather than not at all.
+- Fine: label `fine` (source `report`, reason = the signs, comma separated), score forgiven, the same
+  signs neither count nor report for 30 days (`Detection/Fines`, loaded back from `member_labels`). A
+  `fine` label also sets the outcome of the member's detections from the day before.
+- Labels: report buttons are source `report`, raid alert and link-report buttons `raid` (the suspects
+  banned when an admin presses Ban suspects are that admin's decision). Ignore on a raid alert is a
+  `fine` label for each suspect, Ignore on a link report for that member. Delete on an `@admin`
+  report is a `delete` label (buttons carry the member's id from now on). Mark solved writes no label:
+  it says nothing about the member.
+- The log channel gets one line for every action the engine takes.
+- Filters can report: `report` is in the presets' action cycle, and an own rule could already have it.
+- End of a trial: `Detection/FilterTrials` looks every 10 minutes for rules whose trial ended in the
+  last 30 days. `group_filters.trial_notified_at` is claimed first, so with both editions in a group it
+  goes out once, from an edition that is in the group. Changing the trial (Extend, `/filter trial`)
+  clears it. The notice says how often the rule matched and how many of those members were banned or
+  removed later, with Make live, 7 more days and Delete (copies in `report_copies`, kind `trial`).
 
 ## 7. Profiles and channels
 
@@ -367,7 +396,8 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
    toggles it as its value does, Done deletes the menu. `/dashboard` is removed. The privacy text
    is `/privacy`, since `/about` is each group's own text. Retention is saved now and carried out by
    step 14.
-7. Reports: private chats, admin chat link, buttons, labels from every button.
+7. Reports: private chats, admin chat link, buttons, labels from every button. **As built** in section 6;
+   also the end-of-trial notice of section 5.
 8. Edit rules.
 9. Message signs.
 10. Name signs.

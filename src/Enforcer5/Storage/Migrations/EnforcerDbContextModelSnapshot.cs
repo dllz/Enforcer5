@@ -428,6 +428,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("target");
 
+                    b.Property<DateTimeOffset?>("TrialNotifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trial_notified_at");
+
                     b.Property<DateTimeOffset?>("TrialUntil")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("trial_until");
@@ -1020,6 +1024,115 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("report_actions", null, t =>
                         {
                             t.HasCheckConstraint("report_actions_action_check", "action IN ('deleted', 'warned', 'kicked', 'banned')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportAdminOptOutEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("OptedOutAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("opted_out_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("GroupId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("report_admin_optouts", (string)null);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportCopyEntity", b =>
+                {
+                    b.Property<long>("CopyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("copy_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("CopyId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("chat_id");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<long?>("DecidedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("decided_by_account_id");
+
+                    b.Property<string>("Decision")
+                        .HasColumnType("text")
+                        .HasColumnName("decision");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<long?>("FilterId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("filter_id");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<long>("MessageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("message_id");
+
+                    b.Property<DateTimeOffset>("OpenedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("opened_at");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.HasKey("CopyId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("DecidedByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "FilterId" }, "report_copies_filter_idx")
+                        .HasFilter("filter_id IS NOT NULL");
+
+                    b.HasIndex(new[] { "GroupId", "AccountId", "OpenedAt" }, "report_copies_member_idx");
+
+                    b.HasIndex(new[] { "SentAt" }, "report_copies_sent_idx");
+
+                    b.ToTable("report_copies", null, t =>
+                        {
+                            t.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
+
+                            t.HasCheckConstraint("report_copies_decision_check", "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete')");
+
+                            t.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("report_copies_filter_check", "(kind = 'trial') = (filter_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial')");
                         });
                 });
 
@@ -1796,6 +1909,40 @@ namespace Enforcer5.Storage.Migrations
                     b.HasOne("Enforcer5.Storage.ReportEntity", null)
                         .WithMany()
                         .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportAdminOptOutEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ReportCopyEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

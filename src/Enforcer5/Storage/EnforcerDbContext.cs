@@ -91,6 +91,39 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.Sign, x.DetectedAt }, "detections_sign_time_idx");
                 entity.HasIndex(x => x.LabelId, "detections_label_idx").HasFilter("label_id IS NOT NULL");
             });
+
+            modelBuilder.Entity<ReportAdminOptOutEntity>(entity =>
+            {
+                entity.ToTable("report_admin_optouts");
+                entity.HasKey(x => new { x.GroupId, x.AccountId });
+                entity.Property(x => x.OptedOutAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ReportCopyEntity>(entity =>
+            {
+                entity.ToTable("report_copies", table =>
+                {
+                    table.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial')");
+                    table.HasCheckConstraint("report_copies_filter_check", "(kind = 'trial') = (filter_id IS NOT NULL)");
+                    table.HasCheckConstraint("report_copies_decision_check",
+                        "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete')");
+                    table.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
+                    table.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
+                });
+                entity.HasKey(x => x.CopyId);
+                entity.Property(x => x.CopyId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.DecidedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                // filter_id has no foreign key: a deleted rule's notices still have to be found to say so.
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.OpenedAt }, "report_copies_member_idx");
+                entity.HasIndex(x => new { x.GroupId, x.FilterId }, "report_copies_filter_idx").HasFilter("filter_id IS NOT NULL");
+                entity.HasIndex(x => x.SentAt, "report_copies_sent_idx");
+            });
         }
 
         private const string DetectionActions = "'none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban'";

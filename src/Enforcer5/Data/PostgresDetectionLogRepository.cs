@@ -192,7 +192,7 @@ RETURNING label_id",
                     AdminDecision = adminDecision, label.Key, label.Edition, At = at, LooksBack = DecisionLooksBack
                 }, transaction));
 
-            if (label.Label == "bad")
+            if (label.Label is "bad" or "fine")
             {
                 // The member's detections from the day before it that no decision had reached yet.
                 await connection.ExecuteAsync(new CommandDefinition(@"
@@ -218,6 +218,35 @@ UPDATE detections SET outcome = 'undone' WHERE label_id IN (SELECT label_id FROM
                     new { At = at, LabelId = labelId, group.GroupId, target.AccountId, Undone = undone }, transaction));
             }
             await transaction.CommitAsync();
+        }
+
+        public async Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<(string Signs, DateTime At)>(new CommandDefinition(@"
+SELECT l.reason, l.decided_at
+FROM member_labels l
+JOIN groups g ON g.group_id = l.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = l.account_id
+WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND l.action = 'fine' AND l.decided_at >= @Since
+ORDER BY l.decided_at", new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
+            return rows.Select(r => (r.Signs, new DateTimeOffset(DateTime.SpecifyKind(r.At, DateTimeKind.Utc)))).ToList();
+        }
+
+        public async Task<IReadOnlyList<(string Sign, int Count)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<(string Sign, long Count)>(new CommandDefinition(@"
+SELECT d.sign, count(*)
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = d.account_id
+WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @Since AND d.mode = 'live'
+  AND (d.score_after > d.score_before OR d.reported)
+GROUP BY d.sign ORDER BY min(d.detected_at)", new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
+            return rows.Select(r => (r.Sign, (int)r.Count)).ToList();
         }
 
         /// <summary>The decisions an undo takes back.</summary>

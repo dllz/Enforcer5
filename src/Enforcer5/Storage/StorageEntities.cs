@@ -395,6 +395,43 @@ namespace Enforcer5.Storage
         public long? CreatedByAccountId { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public long Hits { get; set; }
+
+        /// <summary>When the admins were told the rule's trial is over (build step 7); cleared when the trial is extended.</summary>
+        public DateTimeOffset? TrialNotifiedAt { get; set; }
+    }
+
+    /// <summary>
+    /// An admin of a group who does not want its Detection reports in private (design section 6).
+    /// </summary>
+    internal sealed class ReportAdminOptOutEntity
+    {
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public DateTimeOffset OptedOutAt { get; set; }
+    }
+
+    /// <summary>
+    /// One copy of a Detection report or a filter's end-of-trial notice, sent to an admin in private or
+    /// to the group's admin chat (design section 6). A report is the group, the member and when it was
+    /// opened (<c>opened_at</c>); a notice the group, the rule and when it was sent. The first decision
+    /// is written on every copy, so whichever is pressed later shows it and every copy is edited to say
+    /// it.
+    /// </summary>
+    internal sealed class ReportCopyEntity
+    {
+        public long CopyId { get; set; }
+        public long GroupId { get; set; }
+        public string Kind { get; set; }
+        public long? AccountId { get; set; }
+        public long? FilterId { get; set; }
+        public DateTimeOffset OpenedAt { get; set; }
+        public long ChatId { get; set; }
+        public long MessageId { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset SentAt { get; set; }
+        public string Decision { get; set; }
+        public long? DecidedByAccountId { get; set; }
+        public DateTimeOffset? DecidedAt { get; set; }
     }
 
     /// <summary>

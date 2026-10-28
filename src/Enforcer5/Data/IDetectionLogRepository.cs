@@ -81,5 +81,14 @@ namespace Enforcer5.Data
 
         /// <summary>For each of <paramref name="signs"/>: how many times it fired in the group, and for how many members a ban, kick or tempban followed.</summary>
         Task<IReadOnlyDictionary<string, (long Hits, long Removed)>> SignStatsAsync(long chatId, IReadOnlyList<string> signs);
+
+        /// <summary>
+        /// The member's Fine decisions since <paramref name="since"/>: the signs each was about (comma
+        /// separated, as recorded) and when. Fine exempts them from those signs (design section 6).
+        /// </summary>
+        Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since);
+
+        /// <summary>The live signs that counted or reported for a member since <paramref name="since"/>, with how often: a report's contents after a restart.</summary>
+        Task<IReadOnlyList<(string Sign, int Count)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
     }
 }

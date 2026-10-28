@@ -159,6 +159,7 @@ namespace Enforcer5
             {
                 // An admin looked and let them be: not a suspect in this raid or the next.
                 RaidGuard.Clear(chatId, userId);
+                Detection.Decisions.Fine(chatId, userId, call.From.Id, new[] { Detection.SignCatalog.RaidLink.Name });
             }
             _ = Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "raidDone"));
             // The report itself has said its piece.

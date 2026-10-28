@@ -39,24 +39,56 @@ namespace Enforcer5.Detection
             Record(message.Chat.Id, target.Value, "bad", "delete", actorId, null, false, null, message);
         }
 
+        /// <summary>
+        /// An admin looked at a member and found nothing wrong (Fine on a report, Ignore on a raid alert or a
+        /// link report). <paramref name="signs"/> are what they were reported for, which Fine exempts them
+        /// from for a while; kept as the label's reason.
+        /// </summary>
+        internal static void Fine(long chatId, long userId, long actorId, System.Collections.Generic.IEnumerable<string> signs) =>
+            Record(chatId, userId, "fine", "fine", actorId, string.Join(",", signs ?? System.Array.Empty<string>()), false, null);
+
+        /// <summary>
+        /// The buttons whose decisions are labelled with their own source: Detection reports, and the raid
+        /// alert's and the link report's buttons. Every other button is <c>button</c>.
+        /// </summary>
+        internal static string ButtonSource(string callbackData)
+        {
+            var trigger = callbackData?.Split(':')[0];
+            return trigger switch
+            {
+                DetectionReports.Trigger => "report",
+                "raid" or "raidlink" => "raid",
+                _ => null
+            };
+        }
+
+        /// <summary>An admin deleted the member's message <paramref name="messageId"/> from a report's button.</summary>
+        internal static void Deleted(long chatId, long userId, long messageId, long actorId) =>
+            Record(chatId, userId, "bad", "delete", actorId, null, true, null, aboutId: messageId);
+
         private static void Record(long chatId, long userId, string label, string action, long? actorId, string reason,
-            bool fromReport, string key, Message about = null)
+            bool fromReport, string key, Message about = null, long? aboutId = null)
         {
             try
             {
                 if (chatId > 0 || userId == Bot.Me?.Id) return;
                 var update = ErrorReporter.Current?.Update;
+                var buttonSource = ButtonSource(update?.CallbackQuery?.Data);
+                // What raid mode does when an admin presses a raid button (ban the suspects) is theirs.
+                if (actorId == null && key == null && buttonSource == "raid") actorId = update.CallbackQuery.From.Id;
                 var source = key != null ? "app"
                     : fromReport ? "report"
                     : actorId == null ? "auto"
+                    : buttonSource != null ? buttonSource
                     : update?.CallbackQuery != null ? "button"
                     : "command";
                 about ??= AboutMessage(update, userId, actorId);
                 var fingerprint = about != null ? MessageFingerprint.Of(about) : null;
                 var labelEvent = new LabelEvent(chatId, userId, label, action, source, actorId,
-                    about?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
-                    // Only the bot's own reasons, which are fixed words (Flood, Media, ...); an admin's may be anything.
-                    source == "auto" ? HistoryWriter.Trim(reason) : null,
+                    about?.MessageId ?? aboutId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
+                    // Only the bot's own reasons, which are fixed words (Flood, Media, ...), and the signs a
+                    // Fine was about; an admin's reason may be anything.
+                    source == "auto" || action == "fine" ? HistoryWriter.Trim(reason) : null,
                     key, BanHistory.Edition, DateTimeOffset.UtcNow);
                 HistoryWriter.Enqueue(() => Repositories.DetectionLog.RecordLabelAsync(labelEvent),
                     $"Recording the {action} of {userId} in {chatId} for Detection");

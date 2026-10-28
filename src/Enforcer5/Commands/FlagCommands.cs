@@ -354,7 +354,7 @@ namespace Enforcer5
                                             Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), username: username)
                                         },
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),
-                                            $"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}")
+                                            $"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}:{updateMessage.ReplyToMessage.From.Id}")
                                     }
                                 };
                                 result = Bot.Send(Methods.GetLocaleString(lang, "reportAdminReply", reporter, chatTitle, repId, updateMessage.Text),
@@ -400,7 +400,7 @@ namespace Enforcer5
                                             $"warnflag:{updateMessage.Chat.Id}:{updateMessage.ReplyToMessage.From.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}"),
+                                        new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}:{updateMessage.ReplyToMessage.From.Id}"),
                                         groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
@@ -658,7 +658,13 @@ namespace Enforcer5
             var chatid = long.Parse(args[1]);
             var msgid = int.Parse(args[2]);
             var report = FindReport(chatid, args, null, msgid);
-            if (Bot.DeleteMessage(chatid, msgid)) ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
+            if (Bot.DeleteMessage(chatid, msgid))
+            {
+                ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
+                // Buttons from before the member's id was added to them say nothing about whom.
+                if (args.Length > 4 && long.TryParse(args[4], out var memberId))
+                    Detection.Decisions.Deleted(chatid, memberId, msgid, call.From.Id);
+            }
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
         }
