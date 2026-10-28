@@ -115,6 +115,8 @@ namespace Enforcer5
             // Members set back to new, and the levels Detection learns from the admins' decisions.
             Detection.TrustOverrides.Start(Bot.ShutdownToken);
             Detection.TrustLearning.Start(Bot.ShutdownToken);
+            // Channel and website reputation, implicit labels and each group's retention, nightly.
+            Detection.DetectionData.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

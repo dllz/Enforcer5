@@ -1782,7 +1782,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>2 Jahre</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Was Enforcer speichert&lt;/b&gt;\n\n• Die Einstellungen jeder Gruppe und ihre Verwarnungen, Banns, Kicks und Stummschaltungen: wer, durch wen und warum.\n• Über die Mitglieder der Gruppen, in denen es ist: ihre Telegram-ID, Name und Benutzername, wie sie sich ändern, wann sie beigetreten sind und wie viele Nachrichten sie geschrieben haben.\n• Was seinen Prüfungen an einer Nachricht aufgefallen ist (ihre Art, ein Fingerabdruck des Textes und die Datei-ID) und was die Admins dann entschieden haben.\n• Über neue Mitglieder: ob ihr öffentliches Profil einen Link, eine Erwähnung oder einen persönlichen Kanal hat, und dasselbe über die öffentlichen Kanäle und Gruppen, auf die sie verweisen. Die Bio und die Kanalbeschreibung werden gelesen, nicht gespeichert.\n\nDer Text von Nachrichten, Bios und Bilder werden nie gespeichert.\n\nDas dient dem Schutz der Gruppen: um Spam und Raids zu stoppen und aus den Entscheidungen der Admins zu lernen, was jede Gruppe erlaubt. Die Admins jeder Gruppe wählen, wie lange das, was die Prüfungen bemerkt haben, beim Konto eines Mitglieds bleibt: 90 Tage, 1 Jahr (Standard) oder 2 Jahre.</value>
+    <value>&lt;b&gt;Was Enforcer speichert&lt;/b&gt;\n\n• Die Einstellungen jeder Gruppe und ihre Verwarnungen, Banns, Kicks und Stummschaltungen: wer, durch wen und warum.\n• Über die Mitglieder der Gruppen, in denen es ist: ihre Telegram-ID, Name und Benutzername, wie sie sich ändern, wann sie beigetreten sind und wie viele Nachrichten sie geschrieben haben.\n• Was seinen Prüfungen an einer Nachricht aufgefallen ist (ihre Art, ein Fingerabdruck des Textes und die Datei-ID) und was die Admins dann entschieden haben.\n• Über neue Mitglieder: ob ihr öffentliches Profil einen Link, eine Erwähnung oder einen persönlichen Kanal hat, und dasselbe über die öffentlichen Kanäle und Gruppen, auf die sie verweisen. Die Bio und die Kanalbeschreibung werden gelesen, nicht gespeichert.\n• Außerdem über neue Mitglieder: wie sie beigetreten sind, was ihr erster Beitrag war und wann, und auf welche öffentlichen Kanäle und Websites sie verweisen, um zu lernen, welche Spammer bewerben.\n\nDer Text von Nachrichten, Bios und Bilder werden nie gespeichert.\n\nDas dient dem Schutz der Gruppen: um Spam und Raids zu stoppen und aus den Entscheidungen der Admins zu lernen, was jede Gruppe erlaubt. Die Admins jeder Gruppe wählen, wie lange das, was die Prüfungen bemerkt haben, beim Konto eines Mitglieds bleibt: 90 Tage, 1 Jahr (Standard) oder 2 Jahre.</value>
   </string>
   <string key="cmdprivacy">
     <value>Was Enforcer über dich speichert</value>
@@ -2272,6 +2272,9 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="hcommandsimtest">
     <value>Für Entwickler: wie ähnlich sich zwei Texte oder Namen nach den Schwellen von Detection sind. /{0} erster | zweiter</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Für Entwickler: was aus den Mitgliedern wurde, die auf einen Kanal oder eine Website verwiesen, über alle Gruppen. /{0} @Kanal, eine Kanal-ID oder eine Website.</value>
   </string>
 </strings>
 

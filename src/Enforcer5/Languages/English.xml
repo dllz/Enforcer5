@@ -2784,7 +2784,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>2 years</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
+    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n• Also about new members: how they joined, what their first post was and when, and which public channels and websites they point to, to learn which ones spammers advertise.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
   </string>
   <string key="cmdprivacy">
     <value>What Enforcer keeps about you</value>
@@ -3172,6 +3172,9 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="hcommanddetectreview">
     <value>For developers: every Detection sign across all groups, with what the admins decided after, its near misses, and the comparing signs by similarity. /{0} 90 looks at 90 days.</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>For developers: how the members who pointed at a channel or a website turned out, across groups. /{0} @channel, a channel id, or a website.</value>
   </string>
   <string key="hcommandsimtest">
     <value>For developers: how alike two texts or names are by the thresholds Detection uses. /{0} first | second</value>

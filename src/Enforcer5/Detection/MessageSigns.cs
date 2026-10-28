@@ -65,7 +65,12 @@ namespace Enforcer5.Detection
                 // New members only: the rest is never looked up, nor remembered for comparing.
                 if (await MemberTrust.OfAsync(chatId, userId) != TrustLevel.New) return;
 
+                MemberData.Posted(chatId, message, link ? LinkTargets(message).Count() : 0, mentions.Count, forward);
                 if (link) await Hit(chatId, userId, message, SignCatalog.LinkOutside, new { links = 1 });
+                // The websites they pointed at, for their reputation (step 14).
+                if (link)
+                    foreach (var domain in LinkTargets(message).Select(Reputation.DomainOf).Where(d => d != null).Distinct())
+                        await Reputation.PointedAsync(chatId, userId, message, "domain", domain);
                 if (forward && !await FromOwnChannelAsync(chatId, message.ForwardOrigin))
                     await Hit(chatId, userId, message, SignCatalog.ForwardChannel,
                         new { origin = message.ForwardOrigin is MessageOriginChannel c ? c.Chat.Id : (long?)null });
@@ -129,12 +134,16 @@ namespace Enforcer5.Detection
                     if (MessageFingerprint.MediaIdOf(message) != null)
                         await Hit(chatId, userId, message, SignCatalog.FirstPostMedia, new { type = MessageFingerprint.ContentTypeOf(message) });
                     var joined = await Redis.db.HashGetAsync($"{chatId}:users:{userId}", "joined");
+                    int? delay = null;
                     if (joined.HasValue && long.TryParse(joined.ToString(), out var unix))
                     {
                         var after = message.Date.ToUniversalTime() - DateTimeOffset.FromUnixTimeSeconds(unix).UtcDateTime;
+                        if (after >= TimeSpan.Zero) delay = (int)Math.Min(after.TotalSeconds, int.MaxValue);
                         if (after >= TimeSpan.Zero && after <= SoonAfterJoining)
                             await Hit(chatId, userId, message, SignCatalog.PostedSoon, new { seconds = (int)after.TotalSeconds });
                     }
+                    // Its features (step 14); admins the bot knows are not new members.
+                    if (!AdminDirectory.IsKnownAdmin(chatId, userId)) MemberData.FirstPost(chatId, message, delay);
                 }
                 catch (Exception e)
                 {

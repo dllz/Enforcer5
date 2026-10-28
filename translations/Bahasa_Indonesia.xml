@@ -1971,7 +1971,7 @@
     <value>2 tahun</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n• Tentang anggota baru: apakah profil publik mereka punya tautan, mention, atau channel pribadi, dan hal yang sama tentang channel dan grup publik yang mereka tunjuk. Bio dan deskripsi channel dibaca, tidak disimpan.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
+    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n• Tentang anggota baru: apakah profil publik mereka punya tautan, mention, atau channel pribadi, dan hal yang sama tentang channel dan grup publik yang mereka tunjuk. Bio dan deskripsi channel dibaca, tidak disimpan.\n• Juga tentang anggota baru: bagaimana mereka bergabung, apa dan kapan postingan pertama mereka, dan channel publik serta situs web yang mereka tunjuk, untuk mengetahui mana yang diiklankan spammer.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
   </string>
   <string key="cmdprivacy">
     <value>Apa yang disimpan Enforcer tentangmu</value>
@@ -2461,5 +2461,8 @@
   </string>
   <string key="hcommandsimtest">
     <value>Untuk developer: seberapa mirip dua teks atau nama menurut ambang yang dipakai Detection. /{0} pertama | kedua</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Untuk developer: bagaimana nasib anggota yang menunjuk ke sebuah channel atau situs web, di semua grup. /{0} @channel, id channel, atau situs web.</value>
   </string>
 </strings>

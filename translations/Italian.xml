@@ -1730,7 +1730,7 @@
     <value>2 anni</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
+    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n• Sempre dei nuovi membri: come sono entrati, qual è stato il loro primo messaggio e quando, e a quali canali pubblici e siti rimandano, per imparare quali pubblicizzano gli spammer.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
   </string>
   <string key="cmdprivacy">
     <value>Cosa conserva Enforcer su di te</value>
@@ -2220,5 +2220,8 @@
   </string>
   <string key="hcommandsimtest">
     <value>Per gli sviluppatori: quanto sono simili due testi o nomi secondo le soglie di Detection. /{0} primo | secondo</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Per gli sviluppatori: com'è andata ai membri che hanno rimandato a un canale o a un sito, in tutti i gruppi. /{0} @canale, un id di canale o un sito.</value>
   </string>
 </strings>

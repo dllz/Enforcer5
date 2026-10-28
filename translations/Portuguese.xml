@@ -1738,7 +1738,7 @@
     <value>2 anos</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;O que o Enforcer guarda&lt;/b&gt;\n\n• As configurações de cada grupo e suas advertências, banimentos, expulsões e silenciamentos: quem, por quem e por quê.\n• Sobre os membros dos grupos em que está: o id do Telegram, nome e nome de usuário conforme mudam, quando entraram e quantas mensagens enviaram.\n• O que as verificações notaram numa mensagem (o tipo, uma impressão digital do texto e o id do arquivo) e o que os admins decidiram depois.\n• Sobre membros novos: se o perfil público tem um link, uma menção ou um canal pessoal, e o mesmo sobre os canais e grupos públicos para onde apontam. A bio e a descrição do canal são lidas, não guardadas.\n\nNunca guarda o texto das mensagens, bios ou imagens.\n\nIsso serve para proteger os grupos: para parar spam e raids e aprender com as decisões dos admins o que cada grupo permite. Os admins de cada grupo escolhem por quanto tempo o que as verificações notaram fica ligado à conta de um membro: 90 dias, 1 ano (padrão) ou 2 anos.</value>
+    <value>&lt;b&gt;O que o Enforcer guarda&lt;/b&gt;\n\n• As configurações de cada grupo e suas advertências, banimentos, expulsões e silenciamentos: quem, por quem e por quê.\n• Sobre os membros dos grupos em que está: o id do Telegram, nome e nome de usuário conforme mudam, quando entraram e quantas mensagens enviaram.\n• O que as verificações notaram numa mensagem (o tipo, uma impressão digital do texto e o id do arquivo) e o que os admins decidiram depois.\n• Sobre membros novos: se o perfil público tem um link, uma menção ou um canal pessoal, e o mesmo sobre os canais e grupos públicos para onde apontam. A bio e a descrição do canal são lidas, não guardadas.\n• Também sobre membros novos: como entraram, qual foi a primeira mensagem e quando, e para quais canais públicos e sites apontam, para aprender quais os spammers divulgam.\n\nNunca guarda o texto das mensagens, bios ou imagens.\n\nIsso serve para proteger os grupos: para parar spam e raids e aprender com as decisões dos admins o que cada grupo permite. Os admins de cada grupo escolhem por quanto tempo o que as verificações notaram fica ligado à conta de um membro: 90 dias, 1 ano (padrão) ou 2 anos.</value>
   </string>
   <string key="cmdprivacy">
     <value>O que o Enforcer guarda sobre você</value>
@@ -2228,5 +2228,8 @@
   </string>
   <string key="hcommandsimtest">
     <value>Para desenvolvedores: quão parecidos são dois textos ou nomes pelos limites que o Detection usa. /{0} primeiro | segundo</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Para desenvolvedores: o que aconteceu com os membros que apontaram para um canal ou site, em todos os grupos. /{0} @canal, um id de canal ou um site.</value>
   </string>
 </strings>

@@ -505,6 +505,46 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.IncidentId, x.OffsetMs }, "raid_events_timeline_idx");
             });
 
+            modelBuilder.Entity<MemberSignalEntity>(entity =>
+            {
+                entity.ToTable("member_signals", table =>
+                    table.HasCheckConstraint("member_signals_counts_check", "links >= 0 AND mentions >= 0 AND forwards >= 0 AND max_score >= 0"));
+                entity.HasKey(x => x.SignalId);
+                entity.Property(x => x.SignalId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.AccountId }, "member_signals_member_idx").IsUnique().HasFilter("account_id IS NOT NULL");
+                entity.HasIndex(x => x.UpdatedAt, "member_signals_updated_idx");
+            });
+
+            modelBuilder.Entity<MemberPointerEntity>(entity =>
+            {
+                entity.ToTable("member_pointers", table =>
+                    table.HasCheckConstraint("member_pointers_kind_check", "kind IN ('channel', 'domain')"));
+                entity.HasKey(x => x.PointerId);
+                entity.Property(x => x.PointerId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Value).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.Kind, x.Value }, "member_pointers_member_idx").IsUnique()
+                    .HasFilter("account_id IS NOT NULL");
+                entity.HasIndex(x => new { x.Kind, x.Value }, "member_pointers_value_idx");
+            });
+
+            modelBuilder.Entity<ChannelReputationEntity>(entity =>
+            {
+                entity.ToTable("channel_reputation");
+                entity.HasKey(x => x.ChannelId);
+                entity.Property(x => x.ChannelId).ValueGeneratedNever();
+            });
+
+            modelBuilder.Entity<DomainReputationEntity>(entity =>
+            {
+                entity.ToTable("domain_reputation");
+                entity.HasKey(x => x.Domain);
+            });
+
             modelBuilder.Entity<DetectionNearMissEntity>(entity =>
             {
                 entity.ToTable("detection_near_misses", table =>

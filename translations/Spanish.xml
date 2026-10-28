@@ -723,7 +723,7 @@
     <value>2 años</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n• De los miembros nuevos: si su perfil público tiene un enlace, una mención o un canal personal, y lo mismo de los canales y grupos públicos a los que apuntan. La biografía y la descripción del canal se leen, no se guardan.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
+    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n• De los miembros nuevos: si su perfil público tiene un enlace, una mención o un canal personal, y lo mismo de los canales y grupos públicos a los que apuntan. La biografía y la descripción del canal se leen, no se guardan.\n• También de los miembros nuevos: cómo entraron, cuál fue su primer mensaje y cuándo, y a qué canales públicos y sitios web apuntan, para aprender cuáles anuncian los spammers.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
   </string>
   <string key="cmdprivacy">
     <value>Qué guarda Enforcer sobre ti</value>
@@ -1213,5 +1213,8 @@
   </string>
   <string key="hcommandsimtest">
     <value>Para desarrolladores: cuánto se parecen dos textos o nombres según los umbrales de Detection. /{0} primero | segundo</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Para desarrolladores: qué pasó con los miembros que apuntaron a un canal o sitio web, en todos los grupos. /{0} @canal, un id de canal o un sitio web.</value>
   </string>
 </strings>

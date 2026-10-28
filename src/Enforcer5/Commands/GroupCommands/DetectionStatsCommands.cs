@@ -160,3 +160,71 @@ namespace Enforcer5
         }
     }
 }
+
+namespace Enforcer5
+{
+    public static partial class Commands
+    {
+        /// <summary>
+        /// /channelrep &lt;@name|id|website&gt;: how the members who pointed at a channel or a website turned out, across groups
+        /// (Detection step 14). Counts only. Developers only.
+        /// </summary>
+        [Command(Trigger = "channelrep", DevOnly = true, Description = "Detection: a channel's or website's reputation")]
+        public static void ChannelRep(Update update, string[] args)
+        {
+            var input = (args.Length > 1 ? args[1] : null)?.Trim();
+            if (string.IsNullOrEmpty(input))
+            {
+                Bot.SendReply("/channelrep @channel, a channel id, or a website", update);
+                return;
+            }
+            if (!PostgresStorage.Ready)
+            {
+                Bot.SendReply("PostgreSQL is not ready.", update);
+                return;
+            }
+            try
+            {
+                var (kind, value, label) = ResolvePointer(input);
+                if (value == null)
+                {
+                    Bot.SendReply($"No public channel or website found for {input.FormatHTML()}.", update);
+                    return;
+                }
+                var row = Repositories.DetectionData.GetReputationAsync(kind, value).GetAwaiter().GetResult();
+                Bot.SendReply(ReputationText(label, row), update);
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, "/channelrep");
+                Bot.SendReply("Failed; see the error chat.", update);
+            }
+        }
+
+        private static (string Kind, string Value, string Label) ResolvePointer(string input)
+        {
+            if (long.TryParse(input, out var id)) return ("channel", id.ToString(), id.ToString());
+            var name = input.StartsWith('@') ? input[1..] : ProfileSigns.TelegramName(input);
+            if (name != null)
+            {
+                var channel = Profiles.AwaitAsync(Profiles.ChannelAsync(0, name)).GetAwaiter().GetResult();
+                return channel == null ? ("channel", null, input) : ("channel", channel.Id.ToString(), $"@{name} ({channel.Id})");
+            }
+            var domain = Reputation.DomainOf(input.Contains("://") ? input : "https://" + input);
+            return ("domain", domain, domain);
+        }
+
+        /// <summary>The /channelrep text; pure, for tests.</summary>
+        internal static string ReputationText(string label, ReputationRow row)
+        {
+            if (row == null) return $"{label.FormatHTML()}: no new member has pointed at it (in the data kept).";
+            var bad = row.BadMembers >= Reputation.MinBad && row.BadGroups >= Reputation.MinGroups &&
+                      row.FineMembers * Reputation.FinePerBad <= row.BadMembers;
+            return $"<b>{label.FormatHTML()}</b>\n" +
+                   $"Members who pointed at it, removed or muted for spam or abuse: {row.BadMembers} in {row.BadGroups} groups\n" +
+                   $"Found fine: {row.FineMembers}\n" +
+                   $"Groups it was seen in: {row.Groups}, last {row.LastSeenAt:yyyy-MM-dd}\n" +
+                   $"Reputation: {(bad ? "bad (new members pointing at it get the sign)" : "not bad")}, counted {row.ComputedAt:yyyy-MM-dd HH:mm} UTC";
+        }
+    }
+}

@@ -39,8 +39,9 @@ namespace Enforcer5.Detection
             if (dropped > 0) ErrorReporter.Report($"Detection buffer full; {dropped} detections dropped");
             if (!PostgresStorage.Ready) return;
             await WriteAsync();
-            // The near misses after the detections (step 13).
+            // The near misses after the detections (step 13), then the members' features and pointers (step 14).
             await NearMisses.FlushAsync();
+            await MemberData.FlushAsync();
         }
 
         private static async Task WriteAsync()

@@ -623,4 +623,88 @@ namespace Enforcer5.Storage
         public string Edition { get; set; }
         public DateTimeOffset DetectedAt { get; set; }
     }
+
+    /// <summary>
+    /// What a new member looked like (design section 12, build step 14): features at joining, at their first post, and
+    /// while they were new, for learning which members turn out to be spammers. One row per member and group, written
+    /// while they are new (not established, approved or an admin). Never names, text or ids other than the member's own,
+    /// which retention removes. <c>account_id_range</c> is the Telegram id in steps of 100 million, roughly how old the
+    /// account is; <c>active_hours</c> is a bit per UTC hour they were seen in (a time-zone hint).
+    /// </summary>
+    internal sealed class MemberSignalEntity
+    {
+        public long SignalId { get; set; }
+        public long GroupId { get; set; }
+        public long? AccountId { get; set; }
+        public int? AccountIdRange { get; set; }
+        public bool? HasUsername { get; set; }
+        public bool? IsPremium { get; set; }
+        public string LanguageCode { get; set; }
+        public string NameScript { get; set; }
+        public int? NameLetters { get; set; }
+        public bool? NameEmoji { get; set; }
+        public bool? NameDigits { get; set; }
+        public bool? NameStaffWord { get; set; }
+        public bool? NameLookalikes { get; set; }
+        public string[] ProfileFlags { get; set; }
+        public DateTimeOffset? JoinedAt { get; set; }
+        public string JoinSource { get; set; }
+        public string InviteLinkName { get; set; }
+        public bool? AddedByMember { get; set; }
+        public bool JoinedDuringRaid { get; set; }
+        public DateTimeOffset? FirstPostAt { get; set; }
+        public string FirstPostType { get; set; }
+        public int? FirstPostDelaySeconds { get; set; }
+        public int Links { get; set; }
+        public int Mentions { get; set; }
+        public int Forwards { get; set; }
+        public int ActiveHours { get; set; }
+        public int MaxScore { get; set; }
+        public DateTimeOffset FirstSeenAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A public channel or group (<c>kind</c> channel, <c>value</c> its id) or a website (<c>kind</c> domain, <c>value</c>
+    /// the host) a new member pointed at in a group: by their bio, personal channel, a forward, a mention or a link (build
+    /// step 14). What channel and domain reputation are counted from. Retention removes the account id.
+    /// </summary>
+    internal sealed class MemberPointerEntity
+    {
+        public long PointerId { get; set; }
+        public long GroupId { get; set; }
+        public long? AccountId { get; set; }
+        public string Kind { get; set; }
+        public string Value { get; set; }
+        public DateTimeOffset FirstSeenAt { get; set; }
+        public DateTimeOffset LastSeenAt { get; set; }
+    }
+
+    /// <summary>
+    /// How the members who pointed at a channel turned out, across groups (design section 8, build step 14), recounted
+    /// each night from <c>member_pointers</c> and the decisions: members removed or muted for something other than a
+    /// group's own rules (or globally banned), members found fine, and in how many groups.
+    /// </summary>
+    internal sealed class ChannelReputationEntity
+    {
+        public long ChannelId { get; set; }
+        public int BadMembers { get; set; }
+        public int FineMembers { get; set; }
+        public int BadGroups { get; set; }
+        public int Groups { get; set; }
+        public DateTimeOffset LastSeenAt { get; set; }
+        public DateTimeOffset ComputedAt { get; set; }
+    }
+
+    /// <summary>As <see cref="ChannelReputationEntity"/>, for a website by its host.</summary>
+    internal sealed class DomainReputationEntity
+    {
+        public string Domain { get; set; }
+        public int BadMembers { get; set; }
+        public int FineMembers { get; set; }
+        public int BadGroups { get; set; }
+        public int Groups { get; set; }
+        public DateTimeOffset LastSeenAt { get; set; }
+        public DateTimeOffset ComputedAt { get; set; }
+    }
 }

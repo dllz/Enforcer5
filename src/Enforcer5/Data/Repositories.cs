@@ -74,6 +74,10 @@ namespace Enforcer5.Data
         internal static IBannedMediaRepository BannedMedia { get; set; } =
             new PostgresBannedMediaRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. New members' features, what they pointed at, reputation, retention (Detection/MemberData, Reputation).
+        internal static IDetectionDataRepository DetectionData { get; set; } =
+            new PostgresDetectionDataRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

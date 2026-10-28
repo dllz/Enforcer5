@@ -501,7 +501,29 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     `/simtest a | b` (devs). `tools/tuning/export.sql` (read-only, no ids) and `tune.py` (precision and recall per
     threshold and group size, proposes the lowest threshold with 90% precision over at least 30 decided members).
 14. `member_signals`, implicit labels, reputation, retention, `/detectstats`, `/detectreview`,
-    `/channelrep`.
+    `/channelrep`. **As built (2026-10-28):** `/detectstats` and `/detectreview` came with step 13.
+    - `member_signals` (`Detection/MemberData`): one row per new member and group, merged from joins (both ways
+      Telegram tells), the first post, the newcomer signs, the profile lookups and the score: account id range (id in
+      steps of 100 million), username, premium, language, the name's script, letters, emoji, digits, staff word,
+      lookalikes (never the name), profile flags, join time, source, invite link name, added by a member, during a raid,
+      first post type and delay, links, mentions, forwards, active UTC hours as a bitmask, highest score. Buffered and
+      written with the detections. Edits and the message count are not counted (the stats and `detections` have them).
+    - `member_pointers`: the channels (by id) and websites (by host, `Reputation.DomainOf`) new members point at, from
+      their bio, personal channel, forwards, mentions and links. Detections do not get channel and domain columns as the
+      design table said: the pointers are per member, which is what reputation counts.
+    - Reputation (`Detection/Reputation`): one table each, `channel_reputation` and `domain_reputation`, counted again
+      every night from the pointers: members removed or muted after pointing at it for anything but a group's own rules
+      (category not `group`), or globally banned; members found fine (Fine, an undone action, or an `established`
+      label); in how many groups. Bad: ≥ 2 bad members in ≥ 2 groups and at most one fine for every 3 bad. The bad ones
+      are in memory (reloaded hourly); a new member pointing at one gets `channel_reputation`. `/channelrep` (devs).
+    - Implicit labels: a `bad`/`global` label for every member a global ban came after (seen within 30 days before it),
+      and a `fine`/`established` label for members first seen 30 to 120 days ago with nothing against them who are
+      established now (at most 2000 a night). The other implicit labels of section 12 (bad from sanctions) were already
+      written as each decision happened (`Decisions`).
+    - Retention, nightly: `detections`, `member_labels`, `detection_near_misses`, `member_signals` and `member_pointers`
+      older than the group's choice lose their account id; `account_profile_flags` not looked at for 90 days are deleted.
+    - `Detection/DetectionData` runs it from 03:00 UTC, once a night for both editions (Redis `detect:data:{date}`).
+    - /privacy says what `member_signals` and the pointers keep.
 15. ML service, `IMlClient`, queue, vector tables, PDQ, `similar_to_banned`, AI settings.
 16. Evals.
 17. Image and text classification signs, shadow; live per model after the eval bar.

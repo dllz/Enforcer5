@@ -108,6 +108,7 @@ namespace Enforcer5.Detection
                     change = new MemberScores.Change(current, current, false);
                 }
                 else change = MemberScores.Add(chatId, userId, sign.Name, weight);
+                if (change.Counted && member.Trust == TrustLevel.New) MemberData.Scored(chatId, userId, change.After);
 
                 var action = settings.Action;
                 var deleted = settings.Delete || action == "delete" || settings.DeleteNewcomers && member.Trust == TrustLevel.New;
@@ -276,6 +277,8 @@ namespace Enforcer5.Detection
             ProfileSigns.ResetForTests();
             BannedMedia.ResetForTests();
             NearMisses.ResetForTests();
+            MemberData.ResetForTests();
+            Reputation.SetForTests(System.Array.Empty<string>());
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();

@@ -1751,7 +1751,7 @@
     <value>2 yıl</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n• Yeni üyeler hakkında: herkese açık profillerinde bağlantı, bahsetme veya kişisel kanal olup olmadığı, ve işaret ettikleri herkese açık kanal ve gruplar hakkında aynısı. Biyografi ve kanal açıklaması okunur, saklanmaz.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
+    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n• Yeni üyeler hakkında: herkese açık profillerinde bağlantı, bahsetme veya kişisel kanal olup olmadığı, ve işaret ettikleri herkese açık kanal ve gruplar hakkında aynısı. Biyografi ve kanal açıklaması okunur, saklanmaz.\n• Yeni üyeler hakkında ayrıca: nasıl katıldıkları, ilk mesajlarının ne olduğu ve ne zaman, ve hangi herkese açık kanal ve web sitelerine işaret ettikleri; spamcıların hangilerinin reklamını yaptığını öğrenmek için.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer senin hakkında neleri saklar</value>
@@ -2241,5 +2241,8 @@
   </string>
   <string key="hcommandsimtest">
     <value>Geliştiriciler için: iki metnin veya ismin Detection'ın eşiklerine göre ne kadar benzediği. /{0} birinci | ikinci</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Geliştiriciler için: tüm gruplarda bir kanala veya web sitesine işaret eden üyelerin sonu ne oldu. /{0} @kanal, bir kanal kimliği veya bir web sitesi.</value>
   </string>
 </strings>

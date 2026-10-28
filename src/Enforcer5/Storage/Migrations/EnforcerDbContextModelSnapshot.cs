@@ -152,6 +152,41 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.ChannelReputationEntity", b =>
+                {
+                    b.Property<long>("ChannelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("channel_id");
+
+                    b.Property<int>("BadGroups")
+                        .HasColumnType("integer")
+                        .HasColumnName("bad_groups");
+
+                    b.Property<int>("BadMembers")
+                        .HasColumnType("integer")
+                        .HasColumnName("bad_members");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("computed_at");
+
+                    b.Property<int>("FineMembers")
+                        .HasColumnType("integer")
+                        .HasColumnName("fine_members");
+
+                    b.Property<int>("Groups")
+                        .HasColumnType("integer")
+                        .HasColumnName("groups");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.HasKey("ChannelId");
+
+                    b.ToTable("channel_reputation", (string)null);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.Property<long>("AdjustmentId")
@@ -501,6 +536,41 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("detection_policies_check_key_check", "check_key ~ '^[a-z][a-z0-9_:]*$'");
                         });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.DomainReputationEntity", b =>
+                {
+                    b.Property<string>("Domain")
+                        .HasColumnType("text")
+                        .HasColumnName("domain");
+
+                    b.Property<int>("BadGroups")
+                        .HasColumnType("integer")
+                        .HasColumnName("bad_groups");
+
+                    b.Property<int>("BadMembers")
+                        .HasColumnType("integer")
+                        .HasColumnName("bad_members");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("computed_at");
+
+                    b.Property<int>("FineMembers")
+                        .HasColumnType("integer")
+                        .HasColumnName("fine_members");
+
+                    b.Property<int>("Groups")
+                        .HasColumnType("integer")
+                        .HasColumnName("groups");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.HasKey("Domain");
+
+                    b.ToTable("domain_reputation", (string)null);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
@@ -1092,6 +1162,194 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established')");
 
                             t.HasCheckConstraint("member_labels_undone_check", "(undone_at IS NULL) = (undone_by_label_id IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MemberPointerEntity", b =>
+                {
+                    b.Property<long>("PointerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("pointer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("PointerId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.HasKey("PointerId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex(new[] { "GroupId", "AccountId", "Kind", "Value" }, "member_pointers_member_idx")
+                        .IsUnique()
+                        .HasFilter("account_id IS NOT NULL");
+
+                    b.HasIndex(new[] { "Kind", "Value" }, "member_pointers_value_idx");
+
+                    b.ToTable("member_pointers", null, t =>
+                        {
+                            t.HasCheckConstraint("member_pointers_kind_check", "kind IN ('channel', 'domain')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MemberSignalEntity", b =>
+                {
+                    b.Property<long>("SignalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("signal_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("SignalId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<int?>("AccountIdRange")
+                        .HasColumnType("integer")
+                        .HasColumnName("account_id_range");
+
+                    b.Property<int>("ActiveHours")
+                        .HasColumnType("integer")
+                        .HasColumnName("active_hours");
+
+                    b.Property<bool?>("AddedByMember")
+                        .HasColumnType("boolean")
+                        .HasColumnName("added_by_member");
+
+                    b.Property<DateTimeOffset?>("FirstPostAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_post_at");
+
+                    b.Property<int?>("FirstPostDelaySeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("first_post_delay_seconds");
+
+                    b.Property<string>("FirstPostType")
+                        .HasColumnType("text")
+                        .HasColumnName("first_post_type");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<int>("Forwards")
+                        .HasColumnType("integer")
+                        .HasColumnName("forwards");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<bool?>("HasUsername")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_username");
+
+                    b.Property<string>("InviteLinkName")
+                        .HasColumnType("text")
+                        .HasColumnName("invite_link_name");
+
+                    b.Property<bool?>("IsPremium")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_premium");
+
+                    b.Property<string>("JoinSource")
+                        .HasColumnType("text")
+                        .HasColumnName("join_source");
+
+                    b.Property<DateTimeOffset?>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<bool>("JoinedDuringRaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("joined_during_raid");
+
+                    b.Property<string>("LanguageCode")
+                        .HasColumnType("text")
+                        .HasColumnName("language_code");
+
+                    b.Property<int>("Links")
+                        .HasColumnType("integer")
+                        .HasColumnName("links");
+
+                    b.Property<int>("MaxScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_score");
+
+                    b.Property<int>("Mentions")
+                        .HasColumnType("integer")
+                        .HasColumnName("mentions");
+
+                    b.Property<bool?>("NameDigits")
+                        .HasColumnType("boolean")
+                        .HasColumnName("name_digits");
+
+                    b.Property<bool?>("NameEmoji")
+                        .HasColumnType("boolean")
+                        .HasColumnName("name_emoji");
+
+                    b.Property<int?>("NameLetters")
+                        .HasColumnType("integer")
+                        .HasColumnName("name_letters");
+
+                    b.Property<bool?>("NameLookalikes")
+                        .HasColumnType("boolean")
+                        .HasColumnName("name_lookalikes");
+
+                    b.Property<string>("NameScript")
+                        .HasColumnType("text")
+                        .HasColumnName("name_script");
+
+                    b.Property<bool?>("NameStaffWord")
+                        .HasColumnType("boolean")
+                        .HasColumnName("name_staff_word");
+
+                    b.PrimitiveCollection<string[]>("ProfileFlags")
+                        .HasColumnType("text[]")
+                        .HasColumnName("profile_flags");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SignalId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex(new[] { "GroupId", "AccountId" }, "member_signals_member_idx")
+                        .IsUnique()
+                        .HasFilter("account_id IS NOT NULL");
+
+                    b.HasIndex(new[] { "UpdatedAt" }, "member_signals_updated_idx");
+
+                    b.ToTable("member_signals", null, t =>
+                        {
+                            t.HasCheckConstraint("member_signals_counts_check", "links >= 0 AND mentions >= 0 AND forwards >= 0 AND max_score >= 0");
                         });
                 });
 
@@ -2274,6 +2532,34 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("UndoneByLabelId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MemberPointerEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MemberSignalEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.MemberTrustOverrideEntity", b =>

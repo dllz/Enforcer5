@@ -41,6 +41,7 @@ namespace Enforcer5.Helpers
                     // Names that copy an admin or a bot of the group, or claim to be staff (Detection step 10).
                     Detection.NameSigns.OnJoin(message.Chat.Id, user);
                     var addedBy = message.From != null && message.From.Id != user.Id ? message.From.Id : (long?)null;
+                    Detection.MemberData.Joined(message.Chat.Id, user, at, addedBy.HasValue ? "added" : "unknown", null, addedBy.HasValue);
                     Join(new JoinEvent(message.Chat.Id, user.Id, at, addedBy.HasValue ? "added" : "unknown", null, null, addedBy), false);
                 }
                 if (message.LeftChatMember is { } left && left.Id != Bot.Me?.Id)
@@ -83,6 +84,7 @@ namespace Enforcer5.Helpers
                         : update.InviteLink != null ? "link"
                         : addedBy.HasValue ? "added"
                         : "unknown";
+                    Detection.MemberData.Joined(update.Chat.Id, user, at, source, update.InviteLink?.Name, addedBy.HasValue);
                     Join(new JoinEvent(update.Chat.Id, user.Id, at, source, update.InviteLink?.InviteLink, update.InviteLink?.Name, addedBy), true);
                 }
                 else if (wasIn && !isIn)
