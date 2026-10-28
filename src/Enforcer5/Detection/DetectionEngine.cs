@@ -24,6 +24,9 @@ namespace Enforcer5.Detection
 
         /// <summary>What the admins' report says about it, in the group's language; never message content.</summary>
         internal string Detail { get; init; }
+
+        /// <summary>For a sign that compares (alike texts or names): how alike, 0 to 1, kept for tuning (step 13).</summary>
+        internal double? Similarity { get; init; }
     }
 
     /// <summary>What a ported check did about a sign (<see cref="SignDefinition.Ported"/>).</summary>
@@ -198,7 +201,7 @@ namespace Enforcer5.Detection
                 weight, outcome.ScoreBefore, outcome.ScoreAfter, outcome.Action, outcome.Deleted, outcome.Reported, outcome.Mode,
                 message?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
                 member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, hit.Evidence,
-                BanHistory.Edition, now) { Category = SignCatalog.CategoryOf(sign.Name, policy.Filters) });
+                BanHistory.Edition, now) { Category = SignCatalog.CategoryOf(sign.Name, policy.Filters), Similarity = hit.Similarity });
         }
 
         /// <summary>The stronger of two actions, in the order of <see cref="DetectionPolicy.Actions"/>.</summary>
@@ -272,6 +275,7 @@ namespace Enforcer5.Detection
             NameSigns.ResetForTests();
             ProfileSigns.ResetForTests();
             BannedMedia.ResetForTests();
+            NearMisses.ResetForTests();
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();

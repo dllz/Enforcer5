@@ -3149,6 +3149,33 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="banMediaCleared">
     <value>Lifted the ban on {0} files.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Sends you in private how Detection did in this group over the last 30 days: how often each sign fired, for how many members, and what the admins did about them after (removed, muted, or found fine). Also how many of your removals and mutes no sign saw coming. Admins only.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>How Detection did here</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection in {0}, last {1} days&lt;/b&gt;\nEach sign: how often, for how many members, and what the admins did about them after.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} times, {1} members (removed {2}, muted {3}, fine {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>and {0} times nearly</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} of the {1} removals, mutes and deletes by admins had no sign before them.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>No signs fired here in that time.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>For developers: every Detection sign across all groups, with what the admins decided after, its near misses, and the comparing signs by similarity. /{0} 90 looks at 90 days.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>For developers: how alike two texts or names are by the thresholds Detection uses. /{0} first | second</value>
+  </string>
   <string key="cmduntrust">
     <value>Set a member back to new</value>
   </string>

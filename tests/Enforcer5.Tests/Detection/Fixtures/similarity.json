@@ -1,0 +1,35 @@
+{
+  "about": "Must and must-not fixtures for the similarity checks (design section 11). Our own made-up text, no player data. kind: name (a member's name against an admin's or a bot's), text (two posts by new members), text-embedding (only the AI step can tell; skipped until then). expect: match or no. known: a case the current check gets wrong, with why; the test fails when one of them starts passing, so the note can go.",
+  "cases": [
+    { "kind": "name", "a": "Daniel Kayo", "b": "Daniel Kayo", "expect": "match", "note": "the same" },
+    { "kind": "name", "a": "Dаniel Kаyo", "b": "Daniel Kayo", "expect": "match", "note": "Cyrillic а" },
+    { "kind": "name", "a": "Dαniel Kayο", "b": "Daniel Kayo", "expect": "match", "note": "Greek α and ο" },
+    { "kind": "name", "a": "Dan\u200Diel Kayo", "b": "Daniel Kayo", "expect": "match", "note": "zero-width joiner" },
+    { "kind": "name", "a": "\u2728 Daniel Kayo \u2728", "b": "Daniel Kayo", "expect": "match", "note": "emoji padding" },
+    { "kind": "name", "a": "Daniel Kayo | Support", "b": "Daniel Kayo", "expect": "match", "note": "name and a staff word" },
+    { "kind": "name", "a": "Daniel_admin", "b": "Daniel", "expect": "match", "note": "name_admin" },
+    { "kind": "name", "a": "Official Werewolf Moderator", "b": "Werewolf Moderator", "expect": "match", "note": "a bot's name with a staff word" },
+    { "kind": "name", "a": "Danile Kayo", "b": "Daniel Kayo", "expect": "match", "note": "two letters swapped" },
+    { "kind": "name", "a": "Daniel Kayoo", "b": "Daniel Kayo", "expect": "match", "note": "one letter added" },
+    { "kind": "name", "a": "Daniel", "b": "Daniel Kayo", "expect": "no", "note": "a first name is not the whole name" },
+    { "kind": "name", "a": "Danielle Kayode", "b": "Daniel Kayo", "expect": "no", "note": "another person" },
+    { "kind": "name", "a": "Maximilian", "b": "Max", "expect": "no", "note": "starts the same" },
+    { "kind": "name", "a": "Maximilian Support", "b": "Max", "expect": "no", "note": "starts the same, with a staff word" },
+    { "kind": "name", "a": "Mia", "b": "Max", "expect": "no", "note": "short names only when the same" },
+    { "kind": "name", "a": "Anna Smith", "b": "Hanna Schmidt", "expect": "no", "note": "alike but not the same" },
+
+    { "kind": "text", "a": "Join the best crypto signals channel today, 500% profit guaranteed!", "b": "Join the best crypto signals channel today, 500% profit guaranteed!!! 7731", "expect": "match", "note": "a random ending" },
+    { "kind": "text", "a": "Join the best crypto signals channel today, 500% profit guaranteed!", "b": "J o i n the best crypto signals channel today 500 profit guaranteed", "expect": "match", "note": "spacing and punctuation" },
+    { "kind": "text", "a": "Join the best crypto signals channel today, 500% profit guaranteed!", "b": "Jоin the bеst crypto signals chаnnel today, 500% profit guaranteed!", "expect": "match", "note": "lookalike letters" },
+    { "kind": "text", "a": "Join the best crypto signals channel today, profit guaranteed for everyone", "b": "Join the best crypto signals group today, profit guaranteed for everybody", "expect": "match", "note": "two words changed", "known": "0.69 under 0.7: trigrams alone cannot tell this from the two questions below (0.71)" },
+    { "kind": "text", "a": "Hello everyone, I am new here and happy to join this group", "b": "Hello everyone, I am new here, happy to be in this group", "expect": "no", "note": "two greetings: alike, not a campaign", "known": "0.70: alike as the reworded scam above" },
+    { "kind": "text", "a": "Does anyone know when the next tournament starts this weekend?", "b": "Does anyone know when the next game night starts this weekend?", "expect": "no", "note": "two questions", "known": "0.71: alike as the reworded scam above" },
+    { "kind": "text", "a": "Earn money from home, message me for details about this offer", "b": "The weather is lovely today, anyone up for a walk in the park?", "expect": "no", "note": "unrelated" },
+
+    { "kind": "text-embedding", "a": "Join the best crypto signals channel today, profit guaranteed!", "b": "Únete hoy al mejor canal de señales cripto, ¡ganancias garantizadas!", "expect": "match", "note": "the same scam in Spanish" },
+    { "kind": "text-embedding", "a": "Join the best crypto signals channel today, profit guaranteed!", "b": "Tritt heute dem besten Krypto-Signalkanal bei, Gewinn garantiert!", "expect": "match", "note": "German" },
+    { "kind": "text-embedding", "a": "Join the best crypto signals channel today, profit guaranteed!", "b": "Присоединяйся сегодня к лучшему каналу крипто-сигналов, прибыль гарантирована!", "expect": "match", "note": "Russian" },
+    { "kind": "text-embedding", "a": "Join the best crypto signals channel today, profit guaranteed!", "b": "Gabung hari ini ke channel sinyal kripto terbaik, untung dijamin!", "expect": "match", "note": "Indonesian" },
+    { "kind": "text-embedding", "a": "Join the best crypto signals channel today, profit guaranteed!", "b": "Who wants to join our werewolf game channel today?", "expect": "no", "note": "a harmless invitation" }
+  ]
+}

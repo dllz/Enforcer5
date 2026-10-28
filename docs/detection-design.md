@@ -486,7 +486,20 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     so it acts while the group still watches too). Each group's list is kept in memory, read from PostgreSQL on first
     use and every 10 minutes (when the other edition's additions show), so a media message costs a set lookup only.
     Bans in the Telegram app carry no message, so they ban no file. Strings: 11 keys.
-13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`.
+13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`. **As built (2026-10-28):**
+    `Detection/SimilarityTuning` holds the text and name thresholds (texts 0.7, near from 0.5; names one letter off up
+    to 12 letters, two above, from 5 letters; near from 0.6), each overridable by a `Similarity*` setting of the same
+    name; `RaidLimits.SimilarText` takes its default from it. Comparing signs record how alike in `detections.similarity`.
+    **Near misses go to their own table, `detection_near_misses`, not to `detections` with mode observe** as written
+    above: every query on `detections` (scores, missed decisions, what a decision was about, the watching counts) would
+    otherwise count them as signs. Once per member, sign and day, new members only, written with the detections.
+    Fixtures in `tests/Enforcer5.Tests/Detection/Fixtures/similarity.json` (must and must-not names and texts, and the
+    5-language scam for the AI step); a case the check gets wrong is marked `known` with why. They found that letter
+    triples alone cannot separate a reworded scam (0.69) from two harmless questions (0.71) or greetings (0.70): left at
+    0.7 and marked known; embeddings (step 15) are what can tell them apart. `/detectstats` (admins, in private: each
+    sign over 30 days, what admins did after, near misses, removals no sign saw), `/detectreview [days]` and
+    `/simtest a | b` (devs). `tools/tuning/export.sql` (read-only, no ids) and `tune.py` (precision and recall per
+    threshold and group size, proposes the lowest threshold with 90% precision over at least 30 decided members).
 14. `member_signals`, implicit labels, reputation, retention, `/detectstats`, `/detectreview`,
     `/channelrep`.
 15. ML service, `IMlClient`, queue, vector tables, PDQ, `similar_to_banned`, AI settings.

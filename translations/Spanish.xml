@@ -1187,4 +1187,31 @@
   <string key="banMediaCleared">
     <value>Se quitó la prohibición de {0} archivos.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Te envía en privado cómo le fue a Detection en este grupo en los últimos 30 días: cuántas veces saltó cada señal, para cuántos miembros y qué hicieron después los administradores (expulsados, silenciados o considerados bien). También cuántas de vuestras expulsiones y silencios no tuvieron ninguna señal antes. Solo administradores.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Cómo le va a Detection aquí</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection en {0}, últimos {1} días&lt;/b&gt;\nCada señal: cuántas veces, para cuántos miembros y qué hicieron después los administradores.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} veces, {1} miembros (expulsados {2}, silenciados {3}, bien {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>y {0} veces casi</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} de las {1} expulsiones, silencios y borrados de los administradores no tuvieron ninguna señal antes.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>En ese tiempo no saltó ninguna señal aquí.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Para desarrolladores: cada señal de Detection en todos los grupos, con lo que decidieron después los administradores, sus casi-aciertos y las señales de comparación por parecido. /{0} 90 mira 90 días.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Para desarrolladores: cuánto se parecen dos textos o nombres según los umbrales de Detection. /{0} primero | segundo</value>
+  </string>
 </strings>

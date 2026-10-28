@@ -40,16 +40,18 @@ namespace Enforcer5.Data
             var ids = (await connection.QueryAsync<long>(new CommandDefinition(@"
 WITH input AS (
     SELECT * FROM unnest(@Chats, @Users, @Signs, @Phases, @Weights, @Before, @After, @Actions, @Deleted, @Reported,
-        @Modes, @MessageIds, @MessageTypes, @TextHashes, @MediaIds, @Trust, @Messages, @Since, @Evidence, @Editions, @At, @Categories)
+        @Modes, @MessageIds, @MessageTypes, @TextHashes, @MediaIds, @Trust, @Messages, @Since, @Evidence, @Editions, @At, @Categories,
+        @Similarities)
     AS i(chat, usr, sign, phase, weight, score_before, score_after, action, deleted, reported, mode, message_id,
-        message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence, edition, at, category)
+        message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence, edition, at, category,
+        similarity)
 )
 INSERT INTO detections (group_id, account_id, sign, phase, weight, score_before, score_after, action, deleted, reported,
     mode, message_id, message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence,
-    edition, detected_at, category, label_id)
+    edition, detected_at, category, similarity, label_id)
 SELECT g.group_id, a.account_id, i.sign, i.phase, i.weight, i.score_before, i.score_after, i.action, i.deleted, i.reported,
     i.mode, i.message_id, i.message_type, i.text_hash, i.media_unique_id, i.trust_level, i.member_messages, i.member_since,
-    CAST(i.evidence AS jsonb), i.edition, i.at, i.category,
+    CAST(i.evidence AS jsonb), i.edition, i.at, i.category, i.similarity,
     -- A decision made before this was written (detections are written once a minute).
     (SELECT l.label_id FROM member_labels l
      WHERE l.group_id = g.group_id AND l.account_id = a.account_id AND l.label = 'bad'
@@ -85,6 +87,7 @@ RETURNING detection_id",
                     Editions = detections.Select(d => d.Edition).ToArray(),
                     At = detections.Select(d => Utc(d.At)).ToArray(),
                     Categories = detections.Select(d => d.Category).ToArray(),
+                    Similarities = detections.Select(d => (float?)d.Similarity).ToArray(),
                     LooksBack = DecisionLooksBack
                 }, transaction))).ToArray();
 
@@ -107,6 +110,122 @@ WHERE l.label_id = d.label_id AND l.category IS DISTINCT FROM 'abuse';",
             }
             await transaction.CommitAsync();
             return ids.Length;
+        }
+
+        public async Task<int> WriteNearMissesAsync(IReadOnlyList<NearMissRecord> nearMisses)
+        {
+            if (nearMisses.Count == 0) return 0;
+            await using var connection = await Database.OpenConnectionAsync();
+            return await connection.ExecuteAsync(@"
+INSERT INTO detection_near_misses (group_id, account_id, sign, similarity, threshold, evidence, edition, detected_at)
+SELECT g.group_id, a.account_id, i.sign, i.similarity, i.threshold, CAST(i.evidence AS jsonb), i.edition, i.at
+FROM unnest(@Chats, @Users, @Signs, @Similarities, @Thresholds, @Evidence, @Editions, @At)
+    AS i(chat, usr, sign, similarity, threshold, evidence, edition, at)
+JOIN telegram_chats c ON c.telegram_chat_id = i.chat
+JOIN groups g ON g.chat_id = c.chat_id
+JOIN telegram_accounts a ON a.telegram_user_id = i.usr",
+                new
+                {
+                    Chats = nearMisses.Select(n => n.ChatId).ToArray(),
+                    Users = nearMisses.Select(n => n.UserId).ToArray(),
+                    Signs = nearMisses.Select(n => n.Sign).ToArray(),
+                    Similarities = nearMisses.Select(n => (float)Math.Clamp(n.Similarity, 0, 1)).ToArray(),
+                    Thresholds = nearMisses.Select(n => (float)n.Threshold).ToArray(),
+                    Evidence = nearMisses.Select(n => n.Evidence).ToArray(),
+                    Editions = nearMisses.Select(n => n.Edition).ToArray(),
+                    At = nearMisses.Select(n => Utc(n.At)).ToArray()
+                });
+        }
+
+        private const string InGroup = @"
+  AND (@ChatId IS NULL OR x.group_id = (SELECT g.group_id FROM groups g JOIN telegram_chats c ON c.chat_id = g.chat_id
+                                         WHERE c.telegram_chat_id = @ChatId))";
+
+        private sealed class SignStatRow
+        {
+            public string Sign { get; set; }
+            public long Hits { get; set; }
+            public long Members { get; set; }
+            public long Groups { get; set; }
+            public long Removed { get; set; }
+            public long Muted { get; set; }
+            public long Fined { get; set; }
+            public long Undone { get; set; }
+            public long NearMisses { get; set; }
+        }
+
+        public async Task<IReadOnlyList<SignStat>> SignRecordAsync(long? chatId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<SignStatRow>(@"
+WITH hits AS (
+    SELECT x.sign, count(*) AS hits, count(DISTINCT x.account_id) AS members, count(DISTINCT x.group_id) AS groups,
+           count(DISTINCT x.account_id) FILTER (WHERE x.outcome IN ('ban', 'kick', 'tempban')) AS removed,
+           count(DISTINCT x.account_id) FILTER (WHERE x.outcome IN ('mute', 'tempmute')) AS muted,
+           count(DISTINCT x.account_id) FILTER (WHERE x.outcome = 'fine') AS fined,
+           count(DISTINCT x.account_id) FILTER (WHERE x.outcome = 'undone') AS undone
+    FROM detections x
+    WHERE x.detected_at >= @Since AND x.mode IN ('live', 'observe')" + InGroup + @"
+    GROUP BY x.sign),
+near AS (
+    SELECT x.sign, count(*) AS near_misses FROM detection_near_misses x
+    WHERE x.detected_at >= @Since" + InGroup + @"
+    GROUP BY x.sign)
+SELECT COALESCE(h.sign, n.sign) AS Sign, COALESCE(h.hits, 0) AS Hits, COALESCE(h.members, 0) AS Members,
+       COALESCE(h.groups, 0) AS Groups, COALESCE(h.removed, 0) AS Removed, COALESCE(h.muted, 0) AS Muted,
+       COALESCE(h.fined, 0) AS Fined, COALESCE(h.undone, 0) AS Undone, COALESCE(n.near_misses, 0) AS NearMisses
+FROM hits h FULL JOIN near n ON n.sign = h.sign
+ORDER BY 2 DESC, 1", new { ChatId = chatId, Since = Utc(since) });
+            return rows.Select(r => new SignStat(r.Sign, r.Hits, r.Members, r.Groups, r.Removed, r.Muted, r.Fined, r.Undone, r.NearMisses))
+                .ToList();
+        }
+
+        public async Task<(long Missed, long Decisions)> MissedAsync(long? chatId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return await connection.QuerySingleAsync<(long, long)>(@"
+SELECT count(*) FILTER (WHERE x.missed), count(*)
+FROM member_labels x
+WHERE x.label = 'bad' AND x.decided_at >= @Since AND x.missed IS NOT NULL
+  AND x.action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'delete')" + InGroup,
+                new { ChatId = chatId, Since = Utc(since) });
+        }
+
+        private sealed class BucketRow
+        {
+            public string Sign { get; set; }
+            public string Kind { get; set; }
+            public double From { get; set; }
+            public long Count { get; set; }
+            public long Bad { get; set; }
+            public long Fine { get; set; }
+        }
+
+        public async Task<IReadOnlyList<SimilarityBucket>> SimilarityBucketsAsync(DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            // A near miss's member was bad when an admin removed or muted them within 30 days after it.
+            var rows = await connection.QueryAsync<BucketRow>(@"
+WITH compared AS (
+    SELECT d.sign, 'hit' AS kind, d.similarity,
+           d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete') AS bad,
+           d.outcome IN ('fine', 'undone') AS fine
+    FROM detections d
+    WHERE d.similarity IS NOT NULL AND d.detected_at >= @Since AND d.mode IN ('live', 'observe')
+    UNION ALL
+    SELECT n.sign, 'near', n.similarity,
+           EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id AND l.label = 'bad'
+                     AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete')
+                     AND l.decided_at >= n.detected_at AND l.decided_at < n.detected_at + interval '30 days'),
+           EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id
+                     AND (l.action = 'fine' OR l.undone_at IS NOT NULL)
+                     AND l.decided_at >= n.detected_at AND l.decided_at < n.detected_at + interval '30 days')
+    FROM detection_near_misses n
+    WHERE n.detected_at >= @Since AND n.account_id IS NOT NULL)
+SELECT sign AS Sign, kind AS Kind, floor(similarity * 10) / 10.0 AS ""From"", count(*) AS Count,
+       count(*) FILTER (WHERE bad) AS Bad, count(*) FILTER (WHERE fine AND NOT bad) AS Fine
+FROM compared GROUP BY 1, 2, 3 ORDER BY 1, 3, 2", new { Since = Utc(since) });
+            return rows.Select(r => new SimilarityBucket(r.Sign, r.Kind, r.From, r.Count, r.Bad, r.Fine)).ToList();
         }
 
         public async Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since)

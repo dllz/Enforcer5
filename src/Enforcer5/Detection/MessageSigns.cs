@@ -32,7 +32,6 @@ namespace Enforcer5.Detection
 
         /// <summary>Text shorter than this (in letters) is not compared: "hello" from two newcomers is no campaign.</summary>
         internal const int SameMinLetters = 20;
-        internal const double SameSimilarity = 0.7;
         private const int PerChat = 500;
 
         /// <summary>A group message from a member, on the moderation path. Never waits.</summary>
@@ -72,10 +71,13 @@ namespace Enforcer5.Detection
                         new { origin = message.ForwardOrigin is MessageOriginChannel c ? c.Chat.Id : (long?)null });
                 if (content != null)
                 {
-                    var others = Remember(chatId, userId, message.MessageId, content);
+                    var (others, similarity, near) = Remember(chatId, userId, message.MessageId, content);
+                    if (others.Count == 0 && near >= SimilarityTuning.TextNear)
+                        NearMisses.Add(chatId, userId, SignCatalog.SameAsNewcomers.Name, near, SimilarityTuning.Text);
                     if (others.Count > 0)
                     {
-                        await Hit(chatId, userId, message, SignCatalog.SameAsNewcomers, new { others = others.Count });
+                        await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.SameAsNewcomers.Name,
+                            System.Text.Json.JsonSerializer.Serialize(new { others = others.Count })) { Similarity = similarity });
                         // They posted it too: the same sign for them, about their own message (not here any more).
                         foreach (var other in others)
                             await DetectionEngine.HitAsync(chatId, other, null, new SignHit(SignCatalog.SameAsNewcomers.Name,
@@ -231,25 +233,41 @@ namespace Enforcer5.Detection
                 textCounts && letters >= SameMinLetters ? MessageFingerprint.Sketch(text) : null);
         }
 
-        /// <summary>Remembers what a new member posted; the other new members who posted the same in the last day.</summary>
-        internal static IReadOnlyList<long> Remember(long chatId, long userId, int messageId, Content content)
+        /// <summary>
+        /// Remembers what a new member posted. The other new members who posted the same in the last day, how alike the
+        /// closest of those was (1 for the same file or text), and how alike the closest text was that did not count
+        /// (for the near misses, step 13).
+        /// </summary>
+        internal static (IReadOnlyList<long> Others, double Similarity, double Near) Remember(long chatId, long userId, int messageId, Content content)
         {
             var now = Clock.UtcNow;
             var list = Recent.GetOrAdd(chatId, _ => new List<Posted>());
             lock (list)
             {
                 list.RemoveAll(p => now - p.At >= SameWithin);
-                var others = list.Where(p => p.UserId != userId && Same(p.Content, content)).Select(p => p.UserId).Distinct().ToList();
+                var others = new List<long>();
+                double best = 0, near = 0;
+                foreach (var p in list.Where(p => p.UserId != userId))
+                {
+                    var alike = Alike(p.Content, content);
+                    if (alike >= SimilarityTuning.Text)
+                    {
+                        if (!others.Contains(p.UserId)) others.Add(p.UserId);
+                        best = Math.Max(best, alike);
+                    }
+                    else near = Math.Max(near, alike);
+                }
                 list.Add(new Posted(userId, messageId, content, now));
                 if (list.Count > PerChat) list.RemoveRange(0, list.Count - PerChat);
-                return others;
+                return (others, best, near);
             }
         }
 
-        private static bool Same(Content a, Content b) =>
-            a.Media != null && a.Media == b.Media ||
-            a.TextHash != null && a.TextHash == b.TextHash ||
-            RaidSigns.Similar(a.Sketch, b.Sketch, SameSimilarity);
+        /// <summary>How alike two posts are: 1 for the same file or text, else how much their texts share.</summary>
+        internal static double Alike(Content a, Content b) =>
+            a.Media != null && a.Media == b.Media || a.TextHash != null && a.TextHash == b.TextHash
+                ? 1
+                : SimilarityTuning.Jaccard(a.Sketch, b.Sketch);
 
         internal static void ResetForTests() => Recent.Clear();
     }

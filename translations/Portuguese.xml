@@ -2202,4 +2202,31 @@
   <string key="banMediaCleared">
     <value>Retirada a proibição de {0} arquivos.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Envia no privado como o Detection se saiu neste grupo nos últimos 30 dias: quantas vezes cada sinal apareceu, para quantos membros, e o que os admins fizeram com eles depois (removidos, silenciados ou considerados ok). Também quantas das suas remoções e silenciamentos não tiveram nenhum sinal antes. Só para admins.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Como o Detection se saiu aqui</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection em {0}, últimos {1} dias&lt;/b&gt;\nCada sinal: quantas vezes, para quantos membros e o que os admins fizeram depois.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} vezes, {1} membros (removidos {2}, silenciados {3}, ok {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>e {0} vezes por pouco</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} das {1} remoções, silenciamentos e exclusões dos admins não tiveram nenhum sinal antes.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>Nenhum sinal apareceu aqui nesse período.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Para desenvolvedores: cada sinal do Detection em todos os grupos, com as decisões dos admins depois, seus quase-acertos e os sinais de comparação por semelhança. /{0} 90 olha 90 dias.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Para desenvolvedores: quão parecidos são dois textos ou nomes pelos limites que o Detection usa. /{0} primeiro | segundo</value>
+  </string>
 </strings>

@@ -1789,4 +1789,31 @@ UPDATE LOG
   <string key="banMediaCleared">
     <value>已解除 {0} 個檔案嘅封鎖。</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>私訊你過去 30 日 Detection 喺呢個群嘅表現：每個跡象出現幾多次、涉及幾多個成員，同埋管理員之後點處理（移除、禁言或者認為冇問題）。仲有你哋嘅移除同禁言之中，有幾多個之前冇任何跡象。只限管理員。</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Detection 喺度嘅表現</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;{0} 嘅 Detection，過去 {1} 日&lt;/b&gt;\n每個跡象：幾多次、幾多個成員，同埋管理員之後點處理。</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} 次，{1} 個成員（移除 {2}，禁言 {3}，冇問題 {4}）</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>另外 {0} 次差少少</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>管理員嘅 {1} 次移除、禁言同刪除入面，有 {0} 次之前冇任何跡象。</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>呢段時間呢度冇出現任何跡象。</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>開發者用：所有群組入面每個 Detection 跡象，連同管理員之後嘅決定、差少少嘅次數，同埋比較類跡象按相似度分佈。/{0} 90 睇 90 日。</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>開發者用：按 Detection 用嘅門檻，兩段文字或者兩個名有幾相似。/{0} 第一個 | 第二個</value>
+  </string>
 </strings>

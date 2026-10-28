@@ -19,7 +19,7 @@ namespace Enforcer5.Detection
     /// Names are compared with lookalike letters made Latin and everything but letters left out
     /// (<see cref="MessageFingerprint.Normalize"/>: emoji, digits, separators and invisible characters), with the
     /// group's admins and its bots (bots among the admins, bots seen joining, this bot): the same, one letter apart
-    /// (two for names over <see cref="ShortName"/> letters), or the admin's name with nothing but staff words added
+    /// (two for long names; <see cref="SimilarityTuning"/>), or the admin's name with nothing but staff words added
     /// ("Daniel | Support", "daniel_admin"). Display names and usernames both count, either way round.
     /// </para>
     /// <para>
@@ -30,12 +30,6 @@ namespace Enforcer5.Detection
     /// </summary>
     internal static class NameSigns
     {
-        /// <summary>Names with fewer letters are only compared for being the same.</summary>
-        internal const int CloseFrom = 5;
-
-        /// <summary>Up to this many letters a name may be one letter off; longer ones two.</summary>
-        internal const int ShortName = 12;
-
         /// <summary>Fewer letters than this is no name to copy ("Al", "J").</summary>
         internal const int MinLetters = 3;
 
@@ -47,7 +41,8 @@ namespace Enforcer5.Detection
         /// <summary>Whom a name copies, and how.</summary>
         /// <param name="How">same, close (letters apart) or keyword (their name with staff words added).</param>
         /// <param name="Role">admin or bot.</param>
-        internal sealed record Likeness(User Of, string Role, string How);
+        /// <param name="Similarity">How alike the names are (<see cref="SimilarityTuning.NameSimilarity"/>).</param>
+        internal sealed record Likeness(User Of, string Role, string How, double Similarity = 1);
 
         // ------------------------------------------------------------------ entry points
 
@@ -74,6 +69,7 @@ namespace Enforcer5.Detection
                     return;
                 }
                 var found = Judge(chatId, person, admins);
+                if (found.Near != null) Bot.Dispatch(() => NearAsync(chatId, person, found), "NameSigns.Near");
                 if (found.Likeness == null && !found.Keyword) return;
                 if (!Claim(chatId, person, found)) return;
                 Bot.Dispatch(() => HitAsync(chatId, person, message, found), "NameSigns");
@@ -102,6 +98,7 @@ namespace Enforcer5.Detection
             {
                 if (admins != null && admins.Any(a => a.User.Id == person.Id)) return;
                 var found = Judge(chatId, person, admins);
+                if (found.Near != null) await NearAsync(chatId, person, found);
                 if (found.Likeness == null && !found.Keyword) return;
                 if (!Claim(chatId, person, found)) return;
                 await HitAsync(chatId, person, message, found);
@@ -120,7 +117,7 @@ namespace Enforcer5.Detection
                     await DetectionEngine.HitAsync(chatId, person.Id, message,
                         new SignHit(SignCatalog.NameImpersonation.Name, JsonSerializer.Serialize(new { of = like.Of.Id, role = like.Role, how = like.How }))
                         {
-                            Detail = Describe(like.Of)
+                            Detail = Describe(like.Of), Similarity = like.Similarity
                         });
                 if (found.Keyword)
                     await DetectionEngine.HitAsync(chatId, person.Id, message, new SignHit(SignCatalog.NameKeyword.Name));
@@ -128,6 +125,26 @@ namespace Enforcer5.Detection
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Name signs of {person.Id} in {chatId}");
+            }
+        }
+
+        private static async Task NearAsync(long chatId, User person, Found found)
+        {
+            try
+            {
+                if (found.Near is not { } near) return;
+                if (await MemberTrust.OfAsync(chatId, person.Id) != TrustLevel.New)
+                {
+                    NearMisses.Skip(chatId, person.Id, SignCatalog.NameImpersonation.Name);
+                    return;
+                }
+                NearMisses.Add(chatId, person.Id, SignCatalog.NameImpersonation.Name, near.Similarity,
+                    1 - (double)SimilarityTuning.NameDistanceFor(near.Length) / Math.Max(near.Length, 1),
+                    new { of = near.Of.Id, role = near.Role });
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Recording a near miss of {person.Id} in {chatId}");
             }
         }
 
@@ -142,6 +159,9 @@ namespace Enforcer5.Detection
 
         internal sealed record Found(Likeness Likeness, bool Keyword)
         {
+            /// <summary>A name close to an admin's or a bot's that did not match (step 13), recorded for new members.</summary>
+            internal (User Of, string Role, double Similarity, int Length)? Near { get; init; }
+
             /// <summary>What the remembered verdict is about: the name as compared, and what it matched.</summary>
             internal string Key(User person) =>
                 $"{Name(person)}|{MessageFingerprint.Normalize(person.Username)}|{Likeness?.Of.Id}|{Keyword}";
@@ -153,7 +173,35 @@ namespace Enforcer5.Detection
             if (admins != null)
                 targets.AddRange(admins.Where(a => a.User.Id != person.Id).Select(a => (a.User, a.User.IsBot ? "bot" : "admin")));
             targets.AddRange(BotsOf(chatId).Where(b => b.Id != person.Id && targets.All(t => t.User.Id != b.Id)).Select(b => (b, "bot")));
-            return new Found(Impersonates(person, targets), HasKeyword(person));
+            var likeness = Impersonates(person, targets);
+            var near = likeness == null && NearMisses.Due(chatId, person.Id, SignCatalog.NameImpersonation.Name)
+                ? Closest(person, targets)
+                : null;
+            return new Found(likeness, HasKeyword(person)) { Near = near };
+        }
+
+        /// <summary>The target whose name is most like one of <paramref name="person"/>'s, if any is at least <see cref="SimilarityTuning.NameNear"/>; null otherwise.</summary>
+        internal static (User Of, string Role, double Similarity, int Length)? Closest(User person, IEnumerable<(User User, string Role)> targets)
+        {
+            var mine = Names(person);
+            (User, string, double, int)? best = null;
+            foreach (var (target, role) in targets)
+            {
+                if (target == null || target.Id == person.Id) continue;
+                foreach (var theirs in Names(target))
+                foreach (var name in mine)
+                {
+                    // Only as far as could still be near: this runs on every message, so most names stop early.
+                    var longer = Math.Max(name.Length, theirs.Length);
+                    var limit = (int)Math.Floor((1 - SimilarityTuning.NameNear) * longer);
+                    if (Math.Abs(name.Length - theirs.Length) > limit) continue;
+                    var distance = Distance(name, theirs, limit);
+                    if (distance > limit) continue;
+                    var alike = 1 - (double)distance / longer;
+                    if (best == null || alike > best.Value.Item3) best = (target, role, alike, theirs.Length);
+                }
+            }
+            return best;
         }
 
         /// <summary>A display name or username with admin, support, official and the like (the staff words preset).</summary>
@@ -175,8 +223,10 @@ namespace Enforcer5.Detection
                 foreach (var name in mine)
                 {
                     if (name == theirs) return new Likeness(target, role, "same");
-                    if (close == null && Close(name, theirs)) close = new Likeness(target, role, "close");
-                    if (keyword == null && staffWord && WithStaffWords(name, theirs)) keyword = new Likeness(target, role, "keyword");
+                    if (close == null && Close(name, theirs))
+                        close = new Likeness(target, role, "close", SimilarityTuning.NameSimilarity(name, theirs));
+                    if (keyword == null && staffWord && WithStaffWords(name, theirs))
+                        keyword = new Likeness(target, role, "keyword", SimilarityTuning.NameSimilarity(name, theirs));
                 }
             }
             return close ?? keyword;
@@ -195,11 +245,14 @@ namespace Enforcer5.Detection
 
         private static string Name(User user) => MessageFingerprint.Normalize($"{user.FirstName} {user.LastName}");
 
-        /// <summary>One letter apart (two for long names), counting two letters swapped as one; never for names under <see cref="CloseFrom"/>.</summary>
+        /// <summary>
+        /// One letter apart (two for long names; <see cref="SimilarityTuning"/>), counting two letters swapped as one; never
+        /// for names under <see cref="SimilarityTuning.NameCloseFrom"/> letters.
+        /// </summary>
         internal static bool Close(string a, string b)
         {
-            if (b.Length < CloseFrom || a.Length < CloseFrom) return false;
-            var max = b.Length > ShortName ? 2 : 1;
+            if (b.Length < SimilarityTuning.NameCloseFrom || a.Length < SimilarityTuning.NameCloseFrom) return false;
+            var max = SimilarityTuning.NameDistanceFor(b.Length);
             return Math.Abs(a.Length - b.Length) <= max && Distance(a, b, max) <= max;
         }
 

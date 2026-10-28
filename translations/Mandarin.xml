@@ -1897,4 +1897,31 @@ Example:
   <string key="banMediaCleared">
     <value>已解除 {0} 个文件的封禁。</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>私聊发给你过去 30 天 Detection 在本群的表现：每个迹象出现了多少次、涉及多少成员，以及管理员之后如何处理（移除、禁言或认为没问题）。还有你们的移除和禁言中，有多少之前没有任何迹象。仅限管理员。</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Detection 在这里的表现</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;{0} 的 Detection，最近 {1} 天&lt;/b&gt;\n每个迹象：多少次、多少成员，以及管理员之后如何处理。</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} 次，{1} 名成员（移除 {2}，禁言 {3}，没问题 {4}）</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>另有 {0} 次差一点</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>管理员的 {1} 次移除、禁言和删除中，有 {0} 次之前没有任何迹象。</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>这段时间这里没有出现任何迹象。</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>开发者用：所有群里每个 Detection 迹象，以及管理员之后的决定、差一点的次数和比较类迹象按相似度的分布。/{0} 90 查看 90 天。</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>开发者用：按 Detection 使用的阈值，两段文本或两个名字有多相似。/{0} 第一个 | 第二个</value>
+  </string>
 </strings>

@@ -2215,4 +2215,31 @@
   <string key="banMediaCleared">
     <value>{0} dosyanın yasağı kaldırıldı.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Detection'ın son 30 günde bu grupta nasıl çalıştığını sana özelden gönderir: her işaretin kaç kez çıktığı, kaç üyede, ve yöneticilerin sonra onlara ne yaptığı (çıkarıldı, susturuldu veya sorunsuz bulundu). Ayrıca çıkarmalarınızın ve susturmalarınızın kaçından önce hiçbir işaret olmadığı. Sadece yöneticiler.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Detection burada nasıl</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;{0} içinde Detection, son {1} gün&lt;/b&gt;\nHer işaret: kaç kez, kaç üyede ve yöneticiler sonra ne yaptı.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} kez, {1} üye (çıkarıldı {2}, susturuldu {3}, sorunsuz {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>ve {0} kez az kalsın</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>Yöneticilerin {1} çıkarma, susturma ve silmesinden {0} tanesinden önce hiçbir işaret yoktu.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>Bu sürede burada hiçbir işaret çıkmadı.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Geliştiriciler için: tüm gruplarda her Detection işareti, yöneticilerin sonraki kararları, az kalan durumları ve benzerliğe göre karşılaştıran işaretler. /{0} 90 son 90 güne bakar.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Geliştiriciler için: iki metnin veya ismin Detection'ın eşiklerine göre ne kadar benzediği. /{0} birinci | ikinci</value>
+  </string>
 </strings>

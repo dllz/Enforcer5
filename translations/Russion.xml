@@ -1937,6 +1937,33 @@ $title - заменяется названием группы.
   <string key="banMediaCleared">
     <value>Снят запрет с файлов: {0}.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Присылает в личку, как работал Detection в этой группе за последние 30 дней: сколько раз сработал каждый признак, у скольких участников и что админы потом с ними сделали (удалили, заглушили или сочли нормальными). А также сколько ваших удалений и заглушений не предварял ни один признак. Только для админов.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Как работает Detection здесь</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection в {0}, последние {1} дней&lt;/b&gt;\nКаждый признак: сколько раз, у скольких участников и что потом сделали админы.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} раз, {1} участников (удалено {2}, заглушено {3}, нормально {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>и {0} раз почти</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} из {1} удалений, заглушений и стираний сообщений админами не предварял ни один признак.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>За это время здесь не сработал ни один признак.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Для разработчиков: каждый признак Detection во всех группах, с решениями админов после, почти-срабатываниями и сравнивающими признаками по степени сходства. /{0} 90 — за 90 дней.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Для разработчиков: насколько похожи два текста или имени по порогам Detection. /{0} первое | второе</value>
+  </string>
 </strings>
 
   

@@ -348,6 +348,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("sign");
 
+                    b.Property<float?>("Similarity")
+                        .HasColumnType("real")
+                        .HasColumnName("similarity");
+
                     b.Property<string>("TextHash")
                         .HasColumnType("text")
                         .HasColumnName("text_hash");
@@ -392,6 +396,65 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("detections_score_check", "score_before >= 0 AND score_after >= score_before");
 
                             t.HasCheckConstraint("detections_trust_check", "trust_level IS NULL OR trust_level IN ('admin', 'approved', 'established', 'new')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.DetectionNearMissEntity", b =>
+                {
+                    b.Property<long>("NearMissId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("near_miss_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("NearMissId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("DetectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detected_at");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<string>("Evidence")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("evidence");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Sign")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sign");
+
+                    b.Property<float>("Similarity")
+                        .HasColumnType("real")
+                        .HasColumnName("similarity");
+
+                    b.Property<float>("Threshold")
+                        .HasColumnType("real")
+                        .HasColumnName("threshold");
+
+                    b.HasKey("NearMissId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex(new[] { "GroupId", "AccountId", "DetectedAt" }, "detection_near_misses_member_idx");
+
+                    b.HasIndex(new[] { "Sign", "DetectedAt" }, "detection_near_misses_sign_time_idx");
+
+                    b.ToTable("detection_near_misses", null, t =>
+                        {
+                            t.HasCheckConstraint("detection_near_misses_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("detection_near_misses_similarity_check", "similarity >= 0 AND similarity <= 1");
                         });
                 });
 
@@ -2064,6 +2127,20 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("LabelId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.DetectionNearMissEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.DetectionPolicyEntity", b =>

@@ -50,7 +50,7 @@ namespace Enforcer5.Raids
         /// <summary>Texts this long (in letters) are harmful content when posted alike, even without a link or a file.</summary>
         internal int LongTextLetters = 100;
         /// <summary>Two texts this alike (shared three-letter runs) are the same, so a random ending does not hide spam.</summary>
-        internal double SimilarText = 0.7;
+        internal double SimilarText = Detection.SimilarityTuning.Text;
         internal int Flooders = 3;
         internal int BareLinkUsers = 3;
         internal int Reports = 5;

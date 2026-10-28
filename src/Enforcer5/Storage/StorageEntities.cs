@@ -516,6 +516,9 @@ namespace Enforcer5.Storage
 
         /// <summary>abuse or group (step 7c): what the sign is about, as the group's settings said then.</summary>
         public string Category { get; set; }
+
+        /// <summary>For a sign that compares (alike texts, alike names; step 13): how alike, 0 to 1.</summary>
+        public float? Similarity { get; set; }
     }
 
     /// <summary>
@@ -600,5 +603,24 @@ namespace Enforcer5.Storage
         public long? AddedByAccountId { get; set; }
         public string Source { get; set; }
         public DateTimeOffset AddedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A comparison that came close but stayed under its threshold (design section 11, build step 13): what a lower
+    /// threshold would have caught, so thresholds can be replayed against the admins' decisions later. Kept apart from
+    /// <c>detections</c> so it never counts as a sign (scores, reports, missed decisions, what a decision was about).
+    /// Once per member, sign and day. Never the text or the name compared.
+    /// </summary>
+    internal sealed class DetectionNearMissEntity
+    {
+        public long NearMissId { get; set; }
+        public long GroupId { get; set; }
+        public long? AccountId { get; set; }
+        public string Sign { get; set; }
+        public float Similarity { get; set; }
+        public float Threshold { get; set; }
+        public string Evidence { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset DetectedAt { get; set; }
     }
 }

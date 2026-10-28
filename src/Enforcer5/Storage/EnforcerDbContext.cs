@@ -505,6 +505,24 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.IncidentId, x.OffsetMs }, "raid_events_timeline_idx");
             });
 
+            modelBuilder.Entity<DetectionNearMissEntity>(entity =>
+            {
+                entity.ToTable("detection_near_misses", table =>
+                {
+                    table.HasCheckConstraint("detection_near_misses_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("detection_near_misses_similarity_check", "similarity >= 0 AND similarity <= 1");
+                });
+                entity.HasKey(x => x.NearMissId);
+                entity.Property(x => x.NearMissId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Sign).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.Property(x => x.Evidence).HasColumnType("jsonb");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.Sign, x.DetectedAt }, "detection_near_misses_sign_time_idx");
+                entity.HasIndex(x => new { x.GroupId, x.AccountId, x.DetectedAt }, "detection_near_misses_member_idx");
+            });
+
             modelBuilder.Entity<BannedMediaEntity>(entity =>
             {
                 entity.ToTable("banned_media", table =>

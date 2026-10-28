@@ -2435,4 +2435,31 @@
   <string key="banMediaCleared">
     <value>Blokir dicabut dari {0} file.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Mengirim lewat chat pribadi bagaimana kinerja Detection di grup ini selama 30 hari terakhir: seberapa sering setiap tanda muncul, untuk berapa anggota, dan apa yang dilakukan admin terhadap mereka setelahnya (dikeluarkan, dibisukan, atau dinilai tidak bermasalah). Juga berapa banyak pengeluaran dan pembisuan oleh kalian yang tidak didahului tanda apa pun. Hanya untuk admin.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Kinerja Detection di sini</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection di {0}, {1} hari terakhir&lt;/b&gt;\nSetiap tanda: seberapa sering, untuk berapa anggota, dan apa yang dilakukan admin setelahnya.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} kali, {1} anggota (dikeluarkan {2}, dibisukan {3}, tidak bermasalah {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>dan {0} kali hampir</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} dari {1} pengeluaran, pembisuan, dan penghapusan oleh admin tidak didahului tanda apa pun.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>Tidak ada tanda yang muncul di sini dalam waktu itu.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Untuk developer: setiap tanda Detection di semua grup, dengan keputusan admin setelahnya, nyaris-cocoknya, dan tanda pembanding menurut kemiripan. /{0} 90 melihat 90 hari.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Untuk developer: seberapa mirip dua teks atau nama menurut ambang yang dipakai Detection. /{0} pertama | kedua</value>
+  </string>
 </strings>

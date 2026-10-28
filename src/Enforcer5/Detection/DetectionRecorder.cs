@@ -38,6 +38,13 @@ namespace Enforcer5.Detection
             var dropped = System.Threading.Interlocked.Exchange(ref _dropped, 0);
             if (dropped > 0) ErrorReporter.Report($"Detection buffer full; {dropped} detections dropped");
             if (!PostgresStorage.Ready) return;
+            await WriteAsync();
+            // The near misses after the detections (step 13).
+            await NearMisses.FlushAsync();
+        }
+
+        private static async Task WriteAsync()
+        {
             while (true)
             {
                 var batch = new List<DetectionRecord>(BatchSize);

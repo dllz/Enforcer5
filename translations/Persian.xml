@@ -2186,4 +2186,31 @@ exaple: /{0}
   <string key="banMediaCleared">
     <value>ممنوعیت {0} فایل برداشته شد.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>در پیوی برایتان می‌فرستد که Detection در ۳۰ روز گذشته در این گروه چطور عمل کرده: هر نشانه چند بار دیده شد، برای چند عضو، و مدیران بعد با آنها چه کردند (حذف، بی‌صدا یا بی‌مشکل). همچنین چند مورد از حذف‌ها و بی‌صداکردن‌های شما پیش از آن هیچ نشانه‌ای نداشت. فقط برای مدیران.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>عملکرد Detection در اینجا</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection در {0}، {1} روز گذشته&lt;/b&gt;\nهر نشانه: چند بار، برای چند عضو، و مدیران بعد چه کردند.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} بار، {1} عضو (حذف {2}، بی‌صدا {3}، بی‌مشکل {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>و {0} بار نزدیک</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} مورد از {1} حذف، بی‌صدا کردن و پاک کردن توسط مدیران پیش از آن هیچ نشانه‌ای نداشت.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>در این مدت اینجا هیچ نشانه‌ای دیده نشد.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>برای توسعه‌دهندگان: هر نشانه Detection در همه گروه‌ها، با تصمیم‌های بعدی مدیران، موارد نزدیک و نشانه‌های مقایسه‌ای بر اساس شباهت. ‎/{0} 90 نود روز را نشان می‌دهد.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>برای توسعه‌دهندگان: دو متن یا نام طبق آستانه‌های Detection چقدر شبیه‌اند. ‎/{0} اولی | دومی</value>
+  </string>
 </strings> 

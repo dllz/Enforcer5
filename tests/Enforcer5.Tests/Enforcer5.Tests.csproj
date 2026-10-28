@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Must and must-not fixtures for the similarity checks (Detection step 13). -->
+    <None Include="Detection\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The configuration flows through, so -c Premium tests the PREMIUM build. -->
     <ProjectReference Include="..\..\src\Enforcer5\Enforcer5.csproj" />
   </ItemGroup>

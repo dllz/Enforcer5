@@ -2246,6 +2246,33 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="banMediaCleared">
     <value>Sperre von {0} Dateien aufgehoben.</value>
   </string>
+  <string key="hcommanddetectstats">
+    <value>Schickt dir privat, wie Detection in dieser Gruppe in den letzten 30 Tagen gearbeitet hat: wie oft jedes Anzeichen auftrat, bei wie vielen Mitgliedern, und was die Admins danach mit ihnen gemacht haben (entfernt, stummgeschaltet oder für in Ordnung befunden). Außerdem, wie viele eurer Entfernungen und Stummschaltungen kein Anzeichen vorher hatten. Nur für Admins.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Wie Detection hier arbeitet</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection in {0}, letzte {1} Tage&lt;/b&gt;\nJedes Anzeichen: wie oft, bei wie vielen Mitgliedern und was die Admins danach getan haben.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0}-mal, {1} Mitglieder (entfernt {2}, stumm {3}, in Ordnung {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>und {0}-mal knapp</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} von {1} Entfernungen, Stummschaltungen und Löschungen durch Admins hatten kein Anzeichen vorher.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>In dieser Zeit gab es hier keine Anzeichen.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Für Entwickler: jedes Detection-Anzeichen in allen Gruppen, mit den Entscheidungen der Admins danach, seinen Beinahe-Treffern und den vergleichenden Anzeichen nach Ähnlichkeit. /{0} 90 zeigt 90 Tage.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Für Entwickler: wie ähnlich sich zwei Texte oder Namen nach den Schwellen von Detection sind. /{0} erster | zweiter</value>
+  </string>
 </strings>
 
 

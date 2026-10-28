@@ -32,7 +32,28 @@ namespace Enforcer5.Data
     {
         /// <summary><see cref="SignCategory"/>: abuse, or the group's own rules.</summary>
         internal string Category { get; init; } = SignCategory.Abuse;
+
+        /// <summary>For a sign that compares: how alike (0 to 1); null for the rest.</summary>
+        internal double? Similarity { get; init; }
     }
+
+    /// <summary>
+    /// How a sign did over a time (/detectstats, /detectreview): how often it fired, for how many members (in how many
+    /// groups), what the admins decided about them after (removed: ban, kick or tempban; muted; fined; undone), and how
+    /// many near misses it had.
+    /// </summary>
+    internal sealed record SignStat(string Sign, long Hits, long Members, long Groups, long Removed, long Muted, long Fined,
+        long Undone, long NearMisses);
+
+    /// <summary>
+    /// Hits or near misses of a comparing sign whose similarity falls in [<see cref="From"/>, From + 0.1), and how many of
+    /// their members the admins removed or muted (bad) or found fine (fined, or an action undone) afterwards.
+    /// </summary>
+    internal sealed record SimilarityBucket(string Sign, string Kind, double From, long Count, long Bad, long Fine);
+
+    /// <summary>A comparison under its threshold (<c>detection_near_misses</c>): what a lower threshold would have caught.</summary>
+    internal sealed record NearMissRecord(long ChatId, long UserId, string Sign, double Similarity, double Threshold, string Evidence,
+        string Edition, DateTimeOffset At);
 
     /// <summary>
     /// A decision about a member, as recorded in <c>member_labels</c>: what was done (or undone), by
@@ -71,6 +92,18 @@ namespace Enforcer5.Data
     {
         /// <summary>Writes detections of known groups and accounts; returns how many were written.</summary>
         Task<int> WriteDetectionsAsync(IReadOnlyList<DetectionRecord> detections);
+
+        /// <summary>Writes near misses of known groups and accounts; returns how many were written.</summary>
+        Task<int> WriteNearMissesAsync(IReadOnlyList<NearMissRecord> nearMisses);
+
+        /// <summary>Every sign's record since <paramref name="since"/>, in one group, or in all with <paramref name="chatId"/> null; live and observe.</summary>
+        Task<IReadOnlyList<SignStat>> SignRecordAsync(long? chatId, DateTimeOffset since);
+
+        /// <summary>Admins' removals, mutes and deletes since <paramref name="since"/> that no sign came before (missed), and all of them.</summary>
+        Task<(long Missed, long Decisions)> MissedAsync(long? chatId, DateTimeOffset since);
+
+        /// <summary>Hits and near misses of the comparing signs by similarity, across all groups, since <paramref name="since"/>.</summary>
+        Task<IReadOnlyList<SimilarityBucket>> SimilarityBucketsAsync(DateTimeOffset since);
 
         /// <summary>The signs that counted for a member since <paramref name="since"/>, for their score after a restart.</summary>
         Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since);
