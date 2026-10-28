@@ -45,12 +45,12 @@ namespace Enforcer5.Data
             await using var transaction = await connection.BeginTransactionAsync();
             var (groupId, accountId) = await EnsureAsync(connection, transaction, key.ChatId, key.UserId);
             await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO report_copies (group_id, kind, account_id, filter_id, opened_at, chat_id, message_id, edition, sent_at)
-SELECT @GroupId, @Kind, @AccountId, @FilterId, @OpenedAt, c.chat, c.message, @Edition, now()
+INSERT INTO report_copies (group_id, kind, account_id, filter_id, adjustment_id, opened_at, chat_id, message_id, edition, sent_at)
+SELECT @GroupId, @Kind, @AccountId, @FilterId, @AdjustmentId, @OpenedAt, c.chat, c.message, @Edition, now()
 FROM unnest(@Chats, @Messages) AS c(chat, message)",
                 new
                 {
-                    GroupId = groupId, key.Kind, AccountId = accountId, key.FilterId, OpenedAt = Utc(key.OpenedAt),
+                    GroupId = groupId, key.Kind, AccountId = accountId, key.FilterId, key.AdjustmentId, OpenedAt = Utc(key.OpenedAt),
                     Chats = copies.Select(c => c.ChatId).ToArray(), Messages = copies.Select(c => c.MessageId).ToArray(),
                     BanHistory.Edition
                 }, transaction));
@@ -62,8 +62,9 @@ JOIN groups g ON g.group_id = r.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
 LEFT JOIN telegram_accounts a ON a.account_id = r.account_id
 WHERE c.telegram_chat_id = @ChatId AND r.kind = @Kind AND r.edition = @Edition AND r.opened_at = @OpenedAt
-  AND (@Kind <> 'member' OR a.telegram_user_id = @UserId)
-  AND (@Kind <> 'trial' OR r.filter_id = @FilterId)";
+  AND (@Kind NOT IN ('member', 'restore') OR a.telegram_user_id = @UserId)
+  AND (@Kind <> 'trial' OR r.filter_id = @FilterId)
+  AND (@Kind <> 'learn' OR r.adjustment_id = @AdjustmentId)";
 
         private sealed class CopyRow
         {
@@ -76,7 +77,7 @@ WHERE c.telegram_chat_id = @ChatId AND r.kind = @Kind AND r.edition = @Edition A
 
         private static object Args(ReportKey key) => new
         {
-            key.ChatId, key.Kind, key.UserId, key.FilterId, OpenedAt = Utc(key.OpenedAt), BanHistory.Edition
+            key.ChatId, key.Kind, key.UserId, key.FilterId, key.AdjustmentId, OpenedAt = Utc(key.OpenedAt), BanHistory.Edition
         };
 
         private static StoredReport Stored(ReportKey key, IReadOnlyList<CopyRow> rows)
@@ -138,11 +139,12 @@ UPDATE report_copies r SET decision = @Decision, decided_by_account_id = @Actor,
 FROM groups g, telegram_chats c
 WHERE g.group_id = r.group_id AND c.chat_id = g.chat_id AND c.telegram_chat_id = @ChatId
   AND r.kind = @Kind AND r.edition = @Edition AND r.opened_at = @OpenedAt AND r.decision IS NULL
-  AND (@Kind <> 'member' OR r.account_id = (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @UserId))
-  AND (@Kind <> 'trial' OR r.filter_id = @FilterId)",
+  AND (@Kind NOT IN ('member', 'restore') OR r.account_id = (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @UserId))
+  AND (@Kind <> 'trial' OR r.filter_id = @FilterId)
+  AND (@Kind <> 'learn' OR r.adjustment_id = @AdjustmentId)",
                 new
                 {
-                    key.ChatId, key.Kind, key.UserId, key.FilterId, OpenedAt = Utc(key.OpenedAt), BanHistory.Edition,
+                    key.ChatId, key.Kind, key.UserId, key.FilterId, key.AdjustmentId, OpenedAt = Utc(key.OpenedAt), BanHistory.Edition,
                     Decision = decision, Actor = actor, At = Utc(at)
                 }, transaction));
             await transaction.CommitAsync();

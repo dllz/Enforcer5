@@ -112,6 +112,9 @@ namespace Enforcer5
             Raids.RaidGuard.Start(Bot.ShutdownToken);
             // Filter rules whose trial ended: their admins are asked what to do with them.
             Detection.FilterTrials.Start(Bot.ShutdownToken);
+            // Members set back to new, and the levels Detection learns from the admins' decisions.
+            Detection.TrustOverrides.Start(Bot.ShutdownToken);
+            Detection.TrustLearning.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

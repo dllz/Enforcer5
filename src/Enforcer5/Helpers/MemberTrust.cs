@@ -39,9 +39,31 @@ namespace Enforcer5.Helpers
 
         private static readonly ConcurrentDictionary<long, GroupNorms> Norms = new();
 
-        /// <summary>Messages and days an established member of <paramref name="chatId"/> has.</summary>
-        internal static (int Messages, int Days) Thresholds(long chatId) =>
+        /// <summary>
+        /// Messages and days an established member of <paramref name="chatId"/> has: the usual level, or the
+        /// higher one learned from the group's admins (<see cref="Detection.TrustLearning"/>) while learning is on.
+        /// Never waits: a group whose settings are not in memory gets the usual level.
+        /// </summary>
+        internal static (int Messages, int Days) Thresholds(long chatId)
+        {
+            var usual = UsualThresholds(chatId);
+            var engine = Detection.DetectionSettings.Cached(chatId)?.Engine;
+            if (engine is not { Learn: true }) return usual;
+            return (Math.Max(usual.Messages, engine.TrustMessages ?? 0), Math.Max(usual.Days, engine.TrustDays ?? 0));
+        }
+
+        /// <summary>The level worked out each night from the group's usual active member.</summary>
+        internal static (int Messages, int Days) UsualThresholds(long chatId) =>
             Norms.TryGetValue(chatId, out var n) ? (n.EstablishedMessages, n.EstablishedDays) : (DefaultMessages, DefaultDays);
+
+        /// <summary>The member's message count and since when they are here (null: from before this was recorded).</summary>
+        internal static async Task<(long Messages, DateTime? SinceUtc)> CountsAsync(long chatId, long userId)
+        {
+            var values = await Redis.db.HashGetAsync($"{chatId}:users:{userId}", new RedisValue[] { "msgs", "first", "joined" })
+                         ?? Array.Empty<RedisValue>();
+            var since = new[] { Long(values, 1), Long(values, 2) }.Where(v => v.HasValue).Select(v => v.Value).DefaultIfEmpty().Max();
+            return (Long(values, 0) ?? 0, since > 0 ? DateTimeOffset.FromUnixTimeSeconds(since).UtcDateTime : null);
+        }
 
         /// <summary>Usual joins an hour in <paramref name="chatId"/>; null when not known yet.</summary>
         internal static double? JoinsPerHour(long chatId) =>
@@ -61,12 +83,21 @@ namespace Enforcer5.Helpers
             if (auth.Result || watch.Result) return TrustLevel.Approved;
             var values = member.Result ?? Array.Empty<RedisValue>();
             var level = Level(chatId, Long(values, 0), Long(values, 1), Long(values, 2), Clock.UtcNow);
+            // An admin set them back to new: new until an admin restores them.
+            if (level == TrustLevel.Established && Detection.TrustOverrides.IsSet(chatId, userId)) level = TrustLevel.New;
             if (level == TrustLevel.New && isAdmin != null && isAdmin()) return TrustLevel.Admin;
             return level;
         }
 
         /// <summary>What /user shows: the level and what it is based on.</summary>
-        internal sealed record Description(TrustLevel Level, long Messages, DateTime? SinceUtc, int NeedMessages, int NeedDays, bool InSlowLane);
+        internal sealed record Description(TrustLevel Level, long Messages, DateTime? SinceUtc, int NeedMessages, int NeedDays, bool InSlowLane)
+        {
+            /// <summary>When an admin set them back to new; null when no one did.</summary>
+            internal DateTimeOffset? UntrustedAt { get; init; }
+
+            /// <summary>The usual level, when the group's is higher from what its admins decided; else null.</summary>
+            internal (int Messages, int Days)? Usual { get; init; }
+        }
 
         /// <summary>The member's level with the counts behind it, for /user. <paramref name="isAdmin"/> as in <see cref="OfAsync"/>.</summary>
         internal static async Task<Description> DescribeAsync(long chatId, long userId, Func<bool> isAdmin)
@@ -81,8 +112,13 @@ namespace Enforcer5.Helpers
             var slow = false;
             try { slow = (await Repositories.SlowLane.GetAsync(userId))?.Active(Clock.UtcNow) == true; }
             catch (Exception e) { ErrorReporter.Report(e, $"Reading the slow lane of {userId}"); }
+            var usual = UsualThresholds(chatId);
             return new Description(level, Long(values, 0) ?? 0,
-                since > 0 ? DateTimeOffset.FromUnixTimeSeconds(since).UtcDateTime : null, needMessages, needDays, slow);
+                since > 0 ? DateTimeOffset.FromUnixTimeSeconds(since).UtcDateTime : null, needMessages, needDays, slow)
+            {
+                UntrustedAt = Detection.TrustOverrides.Get(chatId, userId)?.SetAt,
+                Usual = usual != (needMessages, needDays) ? usual : null
+            };
         }
 
         /// <summary>The rule itself, for tests: established or new, from the counts.</summary>

@@ -22,6 +22,96 @@ namespace Enforcer5.Storage.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
+                {
+                    b.Property<long>("AdjustmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("adjustment_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("AdjustmentId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<bool>("Applied")
+                        .HasColumnType("boolean")
+                        .HasColumnName("applied");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<int?>("FromDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("from_days");
+
+                    b.Property<int?>("FromValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("from_value");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<long?>("LabelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("label_id");
+
+                    b.Property<DateTimeOffset>("MadeAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("made_at");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<int?>("ToDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("to_days");
+
+                    b.Property<int?>("ToValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("to_value");
+
+                    b.Property<DateTimeOffset?>("UndoneAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("undone_at");
+
+                    b.Property<long?>("UndoneByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("undone_by_account_id");
+
+                    b.HasKey("AdjustmentId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("UndoneByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "MadeAt" }, "detection_adjustments_group_idx");
+
+                    b.ToTable("detection_adjustments", null, t =>
+                        {
+                            t.HasCheckConstraint("detection_adjustments_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("detection_adjustments_kind_check", "kind IN ('established', 'report_at')");
+
+                            t.HasCheckConstraint("detection_adjustments_reason_check", "reason IN ('decision', 'untrust', 'takeover', 'decay', 'decisions', 'reset')");
+
+                            t.HasCheckConstraint("detection_adjustments_undone_check", "undone_at IS NULL OR applied");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionEntity", b =>
                 {
                     b.Property<long>("DetectionId")
@@ -794,6 +884,46 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.MemberTrustOverrideEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<long>("MessagesAtSet")
+                        .HasColumnType("bigint")
+                        .HasColumnName("messages_at_set");
+
+                    b.Property<DateTimeOffset?>("RestorePromptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("restore_prompted_at");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("SetByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("set_by_account_id");
+
+                    b.HasKey("GroupId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("SetByAccountId");
+
+                    b.ToTable("member_trust_overrides", null, t =>
+                        {
+                            t.HasCheckConstraint("member_trust_overrides_messages_check", "messages_at_set >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.MessageFingerprintEntity", b =>
                 {
                     b.Property<long>("FingerprintId")
@@ -1063,6 +1193,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("account_id");
 
+                    b.Property<long?>("AdjustmentId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("adjustment_id");
+
                     b.Property<long>("ChatId")
                         .HasColumnType("bigint")
                         .HasColumnName("chat_id");
@@ -1115,6 +1249,9 @@ namespace Enforcer5.Storage.Migrations
 
                     b.HasIndex("DecidedByAccountId");
 
+                    b.HasIndex(new[] { "AdjustmentId" }, "report_copies_adjustment_idx")
+                        .HasFilter("adjustment_id IS NOT NULL");
+
                     b.HasIndex(new[] { "GroupId", "FilterId" }, "report_copies_filter_idx")
                         .HasFilter("filter_id IS NOT NULL");
 
@@ -1124,15 +1261,17 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("report_copies", null, t =>
                         {
+                            t.HasCheckConstraint("report_copies_adjustment_check", "(kind = 'learn') = (adjustment_id IS NOT NULL)");
+
                             t.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
 
-                            t.HasCheckConstraint("report_copies_decision_check", "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete')");
+                            t.HasCheckConstraint("report_copies_decision_check", "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew')");
 
                             t.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
 
                             t.HasCheckConstraint("report_copies_filter_check", "(kind = 'trial') = (filter_id IS NOT NULL)");
 
-                            t.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial')");
+                            t.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial', 'learn', 'restore')");
                         });
                 });
 
@@ -1709,6 +1848,30 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.MemberLabelEntity", null)
+                        .WithMany()
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UndoneByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -1863,6 +2026,26 @@ namespace Enforcer5.Storage.Migrations
                     b.HasOne("Enforcer5.Storage.MemberLabelEntity", null)
                         .WithMany()
                         .HasForeignKey("UndoneByLabelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.MemberTrustOverrideEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SetByAccountId")
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 

@@ -90,7 +90,12 @@ namespace Enforcer5.Detection
                     // Fine was about; an admin's reason may be anything.
                     source == "auto" || action == "fine" ? HistoryWriter.Trim(reason) : null,
                     key, BanHistory.Edition, DateTimeOffset.UtcNow);
-                HistoryWriter.Enqueue(() => Repositories.DetectionLog.RecordLabelAsync(labelEvent),
+                HistoryWriter.Enqueue(async () =>
+                    {
+                        // Once per decision: the other edition may have recorded an app change first.
+                        if (await Repositories.DetectionLog.RecordLabelAsync(labelEvent) is { } labelId)
+                            TrustLearning.Decided(labelEvent, labelId);
+                    },
                     $"Recording the {action} of {userId} in {chatId} for Detection");
             }
             catch (Exception e)

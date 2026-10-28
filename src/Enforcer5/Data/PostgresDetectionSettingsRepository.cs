@@ -160,7 +160,13 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                 MuteEnabled = policy.Engine.MuteEnabled,
                 RetentionDays = policy.Engine.RetentionDays,
                 ReportTo = policy.Engine.ReportTo,
-                AdminChatId = policy.Engine.AdminChatId
+                AdminChatId = policy.Engine.AdminChatId,
+                Learn = policy.Engine.Learn,
+                TrustMessages = policy.Engine.TrustMessages,
+                TrustDays = policy.Engine.TrustDays,
+                TrustChangedAt = policy.Engine.TrustChangedAt?.UtcDateTime,
+                LearnedOn = policy.Engine.LearnedOn?.UtcDateTime,
+                ProposedReportAt = policy.Engine.ProposedReportAt
             });
             foreach (var (name, sign) in policy.Engine.Signs)
             {
@@ -358,8 +364,12 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                 engine.ReportAt ?? defaults.ReportAt, engine.MuteAt ?? defaults.MuteAt, engine.MuteEnabled, signs,
                 engine.RetentionDays is { } days && EngineSettings.RetentionChoices.Contains(days) ? days : EngineSettings.DefaultRetentionDays,
                 EngineSettings.ReportChoices.Contains(engine.ReportTo) ? engine.ReportTo : EngineSettings.ToAdmins,
-                engine.AdminChatId);
+                engine.AdminChatId, engine.Learn ?? true, engine.TrustMessages, engine.TrustDays, Utc(engine.TrustChangedAt),
+                Utc(engine.LearnedOn), engine.ProposedReportAt);
         }
+
+        private static DateTimeOffset? Utc(DateTime? at) =>
+            at.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(at.Value, DateTimeKind.Utc)) : null;
 
         private sealed class FloodJson
         {
@@ -412,6 +422,12 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public int? RetentionDays { get; set; }
             public string ReportTo { get; set; }
             public long? AdminChatId { get; set; }
+            public bool? Learn { get; set; }
+            public int? TrustMessages { get; set; }
+            public int? TrustDays { get; set; }
+            public DateTime? TrustChangedAt { get; set; }
+            public DateTime? LearnedOn { get; set; }
+            public int? ProposedReportAt { get; set; }
         }
 
         private sealed class SignJson

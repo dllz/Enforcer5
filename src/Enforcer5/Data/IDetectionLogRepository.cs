@@ -64,8 +64,8 @@ namespace Enforcer5.Data
         /// <summary>The signs that counted for a member since <paramref name="since"/>, for their score after a restart.</summary>
         Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since);
 
-        /// <summary>Records a decision and links it to the member's detections.</summary>
-        Task RecordLabelAsync(LabelEvent label);
+        /// <summary>Records a decision and links it to the member's detections. Its id; null when the other edition recorded it first.</summary>
+        Task<long?> RecordLabelAsync(LabelEvent label);
 
         /// <summary>
         /// Names and usernames of the group's members seen since <paramref name="since"/> (joined, or

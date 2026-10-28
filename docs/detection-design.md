@@ -398,6 +398,28 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
    step 14.
 7. Reports: private chats, admin chat link, buttons, labels from every button. **As built** in section 6;
    also the end-of-trial notice of section 5.
+7b. **Learning the levels from the admins** (Daniel, 2026-10-28; not in the approved design, added after
+   step 7). `Detection/TrustLearning`, `TrustOverrides`, /untrust and /trust, /menu → Detection → Learned
+   from you. Every change is applied at once and told to the admins with Undo and Keep (proposed only while
+   the group watches), kept in `detection_adjustments`; learning can be turned off per group (on by default).
+   - **Established level.** Raised when an admin bans, kicks or mutes an established member after a sign in
+     the day before (any sign but flood, media lock and the length checks), or sets one back to new: halfway
+     towards that member's messages (+1) and days, at most 3× the usual messages (≤ 1000) and 2× the usual
+     days (≤ 60). A member already at 3× the usual messages looks like a taken-over account: no change, and
+     the admins are told why. The admins are not asked what a ban was about (Daniel: "for now we do not
+     ask"); the classifiers of steps 15-17 add signs, and so reasons, later. A week after the last raise it
+     eases back a quarter of the way each night until it is the usual one again. The level is the higher of
+     the usual (nightly norm) and the learned one, read from memory (`MemberTrust.Thresholds`).
+   - **Report level.** Nightly, from 30 days of admins' decisions (ban, kick, mute, Fine, an undone decision
+     counts as fine) about members with a score: the lowest score from which ≥ 70% of at least 5 were
+     removed or muted; one step a night, 2 to 8, at least 10 decisions. The mute level is not learned.
+   - **Set back to new** (`member_trust_overrides`): new whatever the counts, until an admin restores them
+     (Daniel). After 30 days, once they wrote as many messages as the group's established level since,
+     with no sign, warn or action against them, the admins are asked once (again 30 days after Keep as new).
+   - Nightly work runs each hour from 03:00 UTC; with both editions in a group, whichever claims the day
+     (`LearnedOn`) does it, and only an edition that is in the group.
+   - The number of members who become new on a raise is not shown: message counts before the PostgreSQL
+     rollout (25 Oct) are only in Redis, so it cannot be counted cheaply.
 8. Edit rules.
 9. Message signs.
 10. Name signs.

@@ -176,10 +176,22 @@ namespace Enforcer5.Detection
     /// <see cref="ToBoth"/>. Without a linked admin chat they go to the admins.
     /// </param>
     /// <param name="AdminChatId">The group's admin chat, linked from the Reports menu; null for none.</param>
+    /// <param name="Learn">
+    /// Detection adjusts the group's levels from its admins' decisions (build step 7b, <see cref="TrustLearning"/>):
+    /// the established level and <paramref name="ReportAt"/>. On by default; the admins see every change.
+    /// </param>
+    /// <param name="TrustMessages">The established level learned from the admins: messages; null is the usual (nightly) one.</param>
+    /// <param name="TrustDays">The same for days.</param>
+    /// <param name="TrustChangedAt">When the learned established level last went up; it eases back after a week without.</param>
+    /// <param name="LearnedOn">The day (UTC) the nightly learning last ran for the group, so both editions run it once.</param>
+    /// <param name="ProposedReportAt">The report level last proposed while watching, so it is not proposed every night.</param>
     internal sealed record EngineSettings(DateTimeOffset? ObserveUntil, int ReportAt, int MuteAt, bool MuteEnabled,
         IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays,
-        string ReportTo = EngineSettings.ToAdmins, long? AdminChatId = null)
+        string ReportTo = EngineSettings.ToAdmins, long? AdminChatId = null, bool Learn = true,
+        int? TrustMessages = null, int? TrustDays = null, DateTimeOffset? TrustChangedAt = null,
+        DateTimeOffset? LearnedOn = null, int? ProposedReportAt = null)
     {
+        internal const int DefaultReportAt = 3;
         internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);
         internal const int DefaultRetentionDays = 365;
         internal static readonly int[] RetentionChoices = { 90, 365, 730 };
@@ -198,7 +210,7 @@ namespace Enforcer5.Detection
         internal long? ReportChat => ReportTo != ToAdmins ? AdminChatId : null;
 
         internal static EngineSettings Default { get; } =
-            new EngineSettings(null, 3, 6, false, new Dictionary<string, SignPolicy>());
+            new EngineSettings(null, DefaultReportAt, 6, false, new Dictionary<string, SignPolicy>());
 
         internal bool Observing(DateTimeOffset now) => ObserveUntil == null || now < ObserveUntil;
 

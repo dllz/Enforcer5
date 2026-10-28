@@ -119,6 +119,10 @@ namespace Enforcer5
                     ? Methods.GetLocaleString(lang, "trustDays", (int)(Clock.UtcNow - d.SinceUtc.Value).TotalDays)
                     : Methods.GetLocaleString(lang, "trustDaysUnknown");
                 var text = Methods.GetLocaleString(lang, "trustLine", level, d.Messages, days, d.NeedMessages, d.NeedDays);
+                if (d.UntrustedAt is { } untrusted)
+                    text += "\n" + Methods.GetLocaleString(lang, "trustUntrusted",
+                        untrusted.UtcDateTime.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture));
+                if (d.Usual is { } usual) text += "\n" + Methods.GetLocaleString(lang, "trustLearnedLine", usual.Messages, usual.Days);
                 if (d.InSlowLane) text += "\n" + Methods.GetLocaleString(lang, "trustSlowLane");
                 return text;
             }
@@ -147,6 +151,9 @@ namespace Enforcer5
                     new InlineButton(Methods.GetLocaleString(lang, "Warn"), $"userbuttonwarnuser:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "removePreWarn"), $"removePrewarn:{update.Message.Chat.Id}:{userid}"),
                     new InlineButton(Methods.GetLocaleString(lang, "resetPreWarn"), $"resetPrewarns:{update.Message.Chat.Id}:{userid}"),
+                    Detection.TrustOverrides.IsSet(update.Message.Chat.Id, userid)
+                        ? new InlineButton(Methods.GetLocaleString(lang, "userTrustButton"), $"userbuttontrust:{update.Message.Chat.Id}:{userid}")
+                        : new InlineButton(Methods.GetLocaleString(lang, "userUntrustButton"), $"userbuttonuntrust:{update.Message.Chat.Id}:{userid}"),
                 };
 
                 var text = Methods.GetUserInfo(userid, update.Message.Chat.Id, update.Message.Chat.Title, lang)

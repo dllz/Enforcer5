@@ -2971,4 +2971,160 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="filterAction_score">
     <value>Score</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Learned from you</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt;\nDetection adjusts two levels from what you decide, and tells you every time it does.\n\nEstablished from: &lt;b&gt;{0} messages and {1} days&lt;/b&gt; ({2})\nReported from a score of: &lt;b&gt;{3}&lt;/b&gt; ({4})\nSet back to new by admins: {5}\nLearning: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>the usual for this group</value>
+  </string>
+  <string key="learnLearned">
+    <value>learned from you; the usual here is {0} messages and {1} days</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>the default</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>learned from you</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Last changes:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: established {1} → {2}, after a member with signs was removed or muted</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: established {1} → {2}, after a member was set back to new</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: established left at {1}: the member looked like a taken-over account</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: established {1} → {2}, easing back to the usual</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: established {1} → {2}, all undone by an admin</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: reported from a score of {1} → {2}, from your decisions</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: reported from a score of {1} → {2}, all undone by an admin</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (undone)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (proposed only)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Learning: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Undo all</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>The levels are back to the usual ones.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\nAn established member was {1}: {2} ({3} messages, {4} days here).\nSeen before: {5}\n\nNew established level: &lt;b&gt;{6} messages and {7} days&lt;/b&gt; (was {8} and {9}). Members below it count as new again, so the newcomer checks and raid detection cover them.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\nAn established member was set back to new: {1} ({2} messages, {3} days here).\n\nNew established level: &lt;b&gt;{4} messages and {5} days&lt;/b&gt; (was {6} and {7}). Members below it count as new again, so the newcomer checks and raid detection cover them.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\nAn established member was {1}: {2} ({3} messages, {4} days here). That is far more than usual here, which looks like a taken-over account rather than a level that is too low, so established stays at {5} messages and {6} days.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Detection is only watching here until {0}, so this was not applied.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\nOf the last {1} members you decided about after Detection gave them a score, {2} were removed or muted and {3} were fine. Members are now reported from a score of &lt;b&gt;{4}&lt;/b&gt; (was {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\nNo new signals for a while, so established is back to the usual for this group: {1} messages and {2} days.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>banned</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>kicked</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>muted</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>set back to new</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Undo</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Keep</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>The levels changed since then. Use Undo all under Learned from you.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Undone by {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Kept by {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Restored by {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Kept as new by {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\n{1} was set back to new on {2}. Since then they wrote {3} messages, with no signs and nothing done against them. Count them as established again?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Restore</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Keep as new</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} counts as new here until an admin restores them with /trust.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} is already set back to new.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Admins cannot be set back to new.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} counts by their messages and days here again.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} was not set back to new.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Sets a member back to new: the newcomer checks and raid detection cover them again, whatever their messages and days, until an admin restores them with /trust. Reply to them, or give their id or @username. Setting back an established member also raises the group's established level, and the admins are told.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Restores a member set back to new with /untrust: they count by their messages and days again. Reply to them, or give their id or @username.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Set a member back to new</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Restore a member set back to new</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Set back to new by an admin on {0}.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Established here is higher than the usual {0} messages and {1} days, from your decisions.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Set back to new</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Restore trust</value>
+  </string>
 </strings>

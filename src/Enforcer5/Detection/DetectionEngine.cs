@@ -263,6 +263,7 @@ namespace Enforcer5.Detection
             StartingObservation.Clear();
             MemberScores.ResetForTests();
             Fines.ResetForTests();
+            TrustOverrides.ResetForTests();
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();

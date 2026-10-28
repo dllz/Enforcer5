@@ -194,6 +194,7 @@ namespace Enforcer5.Tests.Harness
             // PostgreSQL keep the rest.
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
+            await Enforcer5.Detection.TrustOverrides.ReloadAsync();
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);

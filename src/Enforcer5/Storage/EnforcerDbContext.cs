@@ -105,10 +105,11 @@ namespace Enforcer5.Storage
             {
                 entity.ToTable("report_copies", table =>
                 {
-                    table.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial')");
+                    table.HasCheckConstraint("report_copies_kind_check", "kind IN ('member', 'trial', 'learn', 'restore')");
                     table.HasCheckConstraint("report_copies_filter_check", "(kind = 'trial') = (filter_id IS NOT NULL)");
+                    table.HasCheckConstraint("report_copies_adjustment_check", "(kind = 'learn') = (adjustment_id IS NOT NULL)");
                     table.HasCheckConstraint("report_copies_decision_check",
-                        "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete')");
+                        "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew')");
                     table.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
                     table.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
                 });
@@ -123,6 +124,39 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.GroupId, x.AccountId, x.OpenedAt }, "report_copies_member_idx");
                 entity.HasIndex(x => new { x.GroupId, x.FilterId }, "report_copies_filter_idx").HasFilter("filter_id IS NOT NULL");
                 entity.HasIndex(x => x.SentAt, "report_copies_sent_idx");
+                entity.HasIndex(x => x.AdjustmentId, "report_copies_adjustment_idx").HasFilter("adjustment_id IS NOT NULL");
+            });
+
+            modelBuilder.Entity<MemberTrustOverrideEntity>(entity =>
+            {
+                entity.ToTable("member_trust_overrides", table => table.HasCheckConstraint("member_trust_overrides_messages_check", "messages_at_set >= 0"));
+                entity.HasKey(x => new { x.GroupId, x.AccountId });
+                entity.Property(x => x.SetAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.SetByAccountId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<DetectionAdjustmentEntity>(entity =>
+            {
+                entity.ToTable("detection_adjustments", table =>
+                {
+                    table.HasCheckConstraint("detection_adjustments_kind_check", "kind IN ('established', 'report_at')");
+                    table.HasCheckConstraint("detection_adjustments_reason_check",
+                        "reason IN ('decision', 'untrust', 'takeover', 'decay', 'decisions', 'reset')");
+                    table.HasCheckConstraint("detection_adjustments_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("detection_adjustments_undone_check", "undone_at IS NULL OR applied");
+                });
+                entity.HasKey(x => x.AdjustmentId);
+                entity.Property(x => x.AdjustmentId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Reason).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.UndoneByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne<MemberLabelEntity>().WithMany().HasForeignKey(x => x.LabelId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.MadeAt }, "detection_adjustments_group_idx");
             });
         }
 

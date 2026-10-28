@@ -510,7 +510,7 @@ namespace Enforcer5.Detection
         private static string Name(User user) =>
             user.Username != null ? $"{user.FirstName} (@{user.Username})" : $"{user.FirstName} {user.LastName}".Trim();
 
-        private static string StoredName(long userId)
+        internal static string StoredName(long userId)
         {
             try
             {
@@ -524,7 +524,7 @@ namespace Enforcer5.Detection
             }
         }
 
-        private static async Task<string> TitleAsync(long chatId)
+        internal static async Task<string> TitleAsync(long chatId)
         {
             try
             {

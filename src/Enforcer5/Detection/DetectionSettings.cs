@@ -105,6 +105,9 @@ namespace Enforcer5.Detection
         /// <summary>For code that cannot await (menus, commands).</summary>
         internal static DetectionPolicy For(long chatId) => GetAsync(chatId).GetAwaiter().GetResult();
 
+        /// <summary>What memory holds for the group, never waiting; null when it is not loaded.</summary>
+        internal static DetectionPolicy Cached(long chatId) => Entries.TryGetValue(chatId, out var entry) ? entry.Policy : null;
+
         /// <summary>
         /// Applies <paramref name="change"/> to the group's settings in PostgreSQL and returns the
         /// result. Throws <see cref="DetectionSettingsUnavailableException"/> when PostgreSQL is not

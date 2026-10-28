@@ -156,7 +156,7 @@ GROUP BY d.sign", new { ChatId = chatId, Signs = signs.ToArray() }));
             return rows.ToDictionary(r => r.Sign, r => (r.Hits, r.Removed));
         }
 
-        public async Task RecordLabelAsync(LabelEvent label)
+        public async Task<long?> RecordLabelAsync(LabelEvent label)
         {
             await using var connection = await Database.OpenConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
@@ -164,7 +164,7 @@ GROUP BY d.sign", new { ChatId = chatId, Signs = signs.ToArray() }));
                 new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
             if (label.Key != null && await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
                     "SELECT EXISTS (SELECT 1 FROM member_labels WHERE label_key = @Key)", new { label.Key }, transaction)))
-                return; // the other edition saw it first
+                return null; // the other edition saw it first
 
             var group = await PrincipalResolver.EnsureGroupAsync(connection, transaction, label.ChatId,
                 chatType: PostgresBanHistoryRepository.ChatType(label.ChatId));
@@ -218,6 +218,7 @@ UPDATE detections SET outcome = 'undone' WHERE label_id IN (SELECT label_id FROM
                     new { At = at, LabelId = labelId, group.GroupId, target.AccountId, Undone = undone }, transaction));
             }
             await transaction.CommitAsync();
+            return labelId;
         }
 
         public async Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since)

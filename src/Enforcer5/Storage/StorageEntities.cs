@@ -411,6 +411,46 @@ namespace Enforcer5.Storage
     }
 
     /// <summary>
+    /// A member an admin set back to new with /untrust (build step 7b): new in the group whatever their
+    /// counts, until an admin restores them. <c>messages_at_set</c> is their message count then, so the
+    /// bot can tell how much they talked since and offer to restore them.
+    /// </summary>
+    internal sealed class MemberTrustOverrideEntity
+    {
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public long? SetByAccountId { get; set; }
+        public DateTimeOffset SetAt { get; set; }
+        public long MessagesAtSet { get; set; }
+        public DateTimeOffset? RestorePromptedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A change Detection made to a group's levels from its admins' decisions (build step 7b): the
+    /// established level (messages and days) or the score at which members are reported. <c>from</c> and
+    /// <c>to</c> are the group's learned values, null meaning the usual one. <c>applied</c> is false for a
+    /// change only proposed while the group was watching. Kept so the admins can see and undo it.
+    /// </summary>
+    internal sealed class DetectionAdjustmentEntity
+    {
+        public long AdjustmentId { get; set; }
+        public long GroupId { get; set; }
+        public string Kind { get; set; }
+        public string Reason { get; set; }
+        public int? FromValue { get; set; }
+        public int? FromDays { get; set; }
+        public int? ToValue { get; set; }
+        public int? ToDays { get; set; }
+        public long? AccountId { get; set; }
+        public long? LabelId { get; set; }
+        public bool Applied { get; set; }
+        public DateTimeOffset? UndoneAt { get; set; }
+        public long? UndoneByAccountId { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset MadeAt { get; set; }
+    }
+
+    /// <summary>
     /// One copy of a Detection report or a filter's end-of-trial notice, sent to an admin in private or
     /// to the group's admin chat (design section 6). A report is the group, the member and when it was
     /// opened (<c>opened_at</c>); a notice the group, the rule and when it was sent. The first decision
@@ -424,6 +464,7 @@ namespace Enforcer5.Storage
         public string Kind { get; set; }
         public long? AccountId { get; set; }
         public long? FilterId { get; set; }
+        public long? AdjustmentId { get; set; }
         public DateTimeOffset OpenedAt { get; set; }
         public long ChatId { get; set; }
         public long MessageId { get; set; }

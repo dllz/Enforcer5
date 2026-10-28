@@ -62,6 +62,10 @@ namespace Enforcer5.Data
         internal static IDetectionReportRepository DetectionReports { get; set; } =
             new PostgresDetectionReportRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. What Detection learns a group's levels from, and members set back to new (Detection/TrustLearning).
+        internal static IDetectionLearningRepository DetectionLearning { get; set; } =
+            new PostgresDetectionLearningRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

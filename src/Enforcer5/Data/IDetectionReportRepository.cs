@@ -15,6 +15,17 @@ namespace Enforcer5.Data
     {
         internal const string Member = "member";
         internal const string Trial = "trial";
+        internal const string Learn = "learn";
+        internal const string Restore = "restore";
+
+        /// <summary>For <see cref="Learn"/>: the change it tells about.</summary>
+        internal long? AdjustmentId { get; init; }
+
+        internal static ReportKey ForLearn(long chatId, long adjustmentId, DateTimeOffset openedAt) =>
+            new ReportKey(Learn, chatId, null, null, openedAt) { AdjustmentId = adjustmentId };
+
+        internal static ReportKey ForRestore(long chatId, long userId, DateTimeOffset openedAt) =>
+            new ReportKey(Restore, chatId, userId, null, openedAt);
 
         internal static ReportKey ForMember(long chatId, long userId, DateTimeOffset openedAt) =>
             new ReportKey(Member, chatId, userId, null, openedAt);
