@@ -1917,4 +1917,160 @@
   <string key="sign_edit_late">
     <value>modificato molto tempo dopo l'invio</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Imparato da voi</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt;\nIl Rilevamento regola due soglie in base a quello che decidete, e ve lo dice ogni volta.\n\nConsolidato da: &lt;b&gt;{0} messaggi e {1} giorni&lt;/b&gt; ({2})\nSegnalato da un punteggio di: &lt;b&gt;{3}&lt;/b&gt; ({4})\nRiportati tra i nuovi dagli admin: {5}\nApprendimento: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>il solito per questo gruppo</value>
+  </string>
+  <string key="learnLearned">
+    <value>imparato da voi; qui il solito è {0} messaggi e {1} giorni</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>il predefinito</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>imparato da voi</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Ultime modifiche:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: consolidato {1} → {2}, dopo che un membro con segnali è stato rimosso o silenziato</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: consolidato {1} → {2}, dopo che un membro è stato riportato tra i nuovi</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: consolidato lasciato a {1}: il membro sembrava un account rubato</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: consolidato {1} → {2}, tornando gradualmente al solito</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: consolidato {1} → {2}, tutto annullato da un admin</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: segnalato da un punteggio di {1} → {2}, in base alle vostre decisioni</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: segnalato da un punteggio di {1} → {2}, tutto annullato da un admin</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (annullato)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (solo proposto)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Apprendimento: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Annulla tutto</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Le soglie sono tornate quelle solite.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\nUn membro consolidato è stato {1}: {2} ({3} messaggi, {4} giorni qui).\nVisto prima: {5}\n\nNuova soglia per consolidato: &lt;b&gt;{6} messaggi e {7} giorni&lt;/b&gt; (prima {8} e {9}). I membri al di sotto contano di nuovo come nuovi, così i controlli sui nuovi arrivati e il rilevamento dei raid li coprono.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\nUn membro consolidato è stato riportato tra i nuovi: {1} ({2} messaggi, {3} giorni qui).\n\nNuova soglia per consolidato: &lt;b&gt;{4} messaggi e {5} giorni&lt;/b&gt; (prima {6} e {7}). I membri al di sotto contano di nuovo come nuovi, così i controlli sui nuovi arrivati e il rilevamento dei raid li coprono.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\nUn membro consolidato è stato {1}: {2} ({3} messaggi, {4} giorni qui). È molto più del solito qui, il che fa pensare a un account rubato più che a una soglia troppo bassa, quindi consolidato resta a {5} messaggi e {6} giorni.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Qui il Rilevamento sta solo osservando fino al {0}, quindi questo non è stato applicato.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\nDegli ultimi {1} membri su cui avete deciso dopo che il Rilevamento aveva dato loro un punteggio, {2} sono stati rimossi o silenziati e {3} andavano bene. Ora i membri vengono segnalati da un punteggio di &lt;b&gt;{4}&lt;/b&gt; (prima {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\nNessun nuovo segnale da un po', quindi consolidato è tornato al solito per questo gruppo: {1} messaggi e {2} giorni.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>bannato</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>espulso</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>silenziato</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>riportato tra i nuovi</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Annulla</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Mantieni</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>Le soglie sono cambiate da allora. Usa Annulla tutto in Imparato da voi.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Annullato da {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Mantenuto da {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Ripristinato da {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Mantenuto tra i nuovi da {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\n{1} è stato riportato tra i nuovi il {2}. Da allora ha scritto {3} messaggi, senza segnali e senza provvedimenti contro di lui. Contarlo di nuovo come consolidato?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Ripristina</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Mantieni tra i nuovi</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} conta come nuovo qui finché un admin non lo ripristina con /trust.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} è già stato riportato tra i nuovi.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Gli admin non possono essere riportati tra i nuovi.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} conta di nuovo in base ai suoi messaggi e giorni qui.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} non era stato riportato tra i nuovi.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Riporta un membro tra i nuovi: i controlli sui nuovi arrivati e il rilevamento dei raid lo coprono di nuovo, a prescindere da messaggi e giorni, finché un admin non lo ripristina con /trust. Rispondi a un suo messaggio, oppure indica il suo id o @username. Riportare tra i nuovi un membro consolidato alza anche la soglia per consolidato del gruppo, e gli admin vengono avvisati.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Ripristina un membro riportato tra i nuovi con /untrust: conta di nuovo in base ai suoi messaggi e giorni. Rispondi a un suo messaggio, oppure indica il suo id o @username.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Riporta un membro tra i nuovi</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Ripristina un membro riportato tra i nuovi</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Riportato tra i nuovi da un admin il {0}.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Qui la soglia per consolidato è più alta dei soliti {0} messaggi e {1} giorni, in base alle vostre decisioni.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Riporta tra i nuovi</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Ripristina fiducia</value>
+  </string>
 </strings>

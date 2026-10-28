@@ -1620,4 +1620,160 @@ Example:
   <string key="sign_edit_late">
     <value>发送很久后才编辑</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 从你们学到的</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt;\n检测会根据你们的决定调整两个门槛，每次调整都会告诉你们。\n\n老成员门槛：&lt;b&gt;{0} 条消息和 {1} 天&lt;/b&gt;（{2}）\n报告门槛分数：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理员重新设为新成员：{5}\n学习：{6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>本群的常规设置</value>
+  </string>
+  <string key="learnLearned">
+    <value>从你们学到；本群常规为 {0} 条消息和 {1} 天</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>默认</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>从你们学到</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>最近的更改：</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}：老成员 {1} → {2}，因为一名有迹象的成员被移除或禁言</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}：老成员 {1} → {2}，因为一名成员被重新设为新成员</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}：老成员保持在 {1}：该成员看起来像被盗用的账号</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}：老成员 {1} → {2}，逐渐回到常规设置</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}：老成员 {1} → {2}，已被管理员全部撤销</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}：报告门槛分数 {1} → {2}，根据你们的决定</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}：报告门槛分数 {1} → {2}，已被管理员全部撤销</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> （已撤销）</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> （仅建议）</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>学习：{0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ 全部撤销</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>门槛已恢复为常规设置。</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n一名老成员{1}：{2}（{3} 条消息，入群 {4} 天）。\n之前见到：{5}\n\n新的老成员门槛：&lt;b&gt;{6} 条消息和 {7} 天&lt;/b&gt;（原为 {8} 和 {9}）。低于该门槛的成员重新算作新成员，新成员检查和突袭检测会再次覆盖他们。</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n一名老成员被重新设为新成员：{1}（{2} 条消息，入群 {3} 天）。\n\n新的老成员门槛：&lt;b&gt;{4} 条消息和 {5} 天&lt;/b&gt;（原为 {6} 和 {7}）。低于该门槛的成员重新算作新成员，新成员检查和突袭检测会再次覆盖他们。</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n一名老成员{1}：{2}（{3} 条消息，入群 {4} 天）。这远超本群的常规水平，更像是账号被盗用，而不是门槛太低，所以老成员门槛保持在 {5} 条消息和 {6} 天。</value>
+  </string>
+  <string key="learnWatching">
+    <value>检测在本群仅观察至 {0}，所以这次没有应用。</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n在检测给出分数后你们处理过的最近 {1} 名成员中，{2} 名被移除或禁言，{3} 名没问题。现在分数达到 &lt;b&gt;{4}&lt;/b&gt; 就会报告成员（原为 {5}）。</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n一段时间内没有新信号，所以老成员门槛已恢复为本群的常规设置：{1} 条消息和 {2} 天。</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>被封禁</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>被踢出</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>被禁言</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>被重新设为新成员</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ 撤销</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 保留</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>门槛此后已经变化。请在“从你们学到的”中使用“全部撤销”。</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ {0} 已撤销</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 {0} 已保留</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ {0} 已恢复</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>{0} 保留为新成员</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n{1} 于 {2} 被重新设为新成员。此后他发了 {3} 条消息，没有任何迹象，也没有被处理过。要重新算作老成员吗？</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ 恢复</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>保留为新成员</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} 在本群算作新成员，直到管理员用 /trust 恢复。</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} 已被重新设为新成员。</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>管理员不能被重新设为新成员。</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} 重新按其在本群的消息数和天数计算。</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} 没有被重新设为新成员。</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>将成员重新设为新成员：无论其消息数和天数多少，新成员检查和突袭检测都会再次覆盖他，直到管理员用 /trust 恢复。回复该成员，或提供其 id 或 @username。将老成员重新设为新成员还会提高本群的老成员门槛，并通知管理员。</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>恢复用 /untrust 重新设为新成员的成员：他会重新按消息数和天数计算。回复该成员，或提供其 id 或 @username。</value>
+  </string>
+  <string key="cmduntrust">
+    <value>将成员重新设为新成员</value>
+  </string>
+  <string key="cmdtrust">
+    <value>恢复被重新设为新成员的成员</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>于 {0} 被管理员重新设为新成员。</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>根据你们的决定，本群的老成员门槛高于常规的 {0} 条消息和 {1} 天。</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>重新设为新成员</value>
+  </string>
+  <string key="userTrustButton">
+    <value>恢复信任</value>
+  </string>
 </strings>

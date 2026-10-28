@@ -1660,6 +1660,162 @@ $title - заменяется названием группы.
   <string key="sign_edit_late">
     <value>изменено спустя долгое время</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Выучено у вас</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt;\nОбнаружение подстраивает два порога под ваши решения и каждый раз сообщает вам об этом.\n\nПостоянный участник с: &lt;b&gt;{0} сообщ. и {1} дн.&lt;/b&gt; ({2})\nОтчёт с баллов: &lt;b&gt;{3}&lt;/b&gt; ({4})\nВозвращено в новички админами: {5}\nОбучение: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>обычный для этой группы</value>
+  </string>
+  <string key="learnLearned">
+    <value>выучено у вас; обычно здесь {0} сообщ. и {1} дн.</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>по умолчанию</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>выучено у вас</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Последние изменения:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: постоянный {1} → {2}, после того как участника с признаками удалили или заглушили</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: постоянный {1} → {2}, после того как участника вернули в новички</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: постоянный оставлен на {1}: участник был похож на угнанный аккаунт</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: постоянный {1} → {2}, постепенный возврат к обычному</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: постоянный {1} → {2}, всё отменено админом</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: отчёт с баллов {1} → {2}, по вашим решениям</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: отчёт с баллов {1} → {2}, всё отменено админом</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (отменено)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (только предложено)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Обучение: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Отменить всё</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Пороги вернулись к обычным.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\nПостоянного участника {1}: {2} ({3} сообщ., {4} дн. здесь).\nЗамечено ранее: {5}\n\nНовый порог постоянного участника: &lt;b&gt;{6} сообщ. и {7} дн.&lt;/b&gt; (было {8} и {9}). Участники ниже него снова считаются новичками, так что на них действуют проверки новичков и обнаружение рейдов.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\nПостоянного участника вернули в новички: {1} ({2} сообщ., {3} дн. здесь).\n\nНовый порог постоянного участника: &lt;b&gt;{4} сообщ. и {5} дн.&lt;/b&gt; (было {6} и {7}). Участники ниже него снова считаются новичками, так что на них действуют проверки новичков и обнаружение рейдов.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\nПостоянного участника {1}: {2} ({3} сообщ., {4} дн. здесь). Это намного больше обычного для этой группы и больше похоже на угнанный аккаунт, чем на слишком низкий порог, поэтому порог постоянного участника остаётся {5} сообщ. и {6} дн.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Обнаружение здесь только наблюдает до {0}, поэтому это не применено.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\nИз последних {1} участников, о которых вы решали после того, как Обнаружение дало им баллы, удалено или заглушено: {2}, в порядке: {3}. Теперь об участниках сообщается с &lt;b&gt;{4}&lt;/b&gt; баллов (было {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\nНовых сигналов давно не было, поэтому порог постоянного участника вернулся к обычному для этой группы: {1} сообщ. и {2} дн.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>забанили</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>исключили</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>заглушили</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>вернули в новички</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Отменить</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Оставить</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>С тех пор пороги изменились. Используй «Отменить всё» в разделе «Выучено у вас».</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Отменено: {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Оставлено: {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Восстановлено: {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Оставлен(а) новичком: {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Выучено у вас&lt;/b&gt; · {0}\n{1} возвращён(а) в новички {2}. С тех пор написал(а) {3} сообщ., без признаков и без мер против него/неё. Снова считать постоянным участником?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Восстановить</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Оставить новичком</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} считается здесь новичком, пока админ не восстановит через /trust.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} уже возвращён(а) в новички.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Админов нельзя вернуть в новички.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} снова оценивается по своим сообщениям и дням здесь.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} не был(а) возвращён(а) в новички.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Возвращает участника в новички: на него снова действуют проверки новичков и обнаружение рейдов, сколько бы у него ни было сообщений и дней, пока админ не восстановит его через /trust. Ответь на его сообщение или укажи его id или @username. Возврат постоянного участника в новички также повышает порог постоянного участника в группе, и админам об этом сообщается.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Восстанавливает участника, возвращённого в новички через /untrust: он снова оценивается по своим сообщениям и дням. Ответь на его сообщение или укажи его id или @username.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Вернуть участника в новички</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Восстановить участника из новичков</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Возвращён(а) в новички админом: {0}.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>По вашим решениям порог постоянного участника здесь выше обычного ({0} сообщ. и {1} дн.).</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Вернуть в новички</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Вернуть доверие</value>
+  </string>
 </strings>
 
   

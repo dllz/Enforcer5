@@ -1969,6 +1969,162 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="sign_edit_late">
     <value>lange nach dem Senden bearbeitet</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Von euch gelernt</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt;\nDie Erkennung passt zwei Schwellen an das an, was ihr entscheidet, und sagt euch jedes Mal Bescheid.\n\nEtabliert ab: &lt;b&gt;{0} Nachrichten und {1} Tagen&lt;/b&gt; ({2})\nGemeldet ab Punktzahl: &lt;b&gt;{3}&lt;/b&gt; ({4})\nVon Admins auf neu zurückgesetzt: {5}\nLernen: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>der übliche Wert dieser Gruppe</value>
+  </string>
+  <string key="learnLearned">
+    <value>von euch gelernt; üblich sind hier {0} Nachrichten und {1} Tage</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>Standard</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>von euch gelernt</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Letzte Änderungen:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: etabliert {1} → {2}, nachdem ein Mitglied mit Anzeichen entfernt oder stummgeschaltet wurde</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: etabliert {1} → {2}, nachdem ein Mitglied auf neu zurückgesetzt wurde</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: etabliert bleibt bei {1}: das Mitglied wirkte wie ein übernommenes Konto</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: etabliert {1} → {2}, schrittweise zurück zum Üblichen</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: etabliert {1} → {2}, alles von einem Admin rückgängig gemacht</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: gemeldet ab Punktzahl {1} → {2}, nach euren Entscheidungen</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: gemeldet ab Punktzahl {1} → {2}, alles von einem Admin rückgängig gemacht</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (rückgängig gemacht)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (nur vorgeschlagen)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Lernen: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Alles rückgängig</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Die Schwellen sind wieder die üblichen.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\nEin etabliertes Mitglied wurde {1}: {2} ({3} Nachrichten, {4} Tage hier).\nSchon vorher gesehen: {5}\n\nNeue Schwelle für etabliert: &lt;b&gt;{6} Nachrichten und {7} Tage&lt;/b&gt; (vorher {8} und {9}). Mitglieder darunter gelten wieder als neu, damit die Prüfungen für Neue und die Raid-Erkennung sie abdecken.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\nEin etabliertes Mitglied wurde auf neu zurückgesetzt: {1} ({2} Nachrichten, {3} Tage hier).\n\nNeue Schwelle für etabliert: &lt;b&gt;{4} Nachrichten und {5} Tage&lt;/b&gt; (vorher {6} und {7}). Mitglieder darunter gelten wieder als neu, damit die Prüfungen für Neue und die Raid-Erkennung sie abdecken.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\nEin etabliertes Mitglied wurde {1}: {2} ({3} Nachrichten, {4} Tage hier). Das ist weit mehr als hier üblich und sieht eher nach einem übernommenen Konto aus als nach einer zu niedrigen Schwelle, deshalb bleibt etabliert bei {5} Nachrichten und {6} Tagen.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Die Erkennung beobachtet hier nur bis {0}, deshalb wurde das nicht angewendet.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\nVon den letzten {1} Mitgliedern, über die ihr entschieden habt, nachdem die Erkennung ihnen Punkte gegeben hatte, wurden {2} entfernt oder stummgeschaltet und {3} waren in Ordnung. Mitglieder werden jetzt ab einer Punktzahl von &lt;b&gt;{4}&lt;/b&gt; gemeldet (vorher {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\nSeit einer Weile keine neuen Signale, deshalb gilt für etabliert wieder der übliche Wert dieser Gruppe: {1} Nachrichten und {2} Tage.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>gebannt</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>entfernt</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>stummgeschaltet</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>auf neu zurückgesetzt</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Rückgängig</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Behalten</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>Die Schwellen haben sich seitdem geändert. Nutze „Alles rückgängig“ unter „Von euch gelernt“.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Rückgängig gemacht von {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Behalten von {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Wiederhergestellt von {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Als neu behalten von {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\n{1} wurde am {2} auf neu zurückgesetzt. Seitdem kamen {3} Nachrichten, ohne Anzeichen und ohne dass etwas dagegen unternommen wurde. Wieder als etabliert zählen?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Wiederherstellen</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Als neu behalten</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} gilt hier als neu, bis ein Admin das Mitglied mit /trust wiederherstellt.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} ist bereits auf neu zurückgesetzt.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Admins können nicht auf neu zurückgesetzt werden.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} zählt hier wieder nach Nachrichten und Tagen.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} war nicht auf neu zurückgesetzt.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Setzt ein Mitglied auf neu zurück: Die Prüfungen für Neue und die Raid-Erkennung decken es wieder ab, egal wie viele Nachrichten und Tage es hat, bis ein Admin es mit /trust wiederherstellt. Antworte auf das Mitglied oder gib seine ID oder seinen @Benutzernamen an. Wird ein etabliertes Mitglied zurückgesetzt, steigt auch die Schwelle für etabliert in der Gruppe, und die Admins werden informiert.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Stellt ein mit /untrust auf neu zurückgesetztes Mitglied wieder her: Es zählt wieder nach seinen Nachrichten und Tagen. Antworte auf das Mitglied oder gib seine ID oder seinen @Benutzernamen an.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Mitglied auf neu zurücksetzen</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Zurückgesetztes Mitglied wiederherstellen</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Am {0} von einem Admin auf neu zurückgesetzt.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Etabliert liegt hier nach euren Entscheidungen höher als die üblichen {0} Nachrichten und {1} Tage.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Auf neu zurücksetzen</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Vertrauen wiederherstellen</value>
+  </string>
 </strings>
 
 

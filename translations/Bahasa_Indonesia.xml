@@ -2158,4 +2158,160 @@
   <string key="sign_edit_late">
     <value>diedit lama setelah dikirim</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Belajar dari kalian</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt;\nDeteksi menyesuaikan dua batas berdasarkan keputusan kalian, dan memberi tahu kalian setiap kali melakukannya.\n\nTepercaya mulai: &lt;b&gt;{0} pesan dan {1} hari&lt;/b&gt; ({2})\nDilaporkan mulai skor: &lt;b&gt;{3}&lt;/b&gt; ({4})\nDikembalikan menjadi baru oleh admin: {5}\nPembelajaran: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>yang biasa untuk grup ini</value>
+  </string>
+  <string key="learnLearned">
+    <value>dipelajari dari kalian; biasanya di sini {0} pesan dan {1} hari</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>bawaan</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>dipelajari dari kalian</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Perubahan terakhir:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: tepercaya {1} → {2}, setelah anggota dengan tanda-tanda dikeluarkan atau dibisukan</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: tepercaya {1} → {2}, setelah seorang anggota dikembalikan menjadi baru</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: tepercaya tetap {1}: anggota itu tampak seperti akun yang diambil alih</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: tepercaya {1} → {2}, perlahan kembali ke yang biasa</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: tepercaya {1} → {2}, semua dibatalkan oleh admin</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: dilaporkan mulai skor {1} → {2}, dari keputusan kalian</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: dilaporkan mulai skor {1} → {2}, semua dibatalkan oleh admin</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (dibatalkan)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (hanya diusulkan)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Pembelajaran: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Batalkan semua</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Batas-batasnya sudah kembali ke yang biasa.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\nSeorang anggota tepercaya {1}: {2} ({3} pesan, {4} hari di sini).\nTerlihat sebelumnya: {5}\n\nBatas tepercaya baru: &lt;b&gt;{6} pesan dan {7} hari&lt;/b&gt; (sebelumnya {8} dan {9}). Anggota di bawahnya kembali dihitung sebagai baru, sehingga pemeriksaan anggota baru dan deteksi raid berlaku untuk mereka.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\nSeorang anggota tepercaya dikembalikan menjadi baru: {1} ({2} pesan, {3} hari di sini).\n\nBatas tepercaya baru: &lt;b&gt;{4} pesan dan {5} hari&lt;/b&gt; (sebelumnya {6} dan {7}). Anggota di bawahnya kembali dihitung sebagai baru, sehingga pemeriksaan anggota baru dan deteksi raid berlaku untuk mereka.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\nSeorang anggota tepercaya {1}: {2} ({3} pesan, {4} hari di sini). Itu jauh lebih banyak dari biasanya di sini, sehingga lebih mirip akun yang diambil alih daripada batas yang terlalu rendah, jadi batas tepercaya tetap {5} pesan dan {6} hari.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Deteksi di sini hanya mengamati sampai {0}, jadi ini tidak diterapkan.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\nDari {1} anggota terakhir yang kalian putuskan setelah Deteksi memberi mereka skor, {2} dikeluarkan atau dibisukan dan {3} aman. Anggota sekarang dilaporkan mulai skor &lt;b&gt;{4}&lt;/b&gt; (sebelumnya {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\nSudah lama tidak ada sinyal baru, jadi batas tepercaya kembali ke yang biasa untuk grup ini: {1} pesan dan {2} hari.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>diblokir</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>ditendang</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>dibisukan</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>dikembalikan menjadi baru</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Batalkan</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Pertahankan</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>Batasnya sudah berubah sejak itu. Gunakan Batalkan semua di Belajar dari kalian.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Dibatalkan oleh {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Dipertahankan oleh {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Dipulihkan oleh {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Dibiarkan sebagai baru oleh {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\n{1} dikembalikan menjadi baru pada {2}. Sejak itu ia menulis {3} pesan, tanpa tanda-tanda dan tanpa tindakan apa pun terhadapnya. Hitung lagi sebagai tepercaya?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Pulihkan</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Biarkan baru</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} dihitung sebagai baru di sini sampai admin memulihkannya dengan /trust.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} sudah dikembalikan menjadi baru.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Admin tidak bisa dikembalikan menjadi baru.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} kembali dihitung berdasarkan pesan dan harinya di sini.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} tidak sedang dikembalikan menjadi baru.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Mengembalikan anggota menjadi baru: pemeriksaan anggota baru dan deteksi raid kembali berlaku untuknya, berapa pun pesan dan harinya, sampai admin memulihkannya dengan /trust. Balas pesannya, atau berikan id atau @username-nya. Mengembalikan anggota tepercaya juga menaikkan batas tepercaya grup, dan para admin diberi tahu.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Memulihkan anggota yang dikembalikan menjadi baru dengan /untrust: ia kembali dihitung berdasarkan pesan dan harinya. Balas pesannya, atau berikan id atau @username-nya.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Kembalikan anggota menjadi baru</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Pulihkan anggota yang dikembalikan menjadi baru</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Dikembalikan menjadi baru oleh admin pada {0}.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Batas tepercaya di sini lebih tinggi dari yang biasa ({0} pesan dan {1} hari), berdasarkan keputusan kalian.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Kembalikan menjadi baru</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Pulihkan kepercayaan</value>
+  </string>
 </strings>

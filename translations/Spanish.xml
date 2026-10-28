@@ -910,4 +910,160 @@
   <string key="sign_edit_late">
     <value>editado mucho después de publicarlo</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Aprendido de vosotros</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt;\nLa Detección ajusta dos niveles según lo que decidís, y os lo dice cada vez que lo hace.\n\nEstablecido desde: &lt;b&gt;{0} mensajes y {1} días&lt;/b&gt; ({2})\nAviso desde una puntuación de: &lt;b&gt;{3}&lt;/b&gt; ({4})\nDevueltos a nuevos por los admins: {5}\nAprendizaje: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>lo habitual en este grupo</value>
+  </string>
+  <string key="learnLearned">
+    <value>aprendido de vosotros; lo habitual aquí es {0} mensajes y {1} días</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>el predeterminado</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>aprendido de vosotros</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Últimos cambios:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: establecido {1} → {2}, tras quitar o silenciar a un miembro con señales</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: establecido {1} → {2}, tras devolver a un miembro a nuevo</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: establecido se queda en {1}: el miembro parecía una cuenta robada</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: establecido {1} → {2}, volviendo poco a poco a lo habitual</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: establecido {1} → {2}, todo deshecho por un admin</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: aviso desde una puntuación de {1} → {2}, por vuestras decisiones</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: aviso desde una puntuación de {1} → {2}, todo deshecho por un admin</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (deshecho)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (solo propuesto)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Aprendizaje: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Deshacer todo</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Los niveles vuelven a ser los habituales.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\nUn miembro establecido fue {1}: {2} ({3} mensajes, {4} días aquí).\nVisto antes: {5}\n\nNuevo nivel de establecido: &lt;b&gt;{6} mensajes y {7} días&lt;/b&gt; (antes {8} y {9}). Los miembros por debajo vuelven a contar como nuevos, así que las comprobaciones de recién llegados y la detección de raids los cubren.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\nUn miembro establecido fue devuelto a nuevo: {1} ({2} mensajes, {3} días aquí).\n\nNuevo nivel de establecido: &lt;b&gt;{4} mensajes y {5} días&lt;/b&gt; (antes {6} y {7}). Los miembros por debajo vuelven a contar como nuevos, así que las comprobaciones de recién llegados y la detección de raids los cubren.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\nUn miembro establecido fue {1}: {2} ({3} mensajes, {4} días aquí). Es mucho más de lo habitual aquí, lo que parece una cuenta robada más que un nivel demasiado bajo, así que establecido se queda en {5} mensajes y {6} días.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Aquí la Detección solo está observando hasta el {0}, así que esto no se aplicó.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\nDe los últimos {1} miembros sobre los que decidisteis después de que la Detección les diera una puntuación, {2} fueron quitados o silenciados y {3} estaban bien. Ahora se avisa de los miembros desde una puntuación de &lt;b&gt;{4}&lt;/b&gt; (antes {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\nSin señales nuevas desde hace un tiempo, así que establecido vuelve a lo habitual en este grupo: {1} mensajes y {2} días.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>baneado</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>expulsado</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>silenciado</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>devuelto a nuevo</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Deshacer</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Mantener</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>Los niveles han cambiado desde entonces. Usa Deshacer todo en Aprendido de vosotros.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ Deshecho por {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 Mantenido por {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ Restaurado por {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>Mantenido como nuevo por {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Aprendido de vosotros&lt;/b&gt; · {0}\n{1} fue devuelto a nuevo el {2}. Desde entonces ha escrito {3} mensajes, sin señales y sin ninguna acción en su contra. ¿Volver a contarlo como establecido?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Restaurar</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Mantener como nuevo</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} cuenta como nuevo aquí hasta que un admin lo restaure con /trust.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} ya fue devuelto a nuevo.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Los admins no se pueden devolver a nuevo.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} vuelve a contar por sus mensajes y días aquí.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} no había sido devuelto a nuevo.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Devuelve a un miembro a nuevo: las comprobaciones de recién llegados y la detección de raids vuelven a cubrirlo, tenga los mensajes y días que tenga, hasta que un admin lo restaure con /trust. Responde a su mensaje o indica su id o @username. Devolver a nuevo a un miembro establecido también sube el nivel de establecido del grupo, y se avisa a los admins.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>Restaura a un miembro devuelto a nuevo con /untrust: vuelve a contar por sus mensajes y días. Responde a su mensaje o indica su id o @username.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Devolver a un miembro a nuevo</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Restaurar a un miembro devuelto a nuevo</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>Devuelto a nuevo por un admin el {0}.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Aquí el nivel de establecido es más alto que los habituales {0} mensajes y {1} días, por vuestras decisiones.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Devolver a nuevo</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Restaurar confianza</value>
+  </string>
 </strings>

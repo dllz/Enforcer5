@@ -1909,4 +1909,160 @@ exaple: /{0}
   <string key="sign_edit_late">
     <value>مدت‌ها پس از ارسال ویرایش شد</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 آموخته از شما</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt;\nتشخیص دو سطح را بر اساس تصمیم‌های شما تنظیم می‌کند و هر بار که این کار را می‌کند به شما خبر می‌دهد.\n\nعضو قدیمی از: &lt;b&gt;{0} پیام و {1} روز&lt;/b&gt; ({2})\nگزارش از امتیاز: &lt;b&gt;{3}&lt;/b&gt; ({4})\nدوباره تازه‌وارد شده توسط مدیران: {5}\nیادگیری: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>حالت معمول این گروه</value>
+  </string>
+  <string key="learnLearned">
+    <value>آموخته از شما؛ حالت معمول اینجا {0} پیام و {1} روز است</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>پیش‌فرض</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>آموخته از شما</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>آخرین تغییرات:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: عضو قدیمی {1} → {2}، پس از اینکه عضوی با نشانه‌ها حذف یا بی‌صدا شد</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: عضو قدیمی {1} → {2}، پس از اینکه عضوی دوباره تازه‌وارد حساب شد</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: عضو قدیمی روی {1} ماند: آن عضو شبیه حسابی بود که به دست دیگری افتاده</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: عضو قدیمی {1} → {2}، بازگشت تدریجی به حالت معمول</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: عضو قدیمی {1} → {2}، همه توسط یک مدیر لغو شد</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: گزارش از امتیاز {1} → {2}، بر اساس تصمیم‌های شما</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: گزارش از امتیاز {1} → {2}، همه توسط یک مدیر لغو شد</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (لغو شد)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (فقط پیشنهاد)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>یادگیری: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ لغو همه</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>سطح‌ها به حالت معمول برگشتند.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\nیک عضو قدیمی {1}: {2} ({3} پیام، {4} روز در اینجا).\nقبلاً دیده شده: {5}\n\nسطح جدید عضو قدیمی: &lt;b&gt;{6} پیام و {7} روز&lt;/b&gt; (قبلاً {8} و {9}). اعضای پایین‌تر از آن دوباره تازه‌وارد حساب می‌شوند، تا بررسی‌های تازه‌واردها و تشخیص حمله شامل آنها شود.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\nیک عضو قدیمی دوباره تازه‌وارد حساب شد: {1} ({2} پیام، {3} روز در اینجا).\n\nسطح جدید عضو قدیمی: &lt;b&gt;{4} پیام و {5} روز&lt;/b&gt; (قبلاً {6} و {7}). اعضای پایین‌تر از آن دوباره تازه‌وارد حساب می‌شوند، تا بررسی‌های تازه‌واردها و تشخیص حمله شامل آنها شود.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\nیک عضو قدیمی {1}: {2} ({3} پیام، {4} روز در اینجا). این خیلی بیشتر از حد معمول اینجاست و بیشتر به حسابی می‌ماند که به دست دیگری افتاده تا سطحی که خیلی پایین است، پس سطح عضو قدیمی روی {5} پیام و {6} روز می‌ماند.</value>
+  </string>
+  <string key="learnWatching">
+    <value>تشخیص اینجا تا {0} فقط در حال مشاهده است، پس این اعمال نشد.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\nاز {1} عضو آخری که پس از امتیازدهی تشخیص درباره‌شان تصمیم گرفتید، {2} نفر حذف یا بی‌صدا شدند و {3} نفر مشکلی نداشتند. از حالا اعضا از امتیاز &lt;b&gt;{4}&lt;/b&gt; گزارش می‌شوند (قبلاً {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\nمدتی نشانه تازه‌ای نبود، پس سطح عضو قدیمی به حالت معمول این گروه برگشت: {1} پیام و {2} روز.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>مسدود شد</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>اخراج شد</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>بی‌صدا شد</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>دوباره تازه‌وارد حساب شد</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ لغو</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 بماند</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>سطح‌ها از آن موقع تغییر کرده‌اند. از «لغو همه» در «آموخته از شما» استفاده کنید.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ لغو شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 نگه داشته شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ بازگردانده شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>تازه‌وارد ماند توسط {0}</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\n{1} در {2} دوباره تازه‌وارد حساب شد. از آن موقع {3} پیام نوشته، بدون هیچ نشانه‌ای و بدون هیچ اقدامی علیه او. دوباره عضو قدیمی حساب شود؟</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ بازگردان</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>تازه‌وارد بماند</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} اینجا تازه‌وارد حساب می‌شود تا وقتی یک مدیر با /trust او را بازگرداند.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} از قبل دوباره تازه‌وارد حساب شده است.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>مدیران را نمی‌توان دوباره تازه‌وارد حساب کرد.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} دوباره بر اساس پیام‌ها و روزهایش در اینجا حساب می‌شود.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} دوباره تازه‌وارد حساب نشده بود.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>یک عضو را دوباره تازه‌وارد حساب می‌کند: بررسی‌های تازه‌واردها و تشخیص حمله دوباره شامل او می‌شوند، هر تعداد پیام و روز که داشته باشد، تا وقتی یک مدیر با /trust او را بازگرداند. به پیامش ریپلای کنید، یا id یا @username او را بدهید. تازه‌وارد کردن یک عضو قدیمی سطح عضو قدیمی گروه را هم بالا می‌برد و به مدیران خبر داده می‌شود.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>عضوی را که با /untrust دوباره تازه‌وارد حساب شده بازمی‌گرداند: دوباره بر اساس پیام‌ها و روزهایش حساب می‌شود. به پیامش ریپلای کنید، یا id یا @username او را بدهید.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>دوباره تازه‌وارد کردن یک عضو</value>
+  </string>
+  <string key="cmdtrust">
+    <value>بازگرداندن عضوی که دوباره تازه‌وارد شده</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>در {0} توسط یک مدیر دوباره تازه‌وارد حساب شد.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>بر اساس تصمیم‌های شما، سطح عضو قدیمی اینجا بالاتر از حد معمول {0} پیام و {1} روز است.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>دوباره تازه‌وارد</value>
+  </string>
+  <string key="userTrustButton">
+    <value>بازگرداندن اعتماد</value>
+  </string>
 </strings> 

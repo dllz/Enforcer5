@@ -1938,4 +1938,160 @@
   <string key="sign_edit_late">
     <value>gönderildikten çok sonra düzenlendi</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 Sizden öğrenilenler</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt;\nTespit, verdiğiniz kararlara göre iki seviyeyi ayarlar ve her seferinde size bildirir.\n\nYerleşik sayılma: &lt;b&gt;{0} mesaj ve {1} gün&lt;/b&gt; ({2})\nRapor eşiği puanı: &lt;b&gt;{3}&lt;/b&gt; ({4})\nYöneticilerce yeniye döndürülen: {5}\nÖğrenme: {6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>bu grubun olağan değeri</value>
+  </string>
+  <string key="learnLearned">
+    <value>sizden öğrenildi; burada olağan değer {0} mesaj ve {1} gün</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>varsayılan</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>sizden öğrenildi</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>Son değişiklikler:</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}: yerleşik {1} → {2}, belirtileri olan bir üye çıkarıldıktan veya susturulduktan sonra</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}: yerleşik {1} → {2}, bir üye yeniye döndürüldükten sonra</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}: yerleşik {1} olarak bırakıldı: üye ele geçirilmiş bir hesaba benziyordu</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}: yerleşik {1} → {2}, yavaş yavaş olağana dönüyor</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}: yerleşik {1} → {2}, tümü bir yönetici tarafından geri alındı</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}: rapor eşiği puanı {1} → {2}, kararlarınıza göre</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}: rapor eşiği puanı {1} → {2}, tümü bir yönetici tarafından geri alındı</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> (geri alındı)</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> (yalnızca önerildi)</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>Öğrenme: {0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ Tümünü geri al</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>Seviyeler olağan değerlerine döndü.</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\nYerleşik bir üye {1}: {2} ({3} mesaj, burada {4} gün).\nDaha önce görülenler: {5}\n\nYeni yerleşik seviyesi: &lt;b&gt;{6} mesaj ve {7} gün&lt;/b&gt; (önceden {8} ve {9}). Bunun altındaki üyeler yeniden yeni sayılır, böylece yeni gelen kontrolleri ve baskın tespiti onları kapsar.</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\nYerleşik bir üye yeniye döndürüldü: {1} ({2} mesaj, burada {3} gün).\n\nYeni yerleşik seviyesi: &lt;b&gt;{4} mesaj ve {5} gün&lt;/b&gt; (önceden {6} ve {7}). Bunun altındaki üyeler yeniden yeni sayılır, böylece yeni gelen kontrolleri ve baskın tespiti onları kapsar.</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\nYerleşik bir üye {1}: {2} ({3} mesaj, burada {4} gün). Bu, burada olağan olandan çok daha fazla ve çok düşük bir seviyeden çok ele geçirilmiş bir hesaba benziyor, bu yüzden yerleşik seviyesi {5} mesaj ve {6} günde kalıyor.</value>
+  </string>
+  <string key="learnWatching">
+    <value>Tespit burada {0} tarihine kadar sadece izliyor, bu yüzden bu uygulanmadı.</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\nTespit'in puan verdiği ve sizin karar verdiğiniz son {1} üyeden {2} tanesi çıkarıldı veya susturuldu, {3} tanesinde sorun yoktu. Üyeler artık &lt;b&gt;{4}&lt;/b&gt; puandan itibaren raporlanıyor (önceden {5}).</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\nBir süredir yeni sinyal yok, bu yüzden yerleşik seviyesi bu grubun olağan değerine döndü: {1} mesaj ve {2} gün.</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>yasaklandı</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>atıldı</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>susturuldu</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>yeniye döndürüldü</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ Geri al</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 Koru</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>Seviyeler o zamandan beri değişti. Sizden öğrenilenler altındaki Tümünü geri al seçeneğini kullanın.</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ {0} tarafından geri alındı</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 {0} tarafından korundu</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ {0} tarafından geri yüklendi</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>{0} tarafından yeni olarak bırakıldı</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\n{1}, {2} tarihinde yeniye döndürüldü. O zamandan beri hiçbir belirti olmadan ve kendisine karşı hiçbir işlem yapılmadan {3} mesaj yazdı. Yeniden yerleşik sayılsın mı?</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ Geri yükle</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>Yeni olarak bırak</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0}, bir yönetici /trust ile geri yükleyene kadar burada yeni sayılır.</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} zaten yeniye döndürülmüş.</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>Yöneticiler yeniye döndürülemez.</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} burada yeniden mesajlarına ve günlerine göre sayılıyor.</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} yeniye döndürülmemişti.</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>Bir üyeyi yeniye döndürür: bir yönetici /trust ile geri yükleyene kadar, mesaj ve gün sayısı ne olursa olsun yeni gelen kontrolleri ve baskın tespiti onu yeniden kapsar. Üyeye yanıt verin ya da id'sini veya @kullanıcıadını yazın. Yerleşik bir üyeyi yeniye döndürmek grubun yerleşik seviyesini de yükseltir ve yöneticilere bildirilir.</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>/untrust ile yeniye döndürülmüş bir üyeyi geri yükler: yeniden mesajlarına ve günlerine göre sayılır. Üyeye yanıt verin ya da id'sini veya @kullanıcıadını yazın.</value>
+  </string>
+  <string key="cmduntrust">
+    <value>Bir üyeyi yeniye döndür</value>
+  </string>
+  <string key="cmdtrust">
+    <value>Yeniye döndürülen üyeyi geri yükle</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>{0} tarihinde bir yönetici tarafından yeniye döndürüldü.</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>Kararlarınız nedeniyle burada yerleşik seviyesi olağan {0} mesaj ve {1} günden yüksek.</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>Yeniye döndür</value>
+  </string>
+  <string key="userTrustButton">
+    <value>Güveni geri yükle</value>
+  </string>
 </strings>

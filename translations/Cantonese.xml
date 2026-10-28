@@ -1512,4 +1512,160 @@ UPDATE LOG
   <string key="sign_edit_late">
     <value>發咗好耐之後先編輯</value>
   </string>
+  <string key="detectionLearnButton">
+    <value>🧠 從你哋學到</value>
+  </string>
+  <string key="learnMenu">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt;\n偵測會根據你哋嘅決定調整兩個門檻，每次調整都會話俾你哋知。\n\n老成員門檻：&lt;b&gt;{0} 個訊息同 {1} 日&lt;/b&gt;（{2}）\n報告門檻分數：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理員設返做新成員：{5}\n學習：{6}</value>
+  </string>
+  <string key="learnUsual">
+    <value>呢個群嘅一般設定</value>
+  </string>
+  <string key="learnLearned">
+    <value>從你哋學到；呢度一般係 {0} 個訊息同 {1} 日</value>
+  </string>
+  <string key="learnReportDefault">
+    <value>預設</value>
+  </string>
+  <string key="learnReportLearned">
+    <value>從你哋學到</value>
+  </string>
+  <string key="learnHistoryHeader">
+    <value>最近嘅改動：</value>
+  </string>
+  <string key="learnHistory_established_decision">
+    <value>{0}：老成員 {1} → {2}，因為有個有跡象嘅成員被移除或者禁言</value>
+  </string>
+  <string key="learnHistory_established_untrust">
+    <value>{0}：老成員 {1} → {2}，因為有個成員被設返做新成員</value>
+  </string>
+  <string key="learnHistory_established_takeover">
+    <value>{0}：老成員維持喺 {1}：嗰個成員似係被盜用嘅帳戶</value>
+  </string>
+  <string key="learnHistory_established_decay">
+    <value>{0}：老成員 {1} → {2}，慢慢返去一般設定</value>
+  </string>
+  <string key="learnHistory_established_reset">
+    <value>{0}：老成員 {1} → {2}，管理員全部撤銷咗</value>
+  </string>
+  <string key="learnHistory_report_at_decisions">
+    <value>{0}：報告門檻分數 {1} → {2}，根據你哋嘅決定</value>
+  </string>
+  <string key="learnHistory_report_at_reset">
+    <value>{0}：報告門檻分數 {1} → {2}，管理員全部撤銷咗</value>
+  </string>
+  <string key="learnUndoneMark">
+    <value> （已撤銷）</value>
+  </string>
+  <string key="learnProposedMark">
+    <value> （只係建議）</value>
+  </string>
+  <string key="learnToggleButton">
+    <value>學習：{0}</value>
+  </string>
+  <string key="learnUndoAllButton">
+    <value>↩️ 全部撤銷</value>
+  </string>
+  <string key="learnUndoAllDone">
+    <value>門檻已經返返一般設定。</value>
+  </string>
+  <string key="learnRaised">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n有個老成員{1}：{2}（{3} 個訊息，喺度 {4} 日）。\n之前見過：{5}\n\n新嘅老成員門檻：&lt;b&gt;{6} 個訊息同 {7} 日&lt;/b&gt;（之前係 {8} 同 {9}）。低過呢個門檻嘅成員會重新當新成員，所以新成員檢查同突襲偵測會再覆蓋佢哋。</value>
+  </string>
+  <string key="learnRaisedUntrust">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n有個老成員被設返做新成員：{1}（{2} 個訊息，喺度 {3} 日）。\n\n新嘅老成員門檻：&lt;b&gt;{4} 個訊息同 {5} 日&lt;/b&gt;（之前係 {6} 同 {7}）。低過呢個門檻嘅成員會重新當新成員，所以新成員檢查同突襲偵測會再覆蓋佢哋。</value>
+  </string>
+  <string key="learnTakeover">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n有個老成員{1}：{2}（{3} 個訊息，喺度 {4} 日）。呢個遠超呢度嘅一般水平，似係帳戶被盜用多過門檻太低，所以老成員門檻維持喺 {5} 個訊息同 {6} 日。</value>
+  </string>
+  <string key="learnWatching">
+    <value>偵測喺呢度只係觀察到 {0}，所以今次冇套用。</value>
+  </string>
+  <string key="learnReportAt">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n偵測俾咗分數之後你哋決定過嘅最近 {1} 個成員入面，{2} 個被移除或者禁言，{3} 個冇問題。而家分數去到 &lt;b&gt;{4}&lt;/b&gt; 就會報告成員（之前係 {5}）。</value>
+  </string>
+  <string key="learnBackToUsual">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n有一段時間冇新訊號，所以老成員門檻返返呢個群嘅一般設定：{1} 個訊息同 {2} 日。</value>
+  </string>
+  <string key="learnAction_ban">
+    <value>被封鎖咗</value>
+  </string>
+  <string key="learnAction_kick">
+    <value>被踢走咗</value>
+  </string>
+  <string key="learnAction_mute">
+    <value>被禁言咗</value>
+  </string>
+  <string key="learnAction_untrust">
+    <value>被設返做新成員</value>
+  </string>
+  <string key="learnUndoButton">
+    <value>↩️ 撤銷</value>
+  </string>
+  <string key="learnKeepButton">
+    <value>👍 保留</value>
+  </string>
+  <string key="learnUndoStale">
+    <value>門檻之後已經變過。請喺「從你哋學到」入面用「全部撤銷」。</value>
+  </string>
+  <string key="reportDecided_undo">
+    <value>↩️ {0} 已撤銷</value>
+  </string>
+  <string key="reportDecided_keep">
+    <value>👍 {0} 已保留</value>
+  </string>
+  <string key="reportDecided_restore">
+    <value>✅ {0} 已恢復</value>
+  </string>
+  <string key="reportDecided_keepnew">
+    <value>{0} 保留咗做新成員</value>
+  </string>
+  <string key="trustRestorePrompt">
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n{1} 喺 {2} 被設返做新成員。之後佢寫咗 {3} 個訊息，冇任何跡象，亦冇人對佢採取行動。要唔要再當佢係老成員？</value>
+  </string>
+  <string key="trustRestoreButton">
+    <value>✅ 恢復</value>
+  </string>
+  <string key="trustKeepNewButton">
+    <value>保留做新成員</value>
+  </string>
+  <string key="untrustDone">
+    <value>{0} 喺呢度會當新成員，直到管理員用 /trust 恢復佢。</value>
+  </string>
+  <string key="untrustAlready">
+    <value>{0} 已經被設返做新成員。</value>
+  </string>
+  <string key="untrustAdmin">
+    <value>管理員唔可以被設返做新成員。</value>
+  </string>
+  <string key="trustDone">
+    <value>{0} 再次按佢喺呢度嘅訊息同日數計算。</value>
+  </string>
+  <string key="trustNotSet">
+    <value>{0} 冇被設返做新成員。</value>
+  </string>
+  <string key="hcommanduntrust">
+    <value>將成員設返做新成員：無論佢有幾多訊息同日數，新成員檢查同突襲偵測都會再覆蓋佢，直到管理員用 /trust 恢復佢。回覆佢，或者提供佢嘅 id 或 @username。將老成員設返做新成員亦會提高群組嘅老成員門檻，並會通知管理員。</value>
+  </string>
+  <string key="hcommandtrust">
+    <value>恢復用 /untrust 設返做新成員嘅成員：佢會再按訊息同日數計算。回覆佢，或者提供佢嘅 id 或 @username。</value>
+  </string>
+  <string key="cmduntrust">
+    <value>將成員設返做新成員</value>
+  </string>
+  <string key="cmdtrust">
+    <value>恢復被設返做新成員嘅成員</value>
+  </string>
+  <string key="trustUntrusted">
+    <value>喺 {0} 被管理員設返做新成員。</value>
+  </string>
+  <string key="trustLearnedLine">
+    <value>根據你哋嘅決定，呢度嘅老成員門檻高過一般嘅 {0} 個訊息同 {1} 日。</value>
+  </string>
+  <string key="userUntrustButton">
+    <value>設返做新成員</value>
+  </string>
+  <string key="userTrustButton">
+    <value>恢復信任</value>
+  </string>
 </strings>
