@@ -360,9 +360,11 @@ tests that run in the Docker build.
 `RaidReplay`), and **`ChaosScenarios`**: seeded random raids across several groups with storms, lost
 rights and crashes, checking every rule after each. It runs 3 seeds by default. **Before pushing a
 change to `Helpers/TelegramGateway`, `FloodControl`, `Enforcement/`, `CommandLimiter` or `Raids/`,
-run 500:** `ENFORCER_CHAOS_RUNS=500 enf-sql subprod --run -- dotnet test Enforcer5.slnx --filter
-FullyQualifiedName~ChaosScenarios` (about an hour). A failure names its seed; replay it alone with
-`ENFORCER_CHAOS_SEED=<seed>`; `ENFORCER_CHAOS_PROGRESS=<file>` logs each seed as it finishes.
+run 500:** `enf-sql subprod --run -- tools/chaos.sh 500`. It splits the seeds over several test
+processes (seeds cannot share one: the harness takes over static state); each uses up to 5
+connections and subprod's role allows 10, so it runs 2 (`ENFORCER_CHAOS_SHARDS`), about 4.5 s a
+seed each. It lists the failing seeds and exits non-zero. A failure names its seed; replay it alone
+with `ENFORCER_CHAOS_SEED=<seed>`; `ENFORCER_CHAOS_PROGRESS=<file>` logs each seed as it finishes.
 
 The PostgreSQL tests reuse migrated schemas (`TestPostgres.MigratedSchemaAsync`, emptied between
 tests) and turn `synchronous_commit` off: subprod takes 250-800 ms to flush a commit, which made a
