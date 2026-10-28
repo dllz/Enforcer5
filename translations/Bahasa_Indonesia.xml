@@ -2162,7 +2162,7 @@
     <value>🧠 Belajar dari kalian</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt;\nDeteksi menyesuaikan dua batas berdasarkan keputusan kalian, dan memberi tahu kalian setiap kali melakukannya.\n\nTepercaya mulai: &lt;b&gt;{0} pesan dan {1} hari&lt;/b&gt; ({2})\nDilaporkan mulai skor: &lt;b&gt;{3}&lt;/b&gt; ({4})\nDikembalikan menjadi baru oleh admin: {5}\nPembelajaran: {6}</value>
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt;\nDeteksi menyesuaikan dua batas berdasarkan keputusan kalian, dan memberi tahu kalian setiap kali melakukannya. Hanya spam dan penyalahgunaan yang dihitung: anggota yang melanggar aturan grup kalian sendiri, misalnya aturan permainan, tetap dipercaya.\n\nTepercaya mulai: &lt;b&gt;{0} pesan dan {1} hari&lt;/b&gt; ({2})\nDilaporkan mulai skor: &lt;b&gt;{3}&lt;/b&gt; ({4})\nDikembalikan menjadi baru oleh admin: {5}\nPembelajaran: {6}</value>
   </string>
   <string key="learnUsual">
     <value>yang biasa untuk grup ini</value>
@@ -2267,7 +2267,7 @@
     <value>Dibiarkan sebagai baru oleh {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\n{1} dikembalikan menjadi baru pada {2}. Sejak itu ia menulis {3} pesan, tanpa tanda-tanda dan tanpa tindakan apa pun terhadapnya. Hitung lagi sebagai tepercaya?</value>
+    <value>🧠 &lt;b&gt;Belajar dari kalian&lt;/b&gt; · {0}\n{1} dikembalikan menjadi baru pada {2}. Sejak itu ia menulis {3} pesan, tanpa tanda-tanda spam atau penyalahgunaan dan tanpa tindakan apa pun terhadapnya karena hal itu. Hitung lagi sebagai tepercaya?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Pulihkan</value>
@@ -2313,5 +2313,26 @@
   </string>
   <string key="userTrustButton">
     <value>Pulihkan kepercayaan</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>Sebuah aturan adalah aturan grup kalian sendiri, kecuali kalian menyebutnya soal spam: /filter add spam text ban regex, atau /filter spam id (dan /filter grouprule id untuk membatalkannya). Hanya aturan spam dan penyalahgunaan yang memengaruhi siapa yang dipercaya Deteksi.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>Aturan #{0} sekarang tentang spam atau penyalahgunaan: anggota yang tertangkap olehnya bisa kehilangan kepercayaan.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>Aturan #{0} sekarang menjadi aturan grup kalian sendiri: melanggarnya tidak memengaruhi kepercayaan.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(spam atau penyalahgunaan)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(aturan grup)</value>
+  </string>
+  <string key="learnByReason">
+    <value>alasan kalian menyebut spam, iklan, atau penipuan</value>
+  </string>
+  <string key="userRecord">
+    <value>{0} hari terakhir: {1} tindakan karena spam atau penyalahgunaan, {2} karena aturan grup ini sendiri.</value>
   </string>
 </strings>

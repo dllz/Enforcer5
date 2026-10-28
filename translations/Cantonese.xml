@@ -1516,7 +1516,7 @@ UPDATE LOG
     <value>🧠 從你哋學到</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt;\n偵測會根據你哋嘅決定調整兩個門檻，每次調整都會話俾你哋知。\n\n老成員門檻：&lt;b&gt;{0} 個訊息同 {1} 日&lt;/b&gt;（{2}）\n報告門檻分數：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理員設返做新成員：{5}\n學習：{6}</value>
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt;\n偵測會根據你哋嘅決定調整兩個門檻，每次調整都會話俾你哋知。只有垃圾訊息同濫用先計：違反本群自己規則（例如遊戲規則）嘅成員會保留信任。\n\n老成員門檻：&lt;b&gt;{0} 個訊息同 {1} 日&lt;/b&gt;（{2}）\n報告門檻分數：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理員設返做新成員：{5}\n學習：{6}</value>
   </string>
   <string key="learnUsual">
     <value>呢個群嘅一般設定</value>
@@ -1621,7 +1621,7 @@ UPDATE LOG
     <value>{0} 保留咗做新成員</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n{1} 喺 {2} 被設返做新成員。之後佢寫咗 {3} 個訊息，冇任何跡象，亦冇人對佢採取行動。要唔要再當佢係老成員？</value>
+    <value>🧠 &lt;b&gt;從你哋學到&lt;/b&gt; · {0}\n{1} 喺 {2} 被設返做新成員。之後佢寫咗 {3} 個訊息，冇任何垃圾訊息或濫用嘅跡象，亦冇人因此對佢採取行動。要唔要再當佢係老成員？</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ 恢復</value>
@@ -1667,5 +1667,26 @@ UPDATE LOG
   </string>
   <string key="userTrustButton">
     <value>恢復信任</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>除非你哋講明係關於垃圾訊息，否則一條規則就係本群自己嘅規則：/filter add spam text ban regex，或者 /filter spam id（要還原就用 /filter grouprule id）。只有垃圾訊息同濫用嘅規則會影響偵測信任邊個。</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>規則 #{0} 而家係關於垃圾訊息或者濫用：被佢搵到嘅成員可能會失去信任。</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>規則 #{0} 而家係本群自己嘅規則：違反佢唔會影響信任。</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>（垃圾訊息或濫用）</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>（群組規則）</value>
+  </string>
+  <string key="learnByReason">
+    <value>你哋嘅原因提到垃圾訊息、廣告或者詐騙</value>
+  </string>
+  <string key="userRecord">
+    <value>過去 {0} 日：{1} 次因為垃圾訊息或濫用而處理，{2} 次因為本群自己嘅規則。</value>
   </string>
 </strings>

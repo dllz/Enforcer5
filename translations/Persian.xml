@@ -1913,7 +1913,7 @@ exaple: /{0}
     <value>🧠 آموخته از شما</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt;\nتشخیص دو سطح را بر اساس تصمیم‌های شما تنظیم می‌کند و هر بار که این کار را می‌کند به شما خبر می‌دهد.\n\nعضو قدیمی از: &lt;b&gt;{0} پیام و {1} روز&lt;/b&gt; ({2})\nگزارش از امتیاز: &lt;b&gt;{3}&lt;/b&gt; ({4})\nدوباره تازه‌وارد شده توسط مدیران: {5}\nیادگیری: {6}</value>
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt;\nتشخیص دو سطح را بر اساس تصمیم‌های شما تنظیم می‌کند و هر بار که این کار را می‌کند به شما خبر می‌دهد. فقط اسپم و سوءاستفاده حساب می‌شوند: عضوی که قوانین خود گروه شما، مثلاً یک قانون بازی، را زیر پا بگذارد اعتمادش را حفظ می‌کند.\n\nعضو قدیمی از: &lt;b&gt;{0} پیام و {1} روز&lt;/b&gt; ({2})\nگزارش از امتیاز: &lt;b&gt;{3}&lt;/b&gt; ({4})\nدوباره تازه‌وارد شده توسط مدیران: {5}\nیادگیری: {6}</value>
   </string>
   <string key="learnUsual">
     <value>حالت معمول این گروه</value>
@@ -2018,7 +2018,7 @@ exaple: /{0}
     <value>تازه‌وارد ماند توسط {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\n{1} در {2} دوباره تازه‌وارد حساب شد. از آن موقع {3} پیام نوشته، بدون هیچ نشانه‌ای و بدون هیچ اقدامی علیه او. دوباره عضو قدیمی حساب شود؟</value>
+    <value>🧠 &lt;b&gt;آموخته از شما&lt;/b&gt; · {0}\n{1} در {2} دوباره تازه‌وارد حساب شد. از آن موقع {3} پیام نوشته، بدون هیچ نشانه‌ای از اسپم یا سوءاستفاده و بدون هیچ اقدامی علیه او به این خاطر. دوباره عضو قدیمی حساب شود؟</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ بازگردان</value>
@@ -2064,5 +2064,26 @@ exaple: /{0}
   </string>
   <string key="userTrustButton">
     <value>بازگرداندن اعتماد</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>هر قانون یکی از قوانین خود گروه شماست، مگر اینکه بگویید درباره اسپم است: /filter add spam text ban regex یا /filter spam id (و برای برگرداندن /filter grouprule id). فقط قوانین مربوط به اسپم و سوءاستفاده روی اینکه تشخیص به چه کسی اعتماد کند اثر می‌گذارند.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>قانون #{0} اکنون درباره اسپم یا سوءاستفاده است: عضوی که این قانون پیدا کند ممکن است اعتمادش را از دست بدهد.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>قانون #{0} اکنون یکی از قوانین خود گروه شماست: زیر پا گذاشتن آن روی اعتماد اثری ندارد.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(اسپم یا سوءاستفاده)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(قانون گروه)</value>
+  </string>
+  <string key="learnByReason">
+    <value>دلیلی که نوشتید به اسپم، تبلیغ یا کلاهبرداری اشاره داشت</value>
+  </string>
+  <string key="userRecord">
+    <value>{0} روز گذشته: {1} اقدام به خاطر اسپم یا سوءاستفاده، {2} به خاطر قوانین خود این گروه.</value>
   </string>
 </strings> 

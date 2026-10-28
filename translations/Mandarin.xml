@@ -1624,7 +1624,7 @@ Example:
     <value>🧠 从你们学到的</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt;\n检测会根据你们的决定调整两个门槛，每次调整都会告诉你们。\n\n老成员门槛：&lt;b&gt;{0} 条消息和 {1} 天&lt;/b&gt;（{2}）\n报告门槛分数：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理员重新设为新成员：{5}\n学习：{6}</value>
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt;\n检测会根据你们的决定调整两个门槛，每次调整都会告诉你们。只有垃圾信息和滥用才算：违反本群自己规则（例如游戏规则）的成员仍保留信任。\n\n老成员门槛：&lt;b&gt;{0} 条消息和 {1} 天&lt;/b&gt;（{2}）\n报告门槛分数：&lt;b&gt;{3}&lt;/b&gt;（{4}）\n被管理员重新设为新成员：{5}\n学习：{6}</value>
   </string>
   <string key="learnUsual">
     <value>本群的常规设置</value>
@@ -1729,7 +1729,7 @@ Example:
     <value>{0} 保留为新成员</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n{1} 于 {2} 被重新设为新成员。此后他发了 {3} 条消息，没有任何迹象，也没有被处理过。要重新算作老成员吗？</value>
+    <value>🧠 &lt;b&gt;从你们学到的&lt;/b&gt; · {0}\n{1} 于 {2} 被重新设为新成员。此后他发了 {3} 条消息，没有垃圾信息或滥用的迹象，也没有因此被处理过。要重新算作老成员吗？</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ 恢复</value>
@@ -1775,5 +1775,26 @@ Example:
   </string>
   <string key="userTrustButton">
     <value>恢复信任</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>除非你们说明是关于垃圾信息的，否则规则都算作本群自己的规则：/filter add spam text ban regex，或 /filter spam id（用 /filter grouprule id 撤销）。只有垃圾信息和滥用规则会影响检测信任谁。</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>规则 #{0} 现在属于垃圾信息或滥用：被它发现的成员可能会失去信任。</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>规则 #{0} 现在是本群自己的规则：违反它不会影响信任。</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>（垃圾信息或滥用）</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>（群规）</value>
+  </string>
+  <string key="learnByReason">
+    <value>你们给的理由提到了垃圾信息、广告或诈骗</value>
+  </string>
+  <string key="userRecord">
+    <value>最近 {0} 天：{1} 次因垃圾信息或滥用而处理，{2} 次因本群自己的规则。</value>
   </string>
 </strings>

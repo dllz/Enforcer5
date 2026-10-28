@@ -1973,7 +1973,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>🧠 Von euch gelernt</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt;\nDie Erkennung passt zwei Schwellen an das an, was ihr entscheidet, und sagt euch jedes Mal Bescheid.\n\nEtabliert ab: &lt;b&gt;{0} Nachrichten und {1} Tagen&lt;/b&gt; ({2})\nGemeldet ab Punktzahl: &lt;b&gt;{3}&lt;/b&gt; ({4})\nVon Admins auf neu zurückgesetzt: {5}\nLernen: {6}</value>
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt;\nDie Erkennung passt zwei Schwellen an das an, was ihr entscheidet, und sagt euch jedes Mal Bescheid. Nur Spam und Missbrauch zählen: Wer gegen eure eigenen Gruppenregeln verstößt, etwa eine Spielregel, behält sein Vertrauen.\n\nEtabliert ab: &lt;b&gt;{0} Nachrichten und {1} Tagen&lt;/b&gt; ({2})\nGemeldet ab Punktzahl: &lt;b&gt;{3}&lt;/b&gt; ({4})\nVon Admins auf neu zurückgesetzt: {5}\nLernen: {6}</value>
   </string>
   <string key="learnUsual">
     <value>der übliche Wert dieser Gruppe</value>
@@ -2078,7 +2078,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>Als neu behalten von {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\n{1} wurde am {2} auf neu zurückgesetzt. Seitdem kamen {3} Nachrichten, ohne Anzeichen und ohne dass etwas dagegen unternommen wurde. Wieder als etabliert zählen?</value>
+    <value>🧠 &lt;b&gt;Von euch gelernt&lt;/b&gt; · {0}\n{1} wurde am {2} auf neu zurückgesetzt. Seitdem kamen {3} Nachrichten, ohne Anzeichen von Spam oder Missbrauch und ohne dass deswegen etwas dagegen unternommen wurde. Wieder als etabliert zählen?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Wiederherstellen</value>
@@ -2124,6 +2124,27 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="userTrustButton">
     <value>Vertrauen wiederherstellen</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>Eine Regel ist eine eigene Regel eurer Gruppe, außer ihr sagt, dass es um Spam geht: /filter add spam text ban regex oder /filter spam id (und /filter grouprule id, um das rückgängig zu machen). Nur Regeln gegen Spam und Missbrauch beeinflussen, wem die Erkennung vertraut.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>Regel #{0} betrifft jetzt Spam oder Missbrauch: Ein Mitglied, das sie erkennt, kann sein Vertrauen verlieren.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>Regel #{0} ist jetzt eine eigene Regel eurer Gruppe: Ein Verstoß dagegen beeinflusst das Vertrauen nicht.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(Spam oder Missbrauch)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(Gruppenregel)</value>
+  </string>
+  <string key="learnByReason">
+    <value>euer Grund nannte Spam, Werbung oder Betrug</value>
+  </string>
+  <string key="userRecord">
+    <value>Letzte {0} Tage: {1} Maßnahmen wegen Spam oder Missbrauch, {2} wegen eigener Regeln dieser Gruppe.</value>
   </string>
 </strings>
 

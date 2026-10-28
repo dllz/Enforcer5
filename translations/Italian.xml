@@ -1921,7 +1921,7 @@
     <value>🧠 Imparato da voi</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt;\nIl Rilevamento regola due soglie in base a quello che decidete, e ve lo dice ogni volta.\n\nConsolidato da: &lt;b&gt;{0} messaggi e {1} giorni&lt;/b&gt; ({2})\nSegnalato da un punteggio di: &lt;b&gt;{3}&lt;/b&gt; ({4})\nRiportati tra i nuovi dagli admin: {5}\nApprendimento: {6}</value>
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt;\nIl Rilevamento regola due soglie in base a quello che decidete, e ve lo dice ogni volta. Contano solo spam e abusi: un membro che viola le regole proprie del vostro gruppo, come una regola di gioco, mantiene la fiducia.\n\nConsolidato da: &lt;b&gt;{0} messaggi e {1} giorni&lt;/b&gt; ({2})\nSegnalato da un punteggio di: &lt;b&gt;{3}&lt;/b&gt; ({4})\nRiportati tra i nuovi dagli admin: {5}\nApprendimento: {6}</value>
   </string>
   <string key="learnUsual">
     <value>il solito per questo gruppo</value>
@@ -2026,7 +2026,7 @@
     <value>Mantenuto tra i nuovi da {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\n{1} è stato riportato tra i nuovi il {2}. Da allora ha scritto {3} messaggi, senza segnali e senza provvedimenti contro di lui. Contarlo di nuovo come consolidato?</value>
+    <value>🧠 &lt;b&gt;Imparato da voi&lt;/b&gt; · {0}\n{1} è stato riportato tra i nuovi il {2}. Da allora ha scritto {3} messaggi, senza segnali di spam o abusi e senza provvedimenti contro di lui per questo. Contarlo di nuovo come consolidato?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Ripristina</value>
@@ -2072,5 +2072,26 @@
   </string>
   <string key="userTrustButton">
     <value>Ripristina fiducia</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>Una regola è una delle regole proprie del vostro gruppo, a meno che non diciate che riguarda lo spam: /filter add spam text ban regex, oppure /filter spam id (e /filter grouprule id per annullare). Solo le regole su spam e abusi influiscono su chi riceve la fiducia del Rilevamento.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>La regola #{0} ora riguarda spam o abusi: un membro che individua può perdere la fiducia.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>La regola #{0} ora è una delle regole proprie del vostro gruppo: violarla non influisce sulla fiducia.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(spam o abusi)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(regola del gruppo)</value>
+  </string>
+  <string key="learnByReason">
+    <value>il vostro motivo citava spam, pubblicità o una truffa</value>
+  </string>
+  <string key="userRecord">
+    <value>Ultimi {0} giorni: {1} provvedimenti per spam o abusi, {2} per le regole proprie di questo gruppo.</value>
   </string>
 </strings>

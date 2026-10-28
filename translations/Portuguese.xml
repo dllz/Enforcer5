@@ -1929,7 +1929,7 @@
     <value>🧠 Aprendido com vocês</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Aprendido com vocês&lt;/b&gt;\nA Detecção ajusta dois níveis com base no que vocês decidem, e avisa toda vez que faz isso.\n\nEstabelecido a partir de: &lt;b&gt;{0} mensagens e {1} dias&lt;/b&gt; ({2})\nAlerta a partir da pontuação: &lt;b&gt;{3}&lt;/b&gt; ({4})\nMarcados como novos pelos admins: {5}\nAprendizado: {6}</value>
+    <value>🧠 &lt;b&gt;Aprendido com vocês&lt;/b&gt;\nA Detecção ajusta dois níveis com base no que vocês decidem, e avisa toda vez que faz isso. Só spam e abuso contam: um membro que quebra as regras próprias do seu grupo, como uma regra de jogo, mantém a confiança.\n\nEstabelecido a partir de: &lt;b&gt;{0} mensagens e {1} dias&lt;/b&gt; ({2})\nAlerta a partir da pontuação: &lt;b&gt;{3}&lt;/b&gt; ({4})\nMarcados como novos pelos admins: {5}\nAprendizado: {6}</value>
   </string>
   <string key="learnUsual">
     <value>o normal deste grupo</value>
@@ -2034,7 +2034,7 @@
     <value>Mantido como novo por {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Aprendido com vocês&lt;/b&gt; · {0}\n{1} foi marcado como novo em {2}. Desde então escreveu {3} mensagens, sem sinais e sem nenhuma ação contra ele. Contar como estabelecido de novo?</value>
+    <value>🧠 &lt;b&gt;Aprendido com vocês&lt;/b&gt; · {0}\n{1} foi marcado como novo em {2}. Desde então escreveu {3} mensagens, sem sinais de spam ou abuso e sem nenhuma ação contra ele por isso. Contar como estabelecido de novo?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Restaurar</value>
@@ -2080,5 +2080,26 @@
   </string>
   <string key="userTrustButton">
     <value>Restaurar confiança</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>Uma regra é uma das regras próprias do seu grupo, a menos que vocês digam que é sobre spam: /filter add spam text ban regex, ou /filter spam id (e /filter grouprule id para desfazer). Só as regras sobre spam e abuso afetam em quem a Detecção confia.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>A regra #{0} agora é sobre spam ou abuso: um membro pego por ela pode perder a confiança.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>A regra #{0} agora é uma das regras próprias do seu grupo: quebrá-la não afeta a confiança.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(spam ou abuso)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(regra do grupo)</value>
+  </string>
+  <string key="learnByReason">
+    <value>o motivo de vocês mencionou spam, anúncios ou golpe</value>
+  </string>
+  <string key="userRecord">
+    <value>Últimos {0} dias: {1} ações por spam ou abuso, {2} pelas regras próprias deste grupo.</value>
   </string>
 </strings>

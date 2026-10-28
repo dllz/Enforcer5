@@ -1942,7 +1942,7 @@
     <value>🧠 Sizden öğrenilenler</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt;\nTespit, verdiğiniz kararlara göre iki seviyeyi ayarlar ve her seferinde size bildirir.\n\nYerleşik sayılma: &lt;b&gt;{0} mesaj ve {1} gün&lt;/b&gt; ({2})\nRapor eşiği puanı: &lt;b&gt;{3}&lt;/b&gt; ({4})\nYöneticilerce yeniye döndürülen: {5}\nÖğrenme: {6}</value>
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt;\nTespit, verdiğiniz kararlara göre iki seviyeyi ayarlar ve her seferinde size bildirir. Yalnızca spam ve kötüye kullanım sayılır: grubunuzun kendi kurallarını, örneğin bir oyun kuralını çiğneyen bir üye güvenini korur.\n\nYerleşik sayılma: &lt;b&gt;{0} mesaj ve {1} gün&lt;/b&gt; ({2})\nRapor eşiği puanı: &lt;b&gt;{3}&lt;/b&gt; ({4})\nYöneticilerce yeniye döndürülen: {5}\nÖğrenme: {6}</value>
   </string>
   <string key="learnUsual">
     <value>bu grubun olağan değeri</value>
@@ -2047,7 +2047,7 @@
     <value>{0} tarafından yeni olarak bırakıldı</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\n{1}, {2} tarihinde yeniye döndürüldü. O zamandan beri hiçbir belirti olmadan ve kendisine karşı hiçbir işlem yapılmadan {3} mesaj yazdı. Yeniden yerleşik sayılsın mı?</value>
+    <value>🧠 &lt;b&gt;Sizden öğrenilenler&lt;/b&gt; · {0}\n{1}, {2} tarihinde yeniye döndürüldü. O zamandan beri spam veya kötüye kullanım belirtisi olmadan ve bu yüzden kendisine karşı hiçbir işlem yapılmadan {3} mesaj yazdı. Yeniden yerleşik sayılsın mı?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Geri yükle</value>
@@ -2093,5 +2093,26 @@
   </string>
   <string key="userTrustButton">
     <value>Güveni geri yükle</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>Spam ile ilgili olduğunu belirtmediğiniz sürece bir kural, grubunuzun kendi kurallarından biridir: /filter add spam text ban regex veya /filter spam id (geri almak için /filter grouprule id). Tespitin kime güveneceğini yalnızca spam ve kötüye kullanım kuralları etkiler.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>#{0} numaralı kural artık spam veya kötüye kullanımla ilgili: yakaladığı bir üye güvenini kaybedebilir.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>#{0} numaralı kural artık grubunuzun kendi kurallarından biri: bu kuralı çiğnemek güveni etkilemez.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(spam veya kötüye kullanım)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(grup kuralı)</value>
+  </string>
+  <string key="learnByReason">
+    <value>belirttiğiniz sebepte spam, reklam veya dolandırıcılık geçiyordu</value>
+  </string>
+  <string key="userRecord">
+    <value>Son {0} gün: spam veya kötüye kullanım için {1} işlem, bu grubun kendi kuralları için {2} işlem.</value>
   </string>
 </strings>
