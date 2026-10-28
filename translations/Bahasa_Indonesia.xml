@@ -532,9 +532,6 @@
     <value>Jalankan saya dulu</value>
   </string>
   
-  <string key="dashboardMenu">
-    <value>Settingan dalam grup ini adalah:</value>
-  </string>
   
   <string key="userInfoGlobal">
     <value>Informasi user global</value>
@@ -1045,49 +1042,6 @@
 	</value>
   </string>
   
-  <string key="hcommanddashboard">
-  <value>
-		Mengirimi Anda dashboard semua pengaturan grup saat ini secara pribadi.
-		
-		Contoh:
-		/{0}
-	</value>
-  </string>	
-  
-  <string key="hcommandping">
-  <value>
-		Ping bot untuk melihat berapa lama waktu yang dibutuhkan untuk respon.
-		
-		Contoh:
-		/{0}
-	</value>
-  </string>	
-  
-  <string key="hcommandgetcommands">
-  <value>
-		Dapatkan daftar semua perintah bot. Perhatikan bahwa beberapa di antaranya hanya untuk admin bot global sehingga Anda tidak dapat menggunakannya.
-		
-		Contoh:
-		/{0}
-	</value>
-  </string>	
-  
-  <string key="hcommandmarkdown">
-  <value>
-  <![CDATA[
-  <b>Bagaimana cara menggunakan Markdown:</b>
-  
-  
-  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
-  
-  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
-  
-  <a href="telegram.me/greywolfdev">LINK</a> = &lt;a href="telegram.me/greywolfdev"&gt;LINK&lt;/a&gt;
-  
-  
-  ]]>
-  </value>
-  </string>
   
   <string key="actionNotSettext">
 	<value>Harap atur tindakan yang harus dilakukan bot saat pengguna mengirim pesan terlalu panjang</value>
@@ -1765,12 +1719,6 @@
   <string key="valueInGroup">
     <value>Grup</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filter</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} aktif</value>
-  </string>
   <string key="filtersMenu">
     <value>Filter: apa yang terjadi jika pesan, nama, atau username cocok dengan salah satunya. Ketuk filter untuk mengubah tindakannya. Admin dan anggota di daftar watch atau auth tidak pernah diperiksa.\n\nAturan sendiri: {0}. Kelola dengan /filter.</value>
   </string>
@@ -1939,5 +1887,89 @@
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Pengaturan {0}&lt;/b&gt;\nPilih yang ingin diubah. Setiap perubahan langsung berlaku.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Buka pengaturan</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Saya hanya bisa menampilkan pengaturan di chat pribadi kita. Ketuk di bawah untuk membukanya di sana.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Pilih grup</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Grup mana yang ingin kamu ubah? Ketuk tombol di bawah dan pilih satu: hanya grup yang kamu kelola dan ada saya di dalamnya yang ditampilkan.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Membuka pengaturan {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Deteksi</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Panjang pesan</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Media</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Peringatan</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Grup</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Bahasa</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Deteksi&lt;/b&gt;\nEnforcer mencari tanda spam dan raid, seperti tautan dan pesan terusan dari anggota baru, pesan salinan, dan filter kalian, lalu belajar dari tindakan kalian.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Hanya mengamati sampai {0}: mencatat apa yang akan dilakukan dan tidak berbuat apa-apa, supaya kalian bisa melihat dulu apakah cocok untuk grup ini. Sejauh ini ia akan memberi tahu kalian tentang {1} anggota dan bertindak {2} kali. Pemeriksaan yang sudah ada (flood, media, filter) tetap berjalan seperti biasa.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Aktif sejak {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Data tentang anggota disimpan selama {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Aktifkan sekarang</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Amati 7 hari lagi</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Hanya amati 14 hari</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filter ({0} aktif)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Data disimpan: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 hari</value>
+  </string>
+  <string key="retention365">
+    <value>1 tahun</value>
+  </string>
+  <string key="retention730">
+    <value>2 tahun</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Apa yang disimpan Enforcer tentangmu</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Menunjukkan apa yang disimpan Enforcer tentang grup dan anggotanya, untuk apa, dan berapa lama. Bisa di grup maupun chat pribadi.</value>
   </string>
 </strings>

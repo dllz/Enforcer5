@@ -17,6 +17,14 @@ namespace Enforcer5
         /// The filters menu (Detection step 5): each preset with what it does, the two choices for all
         /// filters, and how many own rules the group has (they are managed with /filter).
         /// </summary>
+        /// <summary>Removing people is red, any other action green, off plain.</summary>
+        internal static KeyboardButtonStyle? ActionStyle(string action) => action switch
+        {
+            null => null,
+            "kick" or "tempban" or "ban" => KeyboardButtonStyle.Danger,
+            _ => KeyboardButtonStyle.Success
+        };
+
         internal static InlineKeyboardMarkup GenFiltersMenu(long chatId, XDocument lang)
         {
             var filters = DetectionSettings.For(chatId).Filters;
@@ -24,15 +32,18 @@ namespace Enforcer5
             foreach (var preset in FilterPresets.All)
             {
                 presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"filterPreset_{preset.Name}"), $"filterpreset:{chatId}:{preset.Name}"));
-                presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"filterAction_{filters.PresetAction(preset.Name) ?? "off"}"),
-                    $"filterpreset:{chatId}:{preset.Name}"));
+                var action = filters.PresetAction(preset.Name);
+                presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"filterAction_{action ?? "off"}"),
+                    $"filterpreset:{chatId}:{preset.Name}") { Style = ActionStyle(action) });
             }
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filterEstablishedButton"), $"filtertoggle:{chatId}:established"));
-            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.IncludeEstablished ? "on" : "off"), $"filtertoggle:{chatId}:established"));
+            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.IncludeEstablished ? "on" : "off"), $"filtertoggle:{chatId}:established")
+                { Style = filters.IncludeEstablished ? KeyboardButtonStyle.Success : null });
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filterGroupBotsButton"), $"filtertoggle:{chatId}:bots"));
-            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.ExemptGroupBots ? "on" : "off"), $"filtertoggle:{chatId}:bots"));
+            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.ExemptGroupBots ? "on" : "off"), $"filtertoggle:{chatId}:bots")
+                { Style = filters.ExemptGroupBots ? KeyboardButtonStyle.Success : null });
             var back = new Menu(1);
-            back.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"openGroupMenu:{chatId}"));
+            back.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"detectionmenu:{chatId}"));
             return Key.CreateMarkupFromMenus(presets, back);
         }
     }

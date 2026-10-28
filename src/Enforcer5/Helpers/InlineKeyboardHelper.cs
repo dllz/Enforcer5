@@ -27,13 +27,14 @@ namespace Enforcer5.Helpers
                         {
                             row.Add(new InlineKeyboardButton(cur.Text)
                             {
-                                Url = cur.Url
+                                Url = cur.Url,
+                                Style = cur.Style
                             });
 
                         }
                         else
                         {
-                            row.Add(new InlineKeyboardButton(cur.Text, $"{cur.Trigger}"));
+                            row.Add(new InlineKeyboardButton(cur.Text, $"{cur.Trigger}") { Style = cur.Style });
                         }
                     }
                     catch (Exception e)
@@ -80,13 +81,14 @@ namespace Enforcer5.Helpers
                             {
                                 row.Add(new InlineKeyboardButton(cur.Text)
                                 {
-                                    Url = cur.Url
+                                    Url = cur.Url,
+                                    Style = cur.Style
                                 });
                                                             
                             }
                             else
                             {
-                                row.Add(new InlineKeyboardButton(cur.Text, $"{cur.Trigger}"));
+                                row.Add(new InlineKeyboardButton(cur.Text, $"{cur.Trigger}") { Style = cur.Style });
                             }
                         }
                         catch (Exception e)

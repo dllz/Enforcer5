@@ -447,9 +447,6 @@
   <string key="startMe">
     <value>İlk olarak beni başlatmalısın</value>
   </string>
-  <string key="dashboardMenu">
-    <value>Grupta ne ayarlanacak:</value>
-  </string>
   <string key="userInfoGlobal">
     <value>Genel kullanıcı bilgisi</value>
   </string>
@@ -900,14 +897,6 @@
   <string key="hcommandmenu">
     <value>
       Grubun tüm ayarlarını yapabilmen için sana bir mesaj yolladım.
-
-      Örnek:
-      /{0}
-    </value>
-  </string>
-  <string key="hcommanddashboard">
-    <value>
-      Tüm grup ayarlarını değiştirmek için bir mesaj gönderir.
 
       Örnek:
       /{0}
@@ -1510,12 +1499,6 @@
   <string key="valueInGroup">
     <value>Grup</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filtreler</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} açık</value>
-  </string>
   <string key="filtersMenu">
     <value>Filtreler: bir mesaj, isim veya kullanıcı adı bunlardan birine uyduğunda ne olacağı. Bir filtrenin ne yaptığını değiştirmek için ona dokun. Yöneticiler ve watch ya da auth listesindeki üyeler asla kontrol edilmez.\n\nKendi kurallar: {0}. Onları /filter ile yönet.</value>
   </string>
@@ -1684,5 +1667,89 @@
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;{0} ayarları&lt;/b&gt;\nNeyi değiştirmek istediğini seç. Her değişiklik hemen geçerli olur.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Ayarları aç</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Ayarları sadece özel sohbetimizde gösterebilirim. Orada açmak için aşağıya dokun.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Grup seç</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Hangi grubu değiştirmek istiyorsun? Aşağıdaki düğmeye dokun ve birini seç: sadece yönettiğin ve benim de bulunduğum gruplar listelenir.</value>
+  </string>
+  <string key="menuOpening">
+    <value>{0} ayarları açılıyor.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Tespit</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Mesaj uzunluğu</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Medya</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Uyarılar</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Grup</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Dil</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Tespit&lt;/b&gt;\nEnforcer spam ve baskın belirtileri arar: yeni gelenlerin bağlantıları ve iletmeleri, kopyalanmış mesajlar ve sizin filtreleriniz gibi. Bunlarla ilgili yaptıklarınızdan öğrenir.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 {0} tarihine kadar sadece izliyor: ne yapacağını kaydeder ve hiçbir şey yapmaz, böylece önce bu gruba uyup uymadığını görebilirsiniz. Şimdiye kadar size {1} üye hakkında haber verecek ve {2} kez müdahale edecekti. Mevcut kontrolleriniz (flood, medya, filtreler) eskisi gibi çalışır.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ {0} tarihinden beri etkin.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Üyelerle ilgili veriler {0} saklanır.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Şimdi etkinleştir</value>
+  </string>
+  <string key="detectionExtend">
+    <value>7 gün daha izle</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>14 gün sadece izle</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filtreler ({0} açık)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Saklama: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 gün</value>
+  </string>
+  <string key="retention365">
+    <value>1 yıl</value>
+  </string>
+  <string key="retention730">
+    <value>2 yıl</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Enforcer senin hakkında neleri saklar</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Enforcer'ın gruplar ve üyeleri hakkında neleri sakladığını, ne için ve ne kadar süre sakladığını gösterir. Gruplarda ve özelde çalışır.</value>
   </string>
 </strings>

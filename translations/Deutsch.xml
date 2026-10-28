@@ -447,9 +447,6 @@
 <string key="startMe">
     <value>Du musst mich zun&#228;chst im Privatchat starten</value>
   </string>
-  <string key="dashboardMenu">
-    <value>Dies sind die momentanen Einstellungen der Gruppe:</value>
-  </string>
     <string key="userInfoGlobal">
     <value>Globale Benutzerinformationen</value>
   </string>
@@ -925,49 +922,6 @@
 		/{0}
 	</value>
   </string>	
-  <string key="hcommanddashboard">
-  <value>
-		Sends you a dashboard of all current group settings in private.
-		
-		Example:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandping">
-  <value>
-		Pings the bot to see how long it takes it to respond.
-		
-		Example:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandgetcommands">
-  <value>
-		Get a list of all bot commands. Note that some of them are only for global bot admins so you can't use them.
-		
-		Example:
-		/{0}
-	</value>
-  </string>	
-  
-  <string key="hcommandmarkdown">
-  <value>
-  <![CDATA[
-  <b>Verwendung von Markdown in Wilkommensnachrichten, Regeln, Beschreibungen und Extra-Befehlen:</b>
-  
-  
-  <b>FETT</b> = &lt;b&gt;FETT&lt;/b&gt;
-  
-  <i>KURSIV</i> = &lt;i&gt;KURSIV&lt;/i&gt;
-  
-  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
-  
-  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
-  
-  
-  ]]>
-  </value>
-  </string>
   
   
   <!-- Update 11.4.2017 -->
@@ -1576,12 +1530,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="valueInGroup">
     <value>Gruppe</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filter</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} an</value>
-  </string>
   <string key="filtersMenu">
     <value>Filter: was passiert, wenn eine Nachricht, ein Name oder ein Benutzername darauf passt. Tippe auf einen Filter, um zu ändern, was er tut. Admins und Mitglieder auf der Watch- oder Auth-Liste werden nie geprüft.\n\nEigene Regeln: {0}. Verwalte sie mit /filter.</value>
   </string>
@@ -1750,6 +1698,90 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Einstellungen für {0}&lt;/b&gt;\nWähle, was du ändern willst. Jede Änderung gilt sofort.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Einstellungen öffnen</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Ich kann die Einstellungen nur in unserem privaten Chat zeigen. Tippe unten, um sie dort zu öffnen.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Gruppe wählen</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Welche Gruppe willst du ändern? Tippe unten auf den Knopf und wähle eine: Es werden nur Gruppen gezeigt, die du leitest und in denen ich bin.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Die Einstellungen von {0} werden geöffnet.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Erkennung</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Nachrichtenlänge</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Medien</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Verwarnungen</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Gruppe</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Sprache</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Erkennung&lt;/b&gt;\nEnforcer sucht nach Anzeichen von Spam und Raids, etwa Links und Weiterleitungen von Neuen, kopierte Nachrichten und eure Filter, und lernt aus dem, was ihr dagegen tut.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Nur beobachten bis {0}: Es zeichnet auf, was es tun würde, und tut nichts, damit ihr zuerst sehen könnt, ob es zu dieser Gruppe passt. Bisher hätte es euch über {1} Mitglieder informiert und {2}-mal eingegriffen. Eure bisherigen Prüfungen (Flood, Medien, Filter) arbeiten wie bisher.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Aktiv seit {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Daten über Mitglieder werden {0} lang aufbewahrt.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Jetzt aktivieren</value>
+  </string>
+  <string key="detectionExtend">
+    <value>7 Tage länger beobachten</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>14 Tage nur beobachten</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filter ({0} an)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Aufbewahrung: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 Tage</value>
+  </string>
+  <string key="retention365">
+    <value>1 Jahr</value>
+  </string>
+  <string key="retention730">
+    <value>2 Jahre</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Was Enforcer speichert&lt;/b&gt;\n\n• Die Einstellungen jeder Gruppe und ihre Verwarnungen, Banns, Kicks und Stummschaltungen: wer, durch wen und warum.\n• Über die Mitglieder der Gruppen, in denen es ist: ihre Telegram-ID, Name und Benutzername, wie sie sich ändern, wann sie beigetreten sind und wie viele Nachrichten sie geschrieben haben.\n• Was seinen Prüfungen an einer Nachricht aufgefallen ist (ihre Art, ein Fingerabdruck des Textes und die Datei-ID) und was die Admins dann entschieden haben.\n\nDer Text von Nachrichten, Bios und Bilder werden nie gespeichert.\n\nDas dient dem Schutz der Gruppen: um Spam und Raids zu stoppen und aus den Entscheidungen der Admins zu lernen, was jede Gruppe erlaubt. Die Admins jeder Gruppe wählen, wie lange das, was die Prüfungen bemerkt haben, beim Konto eines Mitglieds bleibt: 90 Tage, 1 Jahr (Standard) oder 2 Jahre.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Was Enforcer über dich speichert</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Zeigt, was Enforcer über Gruppen und ihre Mitglieder speichert, wofür und wie lange. Funktioniert in Gruppen und privat.</value>
   </string>
 </strings>
 

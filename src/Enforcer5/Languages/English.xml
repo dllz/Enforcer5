@@ -441,9 +441,6 @@
   <string key="startMe">
     <value>You need to start me first</value>
   </string>
-  <string key="dashboardMenu">
-    <value>Here are what the settings in the group are set to:</value>
-  </string>
   <string key="userInfoGlobal">
     <value>Global user info</value>
   </string>
@@ -911,14 +908,6 @@
   <string key="hcommandmenu">
     <value>
       Sends you a menu to change all settings of the group in private.
-
-      Example:
-      /{0}
-    </value>
-  </string>
-  <string key="hcommanddashboard">
-    <value>
-      Sends you a dashboard of all current group settings in private.
 
       Example:
       /{0}
@@ -2408,9 +2397,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="cmdclearkeys">
     <value>Remove a bot's button keyboard</value>
   </string>
-  <string key="cmddashboard">
-    <value>The group's settings, in private</value>
-  </string>
   <string key="cmddeauth">
     <value>Take a user's owner rights for the bot away</value>
   </string>
@@ -2545,12 +2531,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="cmdwelcome">
     <value>Set the welcome message</value>
-  </string>
-  <string key="FiltersButton">
-    <value>Filters</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} on</value>
   </string>
   <string key="filtersMenu">
     <value>Filters: what happens when a message, a name or a username matches one. Tap a filter to change what it does. Admins and members on the watch or auth list are never checked.\n\nOwn rules: {0}. Manage them with /filter.</value>
@@ -2720,5 +2700,89 @@ Joined: {0} · muted: {1} · banned: {2}</value>
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Settings for {0}&lt;/b&gt;\nChoose what to change. Every change applies at once.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Open the settings</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>I can only show the settings in our private chat. Tap below to open them there.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Choose a group</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Which group do you want to change? Tap the button below and pick one: only groups you run and I am in are listed.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Opening the settings of {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Detection</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Message length</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Media</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Warns</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Group</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Language</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Detection&lt;/b&gt;\nEnforcer looks for signs of spam and raiders, such as links and forwards from newcomers, copied messages and your filters, and learns from what you do about them.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Watching only until {0}: it records what it would do and does nothing, so you can see first whether it suits this group. So far it would have told you about {1} members and acted {2} times. Your existing checks (flood, media, filters) work as before.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Live since {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Data about members is kept for {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Go live now</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Watch 7 more days</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Watch only for 14 days</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filters ({0} on)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Data kept: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 days</value>
+  </string>
+  <string key="retention365">
+    <value>1 year</value>
+  </string>
+  <string key="retention730">
+    <value>2 years</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>What Enforcer keeps about you</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Shows what Enforcer keeps about groups and their members, what it is used for and how long it is kept. Works in groups and in private.</value>
   </string>
 </strings>

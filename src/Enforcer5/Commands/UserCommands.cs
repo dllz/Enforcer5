@@ -86,6 +86,12 @@ namespace Enforcer5
                             else Bot.SendReply("Error: Wrong syntax!", update);
                             break;
 
+                        case "menu":
+                            // From the group's "open the menu" button: menu_{chat}.
+                            if (long.TryParse(args[1].Substring(args[1].IndexOf('_') + 1), out longGroup))
+                                Commands.MenuFromStart(update.Message, longGroup);
+                            break;
+
                         case "about":
                             group = args[1].Split('_')[1];
                             if (long.TryParse(group, out longGroup))
@@ -105,6 +111,14 @@ namespace Enforcer5
                     Redis.db.HashSetAsync("bot:users", update.Message.From.Id, "xx");
                 }
             }
+        }
+
+        /// <summary>What Enforcer keeps about groups and their members, and for how long (Detection step 6).</summary>
+        [Command(Trigger = "privacy")]
+        public static void Privacy(Update update, string[] args)
+        {
+            var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
+            Bot.SendReply(Methods.GetLocaleString(lang, "privacyText"), update);
         }
 
         [Command(Trigger = "helplist")]

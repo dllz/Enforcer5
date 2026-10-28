@@ -289,13 +289,6 @@
   <string key="welcomeSet">
     <value>Boas vindas definidas por {0}</value>
   </string>
-  <string key="mainMenu">
-    <value>
-      Gerenciar as configurações de {0}.
-
-      Outras configurações: para outras configurações, os ícones são auto-explicativos.
-    </value>
-  </string>
   <string key="WelcomeButton">
     <value>Mensagem de boas vindas</value>
   </string>
@@ -443,9 +436,6 @@
   </string>
   <string key="startMe">
     <value>Você precisa me iniciar primeiro</value>
-  </string>
-  <string key="dashboardMenu">
-    <value>Aqui estão as configurações definidas nesse grupo:</value>
   </string>
   <string key="userInfoGlobal">
     <value>Informação global do usuário:</value>
@@ -906,14 +896,6 @@
   <string key="hcommandmenu">
     <value>
       Envia um menu para alterar todas as configurações do grupo em privado.
-
-      Exemplo:
-      /{0}
-    </value>
-  </string>
-  <string key="hcommanddashboard">
-    <value>
-      Envia um painel de todas as configurações atuais do grupo em privado.
 
       Exemplo:
       /{0}
@@ -1504,12 +1486,6 @@
   <string key="valueInGroup">
     <value>Grupo</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filtros</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} ativos</value>
-  </string>
   <string key="filtersMenu">
     <value>Filtros: o que acontece quando uma mensagem, um nome ou um nome de usuário corresponde a um deles. Toque num filtro para mudar o que ele faz. Admins e membros na lista watch ou auth nunca são verificados.\n\nRegras próprias: {0}. Gerencie-as com /filter.</value>
   </string>
@@ -1678,5 +1654,89 @@
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Configurações de {0}&lt;/b&gt;\nEscolha o que mudar. Cada mudança vale na hora.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Abrir as configurações</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Só posso mostrar as configurações no nosso chat privado. Toque abaixo para abri-las lá.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Escolher um grupo</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Qual grupo você quer mudar? Toque no botão abaixo e escolha um: só aparecem grupos que você administra e em que eu estou.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Abrindo as configurações de {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Detecção</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Tamanho das mensagens</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Mídia</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Advertências</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Grupo</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Idioma</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Detecção&lt;/b&gt;\nO Enforcer procura sinais de spam e de raids, como links e encaminhamentos de recém-chegados, mensagens copiadas e os seus filtros, e aprende com o que vocês fazem a respeito.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Só observando até {0}: registra o que faria e não faz nada, para vocês verem primeiro se combina com este grupo. Até agora teria avisado vocês sobre {1} membros e agido {2} vezes. As verificações que vocês já tinham (flood, mídia, filtros) funcionam como antes.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Ativa desde {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Os dados dos membros são guardados por {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Ativar agora</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Observar mais 7 dias</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Só observar por 14 dias</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filtros ({0} ativos)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Dados guardados: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 dias</value>
+  </string>
+  <string key="retention365">
+    <value>1 ano</value>
+  </string>
+  <string key="retention730">
+    <value>2 anos</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;O que o Enforcer guarda&lt;/b&gt;\n\n• As configurações de cada grupo e suas advertências, banimentos, expulsões e silenciamentos: quem, por quem e por quê.\n• Sobre os membros dos grupos em que está: o id do Telegram, nome e nome de usuário conforme mudam, quando entraram e quantas mensagens enviaram.\n• O que as verificações notaram numa mensagem (o tipo, uma impressão digital do texto e o id do arquivo) e o que os admins decidiram depois.\n\nNunca guarda o texto das mensagens, bios ou imagens.\n\nIsso serve para proteger os grupos: para parar spam e raids e aprender com as decisões dos admins o que cada grupo permite. Os admins de cada grupo escolhem por quanto tempo o que as verificações notaram fica ligado à conta de um membro: 90 dias, 1 ano (padrão) ou 2 anos.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>O que o Enforcer guarda sobre você</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Mostra o que o Enforcer guarda sobre os grupos e seus membros, para que serve e por quanto tempo. Funciona em grupos e no privado.</value>
   </string>
 </strings>

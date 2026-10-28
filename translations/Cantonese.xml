@@ -422,9 +422,6 @@ UPDATE LOG
 	<string key="startMe">		
 		<value>請透過私訊啟用我！</value>		
 	</string>		
-	<string key="dashboardMenu">		
-		<value>以下係呢個群組現有嘅設定︰</value>		
-	</string>
 	<string key="userInfoGlobal">
 		<value>用家完全紀錄：</value>
 	</string>
@@ -600,9 +597,6 @@ UPDATE LOG
 	</string>
 	<string key="hcommandmenu">
 		<value>私訊個設定選單俾你更改群組設定。\n\n例子︰\n/{0}</value>
-	</string>
-	<string key="hcommanddashboard">
-		<value>私訊個設定列表俾你睇吓群組設定。\n\n例子︰\n/{0}</value>
 	</string>
 	<string key="hcommandping">
 		<value>檢查機械人處理訊息嘅速度。\n\n例子︰\n/{0}</value>
@@ -1079,12 +1073,6 @@ UPDATE LOG
   <string key="valueInGroup">
     <value>群組</value>
   </string>
-  <string key="FiltersButton">
-    <value>過濾器</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>開咗 {0} 個</value>
-  </string>
   <string key="filtersMenu">
     <value>過濾器：當訊息、名或者用戶名同其中一個吻合嗰陣會點處理。撳一下過濾器就可以改佢做嘅嘢。管理員同埋喺 watch 或者 auth 名單上面嘅成員永遠唔會被檢查。\n\n自訂規則：{0} 條。用 /filter 管理。</value>
   </string>
@@ -1253,5 +1241,89 @@ UPDATE LOG
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;{0} 嘅設定&lt;/b&gt;\n揀你想改嘅嘢。每個改動即刻生效。</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>打開設定</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>我只可以喺我哋嘅私人對話度顯示設定。撳下面去嗰度打開。</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>揀群組</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>你想改邊個群？撳下面個掣揀一個：只會列出你管理而且我都喺入面嘅群。</value>
+  </string>
+  <string key="menuOpening">
+    <value>打開緊 {0} 嘅設定。</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 偵測</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>洗版</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>訊息長度</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>媒體</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>警告</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>群組</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>語言</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;偵測&lt;/b&gt;\nEnforcer 會搵垃圾訊息同突襲嘅跡象，例如新成員發嘅連結同轉發、抄嚟嘅訊息同你哋嘅過濾器，仲會由你哋點處理佢哋入面學習。</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 只係觀察到 {0}：佢會記低本來會做咩，但唔會做任何嘢，等你哋可以先睇下適唔適合呢個群。到而家為止，佢本來會話俾你哋知 {1} 個成員同處理 {2} 次。你哋原有嘅檢查（洗版、媒體、過濾器）照舊運作。</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ 由 {0} 開始生效。</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>有關成員嘅資料會保存 {0}。</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>即刻啟用</value>
+  </string>
+  <string key="detectionExtend">
+    <value>再觀察 7 日</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>只係觀察 14 日</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>過濾器（開咗 {0} 個）</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>資料保存：{0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 日</value>
+  </string>
+  <string key="retention365">
+    <value>1 年</value>
+  </string>
+  <string key="retention730">
+    <value>2 年</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Enforcer 會保存咩&lt;/b&gt;\n\n• 每個群嘅設定，同埋佢嘅警告、封鎖、踢走同禁言：對邊個、由邊個、點解。\n• 關於佢所在群組嘅成員：Telegram ID、隨住改變嘅名同用戶名、幾時加入同發咗幾多訊息。\n• 佢嘅檢查喺一條訊息入面留意到咩（類型、文字嘅指紋同檔案 ID），同埋管理員之後嘅決定。\n\n佢從來唔會保存訊息文字、個人簡介或者圖片。\n\n呢啲係用嚟保護群組：阻止垃圾訊息同突襲，同埋由管理員嘅決定入面學習每個群容許咩。每個群嘅管理員可以揀檢查留意到嘅嘢同成員帳戶連埋保存幾耐：90 日、1 年（預設）或者 2 年。</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Enforcer 保存咗你啲咩</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>顯示 Enforcer 保存咗群組同成員嘅咩資料、用嚟做咩同保存幾耐。喺群組同私人對話都用得。</value>
   </string>
 </strings>

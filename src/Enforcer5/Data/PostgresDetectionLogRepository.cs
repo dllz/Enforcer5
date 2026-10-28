@@ -131,6 +131,18 @@ LIMIT @Limit", new { ChatId = chatId, Since = Utc(since), Limit = limit }));
             return rows.ToList();
         }
 
+        public async Task<(long Members, long Actions)> ObservedAsync(long chatId)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return await connection.QuerySingleAsync<(long, long)>(new CommandDefinition(@"
+SELECT count(DISTINCT d.account_id) FILTER (WHERE d.reported),
+       count(*) FILTER (WHERE d.deleted OR d.action IN ('warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban'))
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+WHERE c.telegram_chat_id = @ChatId AND d.mode = 'observe'", new { ChatId = chatId }));
+        }
+
         public async Task<IReadOnlyDictionary<string, (long Hits, long Removed)>> SignStatsAsync(long chatId, IReadOnlyList<string> signs)
         {
             await using var connection = await Database.OpenConnectionAsync();

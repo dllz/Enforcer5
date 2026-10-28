@@ -199,6 +199,13 @@ namespace Enforcer5.Handlers
                         if (update.Message.Type != MessageType.NewChatMembers) Detection.FilterCheck.OnMessage(ctx);
                     }
 
+                    // The group an admin picked for the settings menu (/menu in private).
+                    if (update.Message.ChatShared != null && update.Message.Chat.Type == ChatType.Private)
+                    {
+                        var shared = update.Message;
+                        Bot.DispatchInteractive(() => Commands.MenuForSharedChat(shared), "MenuForSharedChat");
+                    }
+
                     switch (update.Message.Type)
                     {
                         case MessageType.Unknown:

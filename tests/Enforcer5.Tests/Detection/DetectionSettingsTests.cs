@@ -226,7 +226,7 @@ namespace Enforcer5.Tests.Detection
                 {
                     ["link_outside"] = new SignPolicy(true, "delete", 3, Delete: true),
                     ["name_keyword"] = new SignPolicy(false, "none", 0, Report: true)
-                })
+                }, RetentionDays: 730)
         };
 
         [TestMethod]

@@ -73,6 +73,12 @@ namespace Enforcer5.Data
         /// </summary>
         Task<IReadOnlyList<(string Name, string Username)>> RecentMemberNamesAsync(long chatId, DateTimeOffset since, int limit);
 
+        /// <summary>
+        /// What watching only found in the group so far: how many members the admins would have been told
+        /// about, and how many times something would have been done (deleted, warned, muted, removed).
+        /// </summary>
+        Task<(long Members, long Actions)> ObservedAsync(long chatId);
+
         /// <summary>For each of <paramref name="signs"/>: how many times it fired in the group, and for how many members a ban, kick or tempban followed.</summary>
         Task<IReadOnlyDictionary<string, (long Hits, long Removed)>> SignStatsAsync(long chatId, IReadOnlyList<string> signs);
     }

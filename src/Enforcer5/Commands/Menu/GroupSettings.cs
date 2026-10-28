@@ -25,8 +25,8 @@ namespace Enforcer5
             // Flood and Mute On Join are in the detection settings (PostgreSQL) since Detection step 2.
             void OnOff(string name, bool on)
             {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{name}Button"), $"menusettings:{name}"));
-                mainMenu.Buttons.Add(new InlineButton(on ? "✅" : "🚫", $"menu{name}:{chatId}"));
+                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{name}Button"), $"menu{name}:{chatId}"));
+                mainMenu.Buttons.Add(new InlineButton(on ? "✅" : "🚫", $"menu{name}:{chatId}") { Style = on ? Telegram.Bot.Types.ReplyMarkups.KeyboardButtonStyle.Success : null });
             }
             OnOff("Flood", policy.Flood.Enabled);
             foreach (var mem in settings)
@@ -34,7 +34,7 @@ namespace Enforcer5
                 if (mem.Name.Equals("Report") | mem.Name.Equals("Welcome") | mem.Name.Equals("DeleteLastWelcome"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                        $"menusettings:{mem.Name}"));
+                        $"menu{mem.Name}:{chatId}"));
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
@@ -48,7 +48,7 @@ namespace Enforcer5
                          mem.Name.Equals("Extra") | mem.Name.Equals("Help"))
                 {
                     mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{mem.Name}Button"),
-                        $"menusettings:{mem.Name}"));
+                        $"menu{mem.Name}:{chatId}"));
                     if (mem.Value.Equals("yes"))
                     {
                         mainMenu.Buttons.Add(new InlineButton("👤", $"menu{mem.Name}:{chatId}"));
@@ -60,20 +60,17 @@ namespace Enforcer5
                 }
             }
             OnOff("MuteOnJoin", policy.MuteOnJoin);
-            // The Arabic and right-to-left settings are filter presets since Detection step 5: one row to the filters menu.
-            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "FiltersButton"), $"filtersmenu:{chatId}"));
-            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filtersOnCount",
-                policy.Filters.Rules.Count(r => r.Enabled && r.Action != null)), $"filtersmenu:{chatId}"));
             var channelPostsBlocked = policy.ChannelPosts.Enabled;
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "ChannelPostsButton"),
-                "menusettings:ChannelPosts"));
+                $"menuChannelPosts:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, channelPostsBlocked ? "on" : "off"),
                 $"menuChannelPosts:{chatId}"));
             var warnReasonMode = Repositories.WarnReasons.GetModeAsync(chatId).GetAwaiter().GetResult();
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "WarnReasonsButton"),
-                "menusettings:WarnReasons"));
+                $"menuWarnReasons:{chatId}"));
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"warnReasonMode{warnReasonMode}"),
                 $"menuWarnReasons:{chatId}"));
+            // A setting's name does what its value does: one tap anywhere on the row.
             var close = new Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
             return Key.CreateMarkupFromMenus(mainMenu, close);

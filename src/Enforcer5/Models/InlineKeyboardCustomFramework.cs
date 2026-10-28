@@ -16,6 +16,12 @@ namespace Enforcer5.Models
         /// </summary>
         public string Url { get; set; }
 
+        /// <summary>
+        /// Telegram's button colour (Bot API 9.4): Success for what is on, Primary for the way forward,
+        /// Danger for what removes people or data. Null is the plain button.
+        /// </summary>
+        public Telegram.Bot.Types.ReplyMarkups.KeyboardButtonStyle? Style { get; set; }
+
         public InlineButton(string text, string trigger = "", string url = "")
         {
             Url = url;

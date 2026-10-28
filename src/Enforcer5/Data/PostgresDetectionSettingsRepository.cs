@@ -157,7 +157,8 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                 ObserveUntil = policy.Engine.ObserveUntil?.UtcDateTime,
                 ReportAt = policy.Engine.ReportAt,
                 MuteAt = policy.Engine.MuteAt,
-                MuteEnabled = policy.Engine.MuteEnabled
+                MuteEnabled = policy.Engine.MuteEnabled,
+                RetentionDays = policy.Engine.RetentionDays
             });
             foreach (var (name, sign) in policy.Engine.Signs)
             {
@@ -349,7 +350,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             }
             return new EngineSettings(
                 engine.ObserveUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(engine.ObserveUntil.Value, DateTimeKind.Utc)) : null,
-                engine.ReportAt ?? defaults.ReportAt, engine.MuteAt ?? defaults.MuteAt, engine.MuteEnabled, signs);
+                engine.ReportAt ?? defaults.ReportAt, engine.MuteAt ?? defaults.MuteAt, engine.MuteEnabled, signs,
+                engine.RetentionDays is { } days && EngineSettings.RetentionChoices.Contains(days) ? days : EngineSettings.DefaultRetentionDays);
         }
 
         private sealed class FloodJson
@@ -400,6 +402,7 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public int? ReportAt { get; set; }
             public int? MuteAt { get; set; }
             public bool MuteEnabled { get; set; }
+            public int? RetentionDays { get; set; }
         }
 
         private sealed class SignJson

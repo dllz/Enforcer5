@@ -326,8 +326,23 @@ namespace Enforcer5.Tests.Harness
             return null;
         }
 
+        private readonly ConcurrentDictionary<long, byte> _notStarted = new();
+        private readonly ConcurrentDictionary<long, string> _titles = new();
+
+        /// <summary>A user who never started the bot: messages to their private chat are refused (403).</summary>
+        internal void SetNotStarted(long userId, bool notStarted = true)
+        {
+            if (notStarted) _notStarted[userId] = 0;
+            else _notStarted.TryRemove(userId, out _);
+        }
+
+        /// <summary>The title getChat gives a group.</summary>
+        internal void SetTitle(long chatId, string title) => _titles[chatId] = title;
+
         private Message Sent(SendMessageRequest r)
         {
+            if (r.ChatId.Identifier is long to && to > 0 && _notStarted.ContainsKey(to))
+                throw new ApiRequestException("Forbidden: bot can't initiate conversation with a user", 403);
             if (r.EphemeralMessageParameters is { } ephemeral)
                 return SentEphemeral(r, ephemeral);
             var message = NewMessage(r.ChatId, r.Text);
@@ -442,6 +457,7 @@ namespace Enforcer5.Tests.Harness
         private ChatFullInfo ChatInfo(long chatId) => new ChatFullInfo
         {
             Id = chatId,
+            Title = _titles.TryGetValue(chatId, out var title) ? title : null,
             LinkedChatId = _linkedChannels.TryGetValue(chatId, out var linked) ? linked : null,
             Type = chatId < 0 ? ChatType.Supergroup : ChatType.Private,
             Permissions = ChatPermissions(chatId) ?? new ChatPermissions

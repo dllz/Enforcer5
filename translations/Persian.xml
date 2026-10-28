@@ -456,9 +456,6 @@
 <string key="startMe">
     <value>بايد ابتدا ربات را استارت كنيد </value>
   </string>
-  <string key="dashboardMenu">
-    <value>در اينجا انچه ك تنظيمات گروه شما است مشاهده ميكنيد  </value>
-  </string>
     <string key="userInfoGlobal">
     <value>اطلاعات جهاني يوزر </value>
   </string>
@@ -897,50 +894,6 @@
 		/{0}
 	</value>
   </string>	
-  <string key="hcommanddashboard">
-  <value>
-	ربات ليستي از تمامي دستورات خود را در پي وي شما ارسال خواهد كرد
-		Example:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandping">
-  <value>
-		Pings the bot to see how long it takes it to respond.
-		
-		Example:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandgetcommands">
-  <value>
-		
-لیستي از تمام دستورات ربات ميباشد . توجه داشته باشید که برخی از آنها تنها برای مدیران ربات جهانی مورد استفاده قرار ميگيرن  ، بنابراین شما نميتوانيد از انها استفاده كنيدد. 
-   
-  Example: 
-  /{0} 
- </value> 
-  </string>  
-  
-  
-  <string key="hcommandmarkdown">
-  <value>
-  <![CDATA[
-  <b>How to use markdown:</b>
-  
-  
-  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
-  
-  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
-  
-  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
-  
-  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
-  
-  
-  ]]>
-  </value>
-  </string>
    
    
    <string key="actionNotSettext"> 
@@ -1517,12 +1470,6 @@ exaple: /{0}
   <string key="valueInGroup">
     <value>گروه</value>
   </string>
-  <string key="FiltersButton">
-    <value>فیلترها</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} فعال</value>
-  </string>
   <string key="filtersMenu">
     <value>فیلترها: وقتی پیام، نام یا نام کاربری با یکی از آنها جور باشد چه اتفاقی می‌افتد. روی یک فیلتر بزنید تا کارش را عوض کنید. مدیران و اعضای لیست watch یا auth هیچ‌وقت بررسی نمی‌شوند.\n\nقوانین خودتان: {0}. با /filter مدیریتشان کنید.</value>
   </string>
@@ -1691,5 +1638,89 @@ exaple: /{0}
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;تنظیمات {0}&lt;/b&gt;\nانتخاب کنید چه چیزی را تغییر دهید. هر تغییر بلافاصله اعمال می‌شود.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>باز کردن تنظیمات</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>فقط در گفتگوی خصوصی‌مان می‌توانم تنظیمات را نشان بدهم. برای باز کردنشان آنجا، روی دکمه زیر بزنید.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>انتخاب گروه</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>کدام گروه را می‌خواهید تغییر دهید؟ روی دکمه زیر بزنید و یکی را انتخاب کنید: فقط گروه‌هایی که مدیرشان هستید و من در آنها هستم نشان داده می‌شوند.</value>
+  </string>
+  <string key="menuOpening">
+    <value>در حال باز کردن تنظیمات {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 تشخیص</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>فلود</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>طول پیام</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>رسانه</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>اخطارها</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>گروه</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>زبان</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;تشخیص&lt;/b&gt;\nEnforcer به دنبال نشانه‌های اسپم و حمله است، مثل لینک‌ها و پیام‌های فورواردی تازه‌واردها، پیام‌های کپی‌شده و فیلترهای شما، و از کاری که شما با آنها می‌کنید یاد می‌گیرد.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 فقط مشاهده تا {0}: ثبت می‌کند چه کاری می‌کرد و کاری انجام نمی‌دهد، تا اول ببینید به این گروه می‌خورد یا نه. تا الان درباره {1} عضو به شما خبر می‌داد و {2} بار اقدام می‌کرد. بررسی‌های فعلی شما (فلود، رسانه، فیلترها) مثل قبل کار می‌کنند.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ فعال از {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>داده‌های مربوط به اعضا به مدت {0} نگه داشته می‌شود.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>همین حالا فعال کن</value>
+  </string>
+  <string key="detectionExtend">
+    <value>۷ روز دیگر مشاهده</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>فقط مشاهده برای ۱۴ روز</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>فیلترها ({0} فعال)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>نگهداری داده: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>۹۰ روز</value>
+  </string>
+  <string key="retention365">
+    <value>۱ سال</value>
+  </string>
+  <string key="retention730">
+    <value>۲ سال</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Enforcer چه چیزهایی نگه می‌دارد&lt;/b&gt;\n\n• تنظیمات هر گروه و اخطارها، مسدودی‌ها، اخراج‌ها و بی‌صداکردن‌هایش: چه کسی، توسط چه کسی و چرا.\n• درباره اعضای گروه‌هایی که در آنهاست: شناسه تلگرام، نام و نام کاربری همان‌طور که تغییر می‌کند، زمان پیوستن و تعداد پیام‌هایی که فرستاده‌اند.\n• آنچه بررسی‌هایش در یک پیام دیده‌اند (نوع پیام، اثر انگشتی از متن و شناسه فایل) و تصمیمی که بعد مدیران گرفته‌اند.\n\nهیچ‌وقت متن پیام‌ها، بیوگرافی‌ها یا تصاویر را نگه نمی‌دارد.\n\nاین برای محافظت از گروه‌هاست: برای جلوگیری از اسپم و حمله‌ها و برای یاد گرفتن از تصمیم‌های مدیران که هر گروه چه چیزی را مجاز می‌داند. مدیران هر گروه انتخاب می‌کنند آنچه بررسی‌ها دیده‌اند تا چه مدت همراه حساب یک عضو بماند: ۹۰ روز، ۱ سال (پیش‌فرض) یا ۲ سال.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Enforcer درباره شما چه نگه می‌دارد</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>نشان می‌دهد Enforcer درباره گروه‌ها و اعضایشان چه چیزهایی نگه می‌دارد، برای چه و تا چه مدت. در گروه و خصوصی کار می‌کند.</value>
   </string>
 </strings> 

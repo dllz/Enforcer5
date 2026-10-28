@@ -471,12 +471,6 @@
   <string key="valueInGroup">
     <value>Grupo</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filtros</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} activos</value>
-  </string>
   <string key="filtersMenu">
     <value>Filtros: qué pasa cuando un mensaje, un nombre o un nombre de usuario coincide con uno. Toca un filtro para cambiar lo que hace. Los administradores y los miembros de la lista watch o auth nunca se revisan.\n\nReglas propias: {0}. Gestiónalas con /filter.</value>
   </string>
@@ -645,5 +639,89 @@
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Ajustes de {0}&lt;/b&gt;\nElige qué cambiar. Cada cambio se aplica al momento.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Abrir los ajustes</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Solo puedo mostrar los ajustes en nuestro chat privado. Toca abajo para abrirlos allí.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Elegir un grupo</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>¿Qué grupo quieres cambiar? Toca el botón de abajo y elige uno: solo aparecen los grupos que administras y en los que estoy.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Abriendo los ajustes de {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Detección</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Longitud de mensajes</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Multimedia</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Advertencias</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Grupo</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Idioma</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Detección&lt;/b&gt;\nEnforcer busca señales de spam y de raids, como enlaces y reenvíos de recién llegados, mensajes copiados y vuestros filtros, y aprende de lo que hacéis con ellos.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Solo observando hasta el {0}: registra lo que haría y no hace nada, para que primero veáis si encaja con este grupo. Hasta ahora os habría avisado de {1} miembros y habría actuado {2} veces. Vuestras comprobaciones de siempre (flood, multimedia, filtros) funcionan igual.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Activa desde el {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Los datos de los miembros se guardan {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Activar ahora</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Observar 7 días más</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Solo observar 14 días</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filtros ({0} activos)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Datos guardados: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 días</value>
+  </string>
+  <string key="retention365">
+    <value>1 año</value>
+  </string>
+  <string key="retention730">
+    <value>2 años</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Qué guarda Enforcer sobre ti</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Muestra qué guarda Enforcer sobre los grupos y sus miembros, para qué y durante cuánto tiempo. Funciona en grupos y en privado.</value>
   </string>
 </strings>

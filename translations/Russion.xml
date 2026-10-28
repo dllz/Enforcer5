@@ -430,9 +430,6 @@
   <string key="startMe">
     <value>Вам нужно сначала запустить меня.</value>
   </string>
-  <string key="dashboardMenu">
-    <value>Настройки, которые установлены в группе:</value>
-  </string>
   <string key="userInfoGlobal">
     <value>Глобальное инфо о пользователе</value>
   </string>
@@ -753,10 +750,6 @@ $title - заменяется названием группы.
   </string>
   <string key="hcommandmenu">
     <value>Отправляет вам меню для изменений всех настроекгруппы в ЛС бота.
-Пример: /{0}.</value>
-  </string>
-  <string key="hcommanddashboard">
-    <value>Отправляет панель инструментов текущих настроек в ЛС бота.
 Пример: /{0}.</value>
   </string>
   <string key="hcommandping">
@@ -1228,12 +1221,6 @@ $title - заменяется названием группы.
   <string key="valueInGroup">
     <value>Группа</value>
   </string>
-  <string key="FiltersButton">
-    <value>Фильтры</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>включено: {0}</value>
-  </string>
   <string key="filtersMenu">
     <value>Фильтры: что происходит, когда сообщение, имя или юзернейм подходит под один из них. Нажми на фильтр, чтобы изменить его действие. Админов и участников из списков watch и auth не проверяют никогда.\n\nСвои правила: {0}. Управляй ими через /filter.</value>
   </string>
@@ -1402,6 +1389,90 @@ $title - заменяется названием группы.
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Настройки {0}&lt;/b&gt;\nВыбери, что изменить. Каждое изменение действует сразу.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Открыть настройки</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Я могу показать настройки только в нашем личном чате. Нажми ниже, чтобы открыть их там.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Выбрать группу</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Какую группу хочешь изменить? Нажми кнопку ниже и выбери: в списке только группы, где ты админ и где есть я.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Открываю настройки {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Обнаружение</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Флуд</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Длина сообщений</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Медиа</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Предупреждения</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Группа</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Язык</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Обнаружение&lt;/b&gt;\nEnforcer ищет признаки спама и рейдов — ссылки и пересылки от новичков, скопированные сообщения, ваши фильтры — и учится на том, что вы с ними делаете.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Только наблюдает до {0}: записывает, что сделал бы, и ничего не делает, чтобы вы сначала увидели, подходит ли это вашей группе. Пока он сообщил бы вам о {1} участниках и вмешался бы {2} раз. Ваши прежние проверки (флуд, медиа, фильтры) работают как раньше.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Включено с {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>Данные об участниках хранятся {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Включить сейчас</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Наблюдать ещё 7 дней</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Только наблюдать 14 дней</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Фильтры (включено: {0})</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Хранение: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 дней</value>
+  </string>
+  <string key="retention365">
+    <value>1 год</value>
+  </string>
+  <string key="retention730">
+    <value>2 года</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Что хранит Enforcer&lt;/b&gt;\n\n• Настройки каждой группы и её предупреждения, баны, исключения и заглушения: кого, кто и почему.\n• Об участниках групп, где он есть: их Telegram id, имя и юзернейм по мере изменения, когда они вступили и сколько сообщений отправили.\n• Что его проверки заметили в сообщении (тип, отпечаток текста и id файла) и что потом решили админы.\n\nОн никогда не хранит текст сообщений, описания профилей и картинки.\n\nЭто нужно для защиты групп: чтобы останавливать спам и рейды и учиться на решениях админов, что разрешено в каждой группе. Админы каждой группы выбирают, как долго замеченное проверками хранится вместе с аккаунтом участника: 90 дней, 1 год (по умолчанию) или 2 года.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Что Enforcer хранит о тебе</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Показывает, что Enforcer хранит о группах и их участниках, зачем и как долго. Работает в группах и в личке.</value>
   </string>
 </strings>
 

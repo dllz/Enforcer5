@@ -449,9 +449,6 @@
 <string key="startMe">
     <value>Prima mi devi avviare.</value>
   </string>
-  <string key="dashboardMenu">
-    <value>Queste sono le impostazioni del gruppo:</value>
-  </string>
     <string key="userInfoGlobal">
     <value>Informazioni globali utente</value>
   </string>
@@ -919,49 +916,6 @@
 		/{0}
 	</value>
   </string>	
-  <string key="hcommanddashboard">
-  <value>
-		Invia in privato una dashboard di tutte le impostazioni attuali del gruppo.
-		
-		Esempio:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandping">
-  <value>
-        Pinga il bot per vedere quanto impiega a rispondere.
-		
-		Esempio:
-		/{0}
-	</value>
-  </string>	
-  <string key="hcommandgetcommands">
-  <value>
-		Restituisce una lista di tutti i comandi del bot. Nota che alcuni di essi sono solo per admin globali.
-		
-		Esempio:
-		/{0}
-	</value>
-  </string>	
-  
-  <string key="hcommandmarkdown">
-  <value>
-  <![CDATA[
-  <b>Come usare i markdown:</b>
-  
-  
-  <b>GRASSETTO</b> = &lt;b&gt;GRASSETTO&lt;/b&gt;
-  
-  <i>CORSIVO</i> = &lt;i&gt;CORSIVO&lt;/i&gt;
-  
-  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
-  
-  <code>SPAZIATURA FISSA</code> = &lt;code&gt;SPAZIATURA FISSA&lt;/code&gt;
-  
-  
-  ]]>
-  </value>
-  </string>
   
   <string key="actionNotSettext">
   <value>Imposta l'azione da compiere se un utente invia un messaggio troppo lungo</value>
@@ -1524,12 +1478,6 @@
   <string key="valueInGroup">
     <value>Gruppo</value>
   </string>
-  <string key="FiltersButton">
-    <value>Filtri</value>
-  </string>
-  <string key="filtersOnCount">
-    <value>{0} attivi</value>
-  </string>
   <string key="filtersMenu">
     <value>Filtri: cosa succede quando un messaggio, un nome o un username corrisponde a uno di essi. Tocca un filtro per cambiare cosa fa. Gli admin e i membri nella lista watch o auth non vengono mai controllati.\n\nRegole proprie: {0}. Gestiscile con /filter.</value>
   </string>
@@ -1698,5 +1646,89 @@
       /{0} trial 3 14
       /{0} del 3
     </value>
+  </string>
+  <string key="settingsHome">
+    <value>&lt;b&gt;Impostazioni di {0}&lt;/b&gt;\nScegli cosa cambiare. Ogni modifica vale subito.</value>
+  </string>
+  <string key="menuOpenInPrivate">
+    <value>Apri le impostazioni</value>
+  </string>
+  <string key="menuStartFirst">
+    <value>Posso mostrare le impostazioni solo nella nostra chat privata. Tocca qui sotto per aprirle lì.</value>
+  </string>
+  <string key="menuChooseGroup">
+    <value>Scegli un gruppo</value>
+  </string>
+  <string key="menuChooseGroupText">
+    <value>Quale gruppo vuoi modificare? Tocca il pulsante qui sotto e scegline uno: compaiono solo i gruppi che gestisci e in cui ci sono io.</value>
+  </string>
+  <string key="menuOpening">
+    <value>Apro le impostazioni di {0}.</value>
+  </string>
+  <string key="detectionButton">
+    <value>🛡 Rilevamento</value>
+  </string>
+  <string key="menuFloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="menuLengthButton">
+    <value>Lunghezza messaggi</value>
+  </string>
+  <string key="menuMediaButton">
+    <value>Media</value>
+  </string>
+  <string key="menuWarnButton">
+    <value>Avvertimenti</value>
+  </string>
+  <string key="menuGroupButton">
+    <value>Gruppo</value>
+  </string>
+  <string key="menuLanguageButton">
+    <value>Lingua</value>
+  </string>
+  <string key="detectionMenu">
+    <value>&lt;b&gt;Rilevamento&lt;/b&gt;\nEnforcer cerca segni di spam e di raid, come link e inoltri dei nuovi arrivati, messaggi copiati e i vostri filtri, e impara da quello che fate al riguardo.</value>
+  </string>
+  <string key="detectionObserving">
+    <value>👀 Solo osservazione fino al {0}: registra cosa farebbe e non fa nulla, così potete vedere prima se è adatto a questo gruppo. Finora vi avrebbe segnalato {1} membri e sarebbe intervenuto {2} volte. I controlli che avevate già (flood, media, filtri) funzionano come prima.</value>
+  </string>
+  <string key="detectionLive">
+    <value>✅ Attivo dal {0}.</value>
+  </string>
+  <string key="detectionRetentionText">
+    <value>I dati sui membri vengono conservati per {0}.</value>
+  </string>
+  <string key="detectionGoLive">
+    <value>Attiva ora</value>
+  </string>
+  <string key="detectionExtend">
+    <value>Osserva altri 7 giorni</value>
+  </string>
+  <string key="detectionWatchAgain">
+    <value>Solo osservazione per 14 giorni</value>
+  </string>
+  <string key="detectionFiltersButton">
+    <value>Filtri ({0} attivi)</value>
+  </string>
+  <string key="detectionRetentionButton">
+    <value>Dati conservati: {0}</value>
+  </string>
+  <string key="retention90">
+    <value>90 giorni</value>
+  </string>
+  <string key="retention365">
+    <value>1 anno</value>
+  </string>
+  <string key="retention730">
+    <value>2 anni</value>
+  </string>
+  <string key="privacyText">
+    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
+  </string>
+  <string key="cmdprivacy">
+    <value>Cosa conserva Enforcer su di te</value>
+  </string>
+  <string key="hcommandprivacy">
+    <value>Mostra cosa conserva Enforcer sui gruppi e sui loro membri, a cosa serve e per quanto tempo. Funziona nei gruppi e in privato.</value>
   </string>
 </strings>

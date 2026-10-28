@@ -359,7 +359,14 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
 3. Engine core: check, phase, actions, policy, score, `detections`, observe mode.
 4. Port the existing checks behind the engine, with parity (step 1's scenarios unchanged).
 5. Filter presets and length rules (char and length become presets); `/filter`.
-6. `/config` with Detection (observe status), old menus moved under it, retention, `/about`.
+6. Detection in `/menu` (observe status), retention, `/privacy`. **As built (2026-10-28, Daniel):** no
+   `/config`; everything named `/config` in this document lives in `/menu`. `/menu` opens from the
+   group (in private; an admin who never started the bot gets a one-tap deep link `menu_{chat}`)
+   or in private through Telegram's group picker (`KeyboardButtonRequestChat`). Buttons use
+   Telegram's styles (primary to go on, green for on, red for removing people), a setting's name
+   toggles it as its value does, Done deletes the menu. `/dashboard` is removed. The privacy text
+   is `/privacy`, since `/about` is each group's own text. Retention is saved now and carried out by
+   step 14.
 7. Reports: private chats, admin chat link, buttons, labels from every button.
 8. Edit rules.
 9. Message signs.

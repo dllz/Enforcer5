@@ -95,6 +95,7 @@ namespace Enforcer5.Tests.Harness
             ChatId = chatId;
             Title = title;
             _owner = owner;
+            world.Telegram.SetTitle(chatId, title);
         }
 
         /// <summary>A new supergroup with a fresh PostgreSQL schema. Skips the test without a database.</summary>

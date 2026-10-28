@@ -165,10 +165,17 @@ namespace Enforcer5.Detection
     /// <param name="ReportAt">A member's score at which the admins get one report about them.</param>
     /// <param name="MuteAt">A member's score at which they are muted, when <paramref name="MuteEnabled"/>.</param>
     /// <param name="Signs">The group's own settings for a sign, by name; others use <see cref="SignCatalog"/>.</param>
+    /// <param name="RetentionDays">
+    /// How long detection data about the group's members is kept with their account (design section 12):
+    /// one of <see cref="RetentionChoices"/>. Set in the Detection menu; carried out by the nightly job of
+    /// build step 14.
+    /// </param>
     internal sealed record EngineSettings(DateTimeOffset? ObserveUntil, int ReportAt, int MuteAt, bool MuteEnabled,
-        IReadOnlyDictionary<string, SignPolicy> Signs)
+        IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays)
     {
         internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);
+        internal const int DefaultRetentionDays = 365;
+        internal static readonly int[] RetentionChoices = { 90, 365, 730 };
 
         internal static EngineSettings Default { get; } =
             new EngineSettings(null, 3, 6, false, new Dictionary<string, SignPolicy>());
