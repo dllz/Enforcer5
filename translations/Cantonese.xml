@@ -1155,7 +1155,7 @@ UPDATE LOG
     <value>【{0}】已被封鎖 {2}：{1}</value>
   </string>
   <string key="filterUsage">
-    <value>本群嘅自訂過濾規則。新規則會先試用 {0} 日：只會記低佢本來會做咩。\n/filter add name|username|text 動作 正則\n/filter try /正則/ 文字\n/filter test 編號或者正則\n/filter list\n/filter live 編號\n/filter trial 編號 日數\n/filter del 編號</value>
+    <value>本群嘅自訂過濾規則。新規則會先試用 {0} 日：只會記低佢本來會做咩。\n/filter add name|username|text|bio|channel 動作 正則\n/filter try /正則/ 文字\n/filter test 編號或者正則\n/filter list\n/filter live 編號\n/filter trial 編號 日數\n/filter del 編號</value>
   </string>
   <string key="filterBadTarget">
     <value>目標一定要係以下其中一個：{0}</value>
@@ -1186,6 +1186,12 @@ UPDATE LOG
   </string>
   <string key="filterTestResult">
     <value>過去 30 日出現過嘅 {1} 個成員入面有 {0} 個吻合。例子：</value>
+  </string>
+  <string key="filterTestBios">
+    <value>過去一日為本群查過嘅 {1} 個個人簡介入面有 {0} 個吻合（簡介只會喺記憶體保留一日）。成員：</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>過去一日成員指向嘅 {1} 個頻道同群組入面有 {0} 個吻合。例子：</value>
   </string>
   <string key="filterTestSent">
     <value>我已經私訊咗結果俾你。</value>
@@ -1228,14 +1234,15 @@ UPDATE LOG
   </string>
   <string key="hcommandfilter">
     <value>
-      你個群嘅自訂過濾規則：對成員嘅名、用戶名或者訊息文字用正則表達式，同埋吻合嗰陣做咩（none, score, report, delete, warn, mute, tempmute, kick, tempban, ban）。只限管理員。現成嘅過濾器（文字、邀請連結、電話號碼等等）喺設定選單嘅「過濾器」入面。
+      你個群嘅自訂過濾規則：對成員嘅名、用戶名或者訊息文字、新成員嘅個人簡介，或者新成員指向嘅頻道同群組（標題、簡介同用戶名）用正則表達式，同埋吻合嗰陣做咩（none, score, report, delete, warn, mute, tempmute, kick, tempban, ban）。只限管理員。現成嘅過濾器（文字、邀請連結、電話號碼等等）喺設定選單嘅「過濾器」入面。
 
       新規則會先試用 7 日：只會記低佢本來會做咩，唔會做任何嘢，咁你就睇到佢捉唔捉啱人。用 /{0} live 啟用。
 
       例子：
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3（用規則 3 檢查過去 30 日出現過嘅成員名，並私訊結果俾你）
+      /{0} test 3（用規則 3 檢查過去 30 日出現過嘅成員名，或者用簡介或頻道規則檢查過去一日查過嘅資料，並私訊結果俾你）
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -1318,7 +1325,7 @@ UPDATE LOG
     <value>2 年</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer 會保存咩&lt;/b&gt;\n\n• 每個群嘅設定，同埋佢嘅警告、封鎖、踢走同禁言：對邊個、由邊個、點解。\n• 關於佢所在群組嘅成員：Telegram ID、隨住改變嘅名同用戶名、幾時加入同發咗幾多訊息。\n• 佢嘅檢查喺一條訊息入面留意到咩（類型、文字嘅指紋同檔案 ID），同埋管理員之後嘅決定。\n\n佢從來唔會保存訊息文字、個人簡介或者圖片。\n\n呢啲係用嚟保護群組：阻止垃圾訊息同突襲，同埋由管理員嘅決定入面學習每個群容許咩。每個群嘅管理員可以揀檢查留意到嘅嘢同成員帳戶連埋保存幾耐：90 日、1 年（預設）或者 2 年。</value>
+    <value>&lt;b&gt;Enforcer 會保存咩&lt;/b&gt;\n\n• 每個群嘅設定，同埋佢嘅警告、封鎖、踢走同禁言：對邊個、由邊個、點解。\n• 關於佢所在群組嘅成員：Telegram ID、隨住改變嘅名同用戶名、幾時加入同發咗幾多訊息。\n• 佢嘅檢查喺一條訊息入面留意到咩（類型、文字嘅指紋同檔案 ID），同埋管理員之後嘅決定。\n• 關於新成員：佢哋嘅公開資料有冇連結、提及或者個人頻道，同埋佢哋指向嘅公開頻道同群組嘅同樣資料。個人簡介同頻道簡介只會讀，唔會保存。\n\n佢從來唔會保存訊息文字、個人簡介或者圖片。\n\n呢啲係用嚟保護群組：阻止垃圾訊息同突襲，同埋由管理員嘅決定入面學習每個群容許咩。每個群嘅管理員可以揀檢查留意到嘅嘢同成員帳戶連埋保存幾耐：90 日、1 年（預設）或者 2 年。</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer 保存咗你啲咩</value>

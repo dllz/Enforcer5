@@ -1801,7 +1801,7 @@
     <value>{0} diban selama {2}: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Aturan filter grup kalian sendiri. Aturan baru dimulai dalam masa uji {0} hari: hanya mencatat apa yang akan dilakukannya.\n/filter add name|username|text tindakan regex\n/filter try /regex/ teks\n/filter test id atau regex\n/filter list\n/filter live id\n/filter trial id hari\n/filter del id</value>
+    <value>Aturan filter grup kalian sendiri. Aturan baru dimulai dalam masa uji {0} hari: hanya mencatat apa yang akan dilakukannya.\n/filter add name|username|text|bio|channel tindakan regex\n/filter try /regex/ teks\n/filter test id atau regex\n/filter list\n/filter live id\n/filter trial id hari\n/filter del id</value>
   </string>
   <string key="filterBadTarget">
     <value>Target harus salah satu dari: {0}</value>
@@ -1832,6 +1832,12 @@
   </string>
   <string key="filterTestResult">
     <value>{0} dari {1} anggota yang terlihat dalam 30 hari terakhir cocok. Contoh:</value>
+  </string>
+  <string key="filterTestBios">
+    <value>{0} dari {1} bio yang dicek untuk grup ini dalam sehari terakhir cocok (bio hanya disimpan di memori, selama sehari). Anggota:</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>{0} dari {1} channel dan grup yang ditunjuk anggota dalam sehari terakhir cocok. Contoh:</value>
   </string>
   <string key="filterTestSent">
     <value>Hasilnya sudah saya kirim lewat chat pribadi.</value>
@@ -1874,14 +1880,15 @@
   </string>
   <string key="hcommandfilter">
     <value>
-      Aturan filter grupmu sendiri: ekspresi reguler pada nama, username, atau teks pesan anggota, dan apa yang dilakukan jika cocok (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Hanya untuk admin. Filter siap pakai (aksara, tautan undangan, nomor telepon, dan lainnya) ada di menu pengaturan, di bagian Filter.
+      Aturan filter grupmu sendiri: ekspresi reguler pada nama, username, atau teks pesan anggota, bio anggota baru, atau channel dan grup yang ditunjuk anggota baru (judul, deskripsi, dan username-nya), dan apa yang dilakukan jika cocok (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Hanya untuk admin. Filter siap pakai (aksara, tautan undangan, nomor telepon, dan lainnya) ada di menu pengaturan, di bagian Filter.
 
       Aturan baru dimulai dalam masa uji 7 hari: mencatat apa yang akan dilakukannya dan tidak berbuat apa-apa, jadi kamu bisa melihat apakah aturan itu menangkap orang yang tepat. Aktifkan dengan /{0} live.
 
       Contoh:
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (mencoba aturan 3 pada nama anggota yang terlihat dalam 30 hari terakhir dan mengirim hasilnya lewat chat pribadi)
+      /{0} test 3 (mencoba aturan 3 pada nama anggota yang terlihat dalam 30 hari terakhir, atau aturan bio atau channel pada yang dicek dalam sehari terakhir, dan mengirim hasilnya lewat chat pribadi)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -1964,7 +1971,7 @@
     <value>2 tahun</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
+    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n• Tentang anggota baru: apakah profil publik mereka punya tautan, mention, atau channel pribadi, dan hal yang sama tentang channel dan grup publik yang mereka tunjuk. Bio dan deskripsi channel dibaca, tidak disimpan.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
   </string>
   <string key="cmdprivacy">
     <value>Apa yang disimpan Enforcer tentangmu</value>

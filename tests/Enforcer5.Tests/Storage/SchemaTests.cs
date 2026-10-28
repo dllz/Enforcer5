@@ -24,7 +24,7 @@ namespace Enforcer5.Tests.Storage
             var tables = context.Model.GetEntityTypes().Select(e => e.GetTableName()).OrderBy(t => t).ToArray();
             CollectionAssert.AreEqual(new[]
             {
-                "detection_adjustments", "detection_policies", "detections", "global_sanctions", "group_filters", "group_joins", "group_members", "group_settings",
+                "account_profile_flags", "channel_profiles", "detection_adjustments", "detection_policies", "detections", "global_sanctions", "group_filters", "group_joins", "group_members", "group_settings",
                 "group_stats", "groups", "member_labels", "member_trust_overrides", "message_fingerprints",
                 "raid_events", "raid_incidents", "report_actions", "report_admin_optouts", "report_copies", "reports", "sanctions",
                 "telegram_account_profiles", "telegram_accounts",

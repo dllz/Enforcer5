@@ -48,7 +48,8 @@ namespace Enforcer5.Raids
         internal static TimeSpan InsideFor = TimeSpan.FromHours(1);
         /// <summary>When the answer could not be had (a 429, Telegram down): outside for now, asked again after this.</summary>
         internal static TimeSpan FailedFor = TimeSpan.FromMinutes(1);
-        internal const int TelegramPerSecond = 10;
+        /// <summary>Shared with the profile and channel lookups (<see cref="LookupPacer"/>).</summary>
+        internal const int TelegramPerSecond = LookupPacer.PerSecond;
         /// <summary>Lookups waiting at most; past that a mention counts as outside without one.</summary>
         internal const int MaxWaiting = 2000;
 
@@ -57,7 +58,6 @@ namespace Enforcer5.Raids
         private static readonly Dictionary<(long Chat, string Key), TaskCompletionSource<MentionPlace>> Waiting = new();
         private static readonly Queue<(long Chat, Mention Mention, string ChatUsername)> Queue = new();
         private static bool _draining;
-        private static DateTime _pausedUntil;
         private static int _lookups;
 
         /// <summary>Telegram lookups made, for tests.</summary>
@@ -174,18 +174,18 @@ namespace Enforcer5.Raids
             var chat = await TelegramAsync(() => Bot.Api.GetChat("@" + mention.Username));
             if (chat.NotFound) return (MentionPlace.Outside, OutsideFor);
             if (chat.Failed) return (MentionPlace.Outside, FailedFor);
+            // The profile lookups need not ask again (Detection step 11).
+            Detection.Profiles.Seen(chat.Value);
             if (chat.Value.Id == chatId || chat.Value.Id == await LinkedChannelAsync(chatId)) return (MentionPlace.Inside, InsideFor);
             return (MentionPlace.Outside, OutsideFor);
         }
 
         private sealed record Answer<T>(T Value, bool Failed, bool NotFound);
 
-        // One Telegram lookup, paced for the whole bot and pausing after a 429.
+        // One Telegram lookup, paced for the whole bot (with the profile lookups) and pausing after a 429.
         private static async Task<Answer<T>> TelegramAsync<T>(Func<Task<T>> call)
         {
-            DateTime wait;
-            lock (Lock) wait = _pausedUntil;
-            if (wait > Clock.UtcNow) await Clock.Delay(wait - Clock.UtcNow);
+            await LookupPacer.TurnAsync();
             System.Threading.Interlocked.Increment(ref _lookups);
             try
             {
@@ -196,21 +196,13 @@ namespace Enforcer5.Raids
                 var api = Bot.AsApiError(e);
                 if (Bot.IsRateLimited(api))
                 {
-                    var retry = TimeSpan.FromSeconds(api.Parameters?.RetryAfter ?? 5);
-                    lock (Lock) _pausedUntil = Clock.UtcNow + retry;
+                    LookupPacer.Pause(TimeSpan.FromSeconds(api.Parameters?.RetryAfter ?? 5));
                     return new Answer<T>(default, true, false);
                 }
                 // "chat not found", "user not found", "PARTICIPANT_ID_INVALID": nothing there by that name.
                 if (api != null && api.ErrorCode == 400) return new Answer<T>(default, false, true);
                 LogHelper.Error($"Mention lookup failed: {e.Message}");
                 return new Answer<T>(default, true, false);
-            }
-            finally
-            {
-                // A little over the even spacing, so no second ever holds more than TelegramPerSecond.
-                var next = Clock.UtcNow + TimeSpan.FromSeconds(1.05 / TelegramPerSecond);
-                lock (Lock)
-                    if (_pausedUntil < next) _pausedUntil = next;
             }
         }
 
@@ -235,9 +227,9 @@ namespace Enforcer5.Raids
                 Waiting.Clear();
                 Queue.Clear();
                 _draining = false;
-                _pausedUntil = DateTime.MinValue;
                 _lookups = 0;
             }
+            LookupPacer.ResetForTests();
         }
     }
 }

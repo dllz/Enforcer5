@@ -553,7 +553,7 @@
     <value>{0} fue baneado durante {2}: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Vuestras propias reglas de filtro. Una regla nueva empieza a prueba durante {0} días: solo registra lo que habría hecho.\n/filter add name|username|text acción regex\n/filter try /regex/ texto\n/filter test id o regex\n/filter list\n/filter live id\n/filter trial id días\n/filter del id</value>
+    <value>Vuestras propias reglas de filtro. Una regla nueva empieza a prueba durante {0} días: solo registra lo que habría hecho.\n/filter add name|username|text|bio|channel acción regex\n/filter try /regex/ texto\n/filter test id o regex\n/filter list\n/filter live id\n/filter trial id días\n/filter del id</value>
   </string>
   <string key="filterBadTarget">
     <value>El objetivo debe ser uno de: {0}</value>
@@ -584,6 +584,12 @@
   </string>
   <string key="filterTestResult">
     <value>{0} de los {1} miembros vistos en los últimos 30 días coinciden. Ejemplos:</value>
+  </string>
+  <string key="filterTestBios">
+    <value>{0} de las {1} biografías consultadas para este grupo en el último día coinciden (las biografías solo se guardan en memoria, un día). Miembros:</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>{0} de los {1} canales y grupos a los que apuntaron los miembros en el último día coinciden. Ejemplos:</value>
   </string>
   <string key="filterTestSent">
     <value>Te he enviado el resultado en privado.</value>
@@ -626,14 +632,15 @@
   </string>
   <string key="hcommandfilter">
     <value>
-      Las reglas de filtro propias de tu grupo: una expresión regular sobre los nombres, nombres de usuario o el texto de los mensajes de los miembros, y qué hacer cuando coincide (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Solo administradores. Los filtros preparados (escrituras, enlaces de invitación, números de teléfono y más) están en el menú de ajustes, en Filtros.
+      Las reglas de filtro propias de tu grupo: una expresión regular sobre los nombres, nombres de usuario o el texto de los mensajes de los miembros, las biografías de los miembros nuevos o los canales y grupos a los que apuntan los miembros nuevos (título, descripción y nombre de usuario), y qué hacer cuando coincide (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Solo administradores. Los filtros preparados (escrituras, enlaces de invitación, números de teléfono y más) están en el menú de ajustes, en Filtros.
 
       Una regla nueva empieza a prueba durante 7 días: registra lo que habría hecho y no hace nada, para que veas si atrapa a las personas correctas. Actívala con /{0} live.
 
       Ejemplos:
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (prueba la regla 3 con los nombres de los miembros vistos en los últimos 30 días y te envía el resultado en privado)
+      /{0} test 3 (prueba la regla 3 con los nombres de los miembros vistos en los últimos 30 días, o una regla de biografía o canal con los consultados en el último día, y te envía el resultado en privado)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -716,7 +723,7 @@
     <value>2 años</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
+    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n• De los miembros nuevos: si su perfil público tiene un enlace, una mención o un canal personal, y lo mismo de los canales y grupos públicos a los que apuntan. La biografía y la descripción del canal se leen, no se guardan.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
   </string>
   <string key="cmdprivacy">
     <value>Qué guarda Enforcer sobre ti</value>

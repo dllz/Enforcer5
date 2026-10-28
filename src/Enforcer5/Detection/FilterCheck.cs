@@ -37,7 +37,7 @@ namespace Enforcer5.Detection
             var filters = ctx.Policy?.Filters;
             var hits = Find(filters, message.From, TextOf(message));
             if (hits.Count == 0) return;
-            Handle(ctx, message.From, message, hits);
+            Handle(ctx, filters, message.From, message, hits);
         }
 
         /// <summary>Everyone in a join message, each by their own name.</summary>
@@ -48,7 +48,7 @@ namespace Enforcer5.Detection
             {
                 if (joiner.Id == Bot.Me.Id) continue;
                 var hits = Find(filters, joiner, null);
-                if (hits.Count > 0) Handle(ctx, joiner, null, hits);
+                if (hits.Count > 0) Handle(ctx, filters, joiner, null, hits);
             }
         }
 
@@ -92,10 +92,32 @@ namespace Enforcer5.Detection
             return hits;
         }
 
-        private static void Handle(MessageContext ctx, User person, Message message, List<Hit> found)
+        /// <summary>
+        /// What a profile lookup found (step 11): a new member's bio (<see cref="FilterTarget.Bio"/>), or a channel they
+        /// pointed at (<see cref="FilterTarget.Channel"/>: its title, description and username), against the group's own
+        /// rules on it. Called from dispatched work.
+        /// </summary>
+        internal static void OnProfile(MessageContext ctx, User person, Message message, FilterTarget target, string value)
+        {
+            var filters = (ctx.Policy ?? DetectionSettings.For(ctx.ChatId)).Filters;
+            var hits = FindIn(filters, target, value);
+            if (hits.Count > 0) Handle(ctx, filters, person, message, hits);
+        }
+
+        /// <summary>The rules that match <paramref name="value"/> on one target; pure, for tests.</summary>
+        internal static List<Hit> FindIn(FilterSettings filters, FilterTarget target, string value)
+        {
+            var hits = new List<Hit>();
+            if (filters == null || string.IsNullOrEmpty(value)) return hits;
+            foreach (var rule in filters.Rules)
+                if (rule.Enabled && !(rule.Kind == FilterRule.PresetKind && rule.Action == null) && rule.Matches(target, value))
+                    hits.Add(new Hit(rule, target));
+            return hits;
+        }
+
+        private static void Handle(MessageContext ctx, FilterSettings filters, User person, Message message, List<Hit> found)
         {
             var chatId = ctx.ChatId;
-            var filters = ctx.Policy.Filters;
             var viaBot = message?.ViaBot;
             var update = ctx.Update;
             Bot.DispatchAction(() =>

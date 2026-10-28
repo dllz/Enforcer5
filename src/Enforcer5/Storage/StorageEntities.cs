@@ -552,4 +552,36 @@ namespace Enforcer5.Storage
         /// </summary>
         public string Category { get; set; }
     }
+
+    /// <summary>
+    /// What Detection's profile lookup (getChat on a member, design section 7, build step 11) found about an
+    /// account: flags only (<c>bio_link</c>, <c>bio_mention</c>, <c>personal_channel</c>, ...), never the bio text,
+    /// and the id of their personal channel. One row per account, updated at each lookup (at most daily). The
+    /// account id is nullable so the row can be anonymised in place (design section 12).
+    /// </summary>
+    internal sealed class AccountProfileFlagsEntity
+    {
+        public long ProfileFlagsId { get; set; }
+        public long? AccountId { get; set; }
+        public string[] Flags { get; set; }
+        public long? PersonalChannelId { get; set; }
+        public string BioScript { get; set; }
+        public DateTimeOffset CheckedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A public channel or group a member pointed at (their bio, personal channel, a forward, a mention or a link),
+    /// as getChat showed it (build step 11): its public id and username, flags about its description, and its
+    /// member count. Never its title or description text. Shared by every group; looked up at most once a day.
+    /// </summary>
+    internal sealed class ChannelProfileEntity
+    {
+        public long TelegramChatId { get; set; }
+        public string ChatType { get; set; }
+        public string Username { get; set; }
+        public string[] Flags { get; set; }
+        public int? MemberCount { get; set; }
+        public long? LinkedChatId { get; set; }
+        public DateTimeOffset CheckedAt { get; set; }
+    }
 }

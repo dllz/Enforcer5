@@ -66,6 +66,10 @@ namespace Enforcer5.Data
         internal static IDetectionLearningRepository DetectionLearning { get; set; } =
             new PostgresDetectionLearningRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. What the profile and channel lookups found: flags only (Detection/Profiles).
+        internal static IProfileRepository Profiles { get; set; } =
+            new PostgresProfileRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

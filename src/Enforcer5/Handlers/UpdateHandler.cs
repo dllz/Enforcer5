@@ -438,6 +438,7 @@ namespace Enforcer5.Handlers
                 foreach (var joiner in joiners) ForgetTempban(chatId, joiner.Id);
                 Detection.FilterCheck.OnJoin(ctx);
                 Detection.MessageSigns.OnJoin(ctx);
+                Detection.ProfileSigns.OnJoin(ctx);
                 if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
@@ -630,7 +631,12 @@ namespace Enforcer5.Handlers
                             {
                                 _ = Redis.db.HashSetAsync(member, "first", Clock.UtcNow.ToUnixTime(), When.NotExists);
                                 // Media as a first post, a first post soon after joining (Detection step 9).
-                                if (ctx.Complete) Detection.MessageSigns.OnFirstPost(ctx);
+                                if (ctx.Complete)
+                                {
+                                    Detection.MessageSigns.OnFirstPost(ctx);
+                                    // Their bio and personal channel, if they are new (step 11).
+                                    Detection.ProfileSigns.OnFirstPost(ctx);
+                                }
                             }
                             RaidCapture.Message(updateMessage, count);
                         }

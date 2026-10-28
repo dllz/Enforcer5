@@ -992,6 +992,7 @@ namespace Enforcer5.Raids
                 }
             }
             MentionResolver.Prune();
+            Detection.Profiles.Prune();
             AdminDirectory.Prune();
             ChatDetails.Prune();
             // One failing incident must not stop the others ending, or restart the loop.
@@ -1347,6 +1348,7 @@ namespace Enforcer5.Raids
             }
             Limits = new RaidLimits();
             MentionResolver.ResetForTests();
+            Detection.Profiles.ResetForTests();
             AdminDirectory.ResetForTests();
             ChatDetails.ResetForTests();
             LogDigest.ResetForTests();

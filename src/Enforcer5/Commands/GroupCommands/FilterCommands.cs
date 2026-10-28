@@ -17,7 +17,7 @@ namespace Enforcer5
     /// trial for <see cref="TrialDays"/>: it is recorded, never acted on, and stays so until an admin
     /// makes it live. The presets are in the filters menu.
     /// <code>
-    /// /filter add &lt;name|username|text&gt; &lt;action&gt; &lt;regex&gt;
+    /// /filter add &lt;name|username|text|bio|channel&gt; &lt;action&gt; &lt;regex&gt;
     /// /filter try &lt;regex&gt; &lt;text&gt;
     /// /filter test &lt;id|regex&gt;
     /// /filter list | live &lt;id&gt; | trial &lt;id&gt; [days] | del &lt;id&gt;
@@ -174,6 +174,7 @@ namespace Enforcer5
             var pattern = rule?.Pattern ?? rest;
             if (!FilterRegex.TryCompile(pattern, out _, out var error))
                 return Methods.GetLocaleString(lang, "filterInvalid", error);
+            if (rule?.Target is "bio" or "channel") return FilterTestProfiles(chatId, adminId, rule, lang);
             if (!PostgresStorage.Ready) return Methods.GetLocaleString(lang, "failed");
 
             IReadOnlyList<(string Name, string Username)> members;
@@ -197,6 +198,37 @@ namespace Enforcer5
             var result = matches.Count == 0
                 ? Methods.GetLocaleString(lang, "filterTestNone", members.Count)
                 : Methods.GetLocaleString(lang, "filterTestResult", matches.Count, members.Count) + "\n" + examples;
+            var sent = Bot.Send(result, adminId);
+            return Methods.GetLocaleString(lang, sent != null ? "filterTestSent" : "filterTestStartMe");
+        }
+
+        /// <summary>
+        /// A bio or channel rule, tried on what was looked up for this group in the last day (bios and channels are kept
+        /// in memory only): the members whose bio matches, or the channels. Sent to the admin in private.
+        /// </summary>
+        private static string FilterTestProfiles(long chatId, long adminId, FilterRule rule, XDocument lang)
+        {
+            List<string> matches;
+            int total;
+            string key;
+            if (rule.Target == "bio")
+            {
+                var bios = Profiles.RecentBios(chatId);
+                total = bios.Count;
+                matches = bios.Where(p => FilterRegex.Matches(rule.Pattern, p.Bio))
+                    .Select(p => $"{DetectionReports.StoredName(p.UserId)} ({p.UserId})").ToList();
+                key = "filterTestBios";
+            }
+            else
+            {
+                var channels = Profiles.RecentChannels(chatId);
+                total = channels.Count;
+                matches = channels.Where(c => FilterRegex.Matches(rule.Pattern, c.FilterText))
+                    .Select(c => c.Username != null ? $"{c.Title} (@{c.Username})" : c.Title ?? c.Id.ToString()).ToList();
+                key = "filterTestChannels";
+            }
+            var result = Methods.GetLocaleString(lang, key, matches.Count, total);
+            if (matches.Count > 0) result += "\n" + string.Join("\n", matches.Take(TestExamples).Select(WebUtility.HtmlEncode));
             var sent = Bot.Send(result, adminId);
             return Methods.GetLocaleString(lang, sent != null ? "filterTestSent" : "filterTestStartMe");
         }

@@ -208,7 +208,7 @@ namespace Enforcer5.Tests.Harness
             var lang = Enforcer5.Helpers.Methods.GetGroupLanguage(chat.ChatId).Doc;
             string S(string key, params object[] args) => Enforcer5.Helpers.Methods.GetLocaleString(lang, key, args);
 
-            await Command(chat, admin, "/filter add bio ban x");
+            await Command(chat, admin, "/filter add avatar ban x");
             StringAssert.StartsWith(chat.Replies.Last(), S("filterBadTarget", "x").Split(':')[0]);
             await Command(chat, admin, "/filter add text explode x");
             StringAssert.StartsWith(chat.Replies.Last(), S("filterBadAction", "x").Split(':')[0]);

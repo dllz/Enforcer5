@@ -206,6 +206,7 @@ namespace Enforcer5.Tests.Harness
                 case GetChatAdministratorsRequest r: return Limited("getChatAdministrators", r.ChatId, null, null, r, () => Administrators(Id(r.ChatId)));
                 case GetChatMemberRequest r: return Limited("getChatMember", r.ChatId, r.UserId, null, r, () => ChatMember(Id(r.ChatId), r.UserId));
                 case GetChatRequest r: return Limited("getChat", r.ChatId, null, null, r, () => ChatInfo(r.ChatId));
+                case GetChatMemberCountRequest r: return Limited("getChatMemberCount", r.ChatId, null, null, r, () => MemberCount(Id(r.ChatId)));
                 case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages));
                 case UnbanChatMemberRequest r: return Limited("unbanChatMember", r.ChatId, r.UserId, null, r, () => Unban(Id(r.ChatId), r.UserId, r.OnlyIfBanned == true));
                 case RestrictChatMemberRequest r: return Limited("restrictChatMember", r.ChatId, r.UserId, null, r, () => Restrict(Id(r.ChatId), r.UserId, r.Permissions));
@@ -447,8 +448,32 @@ namespace Enforcer5.Tests.Harness
         private readonly ConcurrentDictionary<string, (long Id, ChatType Type)> _publicChats = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<long, long> _linkedChannels = new();
 
+        private readonly ConcurrentDictionary<long, ChatFullInfo> _channels = new();
+        private readonly ConcurrentDictionary<long, (string Bio, long? PersonalChannel)> _profiles = new();
+
         /// <summary>A public channel or group elsewhere that getChat("@name") finds.</summary>
         internal void AddPublicChat(string username, long id, ChatType type = ChatType.Channel) => _publicChats[username.TrimStart('@')] = (id, type);
+
+        /// <summary>
+        /// A channel or group elsewhere with its title, description and member count, as getChat and getChatMemberCount
+        /// answer about it: by id, and by "@name" when it has a username.
+        /// </summary>
+        internal void AddChannel(long id, string title, string username = null, string description = null, int members = 100,
+            ChatType type = ChatType.Channel)
+        {
+            if (username != null) _publicChats[username] = (id, type);
+            _channels[id] = new ChatFullInfo { Id = id, Type = type, Title = title, Username = username, Description = description };
+            _memberCounts[id] = members;
+        }
+
+        private readonly ConcurrentDictionary<long, int> _memberCounts = new();
+
+        /// <summary>What getChat says about a person: their bio and personal channel.</summary>
+        internal void SetProfile(long userId, string bio, long? personalChannel = null) => _profiles[userId] = (bio, personalChannel);
+
+        private int MemberCount(long chatId) => _memberCounts.TryGetValue(chatId, out var count)
+            ? count
+            : throw new ApiRequestException("Bad Request: chat not found", 400);
 
         /// <summary>The channel linked to a group.</summary>
         internal void SetLinkedChannel(long chatId, long channelId) => _linkedChannels[chatId] = channelId;
@@ -458,10 +483,30 @@ namespace Enforcer5.Tests.Harness
             if (chat.Username == null) return ChatInfo(Id(chat));
             if (!_publicChats.TryGetValue(chat.Username.TrimStart('@'), out var found))
                 throw new ApiRequestException("Bad Request: chat not found", 400);
+            if (_channels.TryGetValue(found.Id, out var channel)) return channel;
             return new ChatFullInfo { Id = found.Id, Type = found.Type, Username = chat.Username.TrimStart('@') };
         }
 
-        private ChatFullInfo ChatInfo(long chatId) => new ChatFullInfo
+        private ChatFullInfo ChatInfo(long chatId)
+        {
+            if (_channels.TryGetValue(chatId, out var channel)) return channel;
+            if (chatId > 0)
+            {
+                _profiles.TryGetValue(chatId, out var profile);
+                _users.TryGetValue(chatId, out var user);
+                return new ChatFullInfo
+                {
+                    Id = chatId, Type = ChatType.Private, FirstName = user?.FirstName ?? $"User{chatId}", Username = user?.Username,
+                    Bio = profile.Bio,
+                    PersonalChat = profile.PersonalChannel is { } personal
+                        ? new Chat { Id = personal, Type = ChatType.Channel, Title = _channels.TryGetValue(personal, out var c) ? c.Title : "channel" }
+                        : null
+                };
+            }
+            return GroupInfo(chatId);
+        }
+
+        private ChatFullInfo GroupInfo(long chatId) => new ChatFullInfo
         {
             Id = chatId,
             Title = _titles.TryGetValue(chatId, out var title) ? title : null,

@@ -504,6 +504,27 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.Detail).HasColumnType("jsonb");
                 entity.HasIndex(x => new { x.IncidentId, x.OffsetMs }, "raid_events_timeline_idx");
             });
+
+            modelBuilder.Entity<AccountProfileFlagsEntity>(entity =>
+            {
+                entity.ToTable("account_profile_flags");
+                entity.HasKey(x => x.ProfileFlagsId);
+                entity.Property(x => x.ProfileFlagsId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Flags).IsRequired().HasDefaultValueSql("'{}'::text[]");
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(x => x.AccountId, "account_profile_flags_account_idx").IsUnique();
+            });
+
+            modelBuilder.Entity<ChannelProfileEntity>(entity =>
+            {
+                entity.ToTable("channel_profiles", table =>
+                    table.HasCheckConstraint("channel_profiles_type_check", "chat_type IN ('channel', 'group', 'supergroup', 'private')"));
+                entity.HasKey(x => x.TelegramChatId);
+                entity.Property(x => x.TelegramChatId).ValueGeneratedNever();
+                entity.Property(x => x.ChatType).IsRequired();
+                entity.Property(x => x.Flags).IsRequired().HasDefaultValueSql("'{}'::text[]");
+                entity.HasIndex(x => x.Username, "channel_profiles_username_idx");
+            });
         }
 
         private static void UseSnakeCaseColumns(ModelBuilder modelBuilder)

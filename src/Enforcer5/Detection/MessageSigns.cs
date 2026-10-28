@@ -82,6 +82,7 @@ namespace Enforcer5.Detection
                                 System.Text.Json.JsonSerializer.Serialize(new { others = others.Count })));
                     }
                 }
+                var pointedAt = new List<string>();
                 if (mentions.Count > 0)
                 {
                     var chatUsername = message.Chat.Username;
@@ -91,7 +92,17 @@ namespace Enforcer5.Detection
                     finally { Clock.Unpark(); }
                     var outside = places.Count(p => p == MentionPlace.Outside);
                     if (outside > 0) await Hit(chatId, userId, message, SignCatalog.MentionOutside, new { mentions = outside });
+                    pointedAt.AddRange(mentions.Where((m, i) => places[i] == MentionPlace.Outside && m.Username != null).Select(m => m.Username));
                 }
+
+                // The channels and groups they pointed at, looked up for the group's channel rules (step 11).
+                if (link) pointedAt.AddRange(LinkTargets(message).Select(ProfileSigns.TelegramName)
+                    .Where(n => n != null && !string.Equals(n, message.Chat.Username, StringComparison.OrdinalIgnoreCase)));
+                long? forwardedFrom = forward && message.ForwardOrigin is MessageOriginChannel origin && !await FromOwnChannelAsync(chatId, origin)
+                    ? origin.Chat.Id
+                    : null;
+                if (forwardedFrom != null || pointedAt.Count > 0)
+                    await ProfileSigns.PointedAtAsync(ctx, message.From, message, forwardedFrom, pointedAt);
             }
             catch (Exception e)
             {
@@ -168,7 +179,20 @@ namespace Enforcer5.Detection
             return count;
         }
 
-        private static bool IsThisGroup(string url, string chatUsername, long chatId)
+        /// <summary>The addresses of the message's links (URL and hidden-link entities).</summary>
+        internal static IEnumerable<string> LinkTargets(Message message)
+        {
+            var text = message.Text ?? message.Caption ?? "";
+            foreach (var e in message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>())
+            {
+                if (e.Type == MessageEntityType.TextLink && e.Url != null) yield return e.Url;
+                else if (e.Type == MessageEntityType.Url && e.Offset >= 0 && e.Offset + e.Length <= text.Length)
+                    yield return text.Substring(e.Offset, e.Length);
+            }
+        }
+
+        /// <summary>A link to this group itself (its username or its t.me/c id).</summary>
+        internal static bool IsThisGroup(string url, string chatUsername, long chatId)
         {
             var link = url.Trim().ToLowerInvariant();
             foreach (var prefix in new[] { "https://", "http://", "www." }) if (link.StartsWith(prefix)) link = link[prefix.Length..];

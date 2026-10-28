@@ -270,6 +270,7 @@ namespace Enforcer5.Detection
             TrustOverrides.ResetForTests();
             MessageSigns.ResetForTests();
             NameSigns.ResetForTests();
+            ProfileSigns.ResetForTests();
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();

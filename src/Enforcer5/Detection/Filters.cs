@@ -64,8 +64,11 @@ namespace Enforcer5.Detection
         internal const string Live = "live";
         internal const string Trial = "trial";
 
-        /// <summary>The targets an admin's rule can have. Bios and channels come with the profile lookups (step 11).</summary>
-        internal static readonly string[] Targets = { "name", "username", "text" };
+        /// <summary>
+        /// The targets an admin's rule can have. A bio is a new member's, looked up on their first message (or when they
+        /// join, while the group has a bio or channel rule); a channel is one a new member pointed at (step 11).
+        /// </summary>
+        internal static readonly string[] Targets = { "name", "username", "text", "bio", "channel" };
 
         internal static FilterRule NewPreset(string preset, string action) =>
             new FilterRule(0, PresetKind, preset, null, null, action, action != null, Live, null, null);
@@ -78,7 +81,15 @@ namespace Enforcer5.Detection
         internal bool AppliesTo(FilterTarget target) =>
             Kind == PresetKind
                 ? FilterPresets.Get(Preset) is { } preset && preset.Targets.HasFlag(target)
-                : Target switch { "name" => target == FilterTarget.Name, "username" => target == FilterTarget.Username, "text" => target == FilterTarget.Text, _ => false };
+                : Target switch
+                {
+                    "name" => target == FilterTarget.Name,
+                    "username" => target == FilterTarget.Username,
+                    "text" => target == FilterTarget.Text,
+                    "bio" => target == FilterTarget.Bio,
+                    "channel" => target == FilterTarget.Channel,
+                    _ => false
+                };
 
         /// <summary>Whether it matches <paramref name="value"/> on <paramref name="target"/>; false for a rule that cannot run.</summary>
         internal bool Matches(FilterTarget target, string value)
@@ -94,7 +105,13 @@ namespace Enforcer5.Detection
     {
         Text = 1,
         Name = 2,
-        Username = 4
+        Username = 4,
+
+        /// <summary>A member's bio (own rules only; the presets keep their targets).</summary>
+        Bio = 8,
+
+        /// <summary>The title, description and username of a channel or group a member pointed at (own rules only).</summary>
+        Channel = 16
     }
 
     /// <summary>A prepared rule an admin switches on from the menu.</summary>

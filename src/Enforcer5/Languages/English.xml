@@ -2614,7 +2614,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>{0} was banned for {2}: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Your own filter rules. A new rule starts on trial for {0} days: it only records what it would have done.\n/filter add name|username|text action regex\n/filter try /regex/ text\n/filter test id or regex\n/filter list\n/filter live id\n/filter trial id days\n/filter del id</value>
+    <value>Your own filter rules. A new rule starts on trial for {0} days: it only records what it would have done.\n/filter add name|username|text|bio|channel action regex\n/filter try /regex/ text\n/filter test id or regex\n/filter list\n/filter live id\n/filter trial id days\n/filter del id</value>
   </string>
   <string key="filterBadTarget">
     <value>The target must be one of: {0}</value>
@@ -2645,6 +2645,12 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="filterTestResult">
     <value>{0} of the {1} members seen in the last 30 days match. Examples:</value>
+  </string>
+  <string key="filterTestBios">
+    <value>{0} of the {1} bios looked up for this group in the last day match (bios are only held in memory, for a day). Members:</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>{0} of the {1} channels and groups members pointed to in the last day match. Examples:</value>
   </string>
   <string key="filterTestSent">
     <value>I have sent you the result in private.</value>
@@ -2687,14 +2693,15 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="hcommandfilter">
     <value>
-      Your group's own filter rules: a regular expression on members' names, usernames or message text, and what to do when it matches (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Admins only. The ready-made filters (scripts, invite links, phone numbers and more) are in the settings menu under Filters.
+      Your group's own filter rules: a regular expression on members' names, usernames or message text, new members' bios, or the channels and groups new members point to (their title, description and username), and what to do when it matches (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Admins only. The ready-made filters (scripts, invite links, phone numbers and more) are in the settings menu under Filters.
 
       A new rule starts on trial for 7 days: it records what it would have done and does nothing, so you can see whether it catches the right people. Make it act with /{0} live.
 
       Examples:
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (tries rule 3 on the names of members seen in the last 30 days and sends you the result in private)
+      /{0} test 3 (tries rule 3 on the names of members seen in the last 30 days, or a bio or channel rule on those looked up in the last day, and sends you the result in private)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -2777,7 +2784,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>2 years</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
+    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
   </string>
   <string key="cmdprivacy">
     <value>What Enforcer keeps about you</value>

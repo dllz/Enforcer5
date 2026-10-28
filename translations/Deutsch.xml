@@ -1612,7 +1612,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>{0} wurde für {2} gebannt: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Eure eigenen Filterregeln. Eine neue Regel ist zuerst {0} Tage auf Probe: Sie zeichnet nur auf, was sie getan hätte.\n/filter add name|username|text Aktion Regex\n/filter try /Regex/ Text\n/filter test ID oder Regex\n/filter list\n/filter live ID\n/filter trial ID Tage\n/filter del ID</value>
+    <value>Eure eigenen Filterregeln. Eine neue Regel ist zuerst {0} Tage auf Probe: Sie zeichnet nur auf, was sie getan hätte.\n/filter add name|username|text|bio|channel Aktion Regex\n/filter try /Regex/ Text\n/filter test ID oder Regex\n/filter list\n/filter live ID\n/filter trial ID Tage\n/filter del ID</value>
   </string>
   <string key="filterBadTarget">
     <value>Das Ziel muss eines davon sein: {0}</value>
@@ -1643,6 +1643,12 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="filterTestResult">
     <value>{0} von {1} Mitgliedern der letzten 30 Tage passen. Beispiele:</value>
+  </string>
+  <string key="filterTestBios">
+    <value>{0} von {1} Bios, die am letzten Tag für diese Gruppe abgefragt wurden, passen (Bios werden nur einen Tag im Arbeitsspeicher gehalten). Mitglieder:</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>{0} von {1} Kanälen und Gruppen, auf die Mitglieder am letzten Tag verwiesen haben, passen. Beispiele:</value>
   </string>
   <string key="filterTestSent">
     <value>Ich habe dir das Ergebnis privat geschickt.</value>
@@ -1685,14 +1691,15 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="hcommandfilter">
     <value>
-      Die eigenen Filterregeln deiner Gruppe: ein regulärer Ausdruck auf Namen, Benutzernamen oder Nachrichtentext von Mitgliedern, und was bei einem Treffer passiert (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Nur für Admins. Die fertigen Filter (Schriften, Einladungslinks, Telefonnummern und mehr) findest du im Einstellungsmenü unter Filter.
+      Die eigenen Filterregeln deiner Gruppe: ein regulärer Ausdruck auf Namen, Benutzernamen oder Nachrichtentext von Mitgliedern, die Bios neuer Mitglieder oder die Kanäle und Gruppen, auf die neue Mitglieder verweisen (Titel, Beschreibung und Benutzername), und was bei einem Treffer passiert (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Nur für Admins. Die fertigen Filter (Schriften, Einladungslinks, Telefonnummern und mehr) findest du im Einstellungsmenü unter Filter.
 
       Eine neue Regel ist zuerst 7 Tage auf Probe: Sie zeichnet auf, was sie getan hätte, und tut nichts, damit du sehen kannst, ob sie die Richtigen erwischt. Schalte sie mit /{0} live scharf.
 
       Beispiele:
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (prüft Regel 3 an den Namen der Mitglieder der letzten 30 Tage und schickt dir das Ergebnis privat)
+      /{0} test 3 (prüft Regel 3 an den Namen der Mitglieder der letzten 30 Tage, eine Bio- oder Kanalregel an den am letzten Tag abgefragten, und schickt dir das Ergebnis privat)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -1775,7 +1782,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>2 Jahre</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Was Enforcer speichert&lt;/b&gt;\n\n• Die Einstellungen jeder Gruppe und ihre Verwarnungen, Banns, Kicks und Stummschaltungen: wer, durch wen und warum.\n• Über die Mitglieder der Gruppen, in denen es ist: ihre Telegram-ID, Name und Benutzername, wie sie sich ändern, wann sie beigetreten sind und wie viele Nachrichten sie geschrieben haben.\n• Was seinen Prüfungen an einer Nachricht aufgefallen ist (ihre Art, ein Fingerabdruck des Textes und die Datei-ID) und was die Admins dann entschieden haben.\n\nDer Text von Nachrichten, Bios und Bilder werden nie gespeichert.\n\nDas dient dem Schutz der Gruppen: um Spam und Raids zu stoppen und aus den Entscheidungen der Admins zu lernen, was jede Gruppe erlaubt. Die Admins jeder Gruppe wählen, wie lange das, was die Prüfungen bemerkt haben, beim Konto eines Mitglieds bleibt: 90 Tage, 1 Jahr (Standard) oder 2 Jahre.</value>
+    <value>&lt;b&gt;Was Enforcer speichert&lt;/b&gt;\n\n• Die Einstellungen jeder Gruppe und ihre Verwarnungen, Banns, Kicks und Stummschaltungen: wer, durch wen und warum.\n• Über die Mitglieder der Gruppen, in denen es ist: ihre Telegram-ID, Name und Benutzername, wie sie sich ändern, wann sie beigetreten sind und wie viele Nachrichten sie geschrieben haben.\n• Was seinen Prüfungen an einer Nachricht aufgefallen ist (ihre Art, ein Fingerabdruck des Textes und die Datei-ID) und was die Admins dann entschieden haben.\n• Über neue Mitglieder: ob ihr öffentliches Profil einen Link, eine Erwähnung oder einen persönlichen Kanal hat, und dasselbe über die öffentlichen Kanäle und Gruppen, auf die sie verweisen. Die Bio und die Kanalbeschreibung werden gelesen, nicht gespeichert.\n\nDer Text von Nachrichten, Bios und Bilder werden nie gespeichert.\n\nDas dient dem Schutz der Gruppen: um Spam und Raids zu stoppen und aus den Entscheidungen der Admins zu lernen, was jede Gruppe erlaubt. Die Admins jeder Gruppe wählen, wie lange das, was die Prüfungen bemerkt haben, beim Konto eines Mitglieds bleibt: 90 Tage, 1 Jahr (Standard) oder 2 Jahre.</value>
   </string>
   <string key="cmdprivacy">
     <value>Was Enforcer über dich speichert</value>

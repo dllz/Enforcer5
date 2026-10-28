@@ -22,6 +22,90 @@ namespace Enforcer5.Storage.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Enforcer5.Storage.AccountProfileFlagsEntity", b =>
+                {
+                    b.Property<long>("ProfileFlagsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("profile_flags_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("ProfileFlagsId"));
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("BioScript")
+                        .HasColumnType("text")
+                        .HasColumnName("bio_script");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("checked_at");
+
+                    b.PrimitiveCollection<string[]>("Flags")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("flags")
+                        .HasDefaultValueSql("'{}'::text[]");
+
+                    b.Property<long?>("PersonalChannelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("personal_channel_id");
+
+                    b.HasKey("ProfileFlagsId");
+
+                    b.HasIndex(new[] { "AccountId" }, "account_profile_flags_account_idx")
+                        .IsUnique();
+
+                    b.ToTable("account_profile_flags", (string)null);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ChannelProfileEntity", b =>
+                {
+                    b.Property<long>("TelegramChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_chat_id");
+
+                    b.Property<string>("ChatType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chat_type");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("checked_at");
+
+                    b.PrimitiveCollection<string[]>("Flags")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("flags")
+                        .HasDefaultValueSql("'{}'::text[]");
+
+                    b.Property<long?>("LinkedChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("linked_chat_id");
+
+                    b.Property<int?>("MemberCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("member_count");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("TelegramChatId");
+
+                    b.HasIndex(new[] { "Username" }, "channel_profiles_username_idx");
+
+                    b.ToTable("channel_profiles", null, t =>
+                        {
+                            t.HasCheckConstraint("channel_profiles_type_check", "chat_type IN ('channel', 'group', 'supergroup', 'private')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.Property<long>("AdjustmentId")
@@ -1864,6 +1948,14 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("warning_events_type_check", "warning_type IN ('standard', 'prewarning', 'media')");
                         });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.AccountProfileFlagsEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>

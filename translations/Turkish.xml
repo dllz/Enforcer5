@@ -1581,7 +1581,7 @@
     <value>{0} {2} süreyle yasaklandı: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Grubunuzun kendi filtre kuralları. Yeni bir kural {0} gün deneme ile başlar: yalnızca ne yapacağını kaydeder.\n/filter add name|username|text eylem regex\n/filter try /regex/ metin\n/filter test id veya regex\n/filter list\n/filter live id\n/filter trial id gün\n/filter del id</value>
+    <value>Grubunuzun kendi filtre kuralları. Yeni bir kural {0} gün deneme ile başlar: yalnızca ne yapacağını kaydeder.\n/filter add name|username|text|bio|channel eylem regex\n/filter try /regex/ metin\n/filter test id veya regex\n/filter list\n/filter live id\n/filter trial id gün\n/filter del id</value>
   </string>
   <string key="filterBadTarget">
     <value>Hedef şunlardan biri olmalı: {0}</value>
@@ -1612,6 +1612,12 @@
   </string>
   <string key="filterTestResult">
     <value>Son 30 günde görülen {1} üyeden {0} tanesi eşleşiyor. Örnekler:</value>
+  </string>
+  <string key="filterTestBios">
+    <value>Son bir günde bu grup için bakılan {1} biyografiden {0} tanesi eşleşiyor (biyografiler yalnızca bir gün bellekte tutulur). Üyeler:</value>
+  </string>
+  <string key="filterTestChannels">
+    <value>Üyelerin son bir günde işaret ettiği {1} kanal ve gruptan {0} tanesi eşleşiyor. Örnekler:</value>
   </string>
   <string key="filterTestSent">
     <value>Sonucu sana özelden gönderdim.</value>
@@ -1654,14 +1660,15 @@
   </string>
   <string key="hcommandfilter">
     <value>
-      Grubunun kendi filtre kuralları: üyelerin isimleri, kullanıcı adları veya mesaj metni üzerinde bir düzenli ifade ve eşleştiğinde ne yapılacağı (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Sadece yöneticiler. Hazır filtreler (alfabeler, davet bağlantıları, telefon numaraları ve daha fazlası) ayarlar menüsünde Filtreler altında.
+      Grubunun kendi filtre kuralları: üyelerin isimleri, kullanıcı adları veya mesaj metni, yeni üyelerin biyografileri ya da yeni üyelerin işaret ettiği kanal ve gruplar (başlık, açıklama ve kullanıcı adı) üzerinde bir düzenli ifade ve eşleştiğinde ne yapılacağı (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Sadece yöneticiler. Hazır filtreler (alfabeler, davet bağlantıları, telefon numaraları ve daha fazlası) ayarlar menüsünde Filtreler altında.
 
       Yeni bir kural 7 gün deneme ile başlar: ne yapacağını kaydeder ve hiçbir şey yapmaz, böylece doğru kişileri yakalayıp yakalamadığını görebilirsin. /{0} live ile etkinleştir.
 
       Örnekler:
       /{0} add text ban free +crypto
+      /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (kural 3'ü son 30 günde görülen üyelerin isimlerinde dener ve sonucu sana özelden gönderir)
+      /{0} test 3 (kural 3'ü son 30 günde görülen üyelerin isimlerinde, bir biyografi veya kanal kuralını ise son bir günde bakılanlarda dener ve sonucu sana özelden gönderir)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -1744,7 +1751,7 @@
     <value>2 yıl</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
+    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n• Yeni üyeler hakkında: herkese açık profillerinde bağlantı, bahsetme veya kişisel kanal olup olmadığı, ve işaret ettikleri herkese açık kanal ve gruplar hakkında aynısı. Biyografi ve kanal açıklaması okunur, saklanmaz.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer senin hakkında neleri saklar</value>

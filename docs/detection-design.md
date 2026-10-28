@@ -190,7 +190,7 @@ extend / delete" with its hits and how many of those members were later banned.
 - A preset acts as soon as an admin switches it on; an own regex starts on trial for 7 days; neither
   waits for the group's observe weeks. A filter acts itself (one action, the strongest of the live
   rules that matched) and records every rule that matched as `filter:<preset>` or `filter:<id>`.
-- Not yet: `bio` and `channel` targets (step 11) and edits (step 8). A rule whose trial is over keeps
+- `bio` and `channel` targets came with step 11, edits with step 8. A rule whose trial is over keeps
   recording only until an admin answers the end-of-trial notice (step 7) or uses `/filter`. The length rules keep their own menu and check.
 - A regex with spaces is written between slashes in `/filter try` (`/filter try /free +crypto/ text`).
 
@@ -461,7 +461,21 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     hand (a group without one gets one lookup every 10 minutes), so a rename shows on the next message. A name
     that matched is remembered a day per member, so it is recorded once. Both signs are for new members only,
     as designed. The report line names whom the name copies. No new strings.
-11. Profile and channel queue.
+11. Profile and channel queue. **As built (2026-10-28):** `Detection/Profiles` (the queue) and `ProfileSigns`. getChat on a
+    member, and getChat with getChatMemberCount on a public channel or group, through one queue like `MentionResolver`'s:
+    single-flight, 2000 waiting at most, answers kept 24h in memory and shared by every group, a 400 is an answer
+    (nothing there). It shares the mention lookups' pace, 10 a second bot-wide for both together (`Helpers/LookupPacer`,
+    taken out of `MentionResolver`); a channel the mention lookup already read is not asked again (no member count then).
+    Nothing new is looked up for a group while `RaidGuard.Quiet`. A member is looked up on their first message here if
+    new (not admins), or on joining while the group has an own rule on bios or channels. Signs `bio_link` (not links to
+    this group), `bio_mention`, `personal_channel` (not the group's own channel). Channels looked up (at most 3 at a
+    time): the personal channel and the chats named in the bio, and from a new member's messages the forwarded channel
+    (not the group's own), mentions found outside the group and t.me links. `/filter add bio|channel`: an own rule on the
+    bio, or on a channel's title, description and username; the presets keep their targets (no preset runs on bios).
+    What was found is applied once a day per member and group. Kept: `account_profile_flags` (flags such as `bio_link`,
+    `bio_phone`, `personal_channel`, `birthdate`, `emoji_status`, `business_location`; the personal channel id; the bio's
+    script) and `channel_profiles` (id, type, username, flags, member count, linked chat); bios, titles and
+    descriptions stay in memory for a day, which is what `/filter test <bio or channel rule>` tries. /privacy says so.
 12. Banned media.
 13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`.
 14. `member_signals`, implicit labels, reputation, retention, `/detectstats`, `/detectreview`,
