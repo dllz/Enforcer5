@@ -1326,4 +1326,190 @@ UPDATE LOG
   <string key="hcommandprivacy">
     <value>顯示 Enforcer 保存咗群組同成員嘅咩資料、用嚟做咩同保存幾耐。喺群組同私人對話都用得。</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 報告</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;報告&lt;/b&gt;\n偵測會通知管理員有可疑嘅成員：每個成員每日一份報告，見到更多就會更新，附有封鎖、禁言同冇問題三個掣。群組仲係只係觀察緊嘅時候唔會發任何嘢；突襲期間啲報告會等住，完咗之後合埋一份發出。\n\n發送到：{0}\n管理員群組：{1}\n你：{2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>管理員（私訊）</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>管理員群組</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>管理員群組同管理員私訊</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>未連結</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>你會收到私訊</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>你已經關咗</value>
+  </string>
+  <string key="reportsToButton">
+    <value>發送到：{0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 連結管理員群組</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>取消連結管理員群組</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>私訊報告俾我：{0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>揀管理員群組</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>撳下面個掣，揀你哋管理員傾偈嘅群組。Enforcer 會加入嗰度，如果已經喺度就直接用，之後報告就會發去嗰度。\n\n呢個掣只可以用一次，有效 {0} 分鐘，而且你要係兩個群組嘅管理員。</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>呢個連結已經過期或者用咗。請再開報告選單攞過個新嘅。</value>
+  </string>
+  <string key="adminChatSame">
+    <value>群組唔可以做自己嘅管理員群組。請揀第二個群組。</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>只有同時係呢度同埋嗰個群組管理員嘅人先可以連結呢個群組。</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>呢個群組而家會收到 {0} 嘅偵測報告。</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;偵測&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>成員：{0}（&lt;code&gt;{1}&lt;/code&gt;）</value>
+  </string>
+  <string key="reportSigns">
+    <value>見到嘅嘢：</value>
+  </string>
+  <string key="reportScore">
+    <value>分數：{0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 封鎖</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 禁言</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ 冇問題</value>
+  </string>
+  <string key="reportDone">
+    <value>搞掂。</value>
+  </string>
+  <string key="reportGone">
+    <value>呢份報告太舊，已經處理唔到。</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 已被 {0} 封鎖</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 已被 {0} 禁言</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ {0} 標記咗冇問題。30 日內呢啲跡象唔會再報告佢。</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ {0} 已啟用</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ {0} 已延長試用</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 {0} 已刪除</value>
+  </string>
+  <string key="reportSignRule">
+    <value>過濾規則 #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;偵測&lt;/b&gt; · {0}\n突襲期間有 {1} 個成員被標記。佢哋嘅報告喺突襲期間暫緩發送：</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…仲有 {0} 個。</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 偵測：{0} {1}（{2}）</value>
+  </string>
+  <string key="filterAction_report">
+    <value>報告</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>暫時禁言</value>
+  </string>
+  <string key="filterAction_none">
+    <value>唔使做</value>
+  </string>
+  <string key="filterAction_score">
+    <value>計分</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;過濾規則 #{0} 試用完咗&lt;/b&gt; · {1}\n{2}：&lt;code&gt;{3}&lt;/code&gt; → {4}\n\n佢吻合咗 {5} 次，當中有 {6} 個成員之後被封鎖或者移除。喺你決定之前，佢會繼續只係記錄。</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ 啟用</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ 再 {0} 日</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 刪除</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>連去其他群組或者網站</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>提及群組以外嘅對話</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>轉發自頻道或者隱藏嘅發送者</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>第一個訊息係媒體</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>一入群就發訊息</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>同其他新成員發嘅訊息一樣</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>名似管理員或者機械人</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>名入面有 admin、support 或者 official</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>簡介入面有連結</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>簡介入面有提及</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>個人頻道</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>指向出名發垃圾訊息嘅頻道</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>本群禁止嘅媒體</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>似被封鎖成員嘅訊息</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>突襲期間加入</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>編輯成其他媒體</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>發咗好耐之後先編輯</value>
+  </string>
 </strings>

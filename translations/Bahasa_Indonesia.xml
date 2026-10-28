@@ -1972,4 +1972,190 @@
   <string key="hcommandprivacy">
     <value>Menunjukkan apa yang disimpan Enforcer tentang grup dan anggotanya, untuk apa, dan berapa lama. Bisa di grup maupun chat pribadi.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 Laporan</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;Laporan&lt;/b&gt;\nDeteksi memberi tahu admin tentang anggota yang mencurigakan: satu laporan per anggota per hari, diperbarui jika ada temuan baru, dengan tombol Blokir, Bisukan, dan Aman. Tidak ada yang dikirim selama grup hanya diamati, dan saat raid laporan ditahan lalu dikirim sekaligus setelah raid selesai.\n\nDikirim ke: {0}\nChat admin: {1}\nAnda: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>admin, lewat chat pribadi</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>chat admin</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>chat admin dan admin lewat chat pribadi</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>belum ditautkan</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>Anda menerimanya lewat chat pribadi</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>Anda mematikannya</value>
+  </string>
+  <string key="reportsToButton">
+    <value>Dikirim ke: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 Tautkan chat admin</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>Lepas chat admin</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>Laporan ke saya: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>Pilih chat admin</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>Ketuk tombol di bawah dan pilih chat tempat admin kalian berdiskusi. Enforcer akan bergabung ke sana, atau memakainya jika sudah ada di sana, dan laporan akan dikirim ke sana.\n\nTombol ini hanya berlaku sekali, selama {0} menit, dan Anda harus menjadi admin di kedua chat.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>Tautan ini sudah kedaluwarsa atau sudah dipakai. Buka lagi menu Laporan untuk mendapatkan yang baru.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>Grup tidak bisa menjadi chat admin untuk dirinya sendiri. Pilih chat lain.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>Hanya orang yang menjadi admin di sini dan di grup itu yang bisa menautkan chat ini.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>Chat ini sekarang menerima laporan Deteksi dari {0}.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;Deteksi&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>Anggota: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>Yang terlihat:</value>
+  </string>
+  <string key="reportScore">
+    <value>Skor: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 Blokir</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 Bisukan</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ Aman</value>
+  </string>
+  <string key="reportDone">
+    <value>Selesai.</value>
+  </string>
+  <string key="reportGone">
+    <value>Laporan ini sudah terlalu lama untuk ditindaklanjuti.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 Diblokir oleh {0}</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 Dibisukan oleh {0}</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ Ditandai aman oleh {0}. Tanda-tanda ini tidak akan melaporkannya lagi selama 30 hari.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ Diaktifkan oleh {0}</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ Masa uji diperpanjang oleh {0}</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 Dihapus oleh {0}</value>
+  </string>
+  <string key="reportSignRule">
+    <value>aturan filter #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;Deteksi&lt;/b&gt; · {0}\nSelama raid, {1} anggota ditandai. Laporan mereka ditahan selama raid berlangsung:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…dan {0} lainnya.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 Deteksi: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>Laporkan</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>Bisukan sementara</value>
+  </string>
+  <string key="filterAction_none">
+    <value>Tidak ada</value>
+  </string>
+  <string key="filterAction_score">
+    <value>Skor</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;Aturan filter #{0} sudah selesai masa uji&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\nAturan ini cocok {5} kali, dan {6} dari anggota itu kemudian diblokir atau dikeluarkan. Sampai Anda memutuskan, aturan ini tetap hanya mencatat.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ Aktifkan</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ {0} hari lagi</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 Hapus</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>tautan ke chat atau situs lain</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>menyebut chat di luar grup</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>terusan dari channel atau pengirim tersembunyi</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>pesan pertama berupa media</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>mengirim pesan tepat setelah bergabung</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>pesan sama dengan anggota baru lain</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>nama mirip admin atau bot</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>nama mengandung admin, support, atau official</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>tautan di bio</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>menyebut akun di bio</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>channel pribadi</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>mengarah ke channel yang dikenal spam</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>media yang dilarang di grup ini</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>mirip pesan anggota yang diblokir</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>bergabung saat raid</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>diedit menjadi media lain</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>diedit lama setelah dikirim</value>
+  </string>
 </strings>

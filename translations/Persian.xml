@@ -1723,4 +1723,190 @@ exaple: /{0}
   <string key="hcommandprivacy">
     <value>نشان می‌دهد Enforcer درباره گروه‌ها و اعضایشان چه چیزهایی نگه می‌دارد، برای چه و تا چه مدت. در گروه و خصوصی کار می‌کند.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 گزارش‌ها</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;گزارش‌ها&lt;/b&gt;\nتشخیص درباره اعضای مشکوک به مدیران خبر می‌دهد: برای هر عضو روزی یک گزارش، که با دیدن موارد بیشتر ویرایش می‌شود، با دکمه‌های مسدود، بی‌صدا و مشکلی نیست. تا وقتی گروه فقط در حال مشاهده است چیزی فرستاده نمی‌شود، و هنگام حمله گزارش‌ها صبر می‌کنند و پس از پایان آن یکجا می‌آیند.\n\nارسال به: {0}\nگروه مدیران: {1}\nشما: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>مدیران، در پیوی</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>گروه مدیران</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>گروه مدیران و مدیران در پیوی</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>متصل نشده</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>در پیوی دریافتشان می‌کنید</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>خاموششان کرده‌اید</value>
+  </string>
+  <string key="reportsToButton">
+    <value>ارسال به: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 اتصال گروه مدیران</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>قطع گروه مدیران</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>گزارش به من: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>انتخاب گروه مدیران</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>روی دکمه زیر بزنید و گروهی را که مدیرانتان در آن گفتگو می‌کنند انتخاب کنید. Enforcer به آن می‌پیوندد، یا اگر از قبل آنجاست از همان استفاده می‌کند، و گزارش‌ها به آنجا می‌روند.\n\nدکمه فقط یک بار و به مدت {0} دقیقه کار می‌کند، و باید مدیر هر دو گروه باشید.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>این لینک منقضی شده یا قبلاً استفاده شده است. برای لینک جدید دوباره منوی گزارش‌ها را باز کنید.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>یک گروه نمی‌تواند گروه مدیران خودش باشد. گروه دیگری انتخاب کنید.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>فقط کسی که هم اینجا و هم در آن گروه مدیر است می‌تواند این گروه را متصل کند.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>این گروه از حالا گزارش‌های تشخیص {0} را دریافت می‌کند.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;تشخیص&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>عضو: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>آنچه دیده شد:</value>
+  </string>
+  <string key="reportScore">
+    <value>امتیاز: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 مسدود</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 بی‌صدا</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ مشکلی نیست</value>
+  </string>
+  <string key="reportDone">
+    <value>انجام شد.</value>
+  </string>
+  <string key="reportGone">
+    <value>این گزارش قدیمی‌تر از آن است که بشود کاری کرد.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 مسدود شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 بی‌صدا شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ {0} آن را بی‌مشکل علامت زد. این نشانه‌ها تا ۳۰ روز دوباره او را گزارش نمی‌کنند.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ فعال شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ دوره آزمایشی تمدید شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 حذف شد توسط {0}</value>
+  </string>
+  <string key="reportSignRule">
+    <value>قانون فیلتر #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;تشخیص&lt;/b&gt; · {0}\nدر طول حمله {1} عضو علامت خوردند. گزارش‌هایشان تا پایان حمله نگه داشته شد:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…و {0} مورد دیگر.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 تشخیص: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>گزارش</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>بی‌صدای موقت</value>
+  </string>
+  <string key="filterAction_none">
+    <value>هیچ</value>
+  </string>
+  <string key="filterAction_score">
+    <value>امتیاز</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;دوره آزمایشی قانون فیلتر #{0} تمام شد&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\n{5} بار جور شد، و {6} نفر از این اعضا بعداً مسدود یا حذف شدند. تا وقتی تصمیم بگیرید، فقط ثبت می‌کند.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ فعال کن</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ {0} روز دیگر</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 حذفش کن</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>لینک به گروه یا سایت دیگر</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>منشن یک گفتگوی بیرون از گروه</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>فوروارد از کانال یا فرستنده پنهان</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>اولین پیامش رسانه بود</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>بلافاصله بعد از ورود پیام داد</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>پیام یکسان با دیگر تازه‌واردها</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>نام شبیه به مدیر یا ربات</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>نام شامل admin، support یا official</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>لینک در بیو</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>منشن در بیو</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>کانال شخصی</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>اشاره به کانالی که به اسپم معروف است</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>رسانه ممنوع در این گروه</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>شبیه پیام یک عضو مسدودشده</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>در حین حمله وارد شد</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>به رسانه دیگری ویرایش شد</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>مدت‌ها پس از ارسال ویرایش شد</value>
+  </string>
 </strings> 

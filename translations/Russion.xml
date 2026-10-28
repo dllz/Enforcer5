@@ -1474,6 +1474,192 @@ $title - заменяется названием группы.
   <string key="hcommandprivacy">
     <value>Показывает, что Enforcer хранит о группах и их участниках, зачем и как долго. Работает в группах и в личке.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 Отчёты</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;Отчёты&lt;/b&gt;\nОбнаружение сообщает админам о подозрительных участниках: один отчёт на участника в день, который дополняется по мере новых находок, с кнопками «Бан», «Заглушить» и «В порядке». Пока группа только наблюдает, ничего не отправляется, а во время рейда отчёты ждут и приходят одним сообщением, когда он закончится.\n\nКуда: {0}\nЧат админов: {1}\nТы: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>админам в личку</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>в чат админов</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>в чат админов и админам в личку</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>не привязан</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>ты получаешь их в личку</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>ты их отключил(а)</value>
+  </string>
+  <string key="reportsToButton">
+    <value>Куда: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 Привязать чат админов</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>Отвязать чат админов</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>Отчёты мне: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>Выбрать чат админов</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>Нажми кнопку ниже и выбери чат, где общаются твои админы. Enforcer вступит в него или будет использовать его, если уже там, и отчёты будут приходить туда.\n\nКнопка работает один раз, {0} мин., и ты должен(на) быть админом в обоих чатах.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>Эта ссылка устарела или уже использована. Открой меню «Отчёты» снова, чтобы получить новую.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>Группа не может быть собственным чатом админов. Выбери другой чат.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>Привязать этот чат может только тот, кто админ и здесь, и в группе.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>Теперь этот чат получает отчёты Обнаружения из {0}.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;Обнаружение&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>Участник: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>Что замечено:</value>
+  </string>
+  <string key="reportScore">
+    <value>Баллы: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 Бан</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 Заглушить</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ В порядке</value>
+  </string>
+  <string key="reportDone">
+    <value>Готово.</value>
+  </string>
+  <string key="reportGone">
+    <value>Этот отчёт слишком старый, по нему уже нельзя действовать.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 Забанен(а): {0}</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 Заглушен(а): {0}</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ {0} отметил(а): в порядке. По этим признакам отчётов о нём не будет 30 дней.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ Включено: {0}</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ Испытание продлено: {0}</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 Удалено: {0}</value>
+  </string>
+  <string key="reportSignRule">
+    <value>правило фильтра #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;Обнаружение&lt;/b&gt; · {0}\nВо время рейда отмечено участников: {1}. Их отчёты были задержаны, пока он шёл:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…и ещё {0}.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 Обнаружение: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>Сообщить</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>Временно заглушить</value>
+  </string>
+  <string key="filterAction_none">
+    <value>Ничего</value>
+  </string>
+  <string key="filterAction_score">
+    <value>Баллы</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;Испытание правила фильтра #{0} закончилось&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\nСовпадений: {5}; из этих участников позже забанено или удалено: {6}. Пока ты не решишь, оно только записывает.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ Включить</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ Ещё {0} дн.</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 Удалить</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>ссылка на другой чат или сайт</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>упоминание чата вне группы</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>пересылка из канала или от скрытого отправителя</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>первое сообщение — медиа</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>написал(а) сразу после входа</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>то же сообщение, что у других новичков</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>имя как у админа или бота</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>в имени admin, support или official</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>ссылка в био</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>упоминание в био</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>личный канал</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>ведёт на канал, известный спамом</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>медиа, запрещённые в этой группе</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>похоже на сообщение забаненного</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>вступил(а) во время рейда</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>изменено на другое медиа</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>изменено спустя долгое время</value>
+  </string>
 </strings>
 
   

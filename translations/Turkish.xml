@@ -1752,4 +1752,190 @@
   <string key="hcommandprivacy">
     <value>Enforcer'ın gruplar ve üyeleri hakkında neleri sakladığını, ne için ve ne kadar süre sakladığını gösterir. Gruplarda ve özelde çalışır.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 Raporlar</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;Raporlar&lt;/b&gt;\nTespit, şüpheli üyeleri yöneticilere bildirir: üye başına günde bir rapor, daha fazlası görüldükçe düzenlenir, Yasakla, Sustur ve Sorun yok düğmeleriyle. Grup sadece izlemedeyken hiçbir şey gönderilmez; baskın sırasında raporlar bekler ve baskın bitince tek mesajda gelir.\n\nGönderim: {0}\nYönetici sohbeti: {1}\nSiz: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>yöneticilere, özelden</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>yönetici sohbetine</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>yönetici sohbetine ve yöneticilere özelden</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>bağlı değil</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>özelden alıyorsunuz</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>kapattınız</value>
+  </string>
+  <string key="reportsToButton">
+    <value>Gönderim: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 Yönetici sohbetini bağla</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>Yönetici sohbetini ayır</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>Bana raporlar: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>Yönetici sohbetini seç</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>Aşağıdaki düğmeye dokunun ve yöneticilerinizin konuştuğu sohbeti seçin. Enforcer o sohbete katılır ya da zaten oradaysa onu kullanır ve raporlar oraya gider.\n\nDüğme bir kez, {0} dakika boyunca çalışır ve iki sohbette de yönetici olmanız gerekir.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>Bu bağlantının süresi doldu ya da zaten kullanıldı. Yenisi için Raporlar menüsünü tekrar açın.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>Bir grup kendi yönetici sohbeti olamaz. Başka bir sohbet seçin.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>Bu sohbeti yalnızca hem burada hem de grupta yönetici olan biri bağlayabilir.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>Bu sohbet artık {0} grubunun Tespit raporlarını alıyor.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;Tespit&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>Üye: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>Görülenler:</value>
+  </string>
+  <string key="reportScore">
+    <value>Puan: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 Yasakla</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 Sustur</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ Sorun yok</value>
+  </string>
+  <string key="reportDone">
+    <value>Yapıldı.</value>
+  </string>
+  <string key="reportGone">
+    <value>Bu rapor işlem yapmak için çok eski.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 {0} tarafından yasaklandı</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 {0} tarafından susturuldu</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ {0} tarafından sorunsuz olarak işaretlendi. Bu belirtiler 30 gün boyunca onu tekrar bildirmeyecek.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ {0} tarafından etkinleştirildi</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ Deneme {0} tarafından uzatıldı</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 {0} tarafından silindi</value>
+  </string>
+  <string key="reportSignRule">
+    <value>filtre kuralı #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;Tespit&lt;/b&gt; · {0}\nBaskın sırasında {1} üye işaretlendi. Raporları baskın sürerken bekletildi:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…ve {0} tane daha.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 Tespit: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>Bildir</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>Geçici sustur</value>
+  </string>
+  <string key="filterAction_none">
+    <value>Hiçbir şey</value>
+  </string>
+  <string key="filterAction_score">
+    <value>Puan</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;Filtre kuralı #{0} denemesini tamamladı&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\n{5} kez eşleşti ve bu üyelerden {6} tanesi sonradan yasaklandı ya da çıkarıldı. Siz karar verene kadar yalnızca kayıt tutmaya devam eder.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ Etkinleştir</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ {0} gün daha</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 Sil</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>başka bir sohbete veya web sitesine bağlantı</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>grup dışındaki bir sohbetten bahsetme</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>bir kanaldan veya gizli göndericiden iletme</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>ilk mesajı medyaydı</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>katıldıktan hemen sonra yazdı</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>diğer yeni üyelerle aynı mesaj</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>bir yöneticininkine veya bir botunkine benzeyen ad</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>adında yönetici, destek veya resmi geçiyor</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>biyografisinde bağlantı</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>biyografisinde bahsetme</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>kişisel kanal</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>spam ile bilinen bir kanala yönlendiriyor</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>bu grupta yasaklı medya</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>yasaklanmış bir üyenin mesajına benziyor</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>baskın sırasında katıldı</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>farklı bir medyaya dönüştürüldü</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>gönderildikten çok sonra düzenlendi</value>
+  </string>
 </strings>

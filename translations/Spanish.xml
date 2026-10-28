@@ -724,4 +724,190 @@
   <string key="hcommandprivacy">
     <value>Muestra qué guarda Enforcer sobre los grupos y sus miembros, para qué y durante cuánto tiempo. Funciona en grupos y en privado.</value>
   </string>
+  <string key="detectionReportsButton">
+    <value>📣 Avisos</value>
+  </string>
+  <string key="reportsMenu">
+    <value>📣 &lt;b&gt;Avisos&lt;/b&gt;\nLa Detección avisa a los admins de miembros sospechosos: un aviso por miembro al día, que se edita a medida que se ve más, con los botones Banear, Silenciar y Está bien. No se envía nada mientras el grupo solo está observando, y durante un raid los avisos esperan y llegan juntos cuando termina.\n\nSe envían a: {0}\nChat de admins: {1}\nTú: {2}</value>
+  </string>
+  <string key="reportsTo_admins">
+    <value>los admins, por privado</value>
+  </string>
+  <string key="reportsTo_chat">
+    <value>el chat de admins</value>
+  </string>
+  <string key="reportsTo_both">
+    <value>el chat de admins y los admins por privado</value>
+  </string>
+  <string key="reportsNoAdminChat">
+    <value>ninguno vinculado</value>
+  </string>
+  <string key="reportsYouOn">
+    <value>los recibes por privado</value>
+  </string>
+  <string key="reportsYouOff">
+    <value>los has desactivado</value>
+  </string>
+  <string key="reportsToButton">
+    <value>Se envían a: {0}</value>
+  </string>
+  <string key="reportsLinkButton">
+    <value>🔗 Vincular chat de admins</value>
+  </string>
+  <string key="reportsUnlinkButton">
+    <value>Desvincular chat de admins</value>
+  </string>
+  <string key="reportsMeButton">
+    <value>Avisos para mí: {0}</value>
+  </string>
+  <string key="reportsPickChatButton">
+    <value>Elegir chat de admins</value>
+  </string>
+  <string key="reportsLinkText">
+    <value>Pulsa el botón de abajo y elige el chat donde hablan vuestros admins. Enforcer se une a él, o lo usa si ya está, y los avisos van allí.\n\nEl botón funciona una vez, durante {0} minutos, y tienes que ser admin de los dos chats.</value>
+  </string>
+  <string key="adminChatLinkExpired">
+    <value>Este enlace ha caducado o ya se usó. Abre de nuevo el menú Avisos para obtener otro.</value>
+  </string>
+  <string key="adminChatSame">
+    <value>Un grupo no puede ser su propio chat de admins. Elige otro chat.</value>
+  </string>
+  <string key="adminChatNotAdmin">
+    <value>Solo alguien que sea admin aquí y en el grupo puede vincular este chat.</value>
+  </string>
+  <string key="adminChatLinked">
+    <value>Este chat recibe ahora los avisos de Detección de {0}.</value>
+  </string>
+  <string key="reportTitle">
+    <value>🛡 &lt;b&gt;Detección&lt;/b&gt; · {0}</value>
+  </string>
+  <string key="reportMember">
+    <value>Miembro: {0} (&lt;code&gt;{1}&lt;/code&gt;)</value>
+  </string>
+  <string key="reportSigns">
+    <value>Lo que se ha visto:</value>
+  </string>
+  <string key="reportScore">
+    <value>Puntuación: {0}</value>
+  </string>
+  <string key="reportBan">
+    <value>🔨 Banear</value>
+  </string>
+  <string key="reportMute">
+    <value>🔇 Silenciar</value>
+  </string>
+  <string key="reportFine">
+    <value>✅ Está bien</value>
+  </string>
+  <string key="reportDone">
+    <value>Hecho.</value>
+  </string>
+  <string key="reportGone">
+    <value>Este aviso es demasiado antiguo para actuar.</value>
+  </string>
+  <string key="reportDecided_ban">
+    <value>🔨 Baneado por {0}</value>
+  </string>
+  <string key="reportDecided_mute">
+    <value>🔇 Silenciado por {0}</value>
+  </string>
+  <string key="reportDecided_fine">
+    <value>✅ Marcado como correcto por {0}. Estas señales no volverán a avisar de él durante 30 días.</value>
+  </string>
+  <string key="reportDecided_trial_live">
+    <value>✅ Activada por {0}</value>
+  </string>
+  <string key="reportDecided_trial_extend">
+    <value>⏳ Prueba ampliada por {0}</value>
+  </string>
+  <string key="reportDecided_trial_delete">
+    <value>🗑 Borrada por {0}</value>
+  </string>
+  <string key="reportSignRule">
+    <value>regla de filtro #{0}</value>
+  </string>
+  <string key="reportRaidSummary">
+    <value>🛡 &lt;b&gt;Detección&lt;/b&gt; · {0}\nDurante el raid se marcaron {1} miembros. Sus avisos se retuvieron mientras duró:</value>
+  </string>
+  <string key="reportRaidSummaryMore">
+    <value>…y {0} más.</value>
+  </string>
+  <string key="detectionLogLine">
+    <value>🛡 Detección: {0} {1} ({2})</value>
+  </string>
+  <string key="filterAction_report">
+    <value>Avisar</value>
+  </string>
+  <string key="filterAction_tempmute">
+    <value>Silencio temporal</value>
+  </string>
+  <string key="filterAction_none">
+    <value>Nada</value>
+  </string>
+  <string key="filterAction_score">
+    <value>Puntuar</value>
+  </string>
+  <string key="filterTrialEnded">
+    <value>🧪 &lt;b&gt;La regla de filtro #{0} ha terminado su prueba&lt;/b&gt; · {1}\n{2}: &lt;code&gt;{3}&lt;/code&gt; → {4}\n\nCoincidió {5} veces, y {6} de esos miembros fueron baneados o expulsados después. Hasta que decidáis, solo sigue registrando.</value>
+  </string>
+  <string key="filterTrialMakeLive">
+    <value>✅ Activarla</value>
+  </string>
+  <string key="filterTrialExtend">
+    <value>⏳ {0} días más</value>
+  </string>
+  <string key="filterTrialDelete">
+    <value>🗑 Borrarla</value>
+  </string>
+  <string key="sign_link_outside">
+    <value>enlace a otro chat o sitio web</value>
+  </string>
+  <string key="sign_mention_outside">
+    <value>mención de un chat fuera del grupo</value>
+  </string>
+  <string key="sign_forward_channel">
+    <value>reenvío de un canal o remitente oculto</value>
+  </string>
+  <string key="sign_first_post_media">
+    <value>el primer mensaje fue multimedia</value>
+  </string>
+  <string key="sign_posted_soon">
+    <value>escribió nada más unirse</value>
+  </string>
+  <string key="sign_same_as_newcomers">
+    <value>mismo mensaje que otros miembros nuevos</value>
+  </string>
+  <string key="sign_name_impersonation">
+    <value>nombre parecido al de un admin o un bot</value>
+  </string>
+  <string key="sign_name_keyword">
+    <value>nombre con admin, soporte u oficial</value>
+  </string>
+  <string key="sign_bio_link">
+    <value>enlace en su bio</value>
+  </string>
+  <string key="sign_bio_mention">
+    <value>mención en su bio</value>
+  </string>
+  <string key="sign_personal_channel">
+    <value>canal personal</value>
+  </string>
+  <string key="sign_channel_reputation">
+    <value>apunta a un canal conocido por spam</value>
+  </string>
+  <string key="sign_banned_media">
+    <value>multimedia prohibido en este grupo</value>
+  </string>
+  <string key="sign_similar_to_banned">
+    <value>parecido al mensaje de un miembro baneado</value>
+  </string>
+  <string key="sign_joined_during_raid">
+    <value>se unió durante un raid</value>
+  </string>
+  <string key="sign_edit_swap">
+    <value>editado a otro tipo de multimedia</value>
+  </string>
+  <string key="sign_edit_late">
+    <value>editado mucho después de publicarlo</value>
+  </string>
 </strings>
