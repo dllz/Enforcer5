@@ -54,12 +54,13 @@ SELECT g.group_id, a.account_id, i.sign, i.phase, i.weight, i.score_before, i.sc
 FROM input i
 JOIN telegram_chats c ON c.telegram_chat_id = i.chat
 JOIN groups g ON g.chat_id = c.chat_id
-JOIN telegram_accounts a ON a.telegram_user_id = i.usr
+LEFT JOIN telegram_accounts a ON a.telegram_user_id = i.usr
+WHERE i.usr IS NULL OR a.account_id IS NOT NULL
 RETURNING detection_id",
                 new
                 {
                     Chats = detections.Select(d => d.ChatId).ToArray(),
-                    Users = detections.Select(d => d.UserId).ToArray(),
+                    Users = detections.Select(d => d.UserId == 0 ? (long?)null : d.UserId).ToArray(),
                     Signs = detections.Select(d => d.Sign).ToArray(),
                     Phases = detections.Select(d => d.Phase).ToArray(),
                     Weights = detections.Select(d => d.Weight).ToArray(),

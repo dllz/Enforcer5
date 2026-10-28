@@ -41,7 +41,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 8 | Raid building blocks: joins, members, message fingerprints, each group's normal, and the lookup for everyone resembling known raiders | `group_joins`, `group_members`, `message_fingerprints`, `group_stats` | Built |
 | 9 | Raid telemetry: every raid and possible raid, with its timeline, for tuning and replay | `raid_incidents`, `raid_events` | Built |
 | 10 | Detection settings, **cut over** (Detection v2 step 2): flood, flood exceptions, media locks, Arabic and right-to-left, text and name length, Mute On Join, max warns and their action, tempban and tempmute lengths, blocked inline bots and sticker packs, channel posts. PostgreSQL is the store, Redis a cache; each group's old hashes are imported on its first use | `group_settings` (the columns the checks use), `detection_policies`, `group_filters` | Built |
-| 11 | Detection engine (Detection v2 step 3): every sign that fires, with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
+| 11 | Detection engine (Detection v2 steps 3 and 4): every sign that fires (the checks that existed before included), with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
 
 ### Step 2: ban history
 
@@ -268,6 +268,15 @@ and a bad member look like (Daniel, 2026-10-27). So the engine records both side
 - An app-made change reaches both editions when both are in the group: `label_key` and the
   sanction's `legacy_key` (`app:{chat}:{user}:{date}:{action}`) make it one row.
 - Members' scores are kept in memory for 24 hours and rebuilt from `detections` after a restart.
+- **The checks that existed before** (Detection v2 step 4) record what they do through
+  `DetectionEngine.Checked`, after their own exemptions: `flood`, `media_lock` (each strike a
+  `delete`, the last one the group's action), `text_length`, `name_length`, `script_arabic` (a
+  joiner's name without a message), `script_rtl`, `inline_bot`, `sticker_set`, `channel_post`,
+  `raid_link` (`report`, or `none` with reports off) and premium's `mass_add`. Always `live`, weight
+  0 (they add nothing to a score), evidence of ids, counts and settings only. A post made as a
+  channel has no member: its row has no account and the channel id in the evidence. Recording is
+  dispatched and never waited for; what the checks do is unchanged. Mute On Join is not recorded
+  (it is not a decision about anyone).
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

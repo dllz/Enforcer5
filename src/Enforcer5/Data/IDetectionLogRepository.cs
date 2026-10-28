@@ -6,6 +6,7 @@ using Enforcer5.Detection;
 namespace Enforcer5.Data
 {
     /// <summary>One sign that fired, as recorded in <c>detections</c>. Never message text: a hash of it at most.</summary>
+    /// <param name="UserId">0 when no member can be seen (a post made as a channel; the channel is in the evidence).</param>
     internal sealed record DetectionRecord(
         long ChatId,
         long UserId,

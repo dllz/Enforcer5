@@ -11,7 +11,21 @@ namespace Enforcer5.Detection
 {
     /// <summary>A sign a check saw. <see cref="Evidence"/> is JSON of ids only, never text.</summary>
     /// <param name="Trial">From a rule on trial: recorded, never acted on, and not added to the score.</param>
-    internal sealed record SignHit(string Sign, string Evidence = null, int? Weight = null, bool Trial = false);
+    internal sealed record SignHit(string Sign, string Evidence = null, int? Weight = null, bool Trial = false)
+    {
+        /// <summary>What a ported check already did; the engine records it and does nothing itself.</summary>
+        internal CheckDecision Done { get; init; }
+
+        /// <summary>
+        /// When the check decided, so the record is not later than the action it took: a decision is
+        /// linked to the detections from before it.
+        /// </summary>
+        internal DateTime? At { get; init; }
+    }
+
+    /// <summary>What a ported check did about a sign (<see cref="SignDefinition.Ported"/>).</summary>
+    /// <param name="Action">One of <see cref="DetectionPolicy.Actions"/>; anything else is recorded as none.</param>
+    internal sealed record CheckDecision(string Action, bool Deleted, bool Reported);
 
     /// <summary>What the engine made of a sign.</summary>
     /// <param name="Mode">live, observe or trial.</param>
@@ -56,6 +70,7 @@ namespace Enforcer5.Detection
             try
             {
                 var sign = SignCatalog.Get(hit.Sign) ?? throw new ArgumentException($"Unknown sign {hit.Sign}");
+                if (sign.Ported || hit.Done != null) return await RecordCheckAsync(chatId, userId, message, sign, hit);
                 var policy = await DetectionSettings.GetAsync(chatId);
                 var settings = policy.Engine.For(sign.Name);
                 if (!settings.Enabled) return null;
@@ -100,12 +115,7 @@ namespace Enforcer5.Detection
                 if (outcome.Acted)
                     Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported));
 
-                var fingerprint = message != null ? MessageFingerprint.Of(message) : null;
-                DetectionRecorder.Add(new DetectionRecord(chatId, userId, sign.Name, sign.Phase == SignPhase.Inline ? "inline" : "enriched",
-                    weight, change.Before, change.After, action, deleted, reported, mode, message?.MessageId,
-                    fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
-                    member.Trust.ToString().ToLowerInvariant(), member.Messages, member.Since, hit.Evidence,
-                    BanHistory.Edition, now));
+                Record(chatId, userId, message, sign, hit, weight, outcome, member, now);
                 return outcome;
             }
             catch (Exception e)
@@ -113,6 +123,69 @@ namespace Enforcer5.Detection
                 ErrorReporter.Report(e, $"Detection of {hit?.Sign} for {userId} in {chatId}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// A ported check (<see cref="SignDefinition.Ported"/>) did <paramref name="action"/> about
+        /// <paramref name="userId"/>: recorded in the background, never waited for and never in the way of
+        /// what the check does, which stays the check's own (its settings, exemptions and notices). Call it
+        /// once the check has decided to act, after its own exemptions.
+        /// </summary>
+        /// <param name="userId">Null for a post made as a channel: the member behind it cannot be seen.</param>
+        /// <param name="message">The message it was about; null when there is none of theirs (a join).</param>
+        /// <param name="evidence">Ids, counts and settings only, never text; serialised to JSON.</param>
+        internal static void Checked(long chatId, long? userId, Message message, SignDefinition sign, string action,
+            bool deleted = false, bool reported = false, object evidence = null)
+        {
+            if (!PostgresStorage.Ready) return; // nothing would be kept
+            var hit = new SignHit(sign.Name, evidence == null ? null : System.Text.Json.JsonSerializer.Serialize(evidence))
+            {
+                Done = new CheckDecision(action, deleted, reported),
+                At = Clock.UtcNow
+            };
+            Bot.Dispatch(async () => await HitAsync(chatId, userId ?? 0, message, hit), "Detection.Checked");
+        }
+
+        /// <summary>
+        /// A ported check's decision, as it was made: every member it applied to, live from day one, nothing
+        /// done here. The score only changes for a sign a group gave a weight.
+        /// </summary>
+        private static async Task<DetectionOutcome> RecordCheckAsync(long chatId, long userId, Message message,
+            SignDefinition sign, SignHit hit)
+        {
+            var done = hit.Done ?? new CheckDecision("none", false, false);
+            var policy = await DetectionSettings.GetAsync(chatId);
+            var settings = policy.Engine.For(sign.Name);
+            if (!settings.Enabled) return null;
+            var member = userId != 0 ? await MemberStateAsync(chatId, userId) : null;
+            var weight = hit.Weight ?? settings.Weight;
+            MemberScores.Change change;
+            if (weight > 0 && userId != 0)
+            {
+                if (MemberScores.NeedsLoad(chatId, userId)) await LoadScoreAsync(chatId, userId);
+                change = MemberScores.Add(chatId, userId, sign.Name, weight);
+            }
+            else
+            {
+                var current = userId != 0 ? MemberScores.Of(chatId, userId) : 0;
+                change = new MemberScores.Change(current, current, false);
+            }
+            var action = Array.IndexOf(DetectionPolicy.Actions, done.Action) >= 0 ? done.Action : "none";
+            var outcome = new DetectionOutcome("live", action, done.Deleted && message != null, done.Reported,
+                change.Before, change.After);
+            Record(chatId, userId, message, sign, hit, weight, outcome, member, hit.At ?? Clock.UtcNow);
+            return outcome;
+        }
+
+        private static void Record(long chatId, long userId, Message message, SignDefinition sign, SignHit hit, int weight,
+            DetectionOutcome outcome, MemberState member, DateTime now)
+        {
+            var fingerprint = message != null ? MessageFingerprint.Of(message) : null;
+            DetectionRecorder.Add(new DetectionRecord(chatId, userId, sign.Name, sign.Phase == SignPhase.Inline ? "inline" : "enriched",
+                weight, outcome.ScoreBefore, outcome.ScoreAfter, outcome.Action, outcome.Deleted, outcome.Reported, outcome.Mode,
+                message?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
+                member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, hit.Evidence,
+                BanHistory.Edition, now));
         }
 
         /// <summary>The stronger of two actions, in the order of <see cref="DetectionPolicy.Actions"/>.</summary>

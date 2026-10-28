@@ -16,8 +16,14 @@ namespace Enforcer5.Detection
     /// <param name="Name">Stored in <c>detections.sign</c> and as <c>sign:{name}</c> in <c>detection_policies</c>.</param>
     /// <param name="NewcomersOnly">Only counts for members who are not established, approved or admins.</param>
     /// <param name="LiveFromDayOne">Acts during the group's observe weeks too (edit rules, the ported checks).</param>
+    /// <param name="Ported">
+    /// One of the checks that existed before the engine (design section 1). The check keeps its own
+    /// settings, exemptions, action and notices, and tells the engine what it did
+    /// (<see cref="DetectionEngine.Checked"/>), which records it. Build step 4 moved them behind the
+    /// engine with no change in what they do; step 18 gives them the shared actions.
+    /// </param>
     internal sealed record SignDefinition(string Name, SignPhase Phase, SignPolicy Default, bool NewcomersOnly,
-        bool LiveFromDayOne = false);
+        bool LiveFromDayOne = false, bool Ported = false);
 
     /// <summary>
     /// Every sign there is. A check may only report a sign listed here, so that
@@ -29,9 +35,10 @@ namespace Enforcer5.Detection
         private static readonly Dictionary<string, SignDefinition> Signs = new();
 
         private static SignDefinition Add(string name, SignPhase phase, int weight, string action, bool newcomersOnly = true,
-            bool delete = false, bool report = false, bool liveFromDayOne = false)
+            bool delete = false, bool report = false, bool liveFromDayOne = false, bool ported = false)
         {
-            var sign = new SignDefinition(name, phase, new SignPolicy(true, action, weight, delete, report), newcomersOnly, liveFromDayOne);
+            var sign = new SignDefinition(name, phase, new SignPolicy(true, action, weight, delete, report), newcomersOnly,
+                liveFromDayOne, ported);
             Signs[name] = sign;
             return sign;
         }
@@ -58,6 +65,24 @@ namespace Enforcer5.Detection
             delete: true, report: true, liveFromDayOne: true);
         internal static readonly SignDefinition EditLate = Add("edit_late", SignPhase.Inline, 1, "report", newcomersOnly: false,
             report: true, liveFromDayOne: true);
+
+        // The checks that existed before the engine (build step 4). Each applies to whom it always has and
+        // does what its own settings say; the engine records it. They add nothing to the score (weight 0),
+        // so a member's score still means what the newcomer signs saw.
+        private static SignDefinition Ported(string name) =>
+            Add(name, SignPhase.Inline, 0, "none", newcomersOnly: false, liveFromDayOne: true, ported: true);
+
+        internal static readonly SignDefinition Flood = Ported("flood");
+        internal static readonly SignDefinition MediaLock = Ported("media_lock");
+        internal static readonly SignDefinition TextLength = Ported("text_length");
+        internal static readonly SignDefinition NameLength = Ported("name_length");
+        internal static readonly SignDefinition ScriptArabic = Ported("script_arabic");
+        internal static readonly SignDefinition ScriptRtl = Ported("script_rtl");
+        internal static readonly SignDefinition InlineBot = Ported("inline_bot");
+        internal static readonly SignDefinition StickerSet = Ported("sticker_set");
+        internal static readonly SignDefinition ChannelPost = Ported("channel_post");
+        internal static readonly SignDefinition RaidLink = Ported("raid_link");
+        internal static readonly SignDefinition MassAdd = Ported("mass_add");
 
         /// <summary>The sign, or null when there is no such sign.</summary>
         internal static SignDefinition Get(string name) =>

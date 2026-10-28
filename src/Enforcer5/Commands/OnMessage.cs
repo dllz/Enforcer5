@@ -100,7 +100,11 @@ namespace Enforcer5
                 // Raid detection sees every flood, whatever the group does about it.
                 FloodTracker.OnFlood(chatId, userid);
                 // In raid mode an untrusted flooder is banned by the raid, with their messages.
-                if (await Raids.RaidGuard.WillHandleFloodAsync(chatId, userid)) return;
+                var raidBans = await Raids.RaidGuard.WillHandleFloodAsync(chatId, userid);
+                Detection.DetectionEngine.Checked(chatId, userid, update.Message, Detection.SignCatalog.Flood,
+                    raidBans ? "ban" : action, deleted: raidBans || action != "ban" && floodMessages.Length > 0,
+                    evidence: new { messages = num, limit = maxmsgs, raid = raidBans });
+                if (raidBans) return;
 
                 Bot.DispatchAction(() =>
                 {
@@ -170,6 +174,8 @@ namespace Enforcer5
             Bot.DispatchAction(() =>
             {
                 if (Methods.IsGroupAdmin(userid, groupId)) return;
+                Detection.DetectionEngine.Checked(groupId, userid, update.Message, Detection.SignCatalog.TextLength, action,
+                    deleted: true, evidence: new { length = text.Length, lines = LineCount(text), maxLength = intml, maxLines = intmline });
                 try
                 {
                     Bot.DeleteMessage(groupId, update.Message.MessageId);
@@ -241,6 +247,8 @@ namespace Enforcer5
             Bot.DispatchAction(() =>
             {
                 if (Methods.IsGroupAdmin(userid, groupId)) return;
+                Detection.DetectionEngine.Checked(groupId, userid, update.Message, Detection.SignCatalog.NameLength, action,
+                    evidence: new { length = text.Length, maxLength = intml });
                 string reply;
                 switch (action)
                 {
@@ -352,6 +360,9 @@ namespace Enforcer5
 
                 var overLimit = current >= max;
                 var action = overLimit ? configuredAction : null;
+                Detection.DetectionEngine.Checked(chatId, message.From.Id, message, Detection.SignCatalog.MediaLock,
+                    action is "kick" or "ban" or "tempban" ? action : "delete", deleted: true,
+                    evidence: new { type = media, strike = current, limit = max });
                 if (overLimit)
                 {
                     Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
@@ -422,7 +433,7 @@ namespace Enforcer5
             if (ctx.Watched || message.IsAutomaticForward) return false;
             if (InlineBotBlock.FirstMatch(ctx.InlineBotBlocks, viaBot.Username) == null) return false;
 
-            DeleteUnlessAdmin(ctx, "BlockedInlineBot");
+            DeleteUnlessAdmin(ctx, Detection.SignCatalog.InlineBot, new { bot = viaBot.Id }, "BlockedInlineBot");
             return true;
         }
 
@@ -436,7 +447,7 @@ namespace Enforcer5
             if (!ctx.StickerSetBlocked) return false;
             if (ctx.Watched || ctx.Message.IsAutomaticForward) return false;
 
-            DeleteUnlessAdmin(ctx, "BlockedStickerSet");
+            DeleteUnlessAdmin(ctx, Detection.SignCatalog.StickerSet, new { set = ctx.Message.Sticker?.SetName }, "BlockedStickerSet");
             return true;
         }
 
@@ -444,7 +455,7 @@ namespace Enforcer5
         /// Silently deletes the message unless an admin sent it. Whether the sender is an admin can
         /// take a Telegram call, so the check and the delete are dispatched.
         /// </summary>
-        private static void DeleteUnlessAdmin(MessageContext ctx, string name)
+        private static void DeleteUnlessAdmin(MessageContext ctx, Detection.SignDefinition sign, object evidence, string name)
         {
             var message = ctx.Message;
             var chatId = ctx.ChatId;
@@ -459,6 +470,12 @@ namespace Enforcer5
             Bot.DispatchAction(() =>
             {
                 if (checkAdmin && Methods.IsGroupAdmin(userId, chatId)) return;
+                // Posted as a channel: the member behind it cannot be seen, so the channel is the evidence.
+                if (senderChat != null)
+                    Detection.DetectionEngine.Checked(chatId, null, message, sign, "delete", deleted: true,
+                        evidence: new { channel = senderChat.Id, of = evidence });
+                else
+                    Detection.DetectionEngine.Checked(chatId, userId, message, sign, "delete", deleted: true, evidence: evidence);
                 // Throws without the delete right; DispatchAction logs it. Nothing is sent to the
                 // chat: one notice per blocked message would double the noise during a raid.
                 Bot.DeleteMessage(chatId, messageId);
@@ -514,6 +531,8 @@ namespace Enforcer5
                 var banned = mayBan &&
                              Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.BanSenderChat(chatId, channel.Id)).Succeeded;
                 if (!deleted && !banned) return;
+                Detection.DetectionEngine.Checked(chatId, null, message, Detection.SignCatalog.ChannelPost,
+                    banned ? "ban" : "delete", deleted: deleted, evidence: new { channel = channel.Id });
 
                 Service.LogBotAction(chatId, Methods.GetLocaleString(lang,
                     banned ? "channelPostBanned" : "channelPostDeleted", ChannelPosts.Describe(channel)));
@@ -560,6 +579,8 @@ namespace Enforcer5
                 try
                 {
                     if (Methods.IsGroupAdmin(userId, chatId)) return;
+                    Detection.DetectionEngine.Checked(chatId, userId, update.Message, Detection.SignCatalog.ScriptRtl, status,
+                        evidence: new { inText = text.Contains(rtl), inName = name.Contains(rtl) || lastName.Contains(rtl) });
                     string reply;
                     switch (status)
                     {
@@ -656,6 +677,9 @@ namespace Enforcer5
                     // A joiner's watch list entry is not in the context, which is the sender's.
                     if (target != null && Redis.db.SetContainsAsync($"chat:{chatId}:watch", userId).Result) return;
                     if (Methods.IsGroupAdmin(userId, chatId)) return;
+                    // A joiner's name: the join message is not theirs.
+                    Detection.DetectionEngine.Checked(chatId, userId, target == null ? ctx.Message : null,
+                        Detection.SignCatalog.ScriptArabic, status, evidence: new { onJoin = target != null });
                     string reply;
                     switch (status)
                     {

@@ -437,6 +437,8 @@ namespace Enforcer5.Handlers
                 {
                     for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
                     {
+                        Detection.DetectionEngine.Checked(chatId, update.Message.NewChatMembers[i].Id, null, Detection.SignCatalog.MassAdd,
+                            "tempban", evidence: new { added = update.Message.NewChatMembers.Length, by = update.Message.From.Id });
                         try
                         {
                             // No pause between them: the enforcement queue and the gateway pace the calls.
@@ -447,6 +449,8 @@ namespace Enforcer5.Handlers
                             ErrorReporter.Report(e, "Tempbanning a mass-added member");
                         }
                     }
+                    Detection.DetectionEngine.Checked(chatId, update.Message.From.Id, update.Message, Detection.SignCatalog.MassAdd,
+                        "tempban", evidence: new { added = update.Message.NewChatMembers.Length, adder = true });
                     try
                     {
                         bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members", reason: "Mass-added members");

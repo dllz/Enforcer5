@@ -1203,8 +1203,11 @@ namespace Enforcer5.Raids
                 if (LinkReported.TryGetValue((chatId, user), out var at) && Clock.UtcNow - at < Limits.LinkReportEvery) return;
                 LinkReported[(chatId, user)] = Clock.UtcNow;
             }
-            if (ctx.Setting("Flagged").Equals("yes")) return; // the group turned reports off
             var message = ctx.Message;
+            var reportsOff = ctx.Setting("Flagged").Equals("yes"); // the group turned reports off
+            Detection.DetectionEngine.Checked(chatId, user, message, Detection.SignCatalog.RaidLink, reportsOff ? "none" : "report",
+                reported: !reportsOff);
+            if (reportsOff) return;
             Bot.Dispatch(() =>
             {
                 var lang = ctx.Lang ?? Methods.GetGroupLanguage(chatId).Doc;
