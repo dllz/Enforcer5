@@ -442,7 +442,15 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
    established members (`SignPolicy.DeleteNewcomers`, `SkipEstablished`). The report line says what
    changed and how long after posting; after a restart a report rebuilt from `detections` loses that
    detail. Both signs are abuse.
-9. Message signs.
+9. Message signs. **As built (2026-10-28):** `Detection/MessageSigns`. Inline on the moderation path (no
+   lookup): links (URL and hidden-link entities) not to this group, forwards from a channel or a hidden
+   sender, @mentions, content worth comparing; the rest is dispatched work, for new members only (one
+   trust lookup): `link_outside`, `forward_channel` (not the group's linked channel), `mention_outside`
+   (through `MentionResolver`), `same_as_newcomers` (same file, same text hash, or alike texts of 20+
+   letters from another new member in 24h, kept in memory, 500 a group; both members get the sign).
+   `first_post_media` and `posted_soon` (60s after `joined`) come from the stats' message count, so they
+   cost one read on a first message only. `joined_during_raid` on joins while `RaidGuard.Quiet`. Edits run
+   them too. No new strings: the sign names were added in step 7.
 10. Name signs.
 11. Profile and channel queue.
 12. Banned media.

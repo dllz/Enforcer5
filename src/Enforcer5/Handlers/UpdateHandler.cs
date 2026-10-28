@@ -48,8 +48,9 @@ namespace Enforcer5.Handlers
                     if (!editCtx.Complete) return;
                     // The edit rules, for posts of any age: an old post edited is the attack they are for.
                     Bot.Dispatch(() => Detection.EditCheck.OnEditAsync(editCtx), "EditCheck");
-                    // The filters on what it says now.
+                    // The filters and the newcomer signs on what it says now.
                     Detection.FilterCheck.OnMessage(editCtx);
+                    Detection.MessageSigns.OnMessage(editCtx);
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
                     await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
@@ -204,6 +205,8 @@ namespace Enforcer5.Handlers
                         if (update.Message.Type != MessageType.NewChatMembers) Detection.FilterCheck.OnMessage(ctx);
                         // What a media post was, so an edit that swaps it can be seen (Detection step 8).
                         Detection.EditCheck.Record(ctx);
+                        // Links, mentions and forwards from new members, and the same post from several (step 9).
+                        Detection.MessageSigns.OnMessage(ctx);
                     }
 
                     // The group an admin picked for the settings menu (/menu in private).
@@ -431,6 +434,7 @@ namespace Enforcer5.Handlers
                 var joiners = update.Message.NewChatMembers ?? Array.Empty<User>();
                 foreach (var joiner in joiners) ForgetTempban(chatId, joiner.Id);
                 Detection.FilterCheck.OnJoin(ctx);
+                Detection.MessageSigns.OnJoin(ctx);
                 if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
@@ -620,7 +624,11 @@ namespace Enforcer5.Handlers
                             // whose first message comes after this was added; for the others, their
                             // count says they are not new.
                             if (count == 1)
+                            {
                                 _ = Redis.db.HashSetAsync(member, "first", Clock.UtcNow.ToUnixTime(), When.NotExists);
+                                // Media as a first post, a first post soon after joining (Detection step 9).
+                                if (ctx.Complete) Detection.MessageSigns.OnFirstPost(ctx);
+                            }
                             RaidCapture.Message(updateMessage, count);
                         }
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);

@@ -89,7 +89,7 @@ namespace Enforcer5.Detection
                     // Only the bot's own reasons, which are fixed words (Flood, Media, ...), and the signs a
                     // Fine was about; an admin's reason may be anything.
                     source == "auto" || action == "fine" ? HistoryWriter.Trim(reason) : null,
-                    key, BanHistory.Edition, DateTimeOffset.UtcNow)
+                    key, BanHistory.Edition, new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero))
                 {
                     // Read, never kept: only whether it names spam, ads, scams and the like.
                     ReasonIsAbuse = label == "bad" && AbuseWords.Mentions(reason)

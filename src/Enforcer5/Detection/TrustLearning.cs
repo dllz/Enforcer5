@@ -191,7 +191,7 @@ namespace Enforcer5.Detection
         private static string Watching(XDocument lang, string text, EngineSettings engine, bool watching) =>
             watching
                 ? text + "\n\n" + Methods.GetLocaleString(lang, "learnWatching",
-                    (engine.ObserveUntil ?? DateTimeOffset.UtcNow).UtcDateTime.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture))
+                    (engine.ObserveUntil ?? new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero)).UtcDateTime.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture))
                 : text;
 
         private static string ActionWord(XDocument lang, string action) =>

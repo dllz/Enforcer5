@@ -46,6 +46,8 @@ SELECT d.sign AS Sign, d.mode AS Mode, d.action AS Action, d.deleted AS Deleted,
        d.score_after AS ScoreAfter, a.telegram_user_id AS UserId, d.account_id IS NULL AS NoAccount,
        d.message_type AS MessageType, d.trust_level AS TrustLevel, d.evidence::text AS Evidence, d.outcome AS Outcome
 FROM detections d LEFT JOIN telegram_accounts a ON a.account_id = d.account_id
+-- The ported checks only: newcomer signs (step 9) fire on the same messages.
+WHERE d.sign NOT IN ('link_outside', 'mention_outside', 'forward_channel', 'first_post_media', 'posted_soon', 'same_as_newcomers', 'joined_during_raid')
 ORDER BY d.detection_id")).ToArray();
         }
 
