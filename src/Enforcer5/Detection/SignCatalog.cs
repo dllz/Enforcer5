@@ -76,17 +76,30 @@ namespace Enforcer5.Detection
         internal static readonly SignDefinition MediaLock = Ported("media_lock");
         internal static readonly SignDefinition TextLength = Ported("text_length");
         internal static readonly SignDefinition NameLength = Ported("name_length");
-        internal static readonly SignDefinition ScriptArabic = Ported("script_arabic");
-        internal static readonly SignDefinition ScriptRtl = Ported("script_rtl");
         internal static readonly SignDefinition InlineBot = Ported("inline_bot");
         internal static readonly SignDefinition StickerSet = Ported("sticker_set");
         internal static readonly SignDefinition ChannelPost = Ported("channel_post");
         internal static readonly SignDefinition RaidLink = Ported("raid_link");
         internal static readonly SignDefinition MassAdd = Ported("mass_add");
 
+        /// <summary>
+        /// A filter (design section 5): <c>filter:{preset}</c> or <c>filter:{id}</c> of an admin's rule. Like
+        /// the ported checks, a filter acts itself and the engine records it.
+        /// </summary>
+        internal const string FilterPrefix = "filter:";
+
+        private static readonly SignDefinition Filter =
+            new SignDefinition(FilterPrefix, SignPhase.Inline, new SignPolicy(true, "none", 0), false, true, true);
+
         /// <summary>The sign, or null when there is no such sign.</summary>
-        internal static SignDefinition Get(string name) =>
-            name != null && Signs.TryGetValue(name, out var sign) ? sign : null;
+        internal static SignDefinition Get(string name)
+        {
+            if (name == null) return null;
+            if (Signs.TryGetValue(name, out var sign)) return sign;
+            return name.StartsWith(FilterPrefix, System.StringComparison.Ordinal) && name.Length > FilterPrefix.Length
+                ? Filter with { Name = name }
+                : null;
+        }
 
         internal static IReadOnlyCollection<SignDefinition> All => Signs.Values;
 

@@ -134,11 +134,13 @@ namespace Enforcer5.Detection
         /// <param name="userId">Null for a post made as a channel: the member behind it cannot be seen.</param>
         /// <param name="message">The message it was about; null when there is none of theirs (a join).</param>
         /// <param name="evidence">Ids, counts and settings only, never text; serialised to JSON.</param>
+        /// <param name="weight">What it adds to the member's score; null is the sign's (0 for the ported checks).</param>
+        /// <param name="trial">A rule on trial: recorded as what it would have done; nothing was done and the score is left alone.</param>
         internal static void Checked(long chatId, long? userId, Message message, SignDefinition sign, string action,
-            bool deleted = false, bool reported = false, object evidence = null)
+            bool deleted = false, bool reported = false, object evidence = null, int? weight = null, bool trial = false)
         {
             if (!PostgresStorage.Ready) return; // nothing would be kept
-            var hit = new SignHit(sign.Name, evidence == null ? null : System.Text.Json.JsonSerializer.Serialize(evidence))
+            var hit = new SignHit(sign.Name, evidence == null ? null : System.Text.Json.JsonSerializer.Serialize(evidence), weight, trial)
             {
                 Done = new CheckDecision(action, deleted, reported),
                 At = Clock.UtcNow
@@ -160,7 +162,7 @@ namespace Enforcer5.Detection
             var member = userId != 0 ? await MemberStateAsync(chatId, userId) : null;
             var weight = hit.Weight ?? settings.Weight;
             MemberScores.Change change;
-            if (weight > 0 && userId != 0)
+            if (weight > 0 && userId != 0 && !hit.Trial)
             {
                 if (MemberScores.NeedsLoad(chatId, userId)) await LoadScoreAsync(chatId, userId);
                 change = MemberScores.Add(chatId, userId, sign.Name, weight);
@@ -171,7 +173,7 @@ namespace Enforcer5.Detection
                 change = new MemberScores.Change(current, current, false);
             }
             var action = Array.IndexOf(DetectionPolicy.Actions, done.Action) >= 0 ? done.Action : "none";
-            var outcome = new DetectionOutcome("live", action, done.Deleted && message != null, done.Reported,
+            var outcome = new DetectionOutcome(hit.Trial ? "trial" : "live", action, done.Deleted && message != null, done.Reported,
                 change.Before, change.After);
             Record(chatId, userId, message, sign, hit, weight, outcome, member, hit.At ?? Clock.UtcNow);
             return outcome;
@@ -251,6 +253,7 @@ namespace Enforcer5.Detection
             StartingObservation.Clear();
             MemberScores.ResetForTests();
             DetectionRecorder.ResetForTests();
+            GroupBots.ResetForTests();
         }
     }
 }

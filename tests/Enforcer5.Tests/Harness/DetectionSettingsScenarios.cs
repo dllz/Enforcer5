@@ -80,7 +80,7 @@ namespace Enforcer5.Tests.Harness
             Assert.IsTrue(stored.MuteOnJoin);
             Assert.IsTrue(stored.Media.IsBlocked("video"));
             Assert.AreEqual("kick", stored.Media.Action);
-            Assert.AreEqual("tempban", stored.Scripts.Arabic);
+            Assert.AreEqual("tempban", stored.Filters.PresetAction(FilterPresets.Arabic));
             Assert.AreEqual("warn", stored.TextLength.Action);
             Assert.AreEqual(3, stored.Warns.MaxWarns);
             Assert.AreEqual("ban", stored.Warns.Action);
@@ -124,9 +124,9 @@ namespace Enforcer5.Tests.Harness
             chat.Hashes[$"chat:{id}:char", "Arab"] = "allowed";
             var admin = chat.Add("Admin", MemberState.Administrator);
             var menu = Menu(chat, admin);
-            await chat.PressDataAsync(admin, menu, $"menuArab:{id}"); // allowed -> tempban
-            await chat.PressDataAsync(admin, menu, $"menuArab:{id}"); // tempban -> ban
-            Assert.AreEqual("ban", (await Stored(chat)).Scripts.Arabic);
+            // off -> delete -> warn -> mute -> kick -> tempban -> ban
+            for (var i = 0; i < 6; i++) await chat.PressDataAsync(admin, menu, $"filterpreset:{id}:arabic");
+            Assert.AreEqual("ban", (await Stored(chat)).Filters.PresetAction(FilterPresets.Arabic));
 
             await chat.CrashAndRestartAsync();
             var first = chat.Add("First");
@@ -155,7 +155,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Storage.PostgresStorage.UseForTests(null);
             try
             {
-                await chat.PressDataAsync(admin, Menu(chat, admin), $"menuArab:{id}");
+                await chat.PressDataAsync(admin, Menu(chat, admin), $"filterpreset:{id}:arabic");
                 var failed = Enforcer5.Helpers.Methods.GetLocaleString(Enforcer5.Helpers.Methods.GetGroupLanguage(id).Doc, "failed");
                 CollectionAssert.Contains(CallbackAnswers(chat), failed);
 
@@ -167,7 +167,7 @@ namespace Enforcer5.Tests.Harness
             {
                 Enforcer5.Storage.PostgresStorage.UseForTests(chat.Database);
             }
-            Assert.AreEqual("ban", (await Stored(chat)).Scripts.Arabic);
+            Assert.AreEqual("ban", (await Stored(chat)).Filters.PresetAction(FilterPresets.Arabic));
             Assert.IsTrue(chat.Errors.All(e => e.Contains("PostgreSQL is not ready")), string.Join("\n", chat.Errors));
         }
 

@@ -114,6 +114,36 @@ ORDER BY d.detected_at",
             return rows.Select(r => new MemberScores.Hit(r.Sign, r.Weight, DateTime.SpecifyKind(r.At, DateTimeKind.Utc))).ToList();
         }
 
+        public async Task<IReadOnlyList<(string Name, string Username)>> RecentMemberNamesAsync(long chatId, DateTimeOffset since, int limit)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<(string Name, string Username)>(new CommandDefinition(@"
+SELECT p.display_name, p.username
+FROM group_members m
+JOIN groups g ON g.group_id = m.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = m.account_id
+JOIN telegram_account_profiles p ON p.account_id = m.account_id AND p.valid_to IS NULL
+WHERE c.telegram_chat_id = @ChatId AND NOT a.is_bot
+  AND GREATEST(m.last_message_at, m.joined_at, m.first_seen_at) >= @Since
+ORDER BY GREATEST(m.last_message_at, m.joined_at, m.first_seen_at) DESC
+LIMIT @Limit", new { ChatId = chatId, Since = Utc(since), Limit = limit }));
+            return rows.ToList();
+        }
+
+        public async Task<IReadOnlyDictionary<string, (long Hits, long Removed)>> SignStatsAsync(long chatId, IReadOnlyList<string> signs)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<(string Sign, long Hits, long Removed)>(new CommandDefinition(@"
+SELECT d.sign, count(*), count(DISTINCT d.account_id) FILTER (WHERE d.outcome IN ('ban', 'kick', 'tempban'))
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+WHERE c.telegram_chat_id = @ChatId AND d.sign = ANY(@Signs)
+GROUP BY d.sign", new { ChatId = chatId, Signs = signs.ToArray() }));
+            return rows.ToDictionary(r => r.Sign, r => (r.Hits, r.Removed));
+        }
+
         public async Task RecordLabelAsync(LabelEvent label)
         {
             await using var connection = await Database.OpenConnectionAsync();

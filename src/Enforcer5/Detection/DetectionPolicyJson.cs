@@ -19,7 +19,7 @@ namespace Enforcer5.Detection
             try
             {
                 var policy = JsonSerializer.Deserialize<DetectionPolicy>(json, Options);
-                return policy?.Flood?.Counted == null || policy.Media?.Blocked == null || policy.Scripts == null ||
+                return policy?.Flood?.Counted == null || policy.Media?.Blocked == null || policy.Filters?.Rules == null ||
                        policy.TextLength == null || policy.NameLength == null || policy.Warns == null ||
                        policy.InlineBots == null || policy.StickerSets == null || policy.ChannelPosts?.Allowed == null ||
                        policy.Engine?.Signs == null

@@ -119,7 +119,7 @@ namespace Enforcer5.Tests.Storage
         {
             await _repo.ImportAsync(ChatId, DetectionPolicy.Empty with
             {
-                Scripts = new ScriptSettings("ban", null),
+                Filters = FilterSettings.Empty.WithPreset(FilterPresets.Arabic, "ban").WithPreset(FilterPresets.Rtl, null),
                 TextLength = new LengthSettings(true, 100, 20, "warn")
             });
             await using var connection = await _database.OpenConnectionAsync();

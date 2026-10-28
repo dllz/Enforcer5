@@ -277,6 +277,10 @@ and a bad member look like (Daniel, 2026-10-27). So the engine records both side
   channel has no member: its row has no account and the channel id in the evidence. Recording is
   dispatched and never waited for; what the checks do is unchanged. Mute On Join is not recorded
   (it is not a decision about anyone).
+- **Filters** (step 5): the old Arabic and right-to-left checks are presets in `group_filters` now,
+  with ten more presets and the admins' own regex rules (`kind = 'regex'`, `mode` live or trial,
+  `trial_until`, `created_by_account_id`); the choices for all filters are the `filters` row of
+  `detection_policies`. Each rule that matches is a detection, `filter:<preset>` or `filter:<id>`.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

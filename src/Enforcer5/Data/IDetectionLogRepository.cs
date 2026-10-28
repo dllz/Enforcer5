@@ -66,5 +66,14 @@ namespace Enforcer5.Data
 
         /// <summary>Records a decision and links it to the member's detections.</summary>
         Task RecordLabelAsync(LabelEvent label);
+
+        /// <summary>
+        /// Names and usernames of the group's members seen since <paramref name="since"/> (joined, or
+        /// posted), newest first, at most <paramref name="limit"/>: what /filter test tries a rule on.
+        /// </summary>
+        Task<IReadOnlyList<(string Name, string Username)>> RecentMemberNamesAsync(long chatId, DateTimeOffset since, int limit);
+
+        /// <summary>For each of <paramref name="signs"/>: how many times it fired in the group, and for how many members a ban, kick or tempban followed.</summary>
+        Task<IReadOnlyDictionary<string, (long Hits, long Removed)>> SignStatsAsync(long chatId, IReadOnlyList<string> signs);
     }
 }

@@ -100,7 +100,7 @@ namespace Enforcer5.Helpers
         }
 
         // Letters from other scripts that pass for Latin ones.
-        private static readonly System.Collections.Generic.Dictionary<char, char> Lookalikes = new()
+        internal static readonly System.Collections.Generic.Dictionary<char, char> Lookalikes = new()
         {
             ['а'] = 'a', ['в'] = 'b', ['е'] = 'e', ['ё'] = 'e', ['к'] = 'k', ['м'] = 'm', ['н'] = 'h', ['о'] = 'o',
             ['р'] = 'p', ['с'] = 'c', ['т'] = 't', ['у'] = 'y', ['х'] = 'x', ['ѕ'] = 's', ['і'] = 'i', ['ј'] = 'j',

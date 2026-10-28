@@ -24,7 +24,7 @@ namespace Enforcer5.Detection
         FloodSettings Flood,
         MediaSettings Media,
         bool MuteOnJoin,
-        ScriptSettings Scripts,
+        FilterSettings Filters,
         LengthSettings TextLength,
         LengthSettings NameLength,
         WarnSettings Warns,
@@ -45,7 +45,7 @@ namespace Enforcer5.Detection
             Flood: new FloodSettings(true, null, null, new Dictionary<string, bool>()),
             Media: new MediaSettings(new Dictionary<string, bool>(), null, null),
             MuteOnJoin: false,
-            Scripts: new ScriptSettings(null, null),
+            Filters: FilterSettings.Empty,
             TextLength: new LengthSettings(false, null, null, null),
             NameLength: new LengthSettings(false, null, null, null),
             Warns: new WarnSettings(Methods.DefaultMaxWarns, WarnSettings.Kick),
@@ -70,7 +70,7 @@ namespace Enforcer5.Detection
             {
                 Flood = new FloodSettings(false, 5, "kick", counted),
                 Media = new MediaSettings(blocked, "tempban", 3),
-                Scripts = new ScriptSettings(null, null),
+                Filters = Filters.WithPreset(FilterPresets.Arabic, null).WithPreset(FilterPresets.Rtl, null),
                 TextLength = new LengthSettings(true, OnMessage.DefaultMaxTextLength, OnMessage.DefaultMaxTextLines, "kick"),
                 NameLength = new LengthSettings(true, OnMessage.DefaultMaxNameLength, null, "kick"),
                 Warns = new WarnSettings(Methods.DefaultMaxWarns, WarnSettings.Ban)
@@ -87,7 +87,17 @@ namespace Enforcer5.Detection
             Version = 0,
             Flood = policy.Flood with { Counted = new SortedDictionary<string, bool>(policy.Flood.Counted.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
             Media = policy.Media with { Blocked = new SortedDictionary<string, bool>(policy.Media.Blocked.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
-            Engine = policy.Engine with { Signs = new SortedDictionary<string, SignPolicy>(policy.Engine.Signs.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) }
+            Engine = policy.Engine with { Signs = new SortedDictionary<string, SignPolicy>(policy.Engine.Signs.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
+            // Ids are the database's; a rule is the same rule by what it is.
+            Filters = policy.Filters with
+            {
+                Rules = policy.Filters.Rules
+                    .Where(r => r.Enabled || r.Kind != FilterRule.PresetKind) // a preset that is off is no preset
+                    .Select(r => r with { Id = 0 })
+                    .OrderBy(r => r.Kind, StringComparer.Ordinal).ThenBy(r => r.Preset, StringComparer.Ordinal)
+                    .ThenBy(r => r.Target, StringComparer.Ordinal).ThenBy(r => r.Pattern, StringComparer.Ordinal)
+                    .ToList()
+            }
         };
     }
 
@@ -122,10 +132,6 @@ namespace Enforcer5.Detection
 
         internal int EffectiveWarnLimit => WarnLimit ?? DefaultWarnLimit;
     }
-
-    /// <param name="Arabic">The Arabic script preset's action (kick, ban, tempban); null allows it.</param>
-    /// <param name="Rtl">The right-to-left mark preset's action; only kick and ban act, as before.</param>
-    internal sealed record ScriptSettings(string Arabic, string Rtl);
 
     /// <param name="Enabled">The check is on.</param>
     /// <param name="MaxCharacters">Null is the check's default.</param>

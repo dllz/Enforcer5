@@ -60,26 +60,10 @@ namespace Enforcer5
                 }
             }
             OnOff("MuteOnJoin", policy.MuteOnJoin);
-            foreach (var (name, action) in new[] { ("Arab", policy.Scripts.Arabic), ("Rtl", policy.Scripts.Rtl) })
-            {
-                mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{name}Button"),
-                    $"menusettings:{name}"));
-                switch (action)
-                {
-                    case "kick":
-                        mainMenu.Buttons.Add(new InlineButton($"⚡️ | {Methods.GetLocaleString(lang, "kick")}", $"menu{name}:{chatId}"));
-                        break;
-                    case "ban":
-                        mainMenu.Buttons.Add(new InlineButton($"⛔ | {Methods.GetLocaleString(lang, "ban")}", $"menu{name}:{chatId}"));
-                        break;
-                    case "tempban":
-                        mainMenu.Buttons.Add(new InlineButton($"⏳ | {Methods.GetLocaleString(lang, "tempban")}", $"menu{name}:{chatId}"));
-                        break;
-                    default:
-                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{name}:{chatId}"));
-                        break;
-                }
-            }
+            // The Arabic and right-to-left settings are filter presets since Detection step 5: one row to the filters menu.
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "FiltersButton"), $"filtersmenu:{chatId}"));
+            mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filtersOnCount",
+                policy.Filters.Rules.Count(r => r.Enabled && r.Action != null)), $"filtersmenu:{chatId}"));
             var channelPostsBlocked = policy.ChannelPosts.Enabled;
             mainMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "ChannelPostsButton"),
                 "menusettings:ChannelPosts"));
@@ -139,17 +123,6 @@ namespace Enforcer5
         [Callback(Trigger = "menuMuteOnJoin", GroupAdminOnly = true)]
         public static void MenuMuteOnJoin(CallbackQuery call, string[] args) =>
             ChangeSettings(call, args, p => p with { MuteOnJoin = !p.MuteOnJoin });
-
-        // The script presets cycle ban -> kick -> allowed -> tempban -> ban, as they always did.
-        private static readonly string[] ScriptActions = { "kick", null, "tempban", "ban" };
-
-        [Callback(Trigger = "menuRtl", GroupAdminOnly = true)]
-        public static void MenuRtl(CallbackQuery call, string[] args) =>
-            ChangeSettings(call, args, p => p with { Scripts = p.Scripts with { Rtl = Next(p.Scripts.Rtl, ScriptActions) } });
-
-        [Callback(Trigger = "menuArab", GroupAdminOnly = true)]
-        public static void MenuArab(CallbackQuery call, string[] args) =>
-            ChangeSettings(call, args, p => p with { Scripts = p.Scripts with { Arabic = Next(p.Scripts.Arabic, ScriptActions) } });
 
         [Callback(Trigger = "menuChannelPosts", GroupAdminOnly = true)]
         public static void MenuChannelPosts(CallbackQuery call, string[] args) =>

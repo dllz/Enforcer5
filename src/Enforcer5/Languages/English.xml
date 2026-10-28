@@ -2546,4 +2546,179 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="cmdwelcome">
     <value>Set the welcome message</value>
   </string>
+  <string key="FiltersButton">
+    <value>Filters</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} on</value>
+  </string>
+  <string key="filtersMenu">
+    <value>Filters: what happens when a message, a name or a username matches one. Tap a filter to change what it does. Admins and members on the watch or auth list are never checked.\n\nOwn rules: {0}. Manage them with /filter.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>Arabic script</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>Right-to-left tricks</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>Cyrillic script</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>Chinese, Japanese, Korean</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>Hebrew script</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>Devanagari script</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>Lookalike letters</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>Invisible characters</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Telegram invite links</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>Phone numbers</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>Crypto wallets</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>Admin or support names</value>
+  </string>
+  <string key="filterAction_off">
+    <value>Off</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>Delete</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>Warn</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>Mute</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>Kick</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>Tempban</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>Ban</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>Check established members</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>Allow bots in this group</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} was muted: {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} was muted for {2}: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} was kicked: {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} was banned: {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} was banned for {2}: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>Your own filter rules. A new rule starts on trial for {0} days: it only records what it would have done.\n/filter add name|username|text action regex\n/filter try /regex/ text\n/filter test id or regex\n/filter list\n/filter live id\n/filter trial id days\n/filter del id</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>The target must be one of: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>The action must be one of: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>That regular expression cannot be used: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>This group already has that rule.</value>
+  </string>
+  <string key="filterLimit">
+    <value>A group can have at most {0} own rules. Delete one with /filter del first.</value>
+  </string>
+  <string key="filterAdded">
+    <value>Rule #{0} added. It is on trial for {1} days: it records what it would do and does nothing. Make it act with /filter live {0}.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>It matches.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>It does not match.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>No match among the {0} members seen in the last 30 days.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>{0} of the {1} members seen in the last 30 days match. Examples:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>I have sent you the result in private.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>I could not send you the result. Start a private chat with me first, then try again.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>This group has no own rules. Add one with /filter add; it starts on trial for {0} days.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>Own rules:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} on {1}, {2}, {3}. Matched {4} times; {5} of those members were removed.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>live</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>on trial until {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>trial over, waiting for /filter live or /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>There is no rule {0}. /filter list shows them.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>Rule #{0} is live: it acts from now on.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>Rule #{0} is on trial for {1} days.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>Rule #{0} is deleted.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>Your own filter rules</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      Your group's own filter rules: a regular expression on members' names, usernames or message text, and what to do when it matches (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Admins only. The ready-made filters (scripts, invite links, phone numbers and more) are in the settings menu under Filters.
+
+      A new rule starts on trial for 7 days: it records what it would have done and does nothing, so you can see whether it catches the right people. Make it act with /{0} live.
+
+      Examples:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (tries rule 3 on the names of members seen in the last 30 days and sends you the result in private)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
 </strings>

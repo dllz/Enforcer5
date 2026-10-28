@@ -19,8 +19,9 @@ namespace Enforcer5.Data
     /// imported.</item>
     /// <item><c>detection_policies</c>: one row per check (<c>flood</c>, <c>media</c>,
     /// <c>mute_on_join</c>, <c>channel_posts</c>) with its thresholds and lists in <c>settings</c>.</item>
-    /// <item><c>group_filters</c>: the Arabic and right-to-left presets, the text and name length
-    /// rules, and the blocked inline bots and sticker packs, one row each.</item>
+    /// <item><c>group_filters</c>: the filter presets and the admins' own regex rules (Detection
+    /// step 5), the text and name length rules, and the blocked inline bots and sticker packs, one row
+    /// each. The <c>filters</c> row of <c>detection_policies</c> holds the choices for all filters.</item>
     /// </list>
     /// A save rewrites the rows that changed and keeps the others, so a filter keeps its id.
     /// </summary>
@@ -31,6 +32,7 @@ namespace Enforcer5.Data
         internal const string MuteOnJoin = "mute_on_join";
         internal const string ChannelPosts = "channel_posts";
         internal const string Engine = "engine";
+        internal const string Filters = "filters";
         internal const string SignPrefix = "sign:";
 
         internal const string Arabic = "arabic";
@@ -86,8 +88,10 @@ RETURNING version", GroupSettingsParameters(groupId.Value, policy), transaction)
             }
 
             await WriteChecksAsync(connection, transaction, groupId.Value, policy);
+            // Read back: the filters get their ids.
+            var imported = await LoadAsync(connection, transaction, chatId);
             await transaction.CommitAsync();
-            return policy with { Version = version.Value };
+            return imported;
         }
 
         public async Task<DetectionPolicy> SaveAsync(long chatId, DetectionPolicy policy, long expectedVersion)
@@ -107,8 +111,9 @@ RETURNING version", parameters, transaction));
             if (version == null) return null;
 
             await WriteChecksAsync(connection, transaction, groupId.Value, policy);
+            var saved = await LoadAsync(connection, transaction, chatId);
             await transaction.CommitAsync();
-            return policy with { Version = version.Value };
+            return saved;
         }
 
         private static DynamicParameters GroupSettingsParameters(long groupId, DetectionPolicy policy)
@@ -175,15 +180,52 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
 DELETE FROM detection_policies WHERE group_id = @GroupId AND check_key LIKE 'sign:%' AND NOT (check_key = ANY(@Keys))",
                 new { GroupId = groupId, Keys = policy.Engine.Signs.Keys.Select(k => SignPrefix + k).ToArray() }, transaction));
 
-            async Task Preset(string preset, string action) =>
+            await Check(Filters, true, null, new FiltersJson
+            {
+                IncludeEstablished = policy.Filters.IncludeEstablished,
+                ExemptGroupBots = policy.Filters.ExemptGroupBots
+            });
+            foreach (var preset in policy.Filters.Rules.Where(r => r.Kind == FilterRule.PresetKind))
                 await connection.ExecuteAsync(new CommandDefinition(@"
 INSERT INTO group_filters (group_id, kind, preset, enabled, action, mode, created_at)
 VALUES (@GroupId, 'preset', @Preset, @Enabled, @Action, 'live', now())
 ON CONFLICT (group_id, preset) WHERE preset IS NOT NULL
-DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action",
-                    new { GroupId = groupId, Preset = preset, Enabled = action != null, Action = action }, transaction));
-            await Preset(Arabic, policy.Scripts.Arabic);
-            await Preset(RightToLeft, policy.Scripts.Rtl);
+DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action
+WHERE group_filters.enabled IS DISTINCT FROM EXCLUDED.enabled OR group_filters.action IS DISTINCT FROM EXCLUDED.action",
+                    new { GroupId = groupId, preset.Preset, preset.Enabled, preset.Action }, transaction));
+
+            // The admins' own rules: one row per target and pattern, the others removed.
+            var own = policy.Filters.OwnRules.ToList();
+            await connection.ExecuteAsync(new CommandDefinition(@"
+DELETE FROM group_filters f
+WHERE f.group_id = @GroupId AND f.kind = 'regex' AND f.target IN ('name', 'username', 'text', 'bio', 'channel')
+  AND NOT EXISTS (SELECT 1 FROM unnest(@Targets, @Patterns) AS n(target, pattern)
+                  WHERE n.target = f.target AND n.pattern = f.pattern)",
+                new { GroupId = groupId, Targets = own.Select(r => r.Target).ToArray(), Patterns = own.Select(r => r.Pattern).ToArray() },
+                transaction));
+            // A new rule's author may not be in telegram_accounts yet (the principal flush runs once a
+            // minute): added under the lock every writer of accounts takes.
+            var authors = own.Where(r => r.Id == 0 && r.CreatedBy.HasValue).Select(r => r.CreatedBy.Value).Distinct().ToList();
+            if (authors.Count > 0)
+            {
+                await connection.ExecuteAsync(new CommandDefinition("SELECT pg_advisory_xact_lock(@Lock)",
+                    new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
+                foreach (var author in authors) await PrincipalResolver.EnsureUserAsync(connection, transaction, author);
+            }
+            foreach (var rule in own)
+                await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO group_filters (group_id, target, kind, pattern, enabled, action, mode, trial_until, created_by_account_id, created_at)
+VALUES (@GroupId, @Target, 'regex', @Pattern, @Enabled, @Action, @Mode, @TrialUntil,
+    (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @CreatedBy), now())
+ON CONFLICT (group_id, target, kind, pattern) WHERE pattern IS NOT NULL
+DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action, mode = EXCLUDED.mode, trial_until = EXCLUDED.trial_until
+WHERE group_filters.enabled IS DISTINCT FROM EXCLUDED.enabled OR group_filters.action IS DISTINCT FROM EXCLUDED.action
+   OR group_filters.mode IS DISTINCT FROM EXCLUDED.mode OR group_filters.trial_until IS DISTINCT FROM EXCLUDED.trial_until",
+                    new
+                    {
+                        GroupId = groupId, rule.Target, rule.Pattern, rule.Enabled, rule.Action, rule.Mode,
+                        TrialUntil = rule.TrialUntil?.UtcDateTime, rule.CreatedBy
+                    }, transaction));
 
             async Task Length(string target, LengthSettings length) =>
                 await connection.ExecuteAsync(new CommandDefinition(@"
@@ -239,10 +281,12 @@ SELECT check_key AS CheckKey, enabled AS Enabled, action AS Action, weight AS We
 FROM detection_policies WHERE group_id = @GroupId", new { group.GroupId }, transaction)))
                 .ToDictionary(r => r.CheckKey);
             var filters = (await connection.QueryAsync<FilterRow>(new CommandDefinition(@"
-SELECT target AS Target, kind AS Kind, preset AS Preset, pattern AS Pattern, max_characters AS MaxCharacters,
-       max_lines AS MaxLines, action AS Action, enabled AS Enabled
-FROM group_filters WHERE group_id = @GroupId AND mode = 'live'
-ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
+SELECT f.filter_id AS FilterId, f.target AS Target, f.kind AS Kind, f.preset AS Preset, f.pattern AS Pattern,
+       f.max_characters AS MaxCharacters, f.max_lines AS MaxLines, f.action AS Action, f.enabled AS Enabled, f.mode AS Mode,
+       f.trial_until AS TrialUntil, a.telegram_user_id AS CreatedBy
+FROM group_filters f LEFT JOIN telegram_accounts a ON a.account_id = f.created_by_account_id
+WHERE f.group_id = @GroupId
+ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
 
             var empty = DetectionPolicy.Empty;
             T Settings<T>(string key) where T : new() =>
@@ -253,10 +297,9 @@ ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
             var flood = Settings<FloodJson>(Flood);
             var media = Settings<MediaJson>(Media);
             var channels = Settings<ChannelPostsJson>(ChannelPosts);
-            string Preset(string preset) =>
-                filters.FirstOrDefault(f => f.Kind == "preset" && f.Preset == preset) is { Enabled: true } row ? row.Action : null;
+            var filterChoices = Settings<FiltersJson>(Filters);
             LengthSettings Length(string target, LengthSettings fallback) =>
-                filters.FirstOrDefault(f => f.Kind == "length" && f.Target == target) is { } row
+                filters.FirstOrDefault(f => f.Kind == "length" && f.Target == target && f.Mode == FilterRule.Live) is { } row
                     ? new LengthSettings(row.Enabled, row.MaxCharacters, row.MaxLines, row.Action)
                     : fallback;
 
@@ -269,17 +312,24 @@ ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
                     ? new MediaSettings(media.Blocked ?? new Dictionary<string, bool>(), mediaRow.Action, media.WarnLimit)
                     : empty.Media,
                 MuteOnJoin: checks.TryGetValue(MuteOnJoin, out var muteRow) && muteRow.Enabled,
-                Scripts: new ScriptSettings(Preset(Arabic), Preset(RightToLeft)),
+                Filters: new FilterSettings(
+                    filters.Where(f => f.Kind is FilterRule.PresetKind or FilterRule.RegexKind && (f.Kind == FilterRule.PresetKind || FilterRule.Targets.Contains(f.Target)))
+                        .Select(f => new FilterRule(f.FilterId, f.Kind, f.Preset, f.Target, f.Pattern, f.Action, f.Enabled, f.Mode,
+                            f.TrialUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(f.TrialUntil.Value, DateTimeKind.Utc)) : null,
+                            f.CreatedBy))
+                        .ToList(),
+                    checks.ContainsKey(Filters) ? filterChoices.IncludeEstablished : true,
+                    filterChoices.ExemptGroupBots),
                 TextLength: Length("text", empty.TextLength),
                 NameLength: Length("name", empty.NameLength),
                 Warns: new WarnSettings(group.MaximumWarnings,
                     group.WarningAction == WarnSettings.Ban ? WarnSettings.Ban : WarnSettings.Kick),
                 TempbanMinutes: group.TempbanMinutes,
                 TempmuteMinutes: group.TempmuteMinutes,
-                InlineBots: filters.Where(f => f.Target == "inline_bot" && f.Enabled && f.Pattern != null)
+                InlineBots: filters.Where(f => f.Target == "inline_bot" && f.Enabled && f.Pattern != null && f.Mode == FilterRule.Live)
                     .Select(f => new InlineBotBlock(f.Kind == "regex" ? InlineBotBlockKind.Pattern : InlineBotBlockKind.Username, f.Pattern))
                     .ToList(),
-                StickerSets: filters.Where(f => f.Target == "sticker_set" && f.Enabled && f.Pattern != null)
+                StickerSets: filters.Where(f => f.Target == "sticker_set" && f.Enabled && f.Pattern != null && f.Mode == FilterRule.Live)
                     .Select(f => f.Pattern).ToList(),
                 ChannelPosts: new ChannelPostSettings(
                     checks.TryGetValue(ChannelPosts, out var channelRow) && channelRow.Enabled,
@@ -358,8 +408,18 @@ ORDER BY filter_id", new { group.GroupId }, transaction))).ToList();
             public bool Report { get; set; }
         }
 
+        private sealed class FiltersJson
+        {
+            public bool IncludeEstablished { get; set; } = true;
+            public bool ExemptGroupBots { get; set; }
+        }
+
         private sealed class FilterRow
         {
+            public long FilterId { get; set; }
+            public string Mode { get; set; }
+            public DateTime? TrialUntil { get; set; }
+            public long? CreatedBy { get; set; }
             public string Target { get; set; }
             public string Kind { get; set; }
             public string Preset { get; set; }

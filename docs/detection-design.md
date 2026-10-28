@@ -175,6 +175,26 @@ Test results go to the admin in private: number of matches, up to 10 example nam
 trial records `detections` (mode `trial`); when the trial ends the admins get "make live /
 extend / delete" with its hits and how many of those members were later banned.
 
+**As built (step 5, 2026-10-28; Daniel's answers that day):**
+
+- Arabic is the whole Arabic script (the old check knew about 30 letters); RTL is every direction
+  override and isolate (U+202A-202E, U+2066-2069), and its tempban now acts. Both keep their old
+  notices and reasons.
+- Rules apply to everyone except admins and members on the watch or auth list. Two choices for all
+  filters, in the menu: **check established members** (on by default, as before) and **allow bots
+  in this group** (off by default): the text of a message sent via an inline bot that is a member
+  of the group is not checked (some bots answer in the member's language); names still are; a bot
+  outside the group never counts.
+- Text rules see captions too, the addresses of text links and the name a message was forwarded
+  from. Name rules run on every message and on each joiner.
+- A preset acts as soon as an admin switches it on; an own regex starts on trial for 7 days; neither
+  waits for the group's observe weeks. A filter acts itself (one action, the strongest of the live
+  rules that matched) and records every rule that matched as `filter:<preset>` or `filter:<id>`.
+- Not yet: `bio` and `channel` targets (step 11), the message when a trial ends (reports, step 7;
+  until then a rule whose trial is over keeps recording only, and `/filter list` says so), and
+  edits (step 8). The length rules keep their own menu and check.
+- A regex with spaces is written between slashes in `/filter try` (`/filter try /free +crypto/ text`).
+
 ## 6. Reports
 
 - **Default destination: admins' private chats**, for admins who started the bot; each admin can

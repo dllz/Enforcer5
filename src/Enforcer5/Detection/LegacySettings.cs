@@ -103,9 +103,10 @@ namespace Enforcer5.Detection
                     OneOf(Field(stored.Media, "action"), "kick", "tempban", "ban"),
                     Int(Field(stored.WarnSettings, "mediamax"))),
                 MuteOnJoin: Field(stored.Settings, "MuteOnJoin") == "no",
-                Scripts: new ScriptSettings(
-                    OneOf(Field(stored.Char, "Arab"), "kick", "ban", "tempban"),
-                    OneOf(Field(stored.Char, "Rtl"), "kick", "ban", "tempban")),
+                // The old Arabic and right-to-left checks are these presets now (Detection step 5).
+                Filters: FilterSettings.Empty
+                    .WithPreset(FilterPresets.Arabic, OneOf(Field(stored.Char, "Arab"), "kick", "ban", "tempban"))
+                    .WithPreset(FilterPresets.Rtl, OneOf(Field(stored.Char, "Rtl"), "kick", "ban", "tempban")),
                 TextLength: Length(stored.TextLength),
                 NameLength: Length(stored.NameLength) with { MaxLines = null },
                 Warns: new WarnSettings(

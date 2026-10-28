@@ -101,14 +101,16 @@ namespace Enforcer5.Tests.Detection
         }
 
         [TestMethod]
-        public void Scripts_AllowedIsNoAction_AndRtlKeepsATempbanItNeverActedOn()
+        public void Scripts_BecomeTheArabicAndRtlPresets_AllowedIsOff_AndRtlKeepsItsTempban()
         {
-            var scripts = LegacySettings.Map(Stored(characters: Hash(("Arab", "allowed"), ("Rtl", "tempban")))).Scripts;
-            Assert.IsNull(scripts.Arabic);
-            Assert.AreEqual("tempban", scripts.Rtl);
-            scripts = LegacySettings.Map(Stored(characters: Hash(("Arab", "kick"), ("Rtl", "whatever")))).Scripts;
-            Assert.AreEqual("kick", scripts.Arabic);
-            Assert.IsNull(scripts.Rtl);
+            var filters = LegacySettings.Map(Stored(characters: Hash(("Arab", "allowed"), ("Rtl", "tempban")))).Filters;
+            Assert.IsNull(filters.PresetAction(FilterPresets.Arabic));
+            Assert.AreEqual("tempban", filters.PresetAction(FilterPresets.Rtl), "never acted on before step 5; it is now");
+            filters = LegacySettings.Map(Stored(characters: Hash(("Arab", "kick"), ("Rtl", "whatever")))).Filters;
+            Assert.AreEqual("kick", filters.PresetAction(FilterPresets.Arabic));
+            Assert.IsNull(filters.PresetAction(FilterPresets.Rtl));
+            Assert.IsTrue(filters.IncludeEstablished, "established members were always checked");
+            Assert.IsFalse(filters.ExemptGroupBots);
         }
 
         [TestMethod]
@@ -203,7 +205,14 @@ namespace Enforcer5.Tests.Detection
         {
             Version = 7,
             MuteOnJoin = true,
-            Scripts = new ScriptSettings("ban", "kick"),
+            Filters = FilterSettings.Empty.WithPreset(FilterPresets.Arabic, "ban").WithPreset(FilterPresets.Rtl, "kick") with
+            {
+                Rules = FilterSettings.Empty.WithPreset(FilterPresets.Arabic, "ban").WithPreset(FilterPresets.Rtl, "kick").Rules
+                    .Append(new FilterRule(0, FilterRule.RegexKind, null, "text", "free +crypto", "ban", true, FilterRule.Trial,
+                        DateTimeOffset.FromUnixTimeSeconds(1_900_000_000), null)).ToList(),
+                IncludeEstablished = false,
+                ExemptGroupBots = true
+            },
             Media = new MediaSettings(new Dictionary<string, bool> { ["image"] = true, ["text"] = false }, "kick", null),
             NameLength = new LengthSettings(true, 30, null, null),
             Warns = new WarnSettings(3, WarnSettings.Ban),

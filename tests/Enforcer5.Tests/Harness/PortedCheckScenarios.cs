@@ -166,11 +166,11 @@ ORDER BY d.detection_id")).ToArray();
             await chat.SendAsync(writer, "abc\u202Edef");
 
             var rows = await Detections(chat);
-            var arabic = rows.Single(r => r.Sign == "script_arabic");
+            var arabic = rows.Single(r => r.Sign == "filter:arabic");
             Assert.AreEqual((joiner.Id, "kick", (string)null), (arabic.UserId, arabic.Action, arabic.MessageType),
                 "the joiner, not the adder, and the join message is not theirs");
-            StringAssert.Contains(arabic.Evidence, "\"onJoin\": true");
-            var rtl = rows.Single(r => r.Sign == "script_rtl");
+            StringAssert.Contains(arabic.Evidence, "\"target\": \"name\"");
+            var rtl = rows.Single(r => r.Sign == "filter:rtl");
             Assert.AreEqual((writer.Id, "ban", "ban"), (rtl.UserId, rtl.Action, rtl.Outcome));
             AssertNoErrors(chat);
         }

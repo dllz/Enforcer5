@@ -531,19 +531,21 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
-        public async Task Arab_OnlySomeLettersCount_AndAllowedOrWatchedIsLeftAlone()
+        public async Task Arab_TheWholeScriptCounts_AndWatchedIsLeftAlone()
         {
+            // Changed deliberately in Detection step 5 (Daniel, 2026-10-28): the check used a
+            // hand-written set of about 30 letters, so "ع" (ain) got through. The arabic preset is the
+            // whole script now.
             await using var chat = await HarnessChat.StartAsync();
             chat.Hashes[$"chat:{chat.ChatId}:char", "Arab"] = "kick";
             var writer = chat.Add("Writer");
             var watched = chat.Add("Watched");
             chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
 
-            // "ع" (ain) is not in the hand-written character class the check uses.
             await chat.SendAsync(writer, "ع");
             await chat.SendAsync(watched, "سلام");
 
-            Assert.AreEqual(MemberState.Member, State(chat, writer));
+            Assert.AreEqual(MemberState.Left, State(chat, writer));
             Assert.AreEqual(MemberState.Member, State(chat, watched));
             AssertNoErrors(chat);
         }
@@ -576,17 +578,19 @@ ORDER BY s.sanction_id")).ToArray();
         }
 
         [TestMethod]
-        public async Task Rtl_Tempban_IsNotActedOn()
+        public async Task Rtl_Tempban_Tempbans_AndEveryOverrideCounts()
         {
-            // RightToLeft returns early unless the setting is "ban" or "kick", so its own tempban
-            // branch is never reached. Pinned as found.
+            // Changed deliberately in Detection step 5: RightToLeft returned early unless the setting
+            // was "ban" or "kick", so a tempban was never carried out, and only U+202E counted. The rtl
+            // preset acts on its tempban and on every direction override and isolate.
             await using var chat = await HarnessChat.StartAsync();
             chat.Hashes[$"chat:{chat.ChatId}:char", "Rtl"] = "tempban";
             var writer = chat.Add("Writer");
 
-            await chat.SendAsync(writer, "abc\u202Edef");
+            await chat.SendAsync(writer, "abc\u2067def");
 
-            Assert.AreEqual(MemberState.Member, State(chat, writer));
+            Assert.AreEqual(MemberState.Kicked, State(chat, writer));
+            Assert.AreEqual(("tempban", "Right-to-left text"), ((await Sanctions(chat)).Single().Kind, (await Sanctions(chat)).Single().Reason));
             AssertNoErrors(chat);
         }
 

@@ -194,6 +194,9 @@ namespace Enforcer5.Handlers
                         // a blocked pack, is being deleted, so nothing below should act on it; the
                         // finally still awaits the work queued above.
                         if (OnMessage.BlockedInlineBot(ctx) || OnMessage.BlockedStickerSet(ctx)) return;
+
+                        // Text, captions and the sender's name, for every kind of message.
+                        if (update.Message.Type != MessageType.NewChatMembers) Detection.FilterCheck.OnMessage(ctx);
                     }
 
                     switch (update.Message.Type)
@@ -203,7 +206,6 @@ namespace Enforcer5.Handlers
                         case MessageType.Text:
                             if (moderate)
                             {
-                                background.Add(OnMessage.ArabDetection(ctx));
                                 background.Add(OnMessage.CheckMedia(ctx));
                             }
 
@@ -414,7 +416,7 @@ namespace Enforcer5.Handlers
                 var chatId = update.Message.Chat.Id;
                 var joiners = update.Message.NewChatMembers ?? Array.Empty<User>();
                 foreach (var joiner in joiners) ForgetTempban(chatId, joiner.Id);
-                Bot.Dispatch(() => OnMessage.ArabJoinDetection(ctx));
+                Detection.FilterCheck.OnJoin(ctx);
                 if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
