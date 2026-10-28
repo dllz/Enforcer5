@@ -51,6 +51,7 @@ namespace Enforcer5.Handlers
                     // The filters and the newcomer signs on what it says now.
                     Detection.FilterCheck.OnMessage(editCtx);
                     Detection.MessageSigns.OnMessage(editCtx);
+                    Detection.NameSigns.OnMessage(editCtx);
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
                     await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
@@ -207,6 +208,8 @@ namespace Enforcer5.Handlers
                         Detection.EditCheck.Record(ctx);
                         // Links, mentions and forwards from new members, and the same post from several (step 9).
                         Detection.MessageSigns.OnMessage(ctx);
+                        // A name that copies an admin or a bot, or claims to be staff, changed since joining (step 10).
+                        Detection.NameSigns.OnMessage(ctx);
                     }
 
                     // The group an admin picked for the settings menu (/menu in private).

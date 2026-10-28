@@ -38,6 +38,8 @@ namespace Enforcer5.Helpers
                 foreach (var user in message.NewChatMembers ?? Array.Empty<User>())
                 {
                     if (user.Id == Bot.Me?.Id) continue;
+                    // Names that copy an admin or a bot of the group, or claim to be staff (Detection step 10).
+                    Detection.NameSigns.OnJoin(message.Chat.Id, user);
                     var addedBy = message.From != null && message.From.Id != user.Id ? message.From.Id : (long?)null;
                     Join(new JoinEvent(message.Chat.Id, user.Id, at, addedBy.HasValue ? "added" : "unknown", null, null, addedBy), false);
                 }
@@ -75,6 +77,7 @@ namespace Enforcer5.Helpers
                     Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);
                 if (!wasIn && isIn)
                 {
+                    Detection.NameSigns.OnJoin(update.Chat.Id, user);
                     var addedBy = update.From != null && update.From.Id != user.Id && !update.ViaJoinRequest ? update.From.Id : (long?)null;
                     var source = update.ViaJoinRequest ? "request"
                         : update.InviteLink != null ? "link"

@@ -115,6 +115,11 @@ namespace Enforcer5.Tests.Harness
 
         internal void SetMember(long chatId, long userId, MemberState state) => _members[(chatId, userId)] = state;
 
+        private readonly ConcurrentDictionary<long, User> _users = new();
+
+        /// <summary>Who <paramref name="user"/> is (name, username), as getChatMember and getChatAdministrators answer it.</summary>
+        internal void Know(User user) => _users[user.Id] = user;
+
         internal MemberState GetMember(long chatId, long userId) =>
             _members.TryGetValue((chatId, userId), out var state) ? state : MemberState.Unknown;
 
@@ -410,7 +415,9 @@ namespace Enforcer5.Tests.Harness
 
         private ChatMember ChatMember(long chatId, long userId)
         {
-            var user = new User { Id = userId, FirstName = $"User{userId}", IsBot = userId == Me.Id };
+            var user = userId == Me.Id ? Me
+                : _users.TryGetValue(userId, out var known) ? known
+                : new User { Id = userId, FirstName = $"User{userId}" };
             if (userId == Me.Id)
                 return new ChatMemberAdministrator { User = user, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = true };
             return GetMember(chatId, userId) switch

@@ -67,6 +67,13 @@ namespace Enforcer5.Helpers
                 return Entries.TryGetValue(chatId, out var entry) && entry.Admins != null && entry.Admins.Any(a => a.User.Id == userId);
         }
 
+        /// <summary>The list at hand, however old, never a lookup; null when there is none.</summary>
+        internal static IReadOnlyList<ChatMember> Known(long chatId)
+        {
+            lock (Lock)
+                return Entries.TryGetValue(chatId, out var entry) ? entry.Admins : null;
+        }
+
         private static async Task<List<ChatMember>> LoadAsync(long chatId)
         {
             // Off the caller's stack, so the lock is never held across the call.

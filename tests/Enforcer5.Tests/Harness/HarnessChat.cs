@@ -208,6 +208,7 @@ namespace Enforcer5.Tests.Harness
         {
             var user = new HarnessUser(id ?? 100000 + Telegram.NextMessageId(), firstName, username, lastName, languageCode, isBot);
             Telegram.SetMember(ChatId, user.Id, state);
+            Telegram.Know(user.ToUser());
             return user;
         }
 

@@ -451,7 +451,16 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
    `first_post_media` and `posted_soon` (60s after `joined`) come from the stats' message count, so they
    cost one read on a first message only. `joined_during_raid` on joins while `RaidGuard.Quiet`. Edits run
    them too. No new strings: the sign names were added in step 7.
-10. Name signs.
+10. Name signs. **As built (2026-10-28):** `Detection/NameSigns`. Names (display name and username, either way
+    round) folded by `MessageFingerprint.Normalize` and compared with the group's admins (`AdminDirectory`) and
+    bots (bots among the admins, bots seen joining, kept in memory, 20 a group, and this bot): the same (3+
+    letters), one letter apart counting a swap as one (5 to 12 letters; two for longer names), or the admin's
+    name with only staff words added ("Daniel | Support", "daniel_admin"). `name_keyword` is the staff words
+    preset's test (admin, support, official, moderator, helpdesk, customer care). Checked on join (service
+    message and member update; the admin list is looked up) and on every message and edit against the list at
+    hand (a group without one gets one lookup every 10 minutes), so a rename shows on the next message. A name
+    that matched is remembered a day per member, so it is recorded once. Both signs are for new members only,
+    as designed. The report line names whom the name copies. No new strings.
 11. Profile and channel queue.
 12. Banned media.
 13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`.
