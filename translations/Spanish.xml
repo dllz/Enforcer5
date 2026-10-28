@@ -1154,4 +1154,37 @@
   <string key="editType_other">
     <value>multimedia</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Prohíbe un archivo en este grupo: responde a una foto, vídeo, GIF, sticker o archivo con /banmedia, y a quien lo vuelva a publicar (salvo administradores y miembros aprobados) se le borrará. El mensaje al que respondes también se borra. Banear o expulsar a alguien respondiendo a su archivo, o pulsar Banear en un reporte sobre él, también prohíbe el archivo. /banmedia solo dice cuántos archivos están prohibidos; /unbanmedia quita una prohibición.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Quita la prohibición de un archivo: responde con /unbanmedia a un mensaje con ese archivo. /unbanmedia all quita todas las prohibiciones de archivos de este grupo.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Prohibir un archivo en este grupo</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Quitar la prohibición de un archivo</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Archivos prohibidos en este grupo: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Ese mensaje no tiene foto, vídeo, GIF, sticker ni archivo que prohibir. Responde a uno con /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Prohibido: a quien vuelva a publicar este archivo aquí se le borrará.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Este archivo ya estaba prohibido aquí.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Se quitó la prohibición de este archivo.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Este archivo no está prohibido aquí.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Se quitó la prohibición de {0} archivos.</value>
+  </string>
 </strings>

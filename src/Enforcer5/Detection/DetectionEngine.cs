@@ -271,6 +271,7 @@ namespace Enforcer5.Detection
             MessageSigns.ResetForTests();
             NameSigns.ResetForTests();
             ProfileSigns.ResetForTests();
+            BannedMedia.ResetForTests();
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();

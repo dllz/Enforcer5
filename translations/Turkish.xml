@@ -2182,4 +2182,37 @@
   <string key="editType_other">
     <value>medya</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Bu grupta bir dosyayı yasaklar: bir fotoğraf, video, GIF, çıkartma veya dosyaya /banmedia ile yanıt ver; onu tekrar gönderen herkesin (yöneticiler ve onaylı üyeler hariç) mesajı silinir. Yanıt verdiğin mesaj da silinir. Birini dosyasına yanıt vererek yasaklamak veya atmak ya da onunla ilgili bir rapordaki Yasakla düğmesi de dosyayı yasaklar. Yalnızca /banmedia kaç dosyanın yasaklı olduğunu söyler; /unbanmedia bir yasağı kaldırır.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Bir dosyanın yasağını kaldırır: o dosyanın olduğu bir mesaja /unbanmedia ile yanıt ver. /unbanmedia all bu gruptaki tüm dosya yasaklarını kaldırır.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Bu grupta bir dosyayı yasakla</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Bir dosyanın yasağını kaldır</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Bu grupta yasaklı dosyalar: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>O mesajda yasaklanacak fotoğraf, video, GIF, çıkartma veya dosya yok. Birine /banmedia ile yanıt ver.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Yasaklandı: bu dosyayı burada tekrar gönderen herkesin mesajı silinir.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Bu dosya burada zaten yasaklıydı.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Bu dosyanın yasağı kaldırıldı.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Bu dosya burada yasaklı değil.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>{0} dosyanın yasağı kaldırıldı.</value>
+  </string>
 </strings>

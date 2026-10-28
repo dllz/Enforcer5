@@ -2153,4 +2153,37 @@ exaple: /{0}
   <string key="editType_other">
     <value>رسانه</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>یک فایل را در این گروه ممنوع می‌کند: با /banmedia به یک عکس، ویدیو، گیف، استیکر یا فایل پاسخ دهید، و هر کسی دوباره آن را بفرستد (جز مدیران و اعضای تأییدشده) پیامش حذف می‌شود. پیامی که به آن پاسخ می‌دهید هم حذف می‌شود. مسدود یا اخراج کردن کسی با پاسخ به فایلش، یا زدن مسدود روی گزارشی درباره آن، هم فایل را ممنوع می‌کند. /banmedia به‌تنهایی می‌گوید چند فایل ممنوع است؛ /unbanmedia ممنوعیت را برمی‌دارد.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>ممنوعیت یک فایل را برمی‌دارد: با /unbanmedia به پیامی که آن فایل را دارد پاسخ دهید. /unbanmedia all همه ممنوعیت‌های فایل این گروه را برمی‌دارد.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>ممنوع کردن یک فایل در این گروه</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>برداشتن ممنوعیت یک فایل</value>
+  </string>
+  <string key="banMediaCount">
+    <value>فایل‌های ممنوع در این گروه: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>آن پیام عکس، ویدیو، گیف، استیکر یا فایلی برای ممنوع کردن ندارد. با /banmedia به یکی از آنها پاسخ دهید.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>ممنوع شد: هر کسی دوباره این فایل را اینجا بفرستد، پیامش حذف می‌شود.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>این فایل از قبل اینجا ممنوع بود.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>ممنوعیت این فایل برداشته شد.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>این فایل اینجا ممنوع نیست.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>ممنوعیت {0} فایل برداشته شد.</value>
+  </string>
 </strings> 

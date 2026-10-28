@@ -2169,4 +2169,37 @@
   <string key="editType_other">
     <value>mídia</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Proíbe um arquivo neste grupo: responda a uma foto, vídeo, GIF, figurinha ou arquivo com /banmedia, e quem o postar de novo (exceto admins e membros aprovados) terá ele apagado. A mensagem a que você responde também é apagada. Banir ou expulsar alguém respondendo ao arquivo dele, ou Banir numa denúncia sobre ele, também proíbe o arquivo. /banmedia sozinho diz quantos arquivos estão proibidos; /unbanmedia retira uma proibição.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Retira a proibição de um arquivo: responda com /unbanmedia a uma mensagem com esse arquivo. /unbanmedia all retira todas as proibições de arquivos deste grupo.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Proibir um arquivo neste grupo</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Retirar a proibição de um arquivo</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Arquivos proibidos neste grupo: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Essa mensagem não tem foto, vídeo, GIF, figurinha ou arquivo para proibir. Responda a um deles com /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Proibido: quem postar este arquivo aqui de novo terá ele apagado.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Este arquivo já estava proibido aqui.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>A proibição deste arquivo foi retirada.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Este arquivo não está proibido aqui.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Retirada a proibição de {0} arquivos.</value>
+  </string>
 </strings>

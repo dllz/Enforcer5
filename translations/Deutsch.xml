@@ -2213,6 +2213,39 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="editType_other">
     <value>Medien</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Sperrt eine Datei in dieser Gruppe: Antworte mit /banmedia auf ein Foto, Video, GIF, einen Sticker oder eine Datei, und wer sie erneut postet (außer Admins und freigegebenen Mitgliedern), dem wird sie gelöscht. Der Beitrag, auf den du antwortest, wird ebenfalls gelöscht. Wer jemanden mit einer Antwort auf dessen Datei bannt oder kickt oder auf einer Meldung dazu Bannen drückt, sperrt die Datei auch. /banmedia allein sagt, wie viele Dateien gesperrt sind; /unbanmedia hebt eine Sperre auf.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Hebt die Sperre einer Datei auf: Antworte mit /unbanmedia auf eine Nachricht mit dieser Datei. /unbanmedia all hebt alle Dateisperren dieser Gruppe auf.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Eine Datei in dieser Gruppe sperren</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Die Sperre einer Datei aufheben</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Gesperrte Dateien in dieser Gruppe: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Diese Nachricht hat kein Foto, Video, GIF, keinen Sticker und keine Datei zum Sperren. Antworte mit /banmedia auf eine.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Gesperrt: Wer diese Datei hier erneut postet, dem wird sie gelöscht.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Diese Datei war hier schon gesperrt.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Die Sperre dieser Datei ist aufgehoben.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Diese Datei ist hier nicht gesperrt.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Sperre von {0} Dateien aufgehoben.</value>
+  </string>
 </strings>
 
 

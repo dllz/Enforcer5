@@ -476,7 +476,16 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     `bio_phone`, `personal_channel`, `birthdate`, `emoji_status`, `business_location`; the personal channel id; the bio's
     script) and `channel_profiles` (id, type, username, flags, member count, linked chat); bios, titles and
     descriptions stay in memory for a day, which is what `/filter test <bio or channel rule>` tries. /privacy says so.
-12. Banned media.
+12. Banned media. **As built (2026-10-28):** `Detection/BannedMedia`, table `banned_media` (group, `file_unique_id`, type,
+    `pdq_hash` for the ML step, added by, source `ban`/`report`/`command`; at most 2000 a group, the oldest dropped). A
+    file is banned when an admin bans, tempbans or kicks someone with a command replying to it (`Decisions`), presses Ban
+    on a Detection report about a post that had one (its record from step 8, looked for over the last 3 days), or
+    replies to it with `/banmedia` (which deletes that post unless an admin made it). `/banmedia` alone gives the count,
+    `/unbanmedia` as a reply lifts one ban, `/unbanmedia all` every one. Posting it again, or editing a post into it, is
+    `banned_media`: deleted for everyone but admins and approved members, **live from day one** (an admin chose it,
+    so it acts while the group still watches too). Each group's list is kept in memory, read from PostgreSQL on first
+    use and every 10 minutes (when the other edition's additions show), so a media message costs a set lookup only.
+    Bans in the Telegram app carry no message, so they ban no file. Strings: 11 keys.
 13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`.
 14. `member_signals`, implicit labels, reputation, retention, `/detectstats`, `/detectreview`,
     `/channelrep`.

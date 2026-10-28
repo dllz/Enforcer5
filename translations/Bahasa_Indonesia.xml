@@ -2402,4 +2402,37 @@
   <string key="editType_other">
     <value>media</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Memblokir file di grup ini: balas foto, video, GIF, stiker, atau file dengan /banmedia, dan siapa pun yang mengirimnya lagi (kecuali admin dan anggota yang disetujui) akan dihapus pesannya. Pesan yang kamu balas juga dihapus. Ban atau kick seseorang dengan membalas file mereka, atau Ban pada laporan tentangnya, juga memblokir file itu. /banmedia saja menunjukkan berapa file yang diblokir; /unbanmedia mencabut blokir.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Mencabut blokir sebuah file: balas pesan berisi file itu dengan /unbanmedia. /unbanmedia all mencabut semua blokir file di grup ini.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Blokir file di grup ini</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Cabut blokir file</value>
+  </string>
+  <string key="banMediaCount">
+    <value>File yang diblokir di grup ini: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Pesan itu tidak berisi foto, video, GIF, stiker, atau file untuk diblokir. Balas salah satunya dengan /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Diblokir: siapa pun yang mengirim file ini lagi di sini akan dihapus pesannya.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>File ini sudah diblokir di sini.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Blokir file ini sudah dicabut.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>File ini tidak diblokir di sini.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Blokir dicabut dari {0} file.</value>
+  </string>
 </strings>

@@ -1864,4 +1864,37 @@ Example:
   <string key="editType_other">
     <value>媒体</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>在本群封禁一个文件：用 /banmedia 回复一张图片、视频、GIF、贴纸或文件，之后任何人再发（管理员和已批准成员除外）都会被删除。你回复的那条消息也会被删除。回复某人的文件来封禁或踢出他，或在关于它的报告上点封禁，也会封禁这个文件。只发 /banmedia 会告诉你封禁了多少文件；/unbanmedia 解除封禁。</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>解除一个文件的封禁：用 /unbanmedia 回复含有该文件的消息。/unbanmedia all 解除本群所有文件的封禁。</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>在本群封禁一个文件</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>解除一个文件的封禁</value>
+  </string>
+  <string key="banMediaCount">
+    <value>本群封禁的文件：{0} 个。</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>那条消息没有可以封禁的图片、视频、GIF、贴纸或文件。用 /banmedia 回复其中一个。</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>已封禁：之后任何人在这里再发这个文件都会被删除。</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>这个文件在这里已经被封禁了。</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>这个文件的封禁已解除。</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>这个文件在这里没有被封禁。</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>已解除 {0} 个文件的封禁。</value>
+  </string>
 </strings>

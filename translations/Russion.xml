@@ -1904,6 +1904,39 @@ $title - заменяется названием группы.
   <string key="editType_other">
     <value>медиа</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Запрещает файл в этой группе: ответь на фото, видео, GIF, стикер или файл командой /banmedia, и у любого, кто отправит его снова (кроме админов и одобренных участников), он будет удалён. Сообщение, на которое ты отвечаешь, тоже удаляется. Бан или исключение кого-то ответом на его файл, или «Бан» в отчёте о нём, тоже запрещает файл. Просто /banmedia показывает, сколько файлов запрещено; /unbanmedia снимает запрет.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Снимает запрет с файла: ответь командой /unbanmedia на сообщение с этим файлом. /unbanmedia all снимает все запреты на файлы в этой группе.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Запретить файл в этой группе</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Снять запрет с файла</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Запрещённых файлов в этой группе: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>В этом сообщении нет фото, видео, GIF, стикера или файла, которые можно запретить. Ответь на одно из них командой /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Запрещено: у любого, кто снова отправит этот файл здесь, он будет удалён.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Этот файл уже был запрещён здесь.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Запрет с этого файла снят.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Этот файл здесь не запрещён.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Снят запрет с файлов: {0}.</value>
+  </string>
 </strings>
 
   

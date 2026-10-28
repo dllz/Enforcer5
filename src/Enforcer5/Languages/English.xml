@@ -3116,6 +3116,39 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="hcommandtrust">
     <value>Restores a member set back to new with /untrust: they count by their messages and days again. Reply to them, or give their id or @username.</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Bans a file in this group: reply to a photo, video, GIF, sticker or file with /banmedia, and whoever posts it again (anyone but admins and approved members) has it deleted. The post you reply to is deleted too. Banning or kicking someone with a reply to their file, or Ban on a report about it, bans the file as well. /banmedia alone says how many files are banned; /unbanmedia lifts a ban.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Lifts the ban on a file: reply to a message with that file with /unbanmedia. /unbanmedia all lifts every ban on files in this group.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Ban a file in this group</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Lift the ban on a file</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Files banned in this group: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>That message has no photo, video, GIF, sticker or file to ban. Reply to one with /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Banned: whoever posts this file here again has it deleted.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>This file was already banned here.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>The ban on this file is lifted.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>This file is not banned here.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Lifted the ban on {0} files.</value>
+  </string>
   <string key="cmduntrust">
     <value>Set a member back to new</value>
   </string>

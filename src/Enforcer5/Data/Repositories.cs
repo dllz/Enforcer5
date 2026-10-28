@@ -70,6 +70,10 @@ namespace Enforcer5.Data
         internal static IProfileRepository Profiles { get; set; } =
             new PostgresProfileRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. The files admins banned in each group (Detection/BannedMedia).
+        internal static IBannedMediaRepository BannedMedia { get; set; } =
+            new PostgresBannedMediaRepository(() => Storage.PostgresStorage.Database);
+
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 

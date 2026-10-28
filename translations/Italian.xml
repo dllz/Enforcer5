@@ -2161,4 +2161,37 @@
   <string key="editType_other">
     <value>media</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Vieta un file in questo gruppo: rispondi a una foto, un video, una GIF, uno sticker o un file con /banmedia, e a chi lo pubblica di nuovo (tranne admin e membri approvati) viene cancellato. Anche il messaggio a cui rispondi viene cancellato. Bannare o espellere qualcuno rispondendo al suo file, o premere Banna su una segnalazione che lo riguarda, vieta anche il file. /banmedia da solo dice quanti file sono vietati; /unbanmedia toglie un divieto.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Toglie il divieto su un file: rispondi con /unbanmedia a un messaggio con quel file. /unbanmedia all toglie tutti i divieti sui file di questo gruppo.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Vieta un file in questo gruppo</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Togli il divieto su un file</value>
+  </string>
+  <string key="banMediaCount">
+    <value>File vietati in questo gruppo: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Quel messaggio non ha foto, video, GIF, sticker o file da vietare. Rispondi a uno di questi con /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Vietato: a chi pubblica di nuovo questo file qui viene cancellato.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Questo file era già vietato qui.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Il divieto su questo file è stato tolto.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Questo file non è vietato qui.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Tolto il divieto su {0} file.</value>
+  </string>
 </strings>

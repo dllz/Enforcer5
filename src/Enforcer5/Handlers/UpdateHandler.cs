@@ -52,6 +52,7 @@ namespace Enforcer5.Handlers
                     Detection.FilterCheck.OnMessage(editCtx);
                     Detection.MessageSigns.OnMessage(editCtx);
                     Detection.NameSigns.OnMessage(editCtx);
+                    Detection.BannedMedia.OnMessage(editCtx);
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
                     await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
@@ -210,6 +211,8 @@ namespace Enforcer5.Handlers
                         Detection.MessageSigns.OnMessage(ctx);
                         // A name that copies an admin or a bot, or claims to be staff, changed since joining (step 10).
                         Detection.NameSigns.OnMessage(ctx);
+                        // A file an admin banned here, posted again (step 12).
+                        Detection.BannedMedia.OnMessage(ctx);
                     }
 
                     // The group an admin picked for the settings menu (/menu in private).

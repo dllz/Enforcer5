@@ -505,6 +505,19 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.IncidentId, x.OffsetMs }, "raid_events_timeline_idx");
             });
 
+            modelBuilder.Entity<BannedMediaEntity>(entity =>
+            {
+                entity.ToTable("banned_media", table =>
+                    table.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command')"));
+                entity.HasKey(x => new { x.GroupId, x.MediaUniqueId });
+                entity.Property(x => x.MediaType).IsRequired();
+                entity.Property(x => x.Source).IsRequired();
+                entity.Property(x => x.AddedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AddedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.AddedAt }, "banned_media_group_added_idx");
+            });
+
             modelBuilder.Entity<AccountProfileFlagsEntity>(entity =>
             {
                 entity.ToTable("account_profile_flags");

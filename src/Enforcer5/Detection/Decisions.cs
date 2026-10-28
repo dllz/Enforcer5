@@ -94,6 +94,9 @@ namespace Enforcer5.Detection
                     // Read, never kept: only whether it names spam, ads, scams and the like.
                     ReasonIsAbuse = label == "bad" && AbuseWords.Mentions(reason)
                 };
+                // An admin banned or kicked someone replying to a file: the file is banned in the group (step 12).
+                if (label == "bad" && action is "ban" or "tempban" or "kick" && actorId != null && fingerprint?.MediaUniqueId != null)
+                    BannedMedia.Add(chatId, fingerprint.MediaUniqueId, fingerprint.ContentType, actorId, "ban");
                 HistoryWriter.Enqueue(async () =>
                     {
                         // Once per decision: the other edition may have recorded an app change first.

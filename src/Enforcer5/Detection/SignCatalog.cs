@@ -70,7 +70,9 @@ namespace Enforcer5.Detection
         internal static readonly SignDefinition BioMention = Add("bio_mention", SignPhase.Enriched, 1, "score");
         internal static readonly SignDefinition PersonalChannel = Add("personal_channel", SignPhase.Enriched, 1, "score");
         internal static readonly SignDefinition ChannelReputation = Add("channel_reputation", SignPhase.Enriched, 3, "score");
-        internal static readonly SignDefinition BannedMedia = Add("banned_media", SignPhase.Inline, 3, "delete", delete: true);
+        // A file an admin banned (step 12): for everyone but admins and approved members, live from day one.
+        internal static readonly SignDefinition BannedMedia = Add("banned_media", SignPhase.Inline, 3, "delete", newcomersOnly: false,
+            delete: true, liveFromDayOne: true);
         internal static readonly SignDefinition SimilarToBanned = Add("similar_to_banned", SignPhase.Enriched, 2, "score");
         internal static readonly SignDefinition JoinedDuringRaid = Add("joined_during_raid", SignPhase.Inline, 1, "score");
 

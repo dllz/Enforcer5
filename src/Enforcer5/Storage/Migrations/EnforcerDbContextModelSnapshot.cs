@@ -62,6 +62,52 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("account_profile_flags", (string)null);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BannedMediaEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("MediaUniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("media_unique_id");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("AddedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("added_by_account_id");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("media_type");
+
+                    b.Property<byte[]>("PdqHash")
+                        .HasColumnType("bytea")
+                        .HasColumnName("pdq_hash");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.HasKey("GroupId", "MediaUniqueId");
+
+                    b.HasIndex("AddedByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "AddedAt" }, "banned_media_group_added_idx");
+
+                    b.ToTable("banned_media", null, t =>
+                        {
+                            t.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.ChannelProfileEntity", b =>
                 {
                     b.Property<long>("TelegramChatId")
@@ -1956,6 +2002,20 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.BannedMediaEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AddedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>

@@ -1756,4 +1756,37 @@ UPDATE LOG
   <string key="editType_other">
     <value>媒體</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>喺呢個群封鎖一個檔案：用 /banmedia 回覆一張相、影片、GIF、貼圖或者檔案，之後邊個再發佢（管理員同已批准成員除外）都會被刪除。你回覆嗰條訊息都會刪除。回覆某人嘅檔案去封鎖或者踢走佢，或者喺關於佢嘅報告撳封鎖，都會封鎖嗰個檔案。只打 /banmedia 會講有幾多個檔案被封鎖；/unbanmedia 解除封鎖。</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>解除封鎖一個檔案：用 /unbanmedia 回覆有嗰個檔案嘅訊息。/unbanmedia all 解除呢個群所有檔案封鎖。</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>喺呢個群封鎖一個檔案</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>解除封鎖一個檔案</value>
+  </string>
+  <string key="banMediaCount">
+    <value>呢個群被封鎖嘅檔案：{0} 個。</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>嗰條訊息冇相、影片、GIF、貼圖或者檔案可以封鎖。用 /banmedia 回覆其中一個。</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>已封鎖：之後邊個喺度再發呢個檔案都會被刪除。</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>呢個檔案喺度已經封鎖咗。</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>呢個檔案嘅封鎖已經解除。</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>呢個檔案喺度冇被封鎖。</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>已解除 {0} 個檔案嘅封鎖。</value>
+  </string>
 </strings>
