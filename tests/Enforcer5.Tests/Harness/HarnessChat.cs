@@ -288,6 +288,23 @@ namespace Enforcer5.Tests.Harness
         }
 
         /// <summary>
+        /// <paramref name="original"/> edited by its sender into <paramref name="now"/> (a message built with
+        /// <see cref="Text"/> or <see cref="Photo"/>, whose content is taken): Telegram sends the original id
+        /// and date with the edit date. Waits as <see cref="SendAsync"/> does.
+        /// </summary>
+        internal async Task<Message> EditAsync(Message original, Message now)
+        {
+            now.Id = original.Id;
+            now.Date = original.Date;
+            now.EditDate = Clock.UtcNow;
+            now.Chat = original.Chat;
+            now.From = original.From;
+            Route(new Update { Id = _world.NextUpdateId++, EditedMessage = now });
+            await CompleteAsync();
+            return now;
+        }
+
+        /// <summary>
         /// <paramref name="user"/> joins the chat (a service message from them); see
         /// <see cref="SendAsync"/>.
         /// </summary>

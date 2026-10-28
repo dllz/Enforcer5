@@ -21,6 +21,9 @@ namespace Enforcer5.Detection
         /// linked to the detections from before it.
         /// </summary>
         internal DateTime? At { get; init; }
+
+        /// <summary>What the admins' report says about it, in the group's language; never message content.</summary>
+        internal string Detail { get; init; }
     }
 
     /// <summary>What a ported check did about a sign (<see cref="SignDefinition.Ported"/>).</summary>
@@ -79,7 +82,7 @@ namespace Enforcer5.Detection
                 if (member.Trust is TrustLevel.Admin or TrustLevel.Approved) return null;
                 if (member.Trust == TrustLevel.Established)
                 {
-                    if (sign.NewcomersOnly) return null;
+                    if (sign.NewcomersOnly || settings.SkipEstablished) return null;
                     if (Methods.IsGroupAdmin(userId, chatId)) return null;
                 }
                 else if (Methods.IsGroupAdmin(userId, chatId)) return null;
@@ -104,7 +107,7 @@ namespace Enforcer5.Detection
                 else change = MemberScores.Add(chatId, userId, sign.Name, weight);
 
                 var action = settings.Action;
-                var deleted = settings.Delete || action == "delete";
+                var deleted = settings.Delete || action == "delete" || settings.DeleteNewcomers && member.Trust == TrustLevel.New;
                 var reported = settings.Report || action == "report";
                 if (change.Counted)
                 {
@@ -119,7 +122,8 @@ namespace Enforcer5.Detection
                     Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported)
                     {
                         Member = message?.From?.Id == userId ? message.From : null,
-                        Score = change.After
+                        Score = change.After,
+                        Detail = hit.Detail
                     });
 
                 Record(chatId, userId, message, sign, hit, weight, outcome, member, now, policy);

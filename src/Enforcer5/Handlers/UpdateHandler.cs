@@ -44,9 +44,14 @@ namespace Enforcer5.Handlers
                     var edited = update.EditedMessage;
                     if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
                     if (!BotSenderFilter.Accept(edited)) return;
-                    if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old to matter
                     var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
-                    if (editCtx.Complete) await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
+                    if (!editCtx.Complete) return;
+                    // The edit rules, for posts of any age: an old post edited is the attack they are for.
+                    Bot.Dispatch(() => Detection.EditCheck.OnEditAsync(editCtx), "EditCheck");
+                    // The filters on what it says now.
+                    Detection.FilterCheck.OnMessage(editCtx);
+                    if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
+                    await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
                 case UpdateType.MyChatMember:
                     // The bot's own status or rights changed: the admin list is asked again, and jobs
@@ -197,6 +202,8 @@ namespace Enforcer5.Handlers
 
                         // Text, captions and the sender's name, for every kind of message.
                         if (update.Message.Type != MessageType.NewChatMembers) Detection.FilterCheck.OnMessage(ctx);
+                        // What a media post was, so an edit that swaps it can be seen (Detection step 8).
+                        Detection.EditCheck.Record(ctx);
                     }
 
                     // The group an admin picked for the settings menu (/menu in private).

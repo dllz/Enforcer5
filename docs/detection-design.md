@@ -433,7 +433,15 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
      new from being offered back. `/user` shows both records for the last 90 days.
    - The number of members who become new on a raise is not shown: message counts before the PostgreSQL
      rollout (25 Oct) are only in Redis, so it cannot be counted cheaply.
-8. Edit rules.
+8. Edit rules. **As built (2026-10-28):** `Detection/EditCheck`. Media is recorded for everyone but admins
+   the bot knows without a lookup; `media:since:{chat}` marks when recording began, so text turned into
+   media is only called a swap for posts made since (an older post might have been media not recorded).
+   Edits of posts of any age are checked (the 2-day limit stays for raid detection only), and every
+   edit goes through the filters. `edit_late` by default deletes for new members and reports for
+   everyone; /menu → Detection → Edits turns late edits off, the deleting, or the reporting of
+   established members (`SignPolicy.DeleteNewcomers`, `SkipEstablished`). The report line says what
+   changed and how long after posting; after a restart a report rebuilt from `detections` loses that
+   detail. Both signs are abuse.
 9. Message signs.
 10. Name signs.
 11. Profile and channel queue.

@@ -182,7 +182,10 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                     new
                     {
                         GroupId = groupId, Key = SignPrefix + name, sign.Enabled, sign.Action, Weight = (short)Math.Clamp(sign.Weight, 0, short.MaxValue),
-                        Settings = JsonSerializer.Serialize(new SignJson { Delete = sign.Delete, Report = sign.Report }, Json)
+                        Settings = JsonSerializer.Serialize(new SignJson
+                        {
+                            Delete = sign.Delete, Report = sign.Report, DeleteNewcomers = sign.DeleteNewcomers, SkipEstablished = sign.SkipEstablished
+                        }, Json)
                     }, transaction));
             }
             await connection.ExecuteAsync(new CommandDefinition(@"
@@ -359,7 +362,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             {
                 if (!key.StartsWith(SignPrefix, StringComparison.Ordinal)) continue;
                 var extra = row.Settings != null ? JsonSerializer.Deserialize<SignJson>(row.Settings, Json) ?? new SignJson() : new SignJson();
-                signs[key.Substring(SignPrefix.Length)] = new SignPolicy(row.Enabled, row.Action ?? "none", row.Weight ?? 0, extra.Delete, extra.Report);
+                signs[key.Substring(SignPrefix.Length)] = new SignPolicy(row.Enabled, row.Action ?? "none", row.Weight ?? 0, extra.Delete, extra.Report,
+                    extra.DeleteNewcomers, extra.SkipEstablished);
             }
             return new EngineSettings(
                 engine.ObserveUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(engine.ObserveUntil.Value, DateTimeKind.Utc)) : null,
@@ -436,6 +440,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
         {
             public bool Delete { get; set; }
             public bool Report { get; set; }
+            public bool DeleteNewcomers { get; set; }
+            public bool SkipEstablished { get; set; }
         }
 
         private sealed class FiltersJson

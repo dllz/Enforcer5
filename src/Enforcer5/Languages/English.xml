@@ -3148,4 +3148,64 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="userRecord">
     <value>Last {0} days: {1} actions for spam or abuse, {2} for this group's own rules.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Edits</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Edits\nA known attack edits old posts into media against Telegram's terms, which other accounts then report to get the group deleted.\n\nMedia swapped for other media, or text turned into media, within {1} days of posting: always reported and deleted.\n\nLate edits, more than {0} minutes after posting: what happens is up to you. Admins and approved members are never checked.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Late edits</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Delete new members' late edits</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Report established members' late edits</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0} replaced by {1}, {2} after posting</value>
+  </string>
+  <string key="editLateDetail">
+    <value>{0} after posting</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} min</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} h</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} days</value>
+  </string>
+  <string key="editType_text">
+    <value>text</value>
+  </string>
+  <string key="editType_photo">
+    <value>photo</value>
+  </string>
+  <string key="editType_video">
+    <value>video</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>sticker</value>
+  </string>
+  <string key="editType_document">
+    <value>file</value>
+  </string>
+  <string key="editType_voice">
+    <value>voice message</value>
+  </string>
+  <string key="editType_audio">
+    <value>audio</value>
+  </string>
+  <string key="editType_videonote">
+    <value>video message</value>
+  </string>
+  <string key="editType_other">
+    <value>media</value>
+  </string>
 </strings>

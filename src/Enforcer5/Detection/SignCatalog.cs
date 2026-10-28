@@ -77,8 +77,9 @@ namespace Enforcer5.Detection
         // Edit rules (section 4): for everyone but admins and approved members, live from day one.
         internal static readonly SignDefinition EditSwap = Add("edit_swap", SignPhase.Inline, 3, "delete", newcomersOnly: false,
             delete: true, report: true, liveFromDayOne: true);
-        internal static readonly SignDefinition EditLate = Add("edit_late", SignPhase.Inline, 1, "report", newcomersOnly: false,
-            report: true, liveFromDayOne: true);
+        // Late edits: report and delete for newcomers, report for established members (Daniel); each group can change it.
+        internal static readonly SignDefinition EditLate = Register(Add("edit_late", SignPhase.Inline, 1, "report", newcomersOnly: false,
+            report: true, liveFromDayOne: true) with { Default = new SignPolicy(true, "report", 1, Report: true, DeleteNewcomers: true) });
 
         // The checks that existed before the engine (build step 4). Each applies to whom it always has and
         // does what its own settings say; the engine records it. They add nothing to the score (weight 0),

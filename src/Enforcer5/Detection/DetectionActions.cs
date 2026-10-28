@@ -16,6 +16,9 @@ namespace Enforcer5.Detection
 
         /// <summary>Their score after the sign, for the report.</summary>
         internal int Score { get; init; }
+
+        /// <summary>What the report says about the sign (what an edit changed), or null.</summary>
+        internal string Detail { get; init; }
     }
 
     /// <summary>Carries out the engine's decisions. Replaceable in tests.</summary>
@@ -35,7 +38,7 @@ namespace Enforcer5.Detection
         public void Execute(DetectionAction action)
         {
             if (action.Report)
-                DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score);
+                DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail);
             if (action.Action is "none" or "score" or "report" && !action.Delete) return;
             LogAction(action);
             Bot.DispatchAction(() =>

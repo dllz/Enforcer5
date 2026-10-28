@@ -32,6 +32,10 @@ namespace Enforcer5.Data
             if (detections.Count == 0) return 0;
             await using var connection = await Database.OpenConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
+            // The lock RecordLabelAsync takes: written at the same moment, each would miss the other and the
+            // decision would never be linked to the signs before it.
+            await connection.ExecuteAsync(new CommandDefinition("SELECT pg_advisory_xact_lock(@Lock)",
+                new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
             // Accounts and groups the principal flush has not written yet are skipped, as raid capture does.
             var ids = (await connection.QueryAsync<long>(new CommandDefinition(@"
 WITH input AS (

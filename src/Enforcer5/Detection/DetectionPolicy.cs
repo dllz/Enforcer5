@@ -224,7 +224,10 @@ namespace Enforcer5.Detection
     /// <param name="Weight">What it adds to the member's score.</param>
     /// <param name="Delete">The message goes too, whatever the action.</param>
     /// <param name="Report">The admins are told, whatever the score.</param>
-    internal sealed record SignPolicy(bool Enabled, string Action, int Weight, bool Delete = false, bool Report = false)
+    /// <param name="DeleteNewcomers">The message goes too when the member is new (late edits: build step 8).</param>
+    /// <param name="SkipEstablished">Established members are left out of a sign that otherwise applies to everyone.</param>
+    internal sealed record SignPolicy(bool Enabled, string Action, int Weight, bool Delete = false, bool Report = false,
+        bool DeleteNewcomers = false, bool SkipEstablished = false)
     {
         internal static SignPolicy Off { get; } = new SignPolicy(false, "none", 0);
     }

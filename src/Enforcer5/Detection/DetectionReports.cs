@@ -47,6 +47,7 @@ namespace Enforcer5.Detection
             internal ReportKey Key;
             internal string Name;
             internal readonly List<(string Sign, int Count)> Signs = new();
+            internal readonly Dictionary<string, string> Details = new();
             internal int Score;
             internal long? MessageId;
             internal readonly List<ReportCopy> Copies = new();
@@ -77,13 +78,16 @@ namespace Enforcer5.Detection
         /// </summary>
         /// <param name="member">Who they are, when the caller has it; else their name is looked up.</param>
         /// <param name="score">Their score now, 0 when the sign does not score.</param>
-        internal static void Report(long chatId, long userId, long? messageId, string sign, User member = null, int score = 0)
+        /// <param name="detail">What the report says about the sign (what an edit changed), in the group's language.</param>
+        internal static void Report(long chatId, long userId, long? messageId, string sign, User member = null, int score = 0,
+            string detail = null)
         {
             if (chatId > 0 || userId == 0) return;
-            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score), "DetectionReport");
+            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score, detail), "DetectionReport");
         }
 
-        internal static async Task ReportAsync(long chatId, long userId, long? messageId, string sign, User member, int score)
+        internal static async Task ReportAsync(long chatId, long userId, long? messageId, string sign, User member, int score,
+            string detail = null)
         {
             try
             {
@@ -104,6 +108,7 @@ namespace Enforcer5.Detection
                     {
                         if (report.Decision != null) return; // decided: nothing to add
                         report.Add(sign);
+                        if (detail != null) report.Details[sign] = detail;
                         report.Score = Math.Max(report.Score, score);
                         report.MessageId = messageId ?? report.MessageId;
                         ScheduleEdit(report);
@@ -119,6 +124,7 @@ namespace Enforcer5.Detection
                     // What made up their score, then what fired now.
                     foreach (var scored in MemberScores.Signs(chatId, userId).Where(s => s != sign)) report.Add(scored);
                     report.Add(sign);
+                    if (detail != null) report.Details[sign] = detail;
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
                     var copies = await SendAsync(chatId, Text(lang, report, await TitleAsync(chatId)), Buttons(lang, report));
                     report.Copies.AddRange(copies);
@@ -436,7 +442,7 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ text
 
         internal static string Text(XDocument lang, long userId, string name, string title, IReadOnlyList<(string Sign, int Count)> signs,
-            int score, string decisionLine)
+            int score, string decisionLine, IReadOnlyDictionary<string, string> details = null)
         {
             var lines = new List<string>
             {
@@ -446,9 +452,11 @@ namespace Enforcer5.Detection
                 "",
                 Methods.GetLocaleString(lang, "reportSigns")
             };
-            lines.AddRange(signs.Select(s => s.Count > 1
-                ? $"• {SignLabel(lang, s.Sign).FormatHTML()} ×{s.Count}"
-                : $"• {SignLabel(lang, s.Sign).FormatHTML()}"));
+            lines.AddRange(signs.Select(s =>
+            {
+                var line = s.Count > 1 ? $"• {SignLabel(lang, s.Sign).FormatHTML()} ×{s.Count}" : $"• {SignLabel(lang, s.Sign).FormatHTML()}";
+                return details != null && details.TryGetValue(s.Sign, out var detail) ? $"{line} ({detail.FormatHTML()})" : line;
+            }));
             if (score > 0) lines.Add(Methods.GetLocaleString(lang, "reportScore", score));
             if (decisionLine != null) lines.AddRange(new[] { "", decisionLine });
             return string.Join("\n", lines);
@@ -456,7 +464,7 @@ namespace Enforcer5.Detection
 
         private static string Text(XDocument lang, OpenReport report, string title) =>
             Text(lang, report.Key.UserId.Value, report.Name, title, report.Signs, report.Score,
-                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null);
+                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details);
 
         /// <summary>"Banned by …" for a decision: HTML with a link to the admin, or plain text for a button's answer.</summary>
         internal static string DecisionLine(XDocument lang, string decision, long? by, bool html = true)
