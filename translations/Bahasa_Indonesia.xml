@@ -2335,4 +2335,64 @@
   <string key="userRecord">
     <value>{0} hari terakhir: {1} tindakan karena spam atau penyalahgunaan, {2} karena aturan grup ini sendiri.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Editan</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Editan\nSebuah serangan yang dikenal mengedit postingan lama menjadi media yang melanggar ketentuan Telegram, lalu akun lain melaporkannya agar grup dihapus.\n\nMedia yang diganti dengan media lain, atau teks yang diubah menjadi media, dalam {1} hari setelah dikirim: selalu dilaporkan dan dihapus.\n\nEditan terlambat, lebih dari {0} menit setelah dikirim: Anda yang menentukan apa yang terjadi. Admin dan anggota yang disetujui tidak pernah diperiksa.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Editan terlambat</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Hapus editan terlambat anggota baru</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Laporkan editan terlambat anggota lama</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0} diganti {1}, {2} setelah dikirim</value>
+  </string>
+  <string key="editLateDetail">
+    <value>{0} setelah dikirim</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} menit</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} jam</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} hari</value>
+  </string>
+  <string key="editType_text">
+    <value>teks</value>
+  </string>
+  <string key="editType_photo">
+    <value>foto</value>
+  </string>
+  <string key="editType_video">
+    <value>video</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>stiker</value>
+  </string>
+  <string key="editType_document">
+    <value>berkas</value>
+  </string>
+  <string key="editType_voice">
+    <value>pesan suara</value>
+  </string>
+  <string key="editType_audio">
+    <value>audio</value>
+  </string>
+  <string key="editType_videonote">
+    <value>pesan video</value>
+  </string>
+  <string key="editType_other">
+    <value>media</value>
+  </string>
 </strings>

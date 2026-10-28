@@ -2146,6 +2146,66 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="userRecord">
     <value>Letzte {0} Tage: {1} Maßnahmen wegen Spam oder Missbrauch, {2} wegen eigener Regeln dieser Gruppe.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Bearbeitungen</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Bearbeitungen\nEin bekannter Angriff bearbeitet alte Beiträge zu Medien, die gegen die Nutzungsbedingungen von Telegram verstoßen; andere Konten melden sie dann, damit die Gruppe gelöscht wird.\n\nMedien, die durch andere Medien ersetzt werden, oder Text, der zu Medien wird, innerhalb von {1} Tagen nach dem Senden: wird immer gemeldet und gelöscht.\n\nSpäte Bearbeitungen, mehr als {0} Minuten nach dem Senden: Was dann passiert, entscheidest du. Admins und freigegebene Mitglieder werden nie geprüft.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Späte Bearbeitungen</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Späte Bearbeitungen neuer Mitglieder löschen</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Späte Bearbeitungen etablierter Mitglieder melden</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0} durch {1} ersetzt, {2} nach dem Senden</value>
+  </string>
+  <string key="editLateDetail">
+    <value>{0} nach dem Senden</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} Min.</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} Std.</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} Tage</value>
+  </string>
+  <string key="editType_text">
+    <value>Text</value>
+  </string>
+  <string key="editType_photo">
+    <value>Foto</value>
+  </string>
+  <string key="editType_video">
+    <value>Video</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>Sticker</value>
+  </string>
+  <string key="editType_document">
+    <value>Datei</value>
+  </string>
+  <string key="editType_voice">
+    <value>Sprachnachricht</value>
+  </string>
+  <string key="editType_audio">
+    <value>Audio</value>
+  </string>
+  <string key="editType_videonote">
+    <value>Videonachricht</value>
+  </string>
+  <string key="editType_other">
+    <value>Medien</value>
+  </string>
 </strings>
 
 

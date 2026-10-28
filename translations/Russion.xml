@@ -1837,6 +1837,66 @@ $title - заменяется названием группы.
   <string key="userRecord">
     <value>Последние {0} дн.: мер за спам или злоупотребления — {1}, за собственные правила этой группы — {2}.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Правки</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Правки\nИзвестная атака: старые посты правят, превращая их в медиа, нарушающие правила Telegram, а потом другие аккаунты жалуются на них, чтобы группу удалили.\n\nМедиа, заменённое другим медиа, или текст, превращённый в медиа, в течение {1} дн. после отправки: всегда сообщается и удаляется.\n\nПоздние правки, позже чем через {0} мин после отправки: что с ними делать, решаешь ты. Админов и одобренных участников не проверяют никогда.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Поздние правки</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Удалять поздние правки новичков</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Сообщать о поздних правках давних участников</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>замена: {0} на {1}, через {2} после отправки</value>
+  </string>
+  <string key="editLateDetail">
+    <value>через {0} после отправки</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} мин</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} ч</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} дн.</value>
+  </string>
+  <string key="editType_text">
+    <value>текст</value>
+  </string>
+  <string key="editType_photo">
+    <value>фото</value>
+  </string>
+  <string key="editType_video">
+    <value>видео</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>стикер</value>
+  </string>
+  <string key="editType_document">
+    <value>файл</value>
+  </string>
+  <string key="editType_voice">
+    <value>голосовое сообщение</value>
+  </string>
+  <string key="editType_audio">
+    <value>аудио</value>
+  </string>
+  <string key="editType_videonote">
+    <value>видеосообщение</value>
+  </string>
+  <string key="editType_other">
+    <value>медиа</value>
+  </string>
 </strings>
 
   

@@ -2086,4 +2086,64 @@ exaple: /{0}
   <string key="userRecord">
     <value>{0} روز گذشته: {1} اقدام به خاطر اسپم یا سوءاستفاده، {2} به خاطر قوانین خود این گروه.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ ویرایش‌ها</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ ویرایش‌ها\nیک حملهٔ شناخته‌شده پست‌های قدیمی را به رسانه‌ای خلاف قوانین تلگرام ویرایش می‌کند و سپس حساب‌های دیگر آن را گزارش می‌دهند تا گروه حذف شود.\n\nرسانه‌ای که با رسانهٔ دیگری عوض شود، یا متنی که به رسانه تبدیل شود، تا {1} روز پس از ارسال: همیشه گزارش و حذف می‌شود.\n\nویرایش‌های دیرهنگام، بیش از {0} دقیقه پس از ارسال: اینکه چه اتفاقی بیفتد با شماست. مدیران و اعضای تأییدشده هیچ‌وقت بررسی نمی‌شوند.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>ویرایش‌های دیرهنگام</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>حذف ویرایش‌های دیرهنگام اعضای تازه‌وارد</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>گزارش ویرایش‌های دیرهنگام اعضای قدیمی</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0} با {1} عوض شد، {2} پس از ارسال</value>
+  </string>
+  <string key="editLateDetail">
+    <value>{0} پس از ارسال</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} دقیقه</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} ساعت</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} روز</value>
+  </string>
+  <string key="editType_text">
+    <value>متن</value>
+  </string>
+  <string key="editType_photo">
+    <value>عکس</value>
+  </string>
+  <string key="editType_video">
+    <value>ویدیو</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>استیکر</value>
+  </string>
+  <string key="editType_document">
+    <value>فایل</value>
+  </string>
+  <string key="editType_voice">
+    <value>پیام صوتی</value>
+  </string>
+  <string key="editType_audio">
+    <value>صوت</value>
+  </string>
+  <string key="editType_videonote">
+    <value>پیام ویدیویی</value>
+  </string>
+  <string key="editType_other">
+    <value>رسانه</value>
+  </string>
 </strings> 

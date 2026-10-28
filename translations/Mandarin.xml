@@ -1797,4 +1797,64 @@ Example:
   <string key="userRecord">
     <value>最近 {0} 天：{1} 次因垃圾信息或滥用而处理，{2} 次因本群自己的规则。</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ 编辑</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ 编辑\n一种已知的攻击会把旧帖子编辑成违反 Telegram 条款的媒体，然后其他账号举报它们，让群组被删除。\n\n发送后 {1} 天内，媒体被换成其他媒体，或文字变成媒体：总会报告并删除。\n\n延迟编辑，即发送后超过 {0} 分钟才编辑：如何处理由你决定。管理员和已批准的成员永远不会被检查。</value>
+  </string>
+  <string key="editsLateButton">
+    <value>延迟编辑</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>删除新成员的延迟编辑</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>报告老成员的延迟编辑</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0}换成{1}，发送后 {2}</value>
+  </string>
+  <string key="editLateDetail">
+    <value>发送后 {0}</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} 分钟</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} 小时</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} 天</value>
+  </string>
+  <string key="editType_text">
+    <value>文字</value>
+  </string>
+  <string key="editType_photo">
+    <value>图片</value>
+  </string>
+  <string key="editType_video">
+    <value>视频</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>表情</value>
+  </string>
+  <string key="editType_document">
+    <value>文件</value>
+  </string>
+  <string key="editType_voice">
+    <value>语音消息</value>
+  </string>
+  <string key="editType_audio">
+    <value>音频</value>
+  </string>
+  <string key="editType_videonote">
+    <value>视频消息</value>
+  </string>
+  <string key="editType_other">
+    <value>媒体</value>
+  </string>
 </strings>

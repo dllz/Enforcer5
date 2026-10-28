@@ -1689,4 +1689,64 @@ UPDATE LOG
   <string key="userRecord">
     <value>過去 {0} 日：{1} 次因為垃圾訊息或濫用而處理，{2} 次因為本群自己嘅規則。</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ 編輯</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ 編輯\n有一種已知嘅攻擊會將舊帖文編輯成違反 Telegram 條款嘅媒體，然後其他帳戶會檢舉佢哋，令個群組被刪除。\n\n發出後 {1} 日內，媒體換成其他媒體，或者文字變成媒體：一定會報告同刪除。\n\n延遲編輯，即係發出後超過 {0} 分鐘先編輯：點處理由你決定。管理員同已批准嘅成員永遠唔會被檢查。</value>
+  </string>
+  <string key="editsLateButton">
+    <value>延遲編輯</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>刪除新成員嘅延遲編輯</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>報告老成員嘅延遲編輯</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0}換成{1}，發出後 {2}</value>
+  </string>
+  <string key="editLateDetail">
+    <value>發出後 {0}</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} 分鐘</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} 小時</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} 日</value>
+  </string>
+  <string key="editType_text">
+    <value>文字</value>
+  </string>
+  <string key="editType_photo">
+    <value>相片</value>
+  </string>
+  <string key="editType_video">
+    <value>影片</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>貼圖</value>
+  </string>
+  <string key="editType_document">
+    <value>檔案</value>
+  </string>
+  <string key="editType_voice">
+    <value>語音訊息</value>
+  </string>
+  <string key="editType_audio">
+    <value>音訊</value>
+  </string>
+  <string key="editType_videonote">
+    <value>影片訊息</value>
+  </string>
+  <string key="editType_other">
+    <value>媒體</value>
+  </string>
 </strings>

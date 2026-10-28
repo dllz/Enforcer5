@@ -2115,4 +2115,64 @@
   <string key="userRecord">
     <value>Son {0} gün: spam veya kötüye kullanım için {1} işlem, bu grubun kendi kuralları için {2} işlem.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Düzenlemeler</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Düzenlemeler\nBilinen bir saldırı, eski gönderileri Telegram kurallarına aykırı medyaya dönüştürür; ardından başka hesaplar grubu sildirmek için bunları şikâyet eder.\n\nGönderildikten sonraki {1} gün içinde başka bir medyayla değiştirilen medya veya medyaya dönüştürülen metin: her zaman bildirilir ve silinir.\n\nGeç düzenlemeler, gönderildikten {0} dakikadan fazla sonra: ne olacağına siz karar verirsiniz. Yöneticiler ve onaylı üyeler asla kontrol edilmez.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Geç düzenlemeler</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Yeni üyelerin geç düzenlemelerini sil</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Eski üyelerin geç düzenlemelerini bildir</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>{0} yerine {1}, gönderildikten {2} sonra</value>
+  </string>
+  <string key="editLateDetail">
+    <value>gönderildikten {0} sonra</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} dk</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} sa</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} gün</value>
+  </string>
+  <string key="editType_text">
+    <value>metin</value>
+  </string>
+  <string key="editType_photo">
+    <value>fotoğraf</value>
+  </string>
+  <string key="editType_video">
+    <value>video</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>çıkartma</value>
+  </string>
+  <string key="editType_document">
+    <value>dosya</value>
+  </string>
+  <string key="editType_voice">
+    <value>sesli mesaj</value>
+  </string>
+  <string key="editType_audio">
+    <value>ses</value>
+  </string>
+  <string key="editType_videonote">
+    <value>görüntülü mesaj</value>
+  </string>
+  <string key="editType_other">
+    <value>medya</value>
+  </string>
 </strings>

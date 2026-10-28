@@ -1087,4 +1087,64 @@
   <string key="userRecord">
     <value>Últimos {0} días: {1} acciones por spam o abuso, {2} por las reglas propias de este grupo.</value>
   </string>
+  <string key="detectionEditsButton">
+    <value>✏️ Ediciones</value>
+  </string>
+  <string key="editsMenu">
+    <value>✏️ Ediciones\nUn ataque conocido edita publicaciones antiguas y las convierte en multimedia contraria a las condiciones de Telegram, que otras cuentas denuncian después para que eliminen el grupo.\n\nMultimedia cambiada por otra, o texto convertido en multimedia, en los {1} días siguientes a la publicación: siempre se avisa y se borra.\n\nEdiciones tardías, más de {0} minutos después de publicar: tú decides qué pasa. Los administradores y los miembros aprobados nunca se revisan.</value>
+  </string>
+  <string key="editsLateButton">
+    <value>Ediciones tardías</value>
+  </string>
+  <string key="editsDeleteNewButton">
+    <value>Borrar ediciones tardías de miembros nuevos</value>
+  </string>
+  <string key="editsEstablishedButton">
+    <value>Avisar de ediciones tardías de miembros veteranos</value>
+  </string>
+  <string key="editSwapDetail">
+    <value>de {0} a {1}, {2} después de publicarlo</value>
+  </string>
+  <string key="editLateDetail">
+    <value>{0} después de publicarlo</value>
+  </string>
+  <string key="editAgeMinutes">
+    <value>{0} minutos</value>
+  </string>
+  <string key="editAgeHours">
+    <value>{0} horas</value>
+  </string>
+  <string key="editAgeDays">
+    <value>{0} días</value>
+  </string>
+  <string key="editType_text">
+    <value>texto</value>
+  </string>
+  <string key="editType_photo">
+    <value>foto</value>
+  </string>
+  <string key="editType_video">
+    <value>vídeo</value>
+  </string>
+  <string key="editType_gif">
+    <value>GIF</value>
+  </string>
+  <string key="editType_sticker">
+    <value>sticker</value>
+  </string>
+  <string key="editType_document">
+    <value>archivo</value>
+  </string>
+  <string key="editType_voice">
+    <value>mensaje de voz</value>
+  </string>
+  <string key="editType_audio">
+    <value>audio</value>
+  </string>
+  <string key="editType_videonote">
+    <value>videomensaje</value>
+  </string>
+  <string key="editType_other">
+    <value>multimedia</value>
+  </string>
 </strings>
