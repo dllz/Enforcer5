@@ -1,0 +1,1370 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<strings>
+  <language name="简体中文" base="简体中文" owner="ghost404"/>
+  <string key="statusKicked">
+    <value>{0} 已被本群封禁。{1}</value>
+  </string>
+  <string key="statusLeft">
+    <value>{0} 离开了本群。</value>
+  </string>
+  <string key="statusAdministrator">
+    <value>{0} 是一个管理员。</value>
+  </string>
+  <string key="statusCreator">
+    <value>{0} 是群组创建者。</value>
+  </string>
+  <string key="statusUnknown">
+    <value>此用户未在本群组中出现过。</value>
+  </string>
+  <string key="statusMember">
+    <value>{0} 是一个群组成员。</value>
+  </string>
+  <string key="userinfoGlobal">
+    <value><![CDATA[<b>全域封禁信息</b>:\n]]></value>
+  </string>
+  <string key="getkick">
+    <value>踢出：{0}次</value>
+  </string>
+  <string key="getban">
+    <value>封禁：{0}次</value>
+  </string>
+  <string key="gettempban">
+    <value>短时封禁：{0}次</value>
+  </string>
+  <string key="getwarn">
+    <value>因触发警告阈值被踢出：{0}次</value>
+  </string>
+  <string key="getgroupwarn">
+    <value>警告：{0}次</value>
+  </string>
+  <string key="getMediaWarn">
+    <value>媒体警告：{0}次</value>
+  </string>
+  <string key="userinfoGroup">
+    <value><![CDATA[<b>群组信息：{0}</b>:]]></value>
+  </string>
+  <string key="getrtl">
+    <value>因使用LRM字符被踢出：{0}次</value>
+  </string>
+  <string key="getflood">
+    <value>因刷屏被踢出：{0}次</value>
+  </string>
+  <string key="getarab">
+    <value>因使用波斯语被踢出：{0}次</value>
+  </string>
+  <string key="getmedia">
+    <value>因发送已禁止的媒体被踢出：{0}次</value>
+  </string>
+  <string key="getnsfwimage">
+	<value>因发送色情暴力图片被踢出：{0}次</value>
+  </string>
+  <string key="getNothing">
+    <value>什么都没有</value>
+  </string>
+  <string key="botPm">
+    <value>我把消息私聊给你了</value>
+  </string>
+  <string key="noUser">
+    <value>我不知道这是谁</value>
+  </string>
+  <string key="botNotAdmin">
+    <value>我需要本群的管理员权限才能执行这个命令</value>
+  </string>
+  <string key="noReply">
+    <value>请在对别人的回复中使用这个命令。</value>
+  </string>
+  <string key="msgTooLong">
+    <value>消息长度超过了 {0} 字，请适当缩短。</value>
+  </string>
+  <string key="StartMe">
+    <value>激活我</value>
+  </string>
+  <string key="userNotAdmin">
+    <value>你<b>不是</b>本群的管理员</value>
+  </string>
+  <string key="markdownBroken">
+    <value>这段文字的 Markdown 有错误</value>
+  </string>
+  <string key="linkMissing">
+    <value>本群没有设置链接</value>
+  </string>
+  <string key="linkUpdated">
+    <value>链接已更新</value>
+  </string>
+  <string key="linkSet">
+    <value>链接已设置</value>
+  </string>
+  <string key="adminList">
+    <value><![CDATA[<b>创建者</b>: {0}\n<b>管理员</b>:{1}]]></value>
+  </string>
+  <string key="defaultWelcome">
+    <value>你好 {0}，欢迎加入 {1}</value>
+  </string>
+  <string key="noAbout">
+    <value>本群没有设置描述</value>
+  </string>
+  <string key="noRules">
+    <value>本群没有设置规则</value>
+  </string>
+  <string key="rules">
+    <value><![CDATA[\n<b>规则</b>:\n{0}]]></value>
+  </string>
+  <string key="about">
+    <value><![CDATA[\n<b>描述</b>:\n{0}]]></value>
+  </string>
+  <string key="RulesSet">
+    <value>新规则已设置</value>
+  </string>
+  <string key="AboutSet">
+    <value>新描述已设置</value>
+  </string>
+  <string key="extraSaved">
+    <value>{0} 命令已保存</value>
+  </string>
+  <string key="noExtra">
+    <value>没有设置命令</value>
+  </string>
+  <string key="extraList">
+    <value><![CDATA[<b>自定义命令</b>列表:\n{0}]]></value>
+  </string>
+  <string key="extraDeleted">
+    <value>命令已删除</value>
+  </string>
+  <string key="SuccesfulKick">
+    <value>{0} 已被 {1} 踢出。</value>
+  </string>
+  <string key="SuccesfulBan">
+    <value>{0} 已被 {1} 封禁。</value>
+  </string>
+  <string key="FailedKick">
+    <value>{0} 未被踢出，请手动解封他。</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>无法踢出或封禁管理员。</value>
+  </string>
+  <string key="Error">
+    <value>出错了，详情：{0}</value>
+  </string>
+  <string key="PingInfo">
+    <value>接收 ping 耗时：{0}</value>
+  </string>
+  <string key="Ping2">
+    <value>发送 ping 耗时：{0}</value>
+  </string>
+  <string key="groupBanned">
+    <value>你的群组已被禁止使用 Enforcer。</value>
+  </string>
+  <string key="warnMaxKick">
+    <value><![CDATA[{0} 因触发警告阈值<b>被踢出</b>]]></value>
+  </string>
+  <string key="warnMaxBan">
+    <value><![CDATA[{0} 因触发警告阈值<b>被封禁</b>]]></value>
+  </string>
+  <string key="resetWarn">
+    <value>重置警告</value>
+  </string>
+  <string key="removeWarn">
+    <value>移除警告</value>
+  </string>
+  <string key="warn">
+    <value><![CDATA[{0} <b>已被警告。</b>\n<i>已警告次数</i>   <b>{1}</b>\n<i>阈值</i>   <b>{2}</b>]]></value>
+  </string>
+  <string key="warnFlag">
+    <value><![CDATA[{0} <b>已被 {1} 警告。.</b>\n<i>已警告次数</i>   <b>{2}</b>\n<i>阈值</i>   <b>{3}</b>]]></value>
+  </string>
+  <string key="alreadyFlagged">
+    <value>消息已被举报</value>
+  </string>
+  <string key="ban">
+    <value>封禁</value>
+  </string>
+  <string key="kick">
+    <value>踢出</value>
+  </string>
+  <string key="Warn">
+    <value>警告</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\n举报 ID: #r{2}\n#未解决</value>
+  </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\n原始信息 {3}\n举报 ID: #r{2}\n#未解决</value>
+  </string>
+  <string key="reported">
+    <value>已举报！\n#举报 ID: #r{0}</value>
+  </string>
+  <string key="reportNotFound">
+    <value>未找到此举报信息</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>已被 {0} 解决\n{1}\n({2})\n举报者：{3}</value>
+  </string>
+  <string key="solvedBy">
+    <value>已被 {0} 解决\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>举报ID：#r{0}</value>
+  </string>
+  <string key="markSolved">
+    <value>标为已解决</value>
+  </string>
+  <string key="markedAsSolved">
+    <value>#r{1} 已由 {0} 解决</value>
+  </string>
+  <string key="alreadySolved">
+    <value>此问题已在 {0} 由 {1} 解决</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>请回复使用 @admin 的举报消息或发送举报ID。</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>命令参数错误</value>
+  </string>
+  <string key="NoInput">
+    <value>命令没有参数</value>
+  </string>
+  <string key="Support">
+    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">点此进入支持群组</a>]]></value>
+  </string>
+  <string key="UnableToGetID">
+    <value>无法获取用户ID</value>
+  </string>
+  <string key="globalBan">
+    <value>{0} 因 {1} 已被全局封禁。
+            可通过 @werewolfsupport 上诉这个封禁。</value>
+  </string>
+  <string key="goToMessage">
+    <value>Go to message</value>
+  </string>
+  <string key="goToChat">
+    <value>Go to chat</value>
+  </string>
+  <string key="userUnbanned">
+    <value>用户已解封</value>
+  </string>
+  <string key="extraSaved">
+    <value>已设置为对 {0} 的回应</value>
+  </string>
+  <string key="tooLong">
+    <value>{0} 太长了</value>
+  </string>
+  <string key="extra">
+    <value>更多</value>
+  </string>
+  <string key="tempbanZero">
+    <value>封禁时间不能为零</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} 已被封禁 {0} (日:时:分)\nID: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>警告已重置。\n操作人 {0}</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value>此用户没有被警告过</value>
+  </string>
+  <string key="warnRemoved">
+    <value>警告已移除</value>
+  </string>
+  <string key="inlineBan">
+    <value>已通过内联按钮封禁</value>
+  </string>
+  <string key ="userBanned">
+    <value>用户已封禁</value>
+  </string>
+  <string key ="userKicked">
+    <value>用户已踢出</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>没有找到链接。使用方法： /setlink 链接</value>
+  </string>
+  <string key="botNotStarted">
+    <value>你需要先激活bot。点击下方，然后点击开始。</value>
+  </string>
+  <string key="bannedFor">
+    <value>因 {0} 已被封禁</value>
+  </string>
+  <string key="welcomeSet">
+    <value>{0} 设置了欢迎消息</value>
+  </string>
+  <string key ="mainMenu">
+    <value>
+      管理 {0} 的设置。
+
+      可以禁止把一些命令的响应发送到群组中，如 /rules, /about, /adminlist, #extra。
+      禁止一个命令后 bot 会把响应单独私信给使用该命令的人。
+      
+      命令旁边的图标代表目前的状态：
+      • 👥: 在群组内响应命令。
+      • 👤: 用私信响应命令。
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>欢迎消息</value>
+  </string>
+  <string key="ReportButton">
+    <value>举报</value>
+  </string>
+  <string key="FloodButton">
+    <value>刷屏</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>自定义命令</value>
+  </string>
+  <string key="RtlButton">
+    <value>RTM字符</value>
+  </string>
+  <string key="ArabButton">
+    <value>波斯语</value>
+  </string>
+  <string key="WarnsButton">
+    <value>警告 👇🏼</value>
+  </string>
+  <string key="closeButton">
+    <value>完毕</value>
+  </string>
+  <string key="warnToLow">
+    <value>警告数量不能低于 1</value>
+  </string>
+  <string key="settingChanged">
+    <value>设置已更改</value>
+  </string>
+  <string key="floodMenu">
+    <value>
+      你可以在这里管理群组的防刷屏设置。
+
+      第一行
+      • 开/关：防刷屏设置的状态
+      • 踢出/封禁：对刷屏者的处理
+
+      第二行
+      • 用 +/- 改变防刷屏系统的敏感度。
+      • 设置的数字为5秒内允许发送的消息数量。
+      • 最大值 25 - 最小值 4
+
+      第三行及以下
+      为防刷屏系统设置例外
+      • ✅: 不忽略此类消息
+      • ❌: 忽略此类消息
+      • “文字” 选项包含所有其他消息类别。
+    </value>
+  </string>
+  <string key="on">
+    <value>开</value>
+  </string>
+  <string key="off">
+    <value>关</value>
+  </string>
+  <string key="textButton">
+    <value>文字</value>
+  </string>
+  <string key="stickerButton">
+    <value>表情</value>
+  </string>
+  <string key="imageButton">
+    <value>图片</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>视频</value>
+  </string>
+  <string key="audioButton">
+    <value>音频</value>
+  </string>
+  <string key="fileButton">
+    <value>文件</value>
+  </string>
+  <string key="contactButton">
+    <value>通讯录</value>
+  </string>
+  <string key="voiceButton">
+    <value>语音</value>
+  </string>
+  <string key="linkButton">
+    <value>链接</value>
+  </string>
+  <string key="textButton">
+	<value>文字</value>
+  </string>
+  <string key="doNothing">
+    <value>I do not do anything</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>{0} 因刷屏被封禁</value>
+  </string>
+  <string key="kickedForFlood">
+    <value>{0} 因刷屏被踢出</value>
+  </string>
+  <string key="bannedForRtl">
+    <value>{0} 因使用LRM字符被封禁</value>
+  </string>
+  <string key="kickedForRtl">
+    <value>{0} 因使用从右向左的语言被踢出</value>
+  </string>
+  <string key="bannedForNoEnglishScript">
+    <value>{0} 因使用非英语被封禁</value>
+  </string>
+  <string key ="globalBanNotif">
+    <value>{0} 因有 {1} 的历史而被全局封禁。
+            可通过 @werewolfsupport 上诉这个封禁。
+    </value>
+  </string>
+  <string key="GetLang">
+    <value>获取哪个语言的文件？</value>
+  </string>
+  <string key="mediaMenuHeader">
+    <value>媒体警告设置</value>
+  </string>
+  <string key="mediaMenu">
+    <value>
+      Tap on a voice in the right column to change the setting
+      You can use the last line to change how many warns should the bot give before kick/ban someone for a forbidden media
+      The number is not related to the normal /warn command
+    </value>
+  </string>
+<string key="groupLanguage">
+  <value>群组语言</value>
+</string>
+<string key="langMenu">
+  <value>在此设置群组语言\n目前的语言是：<b>{0}</b></value>
+</string>
+<string key="userUnblocked">
+  <value>用户已解封</value>
+</string>
+<string key="userBlocked">
+  <value>用户已封禁</value>
+</string>
+<string key="startMe">
+    <value>你需要先激活我</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>本群的设置有：</value>
+  </string>
+    <string key="userInfoGlobal">
+    <value>全局用户信息</value>
+  </string>
+  <string key="backButton">
+	<value>返回</value>
+  </string>
+    <string key="mediaNotAllowed">
+  <value>此类媒体已被禁止。这是第{0}次警告，最多{1}次。</value>
+  </string>
+  <string key="kickedformedia">
+  <value>{0} 因发送已禁止的媒体被踢出</value>
+  </string>
+  <string key="bannedformedia">
+  <value>{0} 因发送已禁止的媒体被封禁</value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value>{0} 因使用非英语被踢出</value>
+  </string>
+  <string key="bannedfornsfwimage">
+	<value>{0} 因发送黄暴图片被封禁。\n图片有 {1}% 的概率为黄色暴力。</value>
+  </string>
+  <string key="kickedfornsfwimage">
+	<value>{0} 因发送黄暴图片被踢出。\n图片有 {1}% 的概率为黄色暴力。</value>
+  </string>
+  <string key="nsfwMenu">
+	<value>设置踢出还是封禁违规的用户。
+			激活或关闭检测系统。
+			请注意每个API key每月只有5000张图像的限额。用完限额时，你需要自己更新群组的API key。
+			
+			检测系统只对95%及以上确认度的图片进行反应。它使用了最新的电脑识别技术，但因技术限制还是会有误报/漏报。
+			
+			你的选项有:
+	</value>
+  </string>
+  <string key="nsfwButton">
+	<value>黄色暴力检测</value>
+  </string>
+  <string key="getmaxwarn">
+	<value>因触发警告阈值被踢出：{0}次</value>
+  </string>
+  <string key="usergroupstatus">
+  <value>截至目前，{0} 在本群发送了 {1} 条消息。</value>
+  </string>
+  <string key="usergroupstatusnotseen">
+  <value>截至目前，{0} 还没有在本组出现过。</value>
+  </string>
+  <string key="evlavated">
+  <value>{0} 被 {1} 给予了 #elavated 权限</value>
+  </string>
+  <string key="auth">
+  <value>{0} 被 {1} 给予了 #auth 权限</value>
+  </string>
+  <string key="dauth">
+  <value>{0} 被 {1} 撤销了 #auth 权限</value>
+  </string>
+  <string key="devlavated">
+  <value>{0} 被 {1} 撤销了 #elavated 权限</value>
+  </string>
+  <string key="currentMods">
+  <value>目前已提权的用户</value>
+  </string>
+  <string key="prevMods">
+  <value>由用户提权的用户</value>
+  </string>
+   <string key="helpNoRequest">
+   <value>Enforcer 是一个帮助群组管理的 bot。关注 https://t.me/greywolfdev 获取更新信息。
+ 		It does this by implementing antispam, anti media, tempbans, warnings, allowing you to set responses to hashtags etc.
+ 		* 这个 bot 需要群组的管理员权限来正常工作。
+ 		* This bot functions best in supergroups.
+ 		* 发送 /menu 进行设置。
+ 		* This bot has many commands, to find out more information about a specific command send /help [command] EG: /help menu. To get a list of commands send /getcommands.
+ 		* 点击 /support 进入支持群。
+ 	</value>
+ 	</string>
+ 	<string key="helpOptionNotImplemented">
+   <value>
+ 		暂无 {0} 的帮助信息，请到 /support 群组查找更多信息。
+ 	</value>
+   </string>
+   <string key="hcommandkickme">
+   <value>
+ 		让 bot 把你从群组中移除。在退出后无法再次加入的群中使用这个命令让你可以在离开后再次加入。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandkick">
+   <value>
+ 		将一名用户从群组中踢出，但是允许他们再次加入。
+ 		可以使用 ID/用户名 作为命令参数，也可以在回复中使用。
+
+ 		例子: 
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandwarn">
+   <value>
+ 		警告一名用户。你可以在设置面板中调整警告阈值和超过阈值时采取的处罚。
+
+ 		例子: 
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandban">
+   <value>
+ 	 在群组中封禁一名用户，使他们无法再次加入。在回复中使用时可以声明一个理由，以便使用 status 命令时查询。
+
+ 	 例子: 
+ 		/{0} 回复用户
+ 		/{0} [理由] 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandunban">
+   <value>
+ 		解封一名用户。
+
+ 		例子: 
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandtempban">
+   <value>
+ 		Can be used to temporary ban a user from a group, they will only be able to come back after the time is passed. The command works by banning the user from the group and then unbanning them after the stipulated time.
+ 		Usage: 
+ 		You need to reply to the user you want banned. Then when using the command put the number of minutes after the command is sent. If no time is stipulated the bot will ban the user for an hour. 
+
+ 		例子:
+ 		/{0} 123 while replying to a user
+ 		/{0} while replying to a user
+ 	</value>
+   </string>
+   <string key="hcommandadmin">
+   <value>
+ 		Can be used to flag a message or call the group admins. If you reply to a message it is forwarded to the group admins along with the text inside your message. If there is no reply just your message is sent. 
+ 		The admins are presented with an inline menu of actions to take. In supergroups you can go to the message. 
+ 		例子: 
+ 		@{0}
+ 		@{0} while replying to a user
+ 		@{0} [reason]
+ 		@{0} [reason] while replying to a user
+
+ 		/{0}
+ 		/{0} while replying to a user
+ 		/{0} [reason]
+ 		/{0} [reason] while replying to a user
+ 	</value>
+   </string>
+   <string key="hcommandadminoff">
+   <value>
+ 		Stops the bot from sending you reports. Can also be used for other admins than yourself, with reply, or username or ID.
+
+ 	 例子: 
+ 		/{0}
+ 		/{0} while replying to a user
+ 		/{0} [User ID]
+ 		/{0} [Username]
+ 	</value>
+   </string>
+   <string key="hcommandadminon">
+   <value>
+ 		Makes the bot send reports to a user again if they were previously turned off. Can also be used for other admins than yourself, with reply, or username or ID
+
+ 		例子: 
+ 		/{0}
+ 		/{0} while replying to a user
+ 		/{0} [User ID]
+ 		/{0} [Username]
+ 	</value>
+   </string>
+   <string key="hcommandsolved">
+   <value>
+ 		Marks a reported message as solved so that other admins know it has been sorted out.
+
+ 		例子: 
+ 		/{0} while replying to the message containing @admin
+ 		/{0} [Report ID]
+ 	</value>
+   </string>
+   <string key="hcommandreporton">
+   <value>
+ 		允许用户使用 @admin 进行举报。
+
+ 	 例子: 
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandreportoff">
+   <value>
+ 		禁止用户使用 @admin 进行举报。
+
+ 		例子: 
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandrules">
+   <value>
+ 		获取群组的规则。
+
+ 		例子:
+ 		/{0} 
+ 	</value>
+   </string>
+   <string key="hcommandsetrules">
+   <value>
+ 		设置群组的规则。
+
+ 		例子: 
+ 		/{0} 不要作恶！
+ 	</value>
+   </string>
+   <string key="hcommandabout">
+   <value>
+ 		Returns the description for the group which admins set with setabout command before.
+
+ 		例子: 
+ 		/{0} 
+ 	</value>
+   </string>
+   <string key="hcommandsetabout">
+   <value>
+ 		Set a description for the group, that users can see with about command.
+
+ 		例子: 
+ 		/{0} A group for trolololololols
+ 	</value>
+   </string>
+   <string key="hcommandadminlist">
+   <value>
+ 		获得此群组的管理员名单。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommands">
+   <value>
+ 		将消息保存到和bot的私聊中。
+
+ 		例子:
+ 		/{0} 回复想要保存的消息
+ 	</value>
+   </string>
+   <string key="hcommandid">
+   <value>
+ 		获得群组或用户的ID。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandsupport">
+   <value>
+ 		获取GreyWolf的支持群组链接。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommanduser">
+   <value>
+ 		获得用户的本群/全局被处罚记录。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandmeBIGCONFUSEION">
+   <value>
+ 		通过私聊发送你的全局被处罚记录。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandme">
+   <value>
+ 		通过私聊发送你的全局被处罚记录。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string> 
+   <string key="hcommandextra">
+   <value>
+ 		Saves an extra command. Extra commands are custom commands with custom reply, triggered by single words starting with a #. Everyone can send the trigger afterwards and the bot will reply the custom answer.
+
+ 		例子:
+ 		/{0} #blabla while replying to some text or media
+ 		/{0} #blabla This is an extra
+ 	</value>
+   </string>
+   <string key="hcommandextralist">
+   <value>
+ 		Returns a list of all extra commands of that group.
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandextradel">
+   <value>
+ 		Deletes an extra command that was defined before.
+
+ 		例子:
+ 		/{0} #blabla
+ 	</value>
+   </string>
+   <string key="hcommandlink">
+   <value>
+ 		Returns the link of the group. Only works if an admin set the link with setlink command before.
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandsetlink">
+   <value>
+ 		Sets the link of this group, necessary for using the link command. Must be followed by the group link of it is a private group.
+
+ 		例子:
+ 		/{0} [Group Link] (private group)
+ 		/{0} (public group)
+ 	</value>
+   </string>
+   <string key="hcommandstatus">
+   <value>
+ 		获取用户在本群中的状态：成员、管理员、创建者、被踢出、被封禁、未出现过。
+
+ 		例子:
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandwelcome">
+   <value>
+ 		设置群组的欢迎消息，将在新用户加入群组时自动发送。欢迎信息最多只会每分钟发送一次，以防止多个用户加入时被 bot 刷屏。
+ 		例子:
+
+ 		/{0} 欢迎加入本群组！
+ 	</value>
+   </string>
+   <string key="hcommanddisablewatch">
+   <value>
+ 		Disables AntiFlood and persian detection for a user, Admins should use it in a group so it will ignore them.
+
+ 		例子:
+ 		/{0}
+ 		/{0} while replying to a user
+ 	</value>
+   </string>
+   <string key="hcommandenablewatch">
+   <value>
+ 		 Enables AntiFlood and persian detection for a user, only necessary if that user was disablewatched before.
+ 		 
+ 		例子:
+ 		/{0}
+ 		/{0} 回复用户
+ 	</value>
+   </string>
+   <string key="hcommandcheck">
+   <value>
+ 		查看一名用户已发送了多少消息。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandelevate">
+   <value>
+ 		将一名用户提权为管理员。管理员只能将用户提权30分钟，但是群组创建者可以进行永久提权。被提权的用户可以使用所有管理员命令，例如 warn, kick, ban 和 tempban。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommanddeelevate">
+   <value>
+ 		撤销一个用户的提权，只有群组创建者可以使用这个命令。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandelevatelog">
+   <value>
+ 		查看群组管理员进行临时提权的记录。记录包括时间、被提权的用户、操作提权的管理员。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandauth">
+   <value>
+ 		给一个用户 #auth 权限，让 bot 将其视为群组创建者。他将可以管理 #auth 权限，授予其他用户永久提权。
+
+ 		例子:
+ 		/{0} 回复用户
+ 		/{0} [用户ID]
+ 		/{0} [用户名]
+ 	</value>
+   </string>
+   <string key="hcommandblockelevate">
+   <value>
+ 		禁止一个群组管理员对其他用户进行提权。只有群组创建者可以使用这个命令。默认情况下群组管理员可以给普通用户提权30分钟，群组创建者可以用这个命令阻止提权。
+
+ 		例子:
+ 		/{0} 回复管理员
+ 		/{0} [管理员ID]
+ 		/{0} [管理员用户名]
+ 	</value>
+   </string>
+   <string key="hcommanddeauth">
+   <value>
+ 		撤销一个用户的 #auth 权限，他将不再被允许管理 #auth 权限，或授予其他用户永久提权。只有群组创建者可以使用这个命令。
+
+ 		例子:
+ 		/{0} 回复有 #auth 权限的用户
+ 		/{0} [#auth 用户ID]
+ 		/{0} [#auth 用户名]
+ 	</value>
+   </string>
+   <string key="hcommandmenu">
+   <value>
+ 		通过私聊将本群的设置面板发送给你。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommanddashboard">
+   <value>
+ 		通过私聊将本群的所有设置发送给你。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandping">
+   <value>
+ 		发送Ping消息以获得bot的延迟信息。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+   <string key="hcommandgetcommands">
+   <value>
+ 		获取bot的命令列表。注意有些命令只有全域管理员可以使用。
+
+ 		例子:
+ 		/{0}
+   </value>
+   </string>
+
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>如何使用 MarkDown</b>
+  
+  
+  <b>加粗</b> = &lt;b&gt;加粗&lt;/b&gt;
+  
+  <i>斜体</i> = &lt;i&gt;斜体&lt;/i&gt;
+  
+  <a href="t.me/greywolfdev">链接</a> = &lt;a href="t.me/greywolfdev"&gt;链接&lt;/a&gt;
+  
+  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  
+  <string key="actionNotSettext">
+  <value>Please set the action the bot must take when a user sends a too long a message</value>
+  </string>
+  <string key="getlongmessages">
+  <value>Removed for sending long messages: {0}</value>
+  </string>
+  <string key="kickformesslength">
+  <value>{0} has been kicked for sending messages that are too long.</value>
+  </string>
+  <string key="banformesslength">
+  <value>{0} has been banned for sending messages that are too long.</value>
+  </string>
+  
+   <string key="actionNotSetname">
+  <value>Please set the action the bot must take when a user has too long a name</value>
+  </string>
+  <string key="getnamelength">
+  <value>{0} 因用户名过长被移除。</value>
+  </string>
+  <string key="kickfornamelength">
+  <value>{0} 因用户名过长已被踢出。</value>
+  </string>
+  <string key="banfornamelength">
+  <value>{0} 因用户名过长已被封禁。</value>
+  </string>
+  <string key="lengthButton">
+  <value>自动</value>
+  </string>
+  <string key="nameSettingsHeader">
+  <value>名字长度</value>
+  </string>
+  <string key="textSettingsHeader">
+  <value>消息长度</value>
+  </string>
+  <string key="lengthMenu">
+  <value>Here you can change the settings that dicate how the bot handles long names and messages.
+	
+	You can set the character limit by sending the following in the group chat:
+	/maxnl [number of characters] - to change the max length of a name;
+	/maxtl [number of characters] - to change the maximum number of characters in a message;
+	/maxl [number of lines] - to change the maximum number of lines allowed in a message. 
+  
+	The reason you can set lines and characters is that some spammers send blank messages containing many lines. These messages will be below the character count but will still be spammy. 	
+  --[Characters : lines]-- shown in button
+  </value>
+  </string>
+  <string key="maxLength">
+  <value>最大长度</value>
+  </string>
+  <string key="done">
+  <value>完毕</value>
+  </string>
+  <string key="failed">
+  <value>失败</value>
+  </string>
+  <string key="gethelplist">
+    <value>The current support help queries are:\n{0}</value>
+  </string>
+  
+  <string key="hcommandleave">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandlook">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandunlook">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandblockp">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandallowp">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandauthnsfw">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommanddeauthnsfw">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandgetuser">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandhelp">
+  <value> 
+  You ask for help with the help command? A little recursive, but:
+  
+  The help command can be used to get help with a command (like "/help warn") or a few other topics (like "/help markdown"). You can get a list of help topics with /helplist command. If nothing is specified, there will be a standard help message instead.
+  
+  Example:
+  /{0}
+  /{0} [command (without "/")]
+  /{0} [help topic from /helplist]
+  </value>
+  </string>
+  
+  <string key="hcommandhelplist">
+  <value>
+  Gives out a list of current help topics. The /help command can be used with any of these help topics and you will get help for them. (Example "/help warn").
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="hcommandmaxnl">
+  <value>
+  Defines the maximum length for a name of a user in that group. If one's name is longer than that value, they are automatically kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Example:
+  /{0} 50
+  </value>
+  </string>
+  
+  <string key="hcommandmaxtl">
+  <value>
+  Defines the maximum length for messages in this group. If someone sends a message with more characters, they are automatically kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Example:
+  /{0} 1024
+  </value>
+  </string>
+  
+  <string key="hcommandmaxl">
+  <value>
+  Defines the maximum number of lines for messages in that group. If someone sends a message with more lines, they are automatically kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Example:
+  /{0} 50
+  </value>
+  </string>
+  
+  <string key="hcommandrektlist">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandaddrule">
+  <value>
+  Add a new rule at the end of the current ones in the /rules.
+
+  Example:
+  /{0} You must always troll others!
+  </value>
+  </string>
+  
+  <string key="hcommanduploadlanguage">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandvalidatelanguages">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandgetlanguage">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandreloadlang">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandhalt">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandmakelangadmin">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandremovelangadmin">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandgetrekt">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandunrekt">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandmediaid">
+  <value>这个命令只有 enforcer 的开发者可以使用！</value>
+  </string>
+  
+  <string key="hcommandstart">
+<value>
+Command only for private chat with the bot to start it. Necessary for using the /s command, receiving admin reports in private and some other features.
+
+Example:
+/{0}
+</value>
+</string>
+  <string key="logSettingChanged">
+    <value>{0}（{1}）在 {3} 将 {2} 从 {4} 改为 {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>刷屏上限</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>刷屏处理方式</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>{0} 的刷屏检测</value>
+  </string>
+  <string key="settingMedia">
+    <value>媒体：{0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>媒体警告处理方式</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>媒体警告上限</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>警告上限</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>警告处理方式</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>名字长度处理方式</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>消息长度处理方式</value>
+  </string>
+  <string key="valueAllowed">
+    <value>允许</value>
+  </string>
+  <string key="valueBlocked">
+    <value>禁止</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>私聊</value>
+  </string>
+  <string key="valueInGroup">
+    <value>群组</value>
+  </string>
+  <string key="FiltersButton">
+    <value>过滤器</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>已开启 {0} 个</value>
+  </string>
+  <string key="filtersMenu">
+    <value>过滤器：当消息、名字或用户名匹配时会发生什么。点击一个过滤器即可更改它的操作。管理员以及 watch 或 auth 名单上的成员永远不会被检查。\n\n自定义规则：{0} 条。用 /filter 管理。</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>阿拉伯文字</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>从右向左的伎俩</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>西里尔字母</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>中文、日文、韩文</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>希伯来文字</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>天城文</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>形似字母</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>不可见字符</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Telegram 邀请链接</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>电话号码</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>加密货币钱包</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>管理员或客服名字</value>
+  </string>
+  <string key="filterAction_off">
+    <value>关闭</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>删除</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>警告</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>禁言</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>踢出</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>临时封禁</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>封禁</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>检查老成员</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>允许本群的机器人</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} 已被禁言：{1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} 已被禁言 {2}：{1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} 已被踢出：{1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} 已被封禁：{1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} 已被封禁 {2}：{1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>本群的自定义过滤规则。新规则先试用 {0} 天：只记录它本来会做什么。\n/filter add name|username|text 操作 正则\n/filter try /正则/ 文本\n/filter test 编号或正则\n/filter list\n/filter live 编号\n/filter trial 编号 天数\n/filter del 编号</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>目标必须是以下之一：{0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>操作必须是以下之一：{0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>这个正则表达式无法使用：{0}</value>
+  </string>
+  <string key="filterExists">
+    <value>本群已经有这条规则了。</value>
+  </string>
+  <string key="filterLimit">
+    <value>每个群最多 {0} 条自定义规则。请先用 /filter del 删除一条。</value>
+  </string>
+  <string key="filterAdded">
+    <value>已添加规则 #{0}。它试用 {1} 天：只记录它会做什么，不采取任何操作。用 /filter live {0} 启用。</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>匹配。</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>不匹配。</value>
+  </string>
+  <string key="filterTestNone">
+    <value>最近 30 天出现过的 {0} 名成员中没有匹配的。</value>
+  </string>
+  <string key="filterTestResult">
+    <value>最近 30 天出现过的 {1} 名成员中有 {0} 名匹配。例子：</value>
+  </string>
+  <string key="filterTestSent">
+    <value>结果已私聊发给你。</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>无法把结果发给你。请先和我开始私聊，然后再试一次。</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>本群还没有自定义规则。用 /filter add 添加一条；它会先试用 {0} 天。</value>
+  </string>
+  <string key="filterListHeader">
+    <value>自定义规则：</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} 针对 {1}，{2}，{3}。匹配 {4} 次；其中 {5} 名成员被移除。</value>
+  </string>
+  <string key="filterModeLive">
+    <value>生效中</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>试用至 {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>试用已结束，等待 /filter live 或 /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>没有规则 {0}。/filter list 可以查看规则。</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>规则 #{0} 已生效：从现在开始执行操作。</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>规则 #{0} 试用 {1} 天。</value>
+  </string>
+  <string key="filterDeleted">
+    <value>规则 #{0} 已删除。</value>
+  </string>
+  <string key="cmdfilter">
+    <value>自定义过滤规则</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      你的群的自定义过滤规则：对成员的名字、用户名或消息文本使用正则表达式，以及匹配时的操作（none, score, report, delete, warn, mute, tempmute, kick, tempban, ban）。仅限管理员。现成的过滤器（文字、邀请链接、电话号码等）在设置菜单的“过滤器”里。
+
+      新规则先试用 7 天：只记录它本来会做什么，不采取任何操作，这样你可以看看它是否抓对了人。用 /{0} live 启用。
+
+      例子：
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3（用规则 3 检查最近 30 天出现过的成员名字，并私聊发给你结果）
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>

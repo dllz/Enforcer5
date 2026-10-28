@@ -1,0 +1,1688 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<strings>
+  <language name="Türk" base="Türk" owner="By_Azade" IEFT="tr"/>
+  <string key="statusKicked">
+    <value>{0} Bu gtuptan banlandınız {1}</value>
+  </string>
+  <string key="statusLeft">
+    <value>{0} Gruptan ayrıldı veya gruptan atıldı.</value>
+  </string>
+  <string key="statusAdministrator">
+    <value>{0} admindir.</value>
+  </string>
+  <string key="statusCreator">
+    <value>{0} kurucudur.</value>
+  </string>
+  <string key="statusUnknown">
+    <value>Bu kullanıcının sohbetle alakası yok.</value>
+  </string>
+  <string key="statusMember">
+    <value>{0} standart kullanıcı.</value>
+  </string>
+  <string key="userinfoGlobal">
+    <value><![CDATA[<b>Global ban info</b>:\n]]></value>
+  </string>
+  <string key="getkick">
+    <value>at: {0}</value>
+  </string>
+  <string key="getban">
+    <value>Ban: {0}</value>
+  </string>
+  <string key="gettempban">
+    <value>Tempban: {0}</value>
+  </string>
+  <string key="getwarn">
+    <value>Uyarılmayı kaldır: {0}</value>
+  </string>
+  <string key="getgroupwarn">
+    <value>Uyarılar: {0}</value>
+  </string>
+  <string key="getMediaWarn">
+    <value>Medya uyarıları: {0}</value>
+  </string>
+  <string key="userinfoGroup">
+    <value><![CDATA[<b>Info for group: {0}</b>:]]></value>
+  </string>
+  <string key="getrtl">
+    <value>Sağ sol karakterler kaldırıldı: {0}</value>
+  </string>
+  <string key="getflood">
+    <value>Flood silindi: {0}</value>
+  </string>
+  <string key="getarab">
+    <value>Farsça yazılar silindi: {0}</value>
+  </string>
+  <string key="getmedia">
+    <value>Yasak medya silindi: {0}</value>
+  </string>
+  <string key="getnsfwimage">
+    <value>Uygunsuz resimler silindi: {0}</value>
+  </string>
+  <string key="getNothing">
+    <value>Gösterilecek birşey yok</value>
+  </string>
+  <string key="botPm">
+    <value>Sana bir özel mesaj gönderdim!</value>
+  </string>
+  <string key="noUser">
+    <value>Bu kullanıcının kim olduğunu bilmiyorum.</value>
+  </string>
+  <string key="botNotAdmin">
+    <value>Bu grupda admin değilim,komut çalıştırmak için admin yapmalısın.</value>
+  </string>
+  <string key="noReply">
+    <value>Bu komutu kullanmak için birini yanıtlamalısın</value>
+  </string>
+  <string key="msgTooLong">
+    <value>Lütfen bu mesajı {0} kısaltın</value>
+  </string>
+  <string key="StartMe">
+    <value>Başlat</value>
+  </string>
+  <string key="userNotAdmin">
+    <value>
+      Bu sohbette <b>admin</b> değilsin
+    </value>
+  </string>
+  <string key="markdownBroken">
+    <value><![CDATA[The markdown in this text is broken. Check how to use markdown by typing <code>/help markdown</code>]]></value>
+  </string>
+  <string key="linkMissing">
+    <value>Bu grup için link yok</value>
+  </string>
+  <string key="linkUpdated">
+    <value>Link güncellendi.</value>
+  </string>
+  <string key="linkSet">
+    <value>Link ayarlandı</value>
+  </string>
+  <string key="adminList">
+    <value><![CDATA[<b>Kurucu</b>: {0}\n<b>Adminler</b>:{1}]]></value>
+  </string>
+  <string key="defaultWelcome">
+    <value>Merhaba {0} hoş geldin {1}</value>
+  </string>
+  <string key="noAbout">
+    <value>Grup açıklaması ayarlanmadı.</value>
+  </string>
+  <string key="noRules">
+    <value>Kural yok, etraf kaynıyor :)</value>
+  </string>
+  <string key="rules">
+    <value><![CDATA[\n<b>Kurallar</b>:\n{0}]]></value>
+  </string>
+  <string key="about">
+    <value><![CDATA[\n<b>Açıklama</b>:\n{0}]]></value>
+  </string>
+  <string key="RulesSet">
+    <value>Yeni kural ayarlandı</value>
+  </string>
+  <string key="AboutSet">
+    <value>Yeni açıklama ayarlandı</value>
+  </string>
+  <string key="extraSaved">
+    <value>{0} komut kaydedildi</value>
+  </string>
+  <string key="noExtra">
+    <value>Komut ayarlanmadı</value>
+  </string>
+  <string key="extraList">
+    <value><![CDATA[List of <b>custom commands</b>:\n{0}]]></value>
+  </string>
+  <string key="extraDeleted">
+    <value>Komut silindi</value>
+  </string>
+  <string key="SuccesfulKick">
+    <value>{0} tarafından bankandınız {1}.</value>
+  </string>
+  <string key="SuccesfulBan">
+    <value>{0} tarafından banlandınuz {1}.</value>
+  </string>
+  <string key="FailedKick">
+    <value>{0} banlayamadım, lütfen kendin banla.</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>Admini banlayamam ve atamam.</value>
+  </string>
+  <string key="Error">
+    <value>Hata oluştu,hata ayrıntıları: {0}</value>
+  </string>
+  <string key="PingInfo">
+    <value>Mesajın ulaşma süresi: {0}</value>
+  </string>
+  <string key="Ping2">
+    <value>Mesajın gönderilme süresi: {0}</value>
+  </string>
+  <string key="groupBanned">
+    <value>Grubun Werewolf Enforcer kullanılarak banlandı.</value>
+  </string>
+  <string key="warnMaxKick">
+    <value><![CDATA[User {0} <b>atıldınız</b>: en fazla uyarı sayısı]]></value>
+  </string>
+  <string key="warnMaxBan">
+    <value><![CDATA[User {0} <b>banlandınız</b>: en fazla uyarı sayısı]]></value>
+  </string>
+  <string key="resetWarn">
+    <value>Uyarıyı sıfırla</value>
+  </string>
+  <string key="removeWarn">
+    <value>Uyarıyı kaldır</value>
+  </string>
+  <string key="warn">
+    <value><![CDATA[{0} <b>uyarıldınız.</b>\n<i>Uyarı sayısı</i>   <b>{1}</b>\n<i>En çok izin verilen</i>   <b>{2}</b>]]></value>
+  </string>
+  <string key="warnFlag">
+    <value><![CDATA[{0} <b>tarafından uyarıldınız {1}.</b>\n<i>uyarı sayısı</i>   <b>{2}</b>\n<i>En fazla uyarı</i>   <b>{3}</b>]]></value>
+  </string>
+  <string key="alreadyFlagged">
+    <value>Mesaj çoktan rapor edildi.</value>
+  </string>
+  <string key="ban">
+    <value>Banla</value>
+  </string>
+  <string key="kick">
+    <value>At</value>
+  </string>
+  <string key="Warn">
+    <value>Uyar</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nRapor kimliği: #r{2}\n#Çözülmedi</value>
+  </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nOrjinal mesaj {3}\nRapor kimliği: #r{2}\n#Çözülmedi</value>
+  </string>
+  <string key="reported">
+    <value>Rapor edildi!\n#Rapor kimliği: #r{0}</value>
+  </string>
+  <string key="reportNotFound">
+    <value>Rapor bulunamadı</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>Tarafından çözüldü: {0}\n{1}\n({2})\nTarafından rapor edildi: {3}</value>
+  </string>
+  <string key="solvedBy">
+    <value>Tarafından çözüldü: {0}\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>Rapor kimliği: #r{0}</value>
+  </string>
+  <string key="markSolved">
+    <value>Belirgin olarak çözüldü</value>
+  </string>
+  <string key="markedAsSolved">
+    <value>Rapor #r{1} tarafından çözüldü {0}</value>
+  </string>
+  <string key="alreadySolved">
+    <value>Rapor çözüldü {0} tarafından {1}</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>Admine bildirmek istediğin mesajı yanıtlayıp (@admin) şeklinde cevaplamalısın.</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>Yanlış değişken türü girdiniz</value>
+  </string>
+  <string key="NoInput">
+    <value>Komut girilmedi</value>
+  </string>
+  <string key="Support">
+    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Bot destek grubundan yardım almak için tıklayınız.</a>]]></value>
+  </string>
+  <string key="UnableToGetID">
+    <value>Kullanıcı kimliği alınmadı</value>
+  </string>
+  <string key="globalBan">
+    <value>{0} bu yüzden otomatik olarak banlandınız:{1}\nKullanıcı destek almak için admine yazabilir.</value>
+  </string>
+  <string key="goToMessage">
+    <value>Mesaja git</value>
+  </string>
+  <string key="goToChat">
+    <value>Sohbete git</value>
+  </string>
+  <string key="userUnbanned">
+    <value>Ban kaldırıldı!</value>
+  </string>
+  <string key="extraMediaSaved">
+    <value>Bu medya yanıt olarak kaydedilmiş: {0}</value>
+  </string>
+  <string key="tooLong">
+    <value>{0} çok uzun</value>
+  </string>
+  <string key="extra">
+    <value>Extra</value>
+  </string>
+  <string key="tempbanZero">
+    <value>Tempban sıfır olamaz</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} bu yüzden banlandınız {0} (gün:saat:dakika)\nKullanıcı kimliği: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>Uyarı sıfırlandı.\nTarafından: {0}</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value>Kullanıcının hiç uyarısı yok</value>
+  </string>
+  <string key="warnRemoved">
+    <value>Uyarı silindi</value>
+  </string>
+  <string key="inlineBan">
+    <value>Banlamak için alttaki butonu kullan</value>
+  </string>
+  <string key ="userBanned">
+    <value>Kullanıcı Banlandı</value>
+  </string>
+  <string key ="userKicked">
+    <value>Kullanıcı atıldı</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>Link bulunamadı. Kullanım: /setlink (link)</value>
+  </string>
+  <string key="botNotStarted">
+    <value>İlk olarak botu starta basıo başlatmalısın</value>
+  </string>
+  <string key="bannedFor">
+    <value>Banlandı: {0}</value>
+  </string>
+  <string key="welcomeSet">
+    <value>Hoş geldin mesajı ayarlandı {0}</value>
+  </string>
+  <string key ="mainMenu">
+    <value>
+     Ayarkarı yönet {0}.
+
+      Diğer ayarlar: Diğer ayarlar için, butonda açıklamalar var
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>Hoş Geldin mesajı</value>
+  </string>
+  <string key="ReportButton">
+    <value>Rapor</value>
+  </string>
+  <string key="FloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Extra</value>
+  </string>
+  <string key="RtlButton">
+    <value>Sağdan sola</value>
+  </string>
+  <string key="ArabButton">
+    <value>Arap</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Uyarı: {0}</value>
+  </string>
+  <string key="closeButton">
+    <value>Tamamlandı</value>
+  </string>
+  <string key="warnToLow">
+    <value>Uyarı sayısı 1 den küçük olamaz</value>
+  </string>
+  <string key="settingChanged">
+    <value>Ayarlar değiştirildi</value>
+  </string>
+  <string key="floodMenu">
+    <value>
+      Flood ayarlarını buradan yönetebilirsin.
+
+      1. satır
+      • AÇIK/KAPALI: anti-flood durumu
+      • AT/BANLA: Flood gönderenlere yapılacaklar
+
+      2. satır
+      • anti-flood hassasiyetini arttırıp azaltabilirsin.
+      • maksimum saniyede 5 mesaj
+      • en çok değer: 25 - en az değer: 4
+
+      3. satır
+      Anti-flood için bazı istisnalar ayarlayabilirsin:
+      • ✅: anti-flood önemsenmeyecek
+      • ❌: anti-flood önemsenecek
+      • Not: "yazı" içeriğini belirlemelisiniz
+    </value>
+  </string>
+  <string key="on">
+    <value>Açık</value>
+  </string>
+  <string key="off">
+    <value>Kapalı</value>
+  </string>
+  <string key="textButton">
+    <value>Yazı</value>
+  </string>
+  <string key="stickerButton">
+    <value>Çıkartma</value>
+  </string>
+  <string key="imageButton">
+    <value>Resim</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>Video</value>
+  </string>
+  <string key="audioButton">
+    <value>Ses</value>
+  </string>
+  <string key="fileButton">
+    <value>Dosya</value>
+  </string>
+  <string key="contactButton">
+    <value>Kişi</value>
+  </string>
+  <string key="voiceButton">
+    <value>sesli mesaj</value>
+  </string>
+  <string key="linkButton">
+    <value>Link</value>
+  </string>
+  <string key="textButton">
+    <value>yazı</value>
+  </string>
+  <string key="doNothing">
+    <value>Hiçbirşey yapamam</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>{0} flood gönderdiği için banlandı</value>
+  </string>
+  <string key="kickedForFlood">
+    <value>{0} flood gönderdiği için atıldı</value>
+  </string>
+  <string key="bannedForRtl">
+    <value>{0} yabancı karakter kullandığı için banlandı</value>
+  </string>
+  <string key="kickedForRtl">
+    <value>{0} yabancı karakter kullandığı için atıldı</value>
+  </string>
+  <string key="bannedForNoEnglishScript">
+    <value>{0} latin olmayan karakter kullandığı için banlandı</value>
+  </string>
+  <string key ="globalBanNotif">
+    <value>
+      {0} otomatik olarak banlandı: {1}
+      
+    </value>
+  </string>
+  <string key="GetLang">
+    <value>Hangi dilde dosya almak istiyorsun?</value>
+  </string>
+  <string key="mediaMenuHeader">
+    <value>Medya uyarı ayarları</value>
+  </string>
+  <string key="mediaMenu">
+    <value>
+      Sol sütundan ses dokunarak ayarları seçin.
+      Ne kadar uyarı sonucunda yasaklanan medyayı atarsa banlama/atma ayarları
+      Normal komut ile uyarmak
+    </value>
+  </string>
+  <string key="groupLanguage">
+    <value>Grup dili</value>
+  </string>
+  <string key="langMenu">
+    <value>
+      Grup dilini ayarlayabilirsin.\nAyarlanan dil: <b>{0}</b>
+    </value>
+  </string>
+  <string key="userUnblocked">
+    <value>Kullanıcı yasağı kaldırıldı</value>
+  </string>
+  <string key="userBlocked">
+    <value>Kullanucı yasaklandı</value>
+  </string>
+  <string key="startMe">
+    <value>İlk olarak beni başlatmalısın</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Grupta ne ayarlanacak:</value>
+  </string>
+  <string key="userInfoGlobal">
+    <value>Genel kullanıcı bilgisi</value>
+  </string>
+  <string key="backButton">
+    <value>Geri</value>
+  </string>
+  <string key="mediaNotAllowed">
+    <value>Yasaklı medya gönderdiniz,bu yüzden uyarıldınız. {1}.uyarıdan  {0}.ıncı </value>
+  </string>
+  <string key="kickedformedia">
+    <value>{0} izin verilmeyen medya yolladığınız için atıldınız</value>
+  </string>
+  <string key="bannedformedia">
+    <value>{0} izin verilmeyen medya yolladığınız için banlandınız</value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value>{0} latin olmayan karakter kullandığınız için atıldınız.</value>
+  </string>
+  <string key="bannedfornsfwimage">
+    <value>{0} uygunsuz resim gönderdiğiniz için banlandınız.\nresim {1}% uygunsuz</value>
+  </string>
+  <string key="kickedfornsfwimage">
+    <value>{0} uygunsuz resim gönderdiğiniz için atıldınız.\nresim {1}% uygunsuz</value>
+  </string>
+  <string key="nsfwMenu">
+    <value>
+      Banlama ve gruptan atma seçeneklerini ayarlayınız.
+      Algılama sistemi açık veya kapalı seçin
+      yıllık 5000 resim algılama limiti vardır sonrası için sorumluluk sana aittir çalışmaz ise.
+
+      Bu sistem %95 olasılıkla uygunsuz resimleri algılayıp gönderenleri banlar.
+
+      Bu sistem hakkında daha fazla bilgi almak için:
+      http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
+
+      Seçenekler aşağıda verilmiştir:
+    </value>
+  </string>
+  <string key="nsfwButton">
+    <value>Uygunsuz içerik algılayıcısı</value>
+  </string>
+  <string key="getmaxwarn">
+    <value>Maksimum uyarı sayısı: {0}</value>
+  </string>
+  <string key="evlavated">
+    <value>User: {0} tarafından özel haklar verilmiş {1}</value>
+  </string>
+  <string key="auth">
+    <value>User: {0} tarafından özel haklar verilmemiş {1}</value>
+  </string>
+  <string key="dauth">
+    <value>User: {0} tarafından özel hakları kaldırılmış {1}</value>
+  </string>
+  <string key="devlavated">
+    <value>User: {0} tarafından özel haklar yinelenmiş {1}</value>
+  </string>
+  <string key="currentMods">
+    <value><![CDATA[\n<b>Özel haklı kullanıcılar:</b>\n]]></value>
+  </string>
+  <string key="prevMods">
+    <value>Eski hakları geri ver</value>
+  </string>
+  <string key="helpNoRequest">
+    <value>
+      Bu bot gruplarınızı daha kolay yönetmek yapmak yardımcı olmak için tasarlanmış bir bottur. Yenilikler için https://t.me/greywolfdev.
+      antispam, anti medya, geçici ban, uyarı, gibi özellikleri içerir.
+      * Botun çalışması için grubunda admin olmalıdır.
+      * Bu botun özellikleri süpergrupda çalışır.
+      * Ayar yapmak için grubundan /menu yazmalısın.
+      * Botun çok komutu vardır, belirli bir komut hakkında yardım almak için /help [komut] Ör: /help menu. Tüm komutlar için ise /getcommands.
+      * Eğer yardıma ihtiyacınız varsa /support komutunu kullanıp bot yardım grubuna ulaşabilirsiniz.
+    </value>
+  </string>
+  <string key="helpOptionNotImplemented">
+    <value>
+      Bilgi {0} henüz yazılmadı, lütfen bot yardım grubuna katılın ve yardım isteyin.
+    </value>
+  </string>
+  <string key="hcommandkickme">
+    <value>
+      Gruptan kaldırıldığında tekrar geri gelebilmesi için kullanılmalı.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandkick">
+    <value>
+      Gruptan atıldığında tekrar geri gelebilmesi için kullanılmalı.
+      Atılacak kişi kullanıcı adı veya kullanıcı kimliği ile atılır..
+
+      Örnek:
+      /{0} yanıtlayarak
+      /{0} [kullanıcı kimliği ile]
+      /{0} [kullanıcı adi ile]
+    </value>
+  </string>
+  <string key="hcommandwarn">
+    <value>
+      En fazla uyarıyı aldığında kullanılacak komuttur.
+
+      Örnek:
+      /{0} yanıtlayarak
+      /{0} [kullanıcı kimliği ile]
+      /{0} [kullanıcı adi ile]
+    </value>
+  </string>
+  <string key="hcommandban">
+    <value>
+      Sebebini bekirtip banlamak istenildiğinde kullanılmalı /{0} hangi seçeneğin görünmesini istiyorsan
+
+      Örnek:
+      /{0} yanıtlayarak
+      /{0} [sebep] yanıtlayarak
+      /{0} [kullanıcı kimliği ile]
+      /{0} [kullanıcı adi ile]
+    </value>
+  </string>
+  <string key="hcommandunban">
+    <value>
+      Banı kaldırmak isendiğinde kullanılacak komut.
+
+      Örnek:
+      /{0} yanıtlayarak
+      /{0} [kullanıcı kimliği ile]
+      /{0} [kullanıcı adi ile]
+    </value>
+  </string>
+  <string key="hcommandtempban">
+    <value>
+      Kullanıcı banlandığında geçici bir süre sonra tekrar geri gelebilir. Komut banlandıktan sonraki süreyi hesaba katar.
+      Kullanım:
+     Banlamak istediğin kişiyi yanıtla. Ne kadar geçici süre vermek istersen onu da belirt. Eğer zaman belirtmez isen saatlik banlama olacak.
+
+      Örnek:
+      /{0} 123 yanıtlayarak
+      /{0} yanıtlayarak
+    </value>
+  </string>
+  <string key="hcommandadmin">
+    <value>
+      Mesajı admine bildirmek için kullanılır. Eğer mesajı yanıtlayıp bildirmek istersen bunu kullanmalısın,bildirilen mesaj admine gidecektir. Eğer mesajı yanıtlamazsan sadece senin mesajın admine gider.
+      Mesajı almak için grup süpergrup olmalıdır.
+     Örnek:
+      @{0}
+      @{0} yanıtlayarak
+      @{0} [sebep]
+      @{0} [sebep] kullanıcıyı yanıtlayarak
+    </value>
+  </string>
+  <string key="hcommandadminoff">
+    <value>
+      Mesajı admine bildirmeyi kapatmaik için kulanılır. Diğer adminler de kapatmak için aynı şekilde yapması gerekir.
+
+      Örnek:
+      /{0}
+      /{0} yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı adı]
+    </value>
+  </string>
+  <string key="hcommandadminon">
+    <value>
+      Kullanıcının admine bildirimini açmak. Diğer adminler de kapatmak için aynı şekilde yapması gerekir.
+
+      Örnek:
+      /{0}
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandsolved">
+    <value>
+      Raporlanan mesajlar sıraya eklendi.
+
+      Örnek:
+      /{0} @admin yazıp yanıtlayarak
+      /{0} [Rapor kimliği]
+    </value>
+  </string>
+  <string key="hcommandreporton">
+    <value>
+      @admin mesaj bildirimi aktif
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandreportoff">
+    <value>
+      @admin mesaj bildirimi kapalı.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandrules">
+    <value>
+      Hangi admin daha önce kural oluşturdu listele.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsetrules">
+    <value>
+      Gruba kural ayarla.Kullanıcılar kuralı /rules yazarak görebilirler.
+
+      Örnek:
+      /{0} Korkunç kötü bir insan olmayın :)
+    </value>
+  </string>
+  <string key="hcommandabout">
+    <value>
+      Adminler grup açıklamasını değiştirmek için bu komutu kullanmalıdır..
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsetabout">
+    <value>
+      Komut kullanarak grup açıklaması ekle
+
+      Örnek:
+      /{0} açıklama
+    </value>
+  </string>
+  <string key="hcommandadminlist">
+    <value>
+     Adminleri listele.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommands">
+    <value>
+     Özel sohbet mesajlarını kaydetmek için komut kullan.
+
+      Örnek:
+      /{0} kaydetmek istediğin mesajı yanıtla
+    </value>
+  </string>
+  <string key="hcommandid">
+    <value>
+      Kullanıcı kimliğini göster
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak cevapla
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsupport">
+    <value>
+      Botun yardım linkini göster.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommanduser">
+    <value>
+      Kullanıcı bilgilerini göster.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandme">
+    <value>
+      Bana bilgi ver.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandextra">
+    <value>
+     Ekstra komut kaydet,başlatmak için # simgesini kullan. Herkes bu komutu kullanabilir.
+
+      Örnek:
+      /{0} #deneme yanıtlayarak
+      /{0} #deneme bu denemedir
+    </value>
+  </string>
+  <string key="hcommandextralist">
+    <value>
+      Ekstra komutları listele.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandextradel">
+    <value>
+      Ekstra komutları sil.
+
+      Örnek:
+      /{0} #deneme
+    </value>
+  </string>
+  <string key="hcommandlink">
+    <value>
+      Gruba link ayarla komut ile.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsetlink">
+    <value>
+      Eğer grup gizli grup ise gruba komutla link ayarlayabilirsin
+      Örnek:
+      /{0} [grup linki] (gizli grup ise)
+      /{0} (gizli değil ise)
+    </value>
+  </string>
+  <string key="hcommandstatus">
+    <value>
+      Grubun durumu hakkında bilgi ver
+
+      Örnek:
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandwelcome">
+    <value>
+      Bir grup için bir hoş geldiniz iletisi tanımlanır, yeni bir kullanıcı katıldığında veya grubuna eklendiğinde gönderilir. Ancak, spamı önlemek için birden çok kullanıcı katılğıdında dakikada sadece bir hoşgeldin mesajı gönderilecektir.
+
+      Yazarken; (kullanım "/help markdown" bu komut hakkında bilgi gösterir) şunlara uymalısın:
+
+      $name - Yeni kullanıcı adı ile değiştirilir
+      $username - Yeni kullanıcı adı ile değiştirilir
+      $id - Yeni kimlik ile değiştirilir
+      $title - Yeni grup adı ile değiştirilir
+
+      Hoş geldin mesajı olarak GİF ayarlamak için kullanılır
+
+      Eğer istersen, metin olarak hoş geldin mesajı ayarlayabilirsin yazı [a], kural [r] ve admin listesi [m]. Bunun için /welcome mesajını kullanabilirsin [letters], Örnek "/welcome ar" hoş geldin mesajı kural olarak kaydedildi.
+
+      Hoş geldin mesajını varsayılana çevir ,  "/welcome no" komutunu kullan
+
+      Örnek:
+      /{0} Hoş Geldin $name  $title!
+      /{0} gif yanıtlandığında
+      /{0} [Text] gif yanıtlandığında
+      /{0} ar
+      /{0} m
+      /{0} [harflerle kompozisyon a, r ve m]
+      /{0} no
+    </value>
+  </string>
+  <string key="hcommanddisablewatch">
+    <value>
+      Kullanıcılar için farsça yazı algılamayı kapat , Admin kullanırsa önemsenmeyecek.
+
+      Örnek:
+      /{0}
+      /{0} Kullanıcıyı Yanıtlayarak
+    </value>
+  </string>
+  <string key="hcommandenablewatch">
+    <value>
+      Kullanıcılar için farsça yazı algılamayı aç , Admin kullanırsa önemsenecek.
+
+      Örnek:
+      /{0}
+      /{0} Kullanıcıyı Yanıtlayarak
+    </value>
+  </string>
+  <string key="hcommandcheck">
+    <value>
+      Bu gruba jaç mesaj gönderdiğini göster.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandelevate">
+    <value>
+      Kullanıcıyı grubun yöneticisi yapar. eğer admin bunu kullanırsa, kullanıcı admın komutlarına sahip olur.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommanddeelevate">
+    <value>
+      Sadece grubun kullanıcısı bu komutu kullanabilir. Bu komutu kullanacak yetkiniz yok.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandelevatelog">
+    <value>
+      Kullanıcıya yetki verildiğinde geçiçi günlük rapor tutulur. Admin kime yetki verdi ise ona ait rapor tutulur.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandauth">
+    <value>
+      Kullanıcıya izin ver. Bunun anlamı, grup kurucusu istediği bir kullanıcıya yetki verip yetkisini alabilir.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandblockelevate">
+    <value>
+      Yetki verilen kullanıcıyı engelle. Bu komut sadece grup kurucusu için geçerlidir. Genellikle , her 30 dakikada 1 kullanıcı yetkilendirilebilir.
+
+      Örnek:
+      /{0} admin yanıtladığında
+      /{0} [Admin's Kullanıcı Kimliği]
+      /{0} [Admin's Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommanddeauth">
+    <value>
+      Kullanıcıya izin verme, bunun için yetkiniz yok, sonsuza kadar yetkiyi kaldır.
+
+      Örnek:
+      /{0} admin yanıtladığında
+      /{0} [Auth's Kullanıcı Kimliği]
+      /{0} [Auth's Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandmenu">
+    <value>
+      Grubun tüm ayarlarını yapabilmen için sana bir mesaj yolladım.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>
+      Tüm grup ayarlarını değiştirmek için bir mesaj gönderir.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandping">
+    <value>
+      Ping, botun ne kadar sürede cevap verdiğini gösterir
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandgetcommands">
+    <value>
+      Tüm komut listesini getir. Bu komutu tüm adminler kullanabilir.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+
+  <string key="hcommandmarkdown">
+    <value>
+      <![CDATA[
+  <b>Yazı tiplerini nasıl kullanacağım:</b>
+
+
+  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+
+  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+
+  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+
+  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
+
+
+  ]]>
+    </value>
+  </string>
+
+  <string key="actionNotSettext">
+    <value>Lütfen eylemleri ayarlayın, bot bir kullanıcı çok uzun mesaj gönderdiğinde bu eylemi uygulayacaktır.</value>
+  </string>
+  <string key="getlongmessages">
+    <value>Uzun mesaj gönderdiğin için silindi: {0}</value>
+  </string>
+  <string key="kickformesslength">
+    <value>{0} çok uzun mesaj gönderdiğin için gruptan atıldın.</value>
+  </string>
+  <string key="banformesslength">
+    <value>{0} çok uzun mesaj gönderdiğin için gruptan banlandın.</value>
+  </string>
+
+  <string key="actionNotSetname">
+    <value>Lütfen eylemleri ayarlayın, bot bir kullanıcı çok uzun isime sahip olduğunda bu eylemi uygulayacaktır</value>
+  </string>
+  <string key="getnamelength">
+    <value>Çok uzun bir isime sahip olduğun için silindi: {0}</value>
+  </string>
+  <string key="kickfornamelength">
+    <value>{0} çok uzun bir isime sahip olduğun için gruptan atıldın.</value>
+  </string>
+  <string key="banfornamelength">
+    <value>{0} çok uzun bir isime sahip olduğun için gruptan banlandın.</value>
+  </string>
+  <string key="lengthButton">
+    <value>Otomatik</value>
+  </string>
+  <string key="nameSettingsHeader">
+    <value>İsim uzunluğu</value>
+  </string>
+  <string key="textSettingsHeader">
+    <value>Mesaj uzunluğu</value>
+  </string>
+  <string key="lengthMenu">
+    <value>
+      Burada bot uzun isimleri ve mesajları nasıl tepki vereceğini ayarlayabilirsiniz
+
+      Grupta gönderilen mesajın karakter limiti:
+      /maxnl [karakter sayısı] - maksimum isim limitini değiştir;
+      /maxtl [karekter sayısı] - maksimum karakter sayısnı değiştir;
+      /maxl [satır sayısı] - maksimum izin verilen satır sayısını değiştir.
+
+      Boş mesaj atarak kalabalık yapanların mesajları için bu özellik vardır. İzin verilen sayı kadar mesaj karakteri kullanarak spam gönderilmesine izin verilmeyecek
+      --[Karakter : satır]-- butonu göster
+    </value>
+  </string>
+  <string key="maxLength">
+    <value>Maksimum uzunluk</value>
+  </string>
+  <string key="done">
+    <value>yapıldı</value>
+  </string>
+  <string key="failed">
+    <value>Hatalı</value>
+  </string>
+  <string key="gethelplist">
+    <value>Mevcut yardımı sorgula:\n{0}</value>
+  </string>
+
+  <string key="hcommandleave">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandlook">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandunlook">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandblockp">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandallowp">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandauthnsfw">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommanddeauthnsfw">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandgetuser">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandhelp">
+    <value>
+      Yardım komutuna mı ihtiyacınız var?  burada:
+
+      Yardım komutu ( "/help warn" gibi ) veya bir konu hakkında ("/help markdown" gibi). Tüm yardım komutları için /helplist komutunu kullanınız. Eğer özel bir yardım talep etmezseniz standart yardım mesajı gösterilir.
+
+      Örnek:
+      /{0}
+      /{0} [komut ( "/" sız)]
+      /{0} [yardım konusu için /helplist]
+    </value>
+  </string>
+
+  <string key="hcommandhelplist">
+    <value>
+      Güncel yardım konularının listesini göster. /help komutunu kullanmak işinize yarayabilir. (Örnek "/help warn").
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+
+  <string key="hcommandmaxnl">
+    <value>
+      Gruptaki bir kullanıcı adı için en fazla uzunluğu tanımlar. Birinin değeri bundan uzun olursa , onlar otomatik olarak  gruptan atılır/uyarılır/banlanır (ayarlamak için  /menu under "Auto")
+
+      Örnek:
+      /{0} 50
+    </value>
+  </string>
+
+  <string key="hcommandmaxtl">
+    <value>
+      Grupta maksimum uzunluktaki mesajı tanımlar. tanımlanan mesajdan daha uzun bir mesaj girilirse, onlar otomatik olarak  gruptan atılır/uyarılır/banlanır (ayarlamak için  /menu under "Auto")
+
+      Örnek:
+      /{0} 1024
+    </value>
+  </string>
+
+  <string key="hcommandmaxl">
+    <value>
+      Grupta maksimum satır mesajı tanımlar. eğer daha fazla satırda mesaj girilirse , onlar otomatik olarak  gruptan atılır/uyarılır/banlanır (ayarlamak için  /menu under "Auto")
+
+      Örnek:
+      /{0} 50
+    </value>
+  </string>
+
+  <string key="hcommandrektlist">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+
+  <string key="hcommandaddrule">
+    <value>
+      Yeni bir kural ekle veya eski kuralın üzerine kaydet ( /rules komutunu kullanarak).
+
+      Örnek:
+      /{0} /rules Kurallar..
+    </value>
+  </string>
+
+  <string key="hcommanduploadlanguage">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandvalidatelanguages">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandgetlanguage">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandreloadlang">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandhalt">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandmakelangadmin">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandremovelangadmin">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandgetrekt">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandunrekt">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandmediaid">
+    <value>Bu komut sadece admin için!</value>
+  </string>
+
+  <string key="hcommandstart">
+    <value>
+      Bu komut sadece bot ile özel mesaj başlatmak için kullanılır.  /s komutunu kullanarak, özel ve bazı mesajları admine raporlayabilirsin.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+
+  <string key="donate">
+    <value>Eğer bağış yapmak istersen buradan yapabilirsin {0}.\nBu para bizim kullandığımız ücretsiz server için harcanacaktır.\nBot geliştiricileri bu bağışlar dışında para alamaz. </value>
+  </string>
+
+  <string key="hcommanddonate">
+    <value>
+      Bağış için Paypal linkini getir. Geliştiriciler bu bağışlar dışında para almazlar ve bu yaptığınız bağış için mutlu olurlar. Bağış olmadan da botu kullanabilirsiniz.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="notChannel">
+    <value>Sağlanan ID geçerli değil, lütfen /help  komutunu kullanın. Destek grubumuza katılıp bize geri bildirim verin</value>
+  </string>
+
+  <string key="channelAdded">
+    <value>Kanal kaydedkdş. Botun grupta admin olduğuna emin olun</value>
+  </string>
+
+  <string key="hcommandaddlogchannel">
+    <value>
+      Gruba ekle. Enforver tüm mesajları admin olarak atacaktır.
+      Bu komutu sadece grup kurucuları kullanabilir.
+      Bot grupta admin olmalıdır, yoksa özellikler çalışmaz
+      Örnek:
+      /{0} [channelID]
+      /{0} -1231243242332
+      /{0} gruptan yönlendirilenler yanıtlandığında
+    </value>
+  </string>
+
+  <string key="logSendError">
+    <value>Bot log kaydı tutamıyor, lütfen /addlogchannel komutunu kullanın ve tekrar deneyin.</value>
+  </string>
+
+  <string key="noone">
+    <value>hiçkimse</value>
+  </string>
+
+  <string key="logMessageCommand">
+    <value><![CDATA[{0} ({1}) sent \n\n <code>{2}</code> \n\n in {3} while replying to {4}.]]></value>
+  </string>
+
+  <string key="logMessageCallback">
+    <value>{0} ({1}) kullanılan {2} in {3}</value>
+  </string>
+
+  <string key="welcomeReset">
+    <value>Hoş geldin mesajı varsayılan olarak kaydedildi.</value>
+  </string>
+
+  <string key="hcommanddelmsg">
+    <value>
+      Yanıtlayarak mesajı sil. Sadece admin kullanabilir
+
+      Örnek:
+      /{0} mesaj yanıtlandğında
+    </value>
+  </string>
+
+  <string key="nsfwapikeyset">
+    <value>Uygunsuz içerik API'si kaydedildi.</value>
+  </string>
+
+  <string key="apikeysucgen">
+    <value>APİ anahtarı başarılı bir şekilde oluşturuldu.</value>
+  </string>
+
+  <string key="hcommandsetnsfw">
+    <value>
+      <![CDATA[Uygunsuz içerik algılayıcı ayarlandı.Daha fazla bilgi için linke tıklayın. <a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">here</a>.
+  
+  Örnek:
+  /{0} [clientid] [clientsecret]]]>
+    </value>
+  </string>
+
+  <string key="hcommandnsfw">
+    <value>
+      Bot otomatik olarak uygunsuz içerik algılar ve siler. Daha fazla detay için buraya bakın:
+
+      http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
+    </value>
+  </string>
+  <string key="welcomeBack">
+    <value>Enfocer'e hoş geldiniz. Ayarlarınız hala sağlam.</value>
+  </string>
+
+  <string key="messageDeleted">
+    <value>Mesaj başarılı bir şekilde silindi</value>
+  </string>
+  <string key="delete">
+    <value>MEsajı sil</value>
+  </string>
+
+  <string key="elevateBlocked">
+    <value>{0} tarafından banlandınız {1}</value>
+  </string>
+
+  <string key="elevateUnblocked">
+    <value>{0} tarafından banlandınız {1}</value>
+  </string>
+  <string key="usergroupstatuscreator">
+    <value>{0} bu grubun kurucusu.\nTMesaj gönderip {1} bu mesaj hakkında bilgi alabilir.</value>
+  </string>
+
+  <string key="usergroupstatusadmin">
+    <value>{0} bu grubun kurucusu.\nMesaj gönderip {1} bu mesajın ne zaman oluşturduğunu görebilirsiniz.</value>
+  </string>
+
+  <string key="usergroupstatusbanned">
+    <value>{0} bu gruptan banlandınız.\nMEsaj gönderip {1} bu mesajın ne zaman oluşturduğunu görebilirsiniz.</value>
+  </string>
+
+  <string key="usergroupstatusauth">
+    <value>{0} bu gruba izniniz var.\nMesaj gönderip {1} combanformesslengthmand komutu ne zaman oluşturuldu</value>
+  </string>
+
+  <string key="usergroupstatuselevated">
+    <value>{0} bu grupta yetkilendirildiniz.\nMesaj gönderip {1} komutun ne zaman oluştuğunu görebilirsiniz</value>
+  </string>
+
+  <string key="usergroupstatusmember">
+    <value>{0} bu grupta kullanıcısınız.\nMesaj gönderip {1} komutun ne zaman oluştuğunu görebilirsiniz</value>
+  </string>
+
+  <string key="usergroupstatusleft">
+    <value>{0} bu gruptan atıldınız veya ayrıldınız.\nMesaj gönderip {1} komutun ne zaman oluştuğunu görebilirsiniz.</value>
+  </string>
+
+  <string key="usergroupstatusneverseen">
+    <value>{0} bu gurpta göremedim.\nThey sent {1} komutun ne zaman oluştuğunu görebilirsiniz</value>
+  </string>
+  <string key="tempban">
+    <value>Geçici banlamak</value>
+  </string>
+  <string key="tempbannedForFlood">
+    <value>{0} Flood gönderdiğiniz için geçici olarak banlandınız, Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="tempbanformesslength">
+    <value>{0} Çok uzun mesaj gönderdiğin için gecici olarak banlandınız. Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="tempbanfornamelength">
+    <value>{0} çok uzun bir isime sahip olduğunuz için geçiçi olarak banlandınız. Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="tempbannedformedia">
+    <value>{0} izin verilmeyen medya gönderidğiniz için geçiçi olarak banlandınız. Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="tempbannedForRtl">
+    <value>{0} sağdan sola yazılan karakter mesajı gönderdiğiniz için geçiçi olarak banlandınız. Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="tempbanForNoEnglishScript">
+    <value>{0} has been Banned for using non-Latin characters. Ban bitişi: {1} (gün:saat:dakika)</value>
+  </string>
+  <string key="defaultTime">
+    <value>Varsayılan geçici ban süresi: {0}</value>
+  </string>
+  <string key="defaultTimeSet">
+    <value>Varsayılan geçiçi ban süresi güncellendi.</value>
+  </string>
+  <string key="groupMenu">
+    <value>
+      Bazı komutlar (/rules, /about, /adminlist, #extra komut) grupta gösterilir.
+      Eğer komut kapatılırsa, özel mesajdan cevap verecektir
+
+      İkonlar şuanki durumu göstermektedir:
+      • 👥: Bot grupta cevap verecek.
+      • 👤: Bot özel mesajda cevap verecek.
+    </value>
+  </string>
+  <string key="warnMenu">
+    <value>Maksimum alınabilecek uyarıyı düzenler</value>
+  </string>
+  <string key="groupSettingButton">
+    <value>Grup</value>
+  </string>
+  <string key="cannotbanadmin">
+    <value>Admini banlayamam ve gruptan atamam</value>
+  </string>
+  <string key="hcommanddelnsfw">
+  <value>
+  Daha önceki uygunsuz içerik algılayıcının API anahtarını sil. Çalışan bir tane ayarla ( daha fazla bilgi için "/help nsfw" ) 
+  
+  Örnek:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandchecknsfw">
+  <value>
+  Manuel olarak kontrol et, kaç tane uygunsuz içerik yakaladığını. İlk olarak bunun ayarını yapabilirsin, yardım için "/help nsfw" komutunu gir.
+  
+  Örnek:
+  /{0} resmi yanıtlayarak
+  </value>
+  </string>
+  <string key="hcommandmsgid">
+  <value>Bu komut sadece admin için!</value>
+  </string>
+  <string key="hcommanddellogchannel">
+  <value>
+  Kayıt tutucuyu sil, daha önce ayarlandı ise. Daha fazla bilgi için "/help addlogchannel" komutunu gir.
+  
+  Örnek:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandtemptime">
+    <value>
+      Geçiçi ban süresini varsayılan olarak ayarla.Zamanı ayarlarken /tempban komutunu kullan. (örnek: max warns, flood, etc.)
+
+      Örnek:
+      /{0} [dakika]
+    </value>
+  </string>
+  <string key="hcommandmedia">
+    <value>
+      Kullanıcı uyarılarını resetle veya sil.
+
+      Örnek:
+      /{0} Kullanıcıyı Yanıtlayarak
+      /{0} [Kullanıcı Kimliği]
+      /{0} [Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandunblockelevate">
+    <value>
+      Adminlere izin ver, daha önce egellenen yetkili kullanıcıları tekrar yetkilendir.
+
+      Örnek:
+      /{0} admin yanıtladığında
+      /{0} [Admin's Kullanıcı Kimliği]
+      /{0} [Admin's Kullanıcı Adı]
+    </value>
+  </string>
+  <string key="hcommandresetsettings">
+    <value>
+      Tüm grup ayarlarını sıfırlayabilirsin - rapor tutucu, kurallar, hakkında, vb. Uyarı: Tüm ayarlar silinecek, geri alınamaz.
+      
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandmissinghcommands">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+  <string key="hcommandwhois">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+  <string key="donateWord">
+  <value>Yardım et</value>
+  </string>
+  <string key="otherhelpList">
+    <value>uygunsuz içerik</value>
+  </string>
+  <string key="typeMore">
+    <value>Lütfen daha fazla sonuç getir</value>
+  </string>
+  <string key="tempbanDescription">
+    <value>Geçiçi banlama hakkında bilgi al</value>
+  </string>
+  <string key="helpDescription">
+    <value>Yardım komutu</value>
+  </string>
+  <string key="uct">
+    <value>UTC</value>
+  </string>
+  <string key="HelpButton">
+  <value>Yardım</value>
+  </string>
+  <string key="hcommandlangcode">
+    <value>Bu komut sadece enforcer admin için!</value>
+  </string>
+<string key="registerfortagall">
+  <value>Başaılı bir şekilde @pingall a kaydoldunuz</value>
+  </string>
+  <string key="tagallregistered">
+  <value>{0}  /pingme komutunu kullananları görüntüle</value>
+  </string>
+  <string key="tagallregisterednoone">
+  <value>hiç kimse /pingme komutunu kullanmadı henüz</value>
+  </string>
+  <string key="unregisterfortagall">
+  <value>Başarılı bir şekilde @pingall kaydınız iptal edildi</value>
+  </string>
+  <string key="hcommandpingme">
+  <value>
+  Kendini ping listesi grubuna ekleyebilirsin. Eğer bunu yaparsan Enforcer sana @pingall dan mesaj gönderecek. Dakika başı ping mesajı alacaksın.Ping listesinden çıkmak istersen /unpingme komutunu kullanmalısın.
+  
+  Örnek:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandunpingme">
+  <value>
+  Kendini ping listesinden çıkarabilirsin.Bu komutu kullandığında @pingall dan mesaj alamayacaksın
+  
+  Örnek:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandpingall">
+  <value>
+  Herkesi gruba çağır. Her 10 dakikada bir kere ping mesajı alacaksın. Ping listesinden çıkmak istersen /unpingme komutunu kullanmalısın.
+  
+  Örnek:
+  @{0}
+  /{0}
+  </value>
+  </string>
+  <string key="tagallNoUsername">
+  <value>Kendi kendini @pingall listesine ekleyebilirsin eğer kullanıcı adın varsa!</value>
+  </string>
+  <string key="logSettingChanged">
+    <value>{0} ({1}), {3} grubunda {2} ayarını değiştirdi: {4} → {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>Flood sınırı</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>Flood eylemi</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>{0} için flood kontrolü</value>
+  </string>
+  <string key="settingMedia">
+    <value>Medya: {0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>Medya uyarı eylemi</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>Maks. medya uyarısı</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>Maks. uyarı</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>Uyarı eylemi</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>İsim uzunluğu eylemi</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>Mesaj uzunluğu eylemi</value>
+  </string>
+  <string key="valueAllowed">
+    <value>İzinli</value>
+  </string>
+  <string key="valueBlocked">
+    <value>Engelli</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>Özel sohbet</value>
+  </string>
+  <string key="valueInGroup">
+    <value>Grup</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtreler</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} açık</value>
+  </string>
+  <string key="filtersMenu">
+    <value>Filtreler: bir mesaj, isim veya kullanıcı adı bunlardan birine uyduğunda ne olacağı. Bir filtrenin ne yaptığını değiştirmek için ona dokun. Yöneticiler ve watch ya da auth listesindeki üyeler asla kontrol edilmez.\n\nKendi kurallar: {0}. Onları /filter ile yönet.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>Arap alfabesi</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>Sağdan sola hileleri</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>Kiril alfabesi</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>Çince, Japonca, Korece</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>İbrani alfabesi</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>Devanagari alfabesi</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>Benzer görünen harfler</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>Görünmez karakterler</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Telegram davet bağlantıları</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>Telefon numaraları</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>Kripto cüzdanları</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>Yönetici veya destek isimleri</value>
+  </string>
+  <string key="filterAction_off">
+    <value>Kapalı</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>Sil</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>Uyar</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>Sustur</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>At</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>Geçici yasak</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>Yasakla</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>Eski üyeleri de kontrol et</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>Bu gruptaki botlara izin ver</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} susturuldu: {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} {2} süreyle susturuldu: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} atıldı: {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} yasaklandı: {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} {2} süreyle yasaklandı: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>Grubunuzun kendi filtre kuralları. Yeni bir kural {0} gün deneme ile başlar: yalnızca ne yapacağını kaydeder.\n/filter add name|username|text eylem regex\n/filter try /regex/ metin\n/filter test id veya regex\n/filter list\n/filter live id\n/filter trial id gün\n/filter del id</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>Hedef şunlardan biri olmalı: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>Eylem şunlardan biri olmalı: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>Bu düzenli ifade kullanılamaz: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>Bu grupta bu kural zaten var.</value>
+  </string>
+  <string key="filterLimit">
+    <value>Bir grubun en fazla {0} kendi kuralı olabilir. Önce /filter del ile birini sil.</value>
+  </string>
+  <string key="filterAdded">
+    <value>Kural #{0} eklendi. {1} gün denemede: ne yapacağını kaydeder ve hiçbir şey yapmaz. /filter live {0} ile etkinleştir.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>Uyuyor.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>Uymuyor.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>Son 30 günde görülen {0} üye arasında eşleşme yok.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>Son 30 günde görülen {1} üyeden {0} tanesi eşleşiyor. Örnekler:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>Sonucu sana özelden gönderdim.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>Sonucu sana gönderemedim. Önce benimle özel sohbet başlat, sonra tekrar dene.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>Bu grubun kendi kuralı yok. /filter add ile bir tane ekle; {0} gün deneme ile başlar.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>Kendi kurallar:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} {1} üzerinde, {2}, {3}. {4} kez eşleşti; bu üyelerden {5} tanesi çıkarıldı.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>etkin</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>{0} tarihine kadar denemede</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>deneme bitti, /filter live veya /filter del bekleniyor</value>
+  </string>
+  <string key="filterNotFound">
+    <value>{0} diye bir kural yok. /filter list kuralları gösterir.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>Kural #{0} etkin: bundan sonra işlem yapar.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>Kural #{0} {1} gün denemede.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>Kural #{0} silindi.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>Kendi filtre kuralların</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      Grubunun kendi filtre kuralları: üyelerin isimleri, kullanıcı adları veya mesaj metni üzerinde bir düzenli ifade ve eşleştiğinde ne yapılacağı (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Sadece yöneticiler. Hazır filtreler (alfabeler, davet bağlantıları, telefon numaraları ve daha fazlası) ayarlar menüsünde Filtreler altında.
+
+      Yeni bir kural 7 gün deneme ile başlar: ne yapacağını kaydeder ve hiçbir şey yapmaz, böylece doğru kişileri yakalayıp yakalamadığını görebilirsin. /{0} live ile etkinleştir.
+
+      Örnekler:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (kural 3'ü son 30 günde görülen üyelerin isimlerinde dener ve sonucu sana özelden gönderir)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>

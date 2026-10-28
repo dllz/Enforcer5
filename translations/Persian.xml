@@ -1,0 +1,1695 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<strings> 
+  <language name="فارسي" base="فارسي" owner="wulf_me" IEFT="fa"/> 
+  <string key="statusKicked">  
+    <value>   كاربر {0} از گروه بن شده است بنابردلايل {1}</value>  
+  </string>
+  <string key="statusLeft"> 
+    <value>  كاربر {0} گروه  را ترك كرده و يا كيك شده است</value> 
+  </string> 
+  <string key="statusAdministrator">  
+    <value> كاربر {0} ادمین میباشد</value>  
+  </string> 
+  <string key="statusCreator"> 
+    <value> سازنده گروه {0} میباشد </value> 
+  </string> 
+  <string key="statusUnknown"> 
+    <value> اين كاربر هيچ ارتباطي با اين چت ندارد .</value> 
+  </string> 
+  <string key="statusMember"> 
+    <value>كاربر {0} ممبر اين چت ميباشد </value> 
+  </string> 
+  <string key="userinfoGlobal"> 
+    <value><![CDATA[اطلاعات بن گلوبال]]></value> 
+  </string>
+  <string key="getkick"> 
+    <value> كيك  : {0}</value> 
+  </string> 
+  <string key="getban"> 
+    <value> بن : {0}</value> 
+  </string> 
+  <string key="gettempban"> 
+    <value> بن موقت : {0}</value> 
+  </string> 
+  <string key="getwarn"> 
+    <value>  بن شدن به دلیل حداکثر هشدار : {0}</value> 
+  </string> 
+  <string key="getgroupwarn"> 
+    <value> هشدارهاي كاربر : {0}</value> 
+  </string> 
+  <string key="getMediaWarn"> 
+    <value> هشدارهای رسانه : {0}</value> 
+  </string> 
+  <string key="userinfoGroup"> 
+    <value><![CDATA[<b>اطلاعات گروه: {0}</b>:]]></value> 
+  </string>
+  <string key="getrtl"> 
+    <value> حذف شدن به دلیل حروف چپ به راست  : {0}</value> 
+  </string> 
+  <string key="getflood"> 
+    <value>حذف شدن به دلیل اسپم : {0}   </value> 
+  </string> 
+  <string key="getarab"> 
+    <value>حذف شدن به دلیل حروف عربی : {0}  </value> 
+  </string> 
+  <string key="getmedia"> 
+   <value>حذف شدن به دلیل مدیا : {0}</value> 
+  </string> 
+  <string key="getnsfwimage"> 
+<value> حذف شدن به دلیل ارسال عکس غیر مجاز : {0} </value> 
+  </string> 
+  <string key="getNothing"> 
+    <value>Nothing to display</value> 
+  </string> 
+  <string key="botPm"> 
+    <value>یک پیام برای شما ارسال کردم</value> 
+  </string> 
+  <string key="noUser"> 
+    <value>قابل ب شناسايي يوزر نيستم</value> 
+  </string> 
+  <string key="botNotAdmin"> 
+    <value>من ادمين اين گفتگو نيستم ، بايد ادمين باشم تا بتوانم  دستور را اجرا كنم</value> 
+  </string> 
+  <string key="noReply"> 
+    <value>براي استفاده از اين دستور بايد روي شخصي ريپلاي كنيد</value> 
+  </string> 
+  <string key="msgTooLong"> 
+    <value>اين پيام از {0} حروف بيشتر است لطفا متن خود را كوتاه كنيد</value> 
+  </string> 
+  <string key="StartMe"> 
+    <value>استارت كردن</value> 
+  </string> 
+  <string key="userNotAdmin"> 
+    <value>شما ادمين اين گفتگو نيستيد</value> 
+  </string> 
+  <string key="markdownBroken">  
+    <value>مدل هاي نشانه گذاري در اين پيام نامعتبر  است براي تصحيح اشتباه خود از كمكي زير استفاده كنيد /help markdown </value>
+  </string>
+  <string key="linkMissing"> 
+    <value>لينكي براي اين گروه ثبت نشده است</value> 
+  </string> 
+  <string key="linkUpdated"> 
+    <value>لينك جديد براي اين گروه اپديت شد</value> 
+  </string> 
+  <string key="linkSet"> 
+    <value>لينك براي اين گروه ثبت شد</value> 
+  </string> 
+  <string key="adminList"> 
+    <value><![CDATA[<b>سازنده</b>: {0}\n<b>ادمين ها</b>:{1}]]></value> 
+  </string> 
+  <string key="defaultWelcome"> 
+    <value> سلام {0} خوش اومديد به  {1}. </value>   
+  </string> 
+  <string key="noAbout"> 
+    <value>توضيحاتي براي اين گروه ثبت نشده است</value> 
+  </string> 
+  <string key="noRules"> 
+    <value>هيچ قوانيني ثبت نشده است ب آتيش بكشيد گروه را</value> 
+  </string> 
+  <string key="rules"> 
+    <value><![CDATA[\n<b>قوانين</b>:\n{0}]]></value> 
+  </string> 
+  <string key="about"> 
+    <value><![CDATA[\n<b>توضيحات</b>:\n{0}]]></value> 
+  </string> 
+  <string key="RulesSet"> 
+    <value>قوانين جديد ثبت شده است</value> 
+  </string> 
+  <string key="AboutSet"> 
+    <value>توضيحات جديد ثبت شده است</value> 
+  </string> 
+  <string key="extraSaved"> 
+    <value>{0} دستور اضافه ذخيره شد</value> 
+  </string> 
+  <string key="noExtra"> 
+    <value>هيچ دستور اضافه أي گذاشته نشده است</value> 
+  </string> 
+  <string key="extraList">
+<value><![CDATA[List of <b>دستورات اضافه</b>:\n{0}]]></value> 
+  </string> 
+  <string key="extraDeleted">
+    <value>دستور اضافه حذف شده است</value>
+  </string>
+  <string key="SuccesfulKick">
+   <value> كاربر{0}  توسط  {1}كيك شده است. </value>  
+  </string>
+  <string key="SuccesfulBan">
+    <value> كاربر{0}  توسط  {1}بن شده است.  </value> 
+  </string>
+  <string key="FailedKick">
+    <value> كاربر {0}كيك نشده است لطفا ب صورت مستقيم ان بنش كنيد .</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>من قادر نيستم ادمين را كيك يا بن بكنم.</value>
+  </string>
+  <string key="Error">
+<value> خطا رخ داده است، توضيحات خطا {0}  . </value> 
+  </string>
+  <string key="PingInfo">
+<value> زمان براي دريافت پيام پينگ {0} مي باشد. </value> 
+  </string>
+  <string key="Ping2">
+  <value> زمان فرستادن پيام پينگ  {0} مي باشد  </value>
+  </string>
+  <string key="groupBanned">
+    <value>گروه شما از استفاده كردن از ورولف اينفورسر ممنوع شده است</value>
+  </string>
+  <string key="warnMaxKick">
+    <value><![CDATA[User {0} <b>kicked</b>: as they reached the max number of warns]]></value>
+  </string>
+  <string key="warnMaxBan">
+    <value><![CDATA[User {0} <b>banned</b>: as they reached the max number of warns]]></value>
+  </string>
+  <string key="resetWarn">
+    <value>پاك كردن تمامي اخطارها</value>
+  </string>
+  <string key="removeWarn">
+    <value>حذف اخطار</value>
+  </string>
+  <string key="warn">
+    <value><![CDATA[{0} <b>هشدار دريافت كرده است.</b>\n<i>: تعداد هشدارها </i>   <b>{1}</b>\n<i>حداكثر هشدار: </i>   <b>{2}</b>]]></value>
+  </string>
+  <string key="warnFlag">
+    <value><![CDATA[{0} <b>یک هشدار دریافت کرد توسط  {1}.</b>\n<i>تعداد هشدار ها </i>   <b>{2}</b>\n<i>حداکثر هشدار</i>   <b>{3}</b>]]></value>
+  </string>
+  <string key="alreadyFlagged">
+    <value>این پیام قبلا گزارش شده است.</value>
+  </string>
+  <string key="ban">
+    <value>بن</value>
+  </string>
+  <string key="kick">
+    <value>کیک</value>
+  </string>
+  <string key="Warn">
+    <value>هشدار</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nReport ID: #r{2}\n#Unsolved</value>
+  </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nOriginal Message {3}\nReport ID: #r{2}\n#Unsolved</value>
+  </string>
+  <string key="reported">
+    <value>Reported!\n#Report ID: #r{0}</value>
+  </string>
+  <string key="reportNotFound">
+    <value>این گزارش پیدا نشد.</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>این گزارش پاسخ داده شد ، توسط: {0}\n{1}\n({2})\nIt گزارش دهنده: {3}</value>
+  </string>
+  <string key="solvedBy">
+    <value>این گزارش قبلا پاسخ داده شده است توسط: {0}\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>Report ID: #r{0}</value>
+  </string>
+  <string key="markSolved">
+    <value>گزارش پاسخ داده شد.</value>
+  </string>
+  <string key="markedAsSolved">
+    <value>گزارش #r{1} پاسخ داده شد توسط {0}</value>
+  </string>
+  <string key="alreadySolved">
+    <value>پاسخ داده شد در زمان  {0} توسط {1}</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>Please reply to a flagged message (contains @admin) or send the reportID</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>این دستور به درستی تایپ نشده است</value>
+  </string>
+  <string key="NoInput">
+    <value>برای این دستور ورودی معتبری استفاده نشده است.</value>
+  </string>
+  <string key="Support">
+    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a>]]></value>
+  </string>
+  <string key="UnableToGetID">
+    <value>من نمیتوانم آی دی این یوزر را پیدا کنم.</value>
+  </string>
+  <string key="globalBan">
+        <value>كاربر  {0}  به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1}  مي باشند ، براي تجديد نظر در مورد بن خود ميتوانند به گروه پشتيباني  مراجعه 
+كنند
+@werewolfsupport 
+    </value> 
+  </string>
+  <string key="goToMessage">
+    <value>برو ب پيام</value>
+  </string>
+  <string key="goToChat">
+    <value>برو ب چت</value>
+  </string>
+  <string key="userUnbanned">
+    <value>يوزر آزاد شد!</value>
+  </string>
+  <string key="extraMediaSaved"> 
+    <value>اين دستور اضافه در جواب ب {0} سيو شده است </value> 
+  </string> 
+  <string key="tooLong">
+    <value>{0} خيلي طولاني است  </value>
+  </string>
+  <string key="extra">
+    <value>اضافه</value>
+
+  </string>
+  <string key="tempbanZero">
+    <value>زمان تمپ بن نميتواند صفر باشد</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} به طور موقت بن شده است به مدت {0} (days:hours:minutes)\nID: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>هشدار ها ریست شدند .\nReset توسط: {0}</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value> تعداد هشدار هاي كاربر ذكر شده صفر ميباشد صفر تر از اين نميشود</value>
+  </string>
+  <string key="warnRemoved">
+    <value>هشدار حذف شده است </value>
+  </string>
+  <string key="inlineBan">
+    <value>این کاربر با دستور اینلاین بن شده است.</value>
+  </string>
+  <string key ="userBanned">
+    <value>یوزر کیک شده است</value>
+  </string>
+  <string key ="userKicked">
+    <value>یوزر کیک شده است</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>هیچ لینکی برای گروه ثبت نشده است لطفا از دستور زیر برای ثبت لینک استفاده کنید..
+		دستورالعمل: /setlink (link)</value>
+  </string>
+  <string key="botNotStarted">
+    <value>شما در ابتدا باید ربات را استارت کنید    </value>
+  </string>
+  <string key="bannedFor">
+    <value> كاربر{0}  بن شده است براي </value>
+  </string>
+  <string key="welcomeSet">
+    <value> پيام خوش امدگويي  تنظيم شده است  توسط{0}  . </value>
+  </string>
+  <string key ="mainMenu">
+    <value>
+      Manage the settings of {0}.
+برخي از دستورات مانند (/adminlist,/rules,/about,#extra commands) ميتوانند از ارسال شدن در گروه غيرفعال شوند
+چ اتفاقي ميافتد وقتي دستوري از ارسال شدن در گروه غيرفعال ميشود، خب ربات پيام را ب خصوصي شخص ارسال ميكند
+      
+      اموجي هاي نزديك دستور وضعيت فعلي دستور را نشان ميدهند
+•	👥: ربات در گروه جواب شمارا ميدهد
+•	👤: ربات در چت خصوصي شما جواب ميدهد
+ 
+
+     ساير تنظيمات: براي ساير تنظيمات توضيحات مختصري ارائه شده است
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>پيام خوش امدگويي</value>
+  </string>
+  <string key="ReportButton">
+    <value>گزارش</value>
+  </string>
+  <string key="FloodButton">
+    <value>اسپم</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Extra</value>
+  </string>
+  <string key="RtlButton">
+    <value>راست ب چپ </value>
+  </string>
+  <string key="ArabButton">
+    <value>Arab</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Warn action: {0}</value>
+  </string>
+  <string key="closeButton">
+    <value>Done</value>
+  </string>
+  <string key="warnToLow">
+    <value>تعداد هشدار ها نميتواند كمتر از (١) باشد </value>
+  </string>
+  <string key="settingChanged">
+    <value>تنظيمات تغيير كرده است </value>
+  </string>
+  <string key="floodMenu">
+    <value>
+       شما میتوانید تنظیمات ضد اسپم را در اینجا تنظیم کنید.
+      1st row
+      • ON/OFF: وضعیت فعلی ضد اسپم 
+      • Kick/Ban: چه کاری باید انجام دهم وقتی کسی اسپم میدهد
+
+      2nd row
+•	شما میتوانید با +/- تعداد پیام های پشت سر هم را تنظیم کنید
+•	عدد حداكثر تعداد پيام هايي هست ك ميتوانيد در ٥ ثانيه ارسال كنيد
+•	حداكثر حالت: 25-حداقل حالت 4
+
+
+
+      
+  شما ميتوانيد استثناهايي هم براي سيستم ضد تنظيم كنيد
+•	✅: پیام هایی همچون ویدیو،عکس،استیکر و سایر رسانه ها برای آنتی اسپم نادیده گرفته شود
+•	❌: پیام هایی همچون ویدیو،عکس،استیکر و سایر رسانه ها برای آنتی اسپم نادیده گرفته نشود
+•	توجه: در (پيام) تمام رسانه هاي ديگر مانند (فايل صوتي ،فايل...) شامل ميشوند
+    </value>
+  </string>
+  <string key="on">
+    <value>روشن </value>
+  </string>
+  <string key="off">
+    <value> خاموش </value>
+  </string>
+  <string key="textButton">
+    <value>Text</value>
+  </string>
+  <string key="stickerButton">
+    <value>Sticker</value>
+  </string>
+  <string key="imageButton">
+    <value>Image</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>Video</value>
+  </string>
+  <string key="audioButton">
+    <value>Audio</value>
+  </string>
+  <string key="fileButton">
+    <value>File</value>
+  </string>
+  <string key="contactButton">
+    <value>Contact</value>
+  </string>
+  <string key="voiceButton">
+    <value>voice</value>
+  </string>
+  <string key="linkButton">
+    <value>Link</value>
+  </string>
+  <string key="textButton">
+	<value>Text</value>
+  </string>
+  <string key="doNothing">
+    <value>I do not do anything</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>کاربر {0} بار به دلیل اسپم از گروه بن شده است. </value>
+  </string>
+  <string key="kickedForFlood">
+    <value>کاربر {0} بار به دلیل اسپم دادن، از گروه کیک شده است.</value>
+  </string>
+  <string key="bannedForRtl">
+   <value> كاربر {0}  بار به دليل راست به چپ كردن حروف بن شده است .</value>
+  </string>
+  <string key="kickedForRtl">
+    <value> كاربر {0}  بار به دليل راست به چپ كردن حروف کیک شده است </value>
+  </string>
+  <string key="bannedForNoEnglishScript"> 
+    <value>كاربر{0} بار  به دليل استفاده از حروف غير لاتين ريمو شده است.</value> 
+  </string> 
+  <string key ="globalBanNotif"> 
+    <value>كاربر  {0}  به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1}  مي باشند ، براي تجديد نظر در مورد بن خود ميتوانند به گروه پشتيباني  مراجعه 
+كنند
+@werewolfsupport 
+    </value> 
+  </string>
+  <string key="GetLang">
+    <value>دريافت كدام فايل زبان؟  </value>
+  </string>
+  <string key="mediaMenuHeader">
+    <value>تنظيمات هشدار رسانه ها </value>
+  </string>
+  <string key="mediaMenu">
+    <value>
+براي تغيير تنظيمات روي علامت صدا در ستون سمت راست كليك كنيد 
+ميتوانيد از خط اخر براي تنظيم تعداد هشدار هايي كه ربات بايد قبل از كيك/بن فردي ك از رسانه هاي ممنوع استفاده كرده است ، استفاده كنيد
+     تعداد وارن هايي ك ميخواهيد شخص داشته باشد نميتواند كنار دستور روبرو قرار بگيرد /warn
+    </value>
+  </string>
+<string key="groupLanguage">
+  <value>زبان گروه </value>
+</string>
+<string key="langMenu">
+  <value>اينجا ميتوانيد زبان گروه خود را تنظيم كنيد، زبان گروه شما تنظيم شده است ب {0}: </value>
+</string>
+<string key="userUnblocked">
+  <value>يوزر آزاد شده است </value>
+</string>
+<string key="userBlocked">
+  <value>يوزر بن شده است </value>
+</string>
+<string key="startMe">
+    <value>بايد ابتدا ربات را استارت كنيد </value>
+  </string>
+  <string key="dashboardMenu">
+    <value>در اينجا انچه ك تنظيمات گروه شما است مشاهده ميكنيد  </value>
+  </string>
+    <string key="userInfoGlobal">
+    <value>اطلاعات جهاني يوزر </value>
+  </string>
+  <string key="backButton">
+	<value>Back</value>
+  </string>
+    <string key="mediaNotAllowed">
+  <value>اين نوع از رسانه مجاز نميباشد به شما هشدار داده ميشود . شما {0} هشدار از {1} دريافت كرده ايد  </value>
+  </string>
+  <string key="kickedformedia">
+  <value> {0} به دليل ارسال رسانه هاي ممنوعه كيك شده است </value>
+  </string>
+  <string key="bannedformedia">
+  <value> {0} به دليل ارسال رسانه هاي ممنوعه بن شده است </value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value> {0}به دليل استفاده از حروف لاتين كيك شده است  </value>
+  </string>
+  <string key="bannedfornsfwimage">
+	<value> {0}به دليل ارسال تصوير ممنوعه بن شده است. اين تصوير {1}% شانس ممنوع بودن را داشت  </value>
+  </string>
+  <string key="kickedfornsfwimage">
+	<value>{0}  {0}به دليل ارسال تصوير ممنوعه كيك شده است. اين تصوير {1}% شانس ممنوع بودن را داشت </value>
+  </string>
+  <string key="nsfwMenu">
+	<value>تعيين كنيد كه آيا يا نه كاربر بن يا كيك شده است 
+سيستم تشخيص را روشن يا خاموش كنيد
+توجه داشته باشيد كه هركدوم از كليد هاي (api) محدود ب ٥٠٠٠ تصوير در ماه است و مسئوليت خودتان است ك كليد (api) را عوض كنيد وقتي ك پر شده است 
+سيستم اينگونه كار ميكند كه تصاوير با احتمال ٪‏٩٥ ب بالا بي ادبانه رو بن ميكند، از آخرين تكنولوژي ديد كامپيوتر استفاده ميكند اما  اين زمينه هنوز جوان است و كامل نيست
+
+گزينه هاي شما در زير شرح داده شده اند:
+	</value>
+  </string>
+  <string key="nsfwButton">
+	<value>NSFW Detection</value>
+  </string>
+  <string key="getmaxwarn">
+	<value>از گروه برای گرفتن بیشترین سطح هشدار حذف شده است: {0}</value>
+  </string>
+  <string key="usergroupstatus">
+  <value>کاربر: {0} تعداد پیام های {1} در این گروه ارسال کرده است.</value>
+  </string>
+  <string key="usergroupstatusnotseen">
+  <value>کاربر: {0} تا به حال در این گروه دیده نشده است.</value>
+  </string>
+  <string key="evlavated">
+  <value>كاربر {0} توسط  {1} ارتقا پيدا كرده است ب ادمين </value>
+  </string>
+  <string key="auth">
+  <value> كاربر {0} توسط  {1} ارتقا پيدا كرده است ب سازنده    </value>
+  </string>
+  <string key="dauth">
+  <value> كاربر {0} توسط  {1} از سازنده بودن تنزل پيدا كرده است </value>
+  </string>
+  <string key="devlavated">
+  <value> كاربر {0} توسط {1} از ادميني تنزل  پيدا كرده است </value>
+  </string>
+  <string key="currentMods">
+  <value>یوزر هایی که اخیرا به ادمین ارتقا یافته اند</value>
+  </string>
+  <string key="prevMods">
+  <value><![CDATA[\n<b>Users temp elavated by users:</b>\n]]></value>
+  </string>
+  <string key="helpNoRequest">
+  <value>این ربات به شما کمک میکند تا بتوانید گروه خود را به خوبی مدریت کنید برای دریافت اخبار و آخرین تغییرات میتوانید در کانال مقابل عضو شوید https://t.me/greywolfdev.
+		این ربات به شما اجازه میدهد به کاربران هشدار داده ، آن ها را موقتا بن کنید یا از اسپم دادن یا دادن رسانه های غیر مجاز ممنوع کنید
+		* برای این که این ربات بتوانید دستورات را اجرا کند باید حتما در گروه مدیر باشد.
+		* بهتر است که این ربات را در سوپر گروه استفاده کنید
+		* برای تغییر تنظیمات ربات از دستور مقابل استفاده کنید /menu.
+		* این ربات دستورات بسیار زیادی دارد برایِ آن که بتوانید با این دستورات و نحوه استفاده آن ها  آشنا شوید میتوانید از دستورات مقابل استفاده کنید /help [command] EG: /help menu. To get a list of commands send /getcommands.
+		* اگر همچنان در استفاده از این دستورات نیاز به کمک دارید میتوانید در گروه پشتیبانی ربات سوالات خود را بپرسید /support 
+	</value>
+	</string>
+	<string key="helpOptionNotImplemented">
+  <value>
+		The information for {0} has not yet been written, please join the /support group to find out more about it.
+	</value>
+  </string>
+  <string key="hcommandkickme">
+  <value>
+اين دستور باعث ميشود شما گروه را ترك كنيد بدون اينكه لازم باشد از خروج از گروه استفاده كنيد ، براي كسايي ك هربار با خروج از گروه قادر ب برگشتن ب ان نيستند پيشنهاد ميشود همانند daniel
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandkick"> 
+  <value> 
+  از اين دستور براي كيك (ريمو با برگشت) كردن افراد استفاده ميشود فرد از گروه توسط ادمين لفت داده ميشود و قادر ب برگشت ميباشد  
+ميتوانيد در جواب شخص و يا با استفاده از ايدي شخص از اين دستور استفاده كنيد  
+   
+  Example:  
+  /{0} while replying to a user 
+  /{0} [User ID] 
+  /{0} [Username] 
+ </value> 
+  </string>
+  <string key="hcommandwarn">
+  <value>
+		ميتواند براي اضافه كردن هشدار ب فرد مورد استفاده قرار بگيرد، شما ميتوانيد حداكثر هشدار ها و تعداد هشدار هايي ك فرد قابل ب دريافت است را در منوي دستورات تغيير بدهيد
+		Example: 
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandban">
+  <value>
+ميتواند براي بن كردن ي كاربر از گروه (ديگر قادر ب برگشت نيستند) مورد استفاده قرار بگيرد اگ در هنگام ريپلاي مورد استفاده قرار بگيرد ميتوانيد دليل بن خود را نيز اضافه كنيد درست با فاصله و در كنار دستور بن 
+		
+	 Example: 
+		/{0} while replying to a user
+		/{0} [Reason] while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandunban">
+  <value>
+	ميتواند استفاده قرار بگيرد براي ازاد كردن يه يوزر (انها را قادر ب برگشتن ب گروه ميكند) اگر كه بن و يا تمپ بن شده بوده اند
+		Example: 
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandtempban">
+  <value>
+ميتواند براي بن موقت(تمپ بن ) ي يوزر مورد استفاده قرار بگيرد.آنها فقط زماني قادر ب برگشتن ب گروه هستن ك زمان بنشان تمام شده باشد، دستور اينطوري كار ميكند ك فرد را بن ميكند و بعد از زمان خاص تعيين شده ازادش ميكند
+توجه:
+بايد در جواب (ريپلاي) ب شخصي ك ميخوايد بن شود استفاده كنيد، و بعد از استفاده از دستور تعداد دقيقه هايي ك ميخواي بن باشد رو بنويسيد در كنار دستور و با فاصله و سپس ارسال كنيد. توجه كنيد اگر زماني تعيين نكنيد بات ب مدت ي ساعت فرز را بن ميكند 
+
+		Example:
+		/{0} 123 while replying to a user
+		/{0} while replying to a user
+	</value>
+  </string>
+  <string key="hcommandadmin"> 
+  <value> 
+اين دستور ميتواند براي صدا زدن ادمين ها مورد استفاده قرار بگيرد، اگر در جواب پيامي استفاده بشود ان پيام را به همراه پيام شما براي ادمين ها ارسال ميكند ، و اگر در جواب پيامي فرستاده نشود فقط پيام شما فرستاده ميشود 
+ Example:  
+  @{0} 
+  @{0} while replying to a user 
+  @{0} [reason] 
+  @{0} [reason] while replying to a user 
+   
+  /{0} 
+  /{0} while replying to a user 
+  /{0} [reason] 
+  /{0} [reason] while replying to a user 
+ </value> 
+  </string>
+  <string key="hcommandadminoff">
+  <value>
+	توقف كردن ربات از ارسال گزارش ب شما ، شما همچنين ميتوانيد از اين دستور براي بقيه ادمين ها هم استفاده كنيد تا گزارش ها هم ب انها ارسال نشود فقط كافيه ك ايدي ادمين را ذكر كنيد
+	 Example: 
+		/{0}
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandadminon">
+  <value>
+باعث ميشود ك ربات ب ادمين ها گزارش ارسال كند اگ ادميني ربات را غير فعال كرده باشد حتي براي بقيه ادمين ها هم ميتوانيد فعال كنيد ب صورت زير 		Example: 
+		/{0}
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandsolved">
+  <value>پيام گزارش شده را رسيدگي شده  نشان ميدهيد تا بقيه ادمين ها مشاهده كنند ك ب اين گرارش رسيدگي شده است 
+		Example: 
+		/{0} while replying to the message containing @admin
+		/{0} [Report ID]
+	</value>
+  </string>
+  <string key="hcommandreporton">
+  <value>
+	اجازه استفاده كاربر از @admin را ميدهد حتي اگر قبلا مسدود شده بوده است 
+	 Example: 
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandreportoff">
+  <value>
+		اجازه استفاده كاربر از @adminرا نميدهد
+		Example: 
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandrules">
+  <value>
+		قوانين مربوط ب گروه را ميدهد، قوانيني ك ادمين ها قبلا انها را تنظيم كرده اند
+		Example:
+		/{0} 
+	</value>
+  </string>
+  <string key="hcommandsetrules">
+  <value>
+قوانين را براي گروه تنظيم ميكند، توجه داشته باشيد ك كاربران قادر ب ديدن اين فرمان هستند
+		Example: 
+		/{0} Do not be a horrible mean person
+	</value>
+  </string>
+  <string key="hcommandabout">
+  <value>
+بازگشت ب توضيحات گروه ،كه ادمين ها قبلا با استفاده از دستور مربوط ب توضيحات (about)گروه خود را  تنظيم كرده اند
+
+		Example: 
+		/{0} 
+	</value>
+  </string>
+  <string key="hcommandsetabout">
+  <value>
+	
+يك توضيح مختصر در مورد گروه ك كابران با استفاده از دستور about ميتوانند مشاهده كنند 
+		Example: 
+		/{0} A group for trolololololols
+	</value>
+  </string>	
+  <string key="hcommandadminlist">
+  <value>
+ليستي از ادمين ها و ادمين هاي موقت/مديران را ميدهد	
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommands">
+  <value>
+	پيامي را ذخيره ميكند كه روش ريپلاي زديد و به چت خصوصي شما با ربات ارسال ميكند
+		Example:
+		/{0} while replying to a message you want to save
+	</value>
+  </string>	
+  <string key="hcommandid">
+  <value>
+ادي گروه و با ايدي شخصي ك روش ريپلاي زديد را در اختيارتون قرار ميدهد
+		Example:
+		/{0} while replying to a user's message
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandsupport">
+  <value>
+		لينك مربوط ب گروه پشتيباني ورولف را در اختيارتان قرار ميدهد
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommanduser">
+  <value>
+اطلاعاتي در مورد كاربر در اختيارتان قرار ميدهد مانند تعداد هشدار ها (وارنها) ،تعداد دفعاتي ك كيك شده و تعداد بن ها و اگر بن جهاني شدن يا ن
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandme">
+  <value>
+اطلاعاتي را ب شما ميدهد ك چند بار كيك شده ايد ، و يا چند تا وارن يا بن دريافت كرده ايد و ب چت خصوصي شما با ربات ارسال ميكند 
+		Example:
+		/{0}
+	</value>
+  </string> 	
+  <string key="hcommandextra">
+  <value>
+….
+		Example:
+		/{0} #blabla while replying to some text or media
+		/{0} #blabla This is an extra
+	</value>
+  </string>	
+  <string key="hcommandextralist">
+  <value>
+ليستي از دستوراتي ك ب صورت دستور اضافه ، اضافه كرده ايد را در اختيارتان قرار ميدهد
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandextradel">
+  <value>
+	اين فرمان دستور اضافه أي را ك قبلا ثبت شده است را حذف ميكند .
+		
+		Example:
+		/{0} #blabla
+	</value>
+  </string>	
+  <string key="hcommandlink">
+  <value>
+
+	اين دستور لينك گروه را در اختيارتان قرار ميدهد ، فقط زماني كارميكند ك ادمين قبلا  setlink  كرده باشد
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandsetlink">
+  <value>
+		لينك گروه را ثبت ميكند ، براي مشاهده لينك گروه توسط دستور/link  لازم است ك لينك ثبت شده باشد 
+		Example:
+		/{0} [Group Link] (private group)
+		/{0} (public group)
+	</value>
+  </string>	
+  <string key="hcommandstatus">
+  <value>
+وضعيت فعلي كاربر را مشخص ميكند ك آيا ممبر است ،ادمين ، مدير (ادمين موقت)، سازنده، بن شده و ...
+	Example:
+		/{0} while replying to a message
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandwelcome">
+  <value>
+  پيام خوش امدگويي پيامي است ك ربات با جوين شدن اعضا ب گروه در گروه ارسال ميكند 
+پيام خوش امد گويي براي هر شخص ب صورت جاگانه فرستاده ميشود ولي اگ چندين كاربر در يك زمان جوين شون فقط يك پيام خوش امدگويي ارسال ميشود 
+يك پيام در هردقيقه
+
+در پيام خوش امدگويي ميتوانيد از كد هاي زير استفاده كنيد 
+  $name - با نام كابري كاربر جايگزين ميشود 
+  $username - با يوزرنيم كاربر جايگزين ميشود 
+  $id - با ايدي كاربر جايگزين ميشود 
+  $title - با اسم گروه جايگزين ميشود 
+
+اگه بخوايد ميتوانيد از گيف هم براي خوش اومدگويي استفاده كنيد 
+ب صورتي ك بايد روي گيف مورد نظر ريپلاي كنيد 
+اگه بخوايد ربات ميتواند پيام خوش اومدگويي شمارو ب صورت  قوانين ، ليست ادمينا، و يا يه متن نمايش بدهد 
+براي هركدوم از اينا از كد هاي زير استفاده كنيد 
+  
+  براي برگرداندن ولكام قبلي كافيه كه از اين كد استفاده كنيد 
+/welcome no
+
+  Example:
+  /{0} Welcome $name to $title!
+  /{0} while replying to a gif
+  /{0} [Text] while replying to a gif
+  /{0} ar
+  /{0} m
+  /{0} [any composition of the letters a, r and m]
+  /{0} no
+  </value>
+  </string>
+  <string key="hcommanddisablewatch">
+  <value>
+اين دستور براي غيرفعال كردن ضد اسپم و يا استفاده از حروف عربي / فارسي براي ي يوزر خاص  مورد استفاده قرار ميگيرد و باعث ميشود ك ربات انها را ناديده بگيرد . ادمين هاي گروه قادر ب استفاده از اين دستور هستند
+		
+		Example:
+		/{0}
+		/{0} while replying to a user
+	</value>
+  </string>	
+  <string key="hcommandenablewatch">
+  <value>
+اين دستور ب معني فعال كردن ضد اسپم و يا استفاده از حروف عربي / فارسي براي يک يوزر خاص ميباشد ك ادمين هاي گروه قادر ب استفاده از اين دستور هستند و دستور زماني كار ميكند كه قبلا اون يوزر از اين كار منع شده باشد .
+
+	  Example:
+		/{0}
+		/{0} while replying to a user
+	</value>
+  </string>	
+  <string key="hcommandcheck">
+  <value>
+اين دستور براي مشاهده تعداد پيام هايي ك فرد در گروه ارسال كرده است  مورد استفاده قرار ميگيرد 
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandelevate">
+  <value>
+	اين دستور فرد را ب ادميني ارتقا ميدهد فرد ارتقا يافته قادر ب (كيك، بن،تمپ بن) ساير كاربران ميباشد ( اگر توسط ادميني ب اين قابليت ارتقا داده شده باشد فقط ٣٠ مين ادمين موقت خواهد بود .
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommanddeelevate">
+  <value>
+فرد ارتقا يافته ب ادميني را ب ممبري تنزل ميدهد ، فقط توسط سازنده و#auth  ميتواند مورد استفاده قرار بگيرد
+		
+		Example:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandelevatelog">
+  <value>
+گزارشي نشان ميدهد از اينكه چ كساني ادمين شدن ، سلب شدن و غيره ... ب طور كلي گزارشي از #elevate  و #deelevate ميباشد.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandauth"> 
+  <value> 
+اين دستورauth  يعني ربات شما را ب عنوان سازنده گروه ميشناسد  و شما قادر ب ادمين كردن و سلب كردن بقيه هستيد  
+  Example: 
+  /{0} while replying to a user 
+  /{0} [User ID] 
+  /{0} [Username] 
+ </value> 
+  </string>
+  <string key="hcommandblockelevate">
+  <value>
+ادمين را از ادمين كردن بقيه منع ميكند ، همه ادمين ها قادر ب استفاده از اين دستور و قادر ب ادمين كردن بقيه هستند ولي فقط براي ٣٠ دقيقه ، توجه داشته باشيد ك تنها سازنده قادر ب ادمين كردن موقت افراد را دارد  
+		Example:
+		/{0} while replying to an admin
+		/{0} [Admin's User ID]
+		/{0} [Admin's Username]
+	</value>
+  </string>	
+  <string key="hcommanddeauth">
+  <value>
+اين دستور deauth يعني شخص ديگر قادر نيست بقيه را ادمين / مدير كند و ربات ديگر شخص deauth شده  را ب صورت سازنده گروه شناسايي نميكند
+	Example:
+		/{0} while replying to an auth
+		/{0} [Auth's User ID]
+		/{0} [Auth's Username]
+	</value>
+  </string>	
+  <string key="hcommandmenu">
+  <value>
+		ربات منويي براي تغيير تمام تنظيمات گروه در پي وي شما ارسال ميكند
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommanddashboard">
+  <value>
+	ربات ليستي از تمامي دستورات خود را در پي وي شما ارسال خواهد كرد
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandping">
+  <value>
+		Pings the bot to see how long it takes it to respond.
+		
+		Example:
+		/{0}
+	</value>
+  </string>	
+  <string key="hcommandgetcommands">
+  <value>
+		
+لیستي از تمام دستورات ربات ميباشد . توجه داشته باشید که برخی از آنها تنها برای مدیران ربات جهانی مورد استفاده قرار ميگيرن  ، بنابراین شما نميتوانيد از انها استفاده كنيدد. 
+   
+  Example: 
+  /{0} 
+ </value> 
+  </string>  
+  
+  
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>How to use markdown:</b>
+  
+  
+  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+  
+  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+  
+  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+   
+   
+   <string key="actionNotSettext"> 
+  <value>لطفا نوع عملكرد ربات  در مقابل مواجهه شدن با پيامي بسيار طولاني را مشخص كنيد  </value> 
+  </string> 
+  <string key="getlongmessages"> 
+  <value>بن شدن به دلیل پیام های طولانی : {0}</value> 
+  </string> 
+  <string key="kickformesslength"> 
+  <value>كاربر{0}  به دليل فرستادن پيام هاي بسيار طولاني از گروه كيك شد </value> 
+  </string> 
+  <string key="banformesslength"> 
+  <value> كاربر{0}  به دليل فرستادن پيام هاي بسيار طولاني از گروه كيك شد </value> 
+  </string> 
+   
+   <string key="actionNotSetname"> 
+  <value> لطفا نوع عملكرد ربات  در مقابل مواجهه شدن با نام كاربري  بسيار طولاني را مشخص كنيد </value> 
+  </string> 
+  <string key="getnamelength"> 
+  <value>Removed for having too long a name: {0}</value> 
+  </string> 
+  <string key="kickfornamelength"> 
+  <value> كاربر{0}  به دليل داشتن نام كاربري بسيار طولاني از گروه كيك شد </value> 
+  </string> 
+  <string key="banfornamelength"> 
+  <value> كاربر{0}  به دليل داشتن نام كاربري بسيار طولاني از گروه بن شد.</value> 
+  </string> 
+  <string key="lengthButton"> 
+  <value>Auto</value> 
+  </string> 
+  <string key="nameSettingsHeader"> 
+  <value>Name length</value> 
+  </string> 
+  <string key="textSettingsHeader"> 
+  <value>Message length</value> 
+  </string> 
+  <string key="lengthMenu"> 
+  <value>اينجا ميتواني نوع عملكرد ربات در مقابل مواجهه شدن با نام كاربري و پيام بسيار طولاني تعيين كني 
+فقط كافي است كد مربوطه را در گروه بفرستي  
+ /maxnl [number of characters] – براي تعيين حداكثر حروف در اسم 
+ /maxtl [number of characters] – براي تعيين حداكثر حروف در پيام 
+ /maxl [number of lines] – براي تعيين حداكثر خطوط در پيام.  
+   
+دليل اصلي ك شما قادر هستيد تعداد خطوط را تعيين كنيد اين است ك بعضي اسپمر ها پيام هاي خالي با خط هاي زياد ميفرستن ك باعث طولاني شدن پيام ميشود    
+  --[Characters : lines]-- shown in button 
+  </value> 
+  </string> 
+  <string key="maxLength"> 
+  <value>Max length</value> 
+  </string> 
+  <string key="done"> 
+  <value>Done</value> 
+  </string> 
+  <string key="failed"> 
+  <value>Failed</value> 
+  </string> 
+  <string key="gethelplist"> 
+    <value>The current support help queries are:\n{0}</value>
+    </string>
+   
+   <string key="hcommandleave"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandlook"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandunlook"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandblockp"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandallowp"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandauthnsfw"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommanddeauthnsfw"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandgetuser"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string> 
+   
+  <string key="hcommandhelp"> 
+  <value>  
+ تو از دستور كمك براي كمك استفاده ميكني ؟:)) خيلي نوب ولي باز  
+از دستور كمك براي فهميدن و توضيح گرفتن در مورد دستورات ديگر استفاده ميشود ب طور مثال /help warn اطلاعاتي در مورد هشدار دادن و چگونگي هشدار در اختيارتان قرار ميدهد. براي دريافت ليست دستورات از /helplist commandاستفاده كنيد  
+   
+  Example: 
+  /{0} 
+  /{0} [command (without "/")] 
+  /{0} [help topic from /helplist] 
+  </value> 
+  </string> 
+   
+  <string key="hcommandhelplist"> 
+  <value> 
+ليستي از دستورات فعلي ربات در اختيارتان قرار ميدهد شما ميتوانيد با استفاده از /help  توضيحات مربوط ب هركدام از ان دستورات را مطالعه كنيد  
+  Example: 
+  /{0} 
+  </value> 
+  </string> 
+   
+  <string key="hcommandmaxnl"> 
+  <value> 
+با اين دستور حداكثر طول نام كاربري را ميتوانيد تعيين كنيد ، توجه داشته باشيد افرادي ك نام كاربريشان از عدد تعيين شده بيشتر باشد ربات انها را ب صورت اتوماتيك (بن،كيك،هشدار،ريمو) ميكند همه اين ها را ميتوانيد
+در /menu زير AUTO تعيين كنيد  
+ 
+  Example: 
+  /{0} 50 
+  </value> 
+  </string> 
+   
+  <string key="hcommandmaxtl"> 
+  <value> 
+با اين دستور حداكثر طول پيام كاربري را ميتوانيد تعيين كنيد ، توجه داشته باشيد افرادي ك پيام  كاربريشان از عدد تعيين شده بيشتر باشد ربات انها را ب صورت اتوماتيك (بن،كيك،هشدار،ريمو) ميكند همه اين ها را ميتوانيد
+در /menu زير AUTO تعيين كنيد
+  Example: 
+  /{0} 1024 
+  </value> 
+  </string> 
+  
+  <string key="hcommandmaxl"> 
+  <value> با اين دستور حداكثر خطوطي ك ي پيام كاربري ميتواند داشته باشد را تعيين كنيد ، توجه داشته باشيد افرادي ك خطوط  پيام  كاربريشان از عدد تعيين شده بيشتر باشد ربات انها را ب صورت اتوماتيك (بن،كيك،هشدار،ريمو) ميكند همه اين ها را ميتوانيد
+در /menu زير AUTO تعيين كنيد  
+   
+  Example: 
+  /{0} 50 
+  </value> 
+  </string>
+  
+  <string key="hcommandrektlist"> 
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandaddrule">
+<value>
+با اين دستور ميتواني قانون جديدي را ب قوانين موجود در 
+/rules
+ اضافه كنيد فقط كافيه اون قانون رو ب قوانين موجود اضافه كنيد
+
+Example:
+/{0} You must always troll others!
+</value>
+</string>
+  
+  <string key="hcommanduploadlanguage">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandvalidatelanguages">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandgetlanguage">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandreloadlang">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandhalt">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandmakelangadmin">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandremovelangadmin">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandgetrekt">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
+  </string>
+  
+  <string key="hcommandunrekt">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+  
+  <string key="hcommandmediaid">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+  
+  <string key="hcommandstart">
+<value>
+اين دستور براي اين است ك ربات بتواند پيامي ب خصوصي شما ارسال كند براي دستوراتي مانند دريافت ريپورت و سيو كردن پيام لازم است ك ربات را استارت كنيد 
+@admin  and /s 
+
+
+Example:
+/{0}
+</value>
+</string>
+
+<string key="donate">
+    <value>اگه ميخواي در روشن موندن سرور هاي اينفورس كمك كني برو ب اينجا  {0}
+اين پول فقط خرج سرور هاي گران قيمت ميشود و سازنده ها هيچ پولي دريافت نميكنند از اين راه  </value>
+  </string>
+  
+  <string key="hcommanddonate">
+  <value>
+با استفاده از اين دستور ، لينكي دريافت ميكنيد براي اهداي پول از طريق پي پال ، هيچ كدوم از سازنده هاي ربات اين پول را دريافت نميكنيد و از بابت هركدوم از اهداي شما خوشحال ميشن ، و هزار البته بدون اهدا هم ميتوانيد از ربات استفاده كنيد 
+  Example:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="notChannel">
+    <value>ايدي ارائه شده ايدي چنل نميباشد </value>
+  </string>
+
+  <string key="channelAdded">
+    <value>اين چنل ذخيره شده است ، لطفا مطمئن شيد ك ربات در چنل ادمين ميباشد</value>
+  </string>
+
+  <string key="hcommandaddlogchannel">
+  <value>با اين دستور ميتوانيد چنل ثبت وقايع داشته باشيد ، در اين صورت ربات هر اتفاقي در گروه بيفتد در چنل ثبت ميكند ، اين چنل فقط ميتواند توسط كريتور گروه و يا يوزر ارتقا يافته ب درجه كريتور ساخته شود 
+  Example: 
+  /{0} [channelID]
+  /{0} -1231243242332
+  </value>
+  </string> 
+
+  <string key="logMessage">
+  <value>{0} ({1}) used {2} in {3}</value>
+  </string> 
+
+  <string key="logSendError">
+  <value>عدم موفقيت ربات در ثبت اين واقعه در كانال رقايع لطفا ايدي كانال را ثبت كنيد و از ادمين بودن ربات در كانال مطمئن شيد تا ربات بتواند در كانال پست ارسال كند</value>
+  </string>
+
+ <string key="noone">
+    <value>noone</value>
+  </string>
+  
+  <string key="logMessageCommand">
+  <value><![CDATA[{0} ({1}) sent \n\n <code>{2}</code> \n\n in {3} while replying to {4}.]]></value>
+  </string>
+  
+  <string key="logMessageCallback">
+  <value>{0} ({1}) used {2} in {3}</value>
+  </string>
+  
+  <string key="welcomeReset">
+  <value>The welcome message was set to default.</value>
+  </string>
+  
+  <string key="hcommanddelmsg">
+  <value>
+پيامي كه روش ريپلاي كرديد را پاك ميكند ، فقط مورد استفاده ادمين ميتواند قرار بگيرد 
+  Example:
+  /{0} while replying to a message 
+  </value>
+  </string>
+  
+  <string key="nsfwapikeyset">
+  <value>سيو شد NSFW API تنظيمات مربوط ب</value>
+  </string>
+  
+  <string key="apikeysucgen">
+  <value>The API key was generated successfully.</value>
+  </string>
+  
+  <string key="hcommandsetnsfw">
+  <value>
+  <![CDATA[Set up NSFW image detection for your group. Information on how to exactly do it are found <a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">here</a>.
+  
+  Example:
+  /{0} [clientid] [clientsecret]]]>
+  </value>
+  </string>
+  
+  <string key="hcommandnsfw">
+  <value>
+  از این ببعد اینفورس قادر ب شناسایی و برخورد با عکس های غیر مجاز میباشد توضیحات مربوطه را در لینک زیر میتوانید مطالعه کنید
+  
+  http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
+  </value>
+  </string>
+  <string key="welcomeBack">
+    <value>خوش برگشتی تنظیمات شما بدون تغییر باقی ماندن</value>
+  </string>
+
+  <string key="messageDeleted">
+    <value>پیام با موفقیت پاک شد </value>
+  </string>
+  <string key="delete">
+    <value>Delete Message</value>
+  </string>
+  
+  <string key="elevateBlocked">
+    <value>{0} توسط {1} از ارتقا دادن بقیه منع شد </value>
+  </string>
+  
+  <string key="elevateUnblocked">
+    <value>{0} توسط {1} از قادر ب ارتقا دادن بقیه کاربرا از این هنگام میباشد</value>
+  </string>
+  
+   <string key="usergroupstatuscreator">
+    <value>کاربر {0} کریتور گروه است و از وقتی این دستور ساخته شده است ب تعداد {1} پیام در گروه ارسال کرده است</value>
+  </string>
+
+  <string key="usergroupstatusadmin">
+    <value>کاربر {0} ادمین گروه میباشد و از وقتی این دستور ساخته شده است ب تعداد {1} پیام در گروه ارسال کرده است </value>
+  </string>
+
+  <string key="usergroupstatusbanned">
+    <value>کاربر {0} از گروه بن شده است و از وقتی این دستور ساخته شده است ب تعداد {1} پیام در گروه ارسال کرده است </value>
+  </string>
+
+  <string key="usergroupstatusauth">
+    <value>کاربر {0}فرد انتقال یافته ب مقام کریتور میباشد و از وقتی این دستور ساخته شده است ب تعداد {1} پیام در گروه ارسال کرده است </value>
+  </string>
+
+  <string key="usergroupstatuselevated">
+    <value>کاربر {0} مدیر گروه میباشد و از وقتی این دستور ساخته شده است به تعداد {1} پیام در گروه ارسال کرده است</value>
+  </string>
+
+  <string key="usergroupstatusmember">
+    <value>کاربر {0} ممبر این گروه میباشد و از وقتی این دستور ساخته شده است به تعداد {1} پیام در گروه ارسال کرده است</value>
+  </string>
+
+  <string key="usergroupstatusleft">
+    <value>کاربر {0} از گروه کیک و یا لفت داده است از وقتی این دستور ساخته شده این کاربر {1} پیام در گروه ارسال کرده است</value> 
+  </string>
+
+  <string key="usergroupstatusneverseen">
+    <value>کاربر {0} تا کنون در گروه مشاهده نشده است و . تعداد پیام های ارسالی ایشان در گروه {1} میباشد </value>
+  </string>
+  <string key="tempban">
+    <value>Tempban</value>
+  </string>
+  <string key="tempbannedForFlood">
+    <value>{0} has been tempBanned for Flood, Ban expires in: {1} (days:hours:minutes)</value>
+  </string>
+  <string key="tempbanformesslength">
+    <value>کاربر{0} ب دلیل فرستادن پیام بسیار طولانی بن شده است . مدت زمان بن {1}</value>
+  </string>
+  <string key="tempbanfornamelength">
+    <value>کاربر {0} ب دلیل داشتن اسم طولانی بن شده است . مدت زمان بن {1}</value>
+  </string>
+  <string key="tempbannedformedia">
+    <value>کاربر{0} ب دلیل فرستادن رسانه های ممنوعه از گروه بن شده است . مدت زمان بن {1}</value>
+  </string>
+  <string key="tempbannedForRtl">
+    <value>کاربر {0} ب دلیل راست ب چپ نوشتن حروف بن شده است . ب مدت {1} بن شده است</value> 
+  </string>
+  <string key="tempbanForNoEnglishScript">
+    <value>کاربر {0} ب دلیل استفاده کردن از کارکتور های غیر لاتین بن شده است .ب مدت {1} بن میباشد</value>
+  </string>
+  <string key="defaultTime">
+    <value>مدت زمان تمپ بن تنظیم شده برای گروه هست : {0}</value>
+  </string>
+  <string key="defaultTimeSet">
+    <value>زمان تمپ بن برای گروه تنظیم شده است</value>
+  </string>
+  <string key="groupMenu">
+    <value>
+      بعضی از دستورات ربات میتواند از فرستاده شدن در گروه منع شود مانند :
+    (/rules, /about, /adminlist, #extra commands)
+    اگه این دستورات از فرستاده شدن در گروه منع شوند اتفاقی ک میفتد این است ک ربات جواب دستور را ب خصوصی فرد ک دستور را فرستاده است ارسال میکند
+
+      اموجی های زیر حالت دستور ربات را نشان میدهند
+      • 👥:ربات در گروه پاسخ دستور را میدهد
+      • 👤: ربات در خصوصی شخص پاسخ دستور را میدهد
+    </value>
+  </string>
+  <string key="warnMenu">
+    <value>تعداد حداکثر وارن را در گروه خود تغییر بدهید</value>
+  </string>
+  <string key="groupSettingButton">
+    <value>Group</value>
+  </string>
+  <string key="cannotbanadmin"><value>من قادر به کیک یا بن ادمین نمیباشم </value>
+</string>
+-<string key="hcommanddelnsfw">
+<value> Delete an NSFW API Key which you set before. You need to set them to be able to use NSFW image detection (enter "/help nsfw" for more information) and can reset them with this command. Example: /{0} </value>
+</string>
+-<string key="hcommandchecknsfw">
+<value> Can be used to manually check, how much a picture is NSFW due to enforcer. You need to set up NSFW detection for your group at first, enter "/help nsfw" for more information. Example: /{0} while replying to a picture </value>
+</string>
+-<string key="hcommandmsgid">
+<value>از این دستور فقط سازنده های ربات میتوانند استفاده کنند </value>
+</string>
+-<string key="hcommanddellogchannel">
+<value> Delete a log channel from a group, that was added before. For more information about log channels, use "/help addlogchannel". Example: /{0} </value>
+</string>
+-<string key="hcommandtemptime">
+<value> از این دستور برای تعیین زمان تمپ بن حتمی استفاده میشود  
+This time will be used when using /tempban with no time specified and when automatically tempbanning someone (for max warns, flood, etc.) Example: /{0} [time in minutes] </value>
+</string>
+-<string key="hcommandmedia">
+<value> ریمو کردن و یا پاکسازی تمامی وارن های مربوط ب رسانه ها 
+Example: /{0} while replying to a user /{0} [User ID] /{0} [Username] </value>
+</string>
+-<string key="hcommandunblockelevate">
+<value> این دستور اجازه ارتقا دادن ب ادمینی ک قبلا از این کار منع شده بود را میدهد
+ Example: /{0} while replying to the admin /{0} [Admin's User ID] /{0} [Admin's Username] </value>
+</string>
+-<string key="hcommandresetsettings">
+<value> 
+از این دستور میتوان برای پاکسازی تمامی تنظیمات از جمله تعداد وارن و غیره استفاده کرد در جریان باشید هنگامی ک از این دستور استفاده کنید دیگر 
+تغییرات وارد شده قابل ب بازگشت نمیباشند 
+exaple: /{0}
+</value>
+</string>
+-<string key="hcommandmissinghcommands">
+<value>این دستور فقط مورد استفاده سازنده های ربات میباشد</value>
+</string>
+-<string key="hcommandwhois">
+<value>از این دستور فقط میتوانند سازنده های ربات استفاده کنند</value></string>
+<string key="donateWord">
+  <value>کمک مالی</value>
+  </string>
+  <string key="otherhelpList">
+    <value>nsfw</value>
+  </string>
+  <string key="typeMore">
+    <value>لطفا برای دریافت نتیجه بیشتر توضیح دهید</value>
+  </string>
+  <string key="tempbanDescription">
+    <value>اطلاعات بیشتری راجع به گروه یا بن موقت این یوزر دریافت کنید</value>
+  </string>
+  <string key="helpDescription">
+    <value>دستورات ربات میتوانند شما را راهنمایی کنند.</value>
+  </string>
+  <string key="uct">
+    <value>UTC</value>
+  </string>
+  <string key="HelpButton">
+  <value>کمک</value>
+  </string>
+  <string key="hcommandlangcode">
+    <value>این دستور فقط برای ادمین های بین المللی میباشد.</value>
+  </string>
+  <string key="registerfortagall">
+  <value>اسم شما با موفقیت در لیست اضافه شد @pingall</value>
+  </string>
+  <string key="tagallregistered">
+  <value>{0} have all been called as they used /pingme</value>
+  </string>
+  <string key="tagallregisterednoone">
+  <value>هنوز هیچ کس از دستوراستفاده نکرده است /pingme </value>
+  </string>
+  <string key="unregisterfortagall">
+  <value>اسم شما با موفقیت از لیست حذف شد. @pingall</value>
+  </string>
+  <string key="hcommandpingme">
+  <value>
+  شما میتوانید نام خود را در پینگ لیست گروه قرار دهید با دستور زیر 
+	  /pingme
+	  همچنین شما میتوانید نام خود را از پینگ لیست گروه حذف کنید با
+	  /unpingme
+	  اگر کسی از دستور @pingall استفاده کند ربات شما را پینگ خواهد کرد
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandunpingme">
+  <value>
+  اگر شما از این دستور استفاده کنید ربات دیگر شما را از لیست پینگ گروه حذف خواهد کرد.
+	  برای استفاده کافیست از دستور زیر استفاده کنید
+	  /unpingme
+	  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandpingall">
+  <value>
+    
+اگر شما از این دستور استفاده کنید میتوانید تمامی افرادی که نام خود را در پینگ لیست قرار داده اند  پینگ کنید ٫ لطفا توجه داشته باشید که ربات فقط میتواند افرادی را در لیست قرار دهد که یوزر نیم داشته باشند
+برای پینگ کردن همه ی کاربران 
+@pingall
+برای اضافه شدن در لیست
+/pingme
+برای حذف شدن از لیست انتظار 
+/unpingme
+
+  Example:
+  @{0}
+  /{0}
+  </value>
+  </string>
+  <string key="tagallNoUsername">
+  <value>شما فقط میتوانید نام خود را در لیست پینگ گروه قرار دهید.</value>
+  </string>
+  <string key="hcommandd">
+  <value>
+  از این دستور میتوانید برای پاک کردن پیام ها خود یا دیگران استفاده کنید البته بعد از استفاده از این دستور این دستور به طور خود به خود پاک خواهد شد
+	  لطفا دقت فرمایید شما فقط وقتی میتونید پیام های افراد دیگه رو پاک کنید که ادمین گروه باشید یا توسط ادمین ها به ادمینی ارتقا پیدا کرده باشید
+	  اگر شما ادمین گروه نیستید فقط میتوانید پیام های خود را پاک کنید.
+  Example:
+  /{0} while replying to a message of your own
+  /{0} while replying to a foreign message (admins only)
+  </value>
+  </string>
+  <string key="hcommandgetrektu">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+  <string key="hcommandgetrekti">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+  <string key="hcommandclearkeys">
+  <value>
+   این دستور برای محافظت در برابر برخی ربات های اسپمر ساخته شده است و میتواند دستورات غیر مجاز ربات ها را از بین ببرد
+	  
+  Example:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandbangroup">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+  <string key="hcommandunbangroup">
+  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
+  </string>
+
+
+  <string key="logSettingChanged">
+    <value>{0} ({1}) تنظیم {2} را در {3} تغییر داد: {4} ← {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>حد اسپم</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>اقدام اسپم</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>بررسی اسپم برای {0}</value>
+  </string>
+  <string key="settingMedia">
+    <value>رسانه: {0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>اقدام هشدار رسانه</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>حداکثر هشدار رسانه</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>حداکثر هشدار</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>اقدام هشدار</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>اقدام طول نام</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>اقدام طول پیام</value>
+  </string>
+  <string key="valueAllowed">
+    <value>مجاز</value>
+  </string>
+  <string key="valueBlocked">
+    <value>مسدود</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>چت خصوصی</value>
+  </string>
+  <string key="valueInGroup">
+    <value>گروه</value>
+  </string>
+  <string key="FiltersButton">
+    <value>فیلترها</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} فعال</value>
+  </string>
+  <string key="filtersMenu">
+    <value>فیلترها: وقتی پیام، نام یا نام کاربری با یکی از آنها جور باشد چه اتفاقی می‌افتد. روی یک فیلتر بزنید تا کارش را عوض کنید. مدیران و اعضای لیست watch یا auth هیچ‌وقت بررسی نمی‌شوند.\n\nقوانین خودتان: {0}. با /filter مدیریتشان کنید.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>خط عربی</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>ترفندهای راست به چپ</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>خط سیریلیک</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>چینی، ژاپنی، کره‌ای</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>خط عبری</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>خط دوناگری</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>حروف شبیه به هم</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>نویسه‌های نامرئی</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>لینک‌های دعوت تلگرام</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>شماره تلفن</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>کیف پول ارز دیجیتال</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>نام‌های ادمین یا پشتیبانی</value>
+  </string>
+  <string key="filterAction_off">
+    <value>خاموش</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>حذف</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>اخطار</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>بی‌صدا</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>اخراج</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>مسدودی موقت</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>مسدود</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>بررسی اعضای قدیمی</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>اجازه به ربات‌های این گروه</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} بی‌صدا شد: {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} به مدت {2} بی‌صدا شد: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} اخراج شد: {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} مسدود شد: {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} به مدت {2} مسدود شد: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>قوانین فیلتر خود گروه. هر قانون جدید {0} روز آزمایشی است: فقط ثبت می‌کند چه کاری می‌کرد.\n/filter add name|username|text اقدام regex\n/filter try /regex/ متن\n/filter test شناسه یا regex\n/filter list\n/filter live شناسه\n/filter trial شناسه روز\n/filter del شناسه</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>هدف باید یکی از این‌ها باشد: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>اقدام باید یکی از این‌ها باشد: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>این عبارت منظم قابل استفاده نیست: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>این گروه این قانون را از قبل دارد.</value>
+  </string>
+  <string key="filterLimit">
+    <value>هر گروه حداکثر {0} قانون خودش را می‌تواند داشته باشد. اول یکی را با /filter del حذف کنید.</value>
+  </string>
+  <string key="filterAdded">
+    <value>قانون #{0} اضافه شد. {1} روز آزمایشی است: ثبت می‌کند چه می‌کرد و کاری انجام نمی‌دهد. با /filter live {0} فعالش کنید.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>جور است.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>جور نیست.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>در میان {0} عضوی که در ۳۰ روز گذشته دیده شده‌اند هیچ موردی جور نبود.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>{0} نفر از {1} عضوی که در ۳۰ روز گذشته دیده شده‌اند جور هستند. نمونه‌ها:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>نتیجه را در پیوی برایتان فرستادم.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>نتوانستم نتیجه را برایتان بفرستم. اول یک گفتگوی خصوصی با من شروع کنید و دوباره امتحان کنید.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>این گروه قانون خودش را ندارد. با /filter add یکی اضافه کنید؛ {0} روز آزمایشی شروع می‌شود.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>قوانین خود گروه:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} روی {1}، {2}، {3}. {4} بار جور شد؛ {5} نفر از این اعضا حذف شدند.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>فعال</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>آزمایشی تا {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>دوره آزمایشی تمام شد، منتظر /filter live یا /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>قانون {0} وجود ندارد. /filter list قوانین را نشان می‌دهد.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>قانون #{0} فعال است: از حالا اقدام می‌کند.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>قانون #{0} به مدت {1} روز آزمایشی است.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>قانون #{0} حذف شد.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>قوانین فیلتر خودتان</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      قوانین فیلتر خود گروه شما: یک عبارت منظم روی نام، نام کاربری یا متن پیام اعضا، و اینکه وقتی جور شد چه شود (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). فقط برای مدیران. فیلترهای آماده (خط‌ها، لینک‌های دعوت، شماره تلفن و غیره) در منوی تنظیمات، بخش فیلترها هستند.
+
+      هر قانون جدید ۷ روز آزمایشی است: ثبت می‌کند چه می‌کرد و کاری انجام نمی‌دهد، تا ببینید آدم‌های درست را می‌گیرد یا نه. با /{0} live فعالش کنید.
+
+      نمونه‌ها:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (قانون ۳ را روی نام اعضای ۳۰ روز گذشته امتحان می‌کند و نتیجه را در پیوی می‌فرستد)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings> 

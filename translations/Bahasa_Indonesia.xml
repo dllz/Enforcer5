@@ -1,0 +1,1943 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<strings>
+  <language name="Bahasa Indonesia" base="Bahasa Indonesia" owner="@mr_roku" IEFT="id"/>
+  <string key="statusKicked">
+    <value>{0} telah diblokir dari grup. {1}</value>
+  </string>
+  
+  <string key="statusLeft">
+    <value>{0} Meninggalkan grup atau sudah dikick.</value>
+  </string>
+  
+  <string key="statusAdministrator">
+    <value>{0} adalah admin.</value>
+  </string>
+  
+  <string key="statusCreator">
+    <value>{0} adalah Kreator grup.</value>
+  </string>
+  
+  <string key="statusUnknown">
+    <value>user ini tidak ada hubungan nya dengan chat ini.</value>
+  </string>
+  
+  <string key="statusMember">
+    <value>{0} adalah anggota member.</value>
+  </string>
+  
+  <string key="userinfoGlobal">
+    <value><![CDATA[<b>Informasi ban global</b>:\n]]></value>
+  </string>
+  
+  <string key="getkick">
+    <value>Ditendang: {0}</value>
+  </string>
+  
+  <string key="getban">
+    <value>Diblokir: {0}</value>
+  </string>
+  
+  <string key="gettempban">
+    <value>Diblokir sementara: {0}</value>
+  </string>
+  
+  <string key="getwarn">
+    <value>Dihapus karena telalu banyak peringatan: {0}</value>
+  </string>
+  
+  <string key="getgroupwarn">
+    <value>Peringakan: {0}</value>
+  </string>
+  
+  <string key="getMediaWarn">
+    <value>Peringatan Media: {0}</value>
+  </string>
+  
+  <string key="userinfoGroup">
+    <value><![CDATA[<b>Info untuk grup: {0}</b>:]]></value>
+  </string>
+  
+  <string key="getrtl">
+    <value>Dihapus karena karakter RTL: {0}</value>
+  </string>
+  
+  <string key="getflood">
+    <value>Dihapus karena flood: {0}</value>
+  </string>
+  
+  <string key="getarab">
+    <value>Dihapus karena bahasa arab: {0}</value>
+  </string>
+  
+  <string key="getmedia">
+    <value>Dihapus karena media terlarang:  {0}</value>
+  </string>
+  
+  <string key="getnsfwimage">
+	<value>Dihapus karena gambar NSFW: {0}</value>
+  </string>
+  
+  <string key="getNothing">
+    <value>Tidak ada yang dapat ditampilkan</value>
+  </string>
+  
+  <string key="botPm">
+    <value>PM sudah dikirim dan cek PM mu</value>
+  </string>
+  
+  <string key="noUser">
+    <value>Saya tidak kenal user ini</value>
+  </string>
+  
+  <string key="botNotAdmin">
+    <value>Saya bukan admin, Saya harus jadi admin untuk menjalankan perintah</value>
+  </string>
+  <string key="noReply">
+    <value>Tolong replay / balas chat seseorang untuk menggunakan perintah ini</value>
+  </string>
+  <string key="msgTooLong">
+    <value>Pesan ini terlalu panjang  {0} karakter. Tolong dipersingkat</value>
+  </string>
+  <string key="StartMe">
+    <value>Start me</value>
+  </string>
+  <string key="userNotAdmin">
+    <value>Kamu itu <b>BUKAN</b> admin disini</value>
+  </string>
+  <string key="markdownBroken">
+    <value>Markdown ditext ini rusak</value>
+  </string>
+  <string key="linkMissing">
+    <value>Tidak ada link untuk group ini</value>
+  </string>
+  <string key="linkUpdated">
+    <value>Link telah diupdate</value>
+  </string>
+  <string key="linkSet">
+    <value>Link sudah di set</value>
+  </string>
+  <string key="adminList">
+    <value><![CDATA[<b>Pembuat Grup</b>: {0}\n<b>Admin</b>:{1}]]></value>
+  </string>
+  <string key="defaultWelcome">
+    <value>Hallo {0} Selamat datang di {1}</value>
+  </string>
+  <string key="noAbout">
+    <value>No about set for this group</value>
+  </string>
+  <string key="noRules">
+    <value>Tidak ada rules bos disini, Bakar rame rame 🔥🔥🔥</value>
+  </string>
+  <string key="rules">
+    <value><![CDATA[\n<b>Peraturan</b>:\n{0}]]></value>
+  </string>
+  <string key="about">
+    <value><![CDATA[\n<b>Deskripsi</b>:\n{0}]]></value>
+  </string>
+  <string key="RulesSet">
+    <value>Peraturan baru telah diset</value>
+  </string>
+  <string key="AboutSet">
+    <value>Deskripsi baru telah diset</value>
+  </string>
+  
+  <string key="extraSaved">
+    <value>{0} Perintah disimpan</value>
+  </string>
+  
+  <string key="noExtra">
+    <value>tidak ada Perintah</value>
+  </string>
+  
+  <string key="extraList">
+    <value><![CDATA[List of <b>Perintah Custom</b>:\n{0}]]></value>
+  </string>
+  
+  <string key="extraDeleted">
+    <value>Perintah telah dihapus</value>
+  </string>
+  
+  <string key="SuccesfulKick">
+    <value>{0} telah ditendang oleh {1}.</value>
+  </string>
+  
+  <string key="SuccesfulBan">
+    <value>{0} telah diblokir oleh {1}.</value>
+  </string>
+  
+  <string key="FailedKick">
+    <value>{0} blom ditendang, tolong secara manual.</value>
+  </string>
+  
+  <string key="FailedKickBanAdmin">
+    <value>saya tidak bisa kick / ban admin.</value>
+  </string>
+  
+  <string key="Error">
+    <value>terjadi error. detail : {0}</value>
+  </string>
+  
+  <string key="PingInfo">
+    <value>waktu penerimaan pesan ping: {0}</value>
+  </string>
+  
+  <string key="Ping2">
+    <value>waktu pengiriman pesan ping: {0}</value>
+  </string>
+  
+  <string key="groupBanned">
+    <value>Group kamu telah diblokir Werewolf Enforcer</value>
+  </string>
+  
+  <string key="warnMaxKick">
+    <value><![CDATA[User {0} <b>ditendang</b>: Karena sudah mencapai batas peringatan]]></value>
+  </string>
+  
+  <string key="warnMaxBan">
+    <value><![CDATA[User {0} <b>diblokir</b>: Karena sudah mencapai batas peringatan]]></value>
+  </string>
+  
+  <string key="resetWarn">
+    <value>reset peringatan</value>
+  </string>
+  
+  <string key="removeWarn">
+    <value>hapus peringatan</value>
+  </string>
+  
+  <string key="warn">
+    <value><![CDATA[{0} <b>telah diperingatkan.</b>\n<i>Jumlah peringatan</i> <b>{1}</b> <i>dari</i> <b>{2}</b>]]></value>
+  </string>
+  
+  <string key="warnFlag">
+    <value><![CDATA[{0} <b>telah diperingatkan oleh.{1}.</b>\n<i>Jumlah peringatan</i>   <b>{2}</b>\n<i>jumlah maksimum</i>   <b>{3}</b>]]></value>
+  </string>
+  
+  <string key="alreadyFlagged">
+    <value>Pesan ini sudah pernah dilaporkan</value>
+  </string>
+  
+  <string key="ban">
+    <value>Blokir</value>
+  </string>
+  
+  <string key="kick">
+    <value>Tendang</value>
+  </string>
+  
+  <string key="Warn">
+    <value>Warn</value>
+  </string>
+  
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nID Laporan: #r{2}\n#belomdiselesaikan</value>
+  </string>
+  
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nPesan origininal {3}\nID laporan: #r{2}\n#belomdiselesaikan</value>
+  </string>
+  
+  <string key="reported">
+    <value>Dilaporkan!\n#ID laporan: #r{0}</value>
+  </string>
+  
+  <string key="reportNotFound">
+    <value>Laporan tidak ditemukan</value>
+  </string>
+  
+  <string key="solvedByReporter">
+    <value>Masalah ini telah diselesaikan oleh {0}\n{1}\n({2})\ntelah dilaporkan oleh: {3}</value>
+  </string>
+  
+  <string key="solvedBy">
+    <value>Laporan ini telah diselesaikan oleh {0}\n{1}\n({2})</value>
+  </string>
+  
+  <string key="reportID">
+    <value>Id laporan : #r{0}</value>
+  </string>
+  
+  <string key="markSolved">
+    <value>Telah diselesaikan</value>
+  </string>
+  
+  <string key="markedAsSolved">
+    <value>Laporan #r{1} telah diselesaikan oleh {0}</value>
+  </string>
+  
+  <string key="alreadySolved">
+    <value>diselesaikan pada waktu {0} oleh {1}</value>
+  </string>
+  
+  <string key="solvedNoReply">
+    <value>Tolong balas pesan yang mengandung @admin atau kirim report ID</value>
+  </string>
+  
+  <string key="incorrectArgument">
+    <value>Wrong argument type for command</value>
+  </string>
+  
+  <string key="NoInput">
+    <value>perintah tidak ada input</value>
+  </string>
+  
+  <string key="Support">
+    <value><![CDATA[<a href="https://telegram.me/greywolfsupport">klik disini untuk bantuan grup support</a>]]></value>
+  </string>
+  
+  <string key="UnableToGetID">
+    <value>Tidak dapat mencapai Id user</value>
+  </string>
+  
+  <string key="globalBan">
+    <value>{0} telah di blokir otomatis karena : {1}\nUser bisa menghubungi @greywolfsupport menghilangkan ban ini.</value>
+  </string>
+  
+  <string key="goToMessage">
+    <value>Pergi ke pesan</value>
+  </string>
+  
+  <string key="goToChat">
+    <value>Pergi ke chat</value>
+  </string>
+  
+  <string key="userUnbanned">
+    <value>user sudah di unblokir!</value>
+  </string>
+  
+  <string key="extraMediaSaved">
+    <value>media ini telah disimpan dengan command {0}</value>
+  </string>
+  
+  <string key="tooLong">
+    <value>{0} terlalu panjang</value>
+  </string>
+  <string key="extra">
+    <value>Extra</value>
+  </string>
+  <string key="tempbanZero">
+    <value>blokir waktu tidak boleh nol</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} Telah di ban selama {0} (Hari:Jam:Menit)\nID: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>Peringatan telah direset.\ndan direset oleh: {0}</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value>User sudah tidak mempunyai peringatan</value>
+  </string>
+  <string key="warnRemoved">
+    <value>Peringatan sudah dihapus</value>
+  </string>
+  <string key="inlineBan">
+    <value>diban menggunakan inline buttons</value>
+  </string>
+  <string key ="userBanned">
+    <value>User diblokir</value>
+  </string>
+  <string key ="userKicked">
+    <value>User ditendang</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>Tidak ada link. cara menggunakan : /setlink (link)</value>
+  </string>
+  <string key="botNotStarted">
+    <value>Kamu butuh start bot pertama kalinya. Klik dibawah ini, Kemudian klik start</value>
+  </string>
+  <string key="bannedFor">
+    <value>Diblokir karena: {0}</value>
+  </string>
+  <string key="welcomeSet">
+    <value>welcome telah diset oleh {0}</value>
+  </string>
+  <string key ="mainMenu">
+    <value>
+	  Mengatur settingan untuk grup {0}.
+
+      beberapa perintah (/rules, /about, /adminlist, #extra commands) bisa di non aktifkan untuk kirim pesan di grup.
+	  yang akan terjadi apabila perintah di nonaktifkan -> bot akan mengirimkan pesan ke chat pribadi kepada user yang memintah perintah tersebut.
+      
+      Icon yang didekat perintah akan menunjukan status terkini :
+      • 👥: bot akan balas di grup.
+      • 👤: bot akan balas di chat pribadi.
+
+	  Setting lain nya : icon itu akan menjelaskan perintah tersebut
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>Welcome Message</value>
+  </string>
+  <string key="ReportButton">
+    <value>Laporan</value>
+  </string>
+  <string key="FloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Extra</value>
+  </string>
+  <string key="RtlButton">
+    <value>RTL</value>
+  </string>
+  <string key="ArabButton">
+    <value>Arab</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Warn action: {0}</value>
+  </string>
+  <string key="closeButton">
+    <value>Selesai</value>
+  </string>
+  <string key="warnToLow">
+    <value>Jumlah peringatan tidak bisa dibawah 1</value>
+  </string>
+  <string key="settingChanged">
+    <value>Setting telah diganti</value>
+  </string>
+  <string key="floodMenu">
+    <value>
+	Disini anda bisa mengatur settingan flood pada group.
+
+      Baris pertama
+      • ON/OFF: Status terkini anti-flood
+      • ditendang/diblokir: apa yang dilakukan saat ada yang flood
+
+      Baris kedua
+      • gunakan +/- untuk mengubah sensitifitas system anti-flood
+      • jumlah maksimal pesan yang bisa dikirim dalam jangka 5 detik
+      • Nilai maksimal: 25 - Nilai minimal: 4
+
+      baris ketiga dan dibawahnya
+	  anda bisa mengatur pengecualian untuk system anti-flood
+      • ✅: media akan diproses oleh anti-flood
+      • ❌: media akan diabaikan anti-flood
+	  • NOTE : termasuk semua jenis type media (file, audio,...)
+    </value>
+  </string>
+  <string key="on">
+    <value>On</value>
+  </string>
+  <string key="off">
+    <value>Off</value>
+  </string>
+  <string key="textButton">
+    <value>Text</value>
+  </string>
+  <string key="stickerButton">
+    <value>Stiker</value>
+  </string>
+  <string key="imageButton">
+    <value>Gambar</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>Vidio</value>
+  </string>
+  <string key="audioButton">
+    <value>Audio</value>
+  </string>
+  <string key="fileButton">
+    <value>File</value>
+  </string>
+  <string key="contactButton">
+    <value>Kontak</value>
+  </string>
+  
+  <string key="voiceButton">
+    <value>Suara</value>
+  </string>
+  
+  <string key="linkButton">
+    <value>Link</value>
+  </string>
+  
+  <string key="textButton">
+	<value>Text</value>
+  </string>
+  
+  <string key="doNothing">
+    <value>Saya tidak melakukan apapun</value>
+  </string>
+  
+  <string key="bannedForFlood">
+    <value>{0} telah melakukan flood status saat ini banned</value>
+  </string>
+  
+  <string key="kickedForFlood">
+    <value>{0} telah di tendang karena flood</value>
+  </string>
+  
+  <string key="bannedForRtl">
+    <value>{0} telah diblokir karena karakter RTL</value>
+  </string>
+  
+  <string key="kickedForRtl">
+    <value>{0} telah ditendang karena karakter RTL</value>
+  </string>
+  
+  <string key="bannedForNoEnglishScript">
+    <value>{0} telah diblokir karena karakter non-Latin</value>
+  </string>
+  
+  <string key ="globalBanNotif">
+    <value>{0} telah dibanned otomatis karena pernah : {1}
+            dia bisa mengajukan banding ke @greywolfsupport
+    </value>
+  </string>
+  
+  <string key="GetLang">
+    <value>Ambil file bahasa yang mana ?</value>
+  </string>
+  
+  <string key="mediaMenuHeader">
+    <value>Setting media peringatan</value>
+  </string>
+  
+  <string key="mediaMenu">
+    <value>
+	tekan tombol disebelah kanan untuk mengubah pengaturan dan baris terakhir untuk mengubah berapa banyak peringatan yang diberikan sebelum bot melukakukan blokir / tendang pada seseorang yang melakukan media terlarang
+	Angka baris terakhir tidak berhubungan dengan perintah /warn
+    </value>
+  </string>
+  
+  <string key="groupLanguage">
+	<value>Bahasa Grup</value>
+  </string>
+  
+  <string key="langMenu">
+	<value>disini kamu bisa mengatur settingan bahasa grup.\nSetingan bahasa sekarang adalah: <b>{0}</b></value>
+  </string>
+
+  <string key="userUnblocked">
+	<value>User unblocked</value>
+  </string>
+
+  <string key="userBlocked">
+	<value>User diblokir</value>
+  </string>
+
+  <string key="startMe">
+    <value>Jalankan saya dulu</value>
+  </string>
+  
+  <string key="dashboardMenu">
+    <value>Settingan dalam grup ini adalah:</value>
+  </string>
+  
+  <string key="userInfoGlobal">
+    <value>Informasi user global</value>
+  </string>
+  
+  <string key="backButton">
+	<value>Kembali</value>
+  </string>
+  
+  <string key="mediaNotAllowed">
+	<value>Jenis media ini tidak diizinkan. kamu telah diperingati. {0} dari {1} Peringatan diberikan</value>
+  </string>
+  
+  <string key="kickedformedia">
+	<value>{0} telah di kick karena mengirimkan media ilegal</value>
+  </string>
+  
+  <string key="bannedformedia">
+	<value>{0} telah di ban karena mengirimkan media ilegal</value>
+  </string>
+  
+  <string key="kickedForNoEnglishScript">
+    <value>{0} telah di kick karena menggunakan bahasa karakter non-latin</value>
+  </string>
+  
+  <string key="bannedfornsfwimage">
+	<value>{0} telah di blokir karena telah memposting gambar NSFW.\nGambarnya berkemungkinan {1}% NSFW</value>
+  </string>
+  
+  <string key="kickedfornsfwimage">
+	<value>{0} telah di tendang karena telah memposting gambar NSFW.\nGambarnya berkemungkinan {1}% NSFW</value>
+  </string>
+  
+  <string key="nsfwMenu">
+	<value>Mengatur apakah user di kick atau di ban.
+			nyala atau matikan system pendeteksian.
+			tolong ingat bawah tiap api key dibatasi 5000 gambar tiap bulan, tanggung jawab anda untuk mengubah api key apabila sudah habis digunakan.
+			system hanya akan memblokir gambar yang berkemungkinan 95% NSFW. sistem ini menggunakan computer vision technology tetapi teknologi ini masih muda yang belum sempurna.
+			
+			pilihan anda dibawah ini:
+	</value>
+  </string>
+  
+  <string key="nsfwButton">
+	<value>mendedeksi NSFW</value>
+  </string>
+  
+  <string key="getmaxwarn">
+	<value>dihapus karena peringatan maksimum : {0}</value>
+  </string>
+  
+  <string key="usergroupstatus">
+	<value>User: {0} telah mengirimkan {1} pesan sejak perintah ini dijalankan.</value>
+  </string>
+  
+  <string key="usergroupstatusnotseen">
+	<value>User: {0} tidak pernah terlihat didalam chat sejak perintah ini dijalankan.</value>
+  </string>
+  
+  <string key="evlavated">
+	<value>User: {0} telah diberikan status jabatan oleh {1}</value>
+  </string>
+  
+  <string key="auth">
+	<value>User: {0} telah diberikan hak admin oleh {1}</value>
+  </string>
+  
+  <string key="dauth">
+	<value>User: {0} telah dicabut jabatan nya oleh {1}</value>
+  </string>
+  
+  <string key="devlavated">
+	<value>User: {0} has been revoked #elavated rights by {1}</value>
+  </string>
+  
+  <string key="currentMods">
+	<value>Current Elavated users</value>
+  </string>
+  
+  <string key="prevMods">
+	<value>Users temp elavated by users</value>
+  </string>
+  
+  <string key="helpNoRequest">
+  <value>Enforcer merupakan sebuah bot yang dirancang untuk membantu dalam mengelolah grup kamu biar lebih mudah. untuk update silakan cek di https://telegram.me/greywolfdev.
+  		hal ini bisa dilakukan dengan menerapkan fitur anti spam, anti media, tempbans, peringatan, dan lainnya.
+		* This bot needs to be an admin of the group chat to function properly.
+		* This bot functions best in supergroups.
+		* It can be configured by sending it /menu.
+		* This bot has many commands, to find out more information about a specific command send /help [command] EG: /help menu. To get a list of commands send /getcommands.
+		* If you still need help click /support to join our support group.
+	</value>
+	</string>
+	<string key="helpOptionNotImplemented">
+  <value>
+		Informasi untuk{0} belum ditulis, silakan bergabung dengan grup /support untuk mengetahui lebih lanjut tentang hal tersebut.
+	</value>
+  </string>
+  <string key="hcommandkickme">
+  <value>
+		Dapat digunakan untuk membuat bot menghapus Anda dari sebuah grup tanpa harus memilih keluar. Untuk grup yang tidak bisa Anda ikuti saat Anda meninggalkan ini, Anda dapat bergabung lagi.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandkick">
+  <value>
+		Dapat digunakan untuk menghapus pengguna dari grup namun memungkinkan mereka untuk kembali.
+		Ini bisa digunakan dengan id, username atau dengan membalas orang yang ingin ditendang.
+		
+		Contoh:
+		/{0} Saat membalas pengguna
+		/{0} [ID user]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandwarn">
+  <value>
+		Dapat digunakan untuk menambahkan peringatan kepada pengguna, Anda dapat mengatur tindakan yang dilakukan pada maks memperingatkan dan jumlah memperingatkan pengguna bisa mendapatkan dengan perintah menu.
+		
+		Contoh:
+		/{0} Saat membalas pengguna
+		/{0} [ID user]
+		/{0} [Username]
+	</value>
+  </string>
+  <string key="hcommandban">
+  <value>
+	 Can be used to ban a user from a group (they cannot come back). If it is used by reply, you can add a reason for the ban behind /{0} which will be shown in status command
+		
+	 Contoh: 
+		/{0} Saat membalas pengguna
+		/{0} [Reason] Saat membalas pengguna
+		/{0} [ID User]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandunban">
+  <value>
+		Dapat digunakan untuk membalaskan pengguna dari grup yang akan memungkinkan mereka kembali sebelum mereka dilarang atau dilarang.
+		
+		Contoh: 
+		/{0} Saat membalas pengguna
+		/{0} [ID user]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandtempban">
+  <value>
+		Can be used to temporary ban a user from a group, they will only be able to come back after the time is passed. The command works by banning the user from the group and then unbanning them after the stipulated time.		
+		Usage: 
+		You need to reply to the user you want banned. Then when using the command put the number of minutes after the command is sent. If no time is stipulated the bot will ban the user for an hour. 
+		
+		Contoh:
+		/{0} 123 while replying to a user
+		/{0} while replying to a user
+	</value>
+  </string>
+  
+  <string key="hcommandadmin">
+  <value>
+		Can be used to flag a message or call the group admins. If you reply to a message it is forwarded to the group admins along with the text inside your message. If there is no reply just your message is sent. 
+		The admins are presented with an inline menu of actions to take. In supergroups you can go to the message. 
+		Contoh: 
+		@{0}
+		@{0} while replying to a user
+		@{0} [reason]
+		@{0} [reason] while replying to a user
+		
+		/{0}
+		/{0} while replying to a user
+		/{0} [reason]
+		/{0} [reason] while replying to a user
+	</value>
+  </string>
+  
+  <string key="hcommandadminoff">
+  <value>
+		Stops the bot from sending you reports. Can also be used for other admins than yourself, with reply, or username or ID.
+		
+	 Contoh: 
+		/{0}
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandadminon">
+  <value>
+		Makes the bot send reports to a user again if they were previously turned off. Can also be used for other admins than yourself, with reply, or username or ID
+		
+		Contoh: 
+		/{0}
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandsolved">
+  <value>
+		Untuk menandakan bahwa laporan tersebut telah diselesaikan sehingga admin lainnya bisa melihat bahwa laporan tersebut sudah di tindak lanjuti.
+		
+		Contoh:
+		/{0} while replying to the message containing @admin
+		/{0} [Report ID]
+	</value>
+  </string>
+  
+  <string key="hcommandreporton">
+  <value>
+		mengizinkan user untuk menggunakan perintah @admin bila sebelum nya di blokir
+		
+	 Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandreportoff">
+  <value>
+		Blocks a user from using @admin.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandrules">
+  <value>
+		Gets the rules for the group which admins set with setrules command before.
+		
+		Contoh:
+		/{0} 
+	</value>
+  </string>
+  
+  <string key="hcommandsetrules">
+  <value>
+		untuk mensetting peraturan/rules grup. sehingga member bisa melihat nya dengan perintah /rules pada grup.
+		
+		Contoh: 
+		/{0} Do not be a horrible mean person
+	</value>
+  </string>
+  
+  <string key="hcommandabout">
+  <value>
+		Mengembalikan deskripsi untuk grup yang ditetapkan admin dengan perintah setabout sebelumnya.
+		
+		Contoh: 
+		/{0} 
+	</value>
+  </string>
+  
+  <string key="hcommandsetabout">
+  <value>
+		Tetapkan deskripsi untuk grup, yang pengguna dapat melihat dengan tentang perintah.
+		
+		Contoh: 
+		/{0} A group for trolololololols
+	</value>
+  </string>
+  
+  <string key="hcommandadminlist">
+  <value>
+		Mengembalikan daftar admin dan pengguna yang ditinggikan dari grup.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  
+  <string key="hcommands">
+  <value>
+		pesan akan disimpan melalui private chat bot.
+		
+		Contoh:
+		/{0} Sambil membalas pesan yang ingin Anda simpan
+	</value>
+  </string>
+  
+  <string key="hcommandid">
+  <value>
+		Mengembalikan ID Obrolan dari grup, atau ID pengguna yang Anda balas.
+		
+		Contoh:
+		/{0} Sambil membalas pesan user
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandsupport">
+  <value>
+		Gives out link to GreyWolf support group.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommanduser">
+  <value>
+		Returns information about a user in a group, like, how many warns, kicks and bans did they get globally, and how many in this group.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  
+  <string key="hcommandme">
+  <value>
+		Gives you information, how often you were ever warned, kicked, banned etc. globally. Will send you in private.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  
+  <string key="hcommandmeBIGCONFUSION">
+  <value>
+		Gives you information, how often you were ever warned, kicked, banned etc. globally. Will send you in private.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  
+  <string key="hcommandextra">
+  <value>
+		Saves an extra command. Extra commands are custom commands with custom reply, triggered by single words starting with a #. Everyone can send the trigger afterwards and the bot will reply the custom answer.
+		
+		Contoh:
+		/{0} #blabla while replying to some text or media
+		/{0} #blabla This is an extra
+	</value>
+  </string>	
+  
+  <string key="hcommandextralist">
+  <value>
+		Mengembalikan daftar semua perintah tambahan dari grup itu.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandextradel">
+  <value>
+		Menghapus perintah tambahan yang telah ditentukan sebelumnya.
+		
+		Contoh:
+		/{0} #blabla
+	</value>
+  </string>
+  
+  <string key="hcommandlink">
+  <value>
+		Returns the link of the group. Only works if an admin set the link with setlink command before.
+		
+		Contoh:
+		/{0}
+		/{0} dengan mereplay pesan
+	</value>
+  </string>	
+  <string key="hcommandsetlink">
+  <value>
+		Sets the link of this group, necessary for using the link command. Must be followed by the group link of it is a private group.
+		
+		Contoh:
+		/{0} [Group Link] (private group)
+		/{0} (public group)
+	</value>
+  </string>	
+  <string key="hcommandstatus">
+  <value>
+		Returns the current staus of the user in that group - member, admin, creator, kicked, banned, never seen.
+		
+		Contoh:
+		/{0} while replying to a message
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  <string key="hcommandwelcome">
+  <value>
+		Defines a welcome message for a group, that is sent whenever a new user joins or is added to the group.
+		
+		Contoh:
+		/{0} Trolololo! This is a troll group!
+	</value>
+  </string>
+  
+  <string key="hcommanddisablewatch">
+  <value>
+		Disables AntiFlood and persian detection for a user, Admins should use it in a group so it will ignore them.
+		
+		Contoh:
+		/{0}
+		/{0} dengan mereplay pesan user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandenablewatch">
+  <value>
+		 Enables AntiFlood and persian detection for a user, only necessary if that user was disablewatched before.
+		 
+		Contoh:
+		/{0}
+		/{0} dengan mereplay pesan user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandcheck">
+  <value>
+		See how many messages a certain user sent in this group yet.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>
+  
+  <string key="hcommandelevate">
+  <value>
+		Elevates that user to be an admin of that group. If run by admin or elevated, only 30 minutes, if run by creator or auth, permanently. Elevated users have access to all admin commands, for example warn, kick, ban and tempban.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  
+  <string key="hcommanddeelevate">
+  <value>
+		Deelevates a currently elevated user, only for creator and auth. They can no longer use admin commands then.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  
+  <string key="hcommandelevatelog">
+  <value>
+		Returns a log of users that were temporarily elevated by non-auths. It shows the time, elevated user, and the admin who elevated.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandauth">
+  <value>
+		Auths a user. This means, the bot will see them as group creator, they can auth and deauth, and permanently elevate users.
+		
+		Contoh:
+		/{0} while replying to a user
+		/{0} [User ID]
+		/{0} [Username]
+	</value>
+  </string>	
+  
+  <string key="hcommandblockelevate">
+  <value>
+		Blocks an admin from temporarily elevating other users. Auth and creator only command. Usually, every group admin can elevate users for 30 minutes, admins can avoid them with this command.
+		
+		Contoh:
+		/{0} while replying to an admin
+		/{0} [Admin's User ID]
+		/{0} [Admin's Username]
+	</value>
+  </string>	
+  
+  <string key="hcommanddeauth">
+  <value>
+		Deauths a user, so they can no longer auth, deauth and permanently elevate others. Auth only command.
+		
+		Contoh:
+		/{0} while replying to an auth
+		/{0} [Auth's User ID]
+		/{0} [Auth's Username]
+	</value>
+  </string>
+  
+  <string key="hcommandmenu">
+  <value>
+		Mengirimkan Anda sebuah menu untuk mengubah semua pengaturan grup secara pribadi.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  
+  <string key="hcommanddashboard">
+  <value>
+		Mengirimi Anda dashboard semua pengaturan grup saat ini secara pribadi.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandping">
+  <value>
+		Ping bot untuk melihat berapa lama waktu yang dibutuhkan untuk respon.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandgetcommands">
+  <value>
+		Dapatkan daftar semua perintah bot. Perhatikan bahwa beberapa di antaranya hanya untuk admin bot global sehingga Anda tidak dapat menggunakannya.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>	
+  
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>Bagaimana cara menggunakan Markdown:</b>
+  
+  
+  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+  
+  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+  
+  <a href="telegram.me/greywolfdev">LINK</a> = &lt;a href="telegram.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  
+  <string key="actionNotSettext">
+	<value>Harap atur tindakan yang harus dilakukan bot saat pengguna mengirim pesan terlalu panjang</value>
+  </string>
+  
+  <string key="getlongmessages">
+	<value>Dihapus untuk mengirim pesan panjang: {0}</value>
+  </string>
+  
+  <string key="kickformesslength">
+	<value>{0} telah ditendang karena mengirim pesan terlalu panjang.</value>
+  </string>
+  
+  <string key="banformesslength">
+	<value>{0} telah diblokir karena mengirim pesan terlalu panjang.</value>
+  </string>
+  
+  <string key="actionNotSetname">
+	<value>Harap atur tindakan yang harus dilakukan bot saat pengguna memiliki nama yang terlalu panjang</value>
+  </string>
+  
+  <string key="getnamelength">
+	<value>Dihapus karena memiliki nama terlalu panjang: {0}</value>
+  </string>
+  
+  <string key="kickfornamelength">
+	<value>{0} telah di tendang dari grup karena memiliki nama yang terlalu panjang.</value>
+  </string>
+  
+  <string key="banfornamelength">
+	<value>{0} telah di blokir dari grup karena memiliki nama yang terlalu panjang.</value>
+  </string>
+  
+  <string key="lengthButton">
+	<value>Auto</value>
+  </string>
+  
+  <string key="nameSettingsHeader">
+	<value>Panjang karakter nama</value>
+  </string>
+  
+  <string key="textSettingsHeader">
+	<value>Panjang pesan</value>
+  </string>
+  
+  <string key="lengthMenu">
+  <value>Disini kamu bisa mengubah settingan bot untuk orang yang menggunakan nama dan tulisan pesan yang terlalu panjang.
+	
+	Kamu bisa mengatur jumlah karakter dengan mengirimkan command berikut di dalam grup:
+	/maxnl [jumlah karakter] - Untuk mengubah panjang maks sebuah nama;
+	/maxtl [jumlah karakter] - Untuk mengubah jumlah maksimum karakter dalam sebuah pesan;
+	/maxl [Jumlah baris] - Untuk mengubah jumlah maksimum baris yang diizinkan dalam pesan. 
+	
+	Alasan kamu bisa mengatur baris dan karakter adalah beberapa spammer mengirimkan pesan kosong yang berisi banyak baris. Pesan ini akan berada di bawah jumlah karakter tapi masih akan mengandung spam. 	
+  </value>
+  </string>
+  
+  <string key="maxLength">
+	<value>Panjang maksimal</value>
+  </string>
+  
+  <string key="done">
+	<value>Selesai</value>
+  </string>
+  
+  <string key="failed">
+	<value>Gagal</value>
+  </string>
+
+  <string key="gethelplist">
+    <value>Dukungan bantuan saat query adalah:\n{0}</value>
+  </string>
+
+  <string key="hcommandleave">
+	<value>Command ini hanya untuk developer enforcer !</value>
+  </string>  
+  
+  <string key="hcommandlook">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommandunlook">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommandblockp">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandallowp">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommandauthnsfw">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommanddeauthnsfw">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommandgetuser">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>  
+  
+  <string key="hcommandrektlist">
+	<value>Command ini hanya untuk developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandhelp">
+  <value> 
+  Kamu butuh bantuan dengan mengguanakan command help ? Sedikit rekursif, tapi:
+  
+  Command /help dapat digunakan untuk mendapatkan bantuan dengan sebuah perintah (seperti "/help warn") Atau beberapa topik lainnya (seperti "/help markdown"). kamu bisa mendapatkan daftar topik bantuan menggunakan command /helplist. Jika tidak ada yang ditentukan, Akan ada pesan bantuan standar sebagai gantinya.
+  
+  Contoh:
+  /{0}
+  /{0} [command (without "/")]
+  /{0} [help topic from /helplist]
+  </value>
+  </string>
+  
+  <string key="hcommandhelplist">
+  <value>
+  Memberikan daftar topik bantuan terkini. Command / help dapat digunakan dengan topik bantuan ini dan Anda akan mendapatkan bantuan untuk mereka. (Contoh "/help warn").
+  
+  Contoh:
+  /{0}
+  </value>
+  </string>  
+  
+  <string key="hcommandmaxnl">
+  <value>
+  Mendefinisikan panjang maksimum untuk nama pengguna dalam grup tersebut. Jika nama seseorang lebih panjang dari nilai itu, Mereka secara otomatis kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Contoh:
+  /{0} 50
+  </value>
+  </string>
+  
+  <string key="hcommandmaxtl">
+  <value>
+  Mendefinisikan panjang maksimum pesan dalam grup ini. Jika seseorang mengirim pesan dengan lebih banyak karakter, pesan itu otomatis kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Contoh:
+  /{0} 1024
+  </value>
+  </string>  
+  
+  <string key="hcommandmaxl">
+  <value>
+  Mendefinisikan jumlah baris maksimum untuk pesan dalam grup tersebut. Jika seseorang mengirim pesan dengan lebih banyak baris, mereka otomatis kicked/warned/banned (can be set in /menu under "Auto")
+  
+  Contoh:
+  /{0} 50
+  </value>
+  </string>
+  
+  <string key="hcommandrektlist">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandaddrule">
+  <value>
+	Tambahkan aturan baru di akhir kata kunci yang ada di /rules.
+
+  contoh:
+  /{0} Dilarang berenang di dalam grup!
+  </value>
+  </string>
+
+  <string key="hcommanduploadlanguage">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandvalidatelanguages">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandgetlanguage">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandreloadlang">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandhalt">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandmakelangadmin">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandremovelangadmin">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandgetrekt">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandunrekt">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandmediaid">
+  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+
+  <string key="hcommandstart">
+  <value>
+	Command only for private chat with the bot to start it. Necessary for using the /s command, receiving admin reports in private and some other features.
+
+	Contoh:
+	/{0}
+</value>
+</string>
+
+  <string key="donate">
+    <value>jika anda ingin membantu agar enforcer selalu online, silakan donasi kesini {0}.\nUang ini membantu untuk menutupi biaya server bot yang sangat mahal.\nPara Developer ini tidak akan mendapatkan uang selain ada para donatur yang memberikan nya. </value>
+  </string>
+
+  <string key="hcommanddonate">
+  <value>
+  Dapatkan link untuk sumbangan melalui PayPal. para pengembang bot ini tidak pernah mendapatkan uang selain ada yang berdonasi, bila ada yang berdonasi kami sangat senang sekali. Tentu saja Anda bisa menggunakan bot tanpa menyumbang apapun.
+
+  Contoh:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="notChannel">
+    <value>ID yang diberikan tidak valid, gunakan /help addlogchannel untuk informasi lebih lanjut</value>
+  </string>
+
+  <string key="channelAdded">
+    <value>Channel telah disimpan. pastikan bot ada di channel sebagai admin channel bukan member channel</value>
+  </string>
+
+  <string key="hcommandaddlogchannel">
+  <value>Tambahkan saluran log ke enforcer. Enfocer akan mengeposkan semua perintah admin yang digunakan dalam grup Anda ke saluran ini.
+  Perintah ini hanya bisa dijalankan oleh group creator atau pengguna auth
+  Bot perlu admin dari saluran, itu juga bisa menjadi kelompok tapi itu agak mengalahkan tujuan
+  Contoh:
+  /{0} [channelID]
+  /{0} -1231243242332
+  /{0} when replying to a message forwarded from the channel
+  </value>
+  </string>
+
+  <string key="logMessage">
+  <value>{0} ({1}) menggunakan {2} di {3}</value>
+  </string>
+
+  <string key="logSendError">
+  <value>The bot failed to log this command in the logchat, please set the log channel using /addlogchannel and ensure the bot is allow to post in the channel and is in the channel</value>
+  </string>
+  
+  <string key="noone">
+    <value>tidak ada</value>
+  </string>
+  
+  <string key="logMessageCommand">
+  <value><![CDATA[{0} ({1}) mengirimkan perintah \n\n <code>{2}</code> \n\n di grup {3} sambil membalas pesan {4}.]]></value>
+  </string>
+  
+  <string key="logMessageCallback">
+  <value>{0} ({1}) menggunakan {2} di {3}</value>
+  </string>
+  
+  <string key="welcomeReset">
+  <value>Pesan welcome telah di set ke default</value>
+  </string>
+  
+  <string key="hcommanddelmsg">
+  <value>
+  Menghapus pesan yang kamu bales. (hanya perintah untuk admin).
+  
+  Contoh:
+  /{0} Saat membalas pesan
+  </value>
+  </string>
+  
+  <string key="nsfwapikeyset">
+  <value>Informasi API NSFW disimpan.</value>
+  </string>
+  
+  <string key="apikeysucgen">
+  <value>Kunci API berhasil di generate.</value>
+  </string>
+  
+  <string key="hcommandsetnsfw">
+  <value>
+  <![CDATA[Mengatur deteksi gambar NSFW untuk grup Anda. Informasi tentang cara tepatnya melakukannya ditemukan <a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">disini</a>.
+  
+  Contoh:
+  /{0} [clientid] [clientsecret]]]>
+  </value>
+  </string>
+  
+  <string key="hcommandnsfw">
+  <value>
+  Enforcer dapat secara otomatis mendeteksi dan menghukum citra NSFW. Deskripsi rinci tentang cara menyiapkan fitur ini dapat ditemukan di sini:
+  
+  http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
+  </value>
+  </string>
+  
+  <string key="welcomeBack">
+    <value>Selamat menggunakan kembali enforcer. Pengaturan masih utuh berdasarkan pengaturan anda terakhir.</value>
+  </string>
+
+  <string key="messageDeleted">
+    <value>Pesan berhasil dihapus</value>
+  </string>
+  
+  <string key="delete">
+    <value>Hapus Pesan</value>
+  </string>
+  
+  <string key="elevateBlocked">
+    <value>{0} Diblokir dari meninggikan orang lain {1}</value>
+  </string>
+  
+  <string key="elevateUnblocked">
+    <value>{0} Dibebaskan dari meninggikan orang lain {1}</value>
+  </string>
+    <string key="usergroupstatuscreator">
+    <value>{0} adalah pembuat grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusadmin">
+    <value>{0} adalah admin di grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusbanned">
+    <value>{0} dibanned di grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusauth">
+    <value>{0} Adalah auth dalam grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatuselevated">
+    <value>{0} Meningkat dalam grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusmember">
+    <value>{0} Adalah anggota dalam grup ini.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusleft">
+    <value>{0} Ditendang dari grup ini atau meninggalkan grup.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+
+  <string key="usergroupstatusneverseen">
+    <value>{0} tidak pernah terlihat didalan grup.\nMereka telah mengirim {1} Pesan di sini sejak perintah ini dibuat.</value>
+  </string>
+  
+  <string key="tempban">
+    <value>Tempban</value>
+  </string>
+  
+  <string key="tempbannedForFlood">
+    <value>{0} telah di tempban karena melakukan flood, Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="tempbanformesslength">
+    <value>{0} telah di tempban karena mengirimkan pesan terlalu panjang. Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="tempbanfornamelength">
+    <value>{0} telah di tempban karena memiliki nama terlalu panjang. Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="tempbannedformedia">
+    <value>{0} telah di tempban karena mengirimkan media terlarang. Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="tempbannedForRtl">
+    <value>{0} telah di tempban karena menggunakan RTL. Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="tempbanForNoEnglishScript">
+    <value>{0} telah di tempban karena menggunakan karakter non-latin. Ban expires in: {1} (Hari:Jam:Menit)</value>
+  </string>
+  
+  <string key="defaultTime">
+    <value>default grup untuk waktu tempban {0}</value>
+  </string>
+  
+  <string key="defaultTimeSet">
+    <value>Waktu tempban default untuk grup ini telah diperbarui.</value>
+  </string>
+  
+  <string key="groupMenu">
+    <value>
+      Beberapa perintah (/rules, /about, /adminlist, #extra commands) Dapat dinonaktifkan untuk dikirim didalam grup.
+      jika bot di nonaktifkan perintah nya maka bot akan mengirimkan ke user yang memintanya.
+
+      icon disamping perintah akan menunjukan status saat ini:
+      • 👥: bot akan membalas didalam grup.
+      • 👤: bot akan membalas didalam Personal Chat.
+    </value>
+  </string>
+  
+  <string key="warnMenu">
+    <value>Edit peringatan maksimum dan tindakan yang dilakukan dalam grup Anda</value>
+  </string>
+  
+  <string key="groupSettingButton">
+    <value>Grup</value>
+  </string>
+  
+  <string key="cannotbanadmin">
+    <value>Saya tidak bisa kick atau ban admin</value>
+  </string>
+  <string key="hcommanddelnsfw">
+  <value>
+  Delete an NSFW API Key that was set before. You need to set one for NSFW image detection to work (enter "/help nsfw" for more information) and with this command, you remove it again.
+  
+  Example:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="hcommandchecknsfw">
+  <value>
+  Can be used to manually check, how much a picture is NSFW due to enforcer. You need to set up NSFW detection for your group at first, enter "/help nsfw" for more information.
+  
+  Example:
+  /{0} while replying to a picture
+  </value>
+  </string>
+  
+  <string key="hcommandmsgid">
+	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="hcommanddellogchannel">
+  <value>
+  Delete a log channel from a grup, that was added before. For more information about log channels, use "/help addlogchannel".
+  
+  Contoh:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="hcommandtemptime">
+    <value>
+      Tetapkan waktu tempban default untuk grup. Kali ini akan digunakan saat menggunakan / tempban tanpa waktu yang ditentukan dan saat secara otomatis tempbanning seseorang (untuk max warns, flood, etc.)
+
+      Contoh:
+      /{0} [waktu dalam menit]
+    </value>
+  </string>
+  
+  <string key="hcommandmedia">
+    <value>
+      Menghapus atau mengatur ulang peringatan media pengguna.
+
+      Contoh:
+      /{0} balas chat user
+      /{0} [User ID]
+      /{0} [Username]
+    </value>
+  </string>
+  
+  <string key="hcommandunblockelevate">
+    <value>
+      Allow an admin, who was blocked before, to elevate others again.
+
+      Contoh:
+      /{0} while replying to the admin
+      /{0} [Admin's User ID]
+      /{0} [Admin's Username]
+    </value>
+  </string>
+  
+  <string key="hcommandresetsettings">
+    <value>
+      Can be used to reset all settings in a group - log channel, rules, about, etc. Warning: The settings are completely deleted and can't be restored!
+      
+      Contoh:
+      /{0}
+    </value>
+  </string>
+  
+  <string key="hcommandmissinghcommands">
+    <value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandwhois">
+    <value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="donateWord">
+	<value>Donasi</value>
+  </string>
+  
+  <string key="otherhelpList">
+    <value>nsfw</value>
+  </string>
+  
+  <string key="typeMore">
+    <value>Silakan pilih type lain nya untuk mendapatkan hasil</value>
+  </string>
+  
+  <string key="tempbanDescription">
+    <value>Dapatkan informasi tentang tempban group atau user</value>
+  </string>
+  
+  <string key="helpDescription">
+    <value>Dapatkan bantuan dengan sebuah perintah</value>
+  </string>
+  
+  <string key="uct">
+    <value>UTC</value>
+  </string>
+  
+  <string key="HelpButton">
+	<value>Bantuan</value>
+  </string>
+  
+  <string key="hcommandlangcode">
+    <value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="registerfortagall">
+	<value>Anda telah berhasil terdaftar untuk @pingall</value>
+  </string>
+  
+  <string key="tagallregistered">
+	<value>{0} semua telah dipanggil yang menggunakan /pingme</value>
+  </string>
+  
+  <string key="tagallregisterednoone">
+	<value>Belum ada yang menggunakan /pingme</value>
+  </string>
+  
+  <string key="unregisterfortagall">
+	<value>Anda telah berhasil tidak terdaftar untuk @pingall</value>
+  </string>
+  
+  <string key="hcommandpingme">
+	<value>
+	Tambahkan diri Anda ke daftar ping grup. Jika Anda melakukan ini, enforcer akan melakukan ping ke Anda saat seseorang mengirimkan @pingall. Perhatikan bahwa @pingall memiliki cooldown sepuluh menit dan Anda memerlukan username untuk di-ping oleh bot. Untuk dihapus dari pinglist lagi, Anda bisa menggunakan /unpingme.
+  
+	Contoh:
+	/{0}
+	</value>
+  </string>
+  
+  <string key="hcommandunpingme">
+  <value>
+  Hapus diri Anda dari daftar ping kustom, di mana Anda menambahkan diri Anda dengan / pingme sebelumnya. Saat menggunakan perintah ini, petugas tidak akan lagi melakukan ping saat seseorang mengirim @pingall.
+  
+  Contoh:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="hcommandpingall">
+	<value>
+	Panggil semua orang didalam grup, mereka yang menggunakan /pingme sebelumnya. Perhatikan bahwa perintah ini memiliki cooldown 10 menit dan hanya pengguna dengan username yang bisa di-ping. Untuk menghapus diri dari pinglist, Anda bisa menggunakan /unpingme.
+  
+	Contoh:
+	@{0}
+	/{0}
+	</value>
+  </string>
+  
+  <string key="hcommandd">
+  <value>
+  Dengan menggunakan perintah ini akan menghapus pesan yang Anda balas dan perintah itu sendiri. Perhatikan bahwa Anda hanya dapat menghapus pesan Anda sendiri jika Anda bukan admin grup.
+  
+  Contoh:
+  /{0} saat membalas pesan Anda sendiri
+  /{0} saat membalas pesan asing (hanya admin)
+  </value>
+  </string>
+  
+  <string key="hcommandgetrektu">
+	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandgetrekti">
+	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandclearkeys">
+  <value>
+  Perintah ini bisa digunakan untuk membersihkan tombol keyboard di bagian bawah layar (yang ada beberapa bots). Hal ini berguna jika misalnya spambot ditambahkan ke grup Anda yang memberi semua orang keyboard seperti itu dengan 50 tombol yang tidak berguna.
+  
+  Contoh:
+  /{0}
+  </value>
+  </string>
+  
+  <string key="hcommandbangroup">
+	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="hcommandunbangroup">
+	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
+  </string>
+  
+  <string key="registerfortagallclickme">
+	<value>klik tombol start dibawah untuk mendaftarkan dirimu di perintah @pingall atau /pingall .</value>
+  </string>
+  
+  <string key="hcommandunping">
+  <value>
+  Menghapus seorang member dari perintah @pingall,yang menambahkan diri mereka melalui perintah /pingme sebelumnya. Saat menggunakan perintah ini, enforcer tidak akan lagi melakukan ping member ini saat seseorang mengirim pesan @pingall di grup.
+  
+  Example:
+  /{0} replay chat member
+  /{0} [User ID]
+  /{0} [Username]
+  </value>
+  </string>
+  
+  <string key="logchannelAutoRemoved">
+	<value>Gagal mengirim pesan ke logchannel Anda, Oleh karena itu secara otomatis akan dihapus. Untuk menggunakan fitur ini lagi,tambahkan saya ke logchannel Anda lagi dan gunakan perintah /addlogchannel.</value>
+  </string>
+  
+  <string key="logchannelRemoved">
+	<value>log channel kamu berhasil di hapus!</value>
+  </string>
+  
+  <string key="logSettingChanged">
+    <value>{0} ({1}) mengubah {2} di {3}: {4} → {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>Batas flood</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>Tindakan flood</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>Cek flood untuk {0}</value>
+  </string>
+  <string key="settingMedia">
+    <value>Media: {0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>Tindakan peringatan media</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>Maks. peringatan media</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>Maks. peringatan</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>Tindakan peringatan</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>Tindakan panjang nama</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>Tindakan panjang pesan</value>
+  </string>
+  <string key="valueAllowed">
+    <value>Diizinkan</value>
+  </string>
+  <string key="valueBlocked">
+    <value>Diblokir</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>Chat pribadi</value>
+  </string>
+  <string key="valueInGroup">
+    <value>Grup</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filter</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} aktif</value>
+  </string>
+  <string key="filtersMenu">
+    <value>Filter: apa yang terjadi jika pesan, nama, atau username cocok dengan salah satunya. Ketuk filter untuk mengubah tindakannya. Admin dan anggota di daftar watch atau auth tidak pernah diperiksa.\n\nAturan sendiri: {0}. Kelola dengan /filter.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>Aksara Arab</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>Trik kanan-ke-kiri</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>Aksara Sirilik</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>Tionghoa, Jepang, Korea</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>Aksara Ibrani</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>Aksara Dewanagari</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>Huruf yang mirip</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>Karakter tak terlihat</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Tautan undangan Telegram</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>Nomor telepon</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>Dompet kripto</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>Nama admin atau support</value>
+  </string>
+  <string key="filterAction_off">
+    <value>Mati</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>Hapus</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>Peringati</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>Bisukan</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>Tendang</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>Ban sementara</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>Ban</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>Periksa anggota lama</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>Izinkan bot di grup ini</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} dibisukan: {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} dibisukan selama {2}: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} ditendang: {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} diban: {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} diban selama {2}: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>Aturan filter grup kalian sendiri. Aturan baru dimulai dalam masa uji {0} hari: hanya mencatat apa yang akan dilakukannya.\n/filter add name|username|text tindakan regex\n/filter try /regex/ teks\n/filter test id atau regex\n/filter list\n/filter live id\n/filter trial id hari\n/filter del id</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>Target harus salah satu dari: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>Tindakan harus salah satu dari: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>Ekspresi reguler itu tidak bisa dipakai: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>Grup ini sudah punya aturan itu.</value>
+  </string>
+  <string key="filterLimit">
+    <value>Satu grup paling banyak punya {0} aturan sendiri. Hapus satu dulu dengan /filter del.</value>
+  </string>
+  <string key="filterAdded">
+    <value>Aturan #{0} ditambahkan. Aturan ini dalam masa uji {1} hari: mencatat apa yang akan dilakukan dan tidak berbuat apa-apa. Aktifkan dengan /filter live {0}.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>Cocok.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>Tidak cocok.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>Tidak ada yang cocok di antara {0} anggota yang terlihat dalam 30 hari terakhir.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>{0} dari {1} anggota yang terlihat dalam 30 hari terakhir cocok. Contoh:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>Hasilnya sudah saya kirim lewat chat pribadi.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>Saya tidak bisa mengirim hasilnya. Mulai chat pribadi dengan saya dulu, lalu coba lagi.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>Grup ini belum punya aturan sendiri. Tambahkan dengan /filter add; aturan dimulai dalam masa uji {0} hari.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>Aturan sendiri:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} pada {1}, {2}, {3}. Cocok {4} kali; {5} dari anggota itu dikeluarkan.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>aktif</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>masa uji sampai {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>masa uji selesai, menunggu /filter live atau /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>Tidak ada aturan {0}. /filter list menampilkannya.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>Aturan #{0} aktif: bertindak mulai sekarang.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>Aturan #{0} dalam masa uji {1} hari.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>Aturan #{0} dihapus.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>Aturan filter sendiri</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      Aturan filter grupmu sendiri: ekspresi reguler pada nama, username, atau teks pesan anggota, dan apa yang dilakukan jika cocok (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Hanya untuk admin. Filter siap pakai (aksara, tautan undangan, nomor telepon, dan lainnya) ada di menu pengaturan, di bagian Filter.
+
+      Aturan baru dimulai dalam masa uji 7 hari: mencatat apa yang akan dilakukannya dan tidak berbuat apa-apa, jadi kamu bisa melihat apakah aturan itu menangkap orang yang tepat. Aktifkan dengan /{0} live.
+
+      Contoh:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (mencoba aturan 3 pada nama anggota yang terlihat dalam 30 hari terakhir dan mengirim hasilnya lewat chat pribadi)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>

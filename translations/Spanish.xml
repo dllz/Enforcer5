@@ -1,0 +1,649 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<strings>
+  <language name="Español" base="Español" owner="BladeZero"/>
+  <string key="statusKicked">
+    <value>{0} ha sido expulsado/a de este grupo.</value>
+  </string>
+  <string key="statusLeft">
+    <value>{0} dejó el grupo o fue expulsado/a.</value>
+  </string>
+  <string key="statusAdministrator">
+    <value>{0} es un administrador/a.</value>
+  </string>
+  <string key="statusCreator">
+    <value>{0} es el creador del grupo.</value>
+  </string>
+  <string key="statusUnknown">
+    <value>Este usuario no tiene nada que ver con este chat.</value>
+  </string>
+  <string key="statusMember">
+    <value>{0} es miembro del chat.</value>
+  </string>
+  <string key="userinfoGlobal">
+    <value><b>Información global de expulsiones</b>:\n</value>
+  </string>
+  <string key="getkick">
+    <value>Kick: {0}</value>
+  </string>
+  <string key="getban">
+    <value>Ban: {0}</value>
+  </string>
+  <string key="gettempban">
+    <value>Tempban: {0}</value>
+  </string>
+  <string key="getwarn">
+    <value>Advertencias: {0}</value>
+  </string>
+  <string key="getMediaWarn">
+    <value>Advertencia por multimedia: {0}</value>
+  </string>
+  <string key="userinfoGroup">
+    <value><b>Información del grupo {0}</b>:</value>
+  </string>
+  <string key="getrtl">
+    <value>Eliminado por caracteres de derecha a izquierda: {0}</value>
+  </string>
+  <string key="getflood">
+    <value>Eliminado por flood: {0}</value>
+  </string>
+  <string key="getarab">
+    <value>Eliminado por texto persa: {0}</value>
+  </string>
+  <string key="getmedia">
+    <value>Eliminado por multimedia prohibido: {0}</value>
+  </string>
+  <string key="getNothing">
+    <value>Nada que mostrar</value>
+  </string>
+  <string key="botPm">
+    <value>Te he enviado un mensaje privado</value>
+  </string>
+  <string key="noUser">
+    <value>No sé quién es ese usuario</value>
+  </string>
+  <string key="botNotAdmin">
+    <value>No soy administrador de este chat. Necesito ser administrador para ejecutar ese comando</value>
+  </string>
+  <string key="noReply">
+	<value>Por favor, contesta a alguien para usar este comando</value>
+  </string>
+  <string key="msgTooLong">
+	<value>El mensaje ocupa más de {0} caracteres. Por favor, acórtalo</value>
+  </string>
+  <string key="StartMe">
+    <value>Iníciame</value>
+  </string>
+  <string key="userNotAdmin">
+    <value>Tú <b>no</b> eres administrador en este chat</value>
+  </string>
+  <string key="markdownBroken">
+    <value>El marcaje del texto no es consistente</value>
+  </string>
+  <string key="linkMissing">
+    <value>Este grupo no tiene enlace</value>
+  </string>
+  <string key="linkUpdated">
+    <value>Enlace actualizado</value>
+  </string>
+  <string key="linkSet">
+    <value>Enlace configurado</value>
+  </string>
+  <string key="adminList">
+    <value><b>Creador</b>: {0}\n
+           <b>Administradores</b>:{1}</value>
+  </string>
+  <string key="defaultWelcome">
+    <value>Hola {0} bienvenido/a a {1}</value>
+  </string>
+  <string key="noAbout">
+    <value>Este grupo no tiene descripción</value>
+  </string>
+  <string key="noRules">
+    <value>No hay reglas, quémalo todo</value>
+  </string>
+  <string key="rules">
+    <value>\n<b>Reglas</b>:\n{0}</value>
+  </string>
+  <string key="about">
+    <value>\n<b>Descripción</b>:\n{0}</value>
+  </string>
+  <string key="RulesSet">
+    <value>Se han fijado nuevas reglas</value>
+  </string>
+  <string key="AboutSet">
+    <value>Se ha añadido una nueva descripción</value>
+  </string>
+  <string key="extraSaved">
+    <value>{0} comando guardado</value>
+  </string>
+  <string key="noExtra">
+    <value>No hay comandos guardados</value>
+  </string>
+  <string key="extraList">
+    <value>Lista de <b>comandos configurados</b>:\n{0}</value>
+  </string>
+  <string key="extraDeleted">
+    <value>El comando ha sido borrado</value>
+  </string>
+  <string key="SuccesfulKick">
+    <value>{0} ha sido expulsado/a por {1}.</value>
+  </string>
+  <string key="SuccesfulBan">
+    <value>{0} ha sido baneado/a por {1}.</value>
+  </string>
+  <string key="FailedKick">
+    <value>{0} no ha sido expulsado/a, por favor desbanéalo/a manualmente.</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>No puedo expulsar ni banear a un/a administrador/a.</value>
+  </string>
+  <string key="Error">
+    <value>Ha ocurrido un error. Detalles del error: {0}</value>
+  </string>
+  <string key="PingInfo">
+    <value>Tiempo en recibir el mensaje ping: {0}</value>
+  </string>
+  <string key="Ping2">
+    <value>Tiempo en enviar el mensaje ping: {0}</value>
+  </string>
+  <string key="groupBanned">
+    <value>Tu grupo ha sido baneado y no podra usar Werewolf Enforcer</value>
+  </string>
+  <string key="warnMaxKick">
+    <value>Usuario/a {0} <b>expulsado/a</b>: por superar el límite de advertencias.</value>
+  </string>
+  <string key="warnMaxBan">
+    <value>Usuario {0} <b>baneado/a</b>: por superar el límite de advertencias</value>
+  </string>
+  <string key="resetWarn">
+    <value>Reiniciar advertencias</value>
+  </string>
+  <string key="removeWarn">
+    <value>Eliminar advertencia</value>
+  </string>
+  <string key="warn">
+    <value>{0} <b>ha sido advertido/a.</b>\n<i>Número de advertencias</i>   <b>{1}</b>\n<i>Máximo permitido</i>   <b>{2}</b></value>
+  </string>
+  <string key="warnFlag">
+    <value>{0} <b>ha sido advertido/a por {1}.</b>\n<i>Número de advertencias</i>   <b>{2}</b>\n<i>Máximo permitido</i>   <b>{3}</b></value>
+  </string>
+  <string key="alreadyFlagged">
+    <value>Mensaje ya reportado</value>
+  </string>
+  <string key="ban">
+    <value>Ban</value>
+  </string>
+  <string key="kick">
+    <value>Kick</value>
+  </string>
+  <string key="Warn">
+    <value>Warn</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nID del reporte: #r{2}\n#SinResolver</value>
+  </string>
+  <string key="reported">
+    <value>Reportado!\n#ID del reporte: {0}</value>
+  </string>
+  <string key="reportNotFound">
+    <value>Reporte no encontrado.</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>Resuelto por: {0}\n{1}\n({2})\nReportado por: {3}</value>
+  </string>
+  <string key="solvedBy">
+    <value>Atendida por: {0}\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>ID del  reporte: #r{0}</value>
+  </string>
+  <string key="markSolved">
+    <value>Marcado como resuelto</value>
+  </string>
+  <string key="markedAsSolved">
+    <value>Reporte {1} resuelto por {0}</value>
+  </string>
+  <string key="alreadySolved">
+    <value>Resuelto por {1} a las {0}</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>Por favor responde al mensaje mencionando a algún @admin o envia el ID del reporte.</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>Argumentos incorrectos para el comando</value>
+  </string>
+  <string key="NoInput">
+    <value>No hay comando en la entrada</value>
+  </string>
+  <string key="Support">
+    <value><a href="https://telegram.me/werewolfsupport">Pulsa para obtener ayuda del grupo de soporte</a></value>
+  </string>
+  <string key="UnableToGetID">
+    <value>No se pudo obtener el ID de usuario</value>
+  </string>
+  <string key="globalBan">
+    <value>{0} ha sido automaticamente baneado/a por:{1}\nPuede reclamar en @werewolfsupport</value>
+  </string>
+  <string key="goToMessage">
+    <value>Ir al mensaje</value>
+  </string>
+  <string key="goToChat">
+    <value>Ir a la conversación</value>
+  </string>
+  <string key="userUnbanned">
+    <value>Usuario desbaneado!</value>
+  </string>
+  <string key="extraSaved">
+    <value>Este contenido ha sido guardado como respuesta a {0}</value>
+  </string>
+  <string key="tooLong">
+    <value>{0} es demasiado largo</value>
+  </string>
+  <string key="extra">
+    <value>Extra</value>
+  </string>
+  <string key="tempbanZero">
+    <value>El ban temporal no puede ser cero</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} ha sido baneado por {0} (días:horas:minutos)\nID: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>Advertencias puestas a cero.\nReiniciadas por: {0}</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value>El usuario no tiene ninguna advertencia.</value>
+  </string>
+  <string key="warnRemoved">
+    <value>La advertencia ha sido retirada</value>
+  </string>
+  <string key="inlineBan">
+    <value>Baneado usando botones inline</value>
+  </string>
+  <string key ="userBanned">
+    <value>Usuario baneado</value>
+  </string>
+  <string key ="userKicked">
+    <value>Usuario expulsado</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>No se detecta el enlace. Uso: /setlink (enlace)</value>
+  </string>
+  <string key="botNotStarted">
+    <value>Primero necesitas iniciar el bot. Pulsa debajo y selecciona start</value>
+  </string>
+  <string key="bannedFor">
+    <value>Baneado por: {0}</value>
+  </string>
+  <string key="welcomeSet">
+    <value>Bienvenida establecida por {0}</value>
+  </string>
+  <string key ="mainMenu">
+    <value>
+      Configuración de {0}.
+
+	  Algunos comandos (/rules, /about, /adminlist, comandos #extra) pueden ser habilitados únicamente para administradores.
+	  
+	  Comportamiento para comandos desactivados para usuarios/as sin permisos de administrador
+      • Si el comando es invocado por un/a administrador/a, el bot responderá en el grupo.
+      • Si el comando es invocado por un usuario normal, el bot le responderá por chat privado (siempre que haya iniciado antes con start)
+
+	  Los iconos al lado del comando mostrarán su estado:
+      • 👥: el bot responderá en el grupo 
+      • 👤: el bot responderá por privado a usuarios normales y en el grupo a administradores
+
+      Otras opciones: para el resto de opciones, los iconos son descriptivos.
+    </value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>Mensaje de Bienvenida</value>
+  </string>
+  <string key="ReportButton">
+    <value>Reportes</value>
+  </string>
+  <string key="FloodButton">
+    <value>Flood</value>
+  </string>
+  <string key="ModlistButton">
+    <value>/adminlist</value>
+  </string>
+  <string key="AboutButton">
+    <value>/about</value>
+  </string>
+  <string key="RulesButton">
+    <value>/rules</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Extra</value>
+  </string>
+  <string key="RtlButton">
+    <value>Derecha a izquierda</value>
+  </string>
+  <string key="ArabButton">
+    <value>Árabe</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Advertencias 👇🏼</value>
+  </string>
+  <string key="closeButton">
+    <value>Hecho</value>
+  </string>
+  <string key="warnToLow">
+    <value>El límite de advertencias no puede ser inferior a 1</value>
+  </string>
+  <string key="settingChanged">
+    <value>Configuración cambiada</value>
+  </string>
+  <string key="floodMenu">
+    <value>
+	  Aquí puedes gestionar la configuración de flood. 
+
+      Primera fila
+      • ON/OFF: estado actual de del anti-flood
+      • Expulsar/Banear: que hacer cuando alguien hace flooding
+
+      Segunda fila
+      • usa +/- para cambiar la sensibilidad del sistema anti-flood
+      • El valor es el número máximo de mensajes que pueden enviarse en 5 segundos
+      • Máximo: 25 - mínimo: 4
+
+      Tercera fila y siguientes
+	  Puedes configurar excepciones:
+      • ✅: los multimedia seran ignorados por el sistema anti-flood
+      • ❌: los multimedia no serán ignorados por el sistema anti-flood
+      • Nota: con "Texto" se incluyen todos los otros tipos de multimedia (fichero, audio...)
+    </value>
+  </string>
+  <string key="on">
+    <value>On</value>
+  </string>
+  <string key="off">
+    <value>Off</value>
+  </string>
+  <string key="textButton">
+    <value>Texto</value>
+  </string>
+  <string key="stickerButton">
+    <value>Sticker</value>
+  </string>
+  <string key="imageButton">
+    <value>Imagen</value>
+  </string>
+  <string key="gifButton">
+    <value>Gif</value>
+  </string>
+  <string key="videoButton">
+    <value>Vídeo</value>
+  </string>
+  <string key="audioButton">
+    <value>Audio</value>
+  </string>
+  <string key="fileButton">
+    <value>Archivo</value>
+  </string>
+  <string key="contactButton">
+    <value>Contacto</value>
+  </string>
+  <string key="voiceButton">
+    <value>Mensaje de voz</value>
+  </string>
+  <string key="linkButton">
+    <value>Enlace</value>
+  </string>
+  <string key="doNothing">
+    <value>No hacer nada</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>{0} ha sido baneado/a por Flood</value>
+  </string>
+  <string key="bannedForRtl">
+    <value>{0} ha sido baeado/a por texto de Derecha a Izquierda</value>
+  </string>
+  <string key="bannedForNoEnglishScript">
+    <value>{0} ha sido baneado/a por usar alfabeto no latino</value>
+  </string>
+  <string key ="globalBanNotif">
+    <value>{0} ha sido baneado/a automaticamente por historial de: {1}
+			Puede reclamar el bloqueo en @werewolfsupport
+    </value>
+  </string>
+  <string key="GetLang">
+    <value>Qué archivo de idioma?</value>
+  </string>
+  <string key="mediaMenuHeader">
+    <value>Advertencias por uso de Multimedia</value>
+  </string>
+  <string key="mediaMenu">
+    <value>
+	  Pulsa en el micro de la columna de la derecha para cambiar la configuración.
+      Puedes usar la última línea para cambiar el número de advertencias antes de expulsar/banear por multimedia prohibido
+	  El valor no se refiere a las advertencias normales con /warn
+    </value>
+  </string>
+<string key="groupLanguage">
+  <value>Idioma del grupo</value>
+</string>
+<string key="langMenu">
+  <value>Aquí puedes configurar el idioma de tu grupo.\nEl idioma actual es: <b>{0}</b></value>
+</string>
+  <string key="logSettingChanged">
+    <value>{0} ({1}) cambió {2} en {3}: {4} → {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>Límite de flood</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>Acción por flood</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>Control de flood para {0}</value>
+  </string>
+  <string key="settingMedia">
+    <value>Multimedia: {0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>Acción por advertencias de multimedia</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>Máx. advertencias de multimedia</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>Máx. advertencias</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>Acción por advertencias</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>Acción por longitud del nombre</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>Acción por longitud del mensaje</value>
+  </string>
+  <string key="valueAllowed">
+    <value>Permitido</value>
+  </string>
+  <string key="valueBlocked">
+    <value>Bloqueado</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>Chat privado</value>
+  </string>
+  <string key="valueInGroup">
+    <value>Grupo</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtros</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} activos</value>
+  </string>
+  <string key="filtersMenu">
+    <value>Filtros: qué pasa cuando un mensaje, un nombre o un nombre de usuario coincide con uno. Toca un filtro para cambiar lo que hace. Los administradores y los miembros de la lista watch o auth nunca se revisan.\n\nReglas propias: {0}. Gestiónalas con /filter.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>Escritura árabe</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>Trucos de derecha a izquierda</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>Escritura cirílica</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>Chino, japonés, coreano</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>Escritura hebrea</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>Escritura devanagari</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>Letras que se parecen</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>Caracteres invisibles</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Enlaces de invitación de Telegram</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>Números de teléfono</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>Monederos de criptomonedas</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>Nombres de admin o soporte</value>
+  </string>
+  <string key="filterAction_off">
+    <value>Apagado</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>Borrar</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>Advertir</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>Silenciar</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>Expulsar</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>Ban temporal</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>Banear</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>Revisar miembros veteranos</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>Permitir bots de este grupo</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} fue silenciado: {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} fue silenciado durante {2}: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} fue expulsado: {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} fue baneado: {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} fue baneado durante {2}: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>Vuestras propias reglas de filtro. Una regla nueva empieza a prueba durante {0} días: solo registra lo que habría hecho.\n/filter add name|username|text acción regex\n/filter try /regex/ texto\n/filter test id o regex\n/filter list\n/filter live id\n/filter trial id días\n/filter del id</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>El objetivo debe ser uno de: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>La acción debe ser una de: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>Esa expresión regular no se puede usar: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>Este grupo ya tiene esa regla.</value>
+  </string>
+  <string key="filterLimit">
+    <value>Un grupo puede tener como máximo {0} reglas propias. Borra una primero con /filter del.</value>
+  </string>
+  <string key="filterAdded">
+    <value>Regla #{0} añadida. Está a prueba durante {1} días: registra lo que haría y no hace nada. Actívala con /filter live {0}.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>Coincide.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>No coincide.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>Ninguna coincidencia entre los {0} miembros vistos en los últimos 30 días.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>{0} de los {1} miembros vistos en los últimos 30 días coinciden. Ejemplos:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>Te he enviado el resultado en privado.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>No pude enviarte el resultado. Inicia primero un chat privado conmigo y vuelve a intentarlo.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>Este grupo no tiene reglas propias. Añade una con /filter add; empieza a prueba durante {0} días.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>Reglas propias:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} en {1}, {2}, {3}. Coincidió {4} veces; {5} de esos miembros fueron expulsados.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>activa</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>a prueba hasta {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>prueba terminada, esperando /filter live o /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>No existe la regla {0}. /filter list las muestra.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>La regla #{0} está activa: actúa desde ahora.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>La regla #{0} está a prueba durante {1} días.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>La regla #{0} está borrada.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>Tus propias reglas de filtro</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      Las reglas de filtro propias de tu grupo: una expresión regular sobre los nombres, nombres de usuario o el texto de los mensajes de los miembros, y qué hacer cuando coincide (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Solo administradores. Los filtros preparados (escrituras, enlaces de invitación, números de teléfono y más) están en el menú de ajustes, en Filtros.
+
+      Una regla nueva empieza a prueba durante 7 días: registra lo que habría hecho y no hace nada, para que veas si atrapa a las personas correctas. Actívala con /{0} live.
+
+      Ejemplos:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (prueba la regla 3 con los nombres de los miembros vistos en los últimos 30 días y te envía el resultado en privado)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>

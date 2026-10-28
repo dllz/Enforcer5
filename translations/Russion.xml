@@ -1,0 +1,1409 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<strings>
+  <language name="Русский" base="Русский" owner="uthinkimkind" IEFT="ru"/>
+  <string key="statusKicked">
+    <value>{0} забанен(а) в этой группе. {1}</value>
+  </string>
+  <string key="statusLeft">
+    <value>{0} покинул(а) группу или был(а) исключен(а).</value>
+  </string>
+  <string key="statusAdministrator">
+    <value>{0} является администратором.</value>
+  </string>
+  <string key="statusCreator">
+    <value>{0} является создателем.</value>
+  </string>
+  <string key="statusUnknown">
+    <value>Этот пользователь не имеет ничего общего с данной группой.</value>
+  </string>
+  <string key="statusMember">
+    <value>{0} является участником группы.</value>
+  </string>
+  <string key="userinfoGlobal">
+    <value><![CDATA[<b>Инфо о глобальном бане</b>:\n]]></value>
+  </string>
+  <string key="getkick">
+    <value>Исключение: {0}</value>
+  </string>
+  <string key="getban">
+    <value>Бан: {0}</value>
+  </string>
+  <string key="gettempban">
+    <value>Временный бан: {0}</value>
+  </string>
+  <string key="getwarn">
+    <value>Удаление за большое количество предупреждений: {0}</value>
+  </string>
+  <string key="getgroupwarn">
+    <value>Предупреждения: {0}</value>
+  </string>
+  <string key="getMediaWarn">
+    <value>Предупреждения за медиа: {0}</value>
+  </string>
+  <string key="userinfoGroup">
+    <value><![CDATA[<b>Инфо для группы: {0}</b>:]]></value>
+  </string>
+  <string key="getrtl">
+    <value>Удаление за символы справа налево: {0}</value>
+  </string>
+  <string key="getflood">
+    <value>Удаление за флуд: {0}</value>
+  </string>
+  <string key="getarab">
+    <value>Удаление за персидские символы: {0}</value>
+  </string>
+  <string key="getmedia">
+    <value>Удаление за запрещенное медиа: {0}.</value>
+  </string>
+  <string key="getnsfwimage">
+    <value>Удаление за NSFW изображения: {0}</value>
+  </string>
+  <string key="getNothing">
+    <value>Нечего отображать.</value>
+  </string>
+  <string key="botPm">
+    <value>Я отправил вам сообщение в ЛС.</value>
+  </string>
+  <string key="noUser">
+    <value>Я не знаю, кто этот пользователь.</value>
+  </string>
+  <string key="botNotAdmin">
+    <value>Я не администратор в данной группе, мне необходимо быть администратором, чтобы запустить эту команду.</value>
+  </string>
+  <string key="noReply">
+    <value>Пожалуйста, ответьте на сообщение, чтобы использовать эту команду.</value>
+  </string>
+  <string key="msgTooLong">
+    <value>Текст этого сообщения превышает {0} символов. Пожалуйста, сократите его.</value>
+  </string>
+  <string key="StartMe">
+    <value>Запустить</value>
+  </string>
+  <string key="userNotAdmin">
+    <value>Вы <b>не</b> администратор в данной группе.</value>
+  </string>
+  <string key="markdownBroken">
+    <value><![CDATA[Шрифт в этом тексте нарушен. Узнайте, как использовать шрифт, набрав команду<code>/help markdown</code>.]]></value>
+  </string>
+  <string key="linkMissing">
+    <value>Нет ссылки для данной группы.</value>
+  </string>
+  <string key="linkUpdated">
+    <value>Ссылка была обновлена.</value>
+  </string>
+  <string key="linkSet">
+    <value>Ссылка была установлена.</value>
+  </string>
+  <string key="adminList">
+    <value><![CDATA[<b>Создатель</b>: {0}\n<b>Администраторы</b>:{1}]]></value>
+  </string>
+  <string key="defaultWelcome">
+    <value>Привет, {0}! Добро пожаловать в {1}!</value>
+  </string>
+  <string key="noAbout">
+    <value>Нет установленного описания для данной группы.</value>
+  </string>
+  <string key="noRules">
+    <value>Нет никаких правил, сожги их дотла.</value>
+  </string>
+  <string key="rules">
+    <value><![CDATA[\n<b>Правила</b>:\n{0}]]></value>
+  </string>
+  <string key="about">
+    <value><![CDATA[\n<b>Описание</b>:\n{0}]]></value>
+  </string>
+  <string key="RulesSet">
+    <value>Новые правила установлены.</value>
+  </string>
+  <string key="AboutSet">
+    <value>Новое описание установлено.</value>
+  </string>
+  <string key="extraSaved">
+    <value>Команда {0} сохранена.</value>
+  </string>
+  <string key="noExtra">
+    <value>Никакие команды не установлены.</value>
+  </string>
+  <string key="extraList">
+    <value><![CDATA[Список <b>индивидуальных команд</b>:\n{0}]]></value>
+  </string>
+  <string key="extraDeleted">
+    <value>Команда удалена.</value>
+  </string>
+  <string key="SuccesfulKick">
+    <value>{0} исключен(а) администратором {1}.</value>
+  </string>
+  <string key="SuccesfulBan">
+    <value>{0} забанен(а) администратором {1}.</value>
+  </string>
+  <string key="FailedKick">
+    <value>{0} не исключен(а), пожалуйста, разбаньте вручную.</value>
+  </string>
+  <string key="FailedKickBanAdmin">
+    <value>Я не могу исключить или забанить администратора.</value>
+  </string>
+  <string key="Error">
+    <value>Произошла ошибка. Подробности ошибки: {0}.</value>
+  </string>
+  <string key="PingInfo">
+    <value>Время для отправки пинг сообщения: {0}.</value>
+  </string>
+  <string key="Ping2">
+    <value>Время для отправки пинг сообщения: {0}.</value>
+  </string>
+  <string key="groupBanned">
+    <value>Ваша группа забанена от использования Enforcer.</value>
+  </string>
+  <string key="warnMaxKick">
+    <value><![CDATA[{0} <b>исключен(а)</b>, так как достиг(ла) максимальное количество предупреждений.]]></value>
+  </string>
+  <string key="warnMaxBan">
+    <value><![CDATA[{0} <b>забанен(а)</b>, так как достиг(ла) максимальное количество предупреждений.]]></value>
+  </string>
+  <string key="resetWarn">
+    <value>Сбросить</value>
+  </string>
+  <string key="removeWarn">
+    <value>Удалить</value>
+  </string>
+  <string key="warn">
+    <value><![CDATA[{0} <b>предпрежден(а).</b>\n<i>Количество предупреждений:</i> <b>{1}</b>.\n<i>Максимально разрешено:</i> <b>{2}</b>.]]></value>
+  </string>
+  <string key="warnFlag">
+    <value><![CDATA[{0} <b>предупреждена администратором {1}.</b>\n<i>Количество предупреждений:</i> <b>{2}</b>.\n<i>Максимально разрешено:</i>   <b>{3}</b>.]]></value>
+  </string>
+  <string key="alreadyFlagged">
+    <value>Жалоба уже отправлена.</value>
+  </string>
+  <string key="ban">
+    <value>Бан</value>
+  </string>
+  <string key="kick">
+    <value>Исключение</value>
+  </string>
+  <string key="Warn">
+    <value>Предупреждение</value>
+  </string>
+  <string key="reportAdmin">
+    <value>{0}\n\n{1}\nID жалобы: #r{2}.\n#Нерешено</value>
+  </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nОригинал сообщения: {3}\nID жалобы: #r{2}.\n#Нерешено</value>
+  </string>
+  <string key="reported">
+    <value>Жалоба отправлена!\n#Жалоба\nID жалобы: #r{0}.</value>
+  </string>
+  <string key="reportNotFound">
+    <value>Жалоба не найдена.</value>
+  </string>
+  <string key="solvedByReporter">
+    <value>Решена администратором {0}.\n{1}\n({2})\nБыла отправлена пользователем {3}.</value>
+  </string>
+  <string key="solvedBy">
+    <value>Решена администратором {0}\n{1}\n({2})</value>
+  </string>
+  <string key="reportID">
+    <value>ID жалобы: #r{0}.</value>
+  </string>
+  <string key="markSolved">
+    <value>Помечена решенной.</value>
+  </string>
+  <string key="markedAsSolved">
+    <value>Жалоба #r{1} решена администратором {0}.</value>
+  </string>
+  <string key="alreadySolved">
+    <value>Решена в {0} администратором {1}.</value>
+  </string>
+  <string key="solvedNoReply">
+    <value>Пожалуйста, ответь на сообщение (содержит @admin) или отправь ID жалобы.</value>
+  </string>
+  <string key="incorrectArgument">
+    <value>Неверный тип аргумента для команды.</value>
+  </string>
+  <string key="NoInput">
+    <value>Нет ввода с командой.</value>
+  </string>
+  <string key="Support">
+    <value><![CDATA[<a href="https://telegram.me/{0}">Нажмите сюда, чтобы получить помощь от группы службы поддержки</a>.]]></value>
+  </string>
+  <string key="UnableToGetID">
+    <value>Не удалось получить ID пользователя.</value>
+  </string>
+  <string key="globalBan">
+    <value>{0} автоматически забанен(а) за {1}\nПользователь может перейти в {2} для аппеляции своего бана.</value>
+  </string>
+  <string key="goToMessage">
+    <value>Перейти к сообщению</value>
+  </string>
+  <string key="goToChat">
+    <value>Перейти в группу</value>
+  </string>
+  <string key="userUnbanned">
+    <value>Пользователь разблокирован!</value>
+  </string>
+  <string key="extraMediaSaved">
+    <value>Данное медиа сохранено как ответ на {0}.</value>
+  </string>
+  <string key="tooLong">
+    <value>{0} слишком длинное.</value>
+  </string>
+  <string key="extra">
+    <value>Экстра</value>
+  </string>
+  <string key="tempbanZero">
+    <value>Временный бан не может равняться нулю.</value>
+  </string>
+  <string key="tempbanned">
+    <value>{1} забанен(а) за {0} (дни:часы:минуты)\nID: {2}</value>
+  </string>
+  <string key="warnsReset">
+    <value>Предупреждения сброшены администратором {0}.</value>
+  </string>
+  <string key="ZeroWarnings">
+    <value>У пользователя уже нет предупреждений.</value>
+  </string>
+  <string key="warnRemoved">
+    <value>Предупреждения удалены.</value>
+  </string>
+  <string key="inlineBan">
+    <value>Пользователь заблокирован встроенными кнопками.</value>
+  </string>
+  <string key ="userBanned">
+    <value>Пользователь заблокирован.</value>
+  </string>
+  <string key ="userKicked">
+    <value>Пользователь исключен.</value>
+  </string>
+  <string key="NoLinkInputed">
+    <value>Ссылка не обнаружена. Используйте /setlink (ссылка).</value>
+  </string>
+  <string key="botNotStarted">
+    <value>Сначала вам нужно запустить бота.  Нажмите "Запустить".</value>
+  </string>
+  <string key="bannedFor">
+    <value>Пользователь забанен за: {0}.</value>
+  </string>
+  <string key="welcomeSet">
+    <value>Приветствие установено администратором {0}.</value>
+  </string>
+  <string key ="mainMenu">
+    <value>Управление настройками {0}.
+Другие настройки: значки для остальных настроек говорят сами за себя.</value>
+  </string>
+  <string key ="WelcomeButton">
+    <value>Приветствие</value>
+  </string>
+  <string key="ReportButton">
+    <value>Жалоба</value>
+  </string>
+  <string key="FloodButton">
+    <value>Флуд</value>
+  </string>
+  <string key="ModlistButton">
+    <value>Администраторы</value>
+  </string>
+  <string key="AboutButton">
+    <value>Описание</value>
+  </string>
+  <string key="RulesButton">
+    <value>Правила</value>
+  </string>
+  <string key="ExtraButton">
+    <value>Экстра</value>
+  </string>
+  <string key="RtlButton">
+    <value>Справа налево</value>
+  </string>
+  <string key="ArabButton">
+    <value>Арабский</value>
+  </string>
+  <string key="WarnsButton">
+    <value>Действие предупреждения: {0}</value>
+  </string>
+  <string key="closeButton">
+    <value>Готово</value>
+  </string>
+  <string key="warnToLow">
+    <value>Количество предупреждений не может быть меньше 1.</value>
+  </string>
+  <string key="settingChanged">
+    <value>Настройки изменены.</value>
+  </string>
+  <string key="floodMenu">
+    <value>Здесь вы можете управлять настройками группового флуда.
+1-й ряд:
+ • Вкл/Выкл: текущий статус анти-флуда;
+ • Исключение/Бан: что делать, если кто-то флудит.
+2-й ряд:
+ • вы можете использовать +/- для того, чтобы изменить текущую чувствительность системы анти-флуда;
+ • число это максимальное количество сообщений, которые можно отправить за 5 секунд;
+ • максимальное значение - 25, минимальное значение - 4.
+3-й ряд и ниже:
+Вы можете установить некоторые исключения для анти-флуда.
+ • ✅: медиа не будут проигнорены анти-флудом;
+ • ❌: медиа будут проигнорены анти-флудом;
+ • Примечание: в «текст» включены все другие типы медиа (файлы, аудио...).</value>
+  </string>
+  <string key="on">
+    <value>Вкл</value>
+  </string>
+  <string key="off">
+    <value>Выкл</value>
+  </string>
+  <string key="textButton">
+    <value>Текст</value>
+  </string>
+  <string key="stickerButton">
+    <value>Стикер</value>
+  </string>
+  <string key="imageButton">
+    <value>Изображение</value>
+  </string>
+  <string key="gifButton">
+    <value>Гиф</value>
+  </string>
+  <string key="videoButton">
+    <value>Видео</value>
+  </string>
+  <string key="audioButton">
+    <value>Аудио</value>
+  </string>
+  <string key="fileButton">
+    <value>Файл</value>
+  </string>
+  <string key="contactButton">
+    <value>Контакт</value>
+  </string>
+  <string key="voiceButton">
+    <value>Голосовое</value>
+  </string>
+  <string key="linkButton">
+    <value>Ссылка</value>
+  </string>
+  <string key="textButton">
+    <value>Текст</value>
+  </string>
+  <string key="doNothing">
+    <value>Я ничего не делаю.</value>
+  </string>
+  <string key="bannedForFlood">
+    <value>{0} заблокирован(а) за флуд.</value>
+  </string>
+  <string key="kickedForFlood">
+    <value>{0} исключен(а) за флуд.</value>
+  </string>
+  <string key="bannedForRtl">
+    <value>{0} заблокирован(а) за символы справа налево.</value>
+  </string>
+  <string key="kickedForRtl">
+    <value>{0} исключен(а) за символы справа налево.</value>
+  </string>
+  <string key="bannedForNoEnglishScript">
+    <value>{0} заблокирован(а) за использование нелатинских симолов.</value>
+  </string>
+  <string key="globalBanNotif">
+    <value>{0} автоматически забанен(а), так как имеет историю: {1}\nПользователь может перейти в {2} для аппеляции своего бана.</value>
+  </string>
+  <string key="GetLang">
+    <value>Получить файл на каком языке?</value>
+  </string>
+  <string key="mediaMenuHeader">
+    <value>Предупреждения за медиа</value>
+  </string>
+  <string key="mediaMenu">
+    <value>Нажмите на кнопку в правом столбце, чтобы изменить настройку.
+Вы можете использовать последнюю строку, чтобы изменить количество предупреждений, которые должен выдать бот, прежде чем исключить/забанить кого-либо за запрещенное медиа.
+Количество не имеет отношения к обычной команде /warn.</value>
+  </string>
+  <string key="groupLanguage">
+    <value>Язык группы</value>
+  </string>
+  <string key="langMenu">
+    <value>Здесь вы можете установить язык вашей группы.\nВаш текущий язык установлен на: <b>{0}</b>.</value>
+  </string>
+  <string key="userUnblocked">
+    <value>Пользователь разблокирован.</value>
+  </string>
+  <string key="userBlocked">
+    <value>Пользователь заблокирован.</value>
+  </string>
+  <string key="startMe">
+    <value>Вам нужно сначала запустить меня.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Настройки, которые установлены в группе:</value>
+  </string>
+  <string key="userInfoGlobal">
+    <value>Глобальное инфо о пользователе</value>
+  </string>
+  <string key="backButton">
+    <value>Назад</value>
+  </string>
+  <string key="mediaNotAllowed">
+    <value>Данный тип медиа не разрешен. Вы были предупрежены. {0} из {1} предупреждений дано.</value>
+  </string>
+  <string key="kickedformedia">
+    <value>{0} исключен(а) за отправку незаконного медиа.</value>
+  </string>
+  <string key="bannedformedia">
+    <value>{0} забанен(а) за отправку незаконного медиа.</value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value>{0} исключен(а) за использование нелатинских символов.</value>
+  </string>
+  <string key="bannedfornsfwimage">
+    <value>{0} заблокирован(а) за отправку NSFW изображения.\nИзображение имело {1}% вероятность быть NSFW.</value>
+  </string>
+  <string key="kickedfornsfwimage">
+    <value>{0} исключен(а) за отправку NSFW изображения.\nИзображение имело {1}% вероятность быть NSFW.</value>
+  </string>
+  <string key="nsfwMenu">
+    <value>Установите, будет ли пользователь исключен или заблокирован.
+Включите или выключите систему обнаружения.
+Обратите внимание, что каждый API ключ ограничен 5000 изображениями в месяц, вы обязаны изменить API ключ группы, когда он израсходуется.
+Эта система работает, запрещая только изображения с 95% вероятностью или выше быть NSFW. Он использует новейшие технологии компьютерного видения, но, поскольку эта область все еще молода, она не идеальна.
+Вот пост о том, как точно настроить обнаружение NSFW: http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
+  </string>
+  <string key="nsfwButton">
+    <value>Обнаружение NSFW</value>
+  </string>
+  <string key="getmaxwarn">
+    <value>Удален(а) за максимальное количество предупреждений: {0}.</value>
+  </string>
+  <string key="evlavated">
+    <value>Пользователю {0} предоставлены #повышенные права администратором {1}.</value>
+  </string>
+  <string key="auth">
+    <value>Пользователю {0} предоставлены #авторизованные права администратором {1}.</value>
+  </string>
+  <string key="dauth">
+    <value>Пользователю {0} отменены #авторизованные права администратором {1}.</value>
+  </string>
+  <string key="devlavated">
+    <value>Пользователю {0} отменены #повышенные права администратором {1}.</value>
+  </string>
+  <string key="currentMods">
+    <value><![CDATA[\n<b>Текущие повышенные пользователи:</b>\n]]></value>
+  </string>
+  <string key="prevMods">
+    <value>Пользователи временно повышены пользователями.</value>
+  </string>
+  <string key="helpNoRequest">
+    <value>Enforcer - это бот, предназначенный для облегчения управления вашими группами. За обновлениями перейдите в https://t.me/{0}.
+Он делает это путем реализации анти-спама, анти-медиа, тэмпбанов, предупреждений, разрешения вам установки ответов на хэштэги и тд.
+ * Бот должен быть администратором группы, чтобы правильно функционировать.
+ * Бот функционирует лучше всего в супергруппах
+ * Он может быть настроен отправкой команды /menu.
+ * У бота есть много команд, чтобы узнать больше информации о конкретной команде отправьте команду /help. 
+Пример: /help menu.
+Чтобы получить список команд отправьте команду /getcommands.
+ * Если вам все еще нужна помощь, отправбте команду /support, чтобы присоединиться к нашей группе службы поддержки.</value>
+  </string>
+  <string key="helpOptionNotImplemented">
+    <value>Инфо о {0} еще не написано, пожалуйста, присоединитесь к группе службы поддержки, чтобы найти больше об этом - /support.
+    </value>
+  </string>
+  <string key="hcommandkickme">
+    <value>Может использоваться, чтобы бот удалил вас  группы без нажатия "покинуть группу", но позволит вам вернуться.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandkick">
+    <value>Может использоваться для удаления пользователя из группы, но позволит ему вернуться.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandwarn">
+    <value>Может использоваться для добавления предупреждения пользователю. 
+Вы можете установить действие на максимальное количество предупреждений и количество предупреждений, которое пользователь может получить, командой меню.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandban">
+    <value>Может использоваться для бана пользователя с группы без возможности вернуться. Если используется ответом, вы можете добавить причину бана после /{0}, которая будет показана в статусе команды.
+Пример:
+/{0} отвечая пользователю;
+/{0} [причина] отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandunban">
+    <value>Может использоваться для разбана пользователя с группы, которая позволит им обратно вернуться, если он ранее был забанен или временно забанен.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandtempban">
+    <value>Может использоваться для временного бана пользователя с группы, он сможет вернуться только после того, как пройдет установленное время.
+Использование: 
+Вам нужно ответить пользователю, которого вы хотите забанить. Затем при использовании команды набрать количество минут после команды. Если время не будет предусмотрено, бот забанит пользователя на час.
+Пример:
+/{0} 123 отвечая пользователю;
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandadmin">
+    <value>Может использоваться для жалобы. Если вы отвечаете на сообщение, оно будет переслано администраторам с текстом в вашем сообщении. Если без ответа на сообщение, будет отправлено только ваше сообщение.
+Администраторы могут воспользоваться встроенным меню действия.  супергруппах вы можете перейти к сообщению.
+Пример:
+@{0};
+@{0} отвечая пользователю;
+@{0} [причина];
+@{0} [причина] отвечая пользователю;
+/{0};
+/{0} отвечая пользователю;
+/{0} [причина];
+/{0} [причина] отвечая пользователю.</value>
+  </string>
+  <string key="hcommandadminoff">
+    <value>Останавливает бот от отправки вам жалоб. Может также использоваться для других администраторов, как и для вас.
+Пример:
+/{0};
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandadminon">
+    <value>Позволяет боту отправлять жалобы вам, если до этого было выключено. Может также использоваться для других администраторов, как и для вас.
+Пример:
+/{0};
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].
+    </value>
+  </string>
+  <string key="hcommandsolved">
+    <value>Помечает жалобу решенной, чтобы другие администраторы знали, что с ней разобрались.
+Пример:
+/{0} отвечая на сообщение, которое содержит @admin;
+/{0} [ID жалобы].</value>
+  </string>
+  <string key="hcommandreporton">
+    <value>Позволяет пользователю подавать жалобу, используя @admin, если ранее было выключено.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandreportoff">
+    <value>Запрещает пользователю использовать @admin.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandrules">
+    <value>Отправляет правила группы, которые ранее установили администраторы командой /setrules.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandsetrules">
+    <value>Устанавливает правила группы, которые пользователи могут просмотреть командой /rules.
+Пример: /{0} Не будь агрессивым человеком.</value>
+  </string>
+  <string key="hcommandabout">
+    <value>Отправляет описание группы, которое ранее было установлено администраторами командой /setabout.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandsetabout">
+    <value>Устанавливает описание группы, которое пользователи могут просмотреть командой /about.
+Пример: /{0} Группа для игр.</value>
+  </string>
+  <string key="hcommandadminlist">
+    <value>Отправляет список администраторови повышенных пользователей группы.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommands">
+    <value>Сохраняет сообщение в ЛС бота, на которое вы отвечаете.
+Пример: /{0} отвечая на сообщение.</value>
+  </string>
+  <string key="hcommandid">
+    <value>Отправляет ID группы или ID пользователя, которому вы отвечаете.
+Пример:
+/{0};
+/{0} отвечая пользователю.</value>
+  </string>
+  <string key="hcommandsupport">
+    <value>Отправляет ссылку на группу службы поддержки Blackwolf.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommanduser">
+    <value>Отправляет следующую информацию о пользователе в группе: как много предупреждений, исключений и банов он получил глобально и в данной группе.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandme">
+    <value>Отправляет информацию о том сколько было полученл редупреждений, исключений и банов глобально. Будет отправлено вам в ЛС бота.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandextra">
+    <value>Сохраняет экстра команду. Экстра команды - индивидуальные команды с индивидуальными ответом, запускающиеся одним словом, начинающийся хэштэгом. Каждый может отправить команду и бот отправит индивидуальный ответ.
+Пример:
+/{0} #блабла отвечая на сообщение;
+/{0} #блабла Интересный ответ.</value>
+  </string>
+  <string key="hcommandextralist">
+    <value>Отправляет список экстра команд группы. Пример: /{0}.</value>
+  </string>
+  <string key="hcommandextradel">
+    <value>Удаляет экстра команду, которая была ранее установлена. Пример: /{0} #блабла.</value>
+  </string>
+  <string key="hcommandlink">
+    <value>Отправляет ссылку группы. Работает, только если администратор ранее установил ссылку командой /setlink. При использовании в публичных супергруппах, отвечая на сообщение, отправляет ссылку данного сообщения.
+Пример:
+/{0};
+/{0} отвечая на сообщение.</value>
+  </string>
+  <string key="hcommandsetlink">
+    <value>Устанавливает ссылку группы, еобходимсая при использовании команды /link. Должна соответсвовать ссылке, если приватная группа.
+Пример:
+/{0} [ссылка группы] (приватная группа);
+/{0} (публичная группа).</value>
+  </string>
+  <string key="hcommandstatus">
+    <value>Отправляет текущий статус пользователя группы - участник, администратор, создатель, исключен, забанен, никогда не был.
+Пример:
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandwelcome">
+    <value>Определяет приветственное сообщение для группы, которое отправляется, когда новый пользователь присоединяется или добавляется в группу.  Однако, если несколько пользователей присоединяются подряд, во избежание спама в группе будет отправляться только одно приветственное сообщение в минуту.
+В тексте вы можете использовать уценку (используйте /help markdown для получения дополнительной информации) и следующее:
+$name - заменяется новым именем;
+$username - заменяется новым именем пользователя;
+$id - заменяется новым ID пользователя;
+$title - заменяется названием группы.
+Вы также можете установить ГИФ в качестве приветственного сообщения, ответив на него с помощью команды!
+Если хотите, вы можете составить приветственное сообщение из описания [a], правилах [r] и списка администраторов [m].  Для этого используйте /welcome [буквы на латинском], например, "/welcome ar" установит в приветственном сообщении текст и правила.
+Чтобы установить приветственное сообщение по умолчанию, используйте "/welcome no".
+Пример:
+/{0} Добро пожаловать $name в $title!;
+/{0} отвечая на ГИФ;
+/{0} [текст] отвечая на ГИФ;
+/{0} [любая композиция букв a, r и m];
+/{0} no (нет).</value>
+  </string>
+  <string key="hcommanddisablewatch">
+    <value>Отключает анти-флуд, обнаружение персидского, анти-nsfw, анти-длину имени/длину сообщения и все другие фильтры для пользователя. Администраторы должны использовать команду в группе, чтобы вышеперечисленное игнорировалось.
+Пример:
+/{0};
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandenablewatch">
+    <value>Включает все фильтры, если ранее были выключены,
+Пример:
+/{0};
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandcheck">
+    <value>Отправляет количество сообщений, которое пользователь отправил в данной группе.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandelevate">
+    <value>Повышает пользователя до админитратора данной группы. Если сделано администратором или повышенным пользователем длительность будет 30 минут, если создателем или авторизованным пользователем, то на постоянно. Повышенные пользователи имеют доступ ко всем командам администратора.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommanddeelevate">
+    <value>Понижает текущего повышенного пользователя. Команда только для создателя и авторизованных пользователей.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandelevatelog">
+    <value>Отправляет лог пользователей, которые повышены не создателем или авторизавынным пользователем. Показывает время, на которое они повышены и каким администратором.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandauth">
+    <value>Авторизует пользователя - бот будет видеть его создателем, можно авторизовать, снять авторизацию и повышать на постоянно пользователей.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandblockelevate">
+    <value>Блокирует администратора от временного повышения пользователей. Могут использовать только авторизованные пользователи и создатель.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommanddeauth">
+    <value>Снимает авторизацию пользователя.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandmenu">
+    <value>Отправляет вам меню для изменений всех настроекгруппы в ЛС бота.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>Отправляет панель инструментов текущих настроек в ЛС бота.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandping">
+    <value>Пингует бота для просмотра того,  сколько займет времени ему ответить.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandgetcommands">
+    <value>Отправляет список всех команд бота. Обратите внимание, что некоторые из них предназначены только для глобальных администраторов бота, поэтому вы не можете их использовать.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandmarkdown">
+    <value>Как использовать шрифт:
+<b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+<i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+<a href="t.me/BlackWolfAnnouncements">ССЫЛКА</a> = &lt;a href="t.me/BlackWolfAnnouncements"&gt;ССЫЛКА&lt;/a&gt;
+<code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;></value>
+  </string>
+  <string key="actionNotSettext">
+    <value>Пожалуйста, установите действие, которое бот должен выполнить, когда пользователь отправляет слишком длинное сообщение.</value>
+  </string>
+  <string key="getlongmessages">
+    <value>Удаление за слишком длинное сообщение: {0}.</value>
+  </string>
+  <string key="kickformesslength">
+    <value>{0} исключен(а) за отправку слишком длинного сообщения.</value>
+  </string>
+  <string key="banformesslength">
+    <value>{0} забанен(а) за отправку слишком длинного сообщения.</value>
+  </string>
+  <string key="actionNotSetname">
+    <value>Пожалуйста, установите действие, которое бот должен выполнить, когда у пользователя слишком длинное имя.</value>
+  </string>
+  <string key="getnamelength">
+    <value>Удаление за слишком длинное имя: {0}.</value>
+  </string>
+  <string key="kickfornamelength">
+    <value>{0} исключен(а) за слишком длинное имя.</value>
+  </string>
+  <string key="banfornamelength">
+    <value>{0} забанен(а) за слишком длинное имя.</value>
+  </string>
+  <string key="lengthButton">
+    <value>Авто</value>
+  </string>
+  <string key="nameSettingsHeader">
+    <value>Длина имени</value>
+  </string>
+  <string key="textSettingsHeader">
+    <value>Длина сообщения</value>
+  </string>
+  <string key="lengthMenu">
+    <value>Здесь вы можете изменить настройки, как бот будет обрабатывать длинные имена и ообщения.
+Вы можете установить ограничение на количество символов, отправив в группове следующее:
+/maxnl [количество символов] - изменить максимальную длину имени;
+/maxtl [количество символов] - изменить максимальное количество символов в сообщении;
+/maxl [количество строк] - изменить максимальное количество строк, разрешенное в сообщении.
+Причина, по которой вы можете устанавливать строки и символы, заключается в том, что некоторые спамеры отправляют пустые сообщения, содержащие много строк. Эти сообщения будут меньше указанного количества символов, но все равно будут спамом.
+[символы : линии] - указание в кнопке.</value>
+  </string>
+  <string key="maxLength">
+    <value>Макс. длина</value>
+  </string>
+  <string key="done">
+    <value>Готово</value>
+  </string>
+  <string key="failed">
+    <value>Ошибка</value>
+  </string>
+  <string key="gethelplist">
+    <value>Текущие запросы поддержки:\n{0}.</value>
+  </string>
+  <string key="hcommandleave">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandlook">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandunlook">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandblockp">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandallowp">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandauthnsfw">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommanddeauthnsfw">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandgetuser">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandhelp">
+    <value>Вы просите помощи с командой /help? Немного рекурсивно, но:
+Команду /help можно использовать для получения справки по команде (например, «/help warn»). Вы можете получить список разделов справки с помощью команды /helplist. Если ничего не указано, вместо этого будет стандартное справочное сообщение.
+Пример:
+/{0};
+/{0} [команда (без "/")];
+/{0} [раздел справки с /helplist].</value>
+  </string>
+  <string key="hcommandhelplist">
+    <value>Выдает список текущих разделов справки. Команду /help можно использовать с любым из этих разделов справки, и вы получите по ним помощь.  (например, «/help warn»).
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandmaxnl">
+    <value>Определяет максимальную длину имени пользователя в данной группе.  Если имя человека длиннее, чем это значение, он автоматически получает исключение/предупреждение/бан (можно установить в /menu в разделе «Авто»).
+Пример: /{0} 50.</value>
+  </string>
+  <string key="hcommandmaxtl">
+    <value>Определяет максимальную длину сообщений в этой группе. Если кто-то отправляет сообщение с большим количеством символов, он автоматически получает исключение/предупреждение/бан (можно установить в /menu в разделе «Авто»).
+Пример: /{0} 1024.</value>
+  </string>
+  <string key="hcommandmaxl">
+    <value>получает исключение/предупреждение/бан (можно установить в /menu в разделе «Авто»).
+Пример: /{0} 50.</value>
+  </string>
+  <string key="hcommandrektlist">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandaddrule">
+    <value>Добавляет новое правило в конец текущих в /rules.
+Пример: /{0} Ты должен уважать других!</value>
+  </string>
+  <string key="hcommanduploadlanguage">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandvalidatelanguages">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandgetlanguage">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandreloadlang">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandhalt">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandmakelangadmin">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandremovelangadmin">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandgetrekt">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandunrekt">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandmediaid">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandstart">
+    <value>Команда только для ЛС с ботом, чтобы запустить его. Необходимо для использования команды /s, получения личных отчетов администратора и некоторых других функций.
+Пример: /{0}.</value>
+  </string>
+  <string key="donate">
+    <value>Если вы хотите, чтобы Enforcer оставался в сети, сделайте пожертвование здесь - {0}.\nЭти деньги помогают оплачивать дорогие серверы, на которых работает бот.\nРазработчики этого бота не получают никаких денег, кроме этих пожертвований и рады каждому пожертвованию. Конечно, вы можете использовать бота, ничего не жертвуя.</value>
+  </string>
+  <string key="hcommanddonate">
+    <value>Отправляет ссылку для пожертвований через PayPal. Разработчики этого бота не получают никаких денег, кроме пожертвований и рады каждому пожертвованию. Конечно, вы можете использовать бота, ничего не жертвуя.
+Пример: /{0}.</value>
+  </string>
+  <string key="notChannel">
+    <value>Указанный ID недействителен, пожалуйста, используйте /help addlogchannel, чтобы получить дополнительную информацию.</value>
+  </string>
+  <string key="channelAdded">
+    <value>Канал сохранен. Убедитесь, что бот является администратором канала.</value>
+  </string>
+  <string key="hcommandaddlogchannel">
+    <value>Добавьте канал журнала в enforcerbot. Enforcerbot будет публиковать все команды администратора, используемые в вашей группе, на этом канале.
+Эта команда может быть запущена только создателем группы или авторизованным пользователем.
+Бот должен быть администратором канала, он также может быть группой, но это своего рода крах назначения.
+Пример:
+/{0} [ID канала];
+/{0} отвечая на сообщение пересланное с канала.</value>
+  </string>
+  <string key="logSendError">
+    <value>Бот не смог зарегистрировать эту команду в логканале, установите логканал с помощью /addlogchannel и убедитесь, что боту разрешеро публиковать сообщения и находиться в канале.</value>
+  </string>
+  <string key="noone">
+    <value>ничье</value>
+  </string>
+  <string key="logMessageCommand">
+    <value><![CDATA[{0} ({1}) использовал(а) команду\n<code>{2}</code>\nв группе {3}, отвечая на сообщение {4}.]]></value>
+  </string>
+  <string key="logMessageCallback">
+    <value>{0} ({1}) использовал(а)\n{2}\nдля группы {3}.</value>
+  </string>
+  <string key="welcomeReset">
+    <value>Приветственное сообщение было установлено по умолчанию.</value>
+  </string>
+  <string key="hcommanddelmsg">
+    <value>Удаляет сообщение, на которое вы отвечаете. Только для администраторов.
+Пример: /{0} отвечая на сообщение.</value>
+  </string>
+  <string key="nsfwapikeyset">
+    <value>NSFW API инфо сохранено.</value>
+  </string>
+  <string key="apikeysucgen">
+    <value>API ключ успешно сгенерирован.</value>
+  </string>
+  <string key="hcommandsetnsfw">
+    <value><![CDATA[Установите обнаружение NSFW изображения для вашей группы. Инфо о том, как именно это сделать, можно найти < href="https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02">здесь</a>.
+Пример: /{0} [ID клиента] [секрет клиента]]]>.</value>
+  </string>
+  <string key="hcommandnsfw">
+    <value>Enforcerbot может автоматически обнаруживать NSFW изображения и наказывать за них. Подробное описание того, как настроить эту функцию, можно найти здесь: https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02.</value>
+  </string>
+  <string key="welcomeBack">
+    <value>С возвращением в Enforcer. Ваши настройки остались нетронутыми.</value>
+  </string>
+  <string key="messageDeleted">
+    <value>Сообщение успешно удалено.</value>
+  </string>
+  <string key="delete">
+    <value>Удалить</value>
+  </string>
+  <string key="elevateBlocked">
+    <value>{0} заблокирован(а) от использования повышения других администратором {1}.</value>
+  </string>
+  <string key="elevateUnblocked">
+    <value>{0} разблокирован(а) от использования повышения других администратором {1}.</value>
+  </string>
+  <string key="usergroupstatuscreator">
+    <value>{0} является создателем данной группы\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusadmin">
+    <value>{0} является администратором данной группы\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusbanned">
+    <value>{0} забанен(а) в данной группе.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusauth">
+    <value>{0} авторизованный пользователь в данной группе.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatuselevated">
+    <value>{0} повышенный пользователь в данной группе.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusmember">
+    <value>{0} участник в данной группе.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusleft">
+    <value>{0} исключен(а) с данной группы или покинул(а) ее.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="usergroupstatusneverseen">
+    <value>{0} никогда не было в данной группе.\n{0} повышенный пользователь в данной группе.\nОтправлено {1} сообщений с момента создания команды.</value>
+  </string>
+  <string key="tempban">
+    <value>Тэмпбан</value>
+  </string>
+  <string key="tempbannedForFlood">
+    <value>{0} временно забанен(а) за флуд. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="tempbanformesslength">
+    <value>{0} временно забанен(а) за отправку слишком длинного сообщени. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="tempbanfornamelength">
+    <value>{0} временно забанен(а) за слишком длинное имя. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="tempbannedformedia">
+    <value>{0} временно забанен(а) за отправку незаконного медиа. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="tempbannedForRtl">
+    <value>{0} временно забанен(а) за символы справа налево. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="tempbanForNoEnglishScript">
+    <value>{0} временно забанен(а) за использование нелатинских символов. Срок действия бана истекает через: {1} (дни:часы:минуты).</value>
+  </string>
+  <string key="defaultTime">
+    <value>Временный бан для данной группы по умолчанию: {0}.</value>
+  </string>
+  <string key="defaultTimeSet">
+    <value>Временный бан для данрой группы обновлен.</value>
+  </string>
+  <string key="groupMenu">
+    <value>Некоторые команды (/rules, /about, /adminlist, #extra) могут быть выключены для отпавки в группу.
+Если команда отключена, бот просто отправит в ЛС пользователю, который запросил.
+Иконки рядом с командой покажут текущий статус:
+ • 👥: бот ответит в группе;
+ • 👤: бот ответит в ЛС.</value>
+  </string>
+  <string key="warnMenu">
+    <value>Отредактируйте максимальное количество предупреждений и действия, которые будут предприняты в вашей группе.</value>
+  </string>
+  <string key="groupSettingButton">
+    <value>Группа</value>
+  </string>
+  <string key="cannotbanadmin">
+    <value>Я не могу исключить или забанить администратора.</value>
+  </string>
+  <string key="hcommanddelnsfw">
+  <value>Удаляет установленный ранее NSFW API ключ. Сначала вам необходимо настроить обнаружение NSFW изображений для вашей группы, введите «/help nsfw» для получения дополнительной информации и с помощью этой команды вы удалите его снова.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandchecknsfw">
+  <value>Проверяет насколько изображение является NSFW для Enforcer. Сначала вам необходимо настроить обнаружение NSFW изображений для вашей группы, введите «/help nsfw» для получения дополнительной информации.
+Пример: /{0} отвечая на изображение.</value>
+  </string>
+  <string key="hcommandmsgid">
+  <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommanddellogchannel">
+  <value>Удаляет логканал из группы, которая ранее была добавлена. Для получения дополнительной информации о логканалах используйте "/help addlogchannel".
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandtemptime">
+    <value>Установите время временного бана по умолчанию для группы. Это время будет использоваться при использовании /tempban без указания времени и при автоматическом временном бане кого-либо за максимальное количество предупреждений, флуда и т. д..
+Пример: /{0} [время в минутах].</value>
+  </string>
+  <string key="hcommandmedia">
+    <value>Удаляет или сбрасывает пользователю предупреждения медиа.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandunblockelevate">
+    <value>Разрешить администратору, который был заблокирован ранее, снова давать повышение другим.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="hcommandresetsettings">
+    <value>Может использоваться для сброса всех настроек в группе - логканала, правил, описания и т. д. Предупреждение: настройки полностью удаляются и не могут быть восстановлены!
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandmissinghcommands">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandwhois">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="donateWord">
+  <value>Пожертвование</value>
+  </string>
+  <string key="otherhelpList">
+    <value>NSFW</value>
+  </string>
+  <string key="typeMore">
+    <value>Пожалуйста, введите больше, чтобы получить результаты.</value>
+  </string>
+  <string key="tempbanDescription">
+    <value>Отправляет инфо группы или временных банах пользователя.</value>
+  </string>
+  <string key="helpDescription">
+    <value>Отправляет помощь о команде.</value>
+  </string>
+  <string key="uct">
+    <value>UTC</value>
+  </string>
+  <string key="HelpButton">
+  <value>Помощь</value>
+  </string>
+  <string key="hcommandlangcode">
+    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="registerfortagall">
+  <value>Вы успешно зарегистрировались в @pingall.</value>
+  </string>
+  <string key="tagallregistered">
+  <value>{0} все позваны, так как они использовали /pingme.</value>
+  </string>
+  <string key="tagallregisterednoone">
+  <value>Никто еще не использовал /pingme.</value>
+  </string>
+  <string key="unregisterfortagall">
+  <value>Вы успешно отменили регистрацию c @pingall.</value>
+  </string>
+  <string key="hcommandpingme">
+  <value>Добавит вас в список @pingall группы. При использовании этой команды Enforcer будет пинговать вас, когда кто-то отправляет @pingall. Обратите внимание, что время восстановления @pingall составляет 10 минут. Чтобы снова быть удаленным из списка пинга, вы можете использовать /unpingme.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandunpingme">
+  <value>Удалит вас из @pingall, куда вы ранее добавились командой /pingme. При использовании этой команды Enforcer больше не будет пинговать вас, когда кто-то отправляет @pingall.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandpingall">
+  <value>Позвонит всем в группе, кто ранее воспользовался командой /pingme.  Обратите внимание, что эта команда имеет время восстановления 10 минут, и только пользователи с именем пользователя могут быть запингованы. Чтобы удалить себя из списка пинга, вы можете использовать /unpingme.
+Пример:
+@{0};
+/{0}.</value>
+  </string>
+  <string key="hcommandd">
+  <value>Удалет сообщение, на которое вы отвечаете, и саму команду. Обратите внимание, что вы можете удалять только свои собственные сообщения, если вы не являетесь администратором группы.
+Пример:
+/{0} отвечая на собственное сообщение;
+/{0} отвечая ра чужое сообщение (только для аминистраторов).</value>
+  </string>
+  <string key="hcommandgetrektu">
+  <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandgetrekti">
+  <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandclearkeys">
+  <value>Можно использовать для очистки кнопок клавиатуры в нижней части экрана, которая есть у некоторых ботов. Пригодится, если к примеру в вашу группу добавили спам-бота, который подарил всем такую ​​клавиатуру с 50 бесполезными кнопками.
+Пример: /{0}.</value>
+  </string>
+  <string key="hcommandbangroup">
+  <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="hcommandunbangroup">
+  <value>Данная команда предназначена только для разработчиков Enforcer!</value>
+  </string>
+  <string key="registerfortagallclickme">
+  <value>Чтобы добавить себя в @pingall, нажмите кнопку ниже и затем «Запустить».</value>
+  </string>
+  <string key="hcommandunping">
+  <value>Удалите из @pingall кого-то еще, кто ранее добавил себя командой /pingme. При использовании этой команды Enforcer больше не будет пинговать этого пользователя, когда кто-то отправляет @pingall.
+Пример:
+/{0} отвечая пользователю;
+/{0} [ID пользователя];
+/{0} [имя пользователя].</value>
+  </string>
+  <string key="logchannelAutoRemoved">
+  <value>Не удалось отправить сообщение в ваш логканал, поэтому оно было автоматически удалено. Чтобы снова использовать эту функцию, снова добавьте меня в ваш логканал и используйте /addlogchannel.</value>
+  </string>
+  <string key="logchannelRemoved">
+  <value>Ваш логканал успешно удален!</value>
+  </string>
+  <string key="logSettingChanged">
+    <value>{0} ({1}) изменил(а) {2} в {3}: {4} → {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>Лимит флуда</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>Действие при флуде</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>Проверка флуда: {0}</value>
+  </string>
+  <string key="settingMedia">
+    <value>Медиа: {0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>Действие за медиа-предупреждения</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>Макс. медиа-предупреждений</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>Макс. предупреждений</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>Действие предупреждения</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>Действие за длину имени</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>Действие за длину сообщения</value>
+  </string>
+  <string key="valueAllowed">
+    <value>Разрешено</value>
+  </string>
+  <string key="valueBlocked">
+    <value>Запрещено</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>Личный чат</value>
+  </string>
+  <string key="valueInGroup">
+    <value>Группа</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Фильтры</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>включено: {0}</value>
+  </string>
+  <string key="filtersMenu">
+    <value>Фильтры: что происходит, когда сообщение, имя или юзернейм подходит под один из них. Нажми на фильтр, чтобы изменить его действие. Админов и участников из списков watch и auth не проверяют никогда.\n\nСвои правила: {0}. Управляй ими через /filter.</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>Арабское письмо</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>Трюки с письмом справа налево</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>Кириллица</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>Китайский, японский, корейский</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>Еврейское письмо</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>Деванагари</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>Похожие буквы</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>Невидимые символы</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Ссылки-приглашения Telegram</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>Номера телефонов</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>Криптокошельки</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>Имена «админ» или «поддержка»</value>
+  </string>
+  <string key="filterAction_off">
+    <value>Выкл</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>Удалить</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>Предупредить</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>Заглушить</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>Исключить</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>Временный бан</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>Бан</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>Проверять давних участников</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>Разрешить ботов этой группы</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>{0} заглушен(а): {1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>{0} заглушен(а) на {2}: {1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>{0} исключен(а): {1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>{0} забанен(а): {1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>{0} забанен(а) на {2}: {1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>Собственные правила фильтра вашей группы. Новое правило сначала {0} дней на испытании: оно только записывает, что сделало бы.\n/filter add name|username|text действие regex\n/filter try /regex/ текст\n/filter test id или regex\n/filter list\n/filter live id\n/filter trial id дни\n/filter del id</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>Цель должна быть одной из: {0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>Действие должно быть одним из: {0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>Это регулярное выражение нельзя использовать: {0}</value>
+  </string>
+  <string key="filterExists">
+    <value>В этой группе уже есть такое правило.</value>
+  </string>
+  <string key="filterLimit">
+    <value>У группы может быть не больше {0} своих правил. Сначала удали одно через /filter del.</value>
+  </string>
+  <string key="filterAdded">
+    <value>Правило #{0} добавлено. Оно {1} дней на испытании: записывает, что сделало бы, и ничего не делает. Включи его через /filter live {0}.</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>Подходит.</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>Не подходит.</value>
+  </string>
+  <string key="filterTestNone">
+    <value>Ни одного совпадения среди {0} участников, замеченных за последние 30 дней.</value>
+  </string>
+  <string key="filterTestResult">
+    <value>Подходят {0} из {1} участников, замеченных за последние 30 дней. Примеры:</value>
+  </string>
+  <string key="filterTestSent">
+    <value>Я отправил тебе результат в личку.</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>Не получилось отправить тебе результат. Сначала начни со мной личный чат, потом попробуй снова.</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>У этой группы нет своих правил. Добавь правило через /filter add; сначала оно {0} дней на испытании.</value>
+  </string>
+  <string key="filterListHeader">
+    <value>Свои правила:</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} по {1}, {2}, {3}. Совпадений: {4}; из этих участников удалено: {5}.</value>
+  </string>
+  <string key="filterModeLive">
+    <value>действует</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>на испытании до {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>испытание закончилось, ждёт /filter live или /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>Правила {0} нет. /filter list покажет правила.</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>Правило #{0} включено: действует с этого момента.</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>Правило #{0} на испытании {1} дней.</value>
+  </string>
+  <string key="filterDeleted">
+    <value>Правило #{0} удалено.</value>
+  </string>
+  <string key="cmdfilter">
+    <value>Свои правила фильтра</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      Собственные правила фильтра твоей группы: регулярное выражение по именам, юзернеймам или тексту сообщений участников и что делать при совпадении (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Только для админов. Готовые фильтры (письменности, ссылки-приглашения, номера телефонов и другое) — в меню настроек, в разделе «Фильтры».
+
+      Новое правило сначала 7 дней на испытании: записывает, что сделало бы, и ничего не делает, чтобы ты увидел, ловит ли оно тех, кого нужно. Включи его через /{0} live.
+
+      Примеры:
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3 (проверяет правило 3 на именах участников за последние 30 дней и присылает результат в личку)
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>
+
+  
+ 

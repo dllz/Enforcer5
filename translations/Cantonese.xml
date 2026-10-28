@@ -1,0 +1,1257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- translated by @jeffffc, @Firewood_Loki -->
+<!--
+UPDATE LOG
+02/02/2017      - Translated all strings by @jeffffc
+18/07/2017      - Updated all strings by @Firewood_Loki
+-->
+<strings>
+	<language name="廣東話" base="廣東話" owner="jeffffc, Firewood_Loki" IEFT="zh-yue-hk"/>
+	<string key="statusKicked">
+		<value>【{0}】喺呢個群組已被封鎖。\n{1}</value>
+	</string>
+	<string key="statusLeft">
+		<value>【{0}】已經唔喺度啦。</value>
+	</string>
+	<string key="statusAdministrator">
+		<value>【{0}】係群組管理員。</value>
+	</string>
+	<string key="statusCreator">
+		<value>【{0}】係群組創建者。</value>
+	</string>
+	<string key="statusUnknown">
+		<value>我未見過呢個人出現喺呢度。</value>
+	</string>
+	<string key="statusMember">
+		<value>【{0}】係群組成員。</value>
+	</string>
+	<string key="userinfoGlobal">
+		<value><![CDATA[<b>我同佢嘅恩怨︰</b>\n]]></value>
+	</string>
+	<string key="getkick">
+		<value>被驅逐：{0} 次</value>
+	</string>
+	<string key="getban">
+		<value>被封鎖：{0} 次</value>
+	</string>
+	<string key="gettempban">
+		<value>被暫時封鎖：{0} 次</value>
+	</string>
+	<string key="getwarn">
+		<value>累積警告被驅逐︰{0} 次</value>
+	</string>
+	<string key="getgroupwarn">
+		<value>一般警告︰{0} 次</value>
+	</string>
+	<string key="getMediaWarn">
+		<value>多媒體內容警告：{0} 次</value>
+	</string>
+	<string key="userinfoGroup">
+		<value>\n喺【{0}】</value>
+	</string>
+	<string key="getrtl">
+		<value>使用右至咗文字而被驅逐：{0} 次</value>
+	</string>
+	<string key="getflood">
+		<value>洗版而被驅逐：{0} 次</value>
+	</string>
+	<string key="getarab">
+		<value>使用阿拉伯文而被驅逐：{0} 次</value>
+	</string>
+	<string key="getmedia">
+		<value>使用不當媒體而被驅逐：{0} 次</value>
+	</string>
+	<string key="getnsfwimage">
+		<value>使用淫褻圖片而被驅逐︰{0} 次</value>
+	</string>
+	<string key="getNothing">
+		<value>乜都搵唔到。</value>
+	</string>
+	<string key="botPm">
+		<value>已經透過私訊俾咗你。</value>
+	</string>
+	<string key="noUser">
+		<value>我未見過呢個人。</value>
+	</string>
+	<string key="botNotAdmin">
+		<value>我唔係群組管理員，冇足夠權限做呢件事。</value>
+	</string>
+	<string key="noReply">
+		<value>呢個指令要回覆其他人先用到。</value>
+	</string>
+	<string key="msgTooLong">
+		<value>你打嘅訊息太長，{0} 個字元以上，整短啲再試吓！</value>
+	</string>
+	<string key="StartMe">
+		<value>請透過私訊啟用我！</value>
+	</string>
+	<string key="userNotAdmin">
+		<value><![CDATA[你<b>並唔係</b>群組管理員！]]></value>
+	</string>
+	<string key="markdownBroken">
+		<value>你呢段 Markdown 有錯。睇吓「/help markdown」幫唔幫到你。</value>
+	</string>
+	<string key="LinkMissing">
+		<value>未設定『群組連結』。</value>
+	</string>
+	<string key="LinkUpdated">
+		<value>已更新『群組連結』。</value>
+	</string>
+	<string key="LinkSet">
+		<value>已設定『群組連結』。</value>
+	</string>
+	<string key="adminList">
+		<value><![CDATA[<b>創建群組嘅人係︰</b>\n{0}\n\n<b>管理員係</b>：{1}]]></value>
+	</string>
+	<string key="defaultWelcome">
+		<value>你好【{0}】，歡迎嚟到【{1}】。</value>
+	</string>
+	<string key="noAbout">
+		<value>尚未建立『群組簡介』。</value>
+	</string>
+	<string key="noRules">
+		<value>尚未建立『群組規矩』。</value>
+	</string>
+	<string key="rules">
+		<value><![CDATA[\n<b>群組規矩</b>：\n{0}]]></value>
+	</string>
+	<string key="about">
+		<value><![CDATA[\n<b>群組簡介</b>：\n{0}]]></value>
+	</string>
+	<string key="RulesSet">
+		<value>已更新『群組規矩』。</value>
+	</string>
+	<string key="AboutSet">
+		<value>已更新『群組簡介』。</value>
+	</string>
+	<string key="extraSaved">
+		<value>已經儲存咗 【{0}】 呢個快捷 Tag。</value>
+	</string>
+	<string key="extraSaved">
+		<value>已紀錄 {0} 個『標籤指令』。</value>
+	</string>
+	<string key="noExtra">
+		<value>尚未有任何『標籤指令』。</value>
+	</string>
+	<string key="extraList">
+		<value><![CDATA[<b>標籤指令</b>列表︰\n{0}]]></value>
+	</string>
+	<string key="extraDeleted">
+		<value>已刪除『標籤指令』。</value>
+	</string>
+	<string key="SuccesfulKick">
+		<value>管理員【{1}】驅逐【{0}】。</value>
+	</string>
+	<string key="SuccesfulBan">
+		<value>管理員【{1}】封咗【{0}】。</value>
+	</string>
+	<string key="FailedKick">
+		<value>我踢 {0} 嘅時候有啲問題，請你手動解封佢。</value>
+	</string>
+	<string key="FailedKickBanAdmin">
+		<value>無法驅逐或封鎖群組管理員。</value>
+	</string>
+	<string key="Error">
+		<value>發生錯誤！錯誤訊息：\n{0}</value>
+	</string>
+	<string key="PingInfo">
+		<value>接收檢查訊息需時：{0}</value>
+	</string>
+	<string key="Ping2">
+		<value>傳送檢查訊息需時：{0}</value>
+	</string>
+	<string key="groupBanned">
+		<value>此群已被禁止使用本機械人。</value>
+	</string>
+	<string key="warnMaxKick">
+		<value><![CDATA[警告次數累積至上限，【{0}】已<b>被驅逐</b>。]]></value>
+	</string>
+	<string key="warnMaxBan">
+		<value><![CDATA[警告次數累積至上限，【{0}】已<b>被封鎖</b>。]]></value>
+	</string>
+	<string key="resetWarn">
+		<value>警告歸零</value>
+	</string>
+	<string key="removeWarn">
+		<value>移除警告</value>
+	</string>
+	<string key="warn">
+		<value><![CDATA[【{0}】已被<b>警告</b>。\n警告次數︰<b>{1}</b>\n警告上限︰<b>{2}</b>]]></value>
+	</string>
+	<string key="warnFlag">
+		<value><![CDATA[管理員【{1}】<b>警告</b>【{0}】。\n警告次數︰<b>{2}</b>\n警告上限︰<b>{3}</b>]]></value>
+	</string>
+	<string key="alreadyFlagged">
+		<value>已有人檢舉該訊息。</value>
+	</string>
+	<string key="ban">
+		<value>封鎖</value>
+	</string>
+	<string key="kick">
+		<value>驅逐</value>
+	</string>
+	<string key="Warn">
+		<value>警告</value>
+	</string>
+	<string key="reportAdmin">
+		<value>{0}\n\n{1}\n報告編號： #r{2}\n#未解決</value>
+	</string>
+	<string key="reportAdminReply">
+		<value>{0}\n\n{1}\n原始訊息{3}\n報告編號：#r{2}\n#未解決</value>
+	</string>
+	<string key="reported">
+		<value>已成功報告！\n報告編號：#r{0}</value>
+	</string>
+	<string key="reportNotFound">
+		<value>搵唔到呢個報告！</value>
+	</string>
+	<string key="solvedByReporter">
+		<value>管理員【{0}】已經解決咗呢份由【{3}】提交嘅報告。\n{1}\n({2})</value>
+	</string>
+	<string key="solvedBy">
+		<value>管理員【{0}】已經解決咗呢份報告。\n{1}\n({2})</value>
+	</string>
+	<string key="reportID">
+		<value>報告編號：#r{0}</value>
+	</string>
+	<string key="markSolved">
+		<value>標記為已報告。</value>
+	</string>
+	<string key="markedAsSolved">
+		<value>管理員【{0}】已經解決咗報告 #r{1}。</value>
+	</string>
+	<string key="alreadySolved">
+		<value>管理員【{1}】已喺 {0} 解決咗呢個報告。</value>
+	</string>
+	<string key="solvedNoReply">
+		<value>請你回覆帶有「@admin」嘅訊息，或者提供報告編號。</value>
+	</string>
+	<string key="incorrectArgument">
+		<value>指令出錯。</value>
+	</string>
+	<string key="NoInput">
+		<value>指令資料不足。</value>
+	</string>
+	<string key="Support">
+		<value><![CDATA[<a href="https：//telegram.me/werewolfsupport">點此進入官方解答群組（英文）</a>]]></value>
+	</string>
+	<string key="UnableToGetID">
+		<value>搵唔到佢嘅用戶 ID。</value>
+	</string>
+	<string key="globalBan">
+		<value>【{0}】因為{1}而被完全封鎖。\n佢可以去 @werewolfsupport 上訴。</value>
+	</string>
+	<string key="goToMessage">
+		<value>前往信息</value>
+	</string>
+	<string key="goToChat">
+		<value>前往群組</value>
+	</string>
+	<string key="userUnbanned">
+		<value>成功解封！</value>
+	</string>
+	<string key="extraSaved">
+		<value>已設為對 {0} 的回應。</value>
+	</string>
+	<string key="tooLong">
+		<value>{0} 太長。</value>
+	</string>
+	<string key="extra">
+		<value>『標籤指令』</value>
+	</string>
+	<string key="tempbanZero">
+		<value>暫時封鎖時間不可為零。</value>
+	</string>
+	<string key="tempbanned">
+		<value>【{1}】將被封鎖{0} （日：時：分）。\n佢嘅 ID： {2}</value>
+	</string>
+	<string key="warnsReset">
+		<value>管理員【{0}】已重置警告次數。</value>
+	</string>
+	<string key="ZeroWarnings">
+		<value>呢個人冇收過警告。</value>
+	</string>
+	<string key="warnRemoved">
+		<value>已經移除警告。</value>
+	</string>
+	<string key="inlineBan">
+		<value>已透過內置按鈕封鎖。</value>
+	</string>
+	<string key ="userBanned">
+		<value>已封鎖。</value>
+	</string>
+	<string key ="userKicked">
+		<value>已驅逐。</value>
+	</string>
+	<string key="NoLinkInputed">
+		<value>尚未設置『群組連結』。\n設置方法為：/setlink （連結）</value>
+	</string>
+	<string key="botNotStarted">
+		<value>請先啟用我！撳下面個制，再撳「START」。</value>
+	</string>
+	<string key="bannedFor">
+		<value>封鎖原因：{0}</value>
+	</string>
+	<string key="welcomeSet">
+		<value>管理員【{0}】 更新咗歡迎訊息。</value>
+	</string>
+	<string key ="mainMenu">
+		<value>群組【{0}】嘅設定︰</value>
+	</string>
+	<string key ="WelcomeButton">
+		<value>歡迎訊息</value>
+	</string>
+	<string key="ReportButton">
+		<value>報告</value>
+	</string>
+	<string key="FloodButton">
+		<value>洗版</value>
+	</string>
+	<string key="ModlistButton">
+		<value>管理員列表</value>
+	</string>
+	<string key="AboutButton">
+		<value>群組簡介</value>
+	</string>
+	<string key="RulesButton">
+		<value>群組規矩</value>
+	</string>
+	<string key="ExtraButton">
+		<value>標籤指令</value>
+	</string>
+	<string key="RtlButton">
+		<value>右至左文字</value>
+	</string>
+	<string key="ArabButton">
+		<value>阿拉伯文字</value>
+	</string>
+	<string key="WarnsButton">
+		<value>多次警告後：{0}</value>
+	</string>
+	<string key="closeButton">
+		<value>- 設定完畢 -</value>
+	</string>
+	<string key="warnToLow">
+		<value>警告上限至少係 1</value>
+	</string>
+	<string key="settingChanged">
+		<value>已儲存</value>
+	</string>
+	<string key="floodMenu">
+		<value>【洗版】\n\n	第一行\n．開／閂：啟用或關閉防洗版系統\n．驅逐／封鎖：洗版的懲罰\n\n第二行\n．用 ➕ ／ ➖ 制調整訊息上限（每五秒幾多條）\n．數字須介乎 4 至 25\n\n第三以後\n你可以設定例外嘅媒體：\n．✅：會被規管\n．❌：會被無視
+		</value>
+	</string>
+	<string key="on">
+		<value>開</value>
+	</string>
+	<string key="off">
+		<value>閂</value>
+	</string>
+	<string key="textButton">
+		<value>文字及其他</value>
+	</string>
+	<string key="stickerButton">
+		<value>貼圖</value>
+	</string>
+	<string key="imageButton">
+		<value>圖片</value>
+	</string>
+	<string key="gifButton">
+		<value>GIF</value>
+	</string>
+	<string key="videoButton">
+		<value>影片</value>
+	</string>
+	<string key="audioButton">
+		<value>音訊</value>
+	</string>
+	<string key="fileButton">
+		<value>文件</value>
+	</string>
+	<string key="contactButton">
+		<value>聯絡人</value>
+	</string>
+	<string key="voiceButton">
+		<value>錄音</value>
+	</string>
+	<string key="LinkButton">
+		<value>連結</value>
+	</string>
+	<string key="doNothing">
+		<value>我無為而治。</value>
+	</string>
+	<string key="bannedForFlood">
+		<value>【{0}】洗版，已被封鎖。</value>
+	</string>
+	<string key="bannedForRtl">
+		<value>【{0}】使用右至左文字，已被封鎖。</value>
+	</string>
+	<string key="kickedForFlood">
+		<value>【{0}】洗版，已被驅逐。</value>
+	</string>
+	<string key="kickedForRtl">
+		<value>【{0}】使用右至左文字，已被驅逐。</value>
+	</string>
+	<string key="bannedForNoEnglishScript">
+		<value>【{0}】使用非拉丁語系文字，已被封鎖。</value>
+	</string>
+	<string key ="globalBanNotif">
+		<value>【{0}】{1}，已被完全封鎖，佢可以去 @werewolfsupport 上訴。</value>
+	</string>
+	<string key="GetLang">
+		<value>想要邊個語言檔？</value>
+	</string>
+	<string key="mediaMenuHeader">
+		<value>媒體警告</value>
+	</string>
+	<string key="mediaMenu">
+		<value>【媒體警告設定】\n\n利用右邊的剔號同交叉決定是否允許。\n尾二嗰行決定懲罰。\n最尾嗰行係俾幾多次機會佢地。</value>
+	</string>
+	<string key="groupLanguage">
+		<value>群組語言（Language）</value>
+	</string>
+	<string key="langMenu">
+		<value><![CDATA[揀你個群用咩語言。\n而家用緊嘅語言係：<b>{0}</b>]]></value>
+	</string>
+	<string key="userUnblocked">
+		<value>已解封！</value>
+	</string>
+	<string key="userBlocked">
+		<value>已封鎖！</value>
+	</string>
+	<string key="startMe">		
+		<value>請透過私訊啟用我！</value>		
+	</string>		
+	<string key="dashboardMenu">		
+		<value>以下係呢個群組現有嘅設定︰</value>		
+	</string>
+	<string key="userInfoGlobal">
+		<value>用家完全紀錄：</value>
+	</string>
+	<string key="backButton">
+		<value>返回</value>
+	</string>
+	<string key="mediaNotAllowed">
+		<value>呢度唔準用呢種媒體。我依家警告你。你用咗 {0}/{1} 次機會。</value>
+	</string>
+	<string key="kickedformedia">
+		<value>【{0}】使用被禁止的媒體，已被驅逐。</value>
+	</string>
+	<string key="bannedformedia">
+		<value>【{0}】使用被禁止的媒體，已被封鎖。</value>
+	</string>
+	<string key="kickedForNoEnglishScript">
+		<value>【{0}】使用非拉丁語系文字，已被驅逐。</value>
+	</string>
+	<string key="bannedfornsfwimage">
+		<value>【{0}】使用淫褻圖片，已被封鎖。\n該圖片有 {1}% 機會係淫褻圖片。</value>
+	</string>
+	<string key="kickedfornsfwimage">
+		<value>【{0}】使用淫褻圖片，已被驅逐。\n該圖片有 {1}% 機會係淫褻圖片。</value>
+	</string>
+	<string key="nsfwMenu">
+		<value>【淫褻圖片檢測】\n\n開／閂︰是否啟用功能\n懲罰︰驅逐或封鎖。\n\n注意每個 API 只能檢測 5000 張照片，檢查用量係管理員嘅責任。只有 95% 機率係淫褻嘅圖片先會被懲罰。此功能採用最新的電腦辨認技術，但相關技術仍未成熟，不要抱有太高期待。\n\n功能設置教學︰http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
+	</string>
+	<string key="nsfwButton">
+		<value>淫褻圖片檢測</value>
+	</string>
+	<string key="getmaxwarn">
+		<value>【{0}】警告太多，已被懲罰。</value>
+	</string>
+	<string key="evlavated">
+		<value>管理員【{1}】賦予【{0}】管理權限，令佢成為助手 #elevated。</value>
+	</string>
+	<string key="auth">
+		<value>管理員【{1}】賦予【{0}】管理權限，令佢成為副手 #auth。</value>
+	</string>
+	<string key="dauth">
+		<value>管理員【{1}】除去【{0}】的管理權限，變返佢做普通人 #auth。</value>
+	</string>
+	<string key="devlavated">
+		<value>管理員【{1}】除去【{0}】的管理權限，變返佢做普通人 #elevated。</value>
+	</string>
+	<string key="currentMods">
+		<value><![CDATA[\n<b>被賦予管理權限的成員︰</b>\n]]></value>
+	</string>
+	<string key="prevMods">
+		<value>被暫時提高管理權限的成員</value>
+	</string>
+	<string key="helpNoRequest">
+		<value>Enforcer 係幫手管理群組嘅機器人。會幫你手踢除洗版的人、暫時封鎖成員、警告成員、設定標籤指令和回應等等。\n\n．需要群組管理員的權限\n．最好在超級群組使用\n．透過「/menu」召喚設定介面\n．利用「/help（指令）」來查詢各個指令的用途。\n．需要幫助時可利用「/support」進入我地嘅官方解答群組\n\n想掌握更新情報可到 https://t.me/greywolfdev</value>
+	</string>
+	<string key="helpOptionNotImplemented">
+		<value>關於【{0}】的資料尚待補完，請到解答群組 /support 查詢。</value>
+	</string>
+	<string key="hcommandkickme">
+		<value>讓機械人驅逐你而不是自己離開群組。適用於那離開後無法重新加入的群組。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandkick">
+		<value>驅逐條友，但他們可以返入嚟。可以透過回覆，或是在指令後加上 ID 或名稱。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandwarn">
+		<value>用嚟警告條友。透過 /menu，你可以設置警告的上限和相應的懲罰。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandban">
+		<value>用嚟封鎖條友，佢地唔可以再返嚟。透過回覆使用嘅話，可以係指令後面加上原因。\n/{0} which will be shown in status command\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （原因）回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandunban">
+		<value>當有成語被封鎖或暫時封鎖後，可以用佢嚟解除封鎖。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandtempban">
+		<value>用嚟暫時封鎖條友。時間過後佢就可以入返嚟。你必須透過回覆用呢個指令，你都可以指令後面加上時間（分鐘）。預設時間是一小時。\n\n例子︰\n/{0} 123 回覆其他人時使用\n/{0} 回覆其他人時使用</value>
+	</string>
+	<string key="hcommandadmin">
+		<value>用嚟話傳話比管理員知。當你回覆其他人時，會將你的訊息，同你所回覆嘅訊一齊透過機械人傳畀所有管理員。\n管理員會見到幾個可執行嘅動作，喺超級群組仲可以直接去個訊息度。\n\n例子︰\n@{0}\n@{0} 回覆其他人時使用\n@{0} （reason )\n@{0} （reason）回覆其他人時使用\n/{0}\n/{0} 回覆其他人時使用\n/{0} （原因） \n/{0} （reason）回覆其他人時使用	</value>
+	</string>
+	<string key="hcommandadminoff">
+		<value>暫停接收群組成員傳俾管理員嘅訊息。都可以幫其他管理員設定，透過回覆，或是在指令後加上 ID 或名稱。\n\n例子︰\n/{0}\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandadminon">
+		<value>重新接收群組成員傳俾管理員嘅訊息。都可以幫其他管理員設定，透過回覆，或是在指令後加上 ID 或名稱。\n\n例子︰\n/{0}\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandsolved">
+		<value>將訊息標記為已解決，等其他管理員都知你搞掂咗。透過回覆，或是在指令後加上檢舉編號。\n\n例子︰\n/{0} 回覆帶有 @admin 嘅訊息\n/{0} （Report ID）</value>
+	</string>
+	<string key="hcommandreporton">
+		<value>重新容許條友使用 @admin 指令，透過回覆，或是在指令後加上 ID 或名稱。\n\n例子︰\n/{0}\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandreportoff">
+		<value>禁止條友使用 @admin 指令，透過回覆，或是在指令後加上 ID 或名稱。\n\n例子︰\n/{0}\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandrules">
+		<value>召喚『群組規則』。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandsetrules">
+		<value>設定『群組規則』。\n\n例子︰\n/{0} 做好事、說好話、存好心。</value>
+	</string>
+	<string key="hcommandabout">
+		<value>召喚『群組簡介』。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandsetabout">
+		<value>設定『群組簡介』。\n\n例子︰\n/{0} 鵝滿是快樂滴好耳痛。</value>
+	</string>
+	<string key="hcommandadminlist">
+		<value>召喚『管理員列表』。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommands">
+		<value>將你所回覆嘅句子，傳到你和我的對話中。\n\n例子︰\n/{0} 回覆你想記下來的訊息</value>
+	</string>
+	<string key="hcommandid">
+		<value>查看群組的 ID，或是你回覆對象的 ID。\n\n例子︰\n/{0}\n/{0} 回覆其他人時使用</value>
+	</string>
+	<string key="hcommandsupport">
+		<value>召喚狼人官方解答群組的連結。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommanduser">
+		<value>查看成員的各項紀錄。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandme">
+		<value>查看自己的各項紀錄。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandextra">
+		<value>建立或更改『標籤指令』。任何人都可以使用『標籤指令』，然後我會用預先設定的文字回覆。\n\n例子︰\n/{0} #AA while replying to some text or media \n/{0} #AA A for Astronaut</value>
+	</string>
+	<string key="hcommandextralist">
+		<value>查看群組嘅所有『標籤指令』。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandextradel">
+		<value>刪除『標籤指令』。\n\n例子︰\n/{0} #blabla</value>
+	</string>
+	<string key="hcommandlink">
+		<value>召喚『群組連結』。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandsetlink">
+		<value>設定『群組連結』。\n\n例子︰\n/{0} （群組連結）</value>
+	</string>
+	<string key="hcommandstatus">
+		<value>查詢條友的權限和狀態。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandwelcome">
+		<value>建立或更改『歡迎訊息』。當有新人進入群組時，會歡迎佢地。當幾個新人同時加入時，只會出現一段『歡迎訊息』，以免洗板。你可以在上此訊息內使用 Markdown。你還可以使用下列的代碼︰\n．$name - 新人的名字\n．$username - 新人的 Username\n．$id - 新人的 ID\n．$title - 群組的名字\n你亦可以將『群組簡介（a）』、『群組規矩（r）』和『管理員列表（m）』當作歡迎訊息。\n利用「/welcome no」可重置『歡迎訊息』\n\n例子︰
+			\n/{0} 歡迎 $name 嚟到 $title!\n/{0} 回覆 GIF 圖\n/{0} （文字）回覆 GIF 圖\n/{0} ar\n/{0} m\n/{0} （以任意次序排列的 arm）\n/{0} no
+		</value>
+	</string>
+	<string key="hcommanddisablewatch">
+		<value>豁免條友受到洗版和阿拉伯文子的監控。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandenablewatch">
+		<value>令條友重新受到洗版和阿拉伯文子的監控。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandcheck">
+		<value>睇吓條友發過幾多條訊息。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandelevate">
+		<value>賦予管理員權限俾條友。由管理員或助手賦予的話，只有三十分鐘時效。由創建者或副手賦予的話，冇時限。被提拔的人可以使用所有管理指令，如 ban、tempban、kick、warn 等等。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommanddeelevate">
+		<value>除去條友嘅管理員權限，只有創建者或副手用到呢個指令。\n\n例子︰\n/{0} 回覆管理員或助手\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandelevatelog">
+		<value>睇吓由管理員或助手賦予的管理權限紀錄。幾時俾過權限，同邊個俾邊個。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandauth">
+		<value>升條友做副手，佢地可以使用 /auth /deauth，並且賦予冇時限嘅管理員權限。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandblockelevate">
+		<value>唔俾個管理員或助手再將管理權限俾其他人。只有創建者或副手用到呢個指令。一般嚟講，管理員或助手可以賦予其他人 30 分鐘嘅管理員權限。\n\n例子︰\n/{0} 回覆管理員或助手\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommanddeauth">
+		<value>除去條友嘅副手權限，只有創建者或副手用到呢個指令。\n\n例子︰\n/{0} 回覆副手時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandmenu">
+		<value>私訊個設定選單俾你更改群組設定。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommanddashboard">
+		<value>私訊個設定列表俾你睇吓群組設定。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandping">
+		<value>檢查機械人處理訊息嘅速度。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandgetcommands">
+		<value>召喚一個指令列表。部份指令只有此機械人嘅開發人員先用到。\n\n例子︰\n/{0}</value>
+	</string>
+
+	<string key="hcommandmarkdown">
+		<value>
+			<![CDATA[<b>【Markdown 教學】</b>\n\n<b>粗體 BOLD</b> = &lt;b&gt;粗體 BOLD&lt;/b&gt;\n<i>斜體 ITALIC</i>= &lt;i&gt;斜體 ITALIC&lt;/i&gt;\n<code>等距 MONOSPACE</code> = &lt;code&gt;等距 MONOSPACE&lt;/code&gt;\n<a href="t.me/greywolfdev">連結 LINK</a> = &lt;a href="t.me/greywolfdev"&gt;連結 LINK&lt;/a&gt;]]>
+		</value>
+	</string>
+	<string key="actionNotSettext">
+		<value>揀一個懲罰，俾送條超長訊息出嚟嘅人。</value>
+	</string>
+	<string key="getlongmessages">
+		<value>訊息過長被移除︰{0} 次</value>
+	</string>
+	<string key="kickformesslength">
+		<value>【{0}】發送過長訊息，已被驅逐。</value>
+	</string>
+	<string key="banformesslength">
+		<value>【{0}】發送過長訊息，已被封鎖。</value>
+	</string>
+	<string key="actionNotSetname">
+		<value>揀一個懲罰，俾名字過長嘅人嘅人。</value>
+	</string>
+	<string key="getnamelength">
+		<value>名字過長被移除︰{0} 次</value>
+	</string>
+	<string key="kickfornamelength">
+		<value>【{0}】名字過長，已被驅逐。</value>
+	</string>
+	<string key="banfornamelength">
+		<value>【{0}】名字過長，已被封鎖。</value>
+	</string>
+	<string key="lengthButton">
+		<value>名字／訊息過長</value>
+	</string>
+	<string key="nameSettingsHeader">
+		<value>名字長度上限</value>
+	</string>
+	<string key="textSettingsHeader">
+		<value>訊息長度上限</value>
+	</string>
+	<string key="lengthMenu">
+		<value>喺呢度你可以決定點樣應付過長訊息同名字。
+
+			你可以透過以下嘅指令，去調較字串嘅長度︰
+			控制名字長度　/maxnl（字元長度）
+			控制訊息長度　/maxtl（字元長度）
+			控制訊息行數　/maxl（訊息行數）
+		</value>
+	</string>
+	<string key="maxLength">
+		<value>上限</value>
+	</string>
+	<string key="done">
+		<value>完成</value>
+	</string>
+	<string key="failed">
+		<value>失敗</value>
+	</string>
+	<string key="gethelplist">
+		<value>目前嘅指令有︰\n{0}</value>
+	</string>
+	<string key="hcommandleave">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandlook">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandunlook">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandblockp">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandallowp">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandauthnsfw">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommanddeauthnsfw">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandgetuser">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandhelp">
+		<value>你用 help 嚟問 help 點用？你係咪搞緊笑？\n\n呢個指令係用嚟查詢啲指令點用，例如「/help warn」或者「/help markdown」。你可以用 /helplist 嚟睇下有咩指令想問。如嗰冇特別打指令係後面，就會睇返個指令列表。\n\n例子︰\n{0}\n/{0} （指令）\n/{0} （helplist 入面嘅嘢）</value>
+	</string>
+
+	<string key="hcommandhelplist">
+		<value>呢個指令係用嚟睇下有咩指令可以用。暫時同 /help 係一樣功能。\n\n例子︰\n{0}</value>
+	</string>
+
+	<string key="hcommandmaxnl">
+		<value>呢個指令係用嚟調較名字長度嘅上限，太長嘅話就會遭到驅逐／警告／封鎖（利用 /menu 決定），預設為 50。\n註︰一個中文字等於兩個字元。\n\n例子︰\n{0} 50</value>
+	</string>
+
+	<string key="hcommandmaxtl">
+		<value>呢個指令係用嚟調較訊息長度嘅上限，太長嘅話就會遭到驅逐／警告／封鎖（利用 /menu 決定），預設為 1024。\n註︰一個中文字等於兩個字元。\n\n例子︰\n{0} 1024</value>
+	</string>
+
+	<string key="hcommandmaxl">
+		<value>呢個指令係用嚟調較訊息行數嘅上限，太長嘅話就會遭到驅逐／警告／封鎖（利用 /menu 決定），預設為 50。\n註︰一個中文字等於兩個字元。\n\n例子︰\n{0} 50</value>
+	</string>
+
+	<string key="hcommandrektlist">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandaddrule">
+		<value>係原有嘅『群組規矩』底下再加一行。\n\n例子︰\n/{0} 違者，斬立決！</value>
+	</string>
+
+	<string key="hcommanduploadlanguage">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandvalidatelanguages">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandgetlanguage">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandreloadlang">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandhalt">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandmakelangadmin">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandremovelangadmin">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandgetrekt">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandunrekt">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandmediaid">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+
+	<string key="hcommandstart">
+		<value>只能喺私訊用嘅指令。群組管理員必須用呢個指令啟用我。普通成員用 /s 嘅之前都必須啟用我。\n\n例子︰\n/{0}</value>
+	</string>
+
+	<string key="donate">
+		<value>若果你希望 Enforcer 能繼續營運下去，請考慮捐款至【{0}】。幫補吓我地租伺服器嘅昂貴費用。\n我地除咗自願捐款係唔會徵收任何費用。</value>
+	</string>
+
+	<string key="hcommanddonate">
+		<value>會收到一條 Paypal 嘅連結，用嚟捐錢畀 Enforcer 嘅開發人員。完全自願性質，不作捐款也可以隨意使用。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="notChannel">
+		<value>無法辨認頻道連結，請用「/help addlogchannel」查看詳情。</value>
+	</string>
+
+	<string key="channelAdded">
+		<value>已儲存『記事頻道』。請確保我係該頻道嘅管理員。</value>
+	</string>
+
+	<string key="hcommandaddlogchannel">
+		<value>利用『記事頻道』嚟記錄 Enforcer 嘅所作所為。所有嘅管理指令都會紀綠喺呢條頻道。只有創建者或副手可以用呢個指令。機械人必須係頻道嘅管理員。你喜歡的話也可以用『記事群組』代替『記事頻道』。\n\n例子︰\n/{0} （頻道 ID）\n/{0} -1231243242332\n/{0} 回覆轉發自頻道的訊息</value>
+	</string>
+
+	<string key="logSendError">
+		<value>無法在『記事頻道』記錄這個指令，請用 /addlogchannel 來設置頻道，並確保 Enforcer 係頻道管理員之一。</value>
+	</string>
+
+	<string key="noone">
+		<value>沒有對象。</value>
+	</string>
+
+	<string key="logMessageCommand">
+		<!-- {0} command user, {1} user's ID, {2} command, {3} groupname&id, {4} target -->
+		<value><![CDATA[喺群組【{3}】，管理員【{0} (ID:{1})】對【{4}】用咗 <code>{2}</code>]]></value>
+	</string>
+
+	<string key="logMessageCallback">
+		<!-- {0} command user, {1} user's ID, {2} command, {3} groupname&id -->
+		<value><![CDATA[喺群組【{3}】，管理員【{0} (ID:{1})】用咗 <code>{2}</code>]]></value>
+	</string>
+
+	<string key="welcomeReset">
+		<value>重置咗『歡迎訊息』。</value>
+	</string>
+
+	<string key="hcommanddelmsg">
+		<value>刪除你所回覆嘅訊息。管理指令。\n\n例子︰\n/{0} 回覆時使用</value>
+	</string>
+
+	<string key="nsfwapikeyset">
+		<value>已儲存用嚟檢測淫褻圖片嘅 API。</value>
+	</string>
+
+	<string key="apikeysucgen">
+		<value>成功創建 API Key。</value>
+	</string>
+
+	<string key="hcommandsetnsfw">
+		<value><![CDATA[設定淫褻圖片檢測，<a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">詳情按此（英文）</a>。\n\n例子︰\n/{0}（clientid）（clientsecret）]]></value>
+	</string>
+
+	<string key="hcommandnsfw">
+		<value>Enforcer 可以自動檢測淫褻圖片，並懲罰傳播者。詳細教學可留意（英文）︰\nhttp://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
+	</string>
+	<string key="welcomeBack">
+		<value>歡迎回家，主人！你先前嘅設定仲喺度。</value>
+	</string>
+
+	<string key="messageDeleted">
+		<value>已刪除訊息。</value>
+	</string>
+	<string key="delete">
+		<value>刪除訊息</value>
+	</string>
+
+	<string key="elevateBlocked">
+		<value>【{1}】禁止咗【{0}】借個管理權限借俾人嘅權力。</value>
+	</string>
+
+	<string key="elevateUnblocked">
+		<value>【{1}】重新開返【{0}】借個管理權限借俾人嘅權力。</value>
+	</string>
+	<string key="usergroupstatuscreator">
+		<value>ID︰{0}\n權限︰創建者\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusadmin">
+		<value>ID︰{0}\n權限︰管理員\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusbanned">
+		<value>ID︰{0}\n權限︰被封鎖\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusauth">
+		<value>ID︰{0}\n權限︰副手\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatuselevated">
+		<value>ID︰{0}\n權限︰助手\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusmember">
+		<value>ID︰{0}\n權限︰普通成員\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusleft">
+		<value>ID︰{0}\n權限︰已離開或被驅逐\n訊息紀錄︰{1} 條</value>
+	</string>
+
+	<string key="usergroupstatusneverseen">
+		<value>ID︰{0}\n權限︰冇喺度出現過\n訊息紀錄︰{1} 條</value>
+	</string>
+	<string key="tempban">
+		<value>暫時封鎖</value>
+	</string>
+	<string key="tempbannedForFlood">
+		<value>【{0}】洗版，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="tempbanformesslength">
+		<value>【{0}】發送過長訊息，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="tempbanfornamelength">
+		<value>【{0}】名字過長，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="tempbannedformedia">
+		<value>【{0}】使用被禁止的媒體，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="tempbannedForRtl">
+		<value>【{0}】使用右至左文字，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="tempbanForNoEnglishScript">
+		<value>【{0}】使用非拉丁語系文字，已被暫時封鎖。\n時間尚餘︰{1}（日︰時︰分）</value>
+	</string>
+	<string key="defaultTime">
+		<value>群組預設嘅暫時封鎖時效係︰{0}</value>
+	</string>
+	<string key="defaultTimeSet">
+		<value>更新咗預設嘅暫時封鎖時效。</value>
+	</string>
+	<string key="groupMenu">
+		<value>某啲指令係可以改為私訊限定嘅，例如 /rules、/about、/adminlist、#extra 標籤指令）。當有人打咗呢啲私訊限定嘅指令，機械人就唔會喺群組度覆佢，而係喺私訊度覆佢。咁群組嘅訊息就冇咁易俾人洗走。\n\n．👥︰群組內答覆\n．👤︰私訊限定</value>
+	</string>
+	<string key="warnMenu">
+		<value>設定警告嘅上限，同埋達到上限嘅懲罰。</value>
+	</string>
+	<string key="groupSettingButton">
+		<value>一般功能</value>
+	</string>
+	<string key="cannotbanadmin">
+		<value>我冇辦法驅逐或封鎖管理員。</value>
+	</string>
+	<string key="hcommanddelnsfw">
+		<value>移除之前用嚟檢測淫褻圖片嘅 API Key。輸入「/help nsfw」嚟查詢詳情。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandchecknsfw">
+		<value>用嚟手動檢查張相有幾大可能係淫褻圖片。你必須先設定好【淫褻圖片檢測】先可以用，輸入「/help nsfw」嚟查詢詳情。\n\n例子︰\n/{0} 回覆圖片</value>
+	</string>
+	<string key="hcommandmsgid">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="hcommanddellogchannel">
+		<value>移除先前儲存嘅『記事頻道』。輸入「/help addlogchannel」嚟查詢詳情。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandtemptime">
+		<value>更改預設嘅暫時封鎖時效。呢個時效，會用喺冇另外設定時效嘅 /tempban 指令，和由機械人處理嘅暫時封鎖。\n\n例子︰\n/{0}（分鐘）</value>
+	</string>
+	<string key="hcommandmedia">
+		<value>移除或重置條友嘅禁用媒體警告。\n\n例子︰\n/{0} 回覆其他人時使用\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandunblockelevate">
+		<value>重新容許個管理員或助手將管理權限俾其他人。只有創建者或副手用到呢個指令。一般嚟講，管理員或助手可以賦予其他人 30 分鐘嘅管理員權限。\n\n例子︰\n/{0} 回覆管理員或助手\n/{0} （User ID）\n/{0} @username</value>
+	</string>
+	<string key="hcommandresetsettings">
+		<value>用嚟重置所有設定，包括『記事頻道』、『群組規矩』、『群組簡介』、所有人嘅警告次數等等。\n使用後無法還原，請慎重。\n『標籤指令』和【管理權限（副手／助手）』不會被重置。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandmissinghcommands">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="hcommandwhois">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="donateWord">
+		<value>捐款</value>
+	</string>
+	<string key="otherhelpList">
+		<value>nsfw （淫褻圖片檢測）</value>
+	</string>
+	<string key="typeMore">
+		<value>無法執行，請輸入詳細資料。</value>
+	</string>
+	<string key="tempbanDescription">
+		<value>查看暫時封鎖的情況</value>
+	</string>
+	<string key="helpDescription">
+		<value>了解指令嘅用途</value>
+	</string>
+	<string key="uct">
+		<value>UTC 時間</value>
+	</string>
+	<string key="HelpButton">
+		<value>說明</value>
+	</string>
+	<string key="hcommandlangcode">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="registerfortagall">
+		<value>已成功加入『呼喚名單』，下次 @pingall 就會通知埋你。</value>
+	</string>
+	<string key="tagallregistered">
+		<value>已經呼喚咗 {0} 因為佢地用過 /pingme 加入咗『呼喚名單』。</value>
+	</string>
+	<string key="tagallregisterednoone">
+		<value>『呼喚名單』係吉嘅，因為冇人用過 /pingme。</value>
+	</string>
+	<string key="unregisterfortagall">
+		<value>你離開咗『呼喚名單』，下次 @pingall 就冇你份。</value>
+	</string>
+	<string key="hcommandpingme">
+		<value>加你個名去『呼喚名單』度。咁下次有人用 @pingall 就會通知埋你。留意返 @pingall 需要隔十分鐘先可以再用。同埋只有設置咗 @username 先可以用呢個功能。如果想取消返，可以用 /unpingme。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandunpingme">
+		<value>離開『呼喚名單』，下次 @pingall 就冇你份。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandpingall">
+		<value>通知『呼喚名單』入面嘅所有人。留意返呢個指令需要隔十分鐘先可以再用。用 /pingme 加入『呼喚名單』；用 /unpingme 離開『呼喚名單』\n\n例子︰\n@{0}\n/{0}</value>
+	</string>
+	<string key="tagallNoUsername">
+		<value>你仲未有 @username，我係唔可以喺有人用 @pingall 嘅時候通知你。</value>
+	</string>
+	<string key="hcommandd">
+		<value>用呢個指令可以不留痕跡咁刪走你所回覆嘅訊息。留意返，如果你唔係管理員嘅話，只可以刪走自已嘅訊息。\n\n例子︰\n/{0} 回自己嘅訊息\n/{0} 回覆任何訊息（只限管理員）
+		</value>
+	</string>
+	<string key="linkMissing">
+		<value>此群組尚未建立『群組連結』。</value>
+	</string>
+	<string key="linkUpdated">
+		<value>已更新『群組連結』。</value>
+	</string>
+	<string key="linkSet">
+		<value>已設置『群組連結』。</value>
+	</string>
+	<string key="extraMediaSaved">
+		<value>已儲存此媒體作為對 {0} 的回覆。</value>
+	</string>
+	<string key="linkButton">
+		<value>網址</value>
+	</string>
+	<string key="hcommandgetrektu">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="hcommandgetrekti">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="hcommandclearkeys">
+		<value>呢個指令係用嚟整走所有訊息底下嘅按鈕。若果你覺得某啲機械人嘅按鈕非常煩厭，你可以用呢個指令嚟清除所有按鈕。\n\n呢個功能係設計嚟對付啲，利用按鈕妨礙正常溝通嘅無聊機械人。\n\n例子︰\n/{0}</value>
+	</string>
+	<string key="hcommandbangroup">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+	<string key="hcommandunbangroup">
+		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
+	</string>
+  <string key="logSettingChanged">
+    <value>{0}（{1}）喺 {3} 將 {2} 由 {4} 改成 {5}</value>
+  </string>
+  <string key="settingFloodLimit">
+    <value>洗版上限</value>
+  </string>
+  <string key="settingFloodAction">
+    <value>洗版處理方式</value>
+  </string>
+  <string key="settingFloodCheck">
+    <value>{0} 嘅洗版檢查</value>
+  </string>
+  <string key="settingMedia">
+    <value>媒體：{0}</value>
+  </string>
+  <string key="settingMediaAction">
+    <value>媒體警告處理方式</value>
+  </string>
+  <string key="settingMediaMax">
+    <value>媒體警告上限</value>
+  </string>
+  <string key="settingWarnMax">
+    <value>警告上限</value>
+  </string>
+  <string key="settingWarnAction">
+    <value>警告處理方式</value>
+  </string>
+  <string key="settingNameLengthAction">
+    <value>名字長度處理方式</value>
+  </string>
+  <string key="settingTextLengthAction">
+    <value>訊息長度處理方式</value>
+  </string>
+  <string key="valueAllowed">
+    <value>允許</value>
+  </string>
+  <string key="valueBlocked">
+    <value>禁止</value>
+  </string>
+  <string key="valueInPrivate">
+    <value>私人對話</value>
+  </string>
+  <string key="valueInGroup">
+    <value>群組</value>
+  </string>
+  <string key="FiltersButton">
+    <value>過濾器</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>開咗 {0} 個</value>
+  </string>
+  <string key="filtersMenu">
+    <value>過濾器：當訊息、名或者用戶名同其中一個吻合嗰陣會點處理。撳一下過濾器就可以改佢做嘅嘢。管理員同埋喺 watch 或者 auth 名單上面嘅成員永遠唔會被檢查。\n\n自訂規則：{0} 條。用 /filter 管理。</value>
+  </string>
+  <string key="filterPreset_arabic">
+    <value>阿拉伯文字</value>
+  </string>
+  <string key="filterPreset_rtl">
+    <value>由右至左嘅伎倆</value>
+  </string>
+  <string key="filterPreset_cyrillic">
+    <value>西里爾字母</value>
+  </string>
+  <string key="filterPreset_cjk">
+    <value>中文、日文、韓文</value>
+  </string>
+  <string key="filterPreset_hebrew">
+    <value>希伯來文字</value>
+  </string>
+  <string key="filterPreset_devanagari">
+    <value>天城文</value>
+  </string>
+  <string key="filterPreset_lookalikes">
+    <value>似樣嘅字母</value>
+  </string>
+  <string key="filterPreset_zero_width">
+    <value>隱形字元</value>
+  </string>
+  <string key="filterPreset_invite_link">
+    <value>Telegram 邀請連結</value>
+  </string>
+  <string key="filterPreset_phone">
+    <value>電話號碼</value>
+  </string>
+  <string key="filterPreset_crypto">
+    <value>加密貨幣錢包</value>
+  </string>
+  <string key="filterPreset_staff_words">
+    <value>管理員或者客服名</value>
+  </string>
+  <string key="filterAction_off">
+    <value>關閉</value>
+  </string>
+  <string key="filterAction_delete">
+    <value>刪除</value>
+  </string>
+  <string key="filterAction_warn">
+    <value>警告</value>
+  </string>
+  <string key="filterAction_mute">
+    <value>禁言</value>
+  </string>
+  <string key="filterAction_kick">
+    <value>踢走</value>
+  </string>
+  <string key="filterAction_tempban">
+    <value>暫時封鎖</value>
+  </string>
+  <string key="filterAction_ban">
+    <value>封鎖</value>
+  </string>
+  <string key="filterEstablishedButton">
+    <value>檢查老成員</value>
+  </string>
+  <string key="filterGroupBotsButton">
+    <value>容許本群嘅機械人</value>
+  </string>
+  <string key="mutedByFilter">
+    <value>【{0}】已被禁言：{1}</value>
+  </string>
+  <string key="tempmutedByFilter">
+    <value>【{0}】已被禁言 {2}：{1}</value>
+  </string>
+  <string key="kickedByFilter">
+    <value>【{0}】已被踢走：{1}</value>
+  </string>
+  <string key="bannedByFilter">
+    <value>【{0}】已被封鎖：{1}</value>
+  </string>
+  <string key="tempbannedByFilter">
+    <value>【{0}】已被封鎖 {2}：{1}</value>
+  </string>
+  <string key="filterUsage">
+    <value>本群嘅自訂過濾規則。新規則會先試用 {0} 日：只會記低佢本來會做咩。\n/filter add name|username|text 動作 正則\n/filter try /正則/ 文字\n/filter test 編號或者正則\n/filter list\n/filter live 編號\n/filter trial 編號 日數\n/filter del 編號</value>
+  </string>
+  <string key="filterBadTarget">
+    <value>目標一定要係以下其中一個：{0}</value>
+  </string>
+  <string key="filterBadAction">
+    <value>動作一定要係以下其中一個：{0}</value>
+  </string>
+  <string key="filterInvalid">
+    <value>呢個正則表達式用唔到：{0}</value>
+  </string>
+  <string key="filterExists">
+    <value>本群已經有呢條規則。</value>
+  </string>
+  <string key="filterLimit">
+    <value>每個群最多可以有 {0} 條自訂規則。請先用 /filter del 刪走一條。</value>
+  </string>
+  <string key="filterAdded">
+    <value>已加入規則 #{0}。佢試用 {1} 日：只會記低佢會做咩，唔會做任何嘢。用 /filter live {0} 啟用。</value>
+  </string>
+  <string key="filterTryMatch">
+    <value>吻合。</value>
+  </string>
+  <string key="filterTryNoMatch">
+    <value>唔吻合。</value>
+  </string>
+  <string key="filterTestNone">
+    <value>過去 30 日出現過嘅 {0} 個成員入面冇一個吻合。</value>
+  </string>
+  <string key="filterTestResult">
+    <value>過去 30 日出現過嘅 {1} 個成員入面有 {0} 個吻合。例子：</value>
+  </string>
+  <string key="filterTestSent">
+    <value>我已經私訊咗結果俾你。</value>
+  </string>
+  <string key="filterTestStartMe">
+    <value>我傳唔到結果俾你。請先同我開始私人對話，然後再試一次。</value>
+  </string>
+  <string key="filterListEmpty">
+    <value>本群仲未有自訂規則。用 /filter add 加一條；佢會先試用 {0} 日。</value>
+  </string>
+  <string key="filterListHeader">
+    <value>自訂規則：</value>
+  </string>
+  <string key="filterListRule">
+    <value>#{0} 針對 {1}，{2}，{3}。吻合 {4} 次；當中有 {5} 個成員被移除。</value>
+  </string>
+  <string key="filterModeLive">
+    <value>生效中</value>
+  </string>
+  <string key="filterModeTrial">
+    <value>試用至 {0}</value>
+  </string>
+  <string key="filterModeTrialOver">
+    <value>試用完咗，等緊 /filter live 或者 /filter del</value>
+  </string>
+  <string key="filterNotFound">
+    <value>冇規則 {0}。/filter list 可以睇規則。</value>
+  </string>
+  <string key="filterMadeLive">
+    <value>規則 #{0} 已生效：由而家開始執行。</value>
+  </string>
+  <string key="filterTrialSet">
+    <value>規則 #{0} 試用 {1} 日。</value>
+  </string>
+  <string key="filterDeleted">
+    <value>規則 #{0} 已刪除。</value>
+  </string>
+  <string key="cmdfilter">
+    <value>自訂過濾規則</value>
+  </string>
+  <string key="hcommandfilter">
+    <value>
+      你個群嘅自訂過濾規則：對成員嘅名、用戶名或者訊息文字用正則表達式，同埋吻合嗰陣做咩（none, score, report, delete, warn, mute, tempmute, kick, tempban, ban）。只限管理員。現成嘅過濾器（文字、邀請連結、電話號碼等等）喺設定選單嘅「過濾器」入面。
+
+      新規則會先試用 7 日：只會記低佢本來會做咩，唔會做任何嘢，咁你就睇到佢捉唔捉啱人。用 /{0} live 啟用。
+
+      例子：
+      /{0} add text ban free +crypto
+      /{0} try /free +crypto/ Get FREE crypto now
+      /{0} test 3（用規則 3 檢查過去 30 日出現過嘅成員名，並私訊結果俾你）
+      /{0} list
+      /{0} live 3
+      /{0} trial 3 14
+      /{0} del 3
+    </value>
+  </string>
+</strings>
