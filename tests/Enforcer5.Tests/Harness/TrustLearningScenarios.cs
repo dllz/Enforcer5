@@ -49,11 +49,26 @@ namespace Enforcer5.Tests.Harness
             return user;
         }
 
-        /// <summary>A sign Detection records for anyone (a blocked inline bot), about <paramref name="message"/>.</summary>
+        /// <summary>An abuse sign Detection records for anyone (a bare link in a raid), about <paramref name="message"/>.</summary>
         private static async Task Sign(HarnessChat chat, HarnessUser user, Message message)
+        {
+            DetectionEngine.Checked(chat.ChatId, user.Id, message, SignCatalog.RaidLink, "report", reported: true);
+            await chat.SettleAsync();
+        }
+
+        /// <summary>A sign about the group's own rules (a blocked inline bot), about <paramref name="message"/>.</summary>
+        private static async Task GroupRuleSign(HarnessChat chat, HarnessUser user, Message message)
         {
             DetectionEngine.Checked(chat.ChatId, user.Id, message, SignCatalog.InlineBot, "delete", deleted: true);
             await chat.SettleAsync();
+        }
+
+        private static async Task<string[]> Categories(HarnessChat chat, long userId)
+        {
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            return (await connection.QueryAsync<string>(@"
+SELECT coalesce(l.category, '-') || ' ' || l.action FROM member_labels l JOIN telegram_accounts a ON a.account_id = l.account_id
+WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId })).ToArray();
         }
 
         private static async Task<int> Adjustments(HarnessChat chat, string reason)
@@ -111,6 +126,92 @@ namespace Enforcer5.Tests.Harness
 
             Assert.IsNull((await Engine(chat)).TrustMessages);
             Assert.AreEqual(0, Learned(chat, admin).Length);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ATrustedPlayerBannedForAGroupRule_KeepsEveryonesTrust()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            await GoLive(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var player = Established(chat, "Player", 25);
+            var regular = Established(chat, "Regular", 22);
+            var message = await chat.SendAsync(player, "the seer is Bob");
+            await GroupRuleSign(chat, player, message);
+
+            await chat.SendAsync(admin, "/ban leaked roles", replyTo: message);
+            await chat.SettleAsync();
+            await DetectionRecorder.FlushAsync();
+            await chat.SettleAsync();
+
+            Assert.IsNull((await Engine(chat)).TrustMessages);
+            Assert.AreEqual(0, Learned(chat, admin).Length);
+            Assert.AreEqual(TrustLevel.Established, await MemberTrust.OfAsync(chat.ChatId, regular.Id));
+            CollectionAssert.AreEqual(new[] { "group ban" }, await Categories(chat, player.Id));
+
+            await chat.SendAsync(admin, $"/user {player.Id}");
+            StringAssert.Contains(chat.LastBotMessage.Text, S(chat, "userRecord", 90, 0, 1));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ABanWhoseReasonSaysSpam_IsAbuse_EvenWithoutASign()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            await GoLive(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var spammer = Established(chat, "Spammer", 25);
+
+            await chat.SendAsync(admin, "/ban Werbung", replyTo: await chat.SendAsync(spammer, "visit my shop"));
+            await chat.SettleAsync();
+
+            Assert.IsNotNull((await Engine(chat)).TrustMessages);
+            StringAssert.Contains(Learned(chat, admin).Single().Text, S(chat, "learnByReason"));
+            CollectionAssert.AreEqual(new[] { "abuse ban" }, await Categories(chat, spammer.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AnAbuseSignWrittenAfterTheDecision_StillMakesItAbuse_AndWins()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var now = chat.Clock.GetUtcNow();
+            // The warn is recorded while the signs from just before it still wait in the buffer.
+            var recorded = await Repositories.DetectionLog.RecordLabelAsync(new LabelEvent(chat.ChatId, member.Id, "bad", "warn", "command",
+                admin.Id, null, null, null, null, null, null, BanHistory.Edition, now));
+            Assert.AreEqual(SignCategory.GroupRule, recorded.Category, "a warn is a group rule while nothing else is known");
+
+            DetectionRecord Sign(string sign, string category) => new DetectionRecord(chat.ChatId, member.Id, sign, "inline", 0, 0, 0, "none",
+                false, false, "live", null, null, null, null, "new", 1, null, null, BanHistory.Edition, now.AddSeconds(-10)) { Category = category };
+            await Repositories.DetectionLog.WriteDetectionsAsync(new[] { Sign("inline_bot", SignCategory.GroupRule), Sign("raid_link", SignCategory.Abuse) });
+
+            Assert.AreEqual("abuse warn", (await Categories(chat, member.Id)).Single());
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task OwnFilterRules_AreGroupRules_UnlessMarkedSpam()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            await chat.SendAsync(admin, "/filter add text delete seer");
+            await chat.SendAsync(admin, "/filter add spam text ban free +crypto");
+            var stored = (await new PostgresDetectionSettingsRepository(() => chat.Database).LoadAsync(chat.ChatId)).Filters.OwnRules.ToList();
+            Assert.AreEqual(SignCategory.GroupRule, stored.Single(r => r.Pattern == "seer").Category);
+            var spam = stored.Single(r => r.Pattern == "free +crypto");
+            Assert.AreEqual(SignCategory.Abuse, spam.Category);
+
+            await chat.SendAsync(admin, $"/filter grouprule {spam.Id}");
+            Assert.AreEqual(S(chat, "filterMarkedGroupRule", spam.Id), chat.Replies.Last());
+            var after = (await new PostgresDetectionSettingsRepository(() => chat.Database).LoadAsync(chat.ChatId)).Filters.OwnRules
+                .Single(r => r.Id == spam.Id);
+            Assert.AreEqual((SignCategory.GroupRule, FilterRule.Trial), (after.Category, after.Mode), "only the kind changed");
+            Assert.AreEqual(SignCategory.GroupRule, SignCatalog.CategoryOf($"filter:{spam.Id}", DetectionSettings.For(chat.ChatId).Filters));
+            Assert.AreEqual(SignCategory.Abuse, SignCatalog.CategoryOf("filter:invite_link", null));
+            Assert.AreEqual(SignCategory.GroupRule, SignCatalog.CategoryOf("filter:arabic", null));
             AssertNoErrors(chat);
         }
 
@@ -269,6 +370,8 @@ namespace Enforcer5.Tests.Harness
             Assert.AreEqual(0, Learned(chat, admin).Length, "has not talked since");
 
             chat.Hashes[$"{chat.ChatId}:users:{member.Id}", "msgs"] = "60";
+            // A warn for a group rule is the group's business, not a reason to keep distrusting them.
+            await chat.SendAsync(admin, "/warn", replyTo: await chat.SendAsync(member, "off topic"));
             await chat.AdvanceAsync(TimeSpan.FromDays(1));
             await TrustLearning.NightlyAsync(anyHour: true);
             await chat.SettleAsync();

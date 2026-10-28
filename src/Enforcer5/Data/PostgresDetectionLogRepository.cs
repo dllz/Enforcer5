@@ -36,16 +36,16 @@ namespace Enforcer5.Data
             var ids = (await connection.QueryAsync<long>(new CommandDefinition(@"
 WITH input AS (
     SELECT * FROM unnest(@Chats, @Users, @Signs, @Phases, @Weights, @Before, @After, @Actions, @Deleted, @Reported,
-        @Modes, @MessageIds, @MessageTypes, @TextHashes, @MediaIds, @Trust, @Messages, @Since, @Evidence, @Editions, @At)
+        @Modes, @MessageIds, @MessageTypes, @TextHashes, @MediaIds, @Trust, @Messages, @Since, @Evidence, @Editions, @At, @Categories)
     AS i(chat, usr, sign, phase, weight, score_before, score_after, action, deleted, reported, mode, message_id,
-        message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence, edition, at)
+        message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence, edition, at, category)
 )
 INSERT INTO detections (group_id, account_id, sign, phase, weight, score_before, score_after, action, deleted, reported,
     mode, message_id, message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence,
-    edition, detected_at, label_id)
+    edition, detected_at, category, label_id)
 SELECT g.group_id, a.account_id, i.sign, i.phase, i.weight, i.score_before, i.score_after, i.action, i.deleted, i.reported,
     i.mode, i.message_id, i.message_type, i.text_hash, i.media_unique_id, i.trust_level, i.member_messages, i.member_since,
-    CAST(i.evidence AS jsonb), i.edition, i.at,
+    CAST(i.evidence AS jsonb), i.edition, i.at, i.category,
     -- A decision made before this was written (detections are written once a minute).
     (SELECT l.label_id FROM member_labels l
      WHERE l.group_id = g.group_id AND l.account_id = a.account_id AND l.label = 'bad'
@@ -80,6 +80,7 @@ RETURNING detection_id",
                     Evidence = detections.Select(d => d.Evidence).ToArray(),
                     Editions = detections.Select(d => d.Edition).ToArray(),
                     At = detections.Select(d => Utc(d.At)).ToArray(),
+                    Categories = detections.Select(d => d.Category).ToArray(),
                     LooksBack = DecisionLooksBack
                 }, transaction))).ToArray();
 
@@ -91,7 +92,13 @@ UPDATE detections d SET outcome = CASE WHEN l.undone_at IS NOT NULL THEN 'undone
 FROM member_labels l
 WHERE d.label_id = l.label_id AND d.detection_id = ANY(@Ids);
 UPDATE member_labels SET missed = FALSE
-WHERE missed AND label_id IN (SELECT label_id FROM detections WHERE detection_id = ANY(@Ids) AND label_id IS NOT NULL);",
+WHERE missed AND label_id IN (SELECT label_id FROM detections WHERE detection_id = ANY(@Ids) AND label_id IS NOT NULL);
+-- A sign written after the decision it came before tells what the decision was about: abuse wins, and a
+-- group rule fills in what was not known. A reason that named abuse made it abuse already.
+UPDATE member_labels l SET category = CASE WHEN d.abuse THEN 'abuse' ELSE COALESCE(l.category, 'group') END
+FROM (SELECT label_id, bool_or(category = 'abuse') AS abuse FROM detections
+      WHERE detection_id = ANY(@Ids) AND label_id IS NOT NULL AND category IS NOT NULL GROUP BY label_id) d
+WHERE l.label_id = d.label_id AND l.category IS DISTINCT FROM 'abuse';",
                     new { Ids = ids }, transaction));
             }
             await transaction.CommitAsync();
@@ -156,7 +163,7 @@ GROUP BY d.sign", new { ChatId = chatId, Signs = signs.ToArray() }));
             return rows.ToDictionary(r => r.Sign, r => (r.Hits, r.Removed));
         }
 
-        public async Task<long?> RecordLabelAsync(LabelEvent label)
+        public async Task<RecordedLabel> RecordLabelAsync(LabelEvent label)
         {
             await using var connection = await Database.OpenConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
@@ -174,22 +181,34 @@ GROUP BY d.sign", new { ChatId = chatId, Signs = signs.ToArray() }));
                 actor = (await PrincipalResolver.EnsureUserAsync(connection, transaction, label.ActorId.Value)).AccountId;
             var at = Utc(label.At);
             var adminDecision = AdminSources.Contains(label.Source);
+            // What it was about (step 7c): the admin's reason first, then the signs of the day before (abuse
+            // wins), a warn being a group's own rule; not known otherwise.
+            var category = label.ReasonIsAbuse ? SignCategory.Abuse : await connection.ExecuteScalarAsync<string>(new CommandDefinition(@"
+SELECT CASE
+    WHEN bool_or(d.category = 'abuse') THEN 'abuse'
+    WHEN bool_or(d.category = 'group') OR @Warn THEN 'group'
+END
+FROM (SELECT category FROM detections
+      WHERE group_id = @GroupId AND account_id = @AccountId AND detected_at > @At - @LooksBack AND detected_at <= @At
+      UNION ALL SELECT NULL) d",
+                new { group.GroupId, target.AccountId, At = at, LooksBack = DecisionLooksBack, Warn = label.Action == "warn" },
+                transaction));
 
             var labelId = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
 INSERT INTO member_labels (group_id, account_id, label, action, source, decided_by_account_id, message_id, message_type,
-    text_hash, media_unique_id, reason, missed, label_key, edition, decided_at)
+    text_hash, media_unique_id, reason, missed, label_key, edition, decided_at, category)
 VALUES (@GroupId, @AccountId, @Label, @Action, @Source, @Actor, @MessageId, @MessageType, @TextHash, @MediaUniqueId,
     @Reason,
     CASE WHEN @Label = 'bad' AND @AdminDecision THEN NOT EXISTS (
         SELECT 1 FROM detections d WHERE d.group_id = @GroupId AND d.account_id = @AccountId
           AND d.detected_at > @At - @LooksBack AND d.detected_at <= @At) END,
-    @Key, @Edition, @At)
+    @Key, @Edition, @At, @Category)
 RETURNING label_id",
                 new
                 {
                     group.GroupId, target.AccountId, label.Label, label.Action, label.Source, Actor = actor,
                     label.MessageId, label.MessageType, label.TextHash, label.MediaUniqueId, label.Reason,
-                    AdminDecision = adminDecision, label.Key, label.Edition, At = at, LooksBack = DecisionLooksBack
+                    AdminDecision = adminDecision, label.Key, label.Edition, At = at, LooksBack = DecisionLooksBack, Category = category
                 }, transaction));
 
             if (label.Label is "bad" or "fine")
@@ -218,7 +237,7 @@ UPDATE detections SET outcome = 'undone' WHERE label_id IN (SELECT label_id FROM
                     new { At = at, LabelId = labelId, group.GroupId, target.AccountId, Undone = undone }, transaction));
             }
             await transaction.CommitAsync();
-            return labelId;
+            return new RecordedLabel(labelId, category);
         }
 
         public async Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since)

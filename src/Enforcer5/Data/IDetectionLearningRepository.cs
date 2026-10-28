@@ -35,12 +35,20 @@ namespace Enforcer5.Data
 
         Task MarkRestorePromptedAsync(long chatId, long userId, DateTimeOffset at);
 
-        /// <summary>Whether a sign, a bad decision or a warn has been recorded about the member since <paramref name="since"/>.</summary>
-        Task<bool> AnythingAgainstSinceAsync(long chatId, long userId, DateTimeOffset since);
+        /// <summary>
+        /// Whether an abuse sign or a decision about abuse has been recorded about the member since
+        /// <paramref name="since"/>. The group's own rules (a warn, a game rule) say nothing about trust.
+        /// </summary>
+        Task<bool> AbuseSinceAsync(long chatId, long userId, DateTimeOffset since);
 
-        /// <summary>The signs among <paramref name="signs"/> (or any <c>filter:</c> sign) recorded for the member between the two times, first seen first.</summary>
-        Task<IReadOnlyList<string>> SignsBetweenAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to,
-            IReadOnlyCollection<string> signs);
+        /// <summary>The abuse signs recorded for the member between the two times, first seen first.</summary>
+        Task<IReadOnlyList<string>> AbuseSignsBetweenAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to);
+
+        /// <summary>
+        /// Counts of the decisions against the member in the group since <paramref name="since"/>: about abuse,
+        /// and about the group's own rules (warns included). The rest is not known.
+        /// </summary>
+        Task<(int Abuse, int GroupRules)> RecordAsync(long chatId, long userId, DateTimeOffset since);
 
         Task<long> AddAdjustmentAsync(long chatId, string kind, string reason, int? fromValue, int? fromDays, int? toValue,
             int? toDays, long? userId, long? labelId, bool applied, DateTimeOffset at);
@@ -52,8 +60,9 @@ namespace Enforcer5.Data
         Task<IReadOnlyList<Adjustment>> RecentAdjustmentsAsync(long chatId, int limit);
 
         /// <summary>
-        /// Admins' decisions since <paramref name="since"/> about members who had a score: their highest score
-        /// in the day before, and whether they were removed or muted, or found fine (or the decision undone).
+        /// Admins' decisions about abuse since <paramref name="since"/> about members who had a score: their highest
+        /// score in the day before, and whether they were removed or muted, or found fine (or the decision undone).
+        /// Decisions about a group's own rules are left out: the score is about abuse.
         /// </summary>
         Task<IReadOnlyList<ScoredDecision>> ScoredDecisionsAsync(long chatId, DateTimeOffset since);
 

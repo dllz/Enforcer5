@@ -122,7 +122,7 @@ namespace Enforcer5.Detection
                         Score = change.After
                     });
 
-                Record(chatId, userId, message, sign, hit, weight, outcome, member, now);
+                Record(chatId, userId, message, sign, hit, weight, outcome, member, now, policy);
                 return outcome;
             }
             catch (Exception e)
@@ -182,19 +182,19 @@ namespace Enforcer5.Detection
             var action = Array.IndexOf(DetectionPolicy.Actions, done.Action) >= 0 ? done.Action : "none";
             var outcome = new DetectionOutcome(hit.Trial ? "trial" : "live", action, done.Deleted && message != null, done.Reported,
                 change.Before, change.After);
-            Record(chatId, userId, message, sign, hit, weight, outcome, member, hit.At ?? Clock.UtcNow);
+            Record(chatId, userId, message, sign, hit, weight, outcome, member, hit.At ?? Clock.UtcNow, policy);
             return outcome;
         }
 
         private static void Record(long chatId, long userId, Message message, SignDefinition sign, SignHit hit, int weight,
-            DetectionOutcome outcome, MemberState member, DateTime now)
+            DetectionOutcome outcome, MemberState member, DateTime now, DetectionPolicy policy)
         {
             var fingerprint = message != null ? MessageFingerprint.Of(message) : null;
             DetectionRecorder.Add(new DetectionRecord(chatId, userId, sign.Name, sign.Phase == SignPhase.Inline ? "inline" : "enriched",
                 weight, outcome.ScoreBefore, outcome.ScoreAfter, outcome.Action, outcome.Deleted, outcome.Reported, outcome.Mode,
                 message?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
                 member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, hit.Evidence,
-                BanHistory.Edition, now));
+                BanHistory.Edition, now) { Category = SignCatalog.CategoryOf(sign.Name, policy.Filters) });
         }
 
         /// <summary>The stronger of two actions, in the order of <see cref="DetectionPolicy.Actions"/>.</summary>

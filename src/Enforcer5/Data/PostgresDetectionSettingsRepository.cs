@@ -223,20 +223,22 @@ WHERE f.group_id = @GroupId AND f.kind = 'regex' AND f.target IN ('name', 'usern
             }
             foreach (var rule in own)
                 await connection.ExecuteAsync(new CommandDefinition(@"
-INSERT INTO group_filters (group_id, target, kind, pattern, enabled, action, mode, trial_until, created_by_account_id, created_at)
+INSERT INTO group_filters (group_id, target, kind, pattern, enabled, action, mode, trial_until, created_by_account_id, created_at, category)
 VALUES (@GroupId, @Target, 'regex', @Pattern, @Enabled, @Action, @Mode, @TrialUntil,
-    (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @CreatedBy), now())
+    (SELECT account_id FROM telegram_accounts WHERE telegram_user_id = @CreatedBy), now(), @Category)
 ON CONFLICT (group_id, target, kind, pattern) WHERE pattern IS NOT NULL
 DO UPDATE SET enabled = EXCLUDED.enabled, action = EXCLUDED.action, mode = EXCLUDED.mode, trial_until = EXCLUDED.trial_until,
+    category = EXCLUDED.category,
     -- A new trial is a new end to tell the admins about.
     trial_notified_at = CASE WHEN group_filters.mode = EXCLUDED.mode AND group_filters.trial_until IS NOT DISTINCT FROM EXCLUDED.trial_until
                              THEN group_filters.trial_notified_at END
 WHERE group_filters.enabled IS DISTINCT FROM EXCLUDED.enabled OR group_filters.action IS DISTINCT FROM EXCLUDED.action
-   OR group_filters.mode IS DISTINCT FROM EXCLUDED.mode OR group_filters.trial_until IS DISTINCT FROM EXCLUDED.trial_until",
+   OR group_filters.mode IS DISTINCT FROM EXCLUDED.mode OR group_filters.trial_until IS DISTINCT FROM EXCLUDED.trial_until
+   OR group_filters.category IS DISTINCT FROM EXCLUDED.category",
                     new
                     {
                         GroupId = groupId, rule.Target, rule.Pattern, rule.Enabled, rule.Action, rule.Mode,
-                        TrialUntil = rule.TrialUntil?.UtcDateTime, rule.CreatedBy
+                        TrialUntil = rule.TrialUntil?.UtcDateTime, rule.CreatedBy, rule.Category
                     }, transaction));
 
             async Task Length(string target, LengthSettings length) =>
@@ -295,7 +297,7 @@ FROM detection_policies WHERE group_id = @GroupId", new { group.GroupId }, trans
             var filters = (await connection.QueryAsync<FilterRow>(new CommandDefinition(@"
 SELECT f.filter_id AS FilterId, f.target AS Target, f.kind AS Kind, f.preset AS Preset, f.pattern AS Pattern,
        f.max_characters AS MaxCharacters, f.max_lines AS MaxLines, f.action AS Action, f.enabled AS Enabled, f.mode AS Mode,
-       f.trial_until AS TrialUntil, a.telegram_user_id AS CreatedBy
+       f.trial_until AS TrialUntil, a.telegram_user_id AS CreatedBy, f.category AS Category
 FROM group_filters f LEFT JOIN telegram_accounts a ON a.account_id = f.created_by_account_id
 WHERE f.group_id = @GroupId
 ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
@@ -328,7 +330,7 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                     filters.Where(f => f.Kind is FilterRule.PresetKind or FilterRule.RegexKind && (f.Kind == FilterRule.PresetKind || FilterRule.Targets.Contains(f.Target)))
                         .Select(f => new FilterRule(f.FilterId, f.Kind, f.Preset, f.Target, f.Pattern, f.Action, f.Enabled, f.Mode,
                             f.TrialUntil.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(f.TrialUntil.Value, DateTimeKind.Utc)) : null,
-                            f.CreatedBy))
+                            f.CreatedBy, f.Category == SignCategory.Abuse))
                         .ToList(),
                     checks.ContainsKey(Filters) ? filterChoices.IncludeEstablished : true,
                     filterChoices.ExemptGroupBots),
@@ -456,6 +458,7 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public int? MaxLines { get; set; }
             public string Action { get; set; }
             public bool Enabled { get; set; }
+            public string Category { get; set; }
         }
     }
 }

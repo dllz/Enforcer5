@@ -89,12 +89,16 @@ namespace Enforcer5.Detection
                     // Only the bot's own reasons, which are fixed words (Flood, Media, ...), and the signs a
                     // Fine was about; an admin's reason may be anything.
                     source == "auto" || action == "fine" ? HistoryWriter.Trim(reason) : null,
-                    key, BanHistory.Edition, DateTimeOffset.UtcNow);
+                    key, BanHistory.Edition, DateTimeOffset.UtcNow)
+                {
+                    // Read, never kept: only whether it names spam, ads, scams and the like.
+                    ReasonIsAbuse = label == "bad" && AbuseWords.Mentions(reason)
+                };
                 HistoryWriter.Enqueue(async () =>
                     {
                         // Once per decision: the other edition may have recorded an app change first.
-                        if (await Repositories.DetectionLog.RecordLabelAsync(labelEvent) is { } labelId)
-                            TrustLearning.Decided(labelEvent, labelId);
+                        if (await Repositories.DetectionLog.RecordLabelAsync(labelEvent) is { } recorded)
+                            TrustLearning.Decided(labelEvent, recorded);
                     },
                     $"Recording the {action} of {userId} in {chatId} for Detection");
             }

@@ -130,6 +130,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("action");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
                     b.Property<DateTimeOffset?>("DecidedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("decided_at");
@@ -244,6 +248,8 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("detections", null, t =>
                         {
                             t.HasCheckConstraint("detections_action_check", "action IN ('none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban')");
+
+                            t.HasCheckConstraint("detections_category_check", "category IS NULL OR category IN ('abuse', 'group')");
 
                             t.HasCheckConstraint("detections_edition_check", "edition IN ('normal', 'premium')");
 
@@ -462,6 +468,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("action");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -545,6 +555,8 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("group_filters", null, t =>
                         {
                             t.HasCheckConstraint("group_filters_action_check", "action IS NULL OR action IN ('none', 'score', 'report', 'delete', 'warn', 'mute', 'tempmute', 'kick', 'tempban', 'ban')");
+
+                            t.HasCheckConstraint("group_filters_category_check", "category IS NULL OR category IN ('abuse', 'group')");
 
                             t.HasCheckConstraint("group_filters_hits_check", "hits >= 0");
 
@@ -791,6 +803,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("action");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
                     b.Property<DateTimeOffset>("DecidedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("decided_at");
@@ -873,6 +889,8 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("member_labels", null, t =>
                         {
                             t.HasCheckConstraint("member_labels_action_check", "action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine')");
+
+                            t.HasCheckConstraint("member_labels_category_check", "category IS NULL OR category IN ('abuse', 'group')");
 
                             t.HasCheckConstraint("member_labels_edition_check", "edition IN ('normal', 'premium')");
 

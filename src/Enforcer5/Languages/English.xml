@@ -2975,7 +2975,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>🧠 Learned from you</value>
   </string>
   <string key="learnMenu">
-    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt;\nDetection adjusts two levels from what you decide, and tells you every time it does.\n\nEstablished from: &lt;b&gt;{0} messages and {1} days&lt;/b&gt; ({2})\nReported from a score of: &lt;b&gt;{3}&lt;/b&gt; ({4})\nSet back to new by admins: {5}\nLearning: {6}</value>
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt;\nDetection adjusts two levels from what you decide, and tells you every time it does. Only spam and abuse count: a member who breaks your group's own rules, such as a game rule, keeps their trust.\n\nEstablished from: &lt;b&gt;{0} messages and {1} days&lt;/b&gt; ({2})\nReported from a score of: &lt;b&gt;{3}&lt;/b&gt; ({4})\nSet back to new by admins: {5}\nLearning: {6}</value>
   </string>
   <string key="learnUsual">
     <value>the usual for this group</value>
@@ -3080,7 +3080,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>Kept as new by {0}</value>
   </string>
   <string key="trustRestorePrompt">
-    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\n{1} was set back to new on {2}. Since then they wrote {3} messages, with no signs and nothing done against them. Count them as established again?</value>
+    <value>🧠 &lt;b&gt;Learned from you&lt;/b&gt; · {0}\n{1} was set back to new on {2}. Since then they wrote {3} messages, with no sign of spam or abuse and nothing done against them for it. Count them as established again?</value>
   </string>
   <string key="trustRestoreButton">
     <value>✅ Restore</value>
@@ -3126,5 +3126,26 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="userTrustButton">
     <value>Restore trust</value>
+  </string>
+  <string key="filterUsageCategory">
+    <value>A rule is one of your group's own rules unless you say it is about spam: /filter add spam text ban regex, or /filter spam id (and /filter grouprule id to undo). Only spam and abuse rules affect who Detection trusts.</value>
+  </string>
+  <string key="filterMarkedSpam">
+    <value>Rule #{0} is now about spam or abuse: a member it finds can lose their trust.</value>
+  </string>
+  <string key="filterMarkedGroupRule">
+    <value>Rule #{0} is now one of your group's own rules: breaking it does not affect trust.</value>
+  </string>
+  <string key="filterCategory_abuse">
+    <value>(spam or abuse)</value>
+  </string>
+  <string key="filterCategory_group">
+    <value>(group rule)</value>
+  </string>
+  <string key="learnByReason">
+    <value>your reason named spam, ads or a scam</value>
+  </string>
+  <string key="userRecord">
+    <value>Last {0} days: {1} actions for spam or abuse, {2} for this group's own rules.</value>
   </string>
 </strings>

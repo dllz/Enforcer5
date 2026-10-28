@@ -70,13 +70,23 @@ namespace Enforcer5
                 case "del":
                     reply = FilterChange(chatId, rest, lang, (_, _) => null, "filterDeleted");
                     break;
+                // What the rule is about (step 7c): only spam and abuse say anything about whom to trust.
+                case "spam":
+                    reply = FilterChange(chatId, rest, lang, (rule, _) => rule with { Abuse = true }, "filterMarkedSpam");
+                    break;
+                case "grouprule":
+                    reply = FilterChange(chatId, rest, lang, (rule, _) => rule with { Abuse = false }, "filterMarkedGroupRule");
+                    break;
                 default:
-                    reply = Methods.GetLocaleString(lang, "filterUsage", TrialDays);
+                    reply = Usage(lang);
                     break;
             }
             if (reply != null) Bot.SendReply(reply, update);
-            if (verb is "add" or "live" or "trial" or "del") Service.LogCommand(update, message.Text);
+            if (verb is "add" or "live" or "trial" or "del" or "spam" or "grouprule") Service.LogCommand(update, message.Text);
         }
+
+        private static string Usage(XDocument lang) =>
+            Methods.GetLocaleString(lang, "filterUsage", TrialDays) + "\n" + Methods.GetLocaleString(lang, "filterUsageCategory");
 
         private static DateTimeOffset Seconds(DateTime utc) =>
             DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(utc, TimeSpan.Zero).ToUnixTimeSeconds());
@@ -90,11 +100,15 @@ namespace Enforcer5
 
         private static string FilterAdd(long chatId, long adminId, string rest, XDocument lang)
         {
+            // /filter add spam <target> ...: a rule about spam or abuse; any other is one of the group's own rules.
+            var (first, afterFirst) = FirstWord(rest);
+            var abuse = string.Equals(first, "spam", StringComparison.OrdinalIgnoreCase);
+            if (abuse) rest = afterFirst;
             var (target, afterTarget) = FirstWord(rest);
             var (action, pattern) = FirstWord(afterTarget);
             target = target.ToLowerInvariant();
             action = action.ToLowerInvariant();
-            if (pattern.Length == 0) return Methods.GetLocaleString(lang, "filterUsage", TrialDays);
+            if (pattern.Length == 0) return Usage(lang);
             if (!FilterRule.Targets.Contains(target))
                 return Methods.GetLocaleString(lang, "filterBadTarget", string.Join(", ", FilterRule.Targets));
             if (!DetectionPolicy.Actions.Contains(action))
@@ -109,7 +123,7 @@ namespace Enforcer5
                 return Methods.GetLocaleString(lang, "filterLimit", FilterRegex.MaxRulesPerGroup);
 
             var rule = new FilterRule(0, FilterRule.RegexKind, null, target, pattern, action, true, FilterRule.Trial,
-                Seconds(Clock.UtcNow.AddDays(TrialDays)), adminId);
+                Seconds(Clock.UtcNow.AddDays(TrialDays)), adminId, abuse);
             var saved = DetectionSettings.TryUpdate(chatId, p => p with
             {
                 Filters = p.Filters with { Rules = p.Filters.Rules.Append(rule).ToList() }
@@ -137,7 +151,7 @@ namespace Enforcer5
         private static string FilterTry(string rest, XDocument lang)
         {
             var (pattern, text) = RegexAndText(rest);
-            if (pattern.Length == 0 || text.Length == 0) return Methods.GetLocaleString(lang, "filterUsage", TrialDays);
+            if (pattern.Length == 0 || text.Length == 0) return Usage(lang);
             if (!FilterRegex.TryCompile(pattern, out _, out var error))
                 return Methods.GetLocaleString(lang, "filterInvalid", error);
             return Methods.GetLocaleString(lang, FilterRegex.Matches(pattern, text) ? "filterTryMatch" : "filterTryNoMatch");
@@ -155,7 +169,7 @@ namespace Enforcer5
         /// </summary>
         private static string FilterTest(long chatId, long adminId, string rest, XDocument lang)
         {
-            if (rest.Length == 0) return Methods.GetLocaleString(lang, "filterUsage", TrialDays);
+            if (rest.Length == 0) return Usage(lang);
             var rule = OwnRule(chatId, rest);
             var pattern = rule?.Pattern ?? rest;
             if (!FilterRegex.TryCompile(pattern, out _, out var error))
@@ -211,6 +225,7 @@ namespace Enforcer5
                     : r.TrialUntil > Clock.UtcNow ? Methods.GetLocaleString(lang, "filterModeTrial", r.TrialUntil.Value.UtcDateTime.ToString("yyyy-MM-dd"))
                     : Methods.GetLocaleString(lang, "filterModeTrialOver");
                 return Methods.GetLocaleString(lang, "filterListRule", r.Id, r.Target, r.Action, mode, s.Hits, s.Removed) +
+                       " " + Methods.GetLocaleString(lang, $"filterCategory_{r.Category}") +
                        $"\n<code>{WebUtility.HtmlEncode(r.Pattern)}</code>";
             });
             return Methods.GetLocaleString(lang, "filterListHeader") + "\n\n" + string.Join("\n\n", lines);

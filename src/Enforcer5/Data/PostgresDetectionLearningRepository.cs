@@ -93,24 +93,32 @@ WHERE g.group_id = x.group_id AND c.chat_id = g.chat_id AND a.account_id = x.acc
   AND c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId", new { ChatId = chatId, UserId = userId, At = Utc(at) });
         }
 
-        public async Task<bool> AnythingAgainstSinceAsync(long chatId, long userId, DateTimeOffset since)
+        public async Task<bool> AbuseSinceAsync(long chatId, long userId, DateTimeOffset since)
         {
             await using var connection = await Database.OpenConnectionAsync();
             return await connection.ExecuteScalarAsync<bool>(@"
-SELECT EXISTS (SELECT 1 FROM detections x" + Member + @" AND x.detected_at >= @Since)
-    OR EXISTS (SELECT 1 FROM member_labels x" + Member + @" AND x.label = 'bad' AND x.decided_at >= @Since)",
+SELECT EXISTS (SELECT 1 FROM detections x" + Member + @" AND x.detected_at >= @Since AND x.category = 'abuse')
+    OR EXISTS (SELECT 1 FROM member_labels x" + Member + @" AND x.label = 'bad' AND x.decided_at >= @Since AND x.category = 'abuse')",
                 new { ChatId = chatId, UserId = userId, Since = Utc(since) });
         }
 
-        public async Task<IReadOnlyList<string>> SignsBetweenAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to,
-            IReadOnlyCollection<string> signs)
+        public async Task<IReadOnlyList<string>> AbuseSignsBetweenAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to)
         {
             await using var connection = await Database.OpenConnectionAsync();
             return (await connection.QueryAsync<string>(@"
 SELECT x.sign FROM detections x" + Member + @"
-  AND x.detected_at > @From AND x.detected_at <= @To AND (x.sign = ANY(@Signs) OR x.sign LIKE 'filter:%')
+  AND x.detected_at > @From AND x.detected_at <= @To AND x.category = 'abuse'
 GROUP BY x.sign ORDER BY min(x.detected_at)",
-                new { ChatId = chatId, UserId = userId, From = Utc(from), To = Utc(to), Signs = signs.ToArray() })).ToList();
+                new { ChatId = chatId, UserId = userId, From = Utc(from), To = Utc(to) })).ToList();
+        }
+
+        public async Task<(int Abuse, int GroupRules)> RecordAsync(long chatId, long userId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return await connection.QuerySingleAsync<(int, int)>(@"
+SELECT count(*) FILTER (WHERE x.category = 'abuse')::int, count(*) FILTER (WHERE x.category = 'group')::int
+FROM member_labels x" + Member + @" AND x.label = 'bad' AND x.undone_at IS NULL AND x.decided_at >= @Since",
+                new { ChatId = chatId, UserId = userId, Since = Utc(since) });
         }
 
         public async Task<long> AddAdjustmentAsync(long chatId, string kind, string reason, int? fromValue, int? fromDays, int? toValue,
@@ -205,7 +213,7 @@ WITH decided AS (
     JOIN telegram_chats c ON c.chat_id = g.chat_id
     WHERE c.telegram_chat_id = @ChatId AND l.decided_at >= @Since AND l.account_id IS NOT NULL
       AND ((l.label = 'bad' AND l.action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute')
-            AND l.source IN ('command', 'button', 'report', 'app', 'raid'))
+            AND l.source IN ('command', 'button', 'report', 'app', 'raid') AND l.category = 'abuse')
            OR l.action = 'fine')
 )
 SELECT max(d.score_after), x.bad

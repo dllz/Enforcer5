@@ -28,7 +28,11 @@ namespace Enforcer5.Data
         DateTimeOffset? MemberSince,
         string Evidence,
         string Edition,
-        DateTimeOffset At);
+        DateTimeOffset At)
+    {
+        /// <summary><see cref="SignCategory"/>: abuse, or the group's own rules.</summary>
+        internal string Category { get; init; } = SignCategory.Abuse;
+    }
 
     /// <summary>
     /// A decision about a member, as recorded in <c>member_labels</c>: what was done (or undone), by
@@ -49,7 +53,14 @@ namespace Enforcer5.Data
         string Reason,
         string Key,
         string Edition,
-        DateTimeOffset At);
+        DateTimeOffset At)
+    {
+        /// <summary>The admin's reason names spam, ads, scams and the like (<see cref="AbuseWords"/>): abuse, whatever the signs.</summary>
+        internal bool ReasonIsAbuse { get; init; }
+    }
+
+    /// <summary>A decision as recorded: its id, and what it was about (abuse, group, or null when not known).</summary>
+    internal sealed record RecordedLabel(long Id, string Category);
 
     /// <summary>
     /// What Detection learns from: every sign that fired (<c>detections</c>) and every decision about a
@@ -65,7 +76,7 @@ namespace Enforcer5.Data
         Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since);
 
         /// <summary>Records a decision and links it to the member's detections. Its id; null when the other edition recorded it first.</summary>
-        Task<long?> RecordLabelAsync(LabelEvent label);
+        Task<RecordedLabel> RecordLabelAsync(LabelEvent label);
 
         /// <summary>
         /// Names and usernames of the group's members seen since <paramref name="since"/> (joined, or

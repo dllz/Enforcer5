@@ -418,6 +418,19 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
      with no sign, warn or action against them, the admins are asked once (again 30 days after Keep as new).
    - Nightly work runs each hour from 03:00 UTC; with both editions in a group, whichever claims the day
      (`LearnedOn`) does it, and only an edition that is in the group.
+   - **7c, abuse or the group's own rules** (Daniel, 2026-10-28: a player can be trusted to post safely
+     without being trusted to keep a game's rules). Every sign has a kind (`SignCatalog`, `SignCategory`):
+     *abuse* (newcomer signs, impersonation, banned media, edits, raid links, mass adds, and the presets
+     lookalikes, invisible characters, invite links, phone numbers, crypto wallets, staff words) or *group*
+     (flood, media lock, the length checks, inline bots, sticker packs, channel posts, the script presets
+     Arabic, RTL, Cyrillic, CJK, Hebrew, Devanagari, and an admin's own `/filter` rule unless it is marked
+     with `/filter add spam …` or `/filter spam <id>`). Later: hate and toxic speech are group rules. Stored
+     on `detections.category`, as the group's settings said then. Every decision gets one
+     (`member_labels.category`): abuse when the admin's reason names spam, ads, scams, porn or raids
+     (`AbuseWords`, 9 languages; only the kind is kept), else from the signs of the day before (abuse wins),
+     a warn being a group rule, null when nothing is known; a sign written after the decision updates it.
+     Only abuse raises the established level, counts for the report level and keeps a member set back to
+     new from being offered back. `/user` shows both records for the last 90 days.
    - The number of members who become new on a raise is not shown: message counts before the PostgreSQL
      rollout (25 Oct) are only in Redis, so it cannot be counted cheaply.
 8. Edit rules.

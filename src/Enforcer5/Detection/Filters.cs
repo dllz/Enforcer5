@@ -50,9 +50,15 @@ namespace Enforcer5.Detection
     /// </summary>
     /// <param name="Id">The row's <c>filter_id</c>; 0 until saved.</param>
     /// <param name="Mode">live, or trial: recorded in <c>detections</c> and never acted on.</param>
+    /// <param name="Abuse">An admin's own rule marked as being about spam or abuse (/filter spam); by default it is one of the group's own rules.</param>
     internal sealed record FilterRule(long Id, string Kind, string Preset, string Target, string Pattern, string Action,
-        bool Enabled, string Mode, DateTimeOffset? TrialUntil, long? CreatedBy)
+        bool Enabled, string Mode, DateTimeOffset? TrialUntil, long? CreatedBy, bool Abuse = false)
     {
+        /// <summary><see cref="SignCategory"/> of what it finds.</summary>
+        internal string Category => Kind == PresetKind
+            ? FilterPresets.Get(Preset)?.Category ?? SignCategory.GroupRule
+            : Abuse ? SignCategory.Abuse : SignCategory.GroupRule;
+
         internal const string PresetKind = "preset";
         internal const string RegexKind = "regex";
         internal const string Live = "live";
@@ -92,7 +98,9 @@ namespace Enforcer5.Detection
     }
 
     /// <summary>A prepared rule an admin switches on from the menu.</summary>
-    internal sealed record FilterPreset(string Name, FilterTarget Targets, Func<string, bool> Matches);
+    /// <param name="Category">A script is a group's choice of language; links, numbers, wallets and disguised names are abuse.</param>
+    internal sealed record FilterPreset(string Name, FilterTarget Targets, Func<string, bool> Matches,
+        string Category = SignCategory.GroupRule);
 
     /// <summary>
     /// The prepared rules (design section 5), in menu order. Script presets match any letter of the
@@ -113,12 +121,12 @@ namespace Enforcer5.Detection
             new FilterPreset("cjk", TextAndName, t => AnyRune(t, IsCjk)),
             new FilterPreset("hebrew", TextAndName, t => AnyRune(t, r => r.Value is >= 0x0590 and <= 0x05FF or >= 0xFB1D and <= 0xFB4F)),
             new FilterPreset("devanagari", TextAndName, t => AnyRune(t, r => r.Value is >= 0x0900 and <= 0x097F or >= 0xA8E0 and <= 0xA8FF)),
-            new FilterPreset("lookalikes", TextAndName, MixesLookalikes),
-            new FilterPreset("zero_width", TextAndName, HasInvisible),
-            new FilterPreset("invite_link", FilterTarget.Text, HasInviteLink),
-            new FilterPreset("phone", FilterTarget.Text, HasPhoneNumber),
-            new FilterPreset("crypto", FilterTarget.Text, HasWallet),
-            new FilterPreset("staff_words", FilterTarget.Name | FilterTarget.Username, HasStaffWord)
+            new FilterPreset("lookalikes", TextAndName, MixesLookalikes, SignCategory.Abuse),
+            new FilterPreset("zero_width", TextAndName, HasInvisible, SignCategory.Abuse),
+            new FilterPreset("invite_link", FilterTarget.Text, HasInviteLink, SignCategory.Abuse),
+            new FilterPreset("phone", FilterTarget.Text, HasPhoneNumber, SignCategory.Abuse),
+            new FilterPreset("crypto", FilterTarget.Text, HasWallet, SignCategory.Abuse),
+            new FilterPreset("staff_words", FilterTarget.Name | FilterTarget.Username, HasStaffWord, SignCategory.Abuse)
         };
 
         private static readonly Dictionary<string, FilterPreset> ByName = All.ToDictionary(p => p.Name);

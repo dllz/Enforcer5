@@ -46,6 +46,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established')");
                     table.HasCheckConstraint("member_labels_edition_check", "edition IN ('normal', 'premium')");
                     table.HasCheckConstraint("member_labels_undone_check", "(undone_at IS NULL) = (undone_by_label_id IS NULL)");
+                    table.HasCheckConstraint("member_labels_category_check", "category IS NULL OR category IN ('abuse', 'group')");
                 });
                 entity.HasKey(x => x.LabelId);
                 entity.Property(x => x.LabelId).UseIdentityAlwaysColumn();
@@ -73,6 +74,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("detections_trust_check", "trust_level IS NULL OR trust_level IN ('admin', 'approved', 'established', 'new')");
                     table.HasCheckConstraint("detections_edition_check", "edition IN ('normal', 'premium')");
                     table.HasCheckConstraint("detections_score_check", "score_before >= 0 AND score_after >= score_before");
+                    table.HasCheckConstraint("detections_category_check", "category IS NULL OR category IN ('abuse', 'group')");
                 });
                 entity.HasKey(x => x.DetectionId);
                 entity.Property(x => x.DetectionId).UseIdentityAlwaysColumn();
@@ -207,6 +209,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("group_filters_limits_check", "(max_characters IS NULL OR max_characters > 0) AND (max_lines IS NULL OR max_lines > 0)");
                     table.HasCheckConstraint("group_filters_trial_check", "mode <> 'trial' OR trial_until IS NOT NULL");
                     table.HasCheckConstraint("group_filters_hits_check", "hits >= 0");
+                    table.HasCheckConstraint("group_filters_category_check", "category IS NULL OR category IN ('abuse', 'group')");
                 });
                 entity.HasKey(x => x.FilterId);
                 entity.Property(x => x.FilterId).UseIdentityAlwaysColumn();

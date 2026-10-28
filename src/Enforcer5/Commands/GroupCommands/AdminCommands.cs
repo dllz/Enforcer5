@@ -109,6 +109,8 @@ namespace Enforcer5
         /// what that is based on: their messages, how long they have been here, and what this group
         /// asks of an established member.
         /// </summary>
+        private const int RecordDays = 90;
+
         private static string TrustText(long chatId, long userId, System.Xml.Linq.XDocument lang)
         {
             try
@@ -124,6 +126,21 @@ namespace Enforcer5
                         untrusted.UtcDateTime.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture));
                 if (d.Usual is { } usual) text += "\n" + Methods.GetLocaleString(lang, "trustLearnedLine", usual.Messages, usual.Days);
                 if (d.InSlowLane) text += "\n" + Methods.GetLocaleString(lang, "trustSlowLane");
+                // Two records (step 7c): spam and abuse, which is what trust is about, and the group's own rules.
+                if (Enforcer5.Storage.PostgresStorage.Ready)
+                {
+                    try
+                    {
+                        var (abuse, rules) = Enforcer5.Data.Repositories.DetectionLearning
+                            .RecordAsync(chatId, userId, new DateTimeOffset(Clock.UtcNow.AddDays(-RecordDays), TimeSpan.Zero)).GetAwaiter().GetResult();
+                        text += "\n" + Methods.GetLocaleString(lang, "userRecord", RecordDays, abuse, rules);
+                    }
+                    catch (Exception e)
+                    {
+                        // /user without the record.
+                        ErrorReporter.Report(e, $"Reading the record of {userId} in {chatId}");
+                    }
+                }
                 return text;
             }
             catch (Exception e)

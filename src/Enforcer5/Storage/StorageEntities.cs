@@ -398,6 +398,9 @@ namespace Enforcer5.Storage
 
         /// <summary>When the admins were told the rule's trial is over (build step 7); cleared when the trial is extended.</summary>
         public DateTimeOffset? TrialNotifiedAt { get; set; }
+
+        /// <summary>An admin's own rule: abuse (marked with /filter spam) or group, the default (step 7c).</summary>
+        public string Category { get; set; }
     }
 
     /// <summary>
@@ -510,6 +513,9 @@ namespace Enforcer5.Storage
         public long? LabelId { get; set; }
         public long? DecidedByAccountId { get; set; }
         public DateTimeOffset? DecidedAt { get; set; }
+
+        /// <summary>abuse or group (step 7c): what the sign is about, as the group's settings said then.</summary>
+        public string Category { get; set; }
     }
 
     /// <summary>
@@ -539,5 +545,11 @@ namespace Enforcer5.Storage
         public string LabelKey { get; set; }
         public string Edition { get; set; }
         public DateTimeOffset DecidedAt { get; set; }
+
+        /// <summary>
+        /// abuse, group, or null when not known (step 7c): from the reason the admin gave, else the signs seen in
+        /// the day before, a warn being a group rule. Only abuse says anything about trust.
+        /// </summary>
+        public string Category { get; set; }
     }
 }

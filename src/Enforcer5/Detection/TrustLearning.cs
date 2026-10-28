@@ -18,8 +18,10 @@ namespace Enforcer5.Detection
     /// Detection learns two of a group's levels from what its admins decide, and tells them every time
     /// (build step 7b, Daniel 2026-10-28: "be transparent about the learning").
     /// <list type="bullet">
-    /// <item><b>Established.</b> An admin bans, kicks or mutes an established member after Detection saw a sign
-    /// about them in the day before (<see cref="TrustSigns"/>), or sets one back to new with /untrust: the
+    /// <item><b>Established</b> means safe to post, not keeping every rule of the group (step 7c): a member can be
+    /// trusted not to spam without being trusted to keep a game's rules. An admin bans, kicks or mutes an
+    /// established member for abuse (an abuse sign in the day before, <see cref="SignCategory"/>, or a reason
+    /// naming spam or ads, <see cref="AbuseWords"/>), or sets one back to new with /untrust: the
     /// group's established level goes halfway up towards that member's messages and days, at most
     /// <see cref="CapFactor"/> times the usual level (and <see cref="CapDaysFactor"/> times its days). A
     /// member already past that cap looks like a taken-over account: the level stays and the admins are told
@@ -64,23 +66,17 @@ namespace Enforcer5.Detection
         private static readonly string[] Strong = { "ban", "tempban", "kick", "mute", "tempmute" };
         private static readonly string[] AdminSources = { "command", "button", "report", "app", "raid" };
 
-        // Signs about how a member behaves in any group (flood) or about the group's own limits: they say
-        // nothing about whether "established" was set too low.
-        private static readonly string[] NotAboutTrust =
-            { SignCatalog.Flood.Name, SignCatalog.MediaLock.Name, SignCatalog.TextLength.Name, SignCatalog.NameLength.Name };
-
-        /// <summary>The signs that make an admin's decision about an established member a reason to raise the level.</summary>
-        internal static IReadOnlyCollection<string> TrustSigns =>
-            SignCatalog.All.Select(s => s.Name).Where(n => !NotAboutTrust.Contains(n)).ToList();
-
         // ------------------------------------------------------------------ established
 
         /// <summary>A decision was recorded (once, by one edition): learn from it if it says something.</summary>
-        internal static void Decided(LabelEvent label, long labelId)
+        internal static void Decided(LabelEvent label, RecordedLabel recorded)
         {
             if (label.Label != "bad" || !Strong.Contains(label.Action) || !AdminSources.Contains(label.Source)) return;
             if (label.ChatId > 0 || !PostgresStorage.Ready) return;
-            Bot.Dispatch(() => LearnFromDecisionAsync(label, labelId), "TrustLearning.Decided");
+            // About the group's own rules (a game rule, its language): says nothing about trust. Not known yet
+            // may still be abuse: the signs from just before are written once a minute.
+            if (recorded.Category == SignCategory.GroupRule && !label.ReasonIsAbuse) return;
+            Bot.Dispatch(() => LearnFromDecisionAsync(label, recorded.Id), "TrustLearning.Decided");
         }
 
         private static async Task LearnFromDecisionAsync(LabelEvent label, long labelId)
@@ -94,9 +90,9 @@ namespace Enforcer5.Detection
                 if (await MemberTrust.OfAsync(chatId, userId) != TrustLevel.Established) return;
                 // Detections are written once a minute: what was seen just before the decision first.
                 await DetectionRecorder.FlushAsync();
-                var signs = await Repositories.DetectionLearning.SignsBetweenAsync(chatId, userId, label.At - SignsBefore,
-                    label.At.AddSeconds(1), TrustSigns);
-                if (signs.Count == 0) return;
+                var signs = await Repositories.DetectionLearning.AbuseSignsBetweenAsync(chatId, userId, label.At - SignsBefore,
+                    label.At.AddSeconds(1));
+                if (signs.Count == 0 && !label.ReasonIsAbuse) return;
                 await RaiseAsync(chatId, userId, label.Action, signs, labelId, "decision");
             }
             catch (Exception e)
@@ -180,10 +176,13 @@ namespace Enforcer5.Detection
             var id = await Repositories.DetectionLearning.AddAdjustmentAsync(chatId, Adjustment.Established, reason, engine.TrustMessages,
                 engine.TrustDays, to.Messages, to.Days, userId, labelId, !watching, now);
 
-            var text = signs.Count > 0
+            // What made it abuse: the signs seen, or the reason the admin gave.
+            var why = signs.Count > 0
+                ? string.Join(", ", signs.Select(sign => DetectionReports.SignLabel(lang, sign).FormatHTML()))
+                : Methods.GetLocaleString(lang, "learnByReason");
+            var text = reason == "decision"
                 ? Methods.GetLocaleStringNoFormat(lang, "learnRaised", title.FormatHTML(), ActionWord(lang, action), who, messages, daysText,
-                    string.Join(", ", signs.Select(sign => DetectionReports.SignLabel(lang, sign).FormatHTML())), to.Messages, to.Days,
-                    current.Messages, current.Days)
+                    why, to.Messages, to.Days, current.Messages, current.Days)
                 : Methods.GetLocaleStringNoFormat(lang, "learnRaisedUntrust", title.FormatHTML(), who, messages, daysText, to.Messages, to.Days,
                     current.Messages, current.Days);
             await NotifyAsync(chatId, Watching(lang, text, engine, watching), watching ? null : id);
@@ -468,7 +467,8 @@ namespace Enforcer5.Detection
                 var (messages, _) = await MemberTrust.CountsAsync(chatId, o.UserId);
                 var since = messages - o.MessagesAtSet;
                 if (since < MemberTrust.Thresholds(chatId).Messages) continue;
-                if (await Repositories.DetectionLearning.AnythingAgainstSinceAsync(chatId, o.UserId, o.SetAt)) continue;
+                // A warn or a game rule broken since is the group's business, not a reason to distrust them.
+                if (await Repositories.DetectionLearning.AbuseSinceAsync(chatId, o.UserId, o.SetAt)) continue;
                 await Repositories.DetectionLearning.MarkRestorePromptedAsync(chatId, o.UserId, now);
                 TrustOverrides.Prompted(chatId, o.UserId, now);
 
