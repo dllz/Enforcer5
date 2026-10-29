@@ -1179,6 +1179,9 @@ $title - заменяется названием группы.
   <string key="logSettingChanged">
     <value>{0} ({1}) изменил(а) {2} в {3}: {4} → {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) нажал(а) «{2}» в {3}</value>
+  </string>
   <string key="settingFloodLimit">
     <value>Лимит флуда</value>
   </string>

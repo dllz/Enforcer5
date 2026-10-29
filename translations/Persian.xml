@@ -1428,6 +1428,9 @@ exaple: /{0}
   <string key="logSettingChanged">
     <value>{0} ({1}) تنظیم {2} را در {3} تغییر داد: {4} ← {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) در {3} دکمهٔ «{2}» را زد</value>
+  </string>
   <string key="settingFloodLimit">
     <value>حد اسپم</value>
   </string>

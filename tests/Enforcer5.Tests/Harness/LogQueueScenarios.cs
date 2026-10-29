@@ -50,7 +50,8 @@ namespace Enforcer5.Tests.Harness
             var posts = LogPosts(chat).Skip(before).ToArray();
             Assert.AreEqual(1, posts.Length, "posted once the storm is over");
             Assert.IsTrue(posts[0].At.UtcDateTime >= pressed.AddMinutes(1));
-            StringAssert.Contains(posts[0].Text, "editstoggle");
+            StringAssert.Contains(posts[0].Text, "changed Late edits in");
+            StringAssert.Contains(posts[0].Text, ": On → Off");
             Assert.AreEqual(0, LogQueue.Count);
             AssertNoErrors(chat);
         }
@@ -76,6 +77,31 @@ namespace Enforcer5.Tests.Harness
             StringAssert.Contains(post.Text, "<a href=");
             Assert.AreEqual(0, LogQueue.Count);
             Assert.AreEqual(0, chat.Hashes.All(Repositories_LogKey()).Count, "the journal is emptied");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task OpeningScreens_IsNotLogged_AndAnActionSaysWhichButton()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            WithLogChannel(chat);
+            await chat.SendAsync(admin, "/menu");
+            var menu = chat.Telegram.SentMessages.Last(m => m.Chat.Id == admin.Id);
+            var before = LogPosts(chat).Length;
+
+            await chat.PressDataAsync(admin, menu, $"detectionmenu:{chat.ChatId}");
+            await chat.PressDataAsync(admin, menu, $"editsmenu:{chat.ChatId}");
+            await chat.PressDataAsync(admin, menu, $"detectionmenu:{chat.ChatId}");
+            Assert.AreEqual(before, LogPosts(chat).Length, "opening screens is not logged");
+
+            var live = menu.ReplyMarkup.InlineKeyboard
+                .SelectMany(r => r).FirstOrDefault(b => b.CallbackData == $"detectionmode:{chat.ChatId}:live");
+            Assert.IsNotNull(live, "the Detection screen offers Go live");
+            await chat.PressDataAsync(admin, menu, live.CallbackData);
+            var post = LogPosts(chat).Skip(before).Single();
+            StringAssert.Contains(post.Text, $"pressed “{live.Text}” in");
+            Assert.IsFalse(post.Text.Contains("detectionmode:"), post.Text);
             AssertNoErrors(chat);
         }
 

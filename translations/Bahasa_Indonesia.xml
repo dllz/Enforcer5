@@ -1677,6 +1677,12 @@
   <string key="logSettingChanged">
     <value>{0} ({1}) mengubah {2} di {3}: {4} → {5}</value>
   </string>
+  
+  <string key="logButtonPressed">
+  
+    <value>{0} ({1}) menekan “{2}” di {3}</value>
+  
+  </string>
   <string key="settingFloodLimit">
     <value>Batas flood</value>
   </string>

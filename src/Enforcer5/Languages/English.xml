@@ -1199,6 +1199,12 @@
   <string key="logMessageCallback">
     <value>{0} ({1}) used {2} in {3}</value>
   </string>
+  <string key="logSettingChanged">
+    <value>{0} ({1}) changed {2} in {3}: {4} → {5}</value>
+  </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) pressed “{2}” in {3}</value>
+  </string>
 
   <string key="welcomeReset">
     <value>The welcome message was set to default.</value>

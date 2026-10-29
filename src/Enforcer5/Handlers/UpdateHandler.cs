@@ -979,6 +979,9 @@ namespace Enforcer5.Handlers
                         }
                         Interlocked.Increment(ref Bot.CommandsReceived);
                         Log(update, callbacks);
+                        // The menu as the admin saw it: the redraw may replace the message's keyboard.
+                        var shown = (update.Message?.ReplyMarkup, update.Message?.Text);
+                        var capture = MenuCapture.Begin();
                         try
                         {
                             callbacks.Method.Invoke(update, args);
@@ -987,10 +990,14 @@ namespace Enforcer5.Handlers
                         {
                             ErrorReporter.Report(e, $"Callback {callbacks.Trigger}");
                         }
+                        finally
+                        {
+                            MenuCapture.End();
+                        }
                         // After the button has done its work, and queued (LogQueue): a busy log channel
                         // never holds up the menu.
                         if (logGroup is { } group)
-                            Service.LogCallback(group, update.From, update.Data, update.Message);
+                            Service.LogCallback(group, update.From, update.Data, update.Message, shown, capture.Markup);
                     }
                 }
                 catch (Exception e)

@@ -46,6 +46,7 @@ namespace Enforcer5.Helpers
             // as running until the call is done, not only while it waits for its slot: otherwise the
             // test harness saw it as finished the moment its wait ended and moved time on before the
             // request went out.
+            MenuCapture.Saw(request);
             var unit = Bot.CurrentWork;
             unit?.WaitStarted();
             try

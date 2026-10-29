@@ -1444,6 +1444,9 @@
   <string key="logSettingChanged">
     <value>{0} ({1}) alterou {2} em {3}: {4} → {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) tocou em “{2}” em {3}</value>
+  </string>
   <string key="settingFloodLimit">
     <value>Limite de flood</value>
   </string>

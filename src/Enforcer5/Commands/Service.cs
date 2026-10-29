@@ -449,11 +449,15 @@ defSpamValue = 3;
         /// callback carries one, the affected user. Names come from the Redis caches CollectStats
         /// maintains, so no Telegram calls are made; the ID is the fallback.
         /// </summary>
-        public static void LogCallback(long chatId, User admin, string callbackData, Message buttonMessage = null)
+        public static void LogCallback(long chatId, User admin, string callbackData, Message buttonMessage = null,
+            (InlineKeyboardMarkup Keys, string Text) shown = default, InlineKeyboardMarkup redrawn = null)
         {
             var target = "";
             var parts = callbackData.Split(':');
             if (SelfLoggingCallbacks.Contains(parts[0])) return;
+            // A menu button: what it changed, read off the menu ("changed Late edits: On → Off").
+            if (!UserTargetCallbacks.Contains(parts[0]) && !ReportCallbacks.ContainsKey(parts[0])
+                && MenuChangeLog.Log(chatId, admin, callbackData, shown.Keys, shown.Text, redrawn)) return;
             if (parts.Length >= 3 && UserTargetCallbacks.Contains(parts[0]) && long.TryParse(parts[2], out var targetId))
                 target = GetCachedUserName(targetId);
             LogCommand(chatId, admin.Id, Methods.FormatHTML(admin.FirstName), GetCachedGroupName(chatId), Methods.FormatHTML(callbackData), target,

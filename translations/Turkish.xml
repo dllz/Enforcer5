@@ -1457,6 +1457,9 @@
   <string key="logSettingChanged">
     <value>{0} ({1}), {3} grubunda {2} ayarını değiştirdi: {4} → {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}), {3} içinde “{2}” düğmesine bastı</value>
+  </string>
   <string key="settingFloodLimit">
     <value>Flood sınırı</value>
   </string>

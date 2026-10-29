@@ -1031,6 +1031,9 @@ UPDATE LOG
   <string key="logSettingChanged">
     <value>{0}（{1}）喺 {3} 將 {2} 由 {4} 改成 {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0}（{1}）喺 {3} 撳咗「{2}」</value>
+  </string>
   <string key="settingFloodLimit">
     <value>洗版上限</value>
   </string>

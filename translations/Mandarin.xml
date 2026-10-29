@@ -1139,6 +1139,9 @@ Example:
   <string key="logSettingChanged">
     <value>{0}（{1}）在 {3} 将 {2} 从 {4} 改为 {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0}（{1}）在 {3} 中点击了“{2}”</value>
+  </string>
   <string key="settingFloodLimit">
     <value>刷屏上限</value>
   </string>

@@ -1488,6 +1488,9 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="logSettingChanged">
     <value>{0} ({1}) hat {2} in {3} geändert: {4} → {5}</value>
   </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) hat in {3} „{2}“ gedrückt</value>
+  </string>
   <string key="settingFloodLimit">
     <value>Spam-Limit</value>
   </string>
