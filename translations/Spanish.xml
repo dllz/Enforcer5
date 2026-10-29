@@ -2,7 +2,7 @@
 <strings>
   <language name="Español" base="Español" owner="BladeZero"/>
   <string key="statusKicked">
-    <value>{0} ha sido expulsado/a de este grupo.</value>
+    <value>{0} está baneado/a de este grupo. {1}</value>
   </string>
   <string key="statusLeft">
     <value>{0} dejó el grupo o fue expulsado/a.</value>
@@ -20,25 +20,28 @@
     <value>{0} es miembro del chat.</value>
   </string>
   <string key="userinfoGlobal">
-    <value><b>Información global de expulsiones</b>:\n</value>
+    <value><![CDATA[<b>Información global de baneos</b>:\n]]></value>
   </string>
   <string key="getkick">
-    <value>Kick: {0}</value>
+    <value>Expulsiones: {0}</value>
   </string>
   <string key="getban">
     <value>Ban: {0}</value>
   </string>
   <string key="gettempban">
-    <value>Tempban: {0}</value>
+    <value>Baneos temporales: {0}</value>
   </string>
   <string key="getwarn">
+    <value>Advertencias: {0}</value>
+  </string>
+  <string key="getgroupwarn">
     <value>Advertencias: {0}</value>
   </string>
   <string key="getMediaWarn">
     <value>Advertencia por multimedia: {0}</value>
   </string>
   <string key="userinfoGroup">
-    <value><b>Información del grupo {0}</b>:</value>
+    <value><![CDATA[<b>Información del grupo {0}</b>:]]></value>
   </string>
   <string key="getrtl">
     <value>Eliminado por caracteres de derecha a izquierda: {0}</value>
@@ -51,6 +54,9 @@
   </string>
   <string key="getmedia">
     <value>Eliminado por multimedia prohibido: {0}</value>
+  </string>
+  <string key="getnsfwimage">
+    <value>Eliminados por imágenes NSFW: {0}</value>
   </string>
   <string key="getNothing">
     <value>Nada que mostrar</value>
@@ -65,10 +71,10 @@
     <value>No soy administrador de este chat. Necesito ser administrador para ejecutar ese comando</value>
   </string>
   <string key="noReply">
-	<value>Por favor, contesta a alguien para usar este comando</value>
+    <value>Por favor, contesta a alguien para usar este comando</value>
   </string>
   <string key="msgTooLong">
-	<value>El mensaje ocupa más de {0} caracteres. Por favor, acórtalo</value>
+    <value>El mensaje ocupa más de {0} caracteres. Por favor, acórtalo</value>
   </string>
   <string key="StartMe">
     <value>Iníciame</value>
@@ -77,7 +83,7 @@
     <value>Tú <b>no</b> eres administrador en este chat</value>
   </string>
   <string key="markdownBroken">
-    <value>El marcaje del texto no es consistente</value>
+    <value><![CDATA[El markdown de este texto está roto. Mira cómo usar markdown escribiendo <code>/help markdown</code>]]></value>
   </string>
   <string key="linkMissing">
     <value>Este grupo no tiene enlace</value>
@@ -89,8 +95,7 @@
     <value>Enlace configurado</value>
   </string>
   <string key="adminList">
-    <value><b>Creador</b>: {0}\n
-           <b>Administradores</b>:{1}</value>
+    <value><![CDATA[<b>Creador</b>: {0}\n<b>Admins</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
     <value>Hola {0} bienvenido/a a {1}</value>
@@ -102,10 +107,10 @@
     <value>No hay reglas, quémalo todo</value>
   </string>
   <string key="rules">
-    <value>\n<b>Reglas</b>:\n{0}</value>
+    <value><![CDATA[\n<b>Reglas</b>:\n{0}]]></value>
   </string>
   <string key="about">
-    <value>\n<b>Descripción</b>:\n{0}</value>
+    <value><![CDATA[\n<b>Descripción</b>:\n{0}]]></value>
   </string>
   <string key="RulesSet">
     <value>Se han fijado nuevas reglas</value>
@@ -120,7 +125,7 @@
     <value>No hay comandos guardados</value>
   </string>
   <string key="extraList">
-    <value>Lista de <b>comandos configurados</b>:\n{0}</value>
+    <value><![CDATA[Lista de <b>comandos configurados</b>:\n{0}]]></value>
   </string>
   <string key="extraDeleted">
     <value>El comando ha sido borrado</value>
@@ -150,10 +155,10 @@
     <value>Tu grupo ha sido baneado y no podra usar Werewolf Enforcer</value>
   </string>
   <string key="warnMaxKick">
-    <value>Usuario/a {0} <b>expulsado/a</b>: por superar el límite de advertencias.</value>
+    <value><![CDATA[Usuario/a {0} <b>expulsado/a</b>: alcanzó el máximo de advertencias]]></value>
   </string>
   <string key="warnMaxBan">
-    <value>Usuario {0} <b>baneado/a</b>: por superar el límite de advertencias</value>
+    <value><![CDATA[Usuario/a {0} <b>baneado/a</b>: alcanzó el máximo de advertencias]]></value>
   </string>
   <string key="resetWarn">
     <value>Reiniciar advertencias</value>
@@ -162,10 +167,10 @@
     <value>Eliminar advertencia</value>
   </string>
   <string key="warn">
-    <value>{0} <b>ha sido advertido/a.</b>\n<i>Número de advertencias</i>   <b>{1}</b>\n<i>Máximo permitido</i>   <b>{2}</b></value>
+    <value><![CDATA[{0} <b>ha sido advertido/a.</b>\n<i>Número de advertencias</i>   <b>{1}</b>\n<i>Máximo permitido</i>   <b>{2}</b>]]></value>
   </string>
   <string key="warnFlag">
-    <value>{0} <b>ha sido advertido/a por {1}.</b>\n<i>Número de advertencias</i>   <b>{2}</b>\n<i>Máximo permitido</i>   <b>{3}</b></value>
+    <value><![CDATA[{0} <b>ha sido advertido/a por {1}.</b>\n<i>Número de advertencias</i>   <b>{2}</b>\n<i>Máximo permitido</i>   <b>{3}</b>]]></value>
   </string>
   <string key="alreadyFlagged">
     <value>Mensaje ya reportado</value>
@@ -174,13 +179,16 @@
     <value>Ban</value>
   </string>
   <string key="kick">
-    <value>Kick</value>
+    <value>Expulsar</value>
   </string>
   <string key="Warn">
-    <value>Warn</value>
+    <value>Advertir</value>
   </string>
   <string key="reportAdmin">
     <value>{0}\n\n{1}\nID del reporte: #r{2}\n#SinResolver</value>
+  </string>
+  <string key="reportAdminReply">
+    <value>{0}\n\n{1}\nMensaje original {3}\nID del reporte: #r{2}\n#Unsolved</value>
   </string>
   <string key="reported">
     <value>Reportado!\n#ID del reporte: {0}</value>
@@ -216,13 +224,13 @@
     <value>No hay comando en la entrada</value>
   </string>
   <string key="Support">
-    <value><a href="https://telegram.me/werewolfsupport">Pulsa para obtener ayuda del grupo de soporte</a></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">Pulsa aquí para obtener ayuda del grupo de soporte</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>No se pudo obtener el ID de usuario</value>
   </string>
   <string key="globalBan">
-    <value>{0} ha sido automaticamente baneado/a por:{1}\nPuede reclamar en @werewolfsupport</value>
+    <value>{0} ha sido baneado/a automáticamente por: {1}\nPuede reclamar este baneo en {2}.</value>
   </string>
   <string key="goToMessage">
     <value>Ir al mensaje</value>
@@ -233,8 +241,8 @@
   <string key="userUnbanned">
     <value>Usuario desbaneado!</value>
   </string>
-  <string key="extraSaved">
-    <value>Este contenido ha sido guardado como respuesta a {0}</value>
+  <string key="extraMediaSaved">
+    <value>Este archivo multimedia se ha guardado como respuesta a {0}</value>
   </string>
   <string key="tooLong">
     <value>{0} es demasiado largo</value>
@@ -260,10 +268,10 @@
   <string key="inlineBan">
     <value>Baneado usando botones inline</value>
   </string>
-  <string key ="userBanned">
+  <string key="userBanned">
     <value>Usuario baneado</value>
   </string>
-  <string key ="userKicked">
+  <string key="userKicked">
     <value>Usuario expulsado</value>
   </string>
   <string key="NoLinkInputed">
@@ -278,7 +286,7 @@
   <string key="welcomeSet">
     <value>Bienvenida establecida por {0}</value>
   </string>
-  <string key ="mainMenu">
+  <string key="mainMenu">
     <value>
       Configuración de {0}.
 
@@ -295,7 +303,7 @@
       Otras opciones: para el resto de opciones, los iconos son descriptivos.
     </value>
   </string>
-  <string key ="WelcomeButton">
+  <string key="WelcomeButton">
     <value>Mensaje de Bienvenida</value>
   </string>
   <string key="ReportButton">
@@ -323,7 +331,7 @@
     <value>Árabe</value>
   </string>
   <string key="WarnsButton">
-    <value>Advertencias 👇🏼</value>
+    <value>Acción por advertencias: {0}</value>
   </string>
   <string key="closeButton">
     <value>Hecho</value>
@@ -396,16 +404,20 @@
   <string key="bannedForFlood">
     <value>{0} ha sido baneado/a por Flood</value>
   </string>
+  <string key="kickedForFlood">
+    <value>{0} ha sido expulsado/a por flood</value>
+  </string>
   <string key="bannedForRtl">
     <value>{0} ha sido baeado/a por texto de Derecha a Izquierda</value>
+  </string>
+  <string key="kickedForRtl">
+    <value>{0} ha sido expulsado/a por usar caracteres de derecha a izquierda</value>
   </string>
   <string key="bannedForNoEnglishScript">
     <value>{0} ha sido baneado/a por usar alfabeto no latino</value>
   </string>
-  <string key ="globalBanNotif">
-    <value>{0} ha sido baneado/a automaticamente por historial de: {1}
-			Puede reclamar el bloqueo en @werewolfsupport
-    </value>
+  <string key="globalBanNotif">
+    <value>{0} ha sido baneado/a automáticamente por su historial de: {1}\nPuede reclamar este baneo en {2}</value>
   </string>
   <string key="GetLang">
     <value>Qué archivo de idioma?</value>
@@ -420,14 +432,1394 @@
 	  El valor no se refiere a las advertencias normales con /warn
     </value>
   </string>
-<string key="groupLanguage">
-  <value>Idioma del grupo</value>
-</string>
-<string key="langMenu">
-  <value>Aquí puedes configurar el idioma de tu grupo.\nEl idioma actual es: <b>{0}</b></value>
-</string>
+  <string key="groupLanguage">
+    <value>Idioma del grupo</value>
+  </string>
+  <string key="langMenu">
+    <value>Aquí puedes configurar el idioma de tu grupo.\nEl idioma actual es: <b>{0}</b></value>
+  </string>
+  <string key="userUnblocked">
+    <value>Usuario desbloqueado</value>
+  </string>
+  <string key="userBlocked">
+    <value>Usuario bloqueado</value>
+  </string>
+  <string key="startMe">
+    <value>Primero tienes que iniciarme</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Esta es la configuración actual del grupo:</value>
+  </string>
+  <string key="userInfoGlobal">
+    <value>Información global del usuario</value>
+  </string>
+  <string key="backButton">
+    <value>Atrás</value>
+  </string>
+  <string key="mediaNotAllowed">
+    <value>Este tipo de archivo multimedia no está permitido. Has recibido una advertencia. {0} de {1} advertencias</value>
+  </string>
+  <string key="kickedformedia">
+    <value>{0} ha sido expulsado/a por enviar archivos multimedia no permitidos</value>
+  </string>
+  <string key="bannedformedia">
+    <value>{0} ha sido baneado/a por enviar archivos multimedia no permitidos</value>
+  </string>
+  <string key="kickedForNoEnglishScript">
+    <value>{0} ha sido expulsado/a por usar caracteres no latinos</value>
+  </string>
+  <string key="bannedfornsfwimage">
+    <value>{0} ha sido baneado/a por publicar una imagen no apta para el trabajo (NSFW).\nLa imagen tenía un {1}% de probabilidad de ser NSFW</value>
+  </string>
+  <string key="kickedfornsfwimage">
+    <value>{0} ha sido expulsado/a por publicar una imagen no apta para el trabajo (NSFW).\nLa imagen tenía un {1}% de probabilidad de ser NSFW</value>
+  </string>
+  <string key="nsfwMenu">
+    <value>
+      Elige si el usuario es expulsado o baneado.
+      Activa o desactiva el sistema de detección.
+      Ten en cuenta que cada clave de API está limitada a 5000 imágenes al mes; es tu responsabilidad cambiar la clave de API de tu grupo cuando se agote
+
+      Este sistema solo banea imágenes con un 95% o más de probabilidad de ser NSFW. Usa lo último en tecnología de visión por computadora, pero como este campo aún es joven, no es perfecto.
+
+      Aquí tienes una publicación que explica exactamente cómo configurar la detección NSFW:
+      http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
+
+      Tus opciones están abajo:
+    </value>
+  </string>
+  <string key="nsfwButton">
+    <value>Detección NSFW</value>
+  </string>
+  <string key="getmaxwarn">
+    <value>Eliminados por máximo de advertencias: {0}</value>
+  </string>
+  <string key="evlavated">
+    <value>Usuario: {0} ha recibido derechos #elevated de {1}</value>
+  </string>
+  <string key="auth">
+    <value>Usuario: {0} ha recibido derechos #auth de {1}</value>
+  </string>
+  <string key="dauth">
+    <value>Usuario: a {0} le ha retirado los derechos #auth {1}</value>
+  </string>
+  <string key="devlavated">
+    <value>Usuario: a {0} le ha retirado los derechos #elevated {1}</value>
+  </string>
+  <string key="currentMods">
+    <value><![CDATA[\n<b>Usuarios elevados actuales:</b>\n]]></value>
+  </string>
+  <string key="prevMods">
+    <value>Usuarios elevados temporalmente por otros usuarios</value>
+  </string>
+  <string key="helpNoRequest">
+    <value>
+      Enforcer es un bot diseñado para facilitar la administración de tus grupos. Para novedades, ve a https://t.me/{0}.
+      Para ello ofrece antispam, anti multimedia, baneos temporales, advertencias, respuestas a hashtags, etc.
+      * Este bot necesita ser admin del grupo para funcionar correctamente.
+      * Este bot funciona mejor en supergrupos.
+      * Se puede configurar enviándole /menu.
+      * Este bot tiene muchos comandos; para saber más sobre un comando concreto envía /help [comando], por ejemplo: /help menu. Para ver la lista de comandos envía /getcommands.
+      * Si aún necesitas ayuda, pulsa /support para unirte a nuestro grupo de soporte.
+    </value>
+  </string>
+  <string key="helpOptionNotImplemented">
+    <value>
+      La información sobre {0} aún no se ha escrito; únete al grupo de /support para saber más.
+    </value>
+  </string>
+  <string key="hcommandkickme">
+    <value>
+      Sirve para que el bot te saque de un grupo sin tener que pulsar salir del grupo. En los grupos a los que no puedes volver a unirte tras salir, esto te permitirá unirte de nuevo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandkick">
+    <value>
+      Sirve para sacar a un usuario de un grupo, pero le permite volver.
+      Se puede usar con un ID, un nombre de usuario o respondiendo a la persona que quieres expulsar.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandwarn">
+    <value>
+      Sirve para dar una advertencia a un usuario. Con el comando menu puedes configurar la acción que se toma al llegar al máximo de advertencias y cuántas advertencias puede recibir un usuario.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandban">
+    <value>
+      Sirve para banear a un usuario de un grupo (no puede volver). Si se usa respondiendo, puedes añadir un motivo para el baneo detrás de /{0}, que se mostrará en el comando status
+
+      Responde a un mensaje que alguien publicó como canal para banear ese canal del grupo. Telegram no muestra quién está detrás de un canal, así que lo que se banea es el canal.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [Motivo] respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+      /{0} respondiendo a un mensaje publicado como canal
+      /{0} [ID del canal]
+    </value>
+  </string>
+  <string key="hcommandunban">
+    <value>
+      Sirve para desbanear a un usuario de un grupo, lo que le permite volver si antes fue baneado/a o baneado/a temporalmente. También permite que un canal baneado vuelva a publicar en el grupo.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+      /{0} respondiendo a un mensaje publicado como canal
+      /{0} [ID del canal]
+    </value>
+  </string>
+  <string key="hcommandtempban">
+    <value>
+      Sirve para banear temporalmente a un usuario de un grupo; solo podrá volver cuando haya pasado el tiempo. El comando banea al usuario del grupo y lo desbanea pasado el tiempo indicado.
+      Uso:
+      Tienes que responder al usuario que quieres banear. Al usar el comando, escribe el número de minutos después del comando. Si no se indica un tiempo, el bot usa el valor predeterminado del grupo de /temptime, o un día si no hay ninguno. /tempbanlist muestra quién está baneado temporalmente y por cuánto tiempo.
+
+      Ejemplo:
+      /{0} 123 respondiendo a un usuario
+      /{0} respondiendo a un usuario
+    </value>
+  </string>
+  <string key="hcommandadmin">
+    <value>
+      Sirve para señalar un mensaje o llamar a los admins del grupo. Si respondes a un mensaje, se reenvía a los admins del grupo junto con el texto de tu mensaje. Si no respondes a nada, solo se envía tu mensaje.
+      Los admins reciben un menú con las acciones que pueden tomar. En los supergrupos puedes ir al mensaje.
+      Ejemplo:
+      @{0}
+      @{0} respondiendo a un usuario
+      @{0} [motivo]
+      @{0} [motivo] respondiendo a un usuario
+
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [motivo]
+      /{0} [motivo] respondiendo a un usuario
+    </value>
+  </string>
+  <string key="hcommandadminoff">
+    <value>
+      Hace que el bot deje de enviarte reportes. También se puede usar para otros admins, respondiendo o con su nombre de usuario o ID.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandadminon">
+    <value>
+      Hace que el bot vuelva a enviar reportes a un usuario si antes los había desactivado. También se puede usar para otros admins, respondiendo o con su nombre de usuario o ID
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandsolved">
+    <value>
+      Marca un mensaje reportado como resuelto para que los demás admins sepan que ya se ha atendido.
+
+      Ejemplo:
+      /{0} respondiendo al mensaje que contiene @admin
+      /{0} [ID del reporte]
+    </value>
+  </string>
+  <string key="hcommandreporton">
+    <value>
+      Permite que un usuario vuelva a reportar con @admin si antes estaba bloqueado.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandreportoff">
+    <value>
+      Impide que un usuario use @admin.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandrules">
+    <value>
+      Muestra las reglas del grupo que los admins establecieron antes con el comando setrules.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsetrules">
+    <value>
+      Establece las reglas del grupo. Los usuarios pueden verlas con el comando rules.
+
+      Ejemplo:
+      /{0} No seas una persona horrible y mala
+    </value>
+  </string>
+  <string key="hcommandabout">
+    <value>
+      Muestra la descripción del grupo que los admins establecieron antes con el comando setabout.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsetabout">
+    <value>
+      Establece una descripción del grupo, que los usuarios pueden ver con el comando about.
+
+      Ejemplo:
+      /{0} Un grupo para trolololololols
+    </value>
+  </string>
+  <string key="hcommandadminlist">
+    <value>
+      Muestra una lista de los admins y usuarios elevados del grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommands">
+    <value>
+      Guarda el mensaje al que respondes en tu chat privado con el bot.
+
+      Ejemplo:
+      /{0} respondiendo a un mensaje que quieres guardar
+    </value>
+  </string>
+  <string key="hcommandid">
+    <value>
+      Muestra el ID del chat del grupo, o el ID del usuario al que respondes.
+
+      Ejemplo:
+      /{0} respondiendo al mensaje de un usuario
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsupport">
+    <value>
+      Envía el enlace al grupo de soporte de Blackwolf.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommanduser">
+    <value>
+      Muestra información sobre un usuario en un grupo, como cuántas advertencias, expulsiones y baneos ha recibido en total y cuántos en este grupo.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandme">
+    <value>
+      Te da información sobre cuántas veces has sido advertido/a, expulsado/a, baneado/a, etc. en total. Te la envía por privado.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandextra">
+    <value>
+      Guarda un comando extra. Los comandos extra son comandos personalizados con una respuesta personalizada, que se activan con una sola palabra que empieza por #. Después, cualquiera puede enviar esa palabra y el bot responderá con la respuesta personalizada.
+
+      Ejemplo:
+      /{0} #blabla respondiendo a un texto o archivo multimedia
+      /{0} #blabla Esto es un extra
+    </value>
+  </string>
+  <string key="hcommandextralist">
+    <value>
+      Muestra una lista de todos los comandos extra del grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandextradel">
+    <value>
+      Elimina un comando extra definido anteriormente.
+
+      Ejemplo:
+      /{0} #blabla
+    </value>
+  </string>
+  <string key="hcommandlink">
+    <value>
+      Muestra el enlace del grupo. Solo funciona si un admin estableció antes el enlace con el comando setlink. Si se usa respondiendo en un supergrupo público, muestra el enlace del mensaje respondido.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un mensaje
+    </value>
+  </string>
+  <string key="hcommandsetlink">
+    <value>
+      Establece el enlace de este grupo, necesario para usar el comando link. Si es un grupo privado, debe ir seguido del enlace del grupo.
+
+      Ejemplo:
+      /{0} [Enlace del grupo] (grupo privado)
+      /{0} (grupo público)
+    </value>
+  </string>
+  <string key="hcommandstatus">
+    <value>
+      Muestra el estado actual del usuario en ese grupo: miembro, admin, creador, expulsado, baneado, nunca visto.
+
+      Ejemplo:
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandwelcome">
+    <value>
+      Define un mensaje de bienvenida para el grupo, que se envía cada vez que un nuevo usuario se une o es añadido al grupo. Sin embargo, si varios usuarios se unen seguidos, solo se enviará un mensaje de bienvenida por minuto en el grupo para evitar spam.
+
+      En el texto puedes usar markdown (usa "/help markdown" para más información) y lo siguiente:
+
+      $name - Se reemplaza por el nombre del nuevo usuario
+      $username - Se reemplaza por el nombre de usuario del nuevo usuario
+      $id - Se reemplaza por el ID del nuevo usuario
+      $title - Se reemplaza por el nombre del grupo
+
+      ¡También puedes poner un GIF como mensaje de bienvenida respondiendo a él con el comando!
+
+      Y si quieres, puedes componer tu mensaje de bienvenida con el texto de descripción [a], las reglas [r] y la lista de admins [m]. Para ello, usa /welcome [letras]; por ejemplo, "/welcome ar" pondrá como mensaje de bienvenida la descripción más las reglas.
+
+      Para volver al mensaje de bienvenida predeterminado, usa "/welcome no"
+
+      Ejemplo:
+      /{0} ¡Bienvenido/a $name a $title!
+      /{0} respondiendo a un gif
+      /{0} [Texto] respondiendo a un gif
+      /{0} ar
+      /{0} m
+      /{0} [cualquier combinación de las letras a, r y m]
+      /{0} no
+    </value>
+  </string>
+  <string key="hcommanddisablewatch">
+    <value>
+      Desactiva el antiflood, la detección de persa, el anti NSFW, el límite de longitud de nombre / mensaje y todos los demás filtros para un usuario. Los admins deberían usarlo en el grupo para que el bot los ignore.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandenablewatch">
+    <value>
+      Activa todos los filtros para un usuario; solo es necesario si antes se usó disablewatch con ese usuario.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandcheck">
+    <value>
+      Muestra cuántos mensajes ha enviado hasta ahora un usuario en este grupo.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandelevate">
+    <value>
+      Eleva a ese usuario a admin del grupo. Si lo usa un admin o un usuario elevado, dura solo 30 minutos; si lo usa el creador o un auth, es permanente. Los usuarios elevados tienen acceso a todos los comandos de admin, por ejemplo warn, kick, ban y tempban.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommanddeelevate">
+    <value>
+      Quita la elevación a un usuario elevado; solo para el creador y los auth. Después ya no podrá usar comandos de admin.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandelevatelog">
+    <value>
+      Muestra un registro de los usuarios elevados temporalmente por quienes no son auth. Muestra la hora, el usuario elevado y el admin que lo elevó.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandauth">
+    <value>
+      Da auth a un usuario. Esto significa que el bot lo verá como creador del grupo: podrá dar y quitar auth y elevar usuarios de forma permanente.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandblockelevate">
+    <value>
+      Impide que un admin eleve temporalmente a otros usuarios. Comando solo para auth y el creador. Normalmente, cualquier admin del grupo puede elevar usuarios durante 30 minutos; los auth pueden impedirlo con este comando.
+
+      Ejemplo:
+      /{0} respondiendo a un admin
+      /{0} [ID de usuario del admin]
+      /{0} [Nombre de usuario del admin]
+    </value>
+  </string>
+  <string key="hcommanddeauth">
+    <value>
+      Quita el auth a un usuario, de modo que ya no podrá dar ni quitar auth ni elevar a otros de forma permanente. Comando solo para auth.
+
+      Ejemplo:
+      /{0} respondiendo a un auth
+      /{0} [ID de usuario del auth]
+      /{0} [Nombre de usuario del auth]
+    </value>
+  </string>
+  <string key="hcommandmenu">
+    <value>
+      Te envía por privado un menú para cambiar toda la configuración del grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>
+      Te envía por privado un resumen de toda la configuración actual del grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandping">
+    <value>
+      Hace ping al bot para ver cuánto tarda en responder.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandgetcommands">
+    <value>
+      Muestra una lista de todos los comandos del bot. Ten en cuenta que algunos son solo para los admins globales del bot, así que no puedes usarlos.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandmarkdown">
+    <value>
+      <![CDATA[
+  <b>Cómo usar markdown:</b>
+
+
+  <b>NEGRITA</b> = &lt;b&gt;NEGRITA&lt;/b&gt;
+
+  <i>CURSIVA</i> = &lt;i&gt;CURSIVA&lt;/i&gt;
+
+  <a href="t.me/BlackWolfAnnouncements">ENLACE</a> = &lt;a href="t.me/BlackWolfAnnouncements"&gt;ENLACE&lt;/a&gt;
+
+  <code>MONOESPACIADO</code> = &lt;code&gt;MONOESPACIADO&lt;/code&gt;
+
+
+  ]]>
+    </value>
+  </string>
+  <string key="actionNotSettext">
+    <value>Configura la acción que debe tomar el bot cuando un usuario envía un mensaje demasiado largo</value>
+  </string>
+  <string key="getlongmessages">
+    <value>Eliminados por enviar mensajes largos: {0}</value>
+  </string>
+  <string key="kickformesslength">
+    <value>{0} ha sido expulsado/a por enviar mensajes demasiado largos.</value>
+  </string>
+  <string key="banformesslength">
+    <value>{0} ha sido baneado/a por enviar mensajes demasiado largos.</value>
+  </string>
+  <string key="actionNotSetname">
+    <value>Configura la acción que debe tomar el bot cuando un usuario tiene un nombre demasiado largo</value>
+  </string>
+  <string key="getnamelength">
+    <value>Eliminados por tener un nombre demasiado largo: {0}</value>
+  </string>
+  <string key="kickfornamelength">
+    <value>{0} ha sido expulsado/a por tener un nombre demasiado largo.</value>
+  </string>
+  <string key="banfornamelength">
+    <value>{0} ha sido baneado/a por tener un nombre demasiado largo.</value>
+  </string>
+  <string key="lengthButton">
+    <value>Auto</value>
+  </string>
+  <string key="nameSettingsHeader">
+    <value>Longitud del nombre</value>
+  </string>
+  <string key="textSettingsHeader">
+    <value>Longitud del mensaje</value>
+  </string>
+  <string key="lengthMenu">
+    <value>
+      Aquí puedes cambiar la configuración que determina cómo trata el bot los nombres y mensajes largos.
+
+      Puedes establecer el límite de caracteres enviando lo siguiente en el grupo:
+      /maxnl [número de caracteres] - para cambiar la longitud máxima de un nombre;
+      /maxtl [número de caracteres] - para cambiar el número máximo de caracteres de un mensaje;
+      /maxl [número de líneas] - para cambiar el número máximo de líneas permitidas en un mensaje.
+
+      Puedes establecer líneas y caracteres porque algunos spammers envían mensajes en blanco con muchas líneas. Estos mensajes no superan el límite de caracteres, pero siguen siendo spam.
+      --[Caracteres : líneas]-- se muestra en el botón
+    </value>
+  </string>
+  <string key="maxLength">
+    <value>Longitud máx.</value>
+  </string>
+  <string key="done">
+    <value>Hecho</value>
+  </string>
+  <string key="failed">
+    <value>Error</value>
+  </string>
+  <string key="gethelplist">
+    <value>Las consultas de ayuda de soporte actuales son:\n{0}</value>
+  </string>
+  <string key="hcommandleave">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandlook">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandunlook">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandblockp">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandallowp">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandauthnsfw">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommanddeauthnsfw">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandgetuser">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandhelp">
+    <value>
+      ¿Pides ayuda con el comando de ayuda? Un poco recursivo, pero:
+
+      El comando help sirve para obtener ayuda sobre un comando (como "/help warn") o sobre otros temas (como "/help markdown"). Puedes ver la lista de temas de ayuda con el comando /helplist. Si no se indica nada, se mostrará un mensaje de ayuda estándar.
+
+      Ejemplo:
+      /{0}
+      /{0} [comando (sin "/")]
+      /{0} [tema de ayuda de /helplist]
+    </value>
+  </string>
+  <string key="hcommandhelplist">
+    <value>
+      Muestra la lista de temas de ayuda actuales. Puedes usar el comando /help con cualquiera de estos temas para obtener ayuda sobre él. (Ejemplo: "/help warn").
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandmaxnl">
+    <value>
+      Define la longitud máxima del nombre de un usuario en ese grupo. Si el nombre de alguien es más largo, es expulsado/a, advertido/a o baneado/a automáticamente (se configura en /menu, en "Auto")
+
+      Ejemplo:
+      /{0} 50
+    </value>
+  </string>
+  <string key="hcommandmaxtl">
+    <value>
+      Define la longitud máxima de los mensajes en este grupo. Si alguien envía un mensaje con más caracteres, es expulsado/a, advertido/a o baneado/a automáticamente (se configura en /menu, en "Auto")
+
+      Ejemplo:
+      /{0} 1024
+    </value>
+  </string>
+  <string key="hcommandmaxl">
+    <value>
+      Define el número máximo de líneas de los mensajes en ese grupo. Si alguien envía un mensaje con más líneas, es expulsado/a, advertido/a o baneado/a automáticamente (se configura en /menu, en "Auto")
+
+      Ejemplo:
+      /{0} 50
+    </value>
+  </string>
+  <string key="hcommandrektlist">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandaddrule">
+    <value>
+      Añade una regla nueva al final de las actuales en /rules.
+
+      Ejemplo:
+      /{0} ¡Siempre debes trolear a los demás!
+    </value>
+  </string>
+  <string key="hcommanduploadlanguage">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandvalidatelanguages">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandgetlanguage">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandreloadlang">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandhalt">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandmakelangadmin">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandremovelangadmin">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandgetrekt">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandunrekt">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandmediaid">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandstart">
+    <value>
+      Comando solo para el chat privado con el bot, para iniciarlo. Es necesario para usar el comando /s, recibir reportes de admin por privado y algunas otras funciones.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="donate">
+    <value>Si quieres ayudar a mantener Enforcer en línea, dona aquí {0}.\nEste dinero ayuda a pagar los costosos servidores en los que funciona el bot.\nLos desarrolladores de este bot no reciben dinero aparte de estas donaciones. </value>
+  </string>
+  <string key="hcommanddonate">
+    <value>
+      Muestra un enlace para donar por PayPal. Los desarrolladores de este bot no reciben dinero aparte de las donaciones y agradecen cada una. Por supuesto, puedes usar el bot sin donar nada.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="notChannel">
+    <value>El ID indicado no es válido; usa /help addlogchannel para más información</value>
+  </string>
+  <string key="channelAdded">
+    <value>El canal se ha guardado. Asegúrate de que el bot es admin en el canal</value>
+  </string>
+  <string key="hcommandaddlogchannel">
+    <value>
+      Añade un canal de registro a Enforcer. Enforcer publicará en este canal todos los comandos de admin usados en tu grupo.
+      Este comando solo lo puede usar el creador del grupo o un usuario auth
+      El bot tiene que ser admin del canal; también puede ser un grupo, pero eso le quita un poco el sentido
+      Ejemplo:
+      /{0} [ID del canal]
+      /{0} -1231243242332
+      /{0} respondiendo a un mensaje reenviado desde el canal
+    </value>
+  </string>
+  <string key="logSendError">
+    <value>El bot no pudo registrar este comando en el chat de registro; configura el canal de registro con /addlogchannel y asegúrate de que el bot está en el canal y tiene permiso para publicar en él</value>
+  </string>
+  <string key="noone">
+    <value>nadie</value>
+  </string>
+  <string key="logMessageCommand">
+    <value><![CDATA[{0} ({1}) envió \n\n <code>{2}</code> \n\n en {3} mientras respondía a {4}.]]></value>
+  </string>
+  <string key="logMessageCallback">
+    <value>{0} ({1}) usó {2} en {3}</value>
+  </string>
+  <string key="welcomeReset">
+    <value>El mensaje de bienvenida se restableció al predeterminado.</value>
+  </string>
+  <string key="hcommanddelmsg">
+    <value>
+      Borra el mensaje al que respondes. Comando solo para admins.
+
+      Ejemplo:
+      /{0} respondiendo a un mensaje
+    </value>
+  </string>
+  <string key="nsfwapikeyset">
+    <value>Información de la API NSFW guardada.</value>
+  </string>
+  <string key="apikeysucgen">
+    <value>La clave de API se generó correctamente.</value>
+  </string>
+  <string key="hcommandsetnsfw">
+    <value>
+      <![CDATA[Configura la detección de imágenes NSFW para tu grupo. Encontrarás información sobre cómo hacerlo exactamente <a href="https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02">aquí</a>.
+  
+  Ejemplo:
+  /{0} [clientid] [clientsecret]]]>
+    </value>
+  </string>
+  <string key="hcommandnsfw">
+    <value>
+      Enforcer puede detectar y castigar automáticamente imágenes NSFW. Puedes encontrar una descripción detallada de cómo configurar esta función aquí:
+
+      https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02
+    </value>
+  </string>
+  <string key="welcomeBack">
+    <value>Te damos la bienvenida de nuevo a Enforcer. Tu configuración sigue intacta.</value>
+  </string>
+  <string key="messageDeleted">
+    <value>El mensaje se borró correctamente</value>
+  </string>
+  <string key="delete">
+    <value>Borrar mensaje</value>
+  </string>
+  <string key="elevateBlocked">
+    <value>{1} impidió a {0} elevar a otros</value>
+  </string>
+  <string key="elevateUnblocked">
+    <value>{1} volvió a permitir a {0} elevar a otros</value>
+  </string>
+  <string key="usergroupstatuscreator">
+    <value>{0} es quien creó este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusadmin">
+    <value>{0} es admin en este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusbanned">
+    <value>{0} tiene un baneo en este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusauth">
+    <value>{0} es auth en este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatuselevated">
+    <value>{0} tiene permisos elevados en este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusmember">
+    <value>{0} es miembro de este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusleft">
+    <value>{0} ya no está en este grupo (lo dejó o se le expulsó).\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="usergroupstatusneverseen">
+    <value>Nunca se ha visto a {0} en este grupo.\nHa enviado {1} mensajes aquí desde que se creó este comando.</value>
+  </string>
+  <string key="tempban">
+    <value>Baneo temporal</value>
+  </string>
+  <string key="tempbannedForFlood">
+    <value>{0} recibió un baneo temporal por flood. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="tempbanformesslength">
+    <value>{0} recibió un baneo por enviar mensajes demasiado largos. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="tempbanfornamelength">
+    <value>{0} recibió un baneo por tener un nombre demasiado largo. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="tempbannedformedia">
+    <value>{0} recibió un baneo por enviar contenido multimedia no permitido. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="tempbannedForRtl">
+    <value>{0} recibió un baneo por usar caracteres de derecha a izquierda. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="tempbanForNoEnglishScript">
+    <value>{0} recibió un baneo por usar caracteres no latinos. El baneo expira en: {1} (días:horas:minutos)</value>
+  </string>
+  <string key="defaultTime">
+    <value>El tiempo de baneo temporal predeterminado del grupo es: {0}</value>
+  </string>
+  <string key="defaultTimeSet">
+    <value>Se actualizó el tiempo de baneo temporal predeterminado de este grupo.</value>
+  </string>
+  <string key="groupMenu">
+    <value>
+      Algunos comandos (/rules, /about, /adminlist, comandos #extra) se pueden desactivar para que no se envíen en el grupo.
+      Si un comando está desactivado, el bot simplemente enviará el mensaje por privado a quien lo pidió.
+
+      Los iconos junto al comando muestran el estado actual:
+      • 👥: El bot responderá en el grupo.
+      • 👤: El bot responderá en privado.
+
+      Bloquear publicaciones de canales: si está activado, se borran los mensajes que los miembros envían como canal y el canal queda baneado del grupo. No afecta a los admins anónimos, a tu canal vinculado ni a los canales añadidos con /allowchannel. Enforcer necesita permisos para borrar mensajes y banear usuarios.
+    </value>
+  </string>
+  <string key="warnMenu">
+    <value>Edita el máximo de advertencias y la acción que se toma en tu grupo</value>
+  </string>
+  <string key="groupSettingButton">
+    <value>Grupo</value>
+  </string>
+  <string key="cannotbanadmin">
+    <value>No puedo expulsar ni banear a un admin</value>
+  </string>
+  <string key="hcommanddelnsfw">
+    <value>
+  Borra una clave de API NSFW configurada antes. Necesitas configurar una para que funcione la detección de imágenes NSFW (escribe "/help nsfw" para más información) y con este comando la vuelves a quitar.
+  
+  Ejemplo:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandchecknsfw">
+    <value>
+  Sirve para comprobar manualmente qué tan NSFW es una imagen según Enforcer. Primero tienes que configurar la detección NSFW para tu grupo; escribe "/help nsfw" para más información.
+  
+  Ejemplo:
+  /{0} respondiendo a una imagen
+  </value>
+  </string>
+  <string key="hcommandmsgid">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommanddellogchannel">
+    <value>
+  Elimina de un grupo un canal de registro añadido antes. Para más información sobre los canales de registro, usa "/help addlogchannel".
+  
+  Ejemplo:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandtemptime">
+    <value>
+      Establece el tiempo de baneo temporal predeterminado de un grupo. Este tiempo se usa al usar /tempban sin indicar un tiempo y al banear temporalmente a alguien de forma automática (por máximo de advertencias, flood, etc.). Hasta que establezcas uno, el predeterminado es un día.
+
+      Ejemplo:
+      /{0} [tiempo en minutos]
+    </value>
+  </string>
+  <string key="hcommandmedia">
+    <value>
+      Quita o restablece las advertencias por multimedia de un usuario.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandunblockelevate">
+    <value>
+      Permite que un admin que fue bloqueado antes vuelva a elevar a otros.
+
+      Ejemplo:
+      /{0} respondiendo al admin
+      /{0} [ID de usuario del admin]
+      /{0} [Nombre de usuario del admin]
+    </value>
+  </string>
+  <string key="hcommandresetsettings">
+    <value>
+      Sirve para restablecer toda la configuración de un grupo: canal de registro, reglas, descripción, etc. Advertencia: ¡la configuración se borra por completo y no se puede recuperar!
+      
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandmissinghcommands">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandwhois">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="donateWord">
+    <value>Donar</value>
+  </string>
+  <string key="otherhelpList">
+    <value>nsfw</value>
+  </string>
+  <string key="typeMore">
+    <value>Escribe más para obtener resultados</value>
+  </string>
+  <string key="tempbanDescription">
+    <value>Obtén información sobre los baneos temporales de un grupo o usuario</value>
+  </string>
+  <string key="helpDescription">
+    <value>Obtén ayuda con un comando</value>
+  </string>
+  <string key="uct">
+    <value>UTC</value>
+  </string>
+  <string key="HelpButton">
+    <value>Ayuda</value>
+  </string>
+  <string key="hcommandlangcode">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="registerfortagall">
+    <value>Te has registrado correctamente para @pingall</value>
+  </string>
+  <string key="tagallregistered">
+    <value>Se ha llamado a {0}, ya que usaron /pingme</value>
+  </string>
+  <string key="tagallregisterednoone">
+    <value>nadie ha usado /pingme todavía</value>
+  </string>
+  <string key="unregisterfortagall">
+    <value>Se te ha quitado correctamente de @pingall</value>
+  </string>
+  <string key="hcommandpingme">
+    <value>
+  Añádete a la lista @pingall de un grupo. Si lo haces, Enforcer te mencionará cuando alguien envíe @pingall. Ten en cuenta que @pingall tiene una espera de diez minutos. Para salir de la lista otra vez, puedes usar /unpingme.
+  
+  Ejemplo:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandunpingme">
+    <value>
+  Quítate de @pingall, al que te añadiste antes con /pingme. Al usar este comando, Enforcer ya no te mencionará cuando alguien envíe @pingall.
+  
+  Ejemplo:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandpingall">
+    <value>
+  Llama a todos los del grupo que usaron /pingme antes. Ten en cuenta que este comando tiene una espera de 10 minutos y solo se puede mencionar a usuarios con nombre de usuario. Para quitarte de la lista, puedes usar /unpingme.
+  
+  Ejemplo:
+  @{0}
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandd">
+    <value>
+  Al usar este comando se borrarán el mensaje al que respondes y el propio comando. Ten en cuenta que solo puedes borrar tus propios mensajes si no eres admin del grupo.
+  
+  Ejemplo:
+  /{0} respondiendo a un mensaje tuyo
+  /{0} respondiendo a un mensaje ajeno (solo admins)
+  </value>
+  </string>
+  <string key="hcommandgetrektu">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandgetrekti">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandclearkeys">
+    <value>
+  Este comando sirve para quitar el teclado de botones de la parte inferior de la pantalla (que tienen algunos bots). Es útil si, por ejemplo, se añadió a tu grupo un bot de spam que le dio a todos un teclado así con 50 botones inútiles.
+  
+  Ejemplo:
+  /{0}
+  </value>
+  </string>
+  <string key="hcommandbangroup">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="hcommandunbangroup">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="registerfortagallclickme">
+    <value>Para añadirte a @pingall, pulsa el botón de abajo y luego Iniciar.</value>
+  </string>
+  <string key="hcommandunping">
+    <value>
+  Quita de @pingall a otra persona que se añadió antes con /pingme. Al usar este comando, Enforcer ya no mencionará a ese usuario cuando alguien envíe @pingall.
+  
+  Ejemplo:
+  /{0} respondiendo a un usuario
+  /{0} [ID de usuario]
+  /{0} [Nombre de usuario]
+  </value>
+  </string>
+  <string key="logchannelAutoRemoved">
+    <value>No se pudo enviar un mensaje a tu canal de registro, así que se quitó automáticamente. Para volver a usar la función, añádeme de nuevo a tu canal de registro y usa /addlogchannel.</value>
+  </string>
+  <string key="logchannelRemoved">
+    <value>¡Tu canal de registro se quitó correctamente!</value>
+  </string>
+  <string key="DeleteLastWelcomeButton">
+    <value>Borrar última bienvenida</value>
+  </string>
+  <string key="userTempMuted">
+    <value>Usuario silenciado temporalmente.</value>
+  </string>
+  <string key="defaultMuteTimeSet">
+    <value>Se actualizó el tiempo de silencio temporal predeterminado de este grupo.</value>
+  </string>
+  <string key="defaultMuteTime">
+    <value>El tiempo de silencio temporal predeterminado del grupo es: {0} min</value>
+  </string>
+  <string key="noMutedJoiners">
+    <value>No hay usuarios nuevos que fueran silenciados al unirse.</value>
+  </string>
+  <string key="mutedList">
+    <value><![CDATA[Lista de <b>nuevos miembros silenciados</b>:\n{0}]]></value>
+  </string>
+  <string key="failedUnmutedList">
+    <value><![CDATA[Lista de <b>nuevos miembros silenciados a los que no se pudo quitar el silencio</b>:\n{0}]]></value>
+  </string>
+  <string key="unmutedAllJoiners">
+    <value>Se quitó el silencio a todos los nuevos miembros.</value>
+  </string>
+  <string key="MuteOnJoinButton">
+    <value>Silenciar al unirse</value>
+  </string>
+  <string key="unmuted">
+    <value>{1} le quitó el silencio a {0}</value>
+  </string>
+  <string key="muted">
+    <value>{1} silenció a {0}</value>
+  </string>
+  <string key="temmpmuted">
+    <value>Se silenció a {1} durante {0} (días:horas:minutos)\nID: {2}</value>
+  </string>
+  <string key="muteList">
+    <value><![CDATA[<b>Silenciados</b>:\n{0}\n\n<b>Silenciados temporalmente</b> (días:horas:minutos restantes):\n{1}]]></value>
+  </string>
+  <string key="noMutedUsers">
+    <value>Nadie en este grupo está silenciado. Los miembros nuevos silenciados por Silenciar al unirse aparecen con /listmutedjoiners.</value>
+  </string>
+  <string key="tempbanList">
+    <value><![CDATA[<b>Baneados temporalmente</b> (días:horas:minutos restantes):\n{0}]]></value>
+  </string>
+  <string key="noTempbans">
+    <value>Nadie en este grupo tiene un baneo temporal.</value>
+  </string>
+  <string key="cannotMuteChannel">
+    <value>No puedo silenciar a un canal ni a alguien que publica como canal. Usa /ban para banear el canal.</value>
+  </string>
+  <string key="invalidDuration">
+    <value>No pude entender esa duración. Indica un número de minutos, o un número seguido de min, hours o days, por ejemplo 30, 2 hours o 1d. Debe estar entre 1 minuto y 365 días.</value>
+  </string>
+  <string key="getgrouptotalwarn">
+    <value>Advertencias totales: {0}</value>
+  </string>
+  <string key="prewarn">
+    <value><![CDATA[{0} <b>ha recibido una preadvertencia.</b>\n<i>Número de preadvertencias</i>   <b>{1}</b>]]></value>
+  </string>
+  <string key="preWarnConverted">
+    <value>{0} tenía {1} preadvertencias, que se han convertido en {1} advertencia(s)</value>
+  </string>
+  <string key="removePreWarn">
+    <value>Quitar preadvertencia</value>
+  </string>
+  <string key="resetPreWarn">
+    <value>Restablecer preadvertencias</value>
+  </string>
+  <string key="getPreWarn">
+    <value>Preadvertencias: {0}</value>
+  </string>
+  <string key="inlineBlockUsage">
+    <value>Indica el nombre de usuario del bot inline, como @gif, o una expresión regular entre barras, como /spam/. También puedes responder a un mensaje enviado mediante el bot.</value>
+  </string>
+  <string key="inlineBlockInvalidUsername">
+    <value>{0} no es un nombre de usuario de bot válido.</value>
+  </string>
+  <string key="inlineBlockInvalidPattern">
+    <value>Esa expresión regular no se puede usar: {0}</value>
+  </string>
+  <string key="inlineBlockPatternTooLong">
+    <value>Una expresión regular puede tener como máximo {0} caracteres.</value>
+  </string>
+  <string key="inlineBlockLimit">
+    <value>Este grupo ya tiene {0} entradas en su lista de bots inline bloqueados, que es el máximo. Quita una primero con /unblockinline.</value>
+  </string>
+  <string key="inlineBlockAdded">
+    <value>Ahora se borrarán los mensajes enviados mediante {0}.</value>
+  </string>
+  <string key="inlineBlockExists">
+    <value>{0} ya está en la lista de bots inline bloqueados.</value>
+  </string>
+  <string key="inlineBlockRemoved">
+    <value>{0} se quitó de la lista de bots inline bloqueados.</value>
+  </string>
+  <string key="inlineBlockNotFound">
+    <value>{0} no está en la lista de bots inline bloqueados. Usa /blockedinline para ver las entradas.</value>
+  </string>
+  <string key="inlineBlockList">
+    <value><![CDATA[<b>Bots inline bloqueados</b>:\n{0}]]></value>
+  </string>
+  <string key="inlineBlockListEmpty">
+    <value>No hay bots inline bloqueados en este grupo.</value>
+  </string>
+  <string key="hcommandblockinline">
+    <value>
+      Borra todos los mensajes enviados mediante un bot inline, por ejemplo los GIF enviados con @gif. No afecta a los admins ni a los usuarios excluidos con /disablewatch. Enforcer necesita permiso para borrar mensajes.
+
+      Indica el nombre de usuario del bot para bloquear ese bot, o una expresión regular entre barras para bloquear todos los bots cuyo nombre de usuario coincida con ella. Las expresiones no distinguen mayúsculas de minúsculas, se comparan con el nombre de usuario sin la @ y coinciden en cualquier parte de él salvo que las ancles con ^ y $.
+
+      Ejemplo:
+      /{0} @gif
+      /{0} respondiendo a un mensaje enviado mediante el bot
+      /{0} /^spam/ bloquea todos los bots cuyo nombre de usuario empieza por spam
+      /{0} /.*/ bloquea todos los bots inline
+    </value>
+  </string>
+  <string key="hcommandunblockinline">
+    <value>
+      Quita una entrada de la lista de bots inline bloqueados. Escríbela exactamente como la muestra /blockedinline.
+
+      Ejemplo:
+      /{0} @gif
+      /{0} /^spam/
+      /{0} respondiendo a un mensaje enviado mediante el bot
+    </value>
+  </string>
+  <string key="hcommandblockedinline">
+    <value>
+      Muestra los bots inline bloqueados en este grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="inlineTestUsage">
+    <value>Indica el nombre de usuario de un bot, como @gif, para ver qué entradas de la lista de bots inline bloqueados de este grupo lo bloquean. Para probar una expresión regular sin añadirla, ponla primero, entre barras, seguida de hasta {0} nombres de usuario, como /^spam/ @spambot @gif. También puedes responder a un mensaje enviado mediante el bot.</value>
+  </string>
+  <string key="inlineTestTooMany">
+    <value>Puedes probar como máximo {0} nombres de usuario a la vez.</value>
+  </string>
+  <string key="inlineTestPatternHeader">
+    <value>Probando {0}. No se ha añadido a la lista de bloqueo; para eso usa /blockinline.</value>
+  </string>
+  <string key="inlineTestMatch">
+    <value>{0}: coincide, se bloquearía</value>
+  </string>
+  <string key="inlineTestNoMatch">
+    <value>{0}: no coincide</value>
+  </string>
+  <string key="inlineTestBlockedBy">
+    <value>{0}: bloqueado por {1}</value>
+  </string>
+  <string key="inlineTestNotBlocked">
+    <value>{0}: no bloqueado</value>
+  </string>
+  <string key="hcommandtestinline">
+    <value>
+      Muestra si se bloquearían bots inline, sin cambiar nada. Úsalo para comprobar una expresión regular antes de añadirla con /blockinline.
+
+      Indica uno o más nombres de usuario de bots para ver qué entradas de la lista de bloqueo de este grupo los bloquean. Pon primero una expresión regular entre barras para probar esa expresión en lugar de la lista; se comprueba igual que lo hace /blockinline, pero no se guarda.
+
+      Ejemplo:
+      /{0} @gif
+      /{0} /^spam/ @spambot @gif
+      /{0} respondiendo a un mensaje enviado mediante el bot
+    </value>
+  </string>
+  <string key="stickerBlockUsage">
+    <value>Indica el nombre o el enlace del paquete de stickers, como https://t.me/addstickers/Animals, o responde a un sticker del paquete. Para saber el nombre de un paquete sin publicar el sticker aquí, envíame el sticker en un chat privado y respóndelo con /stickerinfo.</value>
+  </string>
+  <string key="stickerSetInvalidName">
+    <value>{0} no es un nombre ni un enlace de paquete de stickers.</value>
+  </string>
+  <string key="stickerNoSet">
+    <value>Ese sticker no forma parte de un paquete, así que no se puede bloquear por paquete.</value>
+  </string>
+  <string key="stickerSetNotFound">
+    <value>Telegram no tiene ningún paquete de stickers llamado {0}.</value>
+  </string>
+  <string key="stickerSetIsEmoji">
+    <value>{0} es un paquete de emojis personalizados. Solo se pueden bloquear paquetes de stickers.</value>
+  </string>
+  <string key="stickerBlockLimit">
+    <value>Este grupo ya tiene {0} paquetes de stickers bloqueados, que es el máximo. Quita uno primero con /unblocksticker.</value>
+  </string>
+  <string key="stickerBlockAdded">
+    <value>Los stickers de {0} se eliminarán a partir de ahora.</value>
+  </string>
+  <string key="stickerBlockExists">
+    <value>{0} ya está en la lista de paquetes de stickers bloqueados.</value>
+  </string>
+  <string key="stickerBlockRemoved">
+    <value>{0} se ha quitado de la lista de paquetes de stickers bloqueados.</value>
+  </string>
+  <string key="stickerBlockNotFound">
+    <value>{0} no está en la lista de paquetes de stickers bloqueados. Usa /blockedstickers para ver la lista.</value>
+  </string>
+  <string key="stickerBlockList">
+    <value><![CDATA[<b>Paquetes de stickers bloqueados</b>:\n{0}]]></value>
+  </string>
+  <string key="stickerBlockListEmpty">
+    <value>No hay paquetes de stickers bloqueados en este grupo.</value>
+  </string>
+  <string key="stickerInfoTitle">
+    <value><![CDATA[<b>{0}</b>]]></value>
+  </string>
+  <string key="stickerInfoName">
+    <value><![CDATA[Nombre: <code>{0}</code>]]></value>
+  </string>
+  <string key="stickerInfoLink">
+    <value>Enlace: {0}</value>
+  </string>
+  <string key="stickerInfoCount">
+    <value>Stickers: {0}</value>
+  </string>
+  <string key="stickerInfoEmojiPack">
+    <value>Este es un paquete de emojis personalizados. Solo se pueden bloquear paquetes de stickers.</value>
+  </string>
+  <string key="stickerInfoBlocked">
+    <value><![CDATA[Bloqueado en este grupo. Para desbloquearlo: <code>/unblocksticker {0}</code>]]></value>
+  </string>
+  <string key="stickerInfoNotBlocked">
+    <value><![CDATA[No está bloqueado en este grupo. Para bloquearlo: <code>/blocksticker {0}</code>]]></value>
+  </string>
+  <string key="stickerInfoHowToBlock">
+    <value><![CDATA[Para bloquearlo, envía esto en tu grupo: <code>/blocksticker {0}</code>]]></value>
+  </string>
+  <string key="hcommandblocksticker">
+    <value>
+      Elimina todos los stickers de un paquete de stickers. No afecta a los admins ni a los usuarios excluidos con /disablewatch. Enforcer necesita el permiso para eliminar mensajes. Los emojis personalizados dentro de los mensajes no se incluyen.
+
+      Indica el nombre del paquete o su enlace t.me/addstickers, o responde a un sticker del paquete. Usa /stickerinfo en un chat privado conmigo para saber el nombre de un paquete.
+
+      Ejemplo:
+      /{0} https://t.me/addstickers/Animals
+      /{0} Animals
+      /{0} respondiendo a un sticker
+    </value>
+  </string>
+  <string key="hcommandunblocksticker">
+    <value>
+      Quita un paquete de la lista de paquetes de stickers bloqueados.
+
+      Ejemplo:
+      /{0} Animals
+      /{0} respondiendo a un sticker
+    </value>
+  </string>
+  <string key="hcommandblockedstickers">
+    <value>
+      Muestra los paquetes de stickers bloqueados en este grupo.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandstickerinfo">
+    <value>
+      Muestra el nombre y el enlace de un paquete de stickers, y cómo bloquearlo. En un chat privado conmigo cualquiera puede usarlo; en un grupo solo los admins, y además indica si el paquete está bloqueado allí.
+
+      Ejemplo:
+      /{0} respondiendo a un sticker
+      /{0} https://t.me/addstickers/Animals
+    </value>
+  </string>
+  <string key="WarnReasonsButton">
+    <value>Motivos para quitar advertencias</value>
+  </string>
+  <string key="warnReasonModeOff">
+    <value>Desactivado</value>
+  </string>
+  <string key="warnReasonModeWarns">
+    <value>Advertencias</value>
+  </string>
+  <string key="warnReasonModeWarnsAndPrewarns">
+    <value>Advertencias + preadvertencias</value>
+  </string>
+  <string key="warnReasonModeAll">
+    <value>Todo</value>
+  </string>
+  <string key="warnKindWarn">
+    <value>Advertencias</value>
+  </string>
+  <string key="warnKindPrewarn">
+    <value>Preadvertencias</value>
+  </string>
+  <string key="warnKindMedia">
+    <value>Advertencias de multimedia</value>
+  </string>
+  <string key="warnCountLine">
+    <value>{0}: {1}</value>
+  </string>
+  <string key="warnNothingToRemove">
+    <value>No hay nada que quitar a {0}. {1}: 0</value>
+  </string>
+  <string key="warnReasonPromptRemove">
+    <value>{0}, ¿por qué le quitas una advertencia a {1}?</value>
+  </string>
+  <string key="warnReasonPromptReset">
+    <value>{0}, ¿por qué reinicias las advertencias de {1}?</value>
+  </string>
+  <string key="warnReasonPromptHint">
+    <value>Toca un motivo o responde a este mensaje con el tuyo. No se cambia nada hasta que lo hagas; esta pregunta caduca en 10 minutos.</value>
+  </string>
+  <string key="warnReasonCancel">
+    <value>Cancelar</value>
+  </string>
+  <string key="warnReasonCancelled">
+    <value>Cancelado. No se ha cambiado nada.</value>
+  </string>
+  <string key="warnReasonExpired">
+    <value>Esta pregunta ha caducado y no se ha cambiado nada. Pulsa el botón otra vez.</value>
+  </string>
+  <string key="warnReasonNotYours">
+    <value>Solo {0} puede responder a esto.</value>
+  </string>
+  <string key="warnReasonTooLong">
+    <value>Un motivo puede tener como máximo {0} caracteres.</value>
+  </string>
+  <string key="warnChangeRemoved">
+    <value>{0} le quitó una advertencia a {1}.</value>
+  </string>
+  <string key="warnChangeReset">
+    <value>{0} reinició las advertencias de {1}.</value>
+  </string>
+  <string key="warnChangeReason">
+    <value>Motivo: {0}</value>
+  </string>
+  <string key="warnChangeNoReason">
+    <value>No se indicó ningún motivo.</value>
+  </string>
+  <string key="logWarnRemoved">
+    <value>{0} ({1}) le quitó una advertencia a {2} en {3}.</value>
+  </string>
+  <string key="logWarnReset">
+    <value>{0} ({1}) reinició las advertencias de {2} en {3}.</value>
+  </string>
   <string key="logSettingChanged">
     <value>{0} ({1}) cambió {2} en {3}: {4} → {5}</value>
+  </string>
+  <string key="logButtonPressed">
+    <value>{0} ({1}) pulsó «{2}» en {3}</value>
   </string>
   <string key="settingFloodLimit">
     <value>Límite de flood</value>
@@ -470,6 +1862,695 @@
   </string>
   <string key="valueInGroup">
     <value>Grupo</value>
+  </string>
+  <string key="warnReasonDefaults">
+    <value>Error|Apelación aceptada|Usuario equivocado|La advertencia ya cumplió su tiempo</value>
+  </string>
+  <string key="warnReasonUsage">
+    <value>Indica el motivo que quieres añadir, de {0} caracteres como máximo, por ejemplo /addwarnreason Advertencia por AFK apelada.</value>
+  </string>
+  <string key="warnReasonDelUsage">
+    <value>Indica el motivo que quieres quitar, o su número en /warnreasons.</value>
+  </string>
+  <string key="warnReasonExists">
+    <value>"{0}" ya es un motivo para quitar advertencias.</value>
+  </string>
+  <string key="warnReasonLimit">
+    <value>Este grupo ya tiene {0} motivos para quitar advertencias, que es el máximo. Quita uno primero con /delwarnreason.</value>
+  </string>
+  <string key="warnReasonAdded">
+    <value>Se añadió "{0}" a los motivos para quitar advertencias.</value>
+  </string>
+  <string key="warnReasonNotFound">
+    <value>"{0}" no es un motivo para quitar advertencias. Usa /warnreasons para verlos.</value>
+  </string>
+  <string key="warnReasonRemoved">
+    <value>Se quitó "{0}" de los motivos para quitar advertencias.</value>
+  </string>
+  <string key="warnReasonList">
+    <value><![CDATA[<b>Motivos para quitar advertencias</b>:\n{0}]]></value>
+  </string>
+  <string key="warnReasonListDefaults">
+    <value>Estos son los motivos predeterminados. Cámbialos con /addwarnreason y /delwarnreason.</value>
+  </string>
+  <string key="warnReasonListEmpty">
+    <value>Este grupo no tiene motivos guardados para quitar advertencias. Se siguen ofreciendo los motivos usados recientemente.</value>
+  </string>
+  <string key="hcommandremovewarn">
+    <value>
+      Quita una advertencia al usuario al que respondes. Añade un motivo después del comando para que se muestre en el grupo y en el canal de registro.
+
+      Si "Motivos para quitar advertencias" está activado en /menu y no indicas ningún motivo, primero te pido uno, con los motivos de tu grupo como botones, y la advertencia solo se quita cuando respondes.
+
+      Ejemplo:
+      /{0} Apelación aceptada (como respuesta)
+      /{0} (como respuesta)
+    </value>
+  </string>
+  <string key="hcommandresetwarns">
+    <value>
+      Reinicia todas las advertencias del usuario al que respondes. Añade un motivo después del comando para que se muestre en el grupo y en el canal de registro.
+
+      Si "Motivos para quitar advertencias" está activado en /menu y no indicas ningún motivo, primero te pido uno, y las advertencias solo se reinician cuando respondes.
+
+      Ejemplo:
+      /{0} Usuario equivocado (como respuesta)
+      /{0} (como respuesta)
+    </value>
+  </string>
+  <string key="hcommandaddwarnreason">
+    <value>
+      Añade un motivo a los botones que se ofrecen al quitar o reiniciar una advertencia. Un grupo empieza con algunos motivos predeterminados; el primer cambio los sustituye por tu propia lista. Hasta 10 motivos; también se ofrecen los usados recientemente.
+
+      Ejemplo:
+      /{0} Advertencia por AFK apelada
+    </value>
+  </string>
+  <string key="hcommanddelwarnreason">
+    <value>
+      Quita un motivo de los motivos para quitar advertencias. Indica el motivo o su número en /warnreasons.
+
+      Ejemplo:
+      /{0} Error
+      /{0} 2
+    </value>
+  </string>
+  <string key="hcommandwarnreasons">
+    <value>
+      Muestra los motivos que se ofrecen como botones al quitar o reiniciar una advertencia.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="cannotmuteadmin">
+    <value>No puedo silenciar a un admin</value>
+  </string>
+  <string key="cannottempmuteadmin">
+    <value>No puedo silenciar temporalmente a un admin</value>
+  </string>
+  <string key="Purchase">
+    <value>Comprar</value>
+  </string>
+  <string key="clickToGetPremium">
+    <value>Pulsa el botón de abajo para obtener Enforcer Premium.</value>
+  </string>
+  <string key="purchaseTitle">
+    <value>Enforcer Premium</value>
+  </string>
+  <string key="purchasePremium">
+    <value>Enforcer Premium para tu grupo.</value>
+  </string>
+  <string key="hcommandadmins">
+    <value>
+      Igual que /admin: llama a los admins del grupo o reporta el mensaje al que respondes. Todo lo que escribas después del comando se envía a los admins como motivo.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [motivo]
+      /{0} [motivo] respondiendo a un usuario
+    </value>
+  </string>
+  <string key="hcommandreport">
+    <value>
+      Igual que /admin: llama a los admins del grupo o reporta el mensaje al que respondes. Todo lo que escribas después del comando se envía a los admins como motivo.
+
+      Ejemplo:
+      /{0}
+      /{0} respondiendo a un usuario
+      /{0} [motivo]
+      /{0} [motivo] respondiendo a un usuario
+    </value>
+  </string>
+  <string key="hcommandinfo">
+    <value>
+      Muestra detalles del mensaje al que respondes: su texto, el nombre, nombre de usuario e ID del remitente, su idioma y cuándo se envió. En un mensaje reenviado, muestra el remitente original.
+
+      Ejemplo:
+      /{0} respondiendo a un mensaje
+    </value>
+  </string>
+  <string key="hcommandmute">
+    <value>
+      Silencia a un usuario, de modo que ya no puede enviar mensajes en el grupo hasta que un admin le quite el silencio con /unmute.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandtempmute">
+    <value>
+      Silencia a un usuario durante un tiempo. Indica una duración después del usuario, o después del comando si respondes a un mensaje: un número de minutos, o un número seguido de min, hours o days (30, 2 hours, 1d). Si no indicas ninguna, se usa la duración predeterminada del grupo de /settempmutetime, o un día si no hay ninguna. Telegram quita el silencio por sí solo cuando se acaba el tiempo. El silencio temporal más largo es de 365 días.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} 2 hours respondiendo a un usuario
+      /{0} [ID de usuario] 30
+      /{0} [Nombre de usuario] 1 day
+    </value>
+  </string>
+  <string key="hcommandunmute">
+    <value>
+      Quita el silencio a un usuario que fue silenciado con /mute o /tempmute, o al unirse.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandmutelist">
+    <value>
+      Muestra los usuarios silenciados con /mute, y los silenciados con /tempmute junto con el tiempo que les queda. Los usuarios que ya no están silenciados, por ejemplo porque un admin les quitó el silencio en Telegram, no aparecen. Los nuevos miembros silenciados por Mute On Join aparecen en /listmutedjoiners.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandtempbanlist">
+    <value>
+      Muestra los usuarios baneados temporalmente de este grupo, con el tiempo que falta hasta que puedan volver a unirse.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandsettempmutetime">
+    <value>
+      Establece la duración predeterminada de /tempmute en este grupo. Indica un número de minutos, o un número seguido de min, hours o days, hasta 365 días. Sin argumento, muestra la duración predeterminada actual. La duración predeterminada es de un día hasta que establezcas otra.
+
+      Ejemplo:
+      /{0}
+      /{0} 30
+      /{0} 2 hours
+      /{0} 1 day
+    </value>
+  </string>
+  <string key="hcommandprewarn">
+    <value>
+      Da una preadvertencia a un usuario. Las preadvertencias no cuentan por sí solas para el límite de advertencias: la próxima vez que el usuario reciba una advertencia normal, se le suman todas sus preadvertencias.
+
+      Ejemplo:
+      /{0} respondiendo a un usuario
+      /{0} [ID de usuario]
+      /{0} [Nombre de usuario]
+    </value>
+  </string>
+  <string key="hcommandlistmutedjoiners">
+    <value>
+      Muestra los nuevos miembros que fueron silenciados automáticamente al unirse, porque Mute On Join está activado en /menu.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandunmutenewjoiners">
+    <value>
+      Quita el silencio a todos los nuevos miembros que fueron silenciados automáticamente al unirse. Usa /listmutedjoiners para ver quiénes son.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandunpingall">
+    <value>
+      Vacía la lista de @pingall de este grupo. @pingall no menciona a nadie hasta que la gente se vuelva a añadir con /pingme.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandremotedisablewatch">
+    <value>¡Este comando es solo para los desarrolladores de Enforcer!</value>
+  </string>
+  <string key="ChannelPostsButton">
+    <value>Bloquear publicaciones de canales</value>
+  </string>
+  <string key="channelPostBanned">
+    <value>Eliminé un mensaje publicado como el canal {0} y baneé el canal de este grupo.</value>
+  </string>
+  <string key="channelPostDeleted">
+    <value>Eliminé un mensaje publicado como el canal {0}. No se pudo banear el canal.</value>
+  </string>
+  <string key="channelUsage">
+    <value>Responde a un mensaje publicado como un canal (o reenviado desde uno), o indica el ID o el @username del canal.</value>
+  </string>
+  <string key="channelNotFound">
+    <value>No encuentro ningún canal llamado {0}.</value>
+  </string>
+  <string key="channelIsGroup">
+    <value>Ese es este mismo grupo, que es como publican los admins anónimos. Nunca se bloquean.</value>
+  </string>
+  <string key="channelAllowLimit">
+    <value>Este grupo ya permite {0} canales, que es el máximo. Quita uno primero con /disallowchannel.</value>
+  </string>
+  <string key="channelAllowed">
+    <value>{0} ahora puede publicar en este grupo.</value>
+  </string>
+  <string key="channelAlreadyAllowed">
+    <value>{0} ya puede publicar en este grupo.</value>
+  </string>
+  <string key="channelDisallowed">
+    <value>{0} se ha quitado de los canales permitidos.</value>
+  </string>
+  <string key="channelNotAllowed">
+    <value>{0} no está en los canales permitidos. Usa /allowedchannels para verlos.</value>
+  </string>
+  <string key="allowedChannelsList">
+    <value><![CDATA[<b>Canales que pueden publicar aquí</b>:\n{0}]]></value>
+  </string>
+  <string key="allowedChannelsEmpty">
+    <value>Ningún canal puede publicar en este grupo, aparte de tu canal vinculado.</value>
+  </string>
+  <string key="channelBanned">
+    <value>{1} ha baneado el canal {0} de este grupo.</value>
+  </string>
+  <string key="channelUnbanned">
+    <value>El canal {0} puede volver a publicar en este grupo.</value>
+  </string>
+  <string key="userNotBanned">
+    <value>{0} no está baneado/a en este grupo.</value>
+  </string>
+  <string key="hcommandallowchannel">
+    <value>
+      Permite que un canal publique en este grupo cuando "Bloquear publicaciones de canales" está activado en /menu. Tu canal vinculado siempre está permitido y no hace falta añadirlo.
+
+      Ejemplo:
+      /{0} respondiendo a un mensaje publicado como el canal
+      /{0} respondiendo a un mensaje reenviado desde el canal
+      /{0} [ID del canal]
+      /{0} @channelname
+    </value>
+  </string>
+  <string key="hcommanddisallowchannel">
+    <value>
+      Quita un canal de los canales que pueden publicar en este grupo.
+
+      Ejemplo:
+      /{0} respondiendo a un mensaje publicado como el canal
+      /{0} [ID del canal]
+      /{0} @channelname
+    </value>
+  </string>
+  <string key="hcommandallowedchannels">
+    <value>
+      Muestra los canales que pueden publicar en este grupo cuando "Bloquear publicaciones de canales" está activado.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="commandsSlowDown">
+    <value>{0}, más despacio, por favor. Inténtalo de nuevo en {1}.</value>
+  </string>
+  <string key="commandsPausedGroup">
+    <value>Demasiados comandos aquí a la vez. Los comandos quedan en pausa para todos excepto los admins durante {0}.</value>
+  </string>
+  <string key="commandsSlowLane">
+    <value>{0}, seguiste enviando comandos cuando se te pidió que fueras más despacio, así que estás en el carril lento: respondo a un comando, botón o reporte tuyo cada {1} minutos. Tras {2} minutos sin intentarlo vuelves a la normalidad.</value>
+  </string>
+  <string key="raidPossible">
+    <value>⚠️ Posible raid: {0} personas se unieron en el último minuto, y {1} nuevos miembros están publicando lo mismo, haciendo flood o publicando enlaces. ¿Qué hago?</value>
+  </string>
+  <string key="raidActive">
+    <value>🚨 El modo raid está activado. Todos los que se unen quedan silenciados durante {3} horas, y los nuevos miembros que hacen spam son baneados junto con sus mensajes.
+Unidos: {0} · silenciados: {1} · baneados: {2}</value>
+  </string>
+  <string key="raidLocked">
+    <value>El grupo está bloqueado: solo los admins pueden publicar hasta que termine el raid.</value>
+  </string>
+  <string key="raidEnded">
+    <value>El modo raid ha terminado. Unidos: {0} · silenciados: {1} · baneados: {2}. A las personas silenciadas al unirse se les quita el silencio pasadas {3} horas, o ahora con el botón. Si el grupo estaba bloqueado, sus permisos vuelven a estar como antes; revísalos, por favor.</value>
+  </string>
+  <string key="raidNotOn">
+    <value>El modo raid no está activado aquí.</value>
+  </string>
+  <string key="raidModeUnknown">
+    <value>Usa /raidmode human, /raidmode auto o /raidmode off.</value>
+  </string>
+  <string key="raidModeIs">
+    <value>Detección de raids aquí: {0}</value>
+  </string>
+  <string key="raidModeHuman">
+    <value>human (etiqueto a los admins y pregunto qué hacer)</value>
+  </string>
+  <string key="raidModeAuto">
+    <value>auto (actúo de inmediato y aviso a los admins)</value>
+  </string>
+  <string key="raidModeOff">
+    <value>off (solo /raid)</value>
+  </string>
+  <string key="raidDone">
+    <value>Hecho.</value>
+  </string>
+  <string key="raidSuspectLink">
+    <value>{0} es nuevo/a aquí y no ha publicado más que un enlace. Admins, ¿es spam?</value>
+  </string>
+  <string key="raidLockButton">
+    <value>🔒 Bloquear el grupo</value>
+  </string>
+  <string key="raidMuteJoinersButton">
+    <value>🔇 Silenciar a los nuevos</value>
+  </string>
+  <string key="raidBanSuspectsButton">
+    <value>⛔ Banear a los spammers</value>
+  </string>
+  <string key="raidIgnoreButton">
+    <value>Ignorar</value>
+  </string>
+  <string key="raidEndButton">
+    <value>Terminar el modo raid</value>
+  </string>
+  <string key="raidReleaseButton">
+    <value>Quitar el silencio a los nuevos ahora</value>
+  </string>
+  <string key="raidBanButton">
+    <value>Banear</value>
+  </string>
+  <string key="hcommandraid">
+    <value>
+      Activa el modo raid: el grupo se bloquea para que solo los admins puedan escribir, todo el que entre queda silenciado durante un día, y los miembros nuevos que hagan spam son baneados junto con sus mensajes. Termina por sí solo tras diez minutos de calma, o con /{0} off. Solo admins.
+
+      Ejemplo:
+      /{0}
+      /{0} off
+    </value>
+  </string>
+  <string key="hcommandraidmode">
+    <value>
+      Define cómo se gestionan los raids aquí. human (por defecto): etiqueto a los admins cuando parece probable un raid y les pregunto qué hacer. auto: activo el modo raid de inmediato y aviso a los admins. off: sin detección de raids ni reportes de enlaces, /raid sigue funcionando. Sin ninguna palabra, indica cuál está activo. Solo admins.
+
+      Ejemplo:
+      /{0} auto
+    </value>
+  </string>
+  <string key="hcommandraidprofile">
+    <value>
+      Para desarrolladores: envía el perfil de un raid como archivo, el más reciente del grupo o el indicado, para reproducirlo en las pruebas.
+
+      Ejemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="trustLine">
+    <value>Confianza aquí: {0}. {1} mensajes, {2}. Establecido aquí: {3} mensajes y {4} días.</value>
+  </string>
+  <string key="trustAdmin">
+    <value>admin</value>
+  </string>
+  <string key="trustApproved">
+    <value>aprobado (en la lista auth o watch)</value>
+  </string>
+  <string key="trustEstablished">
+    <value>establecido</value>
+  </string>
+  <string key="trustNew">
+    <value>nuevo (cuenta para la detección de raids)</value>
+  </string>
+  <string key="trustDays">
+    <value>aquí desde hace {0} días</value>
+  </string>
+  <string key="trustDaysUnknown">
+    <value>aquí desde antes de que se registrara esto</value>
+  </string>
+  <string key="trustSlowLane">
+    <value>En el carril lento por spam de comandos.</value>
+  </string>
+  <string key="cmdstart">
+    <value>Iniciar el bot</value>
+  </string>
+  <string key="cmddonate">
+    <value>Apoyar a los desarrolladores del bot</value>
+  </string>
+  <string key="cmdme">
+    <value>Tus advertencias, expulsiones y baneos, por privado</value>
+  </string>
+  <string key="cmdhelp">
+    <value>Ayuda sobre un comando: /help ban</value>
+  </string>
+  <string key="cmdhelplist">
+    <value>Los temas de ayuda</value>
+  </string>
+  <string key="cmdid">
+    <value>El ID de este chat, o el del usuario al que respondes</value>
+  </string>
+  <string key="cmdstickerinfo">
+    <value>El nombre de un pack de stickers y cómo bloquearlo</value>
+  </string>
+  <string key="cmdsupport">
+    <value>Enlace al grupo de soporte</value>
+  </string>
+  <string key="cmdrules">
+    <value>Las reglas del grupo</value>
+  </string>
+  <string key="cmdadmin">
+    <value>Llamar a los admins, o reportar el mensaje al que respondes</value>
+  </string>
+  <string key="cmdreport">
+    <value>Reportar un mensaje a los admins</value>
+  </string>
+  <string key="cmdkickme">
+    <value>Salir del grupo</value>
+  </string>
+  <string key="cmdinfo">
+    <value>Detalles del mensaje al que respondes</value>
+  </string>
+  <string key="cmdlink">
+    <value>El enlace del grupo</value>
+  </string>
+  <string key="cmdabout">
+    <value>La descripción del grupo</value>
+  </string>
+  <string key="cmdadminlist">
+    <value>Los admins del grupo</value>
+  </string>
+  <string key="cmdextralist">
+    <value>Los comandos #extra del grupo</value>
+  </string>
+  <string key="cmdpingall">
+    <value>Mencionar a todos los de la lista @pingall</value>
+  </string>
+  <string key="cmdpingme">
+    <value>Añadirte a la lista @pingall</value>
+  </string>
+  <string key="cmdunpingme">
+    <value>Quitarte de la lista @pingall</value>
+  </string>
+  <string key="cmdwarn">
+    <value>Advertir a un usuario</value>
+  </string>
+  <string key="cmdban">
+    <value>Banear a un usuario</value>
+  </string>
+  <string key="cmdkick">
+    <value>Expulsar a un usuario</value>
+  </string>
+  <string key="cmdmute">
+    <value>Silenciar a un usuario</value>
+  </string>
+  <string key="cmdtempban">
+    <value>Banear a un usuario por un tiempo</value>
+  </string>
+  <string key="cmdunban">
+    <value>Desbanear a un usuario o canal</value>
+  </string>
+  <string key="cmdmenu">
+    <value>Cambiar la configuración del grupo, por privado</value>
+  </string>
+  <string key="cmdraid">
+    <value>Activar el modo raid, o desactivarlo con /raid off</value>
+  </string>
+  <string key="cmdaddlogchannel">
+    <value>Registrar las acciones de los admins en un canal</value>
+  </string>
+  <string key="cmdaddrule">
+    <value>Añadir una regla</value>
+  </string>
+  <string key="cmdaddwarnreason">
+    <value>Añadir un motivo para quitar advertencias</value>
+  </string>
+  <string key="cmdadminoff">
+    <value>Dejar de enviar reportes a un admin</value>
+  </string>
+  <string key="cmdadminon">
+    <value>Volver a enviar reportes a un admin</value>
+  </string>
+  <string key="cmdallowchannel">
+    <value>Permitir que un canal publique aquí</value>
+  </string>
+  <string key="cmdallowedchannels">
+    <value>Canales con permiso para publicar aquí</value>
+  </string>
+  <string key="cmdauth">
+    <value>Hacer a un usuario propietario para el bot</value>
+  </string>
+  <string key="cmdblockedinline">
+    <value>Bots inline bloqueados</value>
+  </string>
+  <string key="cmdblockedstickers">
+    <value>Packs de stickers bloqueados</value>
+  </string>
+  <string key="cmdblockelevate">
+    <value>Impedir que un admin eleve a otros</value>
+  </string>
+  <string key="cmdblockinline">
+    <value>Bloquear un bot inline</value>
+  </string>
+  <string key="cmdblocksticker">
+    <value>Bloquear un pack de stickers</value>
+  </string>
+  <string key="cmdcheck">
+    <value>Cuántos mensajes ha enviado un usuario aquí</value>
+  </string>
+  <string key="cmdclearkeys">
+    <value>Quitar el teclado de botones de un bot</value>
+  </string>
+  <string key="cmddashboard">
+    <value>La configuración del grupo, por privado</value>
+  </string>
+  <string key="cmddeauth">
+    <value>Quitar a un usuario los derechos de propietario para el bot</value>
+  </string>
+  <string key="cmddeelevate">
+    <value>Terminar la elevación de un usuario</value>
+  </string>
+  <string key="cmddellogchannel">
+    <value>Dejar de registrar en el canal de registro</value>
+  </string>
+  <string key="cmddelmsg">
+    <value>Borrar el mensaje al que respondes</value>
+  </string>
+  <string key="cmddelwarnreason">
+    <value>Eliminar un motivo para quitar advertencias</value>
+  </string>
+  <string key="cmddisablewatch">
+    <value>Eximir a un usuario de las comprobaciones automáticas</value>
+  </string>
+  <string key="cmddisallowchannel">
+    <value>Impedir que un canal publique aquí</value>
+  </string>
+  <string key="cmdelevate">
+    <value>Dar a un usuario derechos de admin en el bot</value>
+  </string>
+  <string key="cmdelevatelog">
+    <value>Quién fue elevado, y por quién</value>
+  </string>
+  <string key="cmdenablewatch">
+    <value>Volver a aplicar las comprobaciones automáticas a un usuario</value>
+  </string>
+  <string key="cmdextra">
+    <value>Guardar un comando #extra</value>
+  </string>
+  <string key="cmdextradel">
+    <value>Borrar un comando #extra</value>
+  </string>
+  <string key="cmdlistmutedjoiners">
+    <value>Miembros silenciados al entrar</value>
+  </string>
+  <string key="cmdmaxl">
+    <value>Máximo de líneas por mensaje</value>
+  </string>
+  <string key="cmdmaxnl">
+    <value>Longitud máxima del nombre</value>
+  </string>
+  <string key="cmdmaxtl">
+    <value>Longitud máxima del mensaje</value>
+  </string>
+  <string key="cmdmedia">
+    <value>Quitar o reiniciar las advertencias por multimedia de un usuario</value>
+  </string>
+  <string key="cmdmutelist">
+    <value>Usuarios silenciados</value>
+  </string>
+  <string key="cmdprewarn">
+    <value>Dar a un usuario una advertencia previa</value>
+  </string>
+  <string key="cmdraidmode">
+    <value>Cómo se gestionan los raids: human, auto u off</value>
+  </string>
+  <string key="cmdremovewarn">
+    <value>Quitar una advertencia</value>
+  </string>
+  <string key="cmdreportoff">
+    <value>Impedir que un usuario use @admin</value>
+  </string>
+  <string key="cmdreporton">
+    <value>Permitir de nuevo que un usuario use @admin</value>
+  </string>
+  <string key="cmdresetsettings">
+    <value>Restablecer toda la configuración del grupo</value>
+  </string>
+  <string key="cmdresetwarns">
+    <value>Reiniciar las advertencias de un usuario</value>
+  </string>
+  <string key="cmdsetabout">
+    <value>Establecer la descripción del grupo</value>
+  </string>
+  <string key="cmdsetlink">
+    <value>Establecer el enlace del grupo</value>
+  </string>
+  <string key="cmdsetrules">
+    <value>Establecer las reglas del grupo</value>
+  </string>
+  <string key="cmdsettempmutetime">
+    <value>Tiempo por defecto de /tempmute</value>
+  </string>
+  <string key="cmdsolved">
+    <value>Marcar un reporte como resuelto</value>
+  </string>
+  <string key="cmdstatus">
+    <value>El estado de un usuario en el grupo</value>
+  </string>
+  <string key="cmdtempbanlist">
+    <value>Usuarios baneados por un tiempo</value>
+  </string>
+  <string key="cmdtempmute">
+    <value>Silenciar a un usuario por un tiempo</value>
+  </string>
+  <string key="cmdtemptime">
+    <value>Tiempo por defecto de /tempban</value>
+  </string>
+  <string key="cmdtestinline">
+    <value>Probar qué bots inline se bloquearían</value>
+  </string>
+  <string key="cmdunblockelevate">
+    <value>Permitir de nuevo que un admin eleve a otros</value>
+  </string>
+  <string key="cmdunblockinline">
+    <value>Desbloquear un bot inline</value>
+  </string>
+  <string key="cmdunblocksticker">
+    <value>Desbloquear un pack de stickers</value>
+  </string>
+  <string key="cmdunmute">
+    <value>Quitar el silencio a un usuario</value>
+  </string>
+  <string key="cmdunmutenewjoiners">
+    <value>Quitar el silencio a todos los silenciados al entrar</value>
+  </string>
+  <string key="cmdunping">
+    <value>Quitar a alguien de la lista @pingall</value>
+  </string>
+  <string key="cmdunpingall">
+    <value>Vaciar la lista @pingall</value>
+  </string>
+  <string key="cmduser">
+    <value>Las advertencias, expulsiones y baneos de un usuario</value>
+  </string>
+  <string key="cmdwarnreasons">
+    <value>Motivos para quitar advertencias</value>
+  </string>
+  <string key="cmdwelcome">
+    <value>Establecer el mensaje de bienvenida</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtros</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} activos</value>
   </string>
   <string key="filtersMenu">
     <value>Filtros: qué pasa cuando un mensaje, un nombre o un nombre de usuario coincide con uno. Toca un filtro para cambiar lo que hace. Los administradores y los miembros de la lista watch o auth nunca se revisan.\n\nReglas propias: {0}. Gestiónalas con /filter.</value>
@@ -553,7 +2634,7 @@
     <value>{0} fue baneado durante {2}: {1}</value>
   </string>
   <string key="filterUsage">
-    <value>Vuestras propias reglas de filtro. Una regla nueva empieza a prueba durante {0} días: solo registra lo que habría hecho.\n/filter add name|username|text|bio|channel acción regex\n/filter try /regex/ texto\n/filter test id o regex\n/filter list\n/filter live id\n/filter trial id días\n/filter del id</value>
+    <value>Vuestras propias reglas de filtro. Una regla nueva empieza a prueba durante {0} días: solo registra lo que habría hecho.\n/filter add name|username|text acción regex\n/filter try /regex/ texto\n/filter test id o regex\n/filter list\n/filter live id\n/filter trial id días\n/filter del id</value>
   </string>
   <string key="filterBadTarget">
     <value>El objetivo debe ser uno de: {0}</value>
@@ -632,15 +2713,15 @@
   </string>
   <string key="hcommandfilter">
     <value>
-      Las reglas de filtro propias de tu grupo: una expresión regular sobre los nombres, nombres de usuario o el texto de los mensajes de los miembros, las biografías de los miembros nuevos o los canales y grupos a los que apuntan los miembros nuevos (título, descripción y nombre de usuario), y qué hacer cuando coincide (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Solo administradores. Los filtros preparados (escrituras, enlaces de invitación, números de teléfono y más) están en el menú de ajustes, en Filtros.
+      Las reglas de filtro propias de tu grupo: una expresión regular sobre los nombres, nombres de usuario o el texto de los mensajes de los miembros, las bios de los miembros nuevos, o los canales y grupos a los que apuntan los miembros nuevos (su título, descripción y nombre de usuario), y qué hacer cuando coincide (none, score, report, delete, warn, mute, tempmute, kick, tempban, ban). Solo admins. Los filtros listos para usar (alfabetos, enlaces de invitación, números de teléfono y más) están en el menú de configuración, en Filtros.
 
-      Una regla nueva empieza a prueba durante 7 días: registra lo que habría hecho y no hace nada, para que veas si atrapa a las personas correctas. Actívala con /{0} live.
+      Una regla nueva empieza a prueba durante 7 días: registra lo que habría hecho y no hace nada, para que veas si atrapa a las personas correctas. Hazla actuar con /{0} live.
 
       Ejemplos:
       /{0} add text ban free +crypto
       /{0} add bio report casino|betting
       /{0} try /free +crypto/ Get FREE crypto now
-      /{0} test 3 (prueba la regla 3 con los nombres de los miembros vistos en los últimos 30 días, o una regla de biografía o canal con los consultados en el último día, y te envía el resultado en privado)
+      /{0} test 3 (prueba la regla 3 con los nombres de los miembros vistos en los últimos 30 días, o una regla de bio o de canal con los consultados en el último día, y te envía el resultado en privado)
       /{0} list
       /{0} live 3
       /{0} trial 3 14
@@ -1055,6 +3136,69 @@
   <string key="hcommandtrust">
     <value>Restaura a un miembro devuelto a nuevo con /untrust: vuelve a contar por sus mensajes y días. Responde a su mensaje o indica su id o @username.</value>
   </string>
+  <string key="hcommandbanmedia">
+    <value>Prohíbe un archivo en este grupo: responde a una foto, vídeo, GIF, sticker o archivo con /banmedia, y a quien lo vuelva a publicar (salvo administradores y miembros aprobados) se le borrará. El mensaje al que respondes también se borra. Banear o expulsar a alguien respondiendo a su archivo, o pulsar Banear en un reporte sobre él, también prohíbe el archivo. /banmedia solo dice cuántos archivos están prohibidos; /unbanmedia quita una prohibición.</value>
+  </string>
+  <string key="hcommandunbanmedia">
+    <value>Quita la prohibición de un archivo: responde con /unbanmedia a un mensaje con ese archivo. /unbanmedia all quita todas las prohibiciones de archivos de este grupo.</value>
+  </string>
+  <string key="cmdbanmedia">
+    <value>Prohibir un archivo en este grupo</value>
+  </string>
+  <string key="cmdunbanmedia">
+    <value>Quitar la prohibición de un archivo</value>
+  </string>
+  <string key="banMediaCount">
+    <value>Archivos prohibidos en este grupo: {0}.</value>
+  </string>
+  <string key="banMediaNoFile">
+    <value>Ese mensaje no tiene foto, vídeo, GIF, sticker ni archivo que prohibir. Responde a uno con /banmedia.</value>
+  </string>
+  <string key="banMediaAdded">
+    <value>Prohibido: a quien vuelva a publicar este archivo aquí se le borrará.</value>
+  </string>
+  <string key="banMediaAlready">
+    <value>Este archivo ya estaba prohibido aquí.</value>
+  </string>
+  <string key="banMediaRemoved">
+    <value>Se quitó la prohibición de este archivo.</value>
+  </string>
+  <string key="banMediaNotBanned">
+    <value>Este archivo no está prohibido aquí.</value>
+  </string>
+  <string key="banMediaCleared">
+    <value>Se quitó la prohibición de {0} archivos.</value>
+  </string>
+  <string key="hcommanddetectstats">
+    <value>Te envía en privado cómo le fue a Detection en este grupo en los últimos 30 días: cuántas veces saltó cada señal, para cuántos miembros y qué hicieron después los administradores (expulsados, silenciados o considerados bien). También cuántas de vuestras expulsiones y silencios no tuvieron ninguna señal antes. Solo administradores.</value>
+  </string>
+  <string key="cmddetectstats">
+    <value>Cómo le va a Detection aquí</value>
+  </string>
+  <string key="detectStatsHeader">
+    <value>&lt;b&gt;Detection en {0}, últimos {1} días&lt;/b&gt;\nCada señal: cuántas veces, para cuántos miembros y qué hicieron después los administradores.</value>
+  </string>
+  <string key="detectStatsLine">
+    <value>{0} veces, {1} miembros (expulsados {2}, silenciados {3}, bien {4})</value>
+  </string>
+  <string key="detectStatsNear">
+    <value>y {0} veces casi</value>
+  </string>
+  <string key="detectStatsMissed">
+    <value>{0} de las {1} expulsiones, silencios y borrados de los administradores no tuvieron ninguna señal antes.</value>
+  </string>
+  <string key="detectStatsNone">
+    <value>En ese tiempo no saltó ninguna señal aquí.</value>
+  </string>
+  <string key="hcommanddetectreview">
+    <value>Para desarrolladores: cada señal de Detection en todos los grupos, con lo que decidieron después los administradores, sus casi-aciertos y las señales de comparación por parecido. /{0} 90 mira 90 días.</value>
+  </string>
+  <string key="hcommandchannelrep">
+    <value>Para desarrolladores: qué pasó con los miembros que apuntaron a un canal o sitio web, en todos los grupos. /{0} @canal, un id de canal o un sitio web.</value>
+  </string>
+  <string key="hcommandsimtest">
+    <value>Para desarrolladores: cuánto se parecen dos textos o nombres según los umbrales de Detection. /{0} primero | segundo</value>
+  </string>
   <string key="cmduntrust">
     <value>Devolver a un miembro a nuevo</value>
   </string>
@@ -1153,69 +3297,6 @@
   </string>
   <string key="editType_other">
     <value>multimedia</value>
-  </string>
-  <string key="hcommandbanmedia">
-    <value>Prohíbe un archivo en este grupo: responde a una foto, vídeo, GIF, sticker o archivo con /banmedia, y a quien lo vuelva a publicar (salvo administradores y miembros aprobados) se le borrará. El mensaje al que respondes también se borra. Banear o expulsar a alguien respondiendo a su archivo, o pulsar Banear en un reporte sobre él, también prohíbe el archivo. /banmedia solo dice cuántos archivos están prohibidos; /unbanmedia quita una prohibición.</value>
-  </string>
-  <string key="hcommandunbanmedia">
-    <value>Quita la prohibición de un archivo: responde con /unbanmedia a un mensaje con ese archivo. /unbanmedia all quita todas las prohibiciones de archivos de este grupo.</value>
-  </string>
-  <string key="cmdbanmedia">
-    <value>Prohibir un archivo en este grupo</value>
-  </string>
-  <string key="cmdunbanmedia">
-    <value>Quitar la prohibición de un archivo</value>
-  </string>
-  <string key="banMediaCount">
-    <value>Archivos prohibidos en este grupo: {0}.</value>
-  </string>
-  <string key="banMediaNoFile">
-    <value>Ese mensaje no tiene foto, vídeo, GIF, sticker ni archivo que prohibir. Responde a uno con /banmedia.</value>
-  </string>
-  <string key="banMediaAdded">
-    <value>Prohibido: a quien vuelva a publicar este archivo aquí se le borrará.</value>
-  </string>
-  <string key="banMediaAlready">
-    <value>Este archivo ya estaba prohibido aquí.</value>
-  </string>
-  <string key="banMediaRemoved">
-    <value>Se quitó la prohibición de este archivo.</value>
-  </string>
-  <string key="banMediaNotBanned">
-    <value>Este archivo no está prohibido aquí.</value>
-  </string>
-  <string key="banMediaCleared">
-    <value>Se quitó la prohibición de {0} archivos.</value>
-  </string>
-  <string key="hcommanddetectstats">
-    <value>Te envía en privado cómo le fue a Detection en este grupo en los últimos 30 días: cuántas veces saltó cada señal, para cuántos miembros y qué hicieron después los administradores (expulsados, silenciados o considerados bien). También cuántas de vuestras expulsiones y silencios no tuvieron ninguna señal antes. Solo administradores.</value>
-  </string>
-  <string key="cmddetectstats">
-    <value>Cómo le va a Detection aquí</value>
-  </string>
-  <string key="detectStatsHeader">
-    <value>&lt;b&gt;Detection en {0}, últimos {1} días&lt;/b&gt;\nCada señal: cuántas veces, para cuántos miembros y qué hicieron después los administradores.</value>
-  </string>
-  <string key="detectStatsLine">
-    <value>{0} veces, {1} miembros (expulsados {2}, silenciados {3}, bien {4})</value>
-  </string>
-  <string key="detectStatsNear">
-    <value>y {0} veces casi</value>
-  </string>
-  <string key="detectStatsMissed">
-    <value>{0} de las {1} expulsiones, silencios y borrados de los administradores no tuvieron ninguna señal antes.</value>
-  </string>
-  <string key="detectStatsNone">
-    <value>En ese tiempo no saltó ninguna señal aquí.</value>
-  </string>
-  <string key="hcommanddetectreview">
-    <value>Para desarrolladores: cada señal de Detection en todos los grupos, con lo que decidieron después los administradores, sus casi-aciertos y las señales de comparación por parecido. /{0} 90 mira 90 días.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Para desarrolladores: cuánto se parecen dos textos o nombres según los umbrales de Detection. /{0} primero | segundo</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Para desarrolladores: qué pasó con los miembros que apuntaron a un canal o sitio web, en todos los grupos. /{0} @canal, un id de canal o un sitio web.</value>
   </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;Datos recuperados de {0}&lt;/b&gt;\n\nLo sentimos: Enforcer perdió datos que tenía guardados de tu grupo entre el {1} y el {2}, como las advertencias. Recuperamos lo que pudimos del canal de registro del grupo. Abajo está lo que volveríamos a poner, con las publicaciones del registro de las que sale cada cambio.\n\nNada cambia hasta que un admin toque Aplicar, y entonces solo lo marcado. Desmarca lo que no quieras; las marcas son compartidas por todos los admins del grupo. Queda abierto hasta el {3}.</value>
