@@ -2318,4 +2318,13 @@ exaple: /{0}
   <string key="hcommandrecovery">
     <value>برای توسعه‌دهندگان: پیشنهادهای بازیابی داده به گروه‌ها پس از از دست رفتن داده. برای وارد کردن یک فایل بازیابی (در انتظار) با ‎/{0} به آن پاسخ دهید، ‎/{0} preview شناسه-چت پیشنهاد یک گروه را نشان می‌دهد، ‎/{0} release دسته آن‌ها را می‌فرستد؛ ‎/{0} به‌تنهایی فهرستشان را نشان می‌دهد.</value>
   </string>
+  <string key="adminChatMode">
+    <value>اینجا چت ادمین‌های {0} است: من اینجا گزارش‌ها و پیشنهادها را می‌فرستم و این چت را مدیریت نمی‌کنم. دستورها را در گروه به کار ببرید.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>چت ادمین‌ها:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings> 

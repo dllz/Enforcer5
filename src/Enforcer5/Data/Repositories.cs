@@ -81,6 +81,10 @@ namespace Enforcer5.Data
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. The admin chats groups linked for their reports (Detection/AdminChats).
+        internal static IAdminChatRepository AdminChats { get; set; } =
+            new PostgresAdminChatRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. Data recovered after a data loss, offered to each group's admins (Recovery/RecoveryOffers).
         internal static IRecoveryRepository Recovery { get; set; } =
             new PostgresRecoveryRepository(() => Storage.PostgresStorage.Database);

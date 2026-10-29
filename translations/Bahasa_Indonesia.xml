@@ -2567,4 +2567,13 @@
   <string key="hcommandrecovery">
     <value>Untuk developer: tawaran pemulihan data ke grup setelah data hilang. Balas file pemulihan dengan /{0} untuk mengimpornya (ditahan), /{0} preview id-chat menampilkan tawaran sebuah grup, /{0} release batch mengirimnya; /{0} saja menampilkan daftarnya.</value>
   </string>
+  <string key="adminChatMode">
+    <value>Ini chat admin untuk {0}: saya mengirim laporan dan tawaran di sini dan tidak memoderasi chat ini. Gunakan perintah di grup.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>Chat admin:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings>

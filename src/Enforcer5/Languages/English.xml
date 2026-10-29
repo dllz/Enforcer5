@@ -3380,4 +3380,13 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="hcommandrecovery">
     <value>For developers: data recovery offers to groups after a data loss. Reply to a recovery file with /{0} to import it (held), /{0} preview chat-id to see a group's offer, /{0} release batch to send them; /{0} alone lists them.</value>
   </string>
+  <string key="adminChatMode">
+    <value>I'm the admin chat for {0}: I post reports and offers here and don't moderate this chat. Use commands in the group.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>Admin chat:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings>

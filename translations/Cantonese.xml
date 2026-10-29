@@ -1921,4 +1921,13 @@ UPDATE LOG
   <string key="hcommandrecovery">
     <value>開發者用：數據遺失之後向各群組發出嘅數據恢復提議。用 /{0} 回覆恢復檔案就可以匯入（暫時唔發），/{0} preview 群組ID 睇某個群組嘅提議，/{0} release 批次 發出佢哋；單獨 /{0} 列出所有提議。</value>
   </string>
+  <string key="adminChatMode">
+    <value>呢度係 {0} 嘅管理員群組：我喺度發報告同提議，唔會管理呢個群組。請喺群組用指令。</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>管理員群組：</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}：</value>
+  </string>
 </strings>

@@ -150,6 +150,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Helpers.Clock.UseForTests(Clock);
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
+            Enforcer5.Detection.AdminChats.ResetForTests();
             Hashes.Install(Redis);
             Keys.Install(Redis);
 #if PREMIUM
@@ -480,6 +481,7 @@ namespace Enforcer5.Tests.Harness
             GlobalBans.ResetForTests();
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
+            Enforcer5.Detection.AdminChats.ResetForTests();
             if (_world.Database != null) await _world.Database.DisposeAsync();
             if (_world.ConnectionString != null) await Storage.TestPostgres.ReleaseMigratedAsync(_world.ConnectionString);
         }

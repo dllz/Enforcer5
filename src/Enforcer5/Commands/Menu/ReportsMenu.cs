@@ -55,6 +55,29 @@ namespace Enforcer5
         }
 
         /// <summary>
+        /// A chat stopped being a group's admin chat. The premium edition is only there for the link, so it leaves,
+        /// quietly, unless the chat is a premium group itself or still another premium group's admin chat. The normal
+        /// edition stays and treats it as a group again.
+        /// </summary>
+        internal static void LeaveUnlinkedAdminChat(long chat)
+        {
+#if PREMIUM
+            try
+            {
+                if (Redis.db.SetContainsAsync("premiumBot", chat).GetAwaiter().GetResult()) return;
+                if (AdminChats.GroupsOf(chat).Any(g => Redis.db.SetContainsAsync("premiumBot", g).GetAwaiter().GetResult())) return;
+                Bot.Api.LeaveChat(chat).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                // Already gone (400/403): nothing to leave.
+                if (Bot.AsApiError(e)?.ErrorCode is not (400 or 403))
+                    ErrorReporter.Report(e, $"Leaving {chat}, no longer an admin chat");
+            }
+#endif
+        }
+
+        /// <summary>
         /// /start adminchat_{token} in a group: the bot was added to (or picked in) a chat from a group's
         /// "Link admin chat" button. The token works once, for 10 minutes, and whoever sent it must be an
         /// admin of both chats.
@@ -89,6 +112,7 @@ namespace Enforcer5
                 Bot.SendReply(Methods.GetLocaleString(lang, "adminChatLinkExpired"), message);
                 return;
             }
+            var previous = DetectionSettings.For(group).Engine.AdminChatId;
             var saved = DetectionSettings.TryUpdate(group, p => p with
             {
                 Engine = p.Engine with
@@ -103,6 +127,8 @@ namespace Enforcer5
                 Bot.SendReply(Methods.GetLocaleString(lang, "failed"), message);
                 return;
             }
+            AdminChats.Linked(group, chat);
+            if (previous is { } old && old != chat) LeaveUnlinkedAdminChat(old);
             var title = ChatDetails.GetAsync(group).GetAwaiter().GetResult()?.Title ?? group.ToString();
             Bot.SendReply(Methods.GetLocaleString(lang, "adminChatLinked", title), message);
             Service.LogCommand(group, from, message.From?.FirstName, title, $"/start {AdminChatStart}", chat.ToString());
@@ -182,11 +208,14 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var adminChat = DetectionSettings.For(chatId).Engine.AdminChatId;
             if (DetectionSettings.TryUpdate(chatId, p => p with { Engine = p.Engine with { AdminChatId = null } }) == null)
             {
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
                 return;
             }
+            AdminChats.Unlinked(chatId);
+            if (adminChat is { } left) Commands.LeaveUnlinkedAdminChat(left);
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
             ShowReportsMenu(call, chatId, lang);
         }

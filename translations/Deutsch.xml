@@ -2378,6 +2378,15 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="hcommandrecovery">
     <value>Für Entwickler: Angebote zur Datenwiederherstellung an Gruppen nach einem Datenverlust. Antworte mit /{0} auf eine Wiederherstellungsdatei, um sie zu importieren (zurückgehalten), /{0} preview Chat-ID zeigt das Angebot einer Gruppe, /{0} release Batch verschickt sie; /{0} allein listet sie auf.</value>
   </string>
+  <string key="adminChatMode">
+    <value>Ich bin der Admin-Chat für {0}: Ich schicke hier Meldungen und Angebote und moderiere diesen Chat nicht. Nutze Befehle in der Gruppe.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>Admin-Chat:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings>
 
 

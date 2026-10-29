@@ -2326,4 +2326,13 @@
   <string key="hcommandrecovery">
     <value>Per gli sviluppatori: offerte di recupero dati ai gruppi dopo una perdita di dati. Rispondi a un file di recupero con /{0} per importarlo (in attesa), /{0} preview id-chat mostra l'offerta di un gruppo, /{0} release lotto le invia; /{0} da solo le elenca.</value>
   </string>
+  <string key="adminChatMode">
+    <value>Sono la chat degli admin di {0}: qui invio segnalazioni e offerte e non modero questa chat. Usa i comandi nel gruppo.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>Chat degli admin:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings>

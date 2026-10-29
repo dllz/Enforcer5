@@ -2029,4 +2029,13 @@ Example:
   <string key="hcommandrecovery">
     <value>开发者用：数据丢失后向各群发送的数据恢复提议。用 /{0} 回复恢复文件即可导入（暂不发送），/{0} preview 群ID 查看某个群的提议，/{0} release 批次 发送它们；单独 /{0} 列出所有提议。</value>
   </string>
+  <string key="adminChatMode">
+    <value>这里是 {0} 的管理员群：我在这里发送报告和提议，不管理这个群。请在群里使用命令。</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>管理员群：</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}：</value>
+  </string>
 </strings>

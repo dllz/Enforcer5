@@ -2347,4 +2347,13 @@
   <string key="hcommandrecovery">
     <value>Geliştiriciler için: veri kaybından sonra gruplara veri kurtarma teklifleri. İçe aktarmak için bir kurtarma dosyasını /{0} ile yanıtlayın (bekletilir), /{0} preview sohbet-kimliği bir grubun teklifini gösterir, /{0} release grup onları gönderir; yalnızca /{0} listeler.</value>
   </string>
+  <string key="adminChatMode">
+    <value>Burası {0} için yönetici sohbeti: burada rapor ve teklif gönderirim, bu sohbeti yönetmem. Komutları grupta kullanın.</value>
+  </string>
+  <string key="extraListAdminChat">
+    <value>Yönetici sohbeti:</value>
+  </string>
+  <string key="extraListGroup">
+    <value>{0}:</value>
+  </string>
 </strings>

@@ -43,6 +43,7 @@ namespace Enforcer5.Handlers
                     // A post edited into spam after it got past the checks: raid detection sees it again.
                     var edited = update.EditedMessage;
                     if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
+                    if (Detection.AdminChats.IsAdminChat(edited.Chat.Id)) return; // nothing is checked in an admin chat
                     if (!BotSenderFilter.Accept(edited)) return;
                     var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
                     if (!editCtx.Complete) return;
@@ -69,6 +70,7 @@ namespace Enforcer5.Handlers
                 case UpdateType.ChatMember:
                     // Joins and leaves, with the invite link used: for raid detection and its capture.
                     PrincipalObserver.Observe(update);
+                    if (update.ChatMember?.Chat is { } memberChat && Detection.AdminChats.IsAdminChat(memberChat.Id)) break;
                     MemberEvents.FromChatMember(update.ChatMember);
                     break;
                 default:
@@ -117,23 +119,8 @@ namespace Enforcer5.Handlers
         {
             {
 #if PREMIUM
-                if (update.Message.Chat.Type != ChatType.Private)
-                {
-                    var allowed = await Redis.db.SetContainsAsync("premiumBot", update.Message.Chat.Id);
-                    if (!allowed)
-                    {
-                        // Fires for every message from a non-premium group, so it must not occupy
-                        // a consumer.
-                        Bot.DispatchAction(() =>
-                        {
-                            Bot.Send(
-                                "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more",
-                                update);
-                            Bot.Api.LeaveChat(update.Message.Chat.Id);
-                        }, "PremiumNotice");
-                        return;
-                    }
-                }
+                if (update.Message.Chat.Type != ChatType.Private && !await PremiumServesAsync(update.Message))
+                    return;
 #endif
 
                 // Both ban checks in one pipelined batch, before we spend anything else on this chat.
@@ -167,6 +154,17 @@ namespace Enforcer5.Handlers
                     // allowed to fail: a timeout on one settings hash must not discard the whole
                     // update, which would silently drop commands.
                     var ctx = await MessageContext.BuildAsync(update, receivedAt);
+
+                    // A group's admin chat: the bot is there to talk to the admins, never to moderate. Only
+                    // commands and extras (Detection/AdminChats).
+                    if (ctx.IsGroup && Detection.AdminChats.IsAdminChat(update.Message.Chat.Id))
+                    {
+                        CollectNames(update.Message);
+                        if (update.Message.Type == MessageType.Text &&
+                            (update.Message.Text.StartsWith("/") || update.Message.Text.StartsWith("#")))
+                            Bot.DispatchInteractive(() => ExecuteTextCommands(update, adminChat: true), "ExecuteTextCommands");
+                        return;
+                    }
 
                     // Joins and leaves first, so raid detection counts this join before anything acts on it.
                     if (ctx.IsGroup && (update.Message.NewChatMembers?.Length > 0 || update.Message.LeftChatMember != null))
@@ -302,7 +300,7 @@ namespace Enforcer5.Handlers
         /// The blocking command-dispatch path, unchanged apart from logging inline instead of
         /// spawning a task per log line. Runs on the pool via Task.Run.
         /// </summary>
-        private static void ExecuteTextCommands(Update update)
+        private static void ExecuteTextCommands(Update update, bool adminChat = false)
         {
             if (update.Message.Text.StartsWith("/"))
             {
@@ -313,6 +311,11 @@ namespace Enforcer5.Handlers
                 var command = Bot.Commands.FirstOrDefault(
                     x => String.Equals(x.Trigger, args[0], StringComparison.CurrentCultureIgnoreCase));
                 if (command != null && !AnswersHere(command, address, update.Message.Chat.Id)) return;
+                if (command != null && adminChat && !AdminChatCommands.Contains(command.Trigger) && !command.DevOnly)
+                {
+                    if (CommandGate.Admit(update.Message)) AnswerAdminChat(update.Message);
+                    return;
+                }
                 if (command != null)
                 {
                     // Esme (the relay bot) may run the language upload, and nothing else a bot could.
@@ -377,6 +380,10 @@ namespace Enforcer5.Handlers
                 Log(update, "extra");
                 Commands.SendExtra(update, args);
             }
+            else if (adminChat)
+            {
+                return; // @admin and @pingall: the admins are already here
+            }
             else if (update.Message.Text.StartsWith("@admin") | update.Message.Text.StartsWith("@pingall"))
             {
                 var args = GetParameters(update.Message.Text);
@@ -426,6 +433,85 @@ namespace Enforcer5.Handlers
                 }
             }
         }
+
+        /// <summary>
+        /// The commands that work in a group's admin chat: linking it, and its own extras (the group's are
+        /// sent too, and listed). Everything else acts on a group, and the admins use it in the group.
+        /// </summary>
+        internal static readonly HashSet<string> AdminChatCommands = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "start", "extra", "extradel", "extralist"
+        };
+
+        /// <summary>A group command in an admin chat: says what the bot is for here.</summary>
+        private static void AnswerAdminChat(Message message)
+        {
+            var lang = Methods.GetGroupLanguage(message, true).Doc;
+            var titles = Detection.AdminChats.GroupsOf(message.Chat.Id)
+                .Select(g => ChatDetails.GetAsync(g).GetAwaiter().GetResult()?.Title ?? g.ToString());
+            Bot.SendReply(Methods.GetLocaleString(lang, "adminChatMode", string.Join(", ", titles)), message);
+        }
+
+        /// <summary>Names and usernames of who posts, so @mentions resolve; nothing is counted in an admin chat.</summary>
+        private static void CollectNames(Message message)
+        {
+            try
+            {
+                if (message.From == null) return;
+                Redis.db.HashSetAsync($"user:{message.From.Id}", "name", message.From.FirstName);
+                if (message.From.Username != null)
+                {
+                    Redis.db.HashSetAsync("bot:usernames", $"@{message.From.Username.ToLower()}", message.From.Id);
+                    Redis.db.HashSetAsync($"user:{message.From.Id}", "username", $"@{message.From.Username.ToLower()}");
+                }
+                Redis.db.HashSetAsync($"chat:{message.Chat.Id}:details", "name", message.Chat.Title);
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, "CollectNames");
+            }
+        }
+
+#if PREMIUM
+        private const string NoLongerActive =
+            "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more";
+
+        /// <summary>
+        /// Whether the premium edition serves this group: a premium group, or the admin chat of one. Otherwise it
+        /// says it is no longer active and leaves, except right after it was added, so the /start of a "Link admin
+        /// chat" button (which follows the join) can link the chat; that /start is handled here.
+        /// </summary>
+        private static async Task<bool> PremiumServesAsync(Message message)
+        {
+            var chatId = message.Chat.Id;
+            if (await Redis.db.SetContainsAsync("premiumBot", chatId)) return true;
+            foreach (var group in Detection.AdminChats.GroupsOf(chatId))
+                if (await Redis.db.SetContainsAsync("premiumBot", group)) return true;
+
+            // Added just now: wait for the link's /start rather than leaving at once.
+            if (message.NewChatMembers?.Any(m => m.Id == Bot.Me.Id) == true) return false;
+            if (message.Text is { } text && text.StartsWith("/"))
+            {
+                var args = GetParameters(text);
+                var address = CommandAddress.Parse(args[0], Bot.Me.Username);
+                if (address.ForMe && string.Equals(address.Trigger, "start", StringComparison.OrdinalIgnoreCase) &&
+                    args[1]?.StartsWith(Commands.AdminChatStart, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    var token = args[1].Substring(Commands.AdminChatStart.Length).Trim();
+                    Bot.DispatchInteractive(() => Commands.LinkAdminChat(message, token), "LinkAdminChat");
+                    return false;
+                }
+            }
+
+            // Fires for every message from a non-premium group, so it must not occupy a consumer.
+            Bot.DispatchAction(() =>
+            {
+                Bot.Send(NoLongerActive, chatId);
+                Bot.Api.LeaveChat(chatId);
+            }, "PremiumNotice");
+            return false;
+        }
+#endif
 
         /// <summary>Join handling. Blocking throughout, so it runs on the bounded action pool.</summary>
         private static void HandleNewChatMembers(MessageContext ctx)

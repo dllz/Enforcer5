@@ -283,6 +283,13 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var text = Redis.db.HashGetAsync(hash, args[0]).Result;
+            // In a group's admin chat, the group's extras work too; the admin chat's own come first.
+            foreach (var group in Detection.AdminChats.GroupsOf(update.Message.Chat.Id))
+            {
+                if (text.HasValue) break;
+                hash = $"chat:{group}:extra";
+                text = Redis.db.HashGetAsync(hash, args[0]).Result;
+            }
             if (!text.HasValue)
                 return;
             var fileId = "";

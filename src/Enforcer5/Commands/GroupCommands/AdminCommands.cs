@@ -403,14 +403,30 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var hash = $"chat:{update.Message.Chat.Id}:extra";
             var commands = Redis.db.HashKeysAsync(hash).Result;
+            var text = string.Join("\n", commands.ToList());
+            // In a group's admin chat: its own extras, then each group's, in sections.
+            var groups = Detection.AdminChats.GroupsOf(update.Message.Chat.Id);
+            if (groups.Count > 0)
+            {
+                var sections = new List<string>();
+                if (commands.Length > 0)
+                    sections.Add(Methods.GetLocaleString(lang, "extraListAdminChat") + "\n" + text);
+                foreach (var group in groups)
+                {
+                    var theirs = Redis.db.HashKeysAsync($"chat:{group}:extra").Result;
+                    if (theirs.Length == 0) continue;
+                    var title = ChatDetails.GetAsync(group).GetAwaiter().GetResult()?.Title ?? group.ToString();
+                    sections.Add(Methods.GetLocaleString(lang, "extraListGroup", title) + "\n" + string.Join("\n", theirs.ToList()));
+                }
+                text = string.Join("\n\n", sections);
+            }
 
-            if (commands.Length == 0)
+            if (text.Length == 0)
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "noExtra"), update);
             }
             else
             {
-                var text = string.Join("\n", commands.ToList());
 
                 if (Methods.SendInPm(update.Message, "Extra"))
                 {
