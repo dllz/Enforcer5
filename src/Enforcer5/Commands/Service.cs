@@ -483,12 +483,15 @@ defSpamValue = 3;
         /// A "Go to message" button for a log channel post, or null if the message cannot be linked:
         /// only supergroups have message links (t.me/c/...), which work for any member.
         /// </summary>
-        internal static InlineKeyboardMarkup LogLinkButton(XDocument lang, long chatId, long? messageId)
-        {
-            if (messageId is not > 0 || !chatId.ToString().StartsWith("-100")) return null;
-            var url = Methods.GetChatMessageLink(chatId, messageId.Value.ToString());
-            return new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(Methods.GetLocaleString(lang, "goToMessage"), url));
-        }
+        internal static InlineKeyboardMarkup LogLinkButton(XDocument lang, long chatId, long? messageId) =>
+            LogLinkUrl(chatId, messageId) is { } url
+                ? new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(Methods.GetLocaleString(lang, "goToMessage"), url))
+                : null;
+
+        /// <summary>The link behind <see cref="LogLinkButton"/>, or null.</summary>
+        internal static string LogLinkUrl(long chatId, long? messageId) =>
+            messageId is not > 0 || !chatId.ToString().StartsWith("-100") ? null
+                : Methods.GetChatMessageLink(chatId, messageId.Value.ToString());
 
         internal static string GetCachedGroupName(long chatId) => Methods.FormatHTML(GetCachedGroupTitle(chatId));
 
@@ -619,22 +622,13 @@ defSpamValue = 3;
                         LogDigest.Add(chatId, long.Parse(logChatID), lang, text());
                         return;
                     }
-                    Bot.Send(text(), long.Parse(logChatID), LogLinkButton(lang, chatId, linkMessageId));
+                    // Posted in the background (LogQueue), which also handles a channel the bot lost.
+                    LogQueue.Enqueue(chatId, long.Parse(logChatID), text(), LogLinkUrl(chatId, linkMessageId),
+                        Methods.GetLocaleString(lang, "goToMessage"));
                 }
                 catch (Exception e)
                 {
-                    List<string> removeTriggers = new List<string> { "bot was kicked from the", "bot is not a member of the", "bot was blocked by" };
-                    if (e is AggregateException && ((AggregateException)e).InnerExceptions.Any(x => removeTriggers.Any(y => x.Message.Contains(y))))
-                    {
-                        // The bot lost access to the log channel: a setup change, handled here.
-                        Redis.db.HashDeleteAsync($"chat:{chatId}:settings", "logchat");
-                        Bot.Send(Methods.GetLocaleString(lang, "logchannelAutoRemoved"), chatId);
-                    }
-                    else
-                    {
-                        ErrorReporter.Report(e, $"Posting to the log channel of {chatId}");
-                        Bot.Send(Methods.GetLocaleString(lang, "logSendError"), chatId);
-                    }
+                    ErrorReporter.Report(e, $"Posting to the log channel of {chatId}");
                 }
             }
         }
@@ -652,13 +646,13 @@ defSpamValue = 3;
 
                     if (groupname != null)
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto),
-                            -1001141798933);
+                        LogQueue.Enqueue(0, -1001141798933,
+                            Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto));
                     }
                     else
                     {
-                        Bot.Send(Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"),
-                           -1001141798933);
+                        LogQueue.Enqueue(0, -1001141798933,
+                            Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"));
                     }
 
                 }

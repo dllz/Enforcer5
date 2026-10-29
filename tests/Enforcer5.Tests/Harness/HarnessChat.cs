@@ -178,6 +178,7 @@ namespace Enforcer5.Tests.Harness
             Telegram.SetMember(ChatId, BotUser.Id, MemberState.Administrator);
             Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
+            LogQueue.ResetForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             await SettleAsync();
@@ -191,6 +192,7 @@ namespace Enforcer5.Tests.Harness
         {
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
+            LogQueue.ResetForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
             // What a group's settings were in memory, and the members' scores; the Redis cache and
             // PostgreSQL keep the rest.
@@ -202,6 +204,7 @@ namespace Enforcer5.Tests.Harness
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
+            await LogQueue.StartAsync();
             await SettleAsync();
         }
 
@@ -477,6 +480,7 @@ namespace Enforcer5.Tests.Harness
             Bot.Api = _world.PreviousApi;
             Bot.Files = _world.PreviousFiles;
             Announcements.ResetForTests();
+            LogQueue.ResetForTests();
             Bot.Me = _world.PreviousMe;
             Enforcer5.Helpers.Clock.UseForTests(null);
             PostgresStorage.UseForTests(null);

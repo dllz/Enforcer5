@@ -958,6 +958,7 @@ namespace Enforcer5.Handlers
                         {
                             return;
                         }
+                        long? logGroup = null;
                         if (args.Length >= 2)
                         {
                             if (!string.IsNullOrEmpty(args[1]))
@@ -969,10 +970,7 @@ namespace Enforcer5.Handlers
                                     
                                     return;
                                 }
-                                if (callbacks.GroupAdminOnly)
-                                {
-                                    Service.LogCallback(long.Parse(args[1]), update.From, update.Data, update.Message);
-                                }
+                                if (callbacks.GroupAdminOnly) logGroup = long.Parse(args[1]);
                             }
                         }
                         if (callbacks.InGroupOnly & update.Message.Chat.Type == ChatType.Private)
@@ -988,7 +986,11 @@ namespace Enforcer5.Handlers
                         catch (Exception e)
                         {
                             ErrorReporter.Report(e, $"Callback {callbacks.Trigger}");
-                        }                         
+                        }
+                        // After the button has done its work, and queued (LogQueue): a busy log channel
+                        // never holds up the menu.
+                        if (logGroup is { } group)
+                            Service.LogCallback(group, update.From, update.Data, update.Message);
                     }
                 }
                 catch (Exception e)

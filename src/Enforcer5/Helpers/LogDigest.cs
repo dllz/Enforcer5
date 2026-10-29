@@ -10,8 +10,8 @@ namespace Enforcer5.Helpers
     /// A group's log channel entries during a raid, posted together every <see cref="Every"/> instead
     /// of one post per action: a raid of 200 would otherwise be 200 posts, in a channel often shared
     /// by several groups. Nothing is left out; only the "go to message" buttons are, which point at
-    /// messages the raid's bans delete anyway. Kept in memory: a restart loses what is waiting, as
-    /// with <see cref="Announcements"/>.
+    /// messages the raid's bans delete anyway. Kept in memory until posted (then <see cref="LogQueue"/>,
+    /// journaled): a restart loses the last <see cref="Every"/>.
     /// </summary>
     internal static class LogDigest
     {
@@ -64,14 +64,14 @@ namespace Enforcer5.Helpers
             {
                 if (post.Length > 0 && post.Length + line.Length + 2 > MaxLength)
                 {
-                    Bot.Send(post.ToString(), pending.LogChat);
+                    LogQueue.Enqueue(chatId, pending.LogChat, post.ToString());
                     post.Clear();
                 }
                 if (post.Length > 0) post.Append("\n\n");
                 post.Append(line);
             }
             if (pending.Dropped > 0) post.Append($"\n\n(+{pending.Dropped} more)");
-            if (post.Length > 0) Bot.Send(post.ToString(), pending.LogChat);
+            if (post.Length > 0) LogQueue.Enqueue(chatId, pending.LogChat, post.ToString());
         }
 
         internal static void ResetForTests()

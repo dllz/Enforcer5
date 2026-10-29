@@ -101,6 +101,8 @@ namespace Enforcer5
 
             // Bans, kicks, mutes and deletes: reloads what the journal holds from before a restart.
             Enforcement.EnforcementQueue.Start(Bot.ShutdownToken);
+            // Log channel posts waiting from before a restart.
+            Bot.Dispatch(() => LogQueue.StartAsync(), "LogQueue");
 
             new Thread(() => Bot.Initialize().GetAwaiter().GetResult()) { IsBackground = true }.Start();
             new Thread(Bot.MonitorLanguageDirectory) { IsBackground = true }.Start();

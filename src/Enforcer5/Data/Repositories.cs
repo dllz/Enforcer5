@@ -109,5 +109,9 @@ namespace Enforcer5.Data
         // Per edition: each carries out its own jobs. See Enforcement/EnforcementQueue.
         internal static IEnforcementJournal EnforcementJournal { get; set; } =
             new RedisEnforcementJournal(() => Redis.db, Enforcer5.Helpers.BanHistory.Edition);
+
+        /// <summary>Log channel posts not yet sent (<see cref="Enforcer5.Helpers.LogQueue"/>).</summary>
+        internal static ILogJournal LogJournal { get; set; } =
+            new RedisLogJournal(() => Redis.db, Enforcer5.Helpers.BanHistory.Edition);
     }
 }

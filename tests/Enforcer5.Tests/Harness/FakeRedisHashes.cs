@@ -46,6 +46,8 @@ namespace Enforcer5.Tests.Harness
                 });
             redis.Setup(r => r.HashDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
                 .ReturnsAsync((RedisKey k, RedisValue f, CommandFlags _) => Delete(k, f));
+            redis.Setup(r => r.HashDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue[]>(), It.IsAny<CommandFlags>()))
+                .ReturnsAsync((RedisKey k, RedisValue[] fs, CommandFlags _) => fs.LongCount(f => Delete(k, f)));
         }
 
         /// <summary>A field's value, null when it is not set.</summary>
