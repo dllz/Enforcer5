@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -510,9 +511,27 @@ namespace Enforcer5.Helpers
             }
         }
 
+        /// <summary>
+        /// The member a command named by argument (an id, a mention or an @username), per update, so
+        /// <see cref="Commands.Service.LogCommand(Update, string)"/> can log who it was about. Without it the
+        /// log channel only had the command text, and a post like "/warn @name" could not be matched to a
+        /// member once the username changed (the 2026 Redis recovery lost warns that way).
+        /// </summary>
+        private static readonly ConditionalWeakTable<Update, StrongBox<long>> ArgTargets = new();
+
+        internal static long? ArgTarget(Update update) =>
+            update != null && ArgTargets.TryGetValue(update, out var box) ? box.Value : null;
+
         public static long GetUserId(Update update, string[] args)
         {
-            var lang = GetGroupLanguage(update.Message,true).Doc;
+            var id = ResolveUserId(update, args, out var fromArgs);
+            if (fromArgs) ArgTargets.AddOrUpdate(update, new StrongBox<long>(id));
+            return id;
+        }
+
+        private static long ResolveUserId(Update update, string[] args, out bool fromArgs)
+        {
+            fromArgs = false;
             if (update.Message.NewChatMember != null)
             {
                 return update.Message.NewChatMember.Id;
@@ -526,6 +545,7 @@ namespace Enforcer5.Helpers
                 
                 if (!string.IsNullOrEmpty(args[1]))
                 {
+                    fromArgs = true;
                     long id;
                     if (long.TryParse(args[1], out id))
                     {

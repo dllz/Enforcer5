@@ -479,10 +479,28 @@ defSpamValue = 3;
                 var messageId = update.Message.MessageId;
                 if(update.Message.ReplyToMessage != null)
                     LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})", linkMessageId: messageId);
+                else if (Methods.ArgTarget(update) is long target)
+                    // Named by id, mention or @username: log the id too, as a reply does.
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, ArgTargetName(target), linkMessageId: messageId);
                 else
                 {
                     LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, linkMessageId: messageId);
                 }                                           
+        }
+
+        /// <summary>"Name (id)" for a member a command named by argument; the id alone when no name is stored.</summary>
+        internal static string ArgTargetName(long userId)
+        {
+            string name = null;
+            try
+            {
+                name = Methods.GetName(userId);
+            }
+            catch (Exception)
+            {
+                // A missing name only costs the name: the id is what the log needs.
+            }
+            return string.IsNullOrWhiteSpace(name) ? userId.ToString() : $"{name} ({userId})";
         }
 
          public static void LogDevCommand(Update update, string command)
