@@ -2216,4 +2216,106 @@ exaple: /{0}
   <string key="hcommandchannelrep">
     <value>برای توسعه‌دهندگان: اعضایی که به یک کانال یا وب‌سایت اشاره کردند در همه گروه‌ها چه سرنوشتی داشتند. ‎/{0} ‎@کانال، شناسه کانال یا یک وب‌سایت.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;داده‌های بازیابی‌شده برای {0}&lt;/b&gt;\n\nمتأسفیم: Enforcer بین {1} و {2} بخشی از داده‌هایی را که برای گروه شما نگه داشته بود، مثل اخطارها، از دست داد. آنچه را می‌شد از کانال لاگ گروه برگرداندیم. پایین چیزهایی است که برمی‌گردانیم، همراه با پست‌های لاگ که هر تغییر از آن آمده است.\n\nتا وقتی یک ادمین «اعمال» را نزند هیچ چیز تغییر نمی‌کند، و بعد هم فقط موارد تیک‌خورده. تیک هر چیزی را که نمی‌خواهید بردارید؛ تیک‌ها بین همه ادمین‌های گروه مشترک است. این تا {3} باز می‌ماند.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;داده‌های بازیابی‌شده برای {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>صفحه {0} از {1} · {2} از {3} تیک‌خورده</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ اعمال {0} مورد تیک‌خورده</value>
+  </string>
+  <string key="recoveryNone">
+    <value>هیچ‌کدام را اعمال نکن</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>{0} مورد از {1} تغییر بازیابی‌شده برای {2} اعمال شود؟ مقدارهایی که پس از از دست رفتن داده‌ها تغییر کرده‌اند همان‌طور می‌مانند؛ به اخطارها فقط اختلاف اضافه می‌شود.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ بله، اعمال کن</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ بازگشت</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ اعمال‌شده توسط {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} تصمیم گرفت هیچ‌کدام را اعمال نکند. چیزی تغییر نکرد.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{0} از {1} تغییر اعمال شد، {2} مورد بدون تیک.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>همان‌طور ماندند، چون از آن زمان تغییر کرده‌اند:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>این اعضا اکنون به اندازه سقف اخطار گروه ({0}) یا بیشتر اخطار دارند. Enforcer آن‌ها را بن نکرد؛ می‌توانید اینجا این کار را بکنید:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 بن کردن {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} اخطار، بن‌شده توسط {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ کسی به‌موقع پاسخ نداد، پس چیزی تغییر نکرد.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>این پیشنهاد بازیابی بسته شده یا دیگر وجود ندارد.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>فقط ادمین‌های گروه می‌توانند داده‌های بازیابی‌شده آن را بررسی کنند.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer بخشی از داده‌های این گروه، مثل اخطارها، را از دست داد و قسمتی از آن را بازیابی کرد. پیش از هر تغییری یک ادمین باید آن را بررسی کند: پایین بزنید.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>بررسی داده‌های بازیابی‌شده</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>اخطارها {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>کل اخطارها {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>پیش‌اخطارها {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>از گزارش دادن منع شد</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>دوباره می‌تواند گزارش دهد</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>مسدود کردن ربات اینلاین {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>رفع مسدودی ربات اینلاین {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>مسدود کردن بسته استیکر {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>رفع مسدودی بسته استیکر {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>بازگرداندن extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>حذف extra {0} (حذف شده بود)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>بازگرداندن متن تغییریافته extra {0}</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>بازگرداندن فهرست دلایل حذف اخطار به شکلی که تغییر داده شده بود</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>برای توسعه‌دهندگان: پیشنهادهای بازیابی داده به گروه‌ها پس از از دست رفتن داده. برای وارد کردن یک فایل بازیابی (در انتظار) با ‎/{0} به آن پاسخ دهید، ‎/{0} preview شناسه-چت پیشنهاد یک گروه را نشان می‌دهد، ‎/{0} release دسته آن‌ها را می‌فرستد؛ ‎/{0} به‌تنهایی فهرستشان را نشان می‌دهد.</value>
+  </string>
 </strings> 

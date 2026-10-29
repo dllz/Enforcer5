@@ -1967,6 +1967,108 @@ $title - заменяется названием группы.
   <string key="hcommandchannelrep">
     <value>Для разработчиков: что стало с участниками, ссылавшимися на канал или сайт, во всех группах. /{0} @канал, id канала или сайт.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;Восстановленные данные для {0}&lt;/b&gt;\n\nИзвините: с {1} по {2} Enforcer потерял данные, которые хранил для вашей группы, например предупреждения. Мы вернули что смогли из лог-канала группы. Ниже то, что мы бы восстановили, со ссылками на записи лога, откуда взято каждое изменение.\n\nНичего не изменится, пока админ не нажмёт «Применить», и тогда только отмеченное. Снимите отметку со всего, что вам не нужно; отметки общие для всех админов группы. Предложение открыто до {3}.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;Восстановленные данные для {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Страница {0} из {1} · отмечено {2} из {3}</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ Применить отмеченные ({0})</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Ничего не применять</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>Применить {0} из {1} восстановленных изменений в {2}? Значения, изменившиеся после потери данных, останутся как есть; к предупреждениям прибавится разница.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Да, применить</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Назад</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ Применил(а) {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} решил(а) ничего не применять. Ничего не изменено.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>Применено {0} из {1} изменений, без отметки: {2}.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>Оставлены как есть, потому что с тех пор изменились:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>У этих участников теперь столько предупреждений, сколько лимит группы ({0}), или больше. Enforcer их не забанил; вы можете сделать это здесь:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 Забанить {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: предупреждений {1}, забанил(а) {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Никто не ответил вовремя, поэтому ничего не изменено.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>Это предложение восстановления закрыто или больше не существует.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Только админы группы могут просмотреть её восстановленные данные.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer потерял часть данных этой группы, например предупреждения, и восстановил часть из них. Админ должен их просмотреть, прежде чем что-то изменится: нажмите ниже.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Просмотреть восстановленные данные</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>предупреждения {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>всего предупреждений {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>предварительные предупреждения {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>лишён(а) права жаловаться</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>снова может жаловаться</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>Заблокировать инлайн-бота {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>Разблокировать инлайн-бота {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>Заблокировать стикерпак {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>Разблокировать стикерпак {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>Восстановить extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>Удалить extra {0} (его удалили)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>Восстановить изменённый текст extra {0}</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Восстановить список причин снятия предупреждений в изменённом виде</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>Для разработчиков: предложения восстановить данные группам после потери данных. Ответьте на файл восстановления командой /{0}, чтобы импортировать его (отложено), /{0} preview id-чата покажет предложение группы, /{0} release пакет отправит их; /{0} без аргументов покажет список.</value>
+  </string>
 </strings>
 
   

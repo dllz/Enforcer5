@@ -707,4 +707,50 @@ namespace Enforcer5.Storage
         public DateTimeOffset LastSeenAt { get; set; }
         public DateTimeOffset ComputedAt { get; set; }
     }
+
+    /// <summary>
+    /// Data recovered for a group after a data loss (the Redis loss of 2026-08-22 to 2026-10-26, read back from the
+    /// log channels), offered to its admins before anything is written (<c>Recovery/RecoveryOffers</c>). Nothing is
+    /// applied until an admin taps Apply; an offer nobody answers expires and applies nothing. <c>held</c> until a dev
+    /// releases the batch, then <c>released</c> until an edition in the group sends it (<c>sent</c>), then decided.
+    /// <c>copies</c> are the messages it was sent as, by <c>edition</c> (the one whose buttons they carry):
+    /// [{"chat": id, "message": id}].
+    /// </summary>
+    internal sealed class RecoveryOfferEntity
+    {
+        public long OfferId { get; set; }
+        public long GroupId { get; set; }
+        public string Batch { get; set; }
+        public DateTimeOffset PeriodFrom { get; set; }
+        public DateTimeOffset PeriodTo { get; set; }
+        public string Status { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? ReleasedAt { get; set; }
+        public DateTimeOffset? SentAt { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset ExpiresAt { get; set; }
+        public long? DecidedByAccountId { get; set; }
+        public DateTimeOffset? DecidedAt { get; set; }
+        public string Copies { get; set; }
+    }
+
+    /// <summary>
+    /// One change of a <see cref="RecoveryOfferEntity"/> that admins can untick: a member's warns (one or more stored
+    /// counts), or one setting or list entry. <c>changes</c> are the stored values it sets, each with the value the
+    /// recovery started from ([{"type": "hash|set|str", "key", "field", "before", "after"}]); <c>evidence</c> the
+    /// log channel posts it was read from ([{"at", "log", "post", "what"}]). <c>outcome</c> once decided:
+    /// applied, partly (some values had changed meanwhile), skipped (all had), unticked or declined.
+    /// </summary>
+    internal sealed class RecoveryItemEntity
+    {
+        public long OfferId { get; set; }
+        public int Position { get; set; }
+        public string Kind { get; set; }
+        public long? AccountId { get; set; }
+        public string Changes { get; set; }
+        public string Evidence { get; set; }
+        public bool Selected { get; set; }
+        public string Outcome { get; set; }
+        public string Result { get; set; }
+    }
 }

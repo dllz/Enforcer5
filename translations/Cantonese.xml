@@ -1819,4 +1819,106 @@ UPDATE LOG
   <string key="hcommandchannelrep">
     <value>開發者用：所有群組入面，指向某個頻道或者網站嘅成員最後點樣。/{0} @頻道、頻道 ID 或者網站。</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;{0} 嘅恢復數據&lt;/b&gt;\n\n唔好意思：喺 {1} 至 {2} 之間，Enforcer 遺失咗幫你哋群組儲存嘅部分數據，例如警告。我哋從群組嘅日誌頻道盡量攞返。下面係我哋會恢復嘅內容，附上每項更改來源嘅日誌帖。\n\n管理員撳「套用」之前乜都唔會改，而且只會套用有剔嘅項目。唔想要嘅就取消剔；剔選狀態係群組所有管理員共用嘅。呢個提議開放到 {3}。</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;{0} 嘅恢復數據&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>第 {0}/{1} 頁 · 已剔 {2}/{3}</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ 套用已剔嘅 {0} 項</value>
+  </string>
+  <string key="recoveryNone">
+    <value>全部唔套用</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>要將 {1} 項恢復嘅更改入面嘅 {0} 項套用去 {2} 嗎？數據遺失之後改過嘅值會保持唔變；警告數會加上差額。</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ 係，套用</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ 返回</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ 由 {0} 套用</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} 揀咗全部唔套用。乜都冇改。</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>已套用 {1} 項入面嘅 {0} 項，{2} 項冇剔。</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>以下項目保持唔變，因為之後已經改過：</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>呢啲成員而家嘅警告數已經到咗或者超過群組上限（{0}）。Enforcer 冇封鎖佢哋；你可以喺呢度做：</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 封鎖 {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}：{1} 次警告，已由 {2} 封鎖</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ 冇人及時回應，所以乜都冇改。</value>
+  </string>
+  <string key="recoveryGone">
+    <value>呢個恢復提議已經關閉或者唔存在。</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>只有群組管理員先可以睇群組嘅恢復數據。</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer 遺失咗呢個群組嘅部分數據（例如警告），並恢復咗其中一部分。改任何嘢之前要有管理員睇過：撳下面。</value>
+  </string>
+  <string key="recoveryReview">
+    <value>睇恢復嘅數據</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>警告 {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>累計警告 {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>預警告 {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>禁止舉報</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>可以再舉報</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>封鎖內聯機械人 {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>解除封鎖內聯機械人 {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>封鎖貼圖包 {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>解除封鎖貼圖包 {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>恢復 extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>刪除 extra {0}（佢已經被刪咗）</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>恢復 extra {0} 改過嘅文字</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>按改過嘅樣恢復移除警告嘅理由列表</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>開發者用：數據遺失之後向各群組發出嘅數據恢復提議。用 /{0} 回覆恢復檔案就可以匯入（暫時唔發），/{0} preview 群組ID 睇某個群組嘅提議，/{0} release 批次 發出佢哋；單獨 /{0} 列出所有提議。</value>
+  </string>
 </strings>

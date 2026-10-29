@@ -596,6 +596,38 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.Flags).IsRequired().HasDefaultValueSql("'{}'::text[]");
                 entity.HasIndex(x => x.Username, "channel_profiles_username_idx");
             });
+
+            modelBuilder.Entity<RecoveryOfferEntity>(entity =>
+            {
+                entity.ToTable("recovery_offers", table =>
+                    table.HasCheckConstraint("recovery_offers_status_check",
+                        "status IN ('held', 'released', 'sent', 'applied', 'declined', 'expired')"));
+                entity.HasKey(x => x.OfferId);
+                entity.Property(x => x.OfferId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Batch).IsRequired();
+                entity.Property(x => x.Status).IsRequired().HasDefaultValue("held");
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.Property(x => x.Copies).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb").IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.DecidedByAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.Batch }, "recovery_offers_group_batch_idx").IsUnique();
+                entity.HasIndex(x => x.Status, "recovery_offers_status_idx");
+            });
+
+            modelBuilder.Entity<RecoveryItemEntity>(entity =>
+            {
+                entity.ToTable("recovery_items", table =>
+                    table.HasCheckConstraint("recovery_items_outcome_check",
+                        "outcome IS NULL OR outcome IN ('applied', 'partly', 'skipped', 'unticked', 'declined', 'expired')"));
+                entity.HasKey(x => new { x.OfferId, x.Position });
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Changes).HasColumnType("jsonb").IsRequired();
+                entity.Property(x => x.Evidence).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb").IsRequired();
+                entity.Property(x => x.Selected).HasDefaultValue(true);
+                entity.Property(x => x.Result).HasColumnType("jsonb");
+                entity.HasOne<RecoveryOfferEntity>().WithMany().HasForeignKey(x => x.OfferId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+            });
         }
 
         private static void UseSnakeCaseColumns(ModelBuilder modelBuilder)

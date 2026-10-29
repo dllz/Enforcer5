@@ -381,7 +381,7 @@ defSpamValue = 3;
         {
             "resetwarns", "removewarn", "resetPrewarns", "removePrewarn",
             "userbuttonresetwarn", "userbuttonremwarns", "usermediaremwarns", "usermediaresetwarn",
-            "warnreason"
+            "warnreason", Recovery.RecoveryOffers.Trigger
         };
 
         /// <summary>
@@ -430,7 +430,7 @@ defSpamValue = 3;
             return new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(Methods.GetLocaleString(lang, "goToMessage"), url));
         }
 
-        private static string GetCachedGroupName(long chatId) => Methods.FormatHTML(GetCachedGroupTitle(chatId));
+        internal static string GetCachedGroupName(long chatId) => Methods.FormatHTML(GetCachedGroupTitle(chatId));
 
         /// <summary>The group's title from the stats cache, unescaped; empty if unknown.</summary>
         internal static string GetCachedGroupTitle(long chatId)

@@ -1927,4 +1927,106 @@ Example:
   <string key="hcommandchannelrep">
     <value>开发者用：在所有群里，指向某个频道或网站的成员后来怎样。/{0} @频道、频道 ID 或网站。</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;{0} 的恢复数据&lt;/b&gt;\n\n抱歉：在 {1} 到 {2} 之间，Enforcer 丢失了为你们群保存的部分数据，例如警告。我们从群的日志频道中尽量找回了数据。下面是我们会恢复的内容，并附上每项更改来源的日志消息。\n\n在管理员点击“应用”之前不会有任何更改，并且只应用勾选的项目。不需要的请取消勾选；勾选状态由群里所有管理员共享。此提议开放到 {3}。</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;{0} 的恢复数据&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>第 {0}/{1} 页 · 已勾选 {2}/{3}</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ 应用已勾选的 {0} 项</value>
+  </string>
+  <string key="recoveryNone">
+    <value>全部不应用</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>要把 {1} 项恢复的更改中的 {0} 项应用到 {2} 吗？数据丢失后被改过的值保持不变；警告数会加上差值。</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ 是，应用</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ 返回</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ 由 {0} 应用</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} 选择全部不应用。没有任何更改。</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>已应用 {1} 项中的 {0} 项，{2} 项未勾选。</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>以下项目保持不变，因为之后已被更改：</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>这些成员现在的警告数已达到或超过群的上限（{0}）。Enforcer 没有封禁他们；你可以在这里操作：</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 封禁 {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}：{1} 次警告，已由 {2} 封禁</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ 没有人及时回应，所以没有任何更改。</value>
+  </string>
+  <string key="recoveryGone">
+    <value>此恢复提议已关闭或不存在。</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>只有群管理员可以查看群的恢复数据。</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer 丢失了本群的部分数据（例如警告），并恢复了其中一部分。在做出任何更改之前需要管理员查看：点击下方。</value>
+  </string>
+  <string key="recoveryReview">
+    <value>查看恢复的数据</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>警告 {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>累计警告 {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>预警告 {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>禁止举报</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>可以再次举报</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>屏蔽内联机器人 {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>取消屏蔽内联机器人 {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>屏蔽贴纸包 {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>取消屏蔽贴纸包 {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>恢复 extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>删除 extra {0}（它已被删除）</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>恢复 extra {0} 修改后的文本</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>按修改后的样子恢复移除警告的理由列表</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>开发者用：数据丢失后向各群发送的数据恢复提议。用 /{0} 回复恢复文件即可导入（暂不发送），/{0} preview 群ID 查看某个群的提议，/{0} release 批次 发送它们；单独 /{0} 列出所有提议。</value>
+  </string>
 </strings>

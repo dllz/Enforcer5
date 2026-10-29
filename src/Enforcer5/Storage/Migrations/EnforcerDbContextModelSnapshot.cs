@@ -1588,6 +1588,146 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.RecoveryItemEntity", b =>
+                {
+                    b.Property<long>("OfferId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("offer_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<long?>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Changes")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("changes");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("evidence")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Outcome")
+                        .HasColumnType("text")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("result");
+
+                    b.Property<bool>("Selected")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("selected");
+
+                    b.HasKey("OfferId", "Position");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("recovery_items", null, t =>
+                        {
+                            t.HasCheckConstraint("recovery_items_outcome_check", "outcome IS NULL OR outcome IN ('applied', 'partly', 'skipped', 'unticked', 'declined', 'expired')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RecoveryOfferEntity", b =>
+                {
+                    b.Property<long>("OfferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("offer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("OfferId"));
+
+                    b.Property<string>("Batch")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("batch");
+
+                    b.Property<string>("Copies")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("copies")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<long?>("DecidedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("decided_by_account_id");
+
+                    b.Property<string>("Edition")
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<DateTimeOffset>("PeriodFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_from");
+
+                    b.Property<DateTimeOffset>("PeriodTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_to");
+
+                    b.Property<DateTimeOffset?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("held")
+                        .HasColumnName("status");
+
+                    b.HasKey("OfferId");
+
+                    b.HasIndex("DecidedByAccountId");
+
+                    b.HasIndex(new[] { "GroupId", "Batch" }, "recovery_offers_group_batch_idx")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "Status" }, "recovery_offers_status_idx");
+
+                    b.ToTable("recovery_offers", null, t =>
+                        {
+                            t.HasCheckConstraint("recovery_offers_status_check", "status IN ('held', 'released', 'sent', 'applied', 'declined', 'expired')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.ReportActionEntity", b =>
                 {
                     b.Property<long>("ReportActionId")
@@ -2608,6 +2748,34 @@ namespace Enforcer5.Storage.Migrations
 
             modelBuilder.Entity("Enforcer5.Storage.RaidIncidentEntity", b =>
                 {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RecoveryItemEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.RecoveryOfferEntity", null)
+                        .WithMany()
+                        .HasForeignKey("OfferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.RecoveryOfferEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("DecidedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
                         .WithMany()
                         .HasForeignKey("GroupId")

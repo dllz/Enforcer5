@@ -2245,4 +2245,106 @@
   <string key="hcommandchannelrep">
     <value>Geliştiriciler için: tüm gruplarda bir kanala veya web sitesine işaret eden üyelerin sonu ne oldu. /{0} @kanal, bir kanal kimliği veya bir web sitesi.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;{0} için kurtarılan veriler&lt;/b&gt;\n\nÜzgünüz: Enforcer {1} ile {2} arasında grubunuz için sakladığı bazı verileri, örneğin uyarıları kaybetti. Grubun kayıt kanalından alabildiğimizi geri aldık. Aşağıda geri koyacaklarımız var; her değişikliğin geldiği kayıt gönderileriyle birlikte.\n\nBir yönetici Uygula'ya dokunana kadar hiçbir şey değişmez, sonra da yalnızca işaretli olanlar. İstemediğiniz her şeyin işaretini kaldırın; işaretler grubun tüm yöneticileri için ortaktır. {3} tarihine kadar açık kalır.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;{0} için kurtarılan veriler&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Sayfa {0}/{1} · {3} içinden {2} işaretli</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ İşaretli {0} tanesini uygula</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Hiçbirini uygulama</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>{2} için kurtarılan {1} değişiklikten {0} tanesi uygulansın mı? Veri kaybından sonra değişen değerler olduğu gibi bırakılır; uyarılara fark eklenir.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Evet, uygula</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Geri</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ {0} uyguladı</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} hiçbirini uygulamamayı seçti. Hiçbir şey değişmedi.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{1} değişiklikten {0} tanesi uygulandı, {2} tanesi işaretsiz.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>O zamandan beri değiştikleri için olduğu gibi bırakıldı:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>Bu üyelerin şimdi grubun sınırı ({0}) kadar ya da daha fazla uyarısı var. Enforcer onları yasaklamadı; burada yapabilirsiniz:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 {0} kişisini yasakla</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} uyarı, {2} yasakladı</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Kimse zamanında yanıt vermedi, bu yüzden hiçbir şey değişmedi.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>Bu kurtarma teklifi kapandı ya da artık yok.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Kurtarılan verileri yalnızca grubun yöneticileri inceleyebilir.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer bu grubun bazı verilerini, örneğin uyarıları kaybetti ve bir kısmını kurtardı. Bir şey değişmeden önce bir yöneticinin incelemesi gerekiyor: aşağıya dokunun.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Kurtarılan verileri incele</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>uyarılar {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>toplam uyarılar {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>ön uyarılar {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>şikâyet etmesi engellendi</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>yeniden şikâyet edebilir</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>{0} satır içi botunu engelle</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>{0} satır içi botunun engelini kaldır</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>{0} çıkartma paketini engelle</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>{0} çıkartma paketinin engelini kaldır</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>{0} extra'sını geri yükle</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>{0} extra'sını sil (silinmişti)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>{0} extra'sının değiştirilen metnini geri yükle</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Uyarı kaldırma nedenleri listesini değiştirildiği hâliyle geri yükle</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>Geliştiriciler için: veri kaybından sonra gruplara veri kurtarma teklifleri. İçe aktarmak için bir kurtarma dosyasını /{0} ile yanıtlayın (bekletilir), /{0} preview sohbet-kimliği bir grubun teklifini gösterir, /{0} release grup onları gönderir; yalnızca /{0} listeler.</value>
+  </string>
 </strings>

@@ -117,6 +117,8 @@ namespace Enforcer5
             Detection.TrustLearning.Start(Bot.ShutdownToken);
             // Channel and website reputation, implicit labels and each group's retention, nightly.
             Detection.DetectionData.Start(Bot.ShutdownToken);
+            // Data recovered after a data loss: offered to each group's admins once a dev releases it.
+            Recovery.RecoveryOffers.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

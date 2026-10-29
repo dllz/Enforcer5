@@ -63,6 +63,12 @@ namespace Enforcer5
 
                     switch (cmd)
                     {
+                        case "recovery":
+                            // From the note in a group none of whose admins could be sent its data recovery offer.
+                            Recovery.RecoveryOffers.StartAsync(update.Message, args[1].Substring(Recovery.RecoveryOffers.StartPrefix.Length))
+                                .GetAwaiter().GetResult();
+                            break;
+
                         case "pingme":
                             group = args[1].Split('_')[1];
                             if (long.TryParse(group, out longGroup))

@@ -2465,4 +2465,106 @@
   <string key="hcommandchannelrep">
     <value>Untuk developer: bagaimana nasib anggota yang menunjuk ke sebuah channel atau situs web, di semua grup. /{0} @channel, id channel, atau situs web.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;Data yang dipulihkan untuk {0}&lt;/b&gt;\n\nMaaf: antara {1} dan {2} Enforcer kehilangan data yang disimpannya untuk grup kalian, seperti peringatan. Kami mengambil kembali apa yang bisa dari channel log grup. Di bawah ini apa yang akan kami kembalikan, beserta postingan log asal setiap perubahan.\n\nTidak ada yang berubah sampai admin menekan Terapkan, lalu hanya yang dicentang. Hapus centang pada yang tidak kalian inginkan; centang ini sama untuk semua admin grup. Terbuka sampai {3}.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;Data yang dipulihkan untuk {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Halaman {0} dari {1} · {2} dari {3} dicentang</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ Terapkan {0} yang dicentang</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Jangan terapkan apa pun</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>Terapkan {0} dari {1} perubahan yang dipulihkan ke {2}? Nilai yang berubah sejak data hilang dibiarkan; untuk peringatan, selisihnya ditambahkan.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Ya, terapkan</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Kembali</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ Diterapkan oleh {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} memilih tidak menerapkan apa pun. Tidak ada yang diubah.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{0} dari {1} perubahan diterapkan, {2} tidak dicentang.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>Dibiarkan apa adanya, karena sudah berubah sejak itu:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>Anggota ini sekarang punya peringatan sebanyak batas grup ({0}) atau lebih. Enforcer tidak mem-ban mereka; kalian bisa melakukannya di sini:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 Ban {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} peringatan, di-ban oleh {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Tidak ada yang menjawab tepat waktu, jadi tidak ada yang diubah.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>Tawaran pemulihan ini sudah ditutup atau tidak ada lagi.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Hanya admin grup yang bisa meninjau data grup yang dipulihkan.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer kehilangan sebagian data grup ini, seperti peringatan, dan memulihkan sebagian. Admin perlu meninjaunya sebelum ada yang berubah: tekan di bawah.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Tinjau data yang dipulihkan</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>peringatan {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>total peringatan {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>pra-peringatan {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>diblokir dari melapor</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>boleh melapor lagi</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>Blokir bot inline {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>Buka blokir bot inline {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>Blokir paket stiker {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>Buka blokir paket stiker {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>Pulihkan extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>Hapus extra {0} (sudah dihapus)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>Pulihkan teks extra {0} yang diubah</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Pulihkan daftar alasan menghapus peringatan seperti yang diubah</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>Untuk developer: tawaran pemulihan data ke grup setelah data hilang. Balas file pemulihan dengan /{0} untuk mengimpornya (ditahan), /{0} preview id-chat menampilkan tawaran sebuah grup, /{0} release batch mengirimnya; /{0} saja menampilkan daftarnya.</value>
+  </string>
 </strings>

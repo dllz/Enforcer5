@@ -2232,4 +2232,106 @@
   <string key="hcommandchannelrep">
     <value>Para desenvolvedores: o que aconteceu com os membros que apontaram para um canal ou site, em todos os grupos. /{0} @canal, um id de canal ou um site.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;Dados recuperados de {0}&lt;/b&gt;\n\nDesculpe: entre {1} e {2} o Enforcer perdeu dados que tinha guardado do seu grupo, como as advertências. Recuperamos o que pudemos do canal de registro do grupo. Abaixo está o que colocaríamos de volta, com as publicações do registro de onde vem cada mudança.\n\nNada muda até um admin tocar em Aplicar, e então só o que estiver marcado. Desmarque o que não quiser; as marcações são compartilhadas por todos os admins do grupo. Fica aberto até {3}.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;Dados recuperados de {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Página {0} de {1} · {2} de {3} marcados</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ Aplicar {0} marcados</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Não aplicar nada</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>Aplicar {0} das {1} mudanças recuperadas em {2}? Valores alterados desde a perda de dados ficam como estão; nas advertências, a diferença é somada.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Sim, aplicar</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Voltar</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ Aplicado por {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} decidiu não aplicar nada. Nada foi alterado.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{0} de {1} mudanças aplicadas, {2} desmarcadas.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>Deixados como estão, porque mudaram desde então:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>Estes membros agora têm tantas advertências quanto o limite do grupo ({0}) ou mais. O Enforcer não os baniu; você pode fazer isso aqui:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 Banir {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} advertências, banido por {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Ninguém respondeu a tempo, então nada foi alterado.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>Esta oferta de recuperação está fechada ou não existe mais.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Só os admins do grupo podem revisar os dados recuperados dele.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 O Enforcer perdeu alguns dados deste grupo, como advertências, e recuperou uma parte. Um admin precisa revisá-los antes que algo mude: toque abaixo.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Revisar dados recuperados</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>advertências {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>advertências no total {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>pré-advertências {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>impedido de reportar</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>pode reportar de novo</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>Bloquear o bot inline {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>Desbloquear o bot inline {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>Bloquear o pacote de figurinhas {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>Desbloquear o pacote de figurinhas {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>Restaurar o extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>Apagar o extra {0} (ele tinha sido apagado)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>Restaurar o texto alterado do extra {0}</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Restaurar a lista de motivos para remover advertências como foi alterada</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>Para desenvolvedores: ofertas de recuperação de dados aos grupos após uma perda de dados. Responda a um arquivo de recuperação com /{0} para importá-lo (retido), /{0} preview id-do-chat mostra a oferta de um grupo, /{0} release lote as envia; /{0} sozinho as lista.</value>
+  </string>
 </strings>

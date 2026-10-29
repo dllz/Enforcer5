@@ -81,6 +81,13 @@ namespace Enforcer5.Data
         internal static IRaidTelemetryRepository RaidTelemetry { get; set; } =
             new PostgresRaidTelemetryRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Data recovered after a data loss, offered to each group's admins (Recovery/RecoveryOffers).
+        internal static IRecoveryRepository Recovery { get; set; } =
+            new PostgresRecoveryRepository(() => Storage.PostgresStorage.Database);
+
+        // Redis. The stored values a recovery offer sets once admins apply it.
+        internal static IRecoveryValues RecoveryValues { get; set; } = new RedisRecoveryValues(() => Redis.db);
+
         internal static ITempbanRepository Tempbans { get; set; } =
 #if PREMIUM
             new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");

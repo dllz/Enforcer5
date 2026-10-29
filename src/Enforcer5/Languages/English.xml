@@ -3278,4 +3278,106 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="editType_other">
     <value>media</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;Recovered data for {0}&lt;/b&gt;\n\nSorry: Enforcer lost data it had stored for your group between {1} and {2}, such as warns. We read back what we could from the group's log channel. Below is what we would put back, with the log posts each change comes from.\n\nNothing changes until an admin taps Apply, and then only what is ticked. Untick anything you don't want; the ticks are shared by all admins of the group. This stays open until {3}.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;Recovered data for {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Page {0} of {1} · {2} of {3} ticked</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ Apply {0} ticked</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Apply none</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>Apply {0} of the {1} recovered changes to {2}? Values that were changed since the data loss are left as they are; warns get the difference added.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Yes, apply</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Back</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ Applied by {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} chose not to apply any of it. Nothing was changed.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{0} of {1} changes applied, {2} unticked.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>Left as they are, because they were changed since:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>These members now have as many warns as the group's limit ({0}) or more. Enforcer did not ban them; you can do it here:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 Ban {0}</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} warns, banned by {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Nobody answered in time, so nothing was changed.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>This recovery offer is closed or no longer there.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Only the group's admins can review its recovered data.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer lost some of this group's data, such as warns, and recovered part of it. An admin needs to review it before anything changes: tap below.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Review recovered data</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>warns {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>all-time warns {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>prewarns {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>blocked from reporting</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>allowed to report again</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>Block inline bot {0}</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>Unblock inline bot {0}</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>Block sticker pack {0}</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>Unblock sticker pack {0}</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>Restore extra {0}</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>Delete extra {0} (it was deleted)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>Restore the changed text of extra {0}</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Restore the list of warn removal reasons as it was changed</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>For developers: data recovery offers to groups after a data loss. Reply to a recovery file with /{0} to import it (held), /{0} preview chat-id to see a group's offer, /{0} release batch to send them; /{0} alone lists them.</value>
+  </string>
 </strings>

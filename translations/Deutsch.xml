@@ -2276,6 +2276,108 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="hcommandchannelrep">
     <value>Für Entwickler: was aus den Mitgliedern wurde, die auf einen Kanal oder eine Website verwiesen, über alle Gruppen. /{0} @Kanal, eine Kanal-ID oder eine Website.</value>
   </string>
+  <string key="recoveryOffer">
+    <value>🛠 &lt;b&gt;Wiederhergestellte Daten für {0}&lt;/b&gt;\n\nEntschuldigung: Enforcer hat zwischen {1} und {2} Daten verloren, die er für eure Gruppe gespeichert hatte, zum Beispiel Verwarnungen. Wir haben aus dem Log-Kanal der Gruppe zurückgeholt, was ging. Unten steht, was wir wiederherstellen würden, mit den Log-Beiträgen, aus denen jede Änderung stammt.\n\nNichts ändert sich, bis ein Admin auf Übernehmen tippt, und dann nur, was angehakt ist. Entferne den Haken bei allem, was ihr nicht wollt; die Haken gelten für alle Admins der Gruppe. Das bleibt bis {3} offen.</value>
+  </string>
+  <string key="recoveryTitle">
+    <value>🛠 &lt;b&gt;Wiederhergestellte Daten für {0}&lt;/b&gt;</value>
+  </string>
+  <string key="recoveryPage">
+    <value>Seite {0} von {1} · {2} von {3} angehakt</value>
+  </string>
+  <string key="recoveryApply">
+    <value>✅ {0} angehakte übernehmen</value>
+  </string>
+  <string key="recoveryNone">
+    <value>Nichts übernehmen</value>
+  </string>
+  <string key="recoveryConfirm">
+    <value>{0} der {1} wiederhergestellten Änderungen für {2} übernehmen? Werte, die seit dem Datenverlust geändert wurden, bleiben, wie sie sind; bei Verwarnungen wird die Differenz addiert.</value>
+  </string>
+  <string key="recoveryYes">
+    <value>✅ Ja, übernehmen</value>
+  </string>
+  <string key="recoveryBack">
+    <value>◀️ Zurück</value>
+  </string>
+  <string key="recoveryDecided_applied">
+    <value>✅ Übernommen von {0}</value>
+  </string>
+  <string key="recoveryDecided_declined">
+    <value>❌ {0} hat entschieden, nichts davon zu übernehmen. Es wurde nichts geändert.</value>
+  </string>
+  <string key="recoveryAppliedCount">
+    <value>{0} von {1} Änderungen übernommen, {2} ohne Haken.</value>
+  </string>
+  <string key="recoverySkipped">
+    <value>Unverändert gelassen, weil sie seitdem geändert wurden:</value>
+  </string>
+  <string key="recoveryOverMax">
+    <value>Diese Mitglieder haben jetzt so viele Verwarnungen wie das Limit der Gruppe ({0}) oder mehr. Enforcer hat sie nicht gebannt; das könnt ihr hier tun:</value>
+  </string>
+  <string key="recoveryBan">
+    <value>🔨 {0} bannen</value>
+  </string>
+  <string key="recoveryBanned">
+    <value>{0}: {1} Verwarnungen, gebannt von {2}</value>
+  </string>
+  <string key="recoveryExpired">
+    <value>⌛ Niemand hat rechtzeitig geantwortet, daher wurde nichts geändert.</value>
+  </string>
+  <string key="recoveryGone">
+    <value>Dieses Wiederherstellungsangebot ist geschlossen oder nicht mehr da.</value>
+  </string>
+  <string key="recoveryNotAdmin">
+    <value>Nur die Admins der Gruppe können ihre wiederhergestellten Daten prüfen.</value>
+  </string>
+  <string key="recoveryGroupNotice">
+    <value>🛠 Enforcer hat einige Daten dieser Gruppe verloren, zum Beispiel Verwarnungen, und einen Teil davon wiederhergestellt. Ein Admin muss sie prüfen, bevor sich etwas ändert: unten tippen.</value>
+  </string>
+  <string key="recoveryReview">
+    <value>Wiederhergestellte Daten prüfen</value>
+  </string>
+  <string key="recoveryWarns">
+    <value>Verwarnungen {0}</value>
+  </string>
+  <string key="recoveryTotalWarns">
+    <value>Verwarnungen insgesamt {0}</value>
+  </string>
+  <string key="recoveryPrewarns">
+    <value>Vorwarnungen {0}</value>
+  </string>
+  <string key="recoveryReportBlock">
+    <value>vom Melden ausgeschlossen</value>
+  </string>
+  <string key="recoveryReportUnblock">
+    <value>darf wieder melden</value>
+  </string>
+  <string key="recoveryInlineBlock">
+    <value>Inline-Bot {0} sperren</value>
+  </string>
+  <string key="recoveryInlineUnblock">
+    <value>Inline-Bot {0} entsperren</value>
+  </string>
+  <string key="recoveryStickerBlock">
+    <value>Stickerpaket {0} sperren</value>
+  </string>
+  <string key="recoveryStickerUnblock">
+    <value>Stickerpaket {0} entsperren</value>
+  </string>
+  <string key="recoveryExtraRestore">
+    <value>Extra {0} wiederherstellen</value>
+  </string>
+  <string key="recoveryExtraDelete">
+    <value>Extra {0} löschen (es wurde gelöscht)</value>
+  </string>
+  <string key="recoveryExtraChange">
+    <value>Den geänderten Text von Extra {0} wiederherstellen</value>
+  </string>
+  <string key="recoveryWarnReasons">
+    <value>Die Liste der Gründe zum Entfernen von Verwarnungen wiederherstellen, wie sie geändert wurde</value>
+  </string>
+  <string key="hcommandrecovery">
+    <value>Für Entwickler: Angebote zur Datenwiederherstellung an Gruppen nach einem Datenverlust. Antworte mit /{0} auf eine Wiederherstellungsdatei, um sie zu importieren (zurückgehalten), /{0} preview Chat-ID zeigt das Angebot einer Gruppe, /{0} release Batch verschickt sie; /{0} allein listet sie auf.</value>
+  </string>
 </strings>
 
 
