@@ -117,7 +117,7 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
-        public async Task AnOldPost_EditedWeeksLater_IsLate_AndTheReportSaysHowLongAfter()
+        public async Task AnOldPost_EditedWeeksLater_WithNoRecord_IsNothing()
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
@@ -128,8 +128,40 @@ namespace Enforcer5.Tests.Harness
 
             await chat.EditAsync(old, chat.Photo(member, "other"));
 
-            StringAssert.Contains(Reports(chat, admin).Single().Text, "40 days after posting");
-            CollectionAssert.AreEqual(new[] { ("edit_late", "live", false, true) }, await Detections(chat), "no record that old: late, not a swap");
+            Assert.AreEqual(0, Reports(chat, admin).Length, "members cannot edit after 48 hours: no record, nothing to compare");
+            Assert.AreEqual(0, (await Detections(chat)).Length);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ATagChange_ResendingAMembersPostsUnchanged_IsNothing_ButARealEditStillIs()
+        {
+            // 2026-10-29: a bot changed three members' tags twice; Telegram sent an edit of each of their posts
+            // of the last hours, with a new edit date and nothing changed, and 70 posts were reported as late edits.
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            var newcomer = chat.Add("Newcomer");
+            var posts = new System.Collections.Generic.List<Message>();
+            for (var i = 0; i < 20; i++)
+            {
+                posts.Add(await chat.SendAsync(member, $"message {i}"));
+                await chat.AdvanceAsync(TimeSpan.FromMinutes(10));
+            }
+            var photo = await chat.PostAsync(chat.Photo(newcomer, "p", "look"));
+            await chat.AdvanceAsync(TimeSpan.FromHours(3));
+
+            foreach (var post in posts) await chat.EditAsync(post, chat.Text(member, post.Text));
+            await chat.EditAsync(photo, chat.Photo(newcomer, "p", "look"));
+
+            Assert.AreEqual(0, Reports(chat, admin).Length);
+            Assert.IsFalse(Deleted(chat, newcomer, photo));
+            Assert.AreEqual(0, (await Detections(chat)).Length);
+
+            await chat.EditAsync(posts[3], chat.Text(member, "message 3, edited"));
+            StringAssert.Contains(Reports(chat, admin).Single().Text, "edited long after posting");
+            await chat.EditAsync(posts[3], chat.Text(member, "message 3, edited"));
+            Assert.AreEqual(1, (await Detections(chat)).Length, "the same edit sent again is compared with the edit, not the post");
             AssertNoErrors(chat);
         }
 

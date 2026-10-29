@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Helpers;
@@ -12,30 +15,52 @@ namespace Enforcer5.Detection
     /// <summary>
     /// The edit rules (design section 4, build step 8). An attack edits old posts into something against
     /// Telegram's terms (copyrighted or illegal media), which other accounts then report to get the group
-    /// deleted. Telegram sends the post's original date with every edit, so a late edit needs no record;
-    /// a swapped one does:
+    /// deleted. Telegram sends the post's original date with every edit, and both kinds need a record:
     /// <list type="bullet">
     /// <item>every media message is recorded as its type and file unique id, in
     /// <c>media:{chat}:{yyyyMMdd of the post}</c> (field: message id), kept <see cref="Window"/>; text writes
     /// nothing, and the record starts when the bot starts recording in the chat (<c>media:since:{chat}</c>);</item>
     /// <item>an edit that changes the type or the file, or turns a post from since then without a record
     /// (text) into media, is <c>edit_swap</c>: reported and deleted, always;</item>
-    /// <item>an edit more than <see cref="LateAfter"/> after the post (any post, however old) is <c>edit_late</c>:
-    /// by default reported and deleted for new members, reported for established ones (each group can
-    /// change it under /menu → Detection → Edits).</item>
+    /// <item>every message's text or caption (with the addresses of its hidden links) is recorded as a short
+    /// hash, in <c>edittext:{chat}:{yyyyMMdd of the post}</c>, kept <see cref="TextWindow"/>: members can edit
+    /// for 48 hours (Telegram's edit_time_limit);</item>
+    /// <item>an edit more than <see cref="LateAfter"/> after the post whose text differs from the record is
+    /// <c>edit_late</c>: by default reported and deleted for new members, reported for established ones (each
+    /// group can change it under /menu → Detection → Edits). Without a record, or with the same text, it is
+    /// nothing: Telegram sends an edit of every recent post of a member whose tag an admin or a bot changed,
+    /// with a new edit date and nothing changed (2026-10-29, 70 posts of 3 members reported in one group).</item>
     /// </list>
     /// Admins and approved members are left out (the engine). The admins' report says what changed and when,
-    /// never the content. One HGET per edit; one pipelined HSET per media message, never waited for.
+    /// never the content. Two HGETs per edit; pipelined HSETs per message, never waited for.
     /// </summary>
     internal static class EditCheck
     {
         internal static readonly TimeSpan Window = TimeSpan.FromDays(31);
         internal static readonly TimeSpan LateAfter = TimeSpan.FromMinutes(10);
+        /// <summary>How long a post's text is kept: Telegram lets members edit for 48 hours, plus a margin.</summary>
+        internal static readonly TimeSpan TextWindow = TimeSpan.FromDays(3);
 
         internal static string RecordKey(long chatId, DateTime postedUtc) =>
             $"media:{chatId}:{postedUtc.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}";
 
         internal static string SinceKey(long chatId) => $"media:since:{chatId}";
+
+        internal static string TextKey(long chatId, DateTime postedUtc) =>
+            $"edittext:{chatId}:{postedUtc.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}";
+
+        /// <summary>
+        /// What a post says, as a short hash: the text or caption exactly as written, and the address of every
+        /// hidden link (a link swapped under the same words is a change). Formatting alone is not. Never null.
+        /// </summary>
+        internal static string TextHash(Message message)
+        {
+            var text = new StringBuilder(message.Text ?? message.Caption ?? "");
+            foreach (var entity in (IEnumerable<MessageEntity>)message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>())
+                if (entity.Url != null) text.Append('\n').Append(entity.Url);
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString()));
+            return Convert.ToBase64String(hash, 0, 9);
+        }
 
         /// <summary>What a post was: its type and its file's unique id; null for text and anything without a file.</summary>
         internal static string Describe(Message message)
@@ -44,18 +69,19 @@ namespace Enforcer5.Detection
             return id == null ? null : $"{MessageFingerprint.ContentTypeOf(message)}:{id}";
         }
 
-        /// <summary>A new group message: its media is recorded, fire and forget. Admins' posts are not (when known without a lookup).</summary>
+        /// <summary>A new group message: its text and media are recorded, fire and forget. Admins' posts are not (when known without a lookup).</summary>
         internal static void Record(MessageContext ctx)
         {
             try
             {
                 var message = ctx.Message;
                 if (message.SenderChat != null || AdminDirectory.IsKnownAdmin(ctx.ChatId, ctx.UserId)) return;
+                var posted = message.Date.ToUniversalTime();
+                var db = Redis.db;
+                RecordText(db, ctx.ChatId, message.MessageId, posted, TextHash(message));
                 var what = Describe(message);
                 if (what == null) return;
-                var posted = message.Date.ToUniversalTime();
                 var key = RecordKey(ctx.ChatId, posted);
-                var db = Redis.db;
                 _ = db.HashSetAsync(key, message.MessageId, what, flags: CommandFlags.FireAndForget);
                 var ttl = posted.Date + Window + TimeSpan.FromDays(1) - Clock.UtcNow;
                 if (ttl > TimeSpan.Zero) _ = db.KeyExpireAsync(key, ttl, CommandFlags.FireAndForget);
@@ -68,18 +94,31 @@ namespace Enforcer5.Detection
             }
         }
 
+        private static void RecordText(IDatabase db, long chatId, long messageId, DateTime postedUtc, string hash)
+        {
+            var ttl = postedUtc.Date + TextWindow + TimeSpan.FromDays(1) - Clock.UtcNow;
+            if (ttl <= TimeSpan.Zero) return;
+            var key = TextKey(chatId, postedUtc);
+            _ = db.HashSetAsync(key, messageId, hash, flags: CommandFlags.FireAndForget);
+            _ = db.KeyExpireAsync(key, ttl, CommandFlags.FireAndForget);
+        }
+
         /// <summary>What an edit was, for the engine; pure, for tests.</summary>
         /// <param name="before">The record of the post, or null.</param>
         /// <param name="after">What it is now (<see cref="Describe"/>), null for text.</param>
         /// <param name="recordingSince">Since when posts in the chat are recorded; null when never.</param>
-        internal static EditFinding Judge(string before, string after, DateTime postedUtc, DateTime editedUtc, DateTime? recordingSince)
+        /// <param name="textBefore">The recorded <see cref="TextHash"/> of the post, or null when there is none.</param>
+        /// <param name="textAfter">Its <see cref="TextHash"/> now.</param>
+        internal static EditFinding Judge(string before, string after, DateTime postedUtc, DateTime editedUtc, DateTime? recordingSince,
+            string textBefore, string textAfter)
         {
             var age = editedUtc - postedUtc;
             if (before != null && before != after)
                 return new EditFinding(SignCatalog.EditSwap.Name, Type(before), after == null ? "text" : Type(after), age);
             if (before == null && after != null && recordingSince is { } since && postedUtc >= since && age < Window)
                 return new EditFinding(SignCatalog.EditSwap.Name, "text", Type(after), age);
-            if (age > LateAfter)
+            // Only a change we can see: an edit Telegram sends with nothing changed (a member's tag set) is nothing.
+            if (age > LateAfter && textBefore != null && textBefore != textAfter)
                 return new EditFinding(SignCatalog.EditLate.Name, null, null, age);
             return null;
         }
@@ -98,14 +137,21 @@ namespace Enforcer5.Detection
                 var after = Describe(message);
                 var db = Redis.db;
                 var key = RecordKey(ctx.ChatId, posted);
+                var textAfter = TextHash(message);
                 var record = db.HashGetAsync(key, message.MessageId);
                 var since = db.StringGetAsync(SinceKey(ctx.ChatId));
-                await Task.WhenAll(record, since);
+                var text = db.HashGetAsync(TextKey(ctx.ChatId, posted), message.MessageId);
+                await Task.WhenAll(record, since, text);
                 DateTime? recordingSince = since.Result.HasValue && long.TryParse(since.Result.ToString(), out var unix)
                     ? DateTimeOffset.FromUnixTimeSeconds(unix).UtcDateTime
                     : null;
                 var before = record.Result.HasValue ? record.Result.ToString() : null;
-                var finding = Judge(before, after, posted, edited, recordingSince);
+                var textBefore = text.Result.HasValue ? text.Result.ToString() : null;
+                var finding = Judge(before, after, posted, edited, recordingSince, textBefore, textAfter);
+
+                // So a second edit is compared with the first.
+                if (textBefore != null && textBefore != textAfter)
+                    RecordText(db, ctx.ChatId, message.MessageId, posted, textAfter);
 
                 // The record follows the post, so a second swap is compared with the first.
                 if (after != null && after != before && posted > Clock.UtcNow - Window)
