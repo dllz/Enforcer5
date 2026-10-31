@@ -42,6 +42,18 @@ namespace Enforcer5.Tests.Harness
             public int PressAfter;     // human mode: steps until the admin locks
             public int? AlertSeenAt;
             public bool Pressed;
+
+            // Other bots (Detection/BotGuard), on a random stream of their own so the raids stay as they were.
+            public HarnessUser GameBot;          // in the group from before: never touched, flood or not
+            public int GamePosts;
+            public HarnessUser Summoner;         // a member summoning guest bots, as on 2026-10-31
+            public int SummonFrom;               // -1 for none
+            public List<HarnessUser> GuestBots = new();
+            public HashSet<long> SummonedByMember = new();
+            public List<int> AdminGuestAnswers = new();
+            public HarnessUser AdminGuest;
+            public int AddBotAt;                 // step a member adds a bot, -1 for none
+            public HarnessUser AddedBot;
         }
 
         // The admin presses the alert's lock button: its data as sent, which names the incident.
@@ -102,6 +114,7 @@ namespace Enforcer5.Tests.Harness
         private static async Task RunAsync(int seed)
         {
             var rnd = new Random(seed);
+            var botRnd = new Random(seed * 7919 + 17);
             await using var first = await HarnessChat.StartAsync(chatId: -1003000000000 - seed * 10L, title: $"Chaos {seed}");
             var groups = new List<GroupPlan>();
             var groupCount = rnd.Next(1, 4);
@@ -119,6 +132,10 @@ namespace Enforcer5.Tests.Harness
                     PressAfter = rnd.Next(1, 15)
                 };
                 RaidGuard.SetMode(chat.ChatId, plan.Mode);
+                plan.GameBot = chat.Add($"Game{g}", username: $"game{g}x{seed}bot", isBot: true);
+                plan.SummonFrom = botRnd.Next(3) == 0 ? -1 : botRnd.Next(0, 30);
+                plan.AddBotAt = botRnd.Next(2) == 0 ? -1 : botRnd.Next(0, 35);
+                plan.AdminGuest = chat.Add($"Helper{g}", MemberState.Left, username: $"helper{g}x{seed}bot", isBot: true);
                 for (var i = 0; i < rnd.Next(4, 10); i++)
                 {
                     var regular = chat.Add($"Regular{g}.{i}");
@@ -208,6 +225,50 @@ namespace Enforcer5.Tests.Harness
                             }
                         }
                     }
+                    // Other bots: a game bot posting fast, guest bots summoned by a member, a bot added by one.
+                    if (botRnd.Next(2) == 0)
+                    {
+                        var burst = botRnd.Next(1, 6);
+                        for (var i = 0; i < burst; i++) chat.Deliver(chat.Text(plan.GameBot, $"Night {plan.GamePosts++} falls"));
+                    }
+                    if (plan.SummonFrom >= 0 && step >= plan.SummonFrom && step % 2 == 0)
+                    {
+                        if (plan.Summoner == null)
+                        {
+                            plan.Summoner = chat.Add($"Summoner{plan.Newcomers.Count}", MemberState.Left);
+                            chat.Deliver(chat.Join(plan.Summoner));
+                        }
+                        var called = Enumerable.Range(0, 3).Select(_ =>
+                        {
+                            if (plan.GuestBots.Count > 0 && botRnd.Next(3) == 0) return plan.GuestBots[botRnd.Next(plan.GuestBots.Count)];
+                            var guest = chat.Add($"Guest{plan.GuestBots.Count}", MemberState.Left, username: $"g{plan.GuestBots.Count}x{seed}bot", isBot: true);
+                            plan.GuestBots.Add(guest);
+                            return guest;
+                        }).Distinct().ToList();
+                        var summoning = chat.Text(plan.Summoner, $"/start {botRnd.Next(1000)} " + string.Join(" ", called.Select(b => "@" + b.Username)));
+                        chat.Deliver(summoning);
+                        foreach (var guest in called)
+                        {
+                            plan.SummonedByMember.Add(guest.Id);
+                            chat.Deliver(BotScenarios.GuestReply(chat, guest, plan.Summoner, summoning, "Earn crypto fast, DM me"));
+                        }
+                    }
+                    if (botRnd.Next(10) == 0)
+                    {
+                        // An admin asks a guest bot something: its answer stays.
+                        var ask = chat.Text(plan.Admin, $"@{plan.AdminGuest.Username} what time is it");
+                        chat.Deliver(ask);
+                        var answer = BotScenarios.GuestReply(chat, plan.AdminGuest, plan.Admin, ask, "Noon");
+                        plan.AdminGuestAnswers.Add(answer.MessageId);
+                        chat.Deliver(answer);
+                    }
+                    if (step == plan.AddBotAt)
+                    {
+                        var adder = plan.Regulars[botRnd.Next(plan.Regulars.Count)];
+                        plan.AddedBot = chat.Add("Added", MemberState.Left, username: $"added{seed}x{chat.ChatId % 10}bot", isBot: true);
+                        if (botRnd.Next(2) == 0) chat.Deliver(chat.Join(plan.AddedBot, addedBy: adder));
+                        chat.Deliver(chat.MemberJoined(plan.AddedBot, addedBy: adder));
+                    }
                     // Human mode: the admin answers the alert after a while.
                     if (plan.Mode == RaidMode.Human)
                     {
@@ -254,6 +315,21 @@ namespace Enforcer5.Tests.Harness
                 Assert.IsTrue(plan.Newcomers.All(n => telegram.GetMember(chatId, n.Id) is MemberState.Member or MemberState.Restricted),
                     "a real newcomer may be held in quarantine, never banned");
                 Assert.IsNull(RaidGuard.IncidentIn(chatId), "every raid ended once it stopped");
+
+                // Other bots: the game bot from before untouched, flood or not; every guest a member summoned
+                // removed with its answers; a bot a member added banned; an admin's guest left to answer.
+                Assert.AreEqual(MemberState.Member, telegram.GetMember(chatId, plan.GameBot.Id), "the game bot from before is left be");
+                Assert.AreEqual(plan.GamePosts, telegram.MessagesFrom(chatId, plan.GameBot.Id).Count, "and none of its posts deleted");
+                foreach (var guest in plan.GuestBots)
+                {
+                    Assert.AreEqual(0, telegram.MessagesFrom(chatId, guest.Id).Count, $"every answer of a guest a member summoned is deleted (crash at {crashAt})");
+                    Assert.AreEqual(MemberState.Kicked, telegram.GetMember(chatId, guest.Id), "and the guest bot banned");
+                }
+                if (plan.AddedBot != null)
+                    Assert.AreEqual(MemberState.Kicked, telegram.GetMember(chatId, plan.AddedBot.Id), "a bot a member added is banned");
+                var adminAnswers = telegram.MessagesFrom(chatId, plan.AdminGuest.Id);
+                Assert.IsTrue(plan.AdminGuestAnswers.All(adminAnswers.Contains), "an admin's guest answers stay");
+                Assert.AreNotEqual(MemberState.Kicked, telegram.GetMember(chatId, plan.AdminGuest.Id), "and the guest is not banned");
                 Assert.IsFalse(telegram.ChatPermissions(chatId)?.CanSendMessages == false, "and the group is open again");
 
                 // A kick is a ban lifted at once (the unban may wait out a 429 or its turn); what

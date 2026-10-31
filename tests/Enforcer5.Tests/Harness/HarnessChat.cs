@@ -196,6 +196,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
             await Enforcer5.Detection.TrustOverrides.ReloadAsync();
+            await Enforcer5.Detection.BotGuard.ReloadAsync();
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);

@@ -119,6 +119,8 @@ namespace Enforcer5
             Detection.DetectionData.Start(Bot.ShutdownToken);
             // The groups' admin chats, where the bot talks to the admins and enforces nothing.
             Detection.AdminChats.Start(Bot.ShutdownToken);
+            // Each group's bots: trusted, or removed (guest bots summoned and bots added by members).
+            Detection.BotGuard.Start(Bot.ShutdownToken);
             // Data recovered after a data loss: offered to each group's admins once a dev releases it.
             Recovery.RecoveryOffers.Start(Bot.ShutdownToken);
 

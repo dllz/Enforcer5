@@ -282,6 +282,7 @@ namespace Enforcer5.Detection
             DetectionReports.ResetForTests();
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();
+            BotGuard.ResetForTests();
         }
     }
 }

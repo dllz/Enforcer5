@@ -139,6 +139,44 @@ namespace Enforcer5.Storage
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.SetByAccountId).OnDelete(DeleteBehavior.SetNull);
             });
 
+            modelBuilder.Entity<GroupBotEntity>(entity =>
+            {
+                entity.ToTable("group_bots", table =>
+                {
+                    table.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
+                    table.HasCheckConstraint("group_bots_source_check",
+                        "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned')");
+                });
+                entity.HasKey(x => new { x.GroupId, x.AccountId });
+                entity.Property(x => x.Status).IsRequired();
+                entity.Property(x => x.Source).IsRequired();
+                entity.Property(x => x.SetAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.SetByAccountId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<BotEventEntity>(entity =>
+            {
+                entity.ToTable("bot_events", table =>
+                {
+                    table.HasCheckConstraint("bot_events_kind_check", "kind IN ('added', 'summoned', 'trusted', 'untrusted')");
+                    table.HasCheckConstraint("bot_events_action_check", "action IN ('none', 'banned')");
+                    table.HasCheckConstraint("bot_events_edition_check", "edition IN ('normal', 'premium')");
+                });
+                entity.HasKey(x => x.EventId);
+                entity.Property(x => x.EventId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Action).IsRequired();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.Property(x => x.OccurredAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.BotAccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.ActorAccountId).OnDelete(DeleteBehavior.SetNull);
+                entity.HasIndex(x => new { x.GroupId, x.OccurredAt }, "bot_events_group_idx");
+                entity.HasIndex(x => new { x.ActorAccountId, x.OccurredAt }, "bot_events_actor_idx");
+            });
+
             modelBuilder.Entity<DetectionAdjustmentEntity>(entity =>
             {
                 entity.ToTable("detection_adjustments", table =>

@@ -38,6 +38,8 @@ namespace Enforcer5.Helpers
                 foreach (var user in message.NewChatMembers ?? Array.Empty<User>())
                 {
                     if (user.Id == Bot.Me?.Id) continue;
+                    // A bot added: logged with who added it, banned unless an admin did (Detection/BotGuard).
+                    if (user.IsBot) Detection.BotGuard.Joined(message.Chat.Id, user, message.From?.Id != user.Id ? message.From : null);
                     // Names that copy an admin or a bot of the group, or claim to be staff (Detection step 10).
                     Detection.NameSigns.OnJoin(message.Chat.Id, user);
                     var addedBy = message.From != null && message.From.Id != user.Id ? message.From.Id : (long?)null;
@@ -71,6 +73,8 @@ namespace Enforcer5.Helpers
                     AdminDirectory.Demoted(update.Chat.Id, user.Id);
                     _ = Redis.db.KeyDeleteAsync($"chat:{update.Chat.Id}:adminses:{user.Id}", CommandFlags.FireAndForget);
                 }
+                // What Telegram said about a bot here (member, admin) is out of date.
+                if (user.IsBot) GroupBots.Forget(update.Chat.Id, user.Id);
                 // An admin's ban, kick or mute made in the Telegram app: history and Detection.
                 Detection.Decisions.FromChatMember(update);
                 // A mute lifted, by us or by hand: the queue no longer takes them as muted.
@@ -78,6 +82,8 @@ namespace Enforcer5.Helpers
                     Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);
                 if (!wasIn && isIn)
                 {
+                    if (user.IsBot)
+                        Detection.BotGuard.Joined(update.Chat.Id, user, update.From?.Id != user.Id ? update.From : null);
                     Detection.NameSigns.OnJoin(update.Chat.Id, user);
                     var addedBy = update.From != null && update.From.Id != user.Id && !update.ViaJoinRequest ? update.From.Id : (long?)null;
                     var source = update.ViaJoinRequest ? "request"

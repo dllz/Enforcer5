@@ -45,7 +45,18 @@ namespace Enforcer5.Handlers
                     var edited = update.EditedMessage;
                     if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
                     if (Detection.AdminChats.IsAdminChat(edited.Chat.Id)) return; // nothing is checked in an admin chat
-                    if (!BotSenderFilter.Accept(edited)) return;
+                    if (!BotSenderFilter.Accept(edited))
+                    {
+                        // Another bot's post edited: checked like a member's when its posts are (Detection/BotGuard).
+                        switch (await Detection.BotGuard.JudgeAsync(edited))
+                        {
+                            case Detection.BotVerdict.Remove:
+                                Detection.BotGuard.Remove(edited);
+                                return;
+                            case Detection.BotVerdict.Ignore:
+                                return;
+                        }
+                    }
                     var editCtx = await MessageContext.BuildAsync(new Update { Id = update.Id, Message = edited }, receivedAt);
                     if (!editCtx.Complete) return;
                     // The edit rules, for posts of any age: an old post edited is the attack they are for.
@@ -76,11 +87,11 @@ namespace Enforcer5.Handlers
                     break;
                 default:
                     if (update.Message == null) return;
-                    // Other bots' messages (Bot-to-Bot Communication Mode) are ignored, trusted ones aside.
-                    if (!BotSenderFilter.Accept(update.Message)) return;
                     if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
                         return; //toss it
-                    await HandleUpdate(update, receivedAt);
+                    // Other bots' messages (Bot-to-Bot Communication Mode, guest bots) never run commands; in a group
+                    // they are checked like a member's, or removed (Detection/BotGuard). Trusted bots are people here.
+                    await HandleUpdate(update, receivedAt, fromBot: !BotSenderFilter.Accept(update.Message));
                     break;
             }
         }
@@ -116,13 +127,29 @@ namespace Enforcer5.Handlers
             Console.WriteLine($"{name} Query: {text} [{update.From.FirstName} {update.From.Id}]");
         }
 
-        private static async Task HandleUpdate(Update update, DateTime receivedAt)
+        private static async Task HandleUpdate(Update update, DateTime receivedAt, bool fromBot = false)
         {
             {
+                // Another bot in private: nothing for us.
+                if (fromBot && update.Message.Chat.Type == ChatType.Private) return;
+                // Another edition's group: a bot's message is no reason to say so, or to leave.
+                if (fromBot && !await ServesAsync(update.Message.Chat.Id)) return;
 #if PREMIUM
                 if (update.Message.Chat.Type != ChatType.Private && !await PremiumServesAsync(update.Message))
                     return;
 #endif
+                if (fromBot)
+                {
+                    switch (await Detection.BotGuard.JudgeAsync(update.Message))
+                    {
+                        case Detection.BotVerdict.Ignore:
+                            return;
+                        case Detection.BotVerdict.Remove:
+                            PrincipalObserver.Observe(update);
+                            Detection.BotGuard.Remove(update.Message);
+                            return;
+                    }
+                }
 
                 // Both ban checks in one pipelined batch, before we spend anything else on this chat.
                 var bannedGroupTask = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id);
@@ -172,7 +199,8 @@ namespace Enforcer5.Handlers
                         MemberEvents.FromServiceMessage(update.Message);
 
                     // Stats and commands run regardless; moderation only on a context we fully read.
-                    background.Add(CollectStats(ctx));
+                    // A bot's posts make no member of it: no counts, so no trust from them.
+                    if (!fromBot) background.Add(CollectStats(ctx));
 
                     var moderate = ctx.IsGroup && ctx.Complete;
                     if (moderate)
@@ -193,7 +221,10 @@ namespace Enforcer5.Handlers
                     if (moderate)
                     {
                         background.Add(Methods.IsRekt(ctx));
-                        background.Add(OnMessage.AntiFlood(ctx));
+                        // Bots are left out of flood, games post fast (Daniel, 2026-10-31); the length checks
+                        // that run with it still apply.
+                        if (!fromBot) background.Add(OnMessage.AntiFlood(ctx));
+                        else if (!ctx.Watched) OnMessage.AntiLength(ctx);
                         background.Add(Raids.RaidGuard.OnMessageAsync(ctx));
 
                         // Ahead of the type switch, because most inline bot traffic is GIFs and
@@ -235,6 +266,9 @@ namespace Enforcer5.Handlers
                             // real command pays for a dispatch. The handlers are synchronous and
                             // can block behind Telegram, so they never run on a consumer.
                             var text = update.Message.Text;
+
+                            // Another bot runs no commands and answers nothing (BotSenderFilter).
+                            if (fromBot) break;
 
                             // A typed warn removal reason. The cheap test runs inline; the Redis
                             // lookup only for replies to the bot, and off the consumer.
@@ -471,6 +505,24 @@ namespace Enforcer5.Handlers
             {
                 ErrorReporter.Report(e, "CollectNames");
             }
+        }
+
+        /// <summary>
+        /// Whether this edition acts in the group, asking nothing and changing nothing: the premium edition only in
+        /// premium groups and their admin chats, the normal one everywhere. For updates that are not a member's
+        /// message (member updates, other bots), where <c>PremiumServesAsync</c>'s notice would be wrong.
+        /// </summary>
+        internal static async Task<bool> ServesAsync(long chatId)
+        {
+#if PREMIUM
+            if (await Redis.db.SetContainsAsync("premiumBot", chatId)) return true;
+            foreach (var group in Detection.AdminChats.GroupsOf(chatId))
+                if (await Redis.db.SetContainsAsync("premiumBot", group)) return true;
+            return false;
+#else
+            await Task.CompletedTask;
+            return true;
+#endif
         }
 
 #if PREMIUM

@@ -2356,4 +2356,82 @@
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>burada güvenilmeyen bir botu çağırdı</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>yönetici olmadan bir bot ekledi</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0}, {1} botunu misafir olarak çağırdı. Cevabı silindi ve bot yasaklandı: gruba yalnızca yöneticiler bot getirebilir.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0}, {1} botunu ekledi. Bir yönetici eklediği için bot güvenilir.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0}, {1} botunu ekledi. Yalnızca yöneticiler bot ekleyebilir, bu yüzden bot yasaklandı.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} burada güvenilir: mesajları ve biri onu andığında verdiği cevaplar geçer ve bir üyeninkiler gibi kontrol edilir.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} bu gruptan çıkarıldı: yasaklandı ve burada paylaştığı her şey silinir.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>Bu bir bot değil. Botun bir mesajına cevap verin ya da @kullanıcı adını veya kimliğini yazın.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} bizim botlarımızdan biri ve her zaman güvenilir.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Bu gruptaki botlar</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Güvenilir:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Çıkarılan:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>Burada henüz hiçbir bot eklenmedi, güvenilir yapılmadı ya da çıkarılmadı. Zaten grupta olan botlar güvenilir kalır.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>bir yönetici ekledi</value>
+  </string>
+  <string key="botSource_command">
+    <value>bir yönetici belirledi</value>
+  </string>
+  <string key="botSource_present">
+    <value>zaten gruptaydı</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>bir üye ekledi</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>bir üye çağırdı</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Bu grupta bir botu güvenilir yapar: mesajları ve biri onu andığında verdiği cevaplar geçer, Enforcer'ın koyduğu yasak kaldırılır. Mesajlarından birine cevap verin ya da @kullanıcı adını veya kimliğini yazın. Bir yöneticinin eklediği botlar zaten güvenilirdir; bir üyenin eklediği ya da burada cevap vermesi için andığı bot yasaklanır.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Bir botu bu gruptan çıkarır: yasaklanır ve burada paylaştığı her şey silinir. Mesajlarından birine cevap verin ya da @kullanıcı adını veya kimliğini yazın. /trustbot onu geri alır.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Bu grubun güvendiği ya da çıkardığı botları ve nasıl olduğunu listeler.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Bu grupta bir botu güvenilir yap</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Bir botu bu gruptan çıkar</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>Güvenilir ve çıkarılan botları listele</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>Karşılama mesajı açık. Metnini /welcome ve ardından metinle belirleyin.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>Karşılama mesajı kapalı.</value>
+  </string>
 </strings>

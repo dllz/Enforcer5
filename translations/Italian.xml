@@ -2335,4 +2335,82 @@
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>ha chiamato un bot che qui non è fidato</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>ha aggiunto un bot senza essere admin</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} ha chiamato il bot {1} come ospite. La sua risposta è stata cancellata e il bot bannato: solo gli admin possono portare bot nel gruppo.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} ha aggiunto il bot {1}. Aggiunto da un admin, è fidato.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} ha aggiunto il bot {1}. Solo gli admin possono aggiungere bot, quindi il bot è stato bannato.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} qui è fidato: i suoi messaggi e le sue risposte quando qualcuno lo menziona passano, e vengono controllati come quelli di un membro.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} è stato rimosso da questo gruppo: è bannato, e tutto ciò che pubblica qui viene cancellato.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>Questo non è un bot. Rispondi a un messaggio del bot, oppure indica il suo @username o il suo id.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} è uno dei nostri bot ed è sempre fidato.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Bot in questo gruppo</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Fidati:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Rimossi:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>Qui non è ancora stato aggiunto, reso fidato o rimosso nessun bot. I bot che erano già nel gruppo restano fidati.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>aggiunto da un admin</value>
+  </string>
+  <string key="botSource_command">
+    <value>deciso da un admin</value>
+  </string>
+  <string key="botSource_present">
+    <value>già nel gruppo</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>aggiunto da un membro</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>chiamato da un membro</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Rende fidato un bot in questo gruppo: i suoi messaggi e le sue risposte quando qualcuno lo menziona passano, e un ban di Enforcer viene tolto. Rispondi a uno dei suoi messaggi, oppure indica il suo @username o il suo id. I bot aggiunti da un admin sono già fidati; un bot aggiunto da un membro, o menzionato da un membro perché risponda qui, viene bannato.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Rimuove un bot da questo gruppo: viene bannato, e tutto ciò che pubblica qui viene cancellato. Rispondi a uno dei suoi messaggi, oppure indica il suo @username o il suo id. Con /trustbot può tornare.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Elenca i bot di cui questo gruppo si fida o che ha rimosso, e come.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Rendi fidato un bot in questo gruppo</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Rimuovi un bot da questo gruppo</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>Elenca i bot fidati e quelli rimossi</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>Il messaggio di benvenuto è attivo. Imposta il testo con /welcome seguito dal testo.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>Il messaggio di benvenuto è disattivato.</value>
+  </string>
 </strings>

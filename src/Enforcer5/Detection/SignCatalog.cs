@@ -76,6 +76,13 @@ namespace Enforcer5.Detection
         internal static readonly SignDefinition SimilarToBanned = Add("similar_to_banned", SignPhase.Enriched, 2, "score");
         internal static readonly SignDefinition JoinedDuringRaid = Add("joined_during_raid", SignPhase.Inline, 1, "score");
 
+        // Bots brought in by a member who is not an admin (BotGuard): for everyone but admins and approved members,
+        // live from day one. A guest bot summoned: its answer is removed by BotGuard, the summoning post deleted here.
+        internal static readonly SignDefinition SummonedBot = Add("summoned_bot", SignPhase.Inline, 3, "report", newcomersOnly: false,
+            delete: true, report: true, liveFromDayOne: true);
+        internal static readonly SignDefinition AddedBot = Add("added_bot", SignPhase.Inline, 3, "report", newcomersOnly: false,
+            report: true, liveFromDayOne: true);
+
         // Edit rules (section 4): for everyone but admins and approved members, live from day one.
         internal static readonly SignDefinition EditSwap = Add("edit_swap", SignPhase.Inline, 3, "delete", newcomersOnly: false,
             delete: true, report: true, liveFromDayOne: true);

@@ -3389,4 +3389,82 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>summoned a bot that is not trusted here</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>added a bot without being an admin</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} summoned the bot {1} as a guest. Its answer was deleted and the bot banned: only admins may bring bots into the group.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} added the bot {1}. Added by an admin, it is trusted.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} added the bot {1}. Only admins may add bots, so the bot was banned.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} is trusted here: its posts and its answers when someone mentions it are let through, and checked like a member's.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} is removed from this group: it is banned, and anything it posts here is deleted.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>That is not a bot. Reply to one of the bot's messages, or give its @username or id.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} is one of our own bots and always trusted.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Bots in this group</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Trusted:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Removed:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>No bot has been added, trusted or removed here yet. Bots that were already in the group stay trusted.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>added by an admin</value>
+  </string>
+  <string key="botSource_command">
+    <value>set by an admin</value>
+  </string>
+  <string key="botSource_present">
+    <value>already in the group</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>added by a member</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>summoned by a member</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Trusts a bot in this group: its posts, and its answers when someone mentions it, are let through, and a ban by Enforcer is lifted. Reply to one of its messages, or give its @username or id. Bots added by an admin are trusted already; a bot added by a member, or mentioned by a member to answer here, is banned.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Removes a bot from this group: it is banned, and anything it posts here is deleted. Reply to one of its messages, or give its @username or id. /trustbot lets it back.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Lists the bots this group trusts or removed, and how.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Trust a bot in this group</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Remove a bot from this group</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>List the group's trusted and removed bots</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>The welcome message is on. Set its text with /welcome followed by the text.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>The welcome message is off.</value>
+  </string>
 </strings>

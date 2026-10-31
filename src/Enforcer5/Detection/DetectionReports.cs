@@ -73,6 +73,24 @@ namespace Enforcer5.Detection
         private static SemaphoreSlim Gate(long chatId, long userId) => Gates.GetOrAdd((chatId, userId), _ => new SemaphoreSlim(1, 1));
 
         /// <summary>
+        /// Enters a member's gate. Waiting for it is waiting on whoever holds it, which may be waiting on the clock
+        /// (a message slot, the edit delay): parked, so the harness's simulated time can move on.
+        /// </summary>
+        private static async Task EnterAsync(SemaphoreSlim gate)
+        {
+            if (gate.Wait(0)) return;
+            Clock.Park();
+            try
+            {
+                await gate.WaitAsync();
+            }
+            finally
+            {
+                Clock.Unpark();
+            }
+        }
+
+        /// <summary>
         /// Tells the admins about <paramref name="userId"/>: <paramref name="sign"/> fired for them, about
         /// <paramref name="messageId"/> if there is one. Dispatched; returns at once.
         /// </summary>
@@ -100,7 +118,7 @@ namespace Enforcer5.Detection
                 }
 
                 var gate = Gate(chatId, userId);
-                await gate.WaitAsync();
+                await EnterAsync(gate);
                 try
                 {
                     var report = await CurrentAsync(chatId, userId);
@@ -182,7 +200,7 @@ namespace Enforcer5.Detection
                 await Clock.Delay(EditAfter);
                 var chatId = report.Key.ChatId;
                 var gate = Gate(chatId, report.Key.UserId.Value);
-                await gate.WaitAsync();
+                await EnterAsync(gate);
                 try
                 {
                     report.EditPending = false;
@@ -343,7 +361,7 @@ namespace Enforcer5.Detection
             OpenReport report;
             string standing;
             long? by;
-            await gate.WaitAsync();
+            await EnterAsync(gate);
             try
             {
                 report = Open.TryGetValue((chatId, userId), out var open) && open.Key.OpenedAt == key.OpenedAt ? open : null;

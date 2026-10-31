@@ -108,6 +108,70 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BotEventEntity", b =>
+                {
+                    b.Property<long>("EventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("event_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("EventId"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<long?>("ActorAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_account_id");
+
+                    b.Property<bool>("ActorWasAdmin")
+                        .HasColumnType("boolean")
+                        .HasColumnName("actor_was_admin");
+
+                    b.Property<long>("BotAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bot_account_id");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("BotAccountId");
+
+                    b.HasIndex(new[] { "ActorAccountId", "OccurredAt" }, "bot_events_actor_idx");
+
+                    b.HasIndex(new[] { "GroupId", "OccurredAt" }, "bot_events_group_idx");
+
+                    b.ToTable("bot_events", null, t =>
+                        {
+                            t.HasCheckConstraint("bot_events_action_check", "action IN ('none', 'banned')");
+
+                            t.HasCheckConstraint("bot_events_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("bot_events_kind_check", "kind IN ('added', 'summoned', 'trusted', 'untrusted')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.ChannelProfileEntity", b =>
                 {
                     b.Property<long>("TelegramChatId")
@@ -651,6 +715,50 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("global_sanctions_period_check", "(expires_at IS NULL OR expires_at >= imposed_at) AND (resolved_at IS NULL OR resolved_at >= imposed_at)");
 
                             t.HasCheckConstraint("global_sanctions_status_check", "status IN ('active', 'revoked', 'completed')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupBotEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("SetByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("set_by_account_id");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("GroupId", "AccountId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("SetByAccountId");
+
+                    b.ToTable("group_bots", null, t =>
+                        {
+                            t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned')");
+
+                            t.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
                         });
                 });
 
@@ -2479,6 +2587,26 @@ namespace Enforcer5.Storage.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BotEventEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ActorAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("BotAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -2567,6 +2695,26 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("UserIdAtTime")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupBotEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SetByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GroupEntity", b =>

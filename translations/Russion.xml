@@ -2078,7 +2078,82 @@ $title - заменяется названием группы.
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>вызвал бота, которому здесь не доверяют</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>добавил бота, не будучи админом</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} вызвал бота {1} как гостя. Его ответ удалён, а бот забанен: приводить ботов в группу могут только админы.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} добавил бота {1}. Его добавил админ, поэтому ему доверяют.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} добавил бота {1}. Добавлять ботов могут только админы, поэтому бот забанен.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} здесь доверенный: его сообщения и ответы, когда его упоминают, пропускаются и проверяются как сообщения участника.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} удалён из этой группы: он забанен, и всё, что он здесь пишет, удаляется.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>Это не бот. Ответьте на сообщение бота или укажите его @username или id.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} — один из наших собственных ботов, ему всегда доверяют.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Боты в этой группе</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Доверенные:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Удалённые:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>Здесь ещё ни один бот не был добавлен, отмечен как доверенный или удалён. Боты, которые уже были в группе, остаются доверенными.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>добавлен админом</value>
+  </string>
+  <string key="botSource_command">
+    <value>решение админа</value>
+  </string>
+  <string key="botSource_present">
+    <value>уже был в группе</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>добавлен участником</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>вызван участником</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Делает бота доверенным в этой группе: его сообщения и ответы, когда его упоминают, пропускаются, а бан от Enforcer снимается. Ответьте на одно из его сообщений или укажите его @username или id. Боты, добавленные админом, уже доверенные; бот, которого добавил участник или упомянул участник, чтобы тот ответил здесь, банится.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Удаляет бота из этой группы: он банится, и всё, что он здесь пишет, удаляется. Ответьте на одно из его сообщений или укажите его @username или id. /trustbot возвращает его.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Показывает ботов, которым эта группа доверяет или которых удалила, и как.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Сделать бота доверенным в группе</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Удалить бота из группы</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>Доверенные и удалённые боты</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>Приветствие включено. Задайте его текст командой /welcome и текстом.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>Приветствие выключено.</value>
+  </string>
 </strings>
-
-  
- 

@@ -2327,4 +2327,82 @@ exaple: /{0}
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
-</strings> 
+  <string key="sign_summoned_bot">
+    <value>رباتی را صدا زد که اینجا مورد اعتماد نیست</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>بدون اینکه ادمین باشد یک ربات اضافه کرد</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} ربات {1} را به‌عنوان مهمان صدا زد. پاسخش پاک شد و ربات بن شد: فقط ادمین‌ها می‌توانند ربات به گروه بیاورند.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} ربات {1} را اضافه کرد. چون یک ادمین آن را اضافه کرده، مورد اعتماد است.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} ربات {1} را اضافه کرد. فقط ادمین‌ها می‌توانند ربات اضافه کنند، برای همین ربات بن شد.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} اینجا مورد اعتماد است: پیام‌هایش و پاسخ‌هایش وقتی کسی به آن اشاره می‌کند رد می‌شوند و مثل پیام‌های یک عضو بررسی می‌شوند.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} از این گروه حذف شد: بن شده و هر چه اینجا بفرستد پاک می‌شود.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>این ربات نیست. به یکی از پیام‌های ربات پاسخ دهید، یا @نام‌کاربری یا شناسه‌اش را بنویسید.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} یکی از ربات‌های خود ماست و همیشه مورد اعتماد است.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>ربات‌های این گروه</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>مورد اعتماد:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>حذف‌شده:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>هنوز هیچ رباتی اینجا اضافه، مورد اعتماد یا حذف نشده است. ربات‌هایی که از قبل در گروه بودند مورد اعتماد می‌مانند.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>اضافه‌شده توسط یک ادمین</value>
+  </string>
+  <string key="botSource_command">
+    <value>تعیین‌شده توسط یک ادمین</value>
+  </string>
+  <string key="botSource_present">
+    <value>از قبل در گروه بود</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>اضافه‌شده توسط یک عضو</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>صدا زده‌شده توسط یک عضو</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>یک ربات را در این گروه مورد اعتماد می‌کند: پیام‌هایش و پاسخ‌هایش وقتی کسی به آن اشاره می‌کند رد می‌شوند و بنِ Enforcer برداشته می‌شود. به یکی از پیام‌هایش پاسخ دهید، یا @نام‌کاربری یا شناسه‌اش را بنویسید. ربات‌هایی که ادمین اضافه کرده از قبل مورد اعتمادند؛ رباتی که یک عضو اضافه کند، یا یک عضو به آن اشاره کند تا اینجا پاسخ دهد، بن می‌شود.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>یک ربات را از این گروه حذف می‌کند: بن می‌شود و هر چه اینجا بفرستد پاک می‌شود. به یکی از پیام‌هایش پاسخ دهید، یا @نام‌کاربری یا شناسه‌اش را بنویسید. با /trustbot دوباره اجازه می‌گیرد.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>ربات‌هایی را که این گروه به آن‌ها اعتماد دارد یا حذف کرده، و چگونگی آن را نشان می‌دهد.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>اعتماد به یک ربات در این گروه</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>حذف یک ربات از این گروه</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>فهرست ربات‌های مورد اعتماد و حذف‌شده</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>پیام خوش‌آمد روشن است. متنش را با /welcome و سپس متن تنظیم کنید.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>پیام خوش‌آمد خاموش است.</value>
+  </string>
+</strings>

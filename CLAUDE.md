@@ -141,9 +141,14 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
   placeholder `136817688`; the member behind it is never visible to bots. Act on the channel
   (`BanChatSenderChat`), never on `From`. Anonymous admins have `SenderChat` = the group itself.
   See `Models/ChannelPosts.cs`.
-- Messages from other bots (Bot-to-Bot Communication Mode) are dropped on arrival except from trusted
+- Messages from other bots (Bot-to-Bot Communication Mode) never run commands, except from trusted
   bots (`Helpers/BotSenderFilter.cs`: Esme, GroupAnonymousBot, Channel_Bot). Esme may run
   `/uploadlanguage` without being in `langAdmins`; nothing else. `/cmd@bot` is matched without case.
+  In groups `Detection/BotGuard.cs` judges every other bot's message: our own and the group's admin
+  bots are ignored; a guest bot (Bot API 10.0: mentioned by a member, it answers without joining,
+  `GuestBotCallerUser`) or a bot added by a non-admin is removed and banned, its caller or adder
+  reported; the rest are checked like a member's message, flood aside. `getChatAdministrators`
+  leaves other bots out, so a bot's admin status comes from `GroupBots` (getChatMember).
 
 ---
 

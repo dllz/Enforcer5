@@ -1930,4 +1930,82 @@ UPDATE LOG
   <string key="extraListGroup">
     <value>{0}：</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>召喚咗一個喺度唔受信任嘅機械人</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>唔係管理員但加咗機械人</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} 以訪客方式召喚咗機械人 {1}。佢嘅回覆已經刪咗，機械人已經被封鎖：只有管理員先可以帶機械人入群組。</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} 加咗機械人 {1}。係管理員加嘅，所以佢受信任。</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} 加咗機械人 {1}。只有管理員先可以加機械人，所以機械人已經被封鎖。</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} 喺度受信任：佢嘅訊息同埋有人提到佢時嘅回覆都會放行，同成員嘅訊息一樣被檢查。</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} 已經從呢個群組移除：佢被封鎖，佢喺度發嘅所有嘢都會被刪除。</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>呢個唔係機械人。請回覆機械人嘅一條訊息，或者俾出佢嘅 @用戶名 或 ID。</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} 係我哋自己嘅機械人之一，一直都受信任。</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>呢個群組嘅機械人</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>受信任：</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>已移除：</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>呢度仲未有任何機械人被加入、信任或者移除。本身已經喺群組嘅機械人繼續受信任。</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>由管理員加入</value>
+  </string>
+  <string key="botSource_command">
+    <value>由管理員設定</value>
+  </string>
+  <string key="botSource_present">
+    <value>本身已經喺群組</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>由成員加入</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>由成員召喚</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>喺呢個群組信任一個機械人：佢嘅訊息同埋有人提到佢時嘅回覆都會放行，Enforcer 嘅封鎖會解除。請回覆佢嘅一條訊息，或者俾出佢嘅 @用戶名 或 ID。管理員加入嘅機械人已經受信任；成員加入嘅機械人，或者成員提到叫佢喺度回覆嘅機械人，會被封鎖。</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>將一個機械人從呢個群組移除：佢會被封鎖，佢喺度發嘅所有嘢都會被刪除。請回覆佢嘅一條訊息，或者俾出佢嘅 @用戶名 或 ID。用 /trustbot 可以俾佢返嚟。</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>列出呢個群組信任或者移除咗嘅機械人，同埋點樣決定。</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>喺呢個群組信任一個機械人</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>從呢個群組移除一個機械人</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>列出受信任同已移除嘅機械人</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>歡迎訊息已經開咗。用 /welcome 加文字嚟設定內容。</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>歡迎訊息已經關咗。</value>
+  </string>
 </strings>

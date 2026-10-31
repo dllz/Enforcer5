@@ -2576,4 +2576,82 @@
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>memanggil bot yang tidak dipercaya di sini</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>menambahkan bot tanpa menjadi admin</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} memanggil bot {1} sebagai tamu. Balasannya dihapus dan bot diblokir: hanya admin yang boleh membawa bot ke grup.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} menambahkan bot {1}. Karena ditambahkan oleh admin, bot ini dipercaya.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} menambahkan bot {1}. Hanya admin yang boleh menambahkan bot, jadi bot diblokir.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} dipercaya di sini: pesannya dan balasannya saat seseorang menyebutnya dibiarkan lewat, dan diperiksa seperti pesan anggota.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} dikeluarkan dari grup ini: bot diblokir, dan semua yang dikirimnya di sini dihapus.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>Itu bukan bot. Balas salah satu pesan bot, atau tulis @username atau id-nya.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} adalah salah satu bot kami sendiri dan selalu dipercaya.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Bot di grup ini</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Dipercaya:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Dikeluarkan:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>Belum ada bot yang ditambahkan, dipercaya, atau dikeluarkan di sini. Bot yang sudah ada di grup tetap dipercaya.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>ditambahkan oleh admin</value>
+  </string>
+  <string key="botSource_command">
+    <value>ditetapkan oleh admin</value>
+  </string>
+  <string key="botSource_present">
+    <value>sudah ada di grup</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>ditambahkan oleh anggota</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>dipanggil oleh anggota</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Mempercayai bot di grup ini: pesannya dan balasannya saat seseorang menyebutnya dibiarkan lewat, dan blokir dari Enforcer dicabut. Balas salah satu pesannya, atau tulis @username atau id-nya. Bot yang ditambahkan admin sudah dipercaya; bot yang ditambahkan anggota, atau disebut anggota agar membalas di sini, diblokir.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Mengeluarkan bot dari grup ini: bot diblokir, dan semua yang dikirimnya di sini dihapus. Balas salah satu pesannya, atau tulis @username atau id-nya. /trustbot mengizinkannya kembali.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Menampilkan bot yang dipercaya atau dikeluarkan grup ini, dan caranya.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Percayai bot di grup ini</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Keluarkan bot dari grup ini</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>Daftar bot yang dipercaya dan dikeluarkan</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>Pesan sambutan aktif. Atur teksnya dengan /welcome diikuti teksnya.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>Pesan sambutan nonaktif.</value>
+  </string>
 </strings>

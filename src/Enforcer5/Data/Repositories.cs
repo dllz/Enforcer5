@@ -85,6 +85,10 @@ namespace Enforcer5.Data
         internal static IAdminChatRepository AdminChats { get; set; } =
             new PostgresAdminChatRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Each group's bots: allowed or blocked, and who added or summoned them (Detection/BotGuard).
+        internal static IGroupBotRepository GroupBots { get; set; } =
+            new PostgresGroupBotRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. Data recovered after a data loss, offered to each group's admins (Recovery/RecoveryOffers).
         internal static IRecoveryRepository Recovery { get; set; } =
             new PostgresRecoveryRepository(() => Storage.PostgresStorage.Database);

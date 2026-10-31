@@ -2038,4 +2038,82 @@ Example:
   <string key="extraListGroup">
     <value>{0}：</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>召唤了一个在这里不受信任的机器人</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>不是管理员却添加了机器人</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} 以访客方式召唤了机器人 {1}。它的回复已删除，机器人已被封禁：只有管理员可以把机器人带进群。</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} 添加了机器人 {1}。由管理员添加，所以它受信任。</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} 添加了机器人 {1}。只有管理员可以添加机器人，所以机器人已被封禁。</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} 在这里受信任：它的消息以及有人提到它时的回复都会放行，并像成员的消息一样被检查。</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} 已从这个群移除：它被封禁，它在这里发的所有内容都会被删除。</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>这不是机器人。请回复机器人的一条消息，或者给出它的 @用户名 或 ID。</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} 是我们自己的机器人之一，始终受信任。</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>本群的机器人</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>受信任：</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>已移除：</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>这里还没有添加、信任或移除过任何机器人。原本就在群里的机器人仍然受信任。</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>由管理员添加</value>
+  </string>
+  <string key="botSource_command">
+    <value>由管理员设定</value>
+  </string>
+  <string key="botSource_present">
+    <value>原本就在群里</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>由成员添加</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>由成员召唤</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>在本群信任一个机器人：它的消息以及有人提到它时的回复都会放行，Enforcer 的封禁会被解除。请回复它的一条消息，或者给出它的 @用户名 或 ID。管理员添加的机器人已经受信任；成员添加的机器人，或成员提到让它在这里回复的机器人，会被封禁。</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>把一个机器人从本群移除：它会被封禁，它在这里发的所有内容都会被删除。请回复它的一条消息，或者给出它的 @用户名 或 ID。用 /trustbot 可以让它回来。</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>列出本群信任或移除的机器人，以及原因。</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>在本群信任一个机器人</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>从本群移除一个机器人</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>列出受信任和已移除的机器人</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>欢迎消息已开启。用 /welcome 加文字来设置内容。</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>欢迎消息已关闭。</value>
+  </string>
 </strings>

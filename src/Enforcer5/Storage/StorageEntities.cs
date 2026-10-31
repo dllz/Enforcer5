@@ -414,6 +414,38 @@ namespace Enforcer5.Storage
     }
 
     /// <summary>
+    /// What a group decided about a bot (Detection/BotGuard): <c>allowed</c> (an admin added or trusted it, or it
+    /// was a member before the bot checks started) or <c>blocked</c> (a member added it, an admin untrusted it, or
+    /// a member summoned it as a guest). A bot with no row is judged when it first posts.
+    /// </summary>
+    internal sealed class GroupBotEntity
+    {
+        public long GroupId { get; set; }
+        public long AccountId { get; set; }
+        public string Status { get; set; }
+        public string Source { get; set; }
+        public long? SetByAccountId { get; set; }
+        public DateTimeOffset SetAt { get; set; }
+    }
+
+    /// <summary>
+    /// Every bot added to a group or summoned into it as a guest, and every admin's trust or untrust, with who did
+    /// it and whether they were an admin: who brings bots in, kept for the admins and for us.
+    /// </summary>
+    internal sealed class BotEventEntity
+    {
+        public long EventId { get; set; }
+        public long GroupId { get; set; }
+        public long BotAccountId { get; set; }
+        public long? ActorAccountId { get; set; }
+        public bool ActorWasAdmin { get; set; }
+        public string Kind { get; set; }
+        public string Action { get; set; }
+        public string Edition { get; set; }
+        public DateTimeOffset OccurredAt { get; set; }
+    }
+
+    /// <summary>
     /// A member an admin set back to new with /untrust (build step 7b): new in the group whatever their
     /// counts, until an admin restores them. <c>messages_at_set</c> is their message count then, so the
     /// bot can tell how much they talked since and offer to restore them.

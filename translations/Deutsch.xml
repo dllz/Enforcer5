@@ -2387,7 +2387,82 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="extraListGroup">
     <value>{0}:</value>
   </string>
+  <string key="sign_summoned_bot">
+    <value>hat einen Bot gerufen, dem hier nicht vertraut wird</value>
+  </string>
+  <string key="sign_added_bot">
+    <value>hat einen Bot hinzugefügt, ohne Admin zu sein</value>
+  </string>
+  <string key="botSummonedLog">
+    <value>🤖 {0} hat den Bot {1} als Gast gerufen. Seine Antwort wurde gelöscht und der Bot gebannt: Nur Admins dürfen Bots in die Gruppe holen.</value>
+  </string>
+  <string key="botAddedByAdminLog">
+    <value>🤖 {0} hat den Bot {1} hinzugefügt. Von einem Admin hinzugefügt, gilt er als vertrauenswürdig.</value>
+  </string>
+  <string key="botAddedByMemberLog">
+    <value>🤖 {0} hat den Bot {1} hinzugefügt. Nur Admins dürfen Bots hinzufügen, deshalb wurde der Bot gebannt.</value>
+  </string>
+  <string key="trustBotDone">
+    <value>✅ {0} ist hier vertrauenswürdig: Seine Beiträge und seine Antworten, wenn ihn jemand erwähnt, werden durchgelassen und wie die eines Mitglieds geprüft.</value>
+  </string>
+  <string key="untrustBotDone">
+    <value>🚫 {0} ist aus dieser Gruppe entfernt: Er ist gebannt, und alles, was er hier postet, wird gelöscht.</value>
+  </string>
+  <string key="trustBotNotABot">
+    <value>Das ist kein Bot. Antworte auf eine Nachricht des Bots oder gib seinen @Benutzernamen oder seine ID an.</value>
+  </string>
+  <string key="trustBotKnown">
+    <value>{0} ist einer unserer eigenen Bots und immer vertrauenswürdig.</value>
+  </string>
+  <string key="trustedBotsTitle">
+    <value><![CDATA[🤖 <b>Bots in dieser Gruppe</b>]]></value>
+  </string>
+  <string key="trustedBotsAllowed">
+    <value>Vertrauenswürdig:</value>
+  </string>
+  <string key="trustedBotsBlocked">
+    <value>Entfernt:</value>
+  </string>
+  <string key="trustedBotsNone">
+    <value>Hier wurde noch kein Bot hinzugefügt, als vertrauenswürdig markiert oder entfernt. Bots, die schon in der Gruppe waren, bleiben vertrauenswürdig.</value>
+  </string>
+  <string key="botSource_admin_added">
+    <value>von einem Admin hinzugefügt</value>
+  </string>
+  <string key="botSource_command">
+    <value>von einem Admin festgelegt</value>
+  </string>
+  <string key="botSource_present">
+    <value>schon in der Gruppe</value>
+  </string>
+  <string key="botSource_member_added">
+    <value>von einem Mitglied hinzugefügt</value>
+  </string>
+  <string key="botSource_summoned">
+    <value>von einem Mitglied gerufen</value>
+  </string>
+  <string key="hcommandtrustbot">
+    <value>Vertraut einem Bot in dieser Gruppe: Seine Beiträge und seine Antworten, wenn ihn jemand erwähnt, werden durchgelassen, und ein Bann durch Enforcer wird aufgehoben. Antworte auf eine seiner Nachrichten oder gib seinen @Benutzernamen oder seine ID an. Von einem Admin hinzugefügte Bots sind bereits vertrauenswürdig; ein Bot, den ein Mitglied hinzufügt oder erwähnt, damit er hier antwortet, wird gebannt.</value>
+  </string>
+  <string key="hcommanduntrustbot">
+    <value>Entfernt einen Bot aus dieser Gruppe: Er wird gebannt, und alles, was er hier postet, wird gelöscht. Antworte auf eine seiner Nachrichten oder gib seinen @Benutzernamen oder seine ID an. Mit /trustbot darf er wieder zurück.</value>
+  </string>
+  <string key="hcommandtrustedbots">
+    <value>Zeigt die Bots, denen diese Gruppe vertraut oder die sie entfernt hat, und wie.</value>
+  </string>
+  <string key="cmdtrustbot">
+    <value>Einem Bot in dieser Gruppe vertrauen</value>
+  </string>
+  <string key="cmduntrustbot">
+    <value>Einen Bot aus dieser Gruppe entfernen</value>
+  </string>
+  <string key="cmdtrustedbots">
+    <value>Vertrauenswürdige und entfernte Bots anzeigen</value>
+  </string>
+  <string key="welcomeTurnedOn">
+    <value>Die Willkommensnachricht ist an. Lege ihren Text mit /welcome und dem Text fest.</value>
+  </string>
+  <string key="welcomeTurnedOff">
+    <value>Die Willkommensnachricht ist aus.</value>
+  </string>
 </strings>
-
-
-
