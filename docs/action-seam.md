@@ -200,7 +200,7 @@ our own functions, so scripts never do I/O):
 
 - the request (`action`);
 - target: warns, prewarns and media warns (Redis), last warn time and the last 20 warn history
-  entries (PostgreSQL `warnings`), joined at, established or new (`MemberTrust`), admin or not;
+  entries (PostgreSQL `warning_events`), joined at, established or new (`MemberTrust`), admin or not;
 - actor: id, name, admin rights;
 - group: warn limit and action, language, whether raid mode is on.
 
