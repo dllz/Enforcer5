@@ -1,6 +1,7 @@
 # Scripting and automation: design
 
-Draft for Daniel's review (2026-10-31). Nothing is built yet. The action seam this rests on has its
+Draft for Daniel's review (2026-10-31); his answers of 2026-10-31 are worked in (section 11).
+Nothing is built yet. The action seam this rests on has its
 own document, `docs/action-seam.md`; read it before changing anything under "Rules" or "Batch".
 
 ## 1. Where this is going
@@ -73,7 +74,8 @@ Cost: about 3 MB per edition (Jint 2.6 MB, Acornima 0.4 MB) on a 41 MB build.
 | Output text | 1,000 characters per message | |
 
 Per group: 20 rules, 2,000 rule runs an hour; over budget, rules are skipped (fail open) and the
-admins are told once. Numbers are first guesses, to be measured in the harness before release.
+admins are told once. Agreed as starting values (Daniel, 2026-10-31); measured in the harness
+before release.
 
 Jint's limits are checked between statements, so they cannot interrupt our own host functions.
 Host functions therefore never do I/O: everything a script can read is loaded before it runs
@@ -114,9 +116,10 @@ rule({
 
 ### Who and how
 
-- **Group admins** who may ban (Telegram's `can_restrict_members`) or the creator. The bot
-  checks the author's rights when the rule runs; if the author is no longer such an admin, their
-  rules pause and the other admins are told.
+- **Group admins** (Daniel, 2026-10-31). Extra actions a rule adds (`also`) run with its
+  author's rights, checked when the rule runs, so an admin who cannot ban cannot ban through a
+  rule either. If the author is no longer an admin, their rules pause and the other admins are
+  told.
 - `/rule add` replying to a `.js` file or a message with the code: the bot checks it (parse,
   `rule(...)` call, known actions and sources, a dry run against made-up input), then shows what
   it understood ("Before removewarn and resetwarns, from commands and buttons") with Enable /
@@ -219,9 +222,18 @@ Each step is a local commit; nothing is pushed until Daniel says "push".
 5. Release check: the harness scenarios, 500 chaos seeds (the seam touches enforcement), both
    editions, strings uploaded.
 
-## 11. Open questions
+## 11. Decisions and open questions
 
-1. Who may write rules: admins who can ban plus the creator (proposed), or the creator only?
-2. Limits in section 3: fine as starting points?
-3. Should after rules also see actions taken in the Telegram app (proposed: yes, source `app`)?
-4. Premium-only extras (more rules, bigger batches), or the same for both editions?
+Decided (Daniel, 2026-10-31):
+
+- Rules are written by the group's admins (section 4).
+- The limits in sections 3 and 5 are the starting values.
+- Detection, filter and length actions get no before hooks in v1 (`docs/action-seam.md`, section 5).
+- A blocked or refused max-warns ban keeps the warns and tells the admins
+  (`docs/action-seam.md`, section 8).
+- Batch and script actions get their own label sources (`docs/action-seam.md`, section 13).
+
+Open:
+
+1. Should after rules also see actions taken in the Telegram app (proposed: yes, source `app`)?
+2. Premium-only extras (more rules, bigger batches), or the same for both editions?

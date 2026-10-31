@@ -1,6 +1,7 @@
 # The action seam: design
 
-Draft for Daniel's review (2026-10-31). Part of `docs/scripting-design.md`, but useful without
+Draft for Daniel's review (2026-10-31); his answers of 2026-10-31 are worked in (section 14).
+Part of `docs/scripting-design.md`, but useful without
 scripts: it gives every moderation action one path, which fixes several bugs and makes `/batch`,
 scripts and later schedules possible.
 
@@ -160,8 +161,8 @@ Before hooks only run for actions an admin chose. The bot's defences never wait 
 | Recovery, Expiry | no | yes | |
 | App | – | yes | already happened; an after rule may react (e.g. undo it) |
 
-`Detection`/`Filter`/`Limits` before hooks are deliberately left out of v1: a slow rule on the
-message path is the one cost the scripting design rules out. Revisit with data.
+`Detection`/`Filter`/`Limits` before hooks are left out of v1 (Daniel, 2026-10-31): a slow rule
+on the message path is the one cost the scripting design rules out. Revisit with data.
 
 ## 6. The pipeline
 
@@ -228,9 +229,11 @@ Today's caller code, moved into the action. The caller keeps only its answer.
 `Kick`, `Source = Escalation`, `Trigger` = the warn, `ParentId` = the warn's id, reason "Max
 warns", no actor as today, so its label stays `auto`; the warn's admin is reachable through the
 parent). It goes through the whole pipeline, so a before rule can see `action.parent` and block or
-replace it. If it is blocked or refused the warns are *not* reset (today they are set to 0 with
-"Max warns" whether or not the ban went through, `BanCommands.cs:255-256`); the result tells the
-caller, which says so.
+replace it. If it is blocked or refused the warns are *kept* and the admins are told (Daniel,
+2026-10-31): the warn message says the limit was reached and why the ban or kick did not happen
+(the rule's name and text, or Telegram's refusal), and the log channel gets the same line. Today
+the warns are set to 0 with "Max warns" whether or not the ban went through
+(`BanCommands.cs:255-256`).
 
 **One warn implementation.** `Commands.Warn` and `userbuttonwarnuser` become one handler; the
 button gets the prewarn conversion, `totalWarns` and its report like the command. Its visible
@@ -313,14 +316,22 @@ Then the script host and rules (`docs/scripting-design.md`, section 10).
 - **Escalation as its own action** changes when warns reset (only after the ban went through).
   Intended, but visible: "3/3 warns, ban blocked by rule X" keeps the 3 warns.
 - **Source mapping**: Detection learns from `member_labels.source`. Labels must keep today's
-  values (`command`, `button`, `report`, `raid`, `auto`, `app`); new sources map onto them
-  (`batch` and `script` get their own values, which Detection must be told about).
+  values (`command`, `button`, `report`, `raid`, `auto`, `app`); new sources map onto them.
+  `batch` and `script` get their own values (Daniel, 2026-10-31): a migration widens
+  `member_labels_source_check` (`Storage/EnforcerDbContext.cs:46`), and Detection's readers of
+  `source` (`TrustLearning`, the nightly labels, `tools/tuning/export.sql`) are checked for how
+  they should count them.
 - **Premium `#if` copies** of tempban keys collapse into `RedisTempbanRepository`; both configs
   must be built and tested at every step.
 
-## 14. Open questions
+## 14. Decisions and open questions
 
-1. Section 5: should Detection and filter actions get before hooks in v1 (proposed: no)?
-2. Escalation blocked or refused: keep the warns (proposed) or reset them as today?
-3. Batch: confirmation by the same admin only (proposed), or any admin?
-4. Labels for `batch` and `script` in `member_labels`: new source values (proposed), or `command`?
+Decided (Daniel, 2026-10-31):
+
+- No before hooks for Detection, filter and length actions in v1 (section 5).
+- A blocked or refused escalation keeps the warns and tells the admins (section 8).
+- `batch` and `script` are new label sources (section 13).
+
+Open:
+
+1. Batch: confirmation by the same admin only (proposed), or any admin?
