@@ -32,8 +32,8 @@ listed so v1's shapes do not have to be broken to add it (section 9).
    (`docs/action-seam.md`, section 5). This is the same rule Detection follows.
 2. **Scripts propose, the bot acts.** A script never calls Telegram, Redis or PostgreSQL. It
    reads what it is given and returns *intents* (block, change, do this too). The bot carries
-   intents out through the action seam, with the permissions of the admin who wrote the script,
-   in that script's group only, within the normal rate limits.
+   intents out through the action seam as an admin of that script's group (not as its author),
+   in that group only, within the normal rate limits.
 3. **A group's scripts only see that group.** The input holds the group's own data about the
    members in the action, nothing about other groups.
 4. **Both editions**, one shared PostgreSQL schema, like Detection.
@@ -116,10 +116,20 @@ rule({
 
 ### Who and how
 
-- **Group admins** (Daniel, 2026-10-31). Extra actions a rule adds (`also`) run with its
-  author's rights, checked when the rule runs, so an admin who cannot ban cannot ban through a
-  rule either. If the author is no longer an admin, their rules pause and the other admins are
-  told.
+- **Who may write, change or turn off rules** (Daniel, 2026-10-31): the group's Telegram admins
+  (anonymous admins included), the creator and the group's `/auth` users. Not elevated members
+  (`/elevate`): a 30-minute elevation must not leave permanent rules behind. Devs and global
+  admins can read and turn off rules in any group (support), not write them.
+- **Rules run as an admin of the group**, not as their author. The bot's tiers all have the same
+  moderation powers through the bot (it never checks an admin's own Telegram rights, and that
+  stays: Daniel, 2026-10-31), so there is no narrower set of rights to run with.
+- **Rules never block the creator or devs.** Before rules do not run on their actions, so a
+  group can never lock its owner out (after rules still run).
+- **When the author is gone** (no longer an admin, or left): their rules keep running, since
+  they run as an admin, and the admins get one message listing that author's rules, each with
+  *Take over* (the admin who taps it becomes the author) and *Turn off*, plus *Take over all*.
+  Found when `AdminDirectory` sees the demotion or the member leaves, and checked again nightly.
+  `/rule list` marks rules without an author until someone takes them over.
 - `/rule add` replying to a `.js` file or a message with the code: the bot checks it (parse,
   `rule(...)` call, known actions and sources, a dry run against made-up input), then shows what
   it understood ("Before removewarn and resetwarns, from commands and buttons") with Enable /
@@ -162,8 +172,9 @@ take part, in `docs/action-seam.md`, section 9. In short:
 
 | Table | Holds |
 |---|---|
-| `scripts` | id, group, name, kind (`rule`), when, actions, sources, enabled, current version, author, created, updated |
+| `scripts` | id, group, name, kind (`rule`), when, actions, sources, enabled, current version, author, author gone since, created, updated |
 | `script_versions` | script, version, source text, api version, author, created |
+| `script_transfers` | script, from, to, at (who took over a gone author's rule) |
 | `script_runs` | script, version, action id, outcome (allowed, blocked, changed, failed, skipped), error, ms, at. Kept 30 days |
 | `batches` | id, group, admin, command, arguments, state, counts, created, finished |
 | `batch_items` | batch, target, state, outcome, reason |
@@ -185,7 +196,9 @@ scripts (`block("...")`, `say("...")`) are the admins' own and are not translate
 | Script reaches .NET, files, network | Jint untrusted profile: no CLR, no modules, no eval; host exposes plain data and pure helpers only |
 | Endless loop, memory bomb, ReDoS | statement, time, memory, recursion and regex limits; fail open |
 | Script acts in another group | intents are bound to the script's group; ids from a script are checked against it |
-| Script does more than its author could | intents run with the author's rights, checked at run time |
+| A rule outlives its author | it keeps running as an admin; the admins are offered the list to take over or turn off |
+| A short-lived elevation leaves rules behind | elevated members cannot write rules |
+| A rule locks the owner out | before rules never run on the creator's or devs' actions |
 | Rules trigger rules | actions from scripts run no script rules (depth 1) |
 | Script blocks raid or flood defence | those sources cannot be blocked (`docs/action-seam.md`, section 5) |
 | A runaway rule floods the group | message lanes and per-group budget; `say` counts against them |
@@ -226,7 +239,12 @@ Each step is a local commit; nothing is pushed until Daniel says "push".
 
 Decided (Daniel, 2026-10-31):
 
-- Rules are written by the group's admins (section 4).
+- Rules are written by the group's admins: Telegram admins, the creator and `/auth` users, not
+  elevated members (section 4).
+- Rules run as an admin of the group, not with their author's rights; when the author is gone
+  the admins are offered that author's rules to take over or turn off (section 4).
+- Rules never block the creator or devs (section 4).
+- The seam does not start checking each admin's own Telegram rights (unchanged behaviour).
 - The limits in sections 3 and 5 are the starting values.
 - Detection, filter and length actions get no before hooks in v1 (`docs/action-seam.md`, section 5).
 - A blocked or refused max-warns ban keeps the warns and tells the admins

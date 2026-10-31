@@ -169,14 +169,17 @@ on the message path is the one cost the scripting design rules out. Revisit with
 1. **Normalise.** Fill `ActorId` for a raid button (as `Decisions.cs:78` does today), clamp
    durations to Telegram's range, turn a negative target id into `BanChannel`.
 2. **Authorise.** For sources with an actor: the actor may do this kind of action in this chat
-   (group admin, global admin or dev, as the dispatcher checks today). For `Batch` and `Script`
-   this is the first and only check, so it must be here and not in the dispatcher. Failure:
-   `Blocked` with `BlockedBy = "rights"`.
+   (group admin, global admin or dev, as the dispatcher checks today). For `Batch` this is the
+   first and only check, so it must be here and not in the dispatcher. `Script` actions run as an
+   admin of the script's group and are only checked to be in that group. Each admin's own
+   Telegram rights (ban users, delete messages) are not checked, as today (Daniel, 2026-10-31).
+   Failure: `Blocked` with `BlockedBy = "rights"`.
 3. **Guards** (built in, always run, no scripts): target is not the bot, not the actor
    themselves (except `/kickme`), not a known admin (`AdminDirectory`; the queue still checks
    too), not an anonymous admin or the group itself. For warn removals: there is something to
    remove (`NothingToDo`). Same answers as today.
-4. **Before hooks** (section 5 decides whether they run). Each enabled hook for this kind and
+4. **Before hooks** (section 5 decides whether they run; never on the creator's or devs'
+   actions, so a rule cannot lock the owner out). Each enabled hook for this kind and
    source, in order. A hook returns allow, block(message) or change(fields). First block stops;
    changes apply in order to `Reason`, `Duration` and `Silent` only. A different action is block
    plus `also(...)`: the kind of an action never changes in place. A hook that throws, times out
@@ -331,6 +334,8 @@ Decided (Daniel, 2026-10-31):
 - No before hooks for Detection, filter and length actions in v1 (section 5).
 - A blocked or refused escalation keeps the warns and tells the admins (section 8).
 - `batch` and `script` are new label sources (section 13).
+- Admins' own Telegram rights are not checked by the seam (section 6, step 2).
+- Before hooks never run on the creator's or devs' actions (section 6, step 4).
 
 Open:
 
