@@ -204,9 +204,16 @@ namespace Enforcer5.Detection
         /// <summary>True the first time in <paramref name="keep"/>; the map is pruned as it grows.</summary>
         private static bool Claim(ConcurrentDictionary<(long, long), DateTime> map, (long, long) key, DateTime now, TimeSpan keep)
         {
-            var claimed = false;
-            map.AddOrUpdate(key, _ => { claimed = true; return now; },
-                (_, at) => { if (now - at < keep) return at; claimed = true; return now; });
+            // TryAdd/TryUpdate rather than AddOrUpdate, whose factories can run and lose the race: a flag set
+            // inside one claimed twice when three guest answers came at once.
+            bool claimed;
+            while (true)
+            {
+                if (map.TryAdd(key, now)) { claimed = true; break; }
+                if (!map.TryGetValue(key, out var at)) continue;
+                if (now - at < keep) { claimed = false; break; }
+                if (map.TryUpdate(key, now, at)) { claimed = true; break; }
+            }
             if (claimed && map.Count > 50_000)
                 foreach (var (old, at) in map)
                     if (now - at >= keep) map.TryRemove(old, out _);

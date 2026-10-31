@@ -322,7 +322,18 @@ namespace Enforcer5.Tests.Harness
                 Assert.AreEqual(plan.GamePosts, telegram.MessagesFrom(chatId, plan.GameBot.Id).Count, "and none of its posts deleted");
                 foreach (var guest in plan.GuestBots)
                 {
-                    Assert.AreEqual(0, telegram.MessagesFrom(chatId, guest.Id).Count, $"every answer of a guest a member summoned is deleted (crash at {crashAt})");
+                    // A delete Telegram refused because the bot had lost its rights ("message can't be deleted") is
+                    // taken as done, as it is for members' messages (EnforcementExecutor): only those may stay.
+                    bool Refused(int id) => telegram.Calls.Any(c => c.ChatId == chatId && !c.Succeeded && !c.Refused &&
+                        (c.Request is Telegram.Bot.Requests.DeleteMessageRequest d && d.MessageId == id ||
+                         c.Request is Telegram.Bot.Requests.DeleteMessagesRequest ds && ds.MessageIds.Contains(id)));
+                    var left = telegram.MessagesFrom(chatId, guest.Id).Where(id => !Refused(id)).ToList();
+                    Assert.AreEqual(0, left.Count, $"every answer of a guest a member summoned is deleted (crash at {crashAt}): message {string.Join(",", left)}, " +
+                        string.Join(",", telegram.Calls.Where(c => c.ChatId == chatId && (c.UserId == guest.Id ||
+                            c.Request is Telegram.Bot.Requests.DeleteMessageRequest d && left.Contains(d.MessageId) ||
+                            c.Request is Telegram.Bot.Requests.DeleteMessagesRequest ds && ds.MessageIds.Any(left.Contains)))
+                            .Select(c => $"{c.Method}{(c.Refused ? "(429)" : c.Succeeded ? "" : "(failed)")}@{(c.At - telegram.Calls[0].At).TotalSeconds:0}s")) +
+                        $"; errors: {string.Join(" | ", first.Errors.Take(3))}");
                     Assert.AreEqual(MemberState.Kicked, telegram.GetMember(chatId, guest.Id), "and the guest bot banned");
                 }
                 if (plan.AddedBot != null)

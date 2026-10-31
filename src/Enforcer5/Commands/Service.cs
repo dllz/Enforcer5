@@ -235,9 +235,16 @@ defSpamValue = 3;
         {
             var now = Helpers.Clock.UtcNow;
             var keep = TimeSpan.FromMinutes(10);
-            var claimed = false;
-            Welcomed.AddOrUpdate((chatId, userId), _ => { claimed = true; return now; },
-                (_, at) => { if (now - at < keep) return at; claimed = true; return now; });
+            var welcome = (chatId, userId);
+            // TryAdd/TryUpdate: AddOrUpdate's factories can run and lose the race, claiming twice.
+            bool claimed;
+            while (true)
+            {
+                if (Welcomed.TryAdd(welcome, now)) { claimed = true; break; }
+                if (!Welcomed.TryGetValue(welcome, out var at)) continue;
+                if (now - at < keep) { claimed = false; break; }
+                if (Welcomed.TryUpdate(welcome, now, at)) { claimed = true; break; }
+            }
             if (claimed && Welcomed.Count > 20_000)
                 foreach (var (key, at) in Welcomed)
                     if (now - at >= keep) Welcomed.TryRemove(key, out _);
