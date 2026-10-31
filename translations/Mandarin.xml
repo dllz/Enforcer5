@@ -160,6 +160,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[{0} 因触发警告阈值<b>被封禁</b>]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} 的警告次数已达上限（{1}/{2}），但<b>未被封禁</b>：{3}\n警告将保留，直到管理员处理。]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} 的警告次数已达上限（{1}/{2}），但<b>未被踢出</b>：{3}\n警告将保留，直到管理员处理。]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>我不是这里的管理员，或没有封禁成员的权限。</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram 拒绝了此操作。</value>
+  </string>
   <string key="resetWarn">
     <value>重置警告</value>
   </string>

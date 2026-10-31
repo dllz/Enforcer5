@@ -169,6 +169,18 @@ UPDATE LOG
 	<string key="warnMaxBan">
 		<value><![CDATA[警告次數累積至上限，【{0}】已<b>被封鎖</b>。]]></value>
 	</string>
+	<string key="warnMaxBanNotDone">
+		<value><![CDATA[【{0}】嘅警告次數已經到上限（{1}/{2}），但係<b>封鎖唔到</b>：{3}\n警告會保留，直到有管理員處理。]]></value>
+	</string>
+	<string key="warnMaxKickNotDone">
+		<value><![CDATA[【{0}】嘅警告次數已經到上限（{1}/{2}），但係<b>踢唔走</b>：{3}\n警告會保留，直到有管理員處理。]]></value>
+	</string>
+	<string key="warnLimitBotNotAdmin">
+		<value>我唔係呢度嘅管理員，或者冇權封鎖成員。</value>
+	</string>
+	<string key="warnLimitRefused">
+		<value>Telegram 拒絕咗。</value>
+	</string>
 	<string key="resetWarn">
 		<value>警告歸零</value>
 	</string>

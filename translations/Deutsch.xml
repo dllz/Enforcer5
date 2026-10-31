@@ -161,6 +161,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[Benutzer {0} wurde aufgrund des Erreichens der maximalen Anzahl an Verwarnungen <b>gebannt</b>!]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} hat die maximale Anzahl an Verwarnungen erreicht ({1}/{2}), wurde aber <b>nicht gebannt</b>: {3}\nDie Verwarnungen bleiben, bis ein Admin handelt.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} hat die maximale Anzahl an Verwarnungen erreicht ({1}/{2}), wurde aber <b>nicht gekickt</b>: {3}\nDie Verwarnungen bleiben, bis ein Admin handelt.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Ich bin hier kein Admin oder darf keine Mitglieder bannen.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram hat es abgelehnt.</value>
+  </string>
   <string key="resetWarn">
     <value>Verwarnungen zur&#252;cksetzen</value>
   </string>

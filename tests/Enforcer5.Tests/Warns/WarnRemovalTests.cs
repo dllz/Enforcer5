@@ -342,9 +342,18 @@ namespace Enforcer5.Tests.Warns
         public async Task RemoveOne_LeavesTheRestAndRemembersTheReason()
         {
             _redis.Hash(Warns)[42] = 2;
-            var left = await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Warn, false, 42), "AFK");
+            var left = await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Warn, false, 42), "AFK", actorId: 7);
             Assert.AreEqual(1L, left);
             CollectionAssert.AreEqual(new[] { "AFK" }, (await _reasons.GetRecentAsync(ChatId)).ToArray());
+        }
+
+        [TestMethod]
+        public async Task TheBotsOwnReason_IsNotRemembered()
+        {
+            // The media limit resets strikes with "Media limit", which is no reason to offer admins.
+            _redis.Hash(Media)[42] = 3;
+            await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Media, true, 42), "Media limit");
+            Assert.AreEqual(0, (await _reasons.GetRecentAsync(ChatId)).Count);
         }
 
         [TestMethod]

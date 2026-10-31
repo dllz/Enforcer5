@@ -1,12 +1,13 @@
 using System;
 using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
+using Enforcer5.Models;
 
 namespace Enforcer5.Actions
 {
     /// <summary>
-    /// An action on a member that goes through the action seam (<c>docs/action-seam.md</c>). Warns, deletes
-    /// and channel bans join in later steps.
+    /// An action on a member that goes through the action seam (<c>docs/action-seam.md</c>). Deletes and
+    /// channel bans join in a later step.
     /// </summary>
     internal enum ActionKind
     {
@@ -16,7 +17,17 @@ namespace Enforcer5.Actions
         Kick,
         Mute,
         TempMute,
-        Unmute
+        Unmute,
+        /// <summary>One warn (plus any prewarns, which it converts). Reaching the limit asks for an escalation.</summary>
+        Warn,
+        /// <summary>One prewarn: counted, converted into warns at the next warn.</summary>
+        Prewarn,
+        /// <summary>One strike for blocked media. The caller acts at the media limit.</summary>
+        MediaStrike,
+        /// <summary>Takes one warn of <see cref="ActionRequest.WarnKind"/> off.</summary>
+        RemoveWarn,
+        /// <summary>Clears the warns of <see cref="ActionRequest.WarnKind"/> (and media warns, if asked).</summary>
+        ResetWarns
     }
 
     /// <summary>
@@ -82,6 +93,10 @@ namespace Enforcer5.Actions
         public string BanListReason { get; init; }
         /// <summary>A ban: the name kept with <see cref="BanListReason"/>.</summary>
         public string BanListName { get; init; }
+        /// <summary>RemoveWarn and ResetWarns: which counter.</summary>
+        public WarnKind WarnKind { get; init; }
+        /// <summary>ResetWarns of warns: the media warns go too (the reset button under a warn).</summary>
+        public bool AlsoMediaWarns { get; init; }
     }
 
     internal enum ActionOutcome
@@ -90,14 +105,29 @@ namespace Enforcer5.Actions
         Done,
         /// <summary>Not yet, but it stays queued and will be; callers treat it as done.</summary>
         Queued,
-        /// <summary>Telegram refused it for good; see <see cref="ActionResult.Refusal"/>.</summary>
-        Refused
+        /// <summary>Telegram refused it for good, or the target cannot be warned; see <see cref="ActionResult.Refusal"/>.</summary>
+        Refused,
+        /// <summary>Nothing to take off: no warns of that kind.</summary>
+        NothingToDo
     }
 
     /// <summary>How an action ended, for the caller to tell the group. <see cref="Applied"/> is what was done.</summary>
     internal sealed record ActionResult(ActionRequest Applied, EnforcementResult Enforcement)
     {
-        internal ActionOutcome Outcome => Enforcement.Outcome switch
+        /// <summary>A warn removal with no warns to take off.</summary>
+        public bool Nothing { get; init; }
+        /// <summary>Warn kinds: the count after it (warns, prewarns or media strikes; for a reset, 0).</summary>
+        public long Count { get; init; }
+        /// <summary>A warn: the group's limit.</summary>
+        public int Max { get; init; }
+        /// <summary>A warn: the prewarns it converted into warns.</summary>
+        public long Converted { get; init; }
+        /// <summary>A warn or strike as written to the warn history, for an action it leads to.</summary>
+        public WarningRef Warning { get; init; }
+        /// <summary>A warn that reached the limit: the ban or kick that followed, done or not. Null below the limit.</summary>
+        public ActionResult Escalation { get; init; }
+
+        internal ActionOutcome Outcome => Nothing ? ActionOutcome.NothingToDo : Enforcement.Outcome switch
         {
             EnforcementOutcome.Done => ActionOutcome.Done,
             EnforcementOutcome.Queued => ActionOutcome.Queued,
@@ -107,6 +137,6 @@ namespace Enforcer5.Actions
         internal Refusal Refusal => Enforcement.Refusal;
 
         /// <summary>Done, or certain to be done: what callers announce as done.</summary>
-        internal bool Succeeded => Enforcement.Succeeded;
+        internal bool Succeeded => !Nothing && Enforcement.Succeeded;
     }
 }

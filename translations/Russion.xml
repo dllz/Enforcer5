@@ -160,6 +160,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[{0} <b>забанен(а)</b>, так как достиг(ла) максимальное количество предупреждений.]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} достиг максимального числа предупреждений ({1}/{2}), но <b>не был забанен</b>: {3}\nПредупреждения сохраняются, пока админ не примет решение.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} достиг максимального числа предупреждений ({1}/{2}), но <b>не был исключён</b>: {3}\nПредупреждения сохраняются, пока админ не примет решение.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Я здесь не админ или мне нельзя банить участников.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram отказал.</value>
+  </string>
   <string key="resetWarn">
     <value>Сбросить</value>
   </string>

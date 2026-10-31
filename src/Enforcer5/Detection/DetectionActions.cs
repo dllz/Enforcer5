@@ -54,7 +54,7 @@ namespace Enforcer5.Detection
                     switch (action.Action)
                     {
                         case "warn":
-                            Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason);
+                            Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason, source: ActionSource.Detection);
                             break;
                         case "mute":
                             Methods.MuteUser(chatId, userId, lang, reason: action.Reason, source: ActionSource.Detection);

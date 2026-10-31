@@ -196,6 +196,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[User {0} <b>diblokir</b>: Karena sudah mencapai batas peringatan]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} telah mencapai batas peringatan ({1}/{2}), tetapi <b>tidak diblokir</b>: {3}\nPeringatannya tetap ada sampai admin bertindak.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} telah mencapai batas peringatan ({1}/{2}), tetapi <b>tidak dikeluarkan</b>: {3}\nPeringatannya tetap ada sampai admin bertindak.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Saya bukan admin di sini, atau saya tidak boleh memblokir anggota.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram menolaknya.</value>
+  </string>
   
   <string key="resetWarn">
     <value>reset peringatan</value>

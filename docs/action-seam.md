@@ -291,7 +291,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 |---|---|---|
 | A (done, 2026-10-31) | `Actions/`: types, `ActionSeam.Run`, no hooks. `Methods.*`, `Commands.Tempban` become thin wrappers building a request; source passed explicitly at the automatic call sites (Detection, filters, flood, limits) and derived for commands and buttons (moving the logic out of `Decisions.cs:74-84`) | none |
 | B (done, 2026-10-31) | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
-| C | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
+| C (done, 2026-10-31) | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
 | D | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | none |
 | E | Log channel lines owned by the actions | wording unchanged |
 | F | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none |
@@ -312,6 +312,18 @@ and every unban now ends a running tempban, whatever asked for it (bot checks to
 a second tempban replaces the first; a member let back in early leaves `/tempbans`; an unban clears the
 ban reason. `{chat}:userJoin` deletes were dropped (nothing writes it), and so was the string
 `chat:{c}:bannedlist` (nothing read it). The ban history and labels stay in `EnforcementExecutor.Record`.
+
+Step C notes: `Actions/WarnActions` carries out `Warn`, `Prewarn`, `MediaStrike`, `RemoveWarn` and
+`ResetWarns` without the queue; `IWarnRepository` gained `AddAsync` and `AddLifetimeAsync`, so nothing
+outside it writes the warn hashes but the data recovery (which restores values, not actions) and the
+old one-off negative clamp in `Service`. A warn at the limit runs a `Ban` or `Kick` with source
+`Escalation` (no actor, label `auto` as before); the warns are reset only when it succeeded, otherwise
+they stay and the warn message and log channel say why (`warnMaxBanNotDone`/`warnMaxKickNotDone`).
+`Commands.Warn` returns the result and renders it; the `/user` Warn button runs the same action
+(so it now converts prewarns and counts lifetime warns). `/removewarn` and `/resetwarns` take a
+member by id or @username when they do not reply. Removal reasons are remembered for the prompt
+only when an admin gave them (the media limit's "Media limit" is not). Strings: 4 new keys, and the
+help of `/removewarn` and `/resetwarns` changed.
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 

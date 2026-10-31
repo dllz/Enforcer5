@@ -82,7 +82,7 @@ namespace Enforcer5.Tests.Actions
                 (Request(ActionKind.TempMute, until: until), EnforcementKind.Mute, until),
                 (Request(ActionKind.Unmute), EnforcementKind.Unmute, null),
             };
-            Assert.AreEqual(Enum.GetValues<ActionKind>().Length, cases.Length, "every kind is covered");
+            Assert.AreEqual(Enum.GetValues<ActionKind>().Count(k => !WarnActions.Handles(k)), cases.Length, "every kind is covered");
             foreach (var (request, kind, expectedUntil) in cases)
             {
                 var job = ActionSeam.ToJob(request);
@@ -106,6 +106,36 @@ namespace Enforcer5.Tests.Actions
             Assert.AreEqual(BanEnd.Expired, ActionSeam.ToJob(Request(ActionKind.Unban, ActionSource.Expiry)).Note.End);
             Assert.IsTrue(ActionSeam.ToJob(Request(ActionKind.Mute, ActionSource.MuteOnJoin)).Note.NewJoiner);
             Assert.IsFalse(ActionSeam.ToJob(Request(ActionKind.Mute, ActionSource.Detection)).Note.NewJoiner);
+        }
+
+        [TestMethod]
+        public void WarnKinds_AreCarriedOutWithoutTheQueue()
+        {
+            foreach (var kind in new[] { ActionKind.Warn, ActionKind.Prewarn, ActionKind.MediaStrike, ActionKind.RemoveWarn, ActionKind.ResetWarns })
+            {
+                Assert.IsTrue(WarnActions.Handles(kind), kind.ToString());
+                Assert.ThrowsException<ArgumentOutOfRangeException>(() => ActionSeam.ToJob(Request(kind)), kind.ToString());
+            }
+        }
+
+        [TestMethod]
+        public void NothingToDo_IsNeitherDoneNorRefused()
+        {
+            var result = new ActionResult(Request(ActionKind.RemoveWarn), EnforcementResult.Done) { Nothing = true };
+            Assert.AreEqual((ActionOutcome.NothingToDo, false), (result.Outcome, result.Succeeded));
+        }
+
+        [DataTestMethod]
+        [DataRow("123 appeal accepted", "123", "appeal accepted")]
+        [DataRow("@someone", "@someone", null)]
+        [DataRow("  @someone   wrong user ", "@someone", "wrong user")]
+        [DataRow("appeal accepted", null, "appeal accepted")]
+        [DataRow("@", null, "@")]
+        [DataRow("-5 x", null, "-5 x")]
+        [DataRow(null, null, null)]
+        public void RemoveWarn_ReadsTheMemberNamedFirst(string text, string target, string after)
+        {
+            Assert.AreEqual((target, after), Commands.SplitTarget(text));
         }
 
         [TestMethod]

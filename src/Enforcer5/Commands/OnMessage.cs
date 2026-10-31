@@ -131,7 +131,7 @@ namespace Enforcer5
                                 }
                                 break;
                             case "warn":
-                                Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Flood");
+                                Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Flood", source: ActionSource.Flood);
                                 Methods.SaveBan(userid, "flood");
                                 break;
                             case "tempban":
@@ -207,7 +207,7 @@ namespace Enforcer5
                         }
                         break;
                     case "warn":
-                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Long message");
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Long message", source: ActionSource.Limits);
                         return;
                     case "tempban":
                         var time = Methods.GetGroupTempbanTime(groupId);
@@ -267,7 +267,7 @@ namespace Enforcer5
                         }
                         break;
                     case "warn":
-                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Name too long");
+                        Commands.Warn(userid, groupId, update, targetnick: userid.ToString(), reason: "Name too long", source: ActionSource.Limits);
                         break;
                     case "tempban":
                         var time = Methods.GetGroupTempbanTime(groupId);
@@ -352,9 +352,14 @@ namespace Enforcer5
             // dropped action reset someone's strike count for free.
             Bot.DispatchAction(() =>
             {
-                if (Methods.IsGroupAdmin(message.From.Id, chatId)) return;
-                var current = Redis.db.HashIncrementAsync($"chat:{chatId}:mediawarn", message.From.Id, 1).Result;
-                var warned = WarnHistory.Added(chatId, message.From.Id, WarnKind.Media, 1, current, null, null, "Media");
+                var strike = ActionSeam.Run(new ActionRequest
+                {
+                    Kind = ActionKind.MediaStrike, ChatId = chatId, TargetId = message.From.Id, Source = ActionSource.Limits,
+                    Reason = "Media"
+                });
+                if (!strike.Succeeded) return; // an admin
+                var current = strike.Count;
+                var warned = strike.Warning;
 
                 var overLimit = current >= max;
                 var action = overLimit ? configuredAction : null;
@@ -362,10 +367,11 @@ namespace Enforcer5
                     action is "kick" or "ban" or "tempban" ? action : "delete", deleted: true,
                     evidence: new { type = media, strike = current, limit = max });
                 if (overLimit)
-                {
-                    Redis.db.HashDeleteAsync($"chat:{chatId}:mediawarn", message.From.Id);
-                    WarnHistory.Reset(chatId, message.From.Id, WarnKind.Media, current, null, "Media limit");
-                }
+                    ActionSeam.Run(new ActionRequest
+                    {
+                        Kind = ActionKind.ResetWarns, ChatId = chatId, TargetId = message.From.Id, Source = ActionSource.Limits,
+                        Reason = "Media limit", WarnKind = WarnKind.Media
+                    });
 
                 if (overLimit)
                 {

@@ -195,7 +195,7 @@ namespace Enforcer5.Detection
                         EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, message.MessageId)).GetAwaiter().GetResult();
                     break;
                 case "warn":
-                    Commands.Warn(userId, chatId, update, targetnick: userId.ToString(), reason: reason);
+                    Commands.Warn(userId, chatId, update, targetnick: userId.ToString(), reason: reason, source: ActionSource.Filter);
                     break;
                 case "mute":
                     if (Methods.MuteUser(chatId, userId, lang, reason: reason, source: ActionSource.Filter))

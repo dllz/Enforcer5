@@ -7,7 +7,7 @@ namespace Enforcer5.Actions
 {
     /// <summary>
     /// The one way to act on a member (<c>docs/action-seam.md</c>). The request is carried out through
-    /// <see cref="EnforcementQueue"/>, then what it owns is recorded (<see cref="ActionEffects"/>: the tempban
+    /// <see cref="EnforcementQueue"/> (warns by <see cref="WarnActions"/>), then what it owns is recorded (<see cref="ActionEffects"/>: the tempban
     /// schedule, the ban list, the ban record). The steps before it (authorise, guards, hooks) arrive later.
     /// </summary>
     internal static class ActionSeam
@@ -21,18 +21,19 @@ namespace Enforcer5.Actions
         /// </summary>
         internal static ActionResult Run(ActionRequest request)
         {
-            EnforcementResult enforcement;
+            ActionResult result;
             try
             {
-                enforcement = EnforcementQueue.Run(ToJob(request));
+                result = WarnActions.Handles(request.Kind)
+                    ? WarnActions.Execute(request)
+                    : new ActionResult(request, EnforcementQueue.Run(ToJob(request)));
             }
             catch (Exception e)
             {
-                // A request the seam cannot carry out (a tempban without an end): the caller's bug.
+                // A request the seam cannot carry out (a tempban without an end), or Redis failing a warn.
                 ErrorReporter.Report(e, $"Carrying out the {request.Kind} of {request.TargetId} in {request.ChatId}");
-                enforcement = EnforcementResult.Refuse(Refusal.Other, e);
+                result = new ActionResult(request, EnforcementResult.Refuse(Refusal.Other, e));
             }
-            var result = new ActionResult(request, enforcement);
             ActionEffects.Apply(result);
             try
             {

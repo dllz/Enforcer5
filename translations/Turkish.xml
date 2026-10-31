@@ -162,6 +162,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[User {0} <b>banlandınız</b>: en fazla uyarı sayısı]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} maksimum uyarı sayısına ulaştı ({1}/{2}), ancak <b>yasaklanmadı</b>: {3}\nUyarılar bir admin işlem yapana kadar kalır.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} maksimum uyarı sayısına ulaştı ({1}/{2}), ancak <b>atılmadı</b>: {3}\nUyarılar bir admin işlem yapana kadar kalır.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Burada admin değilim veya üyeleri yasaklama yetkim yok.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram bunu reddetti.</value>
+  </string>
   <string key="resetWarn">
     <value>Uyarıyı sıfırla</value>
   </string>

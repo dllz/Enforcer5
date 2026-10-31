@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Attributes;
 using Enforcer5.Data;
 using Enforcer5.Helpers;
@@ -194,7 +195,25 @@ namespace Enforcer5
         private static void Complete(long chatId, XDocument lang, WarnChange change, long adminId, string adminName,
             string target, string reason, int sourceMessageId, bool sourceIsBotMessage)
         {
-            var left = ApplyAsync(Repositories.Warns, Repositories.WarnReasons, chatId, change, reason, adminId).GetAwaiter().GetResult();
+            var result = ActionSeam.Run(new ActionRequest
+            {
+                Kind = change.Reset ? ActionKind.ResetWarns : ActionKind.RemoveWarn,
+                ChatId = chatId,
+                TargetId = change.TargetId,
+                ActorId = adminId,
+                Source = ActionSources.Derive(ErrorReporter.Current?.Update, adminId, false),
+                Reason = reason,
+                WarnKind = change.Kind,
+                AlsoMediaWarns = change.AlsoMediaWarns
+            });
+            if (result.Outcome == ActionOutcome.NothingToDo)
+            {
+                // Taken off by someone else while the reason was being asked for.
+                Bot.SendReply(Methods.GetLocaleString(lang, "warnNothingToRemove", target, KindLabel(lang, change.Kind)), chatId, sourceMessageId);
+                return;
+            }
+            if (!result.Succeeded) return; // reported by the seam
+            var left = result.Count;
 
             var text = ResultText(lang, change, adminName, target, left, reason);
             var shown = false;
@@ -277,7 +296,8 @@ namespace Enforcer5
                 WarnHistory.Removed(chatId, change.TargetId, change.Kind, before - left, left, actorId, reason);
             }
 
-            if (reason != null) await reasons.AddRecentAsync(chatId, reason);
+            // An admin's reason is offered again next time; the bot's own ("Media limit") is not.
+            if (reason != null && actorId != null) await reasons.AddRecentAsync(chatId, reason);
             return left;
         }
 
@@ -330,23 +350,55 @@ namespace Enforcer5
 
     public static partial class Commands
     {
-        [Command(Trigger = "removewarn", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "removewarn", InGroupOnly = true, GroupAdminOnly = true)]
         public static void RemoveWarnCommand(Update update, string[] args) => WarnCommand(update, args, reset: false);
 
-        [Command(Trigger = "resetwarns", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
+        [Command(Trigger = "resetwarns", InGroupOnly = true, GroupAdminOnly = true)]
         public static void ResetWarnsCommand(Update update, string[] args) => WarnCommand(update, args, reset: true);
 
+        /// <summary>
+        /// /removewarn and /resetwarns: the member they reply to, with the rest as the reason; or the member named
+        /// first (id or @username), with what follows as the reason.
+        /// </summary>
         private static void WarnCommand(Update update, string[] args, bool reset)
         {
             var message = update.Message;
             var lang = Methods.GetGroupLanguage(message, true).Doc;
-            var target = message.ReplyToMessage.From;
-            if (target == null || target.Id == Bot.Me.Id) return;
+            var text = args.Length > 1 ? args[1] : null;
+            long targetId;
+            if (message.ReplyToMessage != null)
+            {
+                if (message.ReplyToMessage.From == null) return;
+                targetId = message.ReplyToMessage.From.Id;
+            }
+            else
+            {
+                var (named, rest) = SplitTarget(text);
+                if (named == null)
+                {
+                    Bot.SendReply(Methods.GetLocaleString(lang, "noReply"), update);
+                    return;
+                }
+                try
+                {
+                    targetId = Methods.GetUserId(update, new[] { args[0], named });
+                }
+                catch (Exception e)
+                {
+                    // An unknown @username is the admin's typo, not a bug.
+                    if (e.Message != "UnableToResolveUsername")
+                        ErrorReporter.Report(e, "Finding the member to take warns off");
+                    Bot.SendReply(Methods.GetLocaleString(lang, "UnableToGetID"), update);
+                    return;
+                }
+                text = rest;
+            }
+            if (targetId == Bot.Me.Id || targetId == message.From.Id && message.ReplyToMessage == null) return;
 
             string reason = null;
-            if (args.Length > 1 && !string.IsNullOrWhiteSpace(args[1]))
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                reason = WarnReasons.Normalise(args[1]);
+                reason = WarnReasons.Normalise(text);
                 if (reason == null)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "warnReasonTooLong", WarnReasons.MaxLength), update);
@@ -354,8 +406,23 @@ namespace Enforcer5
                 }
             }
 
-            WarnRemovals.Request(message.Chat.Id, new WarnChange(WarnKind.Warn, reset, target.Id),
+            WarnRemovals.Request(message.Chat.Id, new WarnChange(WarnKind.Warn, reset, targetId),
                 message.From.Id, message.From.FirstName, reason, message.MessageId, sourceIsBotMessage: false);
+        }
+
+        /// <summary>
+        /// The member a command names first, as an id or @username, and the text after it; (null, text) when the
+        /// first word names nobody.
+        /// </summary>
+        internal static (string Target, string After) SplitTarget(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return (null, null);
+            var trimmed = text.Trim();
+            var space = trimmed.IndexOfAny(new[] { ' ', '\n' });
+            var first = space < 0 ? trimmed : trimmed.Substring(0, space);
+            var rest = space < 0 ? null : trimmed.Substring(space + 1).Trim();
+            var named = long.TryParse(first, out var id) && id > 0 || first.Length > 1 && first.StartsWith("@");
+            return named ? (first, string.IsNullOrEmpty(rest) ? null : rest) : (null, text);
         }
 
         [Command(Trigger = "addwarnreason", InGroupOnly = true, GroupAdminOnly = true)]

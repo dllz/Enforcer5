@@ -1034,46 +1034,26 @@ namespace Enforcer5
         {
             var userId = long.Parse(args[2]);
             var chatId = long.Parse(args[1]);
-            if (Methods.IsGroupAdmin(userId, chatId))
+            // The same warn as /warn (it used to be a copy that skipped prewarns and the lifetime count); the
+            // /user message it was pressed on becomes the answer.
+            var result = ActionSeam.Run(new ActionRequest
             {
-                return;
-                
-            }
+                Kind = ActionKind.Warn, ChatId = chatId, TargetId = userId, ActorId = call.From.Id, Source = ActionSource.Button
+            });
+            if (!result.Succeeded) return; // an admin: never warned
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
-            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", userId, 1).Result;
-            // This button has never counted towards totalWarns, so the history counts the lifetime itself.
-            var warned = WarnHistory.Added(chatId, userId, WarnKind.Warn, 1, num, null, call.From.Id);
-            var max = Methods.MaxWarns(chatId);
-            
-            if (num >= max)
+            var preText = result.Converted > 0
+                ? Methods.GetLocaleString(lang, "preWarnConverted", userId, result.Converted) + "\n"
+                : "";
+            if (result.Escalation != null)
             {
-                var type = Methods.WarnAction(chatId);
-                if (type.Equals("ban"))
-                {
-                    // BanUser tells the group why on a refusal (bot not admin, target is admin), as
-                    // /warn's max-warns ban does.
-                    if (Methods.BanUser(chatId, userId, lang, "Max warns", trigger: warned, source: ActionSource.Escalation))
-                        Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
-                }
-                else
-                {
-                    Methods.KickUser(chatId, userId, lang, "Max warns", trigger: warned, source: ActionSource.Escalation);
-                    Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
-                }
-                 Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);
-                 WarnHistory.Reset(chatId, userId, WarnKind.Warn, num, null, "Max warns");
+                Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + Commands.WarnLimitText(lang, result, userId),
+                    parseMode: ParseMode.Html);
+                return;
             }
-            else
-            {
-                var text = Methods.GetLocaleString(lang, "warn", userId, num, max);
-                var baseMenu = new List<InlineKeyboardButton>();
-                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "resetWarn"),
-                    $"resetwarns:{chatId}:{userId}"));
-                baseMenu.Add(new InlineKeyboardButton(Methods.GetLocaleString(lang, "removeWarn"),
-                    $"removewarn:{chatId}:{userId}"));
-                var menu = new InlineKeyboardMarkup(baseMenu.ToArray());
-                 Bot.Api.EditMessageText(chatId, call.Message.MessageId, text, replyMarkup:menu, parseMode:ParseMode.Html);
-            }
+            var text = Methods.GetLocaleString(lang, "warn", userId, result.Count, result.Max);
+            Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + text,
+                replyMarkup: Key.CreateMarkupFromMenu(Commands.WarnButtons(lang, chatId, userId)), parseMode: ParseMode.Html);
         }
 
         // The /media menu.

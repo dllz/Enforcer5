@@ -160,6 +160,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[Usuario/a {0} <b>baneado/a</b>: alcanzó el máximo de advertencias]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} alcanzó el número máximo de advertencias ({1}/{2}), pero <b>no fue baneado</b>: {3}\nLas advertencias se mantienen hasta que un admin actúe.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} alcanzó el número máximo de advertencias ({1}/{2}), pero <b>no fue expulsado</b>: {3}\nLas advertencias se mantienen hasta que un admin actúe.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>No soy admin aquí, o no puedo banear miembros.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram lo rechazó.</value>
+  </string>
   <string key="resetWarn">
     <value>Reiniciar advertencias</value>
   </string>
@@ -1898,24 +1910,26 @@
   </string>
   <string key="hcommandremovewarn">
     <value>
-      Quita una advertencia al usuario al que respondes. Añade un motivo después del comando para que se muestre en el grupo y en el canal de registro.
+      Quita una advertencia al usuario al que respondes, o al usuario que indicas por id o @usuario. Añade un motivo después del comando (después del usuario, si lo indicas) para que se muestre en el grupo y en el canal de registro.
 
       Si "Motivos para quitar advertencias" está activado en /menu y no indicas ningún motivo, primero te pido uno, con los motivos de tu grupo como botones, y la advertencia solo se quita cuando respondes.
 
       Ejemplo:
       /{0} Apelación aceptada (como respuesta)
       /{0} (como respuesta)
+      /{0} 123456789 Apelación aceptada
     </value>
   </string>
   <string key="hcommandresetwarns">
     <value>
-      Reinicia todas las advertencias del usuario al que respondes. Añade un motivo después del comando para que se muestre en el grupo y en el canal de registro.
+      Reinicia todas las advertencias del usuario al que respondes, o del usuario que indicas por id o @usuario. Añade un motivo después del comando (después del usuario, si lo indicas) para que se muestre en el grupo y en el canal de registro.
 
       Si "Motivos para quitar advertencias" está activado en /menu y no indicas ningún motivo, primero te pido uno, y las advertencias solo se reinician cuando respondes.
 
       Ejemplo:
       /{0} Usuario equivocado (como respuesta)
       /{0} (como respuesta)
+      /{0} @usuario Usuario equivocado
     </value>
   </string>
   <string key="hcommandaddwarnreason">

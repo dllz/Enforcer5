@@ -160,6 +160,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[L'utente {0} &#232; stato <b>bannato</b> per aver ricevuto il numero massimo di warn.]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} ha raggiunto il numero massimo di avvertimenti ({1}/{2}), ma <b>non è stato bannato</b>: {3}\nGli avvertimenti restano finché un admin non interviene.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} ha raggiunto il numero massimo di avvertimenti ({1}/{2}), ma <b>non è stato espulso</b>: {3}\nGli avvertimenti restano finché un admin non interviene.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Non sono admin qui, oppure non posso bannare i membri.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram l'ha rifiutato.</value>
+  </string>
   <string key="resetWarn">
     <value>Resetta warn</value>
   </string>

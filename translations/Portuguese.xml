@@ -163,6 +163,18 @@
   <string key="warnMaxBan">
     <value>Usuário {0} &lt;b&gt;banido&lt;/b&gt;: por atingir o número máximo de warns.</value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} atingiu o número máximo de avisos ({1}/{2}), mas <b>não foi banido</b>: {3}\nOs avisos continuam até um admin agir.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} atingiu o número máximo de avisos ({1}/{2}), mas <b>não foi removido</b>: {3}\nOs avisos continuam até um admin agir.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>Não sou admin aqui, ou não posso banir membros.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>O Telegram recusou.</value>
+  </string>
   <string key="resetWarn">
     <value>Limpar Warns</value>
   </string>

@@ -162,6 +162,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[User {0} <b>banned</b>: as they reached the max number of warns]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} reached the max number of warns ({1}/{2}), but was <b>not banned</b>: {3}\nTheir warns stay until an admin acts.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} reached the max number of warns ({1}/{2}), but was <b>not kicked</b>: {3}\nTheir warns stay until an admin acts.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>I am not an admin here, or I may not ban members.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>Telegram refused it.</value>
+  </string>
   <string key="resetWarn">
     <value>Reset Warn</value>
   </string>
@@ -1892,24 +1904,26 @@
   </string>
   <string key="hcommandremovewarn">
     <value>
-      Removes one warn from the user you reply to. Add a reason after the command to have it shown in the group and in the log channel.
+      Removes one warn from the user you reply to, or from the user you name by id or @username. Add a reason after the command (after the user, if you name them) to have it shown in the group and in the log channel.
 
       If "Warn removal reasons" is on in /menu and you give no reason, I ask for one first, with your group's reasons as buttons, and the warn is only removed once you answer.
 
       Example:
       /{0} Appeal accepted (as a reply)
       /{0} (as a reply)
+      /{0} 123456789 Appeal accepted
     </value>
   </string>
   <string key="hcommandresetwarns">
     <value>
-      Resets all warns of the user you reply to. Add a reason after the command to have it shown in the group and in the log channel.
+      Resets all warns of the user you reply to, or of the user you name by id or @username. Add a reason after the command (after the user, if you name them) to have it shown in the group and in the log channel.
 
       If "Warn removal reasons" is on in /menu and you give no reason, I ask for one first, and the warns are only reset once you answer.
 
       Example:
       /{0} Wrong user (as a reply)
       /{0} (as a reply)
+      /{0} @username Wrong user
     </value>
   </string>
   <string key="hcommandaddwarnreason">

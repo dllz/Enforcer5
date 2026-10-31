@@ -137,30 +137,30 @@ namespace Enforcer5
         }
 
         /// <summary>
-        /// Warns (or prewarns) the member. <paramref name="actorId"/> is the admin who asked, null
-        /// when Enforcer warns on its own (flood, message or name length); <paramref name="reason"/>
-        /// goes to the warn history; <paramref name="report"/> is the report it was given from.
+        /// Warns (or prewarns) the member through the action seam and tells the group. <paramref name="actorId"/>
+        /// is the admin who asked, null when Enforcer warns on its own (flood, message or name length; pass
+        /// <paramref name="source"/>); <paramref name="reason"/> goes to the warn history; <paramref name="report"/>
+        /// is the report it was given from. Answered as a reply to <paramref name="update"/>, or in a popup for
+        /// <paramref name="callbackid"/> plus a message.
         /// </summary>
-        internal static void Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
-            long? actorId = null, string reason = null, ReportRef report = null)
+        internal static ActionResult Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
+            long? actorId = null, string reason = null, ReportRef report = null, ActionSource? source = null)
         {
-            try
+            var result = ActionSeam.Run(new ActionRequest
             {
-                if (Methods.IsGroupAdmin(warnedId, chatId))
-                    return;
-            }
-            catch (Exception e)
-            {
-                ErrorReporter.Report(e, $"Checking whether {warnedId} is an admin in {chatId} before a warn");
-            }
+                Kind = preWarn ? ActionKind.Prewarn : ActionKind.Warn,
+                ChatId = chatId,
+                TargetId = warnedId,
+                ActorId = actorId,
+                Source = source ?? ActionSources.Derive(ErrorReporter.Current?.Update, actorId, report != null),
+                Reason = reason,
+                Report = report
+            });
+            if (!result.Succeeded) return result; // an admin, or the bot: never warned, nothing said
             var lang = Methods.GetGroupLanguage(chatId);
-            var preText = "";
-            long preWarns = 0;
             if (preWarn)
             {
-                preWarns = Redis.db.HashIncrementAsync($"chat:{chatId}:prewarns", warnedId, 1).Result;
-                WarnHistory.Added(chatId, warnedId, WarnKind.Prewarn, 1, preWarns, null, actorId, reason);
-                var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, preWarns);
+                var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, result.Count);
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
@@ -172,104 +172,32 @@ namespace Enforcer5
                     }
                 };
                 Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
-                return;
-            } else
+                return result;
+            }
+            var preText = result.Converted > 0
+                ? Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, result.Converted) + "\n"
+                : "";
+            if (result.Escalation != null)
             {
-                long.TryParse(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", warnedId).Result.ToString(), out preWarns);
-                if(preWarns > 0)
+                var limitText = WarnLimitText(lang.Doc, result, targetnick);
+                if (update != null)
                 {
-                    preText = Methods.GetLocaleString(lang.Doc, "preWarnConverted", targetnick, preWarns) + "\n";
-                    Redis.db.HashSetAsync($"chat:{chatId}:prewarns", warnedId, 0);
-                    WarnHistory.Removed(chatId, warnedId, WarnKind.Prewarn, preWarns, 0, actorId, "Converted into warns");
+                    Bot.SendReply(preText + limitText, update.Message);
                 }
-            }
-            var num = Redis.db.HashIncrementAsync($"chat:{chatId}:warns", warnedId, 1 + preWarns).Result;
-            var total = Redis.db.HashIncrementAsync($"chat:{chatId}:totalWarns", warnedId, 1 + preWarns).Result;
-            var warned = WarnHistory.Added(chatId, warnedId, WarnKind.Warn, 1 + preWarns, num, total, actorId, reason, report);
-            ReportHistory.Acted(report, ReportAction.Warned, actorId);
-            if (warnedId == Bot.Me.Id)
-                return;
-            if (num < 0)
-            {
-                Redis.db.HashSetAsync($"chat:{chatId}:warns", warnedId, 0);
-            }
-            var id = warnedId;
-            var max = Methods.MaxWarns(chatId);
-            if (num >= max)
-            {
-                var type = Methods.WarnAction(chatId);
-                var name = "";
-                switch(type)
+                else if (!string.IsNullOrEmpty(callbackid))
                 {
-                    case "ban":
-                        try
-                        {
-                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report, source: ActionSource.Escalation,
-                                stat: "maxWarn");
-
-                            if (res)
-                            {
-                                name = targetnick;
-                                if (update != null)
-                                {
-                                    Bot.SendReply($"{preText}{Methods.GetLocaleString(lang.Doc, "warnMaxBan", name)}", update.Message);
-                                }
-                                else if (!string.IsNullOrEmpty(callbackid))
-                                {
-                                    var bantext = Methods.GetLocaleString(lang.Doc, "warnMaxBan", name);
-                                    Bot.Api.AnswerCallbackQuery(callbackid, preText + bantext, true);
-                                    Bot.Send(bantext, chatId);
-                                }
-                                else //How should it be possible that there is neither an update nor a callback query?
-                                {
-                                    Bot.Send(preText + Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
-                                }
-                            }
-                                
-                        }
-                        catch (AggregateException e)
-                        {
-                            ErrorReporter.Report(e, $"Banning {id} in {chatId} at max warns");
-                            Methods.SendError(e.InnerExceptions[0], chatId, lang.Doc);
-                        }
-                        break;
-                        
-                    case "kick":
-                        Methods.KickUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report, source: ActionSource.Escalation);
-                        name = targetnick;
-                        if (update != null)
-                        {
-                            Bot.SendReply(preText + Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), update.Message);
-                        }
-                        else if (!string.IsNullOrEmpty(callbackid))
-                        {
-                            var kicktext = Methods.GetLocaleString(lang.Doc, "warnMaxKick", name);
-                            Bot.Api.AnswerCallbackQuery(callbackid, preText + kicktext, true);
-                            Bot.Send(kicktext, chatId);
-                        }
-                        else //How should it be possible that there is neither an update nor a callback query?
-                        {
-                            Bot.Send(preText + Methods.GetLocaleString(lang.Doc, "warnMaxKick", name), chatId);
-                        }
-                        break;
+                    Bot.Api.AnswerCallbackQuery(callbackid, preText + limitText, true);
+                    Bot.Send(limitText, chatId);
                 }
-                Redis.db.HashSetAsync($"chat:{chatId}:warns", id, 0);
-                WarnHistory.Reset(chatId, id, WarnKind.Warn, num, null, "Max warns");
-            }
-            else
-            {
-                var diff = max - num;
-                var text = Methods.GetLocaleString(lang.Doc, "warn", targetnick, num, max);
-                var solvedMenu = new Menu(2)
+                else
                 {
-                    Buttons = new List<InlineButton>
-                    {
-                        new InlineButton(Methods.GetLocaleString(lang.Doc, "resetWarn"),
-                            $"resetwarns:{chatId}:{warnedId}"),
-                        new InlineButton(Methods.GetLocaleString(lang.Doc, "removeWarn"),
-                            $"removewarn:{chatId}:{warnedId}"),
-                    }
-                };
+                    Bot.Send(preText + limitText, chatId);
+                }
+                return result;
+            }
+            {
+                var text = Methods.GetLocaleString(lang.Doc, "warn", targetnick, result.Count, result.Max);
+                var solvedMenu = WarnButtons(lang.Doc, chatId, warnedId);
                 if (update != null)
                 {
                     Bot.SendReply(preText + text, update, Key.CreateMarkupFromMenu(solvedMenu));
@@ -277,21 +205,53 @@ namespace Enforcer5
                 else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({callbackfromid})", num, max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({callbackfromid})", result.Count, result.Max);
                     Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, num, max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, result.Count, result.Max);
                     Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
-                else //How should it be possible that there is neither an update nor a callback query?
+                else
                 {
                     Bot.Send(preText + text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
                 }
             }
+            return result;
+        }
+
+        /// <summary>The Reset and Remove buttons under a warn.</summary>
+        internal static Menu WarnButtons(System.Xml.Linq.XDocument lang, long chatId, long userId) => new Menu(2)
+        {
+            Buttons = new List<InlineButton>
+            {
+                new InlineButton(Methods.GetLocaleString(lang, "resetWarn"), $"resetwarns:{chatId}:{userId}"),
+                new InlineButton(Methods.GetLocaleString(lang, "removeWarn"), $"removewarn:{chatId}:{userId}"),
+            }
+        };
+
+        /// <summary>
+        /// What a warn reaching the limit says: banned or kicked, or, when that did not happen, why, and that the
+        /// warns stay (then also in the log channel).
+        /// </summary>
+        internal static string WarnLimitText(System.Xml.Linq.XDocument lang, ActionResult warn, object name)
+        {
+            var escalation = warn.Escalation;
+            var kick = escalation.Applied.Kind == ActionKind.Kick;
+            if (escalation.Succeeded)
+                return Methods.GetLocaleString(lang, kick ? "warnMaxKick" : "warnMaxBan", name);
+            var why = Methods.GetLocaleString(lang, escalation.Refusal switch
+            {
+                Enforcement.Refusal.BotNotAdmin => "warnLimitBotNotAdmin",
+                Enforcement.Refusal.TargetIsAdmin => "cannotbanadmin",
+                _ => "warnLimitRefused"
+            });
+            var text = Methods.GetLocaleString(lang, kick ? "warnMaxKickNotDone" : "warnMaxBanNotDone", name, warn.Count, warn.Max, why);
+            Service.LogBotAction(warn.Applied.ChatId, text, warn.Applied.TargetId);
+            return text;
         }
 
         [Command(Trigger = "ban", GroupAdminOnly = true, InGroupOnly = true)]

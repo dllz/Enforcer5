@@ -160,6 +160,18 @@
   <string key="warnMaxBan">
     <value><![CDATA[User {0} <b>banned</b>: as they reached the max number of warns]]></value>
   </string>
+  <string key="warnMaxBanNotDone">
+    <value><![CDATA[{0} به حداکثر تعداد اخطار رسید ({1}/{2})، اما <b>بن نشد</b>: {3}\nاخطارها تا اقدام یک ادمین باقی می‌مانند.]]></value>
+  </string>
+  <string key="warnMaxKickNotDone">
+    <value><![CDATA[{0} به حداکثر تعداد اخطار رسید ({1}/{2})، اما <b>اخراج نشد</b>: {3}\nاخطارها تا اقدام یک ادمین باقی می‌مانند.]]></value>
+  </string>
+  <string key="warnLimitBotNotAdmin">
+    <value>من اینجا ادمین نیستم، یا اجازهٔ بن کردن اعضا را ندارم.</value>
+  </string>
+  <string key="warnLimitRefused">
+    <value>تلگرام آن را رد کرد.</value>
+  </string>
   <string key="resetWarn">
     <value>پاك كردن تمامي اخطارها</value>
   </string>

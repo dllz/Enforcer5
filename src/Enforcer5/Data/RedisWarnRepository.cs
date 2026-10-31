@@ -7,7 +7,8 @@ namespace Enforcer5.Data
 {
     /// <summary>
     /// The existing warn hashes: <c>chat:{chatId}:warns</c>, <c>chat:{chatId}:prewarns</c> and
-    /// <c>chat:{chatId}:mediawarn</c>, each mapping user id to count.
+    /// <c>chat:{chatId}:mediawarn</c>, each mapping user id to count, and <c>chat:{chatId}:totalWarns</c>,
+    /// the lifetime count.
     /// </summary>
     internal sealed class RedisWarnRepository : IWarnRepository
     {
@@ -40,6 +41,12 @@ namespace Enforcer5.Data
 
         public Task ResetAsync(long chatId, WarnKind kind, long userId) =>
             _database().HashDeleteAsync(Key(chatId, kind), userId, CommandFlags.None);
+
+        public Task<long> AddAsync(long chatId, WarnKind kind, long userId, long by) =>
+            _database().HashIncrementAsync(Key(chatId, kind), userId, by, CommandFlags.None);
+
+        public Task<long> AddLifetimeAsync(long chatId, long userId, long by) =>
+            _database().HashIncrementAsync($"chat:{chatId}:totalWarns", userId, by, CommandFlags.None);
 
         private static RedisKey Key(long chatId, WarnKind kind) => kind switch
         {
