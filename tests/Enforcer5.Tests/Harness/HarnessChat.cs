@@ -166,6 +166,7 @@ namespace Enforcer5.Tests.Harness
             CommandGate.ResetForTests();
             FloodTracker.ResetForTests();
             MemberEvents.ResetForTests();
+            Service.ResetWelcomesForTests();
             MemberTrust.SetNormsForTests(null);
             Enforcer5.Raids.RaidTelemetry.ResetForTests();
             Bot.Me = BotUser;

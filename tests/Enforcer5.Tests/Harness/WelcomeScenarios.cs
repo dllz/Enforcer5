@@ -71,5 +71,60 @@ namespace Enforcer5.Tests.Harness
             Assert.IsTrue(chat.Replies.Any(r => r.Contains("Hello there")), string.Join("\n", chat.Replies));
             AssertNoErrors(chat);
         }
+        private static void CustomWelcome(HarnessChat chat, string text)
+        {
+            chat.Hashes[$"chat:{chat.ChatId}:welcome", "type"] = "custom";
+            chat.Hashes[$"chat:{chat.ChatId}:welcome", "content"] = text;
+        }
+
+        [TestMethod]
+        public async Task AJoinWithoutAServiceMessage_IsWelcomedFromTheMemberUpdate()
+        {
+            // Big groups (the support group, The Origin) get no "joined" service message, only the member update.
+            await using var chat = await HarnessChat.StartAsync();
+            CustomWelcome(chat, "Welcome $name");
+            var joiner = chat.Add("Newcomer", MemberState.Left);
+
+            chat.Deliver(chat.MemberJoined(joiner, "https://t.me/+invite"));
+            await chat.CompleteAsync();
+
+            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains("Welcome Newcomer")), string.Join("\n", chat.Replies));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AServiceMessageAndAMemberUpdate_WelcomeOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            CustomWelcome(chat, "Welcome $name");
+            var joiner = chat.Add("Newcomer", MemberState.Left);
+
+            chat.Deliver(chat.MemberJoined(joiner, "https://t.me/+invite"));
+            chat.Deliver(chat.Join(joiner));
+            await chat.CompleteAsync();
+
+            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains("Welcome Newcomer")), string.Join("\n", chat.Replies));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task WelcomeOnAndOff_SwitchTheWelcome_InsteadOfSavingTheWord()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            CustomWelcome(chat, "Welcome $name");
+
+            await chat.SendAsync(admin, "/welcome off");
+            Assert.AreEqual("yes", chat.Hashes[$"chat:{chat.ChatId}:settings", "Welcome"]);
+            Assert.AreEqual("Welcome $name", chat.Hashes[$"chat:{chat.ChatId}:welcome", "content"]);
+            await chat.JoinAsync(chat.Add("Quiet", MemberState.Left));
+            Assert.IsFalse(chat.Replies.Any(r => r.Contains("Welcome Quiet")));
+
+            await chat.SendAsync(admin, "/welcome on");
+            Assert.AreEqual("no", chat.Hashes[$"chat:{chat.ChatId}:settings", "Welcome"]);
+            await chat.JoinAsync(chat.Add("Loud", MemberState.Left));
+            Assert.IsTrue(chat.Replies.Any(r => r.Contains("Welcome Loud")), string.Join("\n", chat.Replies));
+            AssertNoErrors(chat);
+        }
     }
 }

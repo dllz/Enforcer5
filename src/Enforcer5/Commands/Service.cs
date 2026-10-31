@@ -24,6 +24,8 @@ namespace Enforcer5
             var welcomeOn = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Welcome").Result;
             if (welcomeOn.Equals("yes"))
                 return;
+            // Once per join: the service message and the member update both tell of it.
+            if (message.NewChatMember is { } joiner && !ClaimWelcome(chatId, joiner.Id)) return;
             var msgs = Redis.db.StringGetAsync($"spam:added:{message.Chat.Id}").Result;
             var defSpamValue = 1;
             var maxTime = TimeSpan.FromMinutes(1);
@@ -220,6 +222,57 @@ defSpamValue = 3;
                     }
                     break;
             }            
+        }
+
+        /// <summary>How long a join's welcome waits for its service message, which a small group gets.</summary>
+        internal static readonly TimeSpan WelcomeWaitsForServiceMessage = TimeSpan.FromSeconds(3);
+
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<(long Chat, long User), DateTime> Welcomed = new();
+
+        internal static void ResetWelcomesForTests() => Welcomed.Clear();
+
+        private static bool ClaimWelcome(long chatId, long userId)
+        {
+            var now = Helpers.Clock.UtcNow;
+            var keep = TimeSpan.FromMinutes(10);
+            var claimed = false;
+            Welcomed.AddOrUpdate((chatId, userId), _ => { claimed = true; return now; },
+                (_, at) => { if (now - at < keep) return at; claimed = true; return now; });
+            if (claimed && Welcomed.Count > 20_000)
+                foreach (var (key, at) in Welcomed)
+                    if (now - at >= keep) Welcomed.TryRemove(key, out _);
+            return claimed;
+        }
+
+        /// <summary>
+        /// Someone joined, as a member update says. Telegram sends no "joined" service message in big groups
+        /// (the support group, The Origin: no welcome since long before October 2026), so the welcome comes from
+        /// here when no service message brought it within <see cref="WelcomeWaitsForServiceMessage"/>.
+        /// </summary>
+        internal static void WelcomeFromMemberUpdate(Chat chat, User joiner, User from)
+        {
+            if (joiner == null || joiner.IsBot || chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
+            Bot.Dispatch(async () =>
+            {
+                await Helpers.Clock.Delay(WelcomeWaitsForServiceMessage);
+                if (Welcomed.ContainsKey((chat.Id, joiner.Id))) return;
+                if (!await Handlers.UpdateHandler.ServesAsync(chat.Id)) return;
+                var message = new Message
+                {
+                    Chat = chat, From = from ?? joiner, Date = Helpers.Clock.UtcNow, NewChatMembers = new[] { joiner }
+                };
+                Bot.DispatchAction(() =>
+                {
+                    try
+                    {
+                        Welcome(message);
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorReporter.Report(e, $"Welcoming {joiner.Id} to {chat.Id} from a member update");
+                    }
+                }, "WelcomeFromMemberUpdate");
+            }, "WelcomeFromMemberUpdate");
         }
 
         private static string GetCustomWelcome(Message message, RedisValue content)

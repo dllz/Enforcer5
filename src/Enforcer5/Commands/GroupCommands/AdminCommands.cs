@@ -577,6 +577,17 @@ namespace Enforcer5
 
             if (args.Length == 2)
             {
+                // "/welcome on" saved the text "on" as the welcome (the support group's, until October 2026):
+                // on and off turn the welcome on and off, as the menu does.
+                var toggle = args[1]?.Trim().ToLowerInvariant();
+                if (toggle is "on" or "off")
+                {
+                    // The setting is inverted: "yes" turns the welcome off.
+                    Redis.db.HashSetAsync($"chat:{chatId}:settings", "Welcome", toggle == "on" ? "no" : "yes");
+                    Bot.SendReply(Methods.GetLocaleString(lang, toggle == "on" ? "welcomeTurnedOn" : "welcomeTurnedOff"), update);
+                    Service.LogCommand(update, update.Message.Text);
+                    return;
+                }
                 if (!string.IsNullOrEmpty(args[1]))
                 {
                     Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "false");

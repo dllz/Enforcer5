@@ -84,6 +84,8 @@ namespace Enforcer5.Helpers
                 {
                     if (user.IsBot)
                         Detection.BotGuard.Joined(update.Chat.Id, user, update.From?.Id != user.Id ? update.From : null);
+                    // Big groups get no service message for a join, so no welcome from it.
+                    else Service.WelcomeFromMemberUpdate(update.Chat, user, update.From);
                     Detection.NameSigns.OnJoin(update.Chat.Id, user);
                     var addedBy = update.From != null && update.From.Id != user.Id && !update.ViaJoinRequest ? update.From.Id : (long?)null;
                     var source = update.ViaJoinRequest ? "request"
