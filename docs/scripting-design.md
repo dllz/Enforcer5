@@ -125,9 +125,10 @@ rule({
   stays: Daniel, 2026-10-31), so there is no narrower set of rights to run with.
 - **Rules never block the creator or devs.** Before rules do not run on their actions, so a
   group can never lock its owner out (after rules still run).
-- **When the author is gone** (no longer an admin, or left): their rules keep running, since
-  they run as an admin, and the admins get one message listing that author's rules, each with
-  *Take over* (the admin who taps it becomes the author) and *Turn off*, plus *Take over all*.
+- **When the author is gone** (no longer an admin, or left): their rules pause until an admin
+  takes them over (Daniel, 2026-10-31), and the admins get one message listing that author's
+  rules, each with *Take over* (the admin who taps it becomes the author and the rule runs again)
+  and *Turn off*, plus *Take over all*.
   Found when `AdminDirectory` sees the demotion or the member leaves, and checked again nightly.
   `/rule list` marks rules without an author until someone takes them over.
 - `/rule add` replying to a `.js` file or a message with the code: the bot checks it (parse,
@@ -196,7 +197,7 @@ scripts (`block("...")`, `say("...")`) are the admins' own and are not translate
 | Script reaches .NET, files, network | Jint untrusted profile: no CLR, no modules, no eval; host exposes plain data and pure helpers only |
 | Endless loop, memory bomb, ReDoS | statement, time, memory, recursion and regex limits; fail open |
 | Script acts in another group | intents are bound to the script's group; ids from a script are checked against it |
-| A rule outlives its author | it keeps running as an admin; the admins are offered the list to take over or turn off |
+| A rule outlives its author | it pauses; the admins are offered the list to take over or turn off |
 | A short-lived elevation leaves rules behind | elevated members cannot write rules |
 | A rule locks the owner out | before rules never run on the creator's or devs' actions |
 | Rules trigger rules | actions from scripts run no script rules (depth 1) |
@@ -242,7 +243,9 @@ Decided (Daniel, 2026-10-31):
 - Rules are written by the group's admins: Telegram admins, the creator and `/auth` users, not
   elevated members (section 4).
 - Rules run as an admin of the group, not with their author's rights; when the author is gone
-  the admins are offered that author's rules to take over or turn off (section 4).
+  their rules pause and the admins are offered them to take over or turn off (section 4).
+- After rules see actions taken in the Telegram app (source `app`).
+- Both editions get the same limits for now.
 - Rules never block the creator or devs (section 4).
 - The seam does not start checking each admin's own Telegram rights (unchanged behaviour).
 - The limits in sections 3 and 5 are the starting values.
@@ -251,7 +254,4 @@ Decided (Daniel, 2026-10-31):
   (`docs/action-seam.md`, section 8).
 - Batch and script actions get their own label sources (`docs/action-seam.md`, section 13).
 
-Open:
-
-1. Should after rules also see actions taken in the Telegram app (proposed: yes, source `app`)?
-2. Premium-only extras (more rules, bigger batches), or the same for both editions?
+Nothing open.

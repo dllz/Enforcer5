@@ -260,8 +260,9 @@ summary line instead of one per member.
 - **Arguments** are parsed once, the same way the command parses them, with no target in them
   (`/batch tempban 2d spam ring`).
 - **Preview** (in memory, no Telegram calls per id): count, duplicates, the bot, admins
-  (`AdminDirectory`), already banned (`bannedlist`), nothing to remove. Confirm / Cancel, only for
-  the admin who sent it, valid 10 minutes.
+  (`AdminDirectory`), already banned (`bannedlist`), nothing to remove. Confirm / Cancel, for
+  any admin of the group (Daniel, 2026-10-31; the one who confirms is recorded with the batch),
+  valid 10 minutes.
 - **Run:** a `batches` row and its `batch_items` in PostgreSQL; a background worker takes one
   item at a time per batch and runs it through `Actions.RunAsync` with `Source = Batch`,
   `BatchId`, the admin as actor, `Silent = true`. Pacing is the queue's (bans 25 a second
@@ -310,7 +311,7 @@ Then the script host and rules (`docs/scripting-design.md`, section 10).
 - Issue #24 and the warn button get scenarios of their own.
 - Hooks (step F): a hook that blocks, changes, throws, loops and overruns; a raid while a group
   has a slow before hook (the raid must not notice); escalation blocked.
-- Batch: preview counts, confirm by another admin refused, restart halfway, Stop, 429 storm
+- Batch: preview counts, confirm by another admin accepted and by a non-admin refused, restart halfway, Stop, 429 storm
   during a batch, a rule blocking some items.
 
 ## 13. Risks
@@ -336,7 +337,6 @@ Decided (Daniel, 2026-10-31):
 - `batch` and `script` are new label sources (section 13).
 - Admins' own Telegram rights are not checked by the seam (section 6, step 2).
 - Before hooks never run on the creator's or devs' actions (section 6, step 4).
+- Any admin may confirm or cancel a batch (section 9).
 
-Open:
-
-1. Batch: confirmation by the same admin only (proposed), or any admin?
+Nothing open.
