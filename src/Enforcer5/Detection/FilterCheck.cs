@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
@@ -197,23 +198,23 @@ namespace Enforcer5.Detection
                     Commands.Warn(userId, chatId, update, targetnick: userId.ToString(), reason: reason);
                     break;
                 case "mute":
-                    if (Methods.MuteUser(chatId, userId, lang, reason: reason))
+                    if (Methods.MuteUser(chatId, userId, lang, reason: reason, source: ActionSource.Filter))
                         Tell(Methods.GetLocaleString(lang, "mutedByFilter", $"{name}, {userId}", label));
                     break;
                 case "tempmute":
                     var muteMinutes = Methods.GetGroupTempMuteTime(chatId);
-                    if (Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(muteMinutes), lang, reason: reason))
+                    if (Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(muteMinutes), lang, reason: reason, source: ActionSource.Filter))
                         Tell(Methods.GetLocaleString(lang, "tempmutedByFilter", $"{name}, {userId}", label,
                             TimeSpan.FromMinutes(muteMinutes).ToString(@"dd\:hh\:mm")));
                     break;
                 case "kick":
-                    Methods.KickUser(chatId, userId, lang, reason);
+                    Methods.KickUser(chatId, userId, lang, reason, source: ActionSource.Filter);
                     Tell(own != null
                         ? Methods.GetLocaleString(lang, own.Kicked, $"{name}, {userId}")
                         : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {userId}", label));
                     break;
                 case "ban":
-                    if (Methods.BanUser(chatId, userId, lang, reason))
+                    if (Methods.BanUser(chatId, userId, lang, reason, source: ActionSource.Filter))
                     {
                         Methods.SaveBan(userId, own?.SavedAs ?? "filter");
                         Methods.AddBanList(chatId, userId, person.FirstName, own != null
@@ -231,7 +232,7 @@ namespace Enforcer5.Detection
                         ? Methods.GetLocaleString(lang, own.Tempbanned, $"{name}, {userId}", timeText)
                         : Methods.GetLocaleString(lang, "tempbannedByFilter", $"{name}, {userId}", label, timeText);
                     Service.LogBotAction(chatId, text, userId);
-                    Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: text, reason: reason);
+                    Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: text, reason: reason, source: ActionSource.Filter);
                     break;
                 case "report":
                     DetectionReports.Report(chatId, userId, message?.MessageId, rule.Sign, person);

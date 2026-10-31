@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
@@ -113,7 +114,7 @@ namespace Enforcer5
                         switch (action)
                         {
                             case "kick":
-                                var res = Methods.KickUser(chatId, userid, lang, "Flood");
+                                var res = Methods.KickUser(chatId, userid, lang, "Flood", source: ActionSource.Flood);
                                 if (res)
                                 {
                                     Methods.SaveBan(userid, "flood");
@@ -122,7 +123,7 @@ namespace Enforcer5
                                 break;
                             case "ban":
                                 // Banned with everything they posted, in the same call.
-                                res = Methods.BanUser(chatId, userid, lang, "Flood", revokeMessages: true);
+                                res = Methods.BanUser(chatId, userid, lang, "Flood", revokeMessages: true, source: ActionSource.Flood);
                                 if (res)
                                 {
                                     Methods.SaveBan(userid, "flood");
@@ -141,7 +142,7 @@ namespace Enforcer5
                                 string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                                 var message = Methods.GetLocaleString(lang, "tempbannedForFlood",
                                     $"{userid}", timeText);
-                                if (Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message, reason: "Flood"))
+                                if (Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message, reason: "Flood", source: ActionSource.Flood))
                                 {
                                     Methods.SaveBan(userid, "flood");
                                 }
@@ -191,13 +192,13 @@ namespace Enforcer5
                 switch (action)
                 {
                     case "kick":
-                        Methods.KickUser(groupId, userid, lang, "Long message");
+                        Methods.KickUser(groupId, userid, lang, "Long message", source: ActionSource.Limits);
                         reply = Methods.GetLocaleString(lang, "kickformesslength", userid);
                         Service.LogBotAction(groupId, reply, userid);
                         if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         return;
                     case "ban":
-                        var res = Methods.BanUser(groupId, userid, lang, "Long message");
+                        var res = Methods.BanUser(groupId, userid, lang, "Long message", source: ActionSource.Limits);
                         if (res)
                         {
                             Methods.SaveBan(userid, "longmessages");
@@ -217,7 +218,7 @@ namespace Enforcer5
                         var message = Methods.GetLocaleString(lang, "tempbanformesslength",
                             $"{userid}", timeText);
                         Service.LogBotAction(groupId, message, userid);
-                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Long message");
+                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Long message", source: ActionSource.Limits);
                         break;
                     default:
                         // No action chosen (this was a case for the string "default", so it never
@@ -253,13 +254,13 @@ namespace Enforcer5
                 switch (action)
                 {
                     case "kick":
-                        Methods.KickUser(groupId, userid, lang, "Name too long");
+                        Methods.KickUser(groupId, userid, lang, "Name too long", source: ActionSource.Limits);
                         reply = Methods.GetLocaleString(lang, "kickfornamelength", userid);
                         Service.LogBotAction(groupId, reply, userid);
                         if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, update);
                         break;
                     case "ban":
-                        var res = Methods.BanUser(groupId, userid, lang, "Name too long");
+                        var res = Methods.BanUser(groupId, userid, lang, "Name too long", source: ActionSource.Limits);
                         if (res)
                         {
                             Methods.SaveBan(userid, "namelength");
@@ -278,7 +279,7 @@ namespace Enforcer5
                         var message = Methods.GetLocaleString(lang, "tempbanfornamelength",
                             $"{userid}", timeText);
                         Service.LogBotAction(groupId, message, userid);
-                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Name too long");
+                        Commands.Tempban(userid, groupId, time, userid.ToString(), message: message, reason: "Name too long", source: ActionSource.Limits);
                         break;
                     default:
                         // No action chosen (this was a case for the string "default", so it never
@@ -375,13 +376,13 @@ namespace Enforcer5
                     switch (action)
                     {
                         case "kick":
-                            Methods.KickUser(chatId, message.From.Id, lang, "Media", trigger: warned);
+                            Methods.KickUser(chatId, message.From.Id, lang, "Media", trigger: warned, source: ActionSource.Limits);
                             reply = Methods.GetLocaleString(lang, "kickedformedia", $"{name}");
                             Service.LogBotAction(chatId, reply, message.From.Id);
                             if (!Raids.RaidGuard.Quiet(ctx.ChatId)) Bot.SendReply(reply, message);
                             break;
                         case "ban":
-                            var res = Methods.BanUser(chatId, message.From.Id, lang, "Media", trigger: warned);
+                            var res = Methods.BanUser(chatId, message.From.Id, lang, "Media", trigger: warned, source: ActionSource.Limits);
                             if (res)
                             {
                                 Methods.SaveBan(message.From.Id, "media");
@@ -399,7 +400,7 @@ namespace Enforcer5
                             var messageText = Methods.GetLocaleString(lang, "tempbannedformedia",
                                 $"{name}, {message.From.Id}", timeText);
                             Service.LogBotAction(chatId, messageText, message.From.Id);
-                            Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText, reason: "Media");
+                            Commands.Tempban(message.From.Id, chatId, time, message.From.Id.ToString(), message: messageText, reason: "Media", source: ActionSource.Limits);
                             break;
                     }
                 }

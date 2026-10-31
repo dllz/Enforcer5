@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Enforcer5.Actions;
 using Enforcer5.Attributes;
 using Enforcer5.Data;
 using Enforcer5.Helpers;
@@ -1054,12 +1055,12 @@ namespace Enforcer5
                 {
                     // BanUser tells the group why on a refusal (bot not admin, target is admin), as
                     // /warn's max-warns ban does.
-                    if (Methods.BanUser(chatId, userId, lang, "Max warns", trigger: warned))
+                    if (Methods.BanUser(chatId, userId, lang, "Max warns", trigger: warned, source: ActionSource.Escalation))
                         Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxBan", userId), parseMode: ParseMode.Html);
                 }
                 else
                 {
-                    Methods.KickUser(chatId, userId, lang, "Max warns", trigger: warned);
+                    Methods.KickUser(chatId, userId, lang, "Max warns", trigger: warned, source: ActionSource.Escalation);
                     Bot.Api.EditMessageText(chatId, call.Message.MessageId, Methods.GetLocaleString(lang, "warnMaxKick", userId), parseMode: ParseMode.Html);
                 }
                  Redis.db.HashSetAsync($"chat:{chatId}:warns", userId, 0);

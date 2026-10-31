@@ -1,4 +1,5 @@
 using System;
+using Enforcer5.Actions;
 using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
 
@@ -56,20 +57,20 @@ namespace Enforcer5.Detection
                             Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason);
                             break;
                         case "mute":
-                            Methods.MuteUser(chatId, userId, lang, reason: action.Reason);
+                            Methods.MuteUser(chatId, userId, lang, reason: action.Reason, source: ActionSource.Detection);
                             break;
                         case "tempmute":
                             Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(Methods.GetGroupTempMuteTime(chatId)), lang,
-                                reason: action.Reason);
+                                reason: action.Reason, source: ActionSource.Detection);
                             break;
                         case "kick":
-                            Methods.KickUser(chatId, userId, lang, action.Reason);
+                            Methods.KickUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection);
                             break;
                         case "tempban":
-                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), userId.ToString(), reason: action.Reason);
+                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), userId.ToString(), reason: action.Reason, source: ActionSource.Detection);
                             break;
                         case "ban":
-                            Methods.BanUser(chatId, userId, lang, action.Reason);
+                            Methods.BanUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection);
                             break;
                     }
                 }

@@ -33,7 +33,7 @@ mute history, which writes `Decisions` labels (`Helpers/BanHistory.cs:84`).
 
 Goals:
 
-1. **One entry point** for every action on a member, whoever asks for it: `Actions.Run(request)`.
+1. **One entry point** for every action on a member, whoever asks for it: `ActionSeam.Run(request)`.
 2. **The action owns its effects**: state (Redis lists and counters, tempban schedule), history,
    decisions and the log channel line. Callers only render the answer (reply, popup, notice).
 3. **Hooks**: before (may block or change) and after (may react), for scripts and later
@@ -55,7 +55,7 @@ Non-goals:
  caller (command, button, report, Detection, filter, flood, raid, batch, script, app observer)
    │  ActionRequest
    ▼
- Actions.Run ── 1 normalise ── 2 authorise ── 3 guards ── 4 before hooks ── 5 execute ── 6 record ── 7 after hooks
+ ActionSeam.Run ─ 1 normalise ── 2 authorise ── 3 guards ── 4 before hooks ── 5 execute ── 6 record ── 7 after hooks
                                                                             │
                                                                             ▼
                                                                  EnforcementQueue (unchanged)
@@ -97,7 +97,7 @@ internal sealed record ActionRequest
     public long? ActorId { get; init; }            // null: the bot itself
     public required ActionSource Source { get; init; }
     public string Reason { get; init; }
-    public TimeSpan? Duration { get; init; }       // TempBan, TempMute
+    public DateTime? UntilUtc { get; init; }       // TempBan, TempMute: absolute, like the queue's jobs
     public WarnKind WarnKind { get; init; }        // Warn kinds; RemoveWarn/ResetWarns
     public bool AlsoMediaWarns { get; init; }      // ResetWarns from the warn buttons
     public bool RevokeMessages { get; init; }
@@ -140,7 +140,7 @@ happened (the duration a rule shortened, the reason it added).
 Entry points, in the codebase's style (static, like `EnforcementQueue`):
 
 ```csharp
-internal static class Actions
+internal static class ActionSeam   // in Enforcer5.Actions; a class named Actions would clash with the namespace
 {
     internal static Task<ActionResult> RunAsync(ActionRequest request);
     internal static ActionResult Run(ActionRequest request);   // waits as EnforcementQueue.Run does (up to 3 s, then Queued)
@@ -181,7 +181,8 @@ on the message path is the one cost the scripting design rules out. Revisit with
 4. **Before hooks** (section 5 decides whether they run; never on the creator's or devs'
    actions, so a rule cannot lock the owner out). Each enabled hook for this kind and
    source, in order. A hook returns allow, block(message) or change(fields). First block stops;
-   changes apply in order to `Reason`, `Duration` and `Silent` only. A different action is block
+   changes apply in order to `Reason`, the end (`UntilUtc`, shown to scripts as a duration) and
+   `Silent` only. A different action is block
    plus `also(...)`: the kind of an action never changes in place. A hook that throws, times out
    or is over budget counts as allow, and is recorded.
 5. **Execute.** One handler per kind (section 8): the state change and the queue job.
@@ -264,7 +265,7 @@ summary line instead of one per member.
   any admin of the group (Daniel, 2026-10-31; the one who confirms is recorded with the batch),
   valid 10 minutes.
 - **Run:** a `batches` row and its `batch_items` in PostgreSQL; a background worker takes one
-  item at a time per batch and runs it through `Actions.RunAsync` with `Source = Batch`,
+  item at a time per batch and runs it through `ActionSeam.RunAsync` with `Source = Batch`,
   `BatchId`, the admin as actor, `Silent = true`. Pacing is the queue's (bans 25 a second
   bot-wide, chats taking turns), so a batch cannot starve another group's enforcement. After a
   restart unfinished items continue.
@@ -288,13 +289,20 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 
 | Step | What | Visible change |
 |---|---|---|
-| A | `Actions/`: types, `Actions.Run`, no hooks. `Methods.*`, `Commands.Tempban` become thin wrappers building a request; source passed explicitly at the automatic call sites (Detection, filters, flood, limits) and derived for commands and buttons (moving the logic out of `Decisions.cs:74-84`) | none |
+| A (done, 2026-10-31) | `Actions/`: types, `ActionSeam.Run`, no hooks. `Methods.*`, `Commands.Tempban` become thin wrappers building a request; source passed explicitly at the automatic call sites (Detection, filters, flood, limits) and derived for commands and buttons (moving the logic out of `Decisions.cs:74-84`) | none |
 | B | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
 | C | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
-| D | Raid, global ban and Mute On Join through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | none |
+| D | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | none |
 | E | Log channel lines owned by the actions | wording unchanged |
 | F | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none |
 | G | `/batch` | new command |
+
+Step A notes: global bans and Mute On Join already reach the seam through `Methods.*`, with their
+own sources; the premium mass add is `Detection`; the raid link report's Ban button is derived as
+`Raid`. Labels in `member_labels` are still worked out by `Decisions` from the update
+(`ActionSources.Derive`, the same rules as before, pinned by `ActionSeamTests`); the request's own
+source starts to be used for labels in step D, when raid mode's actions without an actor must keep
+the label `auto` (`ActionSources.Label` maps `Raid` to `raid`).
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 
