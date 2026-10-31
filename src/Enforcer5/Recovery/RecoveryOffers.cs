@@ -332,12 +332,11 @@ namespace Enforcer5.Recovery
             }
             if (result.BannedBy == null)
             {
-                if (!Methods.BanUser(offer.ChatId, member, lang, Reason, call.From.Id))
+                if (!Methods.BanUser(offer.ChatId, member, lang, Reason, call.From.Id, stat: "maxWarn"))
                 {
                     await Answer(call, Methods.GetLocaleString(lang, "failed"));
                     return;
                 }
-                Methods.SaveBan(member, "maxWarn");
                 result.BannedBy = call.From.Id;
                 await Repositories.Recovery.SetOutcomesAsync(offer.OfferId,
                     new[] { new RecoveryOutcome(position, item.Outcome, JsonConvert.SerializeObject(result)) });

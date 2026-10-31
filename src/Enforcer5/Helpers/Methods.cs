@@ -81,7 +81,8 @@ namespace Enforcer5.Helpers
         /// is the report it was taken from.
         /// </summary>
         internal static bool KickUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            WarningRef trigger = null, bool record = true, ReportRef report = null, ActionSource? source = null)
+            WarningRef trigger = null, bool record = true, ReportRef report = null, ActionSource? source = null,
+            string stat = null)
         {
             // A ban lifted at once, through the enforcement queue: two calls, retried until Telegram
             // has taken them. It used to be a ban, up to ten membership checks and ten unbans.
@@ -89,7 +90,7 @@ namespace Enforcer5.Helpers
             {
                 Kind = ActionKind.Kick, ChatId = chatId, TargetId = userId, ActorId = actorId,
                 Source = source ?? SourceOf(actorId, report), Reason = reason, Trigger = trigger, Report = report,
-                Record = record
+                Record = record, Stat = stat
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
@@ -837,10 +838,10 @@ namespace Enforcer5.Helpers
                 try
                 {
                     // A known spammer: their messages go in the same call as the ban.
-                    var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}", revokeMessages: true, source: ActionSource.GlobalBan);
+                    var temp = BanUser(update.Message.Chat.Id, id, lang, $"Global ban: {reason}", revokeMessages: true,
+                        source: ActionSource.GlobalBan, stat: "ban");
                     if (temp)
                     {
-                        SaveBan(id, "ban");
                         Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
                         Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
                     }
@@ -861,42 +862,36 @@ namespace Enforcer5.Helpers
         /// <summary>
         /// Bans the user and records it in the ban history. <paramref name="actorId"/> is the admin
         /// who asked for it; leave it null when Enforcer acts on its own. <paramref name="trigger"/> is
-        /// the warn that reached the maximum, for a max-warns ban.
+        /// the warn that reached the maximum, for a max-warns ban. <paramref name="stat"/> is the counter of
+        /// their ban record; <paramref name="banListReason"/> and <paramref name="banListName"/> what /status
+        /// shows (see <see cref="ActionRequest"/>).
         /// </summary>
         internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            WarningRef trigger = null, ReportRef report = null, bool revokeMessages = false, ActionSource? source = null)
+            WarningRef trigger = null, ReportRef report = null, bool revokeMessages = false, ActionSource? source = null,
+            string stat = null, string banListReason = null, string banListName = null)
         {
             // revokeMessages: the same call deletes everything they posted in the chat, for spammers.
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.Ban, ChatId = chatId, TargetId = userId, ActorId = actorId,
                 Source = source ?? SourceOf(actorId, report), Reason = reason, Trigger = trigger, Report = report,
-                RevokeMessages = revokeMessages
+                RevokeMessages = revokeMessages, Stat = stat, BanListReason = banListReason, BanListName = banListName
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
 
         /// <summary>Tempbans the user until <paramref name="untilDateTime"/> (UTC); see BanUser.</summary>
         internal static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
-            string reason = null, long? actorId = null, ActionSource? source = null)
+            string reason = null, long? actorId = null, ActionSource? source = null, string stat = null)
         {
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.TempBan, ChatId = chatId, TargetId = userId, ActorId = actorId,
-                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime
+                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime, Stat = stat
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
 
-        public static void AddBanList(long chatId, long userId, string name, string why)
-        {
-            var hash = $"chat:{chatId}:bannedlist";
-            var kvp = new List<KeyValuePair<RedisKey, RedisValue>>();
-            kvp.Add(new KeyValuePair<RedisKey, RedisValue>(hash, userId.ToString()));
-             Redis.db.StringSetAsync(kvp.ToArray());
-             Redis.db.HashSetAsync($"{hash}:{userId}", "why", why);
-             Redis.db.HashSetAsync($"{hash}:{userId}", "nick", why);
-        }
         // The timer fires every 30s and the scan is not instant. Without this, a slow run simply
         // overlaps the next one and they pile up.
         private static int _checkingTempBans;
@@ -906,42 +901,22 @@ namespace Enforcer5.Helpers
             if (Interlocked.CompareExchange(ref _checkingTempBans, 1, 0) != 0) return;
             try
             {
-#if NORMAL
-                var tempbans = Redis.db.HashGetAllAsync("tempbanned").Result;
-#endif
-#if PREMIUM
-                var tempbans = Redis.db.HashGetAllAsync("tempbannedPremium").Result;
-#endif
-                foreach (var mem in tempbans)
+                foreach (var entry in Repositories.Tempbans.DueAsync(Clock.UtcNow).GetAwaiter().GetResult())
                 {
                     try
                     {
-                        if (System.DateTime.UtcNow.ToUnixTime() >= long.Parse(mem.Name))
+                        if (!UnbanUser(entry.ChatId, entry.UserId, GetGroupLanguage(entry.ChatId).Doc, source: ActionSource.Expiry))
                         {
-                            var subStrings = mem.Value.ToString().Split(':');
-                            var chatId = long.Parse(subStrings[0]);
-                            var userId = long.Parse(subStrings[1]);
-                            if (!UnbanUser(chatId, userId, GetGroupLanguage(chatId).Doc, source: ActionSource.Expiry))
-                            {
-                                // Telegram lifts a tempban at its until date by itself, and Redis
-                                // forgets it below, so it has ended even when this unban failed.
-                                BanHistory.Unbanned(chatId, userId, BanEnd.Expired, null);
-                            }
-#if NORMAL
-                            Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                            Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbanned", subStrings[1]);
-#endif
-#if PREMIUM
-                        Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
-                        Redis.db.SetRemoveAsync($"chat:{subStrings[0]}:tempbannedPremium", subStrings[1]);
-#endif
+                            // Telegram lifts a tempban at its until date by itself, and the schedule
+                            // forgets it below, so it has ended even when this unban failed.
+                            BanHistory.Unbanned(entry.ChatId, entry.UserId, BanEnd.Expired, null);
                         }
+                        Repositories.Tempbans.RemoveAsync(entry).GetAwaiter().GetResult();
                     }
                     catch (Exception e)
                     {
-                        ErrorReporter.Report(e, $"Lifting tempban {mem.Value}");
+                        ErrorReporter.Report(e, $"Lifting tempban {entry}");
                     }
-
                 }
             }
             catch (Exception e)

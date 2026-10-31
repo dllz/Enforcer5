@@ -151,9 +151,8 @@ namespace Enforcer5
             if (action == "ban")
             {
                 // Their messages go with them, the link included.
-                var done = Methods.BanUser(chatId, userId, lang, "Spam link", call.From.Id, revokeMessages: true);
+                var done = Methods.BanUser(chatId, userId, lang, "Spam link", call.From.Id, revokeMessages: true, stat: "ban");
                 if (!done) return;
-                Methods.SaveBan(userId, "ban");
             }
             else
             {

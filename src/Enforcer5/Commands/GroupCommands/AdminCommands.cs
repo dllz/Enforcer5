@@ -528,8 +528,8 @@ namespace Enforcer5
                         name = $"{name} - @{user.User.Username}";
                     if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                         status = ChatMemberStatus.Kicked;
-                    var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
-                    if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
+                    var reason = Repositories.BanList.GetReasonAsync(chatId, userId).GetAwaiter().GetResult();
+                    if (reason != null && status == ChatMemberStatus.Kicked)
                     {
 
                         Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, Methods.GetLocaleString(lang, "bannedFor", reason)), update);
@@ -550,8 +550,8 @@ namespace Enforcer5
                     name = $"{name} - @{user.User.Username}";
                 if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
                     status = ChatMemberStatus.Kicked;
-                var reason = Redis.db.HashGetAsync($"chat:{chatId}:bannedlist:{userId}", "why").Result;
-                if (!reason.IsNullOrEmpty && status == ChatMemberStatus.Kicked)
+                var reason = Repositories.BanList.GetReasonAsync(chatId, userId).GetAwaiter().GetResult();
+                if (reason != null && status == ChatMemberStatus.Kicked)
                 {
 
                     Bot.SendReply(Methods.GetLocaleString(lang, $"status{status.ToString()}", name, Methods.GetLocaleString(lang, "bannedFor", reason)), update);
@@ -1012,26 +1012,12 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var userId = args[2];
             var isChatMember = Bot.Api.GetChatMember(call.Message.Chat.Id,long.Parse(userId)).Result;
-            var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang, null, call.From.Id);
-            var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId).Result;
-            if (isAlreadyTempbanned)
-            {
-                var all = Redis.db.HashGetAllAsync("tempbanned").Result;
-                foreach (var mem in all)
-                {
-                    if ($"{call.Message.Chat.Id}:{userId}".Equals(mem.Value))
-                    {
-                         Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                    }
-                }
-                 Redis.db.SetRemoveAsync($"chat:{call.Message.Chat.Id}:tempbanned", userId);
-            }
+            // The ban also ends any tempban they had (ActionEffects): this button used to leave it, so they
+            // were unbanned when it ran out (issue #24).
+            var res = Methods.BanUser(call.Message.Chat.Id, long.Parse(userId), lang, null, call.From.Id,
+                stat: isChatMember.Status == ChatMemberStatus.Member ? "ban" : null);
             if (res)
             {
-                if (isChatMember.Status == ChatMemberStatus.Member)
-                {
-                    Methods.SaveBan(long.Parse(userId), "ban");
-                }
                 if (long.Parse(userId) == 321720895 | long.Parse(userId) == 9375804)
                 {
                     Redis.db.SetAdd("bot:lookaround",

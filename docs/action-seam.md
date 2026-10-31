@@ -290,7 +290,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 | Step | What | Visible change |
 |---|---|---|
 | A (done, 2026-10-31) | `Actions/`: types, `ActionSeam.Run`, no hooks. `Methods.*`, `Commands.Tempban` become thin wrappers building a request; source passed explicitly at the automatic call sites (Detection, filters, flood, limits) and derived for commands and buttons (moving the logic out of `Decisions.cs:74-84`) | none |
-| B | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
+| B (done, 2026-10-31) | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
 | C | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
 | D | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | none |
 | E | Log channel lines owned by the actions | wording unchanged |
@@ -303,6 +303,15 @@ own sources; the premium mass add is `Detection`; the raid link report's Ban but
 (`ActionSources.Derive`, the same rules as before, pinned by `ActionSeamTests`); the request's own
 source starts to be used for labels in step D, when raid mode's actions without an actor must keep
 the label `auto` (`ActionSources.Label` maps `Raid` to `raid`).
+
+Step B notes: `Actions/ActionEffects` applies what an action owns once it succeeded (done or queued):
+the tempban schedule (`ITempbanRepository`: schedule, cancel, due, remove; the only code that knows the
+edition's keys), the ban list /status reads (`IBanListRepository`), and the member's ban record
+(`ActionRequest.Stat`, the `ban:{user}` counters, which callers name as before). Every permanent ban
+and every unban now ends a running tempban, whatever asked for it (bot checks too, not just `/ban`);
+a second tempban replaces the first; a member let back in early leaves `/tempbans`; an unban clears the
+ban reason. `{chat}:userJoin` deletes were dropped (nothing writes it), and so was the string
+`chat:{c}:bannedlist` (nothing read it). The ban history and labels stay in `EnforcementExecutor.Record`.
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 

@@ -187,18 +187,6 @@ namespace Enforcer5.Tests.ChannelPostTests
             Assert.AreEqual(expected, ChannelPosts.IsUsername(text));
         }
 
-        [DataTestMethod]
-        [DataRow("-100:42:Name:Group", true)]
-        [DataRow("-100:42", true)]
-        [DataRow("-100:421:Name:Group", false)]
-        [DataRow("-1001:42:Name:Group", false)]
-        [DataRow("", false)]
-        public void TempbanEntry_MatchesItsUserOnly(string value, bool expected)
-        {
-            // /ban used to compare with Equals, which never matched the stored "{chat}:{user}:{name}:{group}".
-            Assert.AreEqual(expected, ChannelPosts.IsTempbanEntryFor(value, -100, 42));
-        }
-
         [TestMethod]
         public void AllowedChannel_DisplaysTitleAndId()
         {

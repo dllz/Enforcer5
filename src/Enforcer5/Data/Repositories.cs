@@ -96,6 +96,9 @@ namespace Enforcer5.Data
         // Redis. The stored values a recovery offer sets once admins apply it.
         internal static IRecoveryValues RecoveryValues { get; set; } = new RedisRecoveryValues(() => Redis.db);
 
+        // Redis. Why a member is banned, for /status.
+        internal static IBanListRepository BanList { get; set; } = new RedisBanListRepository(() => Redis.db);
+
         internal static ITempbanRepository Tempbans { get; set; } =
 #if PREMIUM
             new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");

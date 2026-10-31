@@ -507,27 +507,13 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
             var report = FindReport(chatId, args, userId, null);
-            var res = Methods.BanUser(chatId, userId, grouplang, "Reported", call.From.Id, report: report);
+            // The ban also ends any tempban they had (ActionEffects): this button used to leave it, so they
+            // were unbanned when it ran out (issue #24).
+            var res = Methods.BanUser(chatId, userId, grouplang, "Reported", call.From.Id, report: report, stat: "ban",
+                banListReason: Methods.GetLocaleString(grouplang, "inlineBan"), banListName: userId.ToString());
             if (res) ReportHistory.Acted(report, ReportAction.Banned, call.From.Id);
-            var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
-            if (isAlreadyTempbanned)
-            {
-                var all = Redis.db.HashGetAllAsync("tempbanned").Result;
-                foreach (var mem in all)
-                {
-                    if ($"{chatId}:{userId}".Equals(mem.Value))
-                    {
-                         Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-                    }
-                }
-                 Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
-            }
             if (res)
             {
-                Methods.SaveBan(userId, "ban");
-                var why = Methods.GetLocaleString(grouplang, "inlineBan");
-                Methods.AddBanList(chatId, userId, userId.ToString(), why);
-                Redis.db.HashDeleteAsync($"{call.Message.Chat.Id}:userJoin", userId);
                 var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
                 var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
@@ -543,11 +529,10 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var userId = long.Parse(args[2]);
             var report = FindReport(chatId, args, userId, null);
-            var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id, report: report);
+            var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id, report: report, stat: "kick");
             if (res) ReportHistory.Acted(report, ReportAction.Kicked, call.From.Id);
             if (res)
             {
-                Methods.SaveBan(userId, "kick");
                 var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
                 var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
                 Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", nick, admin), chatId);

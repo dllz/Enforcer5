@@ -214,12 +214,12 @@ namespace Enforcer5.Detection
                         : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {userId}", label));
                     break;
                 case "ban":
-                    if (Methods.BanUser(chatId, userId, lang, reason, source: ActionSource.Filter))
+                    if (Methods.BanUser(chatId, userId, lang, reason, source: ActionSource.Filter, stat: own?.SavedAs ?? "filter",
+                            banListReason: own != null
+                                ? Methods.GetLocaleString(lang, own.Banned, ".")
+                                : Methods.GetLocaleString(lang, "bannedByFilter", ".", label),
+                            banListName: person.FirstName))
                     {
-                        Methods.SaveBan(userId, own?.SavedAs ?? "filter");
-                        Methods.AddBanList(chatId, userId, person.FirstName, own != null
-                            ? Methods.GetLocaleString(lang, own.Banned, ".")
-                            : Methods.GetLocaleString(lang, "bannedByFilter", ".", label));
                         Tell(own != null
                             ? Methods.GetLocaleString(lang, own.Banned, $"{name}, {userId}")
                             : Methods.GetLocaleString(lang, "bannedByFilter", $"{name}, {userId}", label));

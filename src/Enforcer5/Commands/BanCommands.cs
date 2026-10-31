@@ -47,11 +47,11 @@ namespace Enforcer5
                             return;
                         // As /ban: what the admin typed, or the message the kick replied to.
                         var reason = args.Length > 1 && !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
-                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc, reason, update.Message.From.Id);
+                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc, reason, update.Message.From.Id,
+                            stat: "kick");
                         
                         if (res)
                         {
-                            Methods.SaveBan(userid, "kick");
                                 
                             object[] arguments =
                             {
@@ -204,7 +204,8 @@ namespace Enforcer5
                     case "ban":
                         try
                         {
-                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report, source: ActionSource.Escalation);
+                            var res = Methods.BanUser(chatId, id, lang.Doc, "Max warns", trigger: warned, report: report, source: ActionSource.Escalation,
+                                stat: "maxWarn");
 
                             if (res)
                             {
@@ -223,7 +224,6 @@ namespace Enforcer5
                                 {
                                     Bot.Send(preText + Methods.GetLocaleString(lang.Doc, "warnMaxBan", name), chatId);
                                 }
-                                Methods.SaveBan(id, "maxWarn");
                             }
                                 
                         }
@@ -320,77 +320,27 @@ namespace Enforcer5
                         return;
 
                     var isChatMember = Bot.Api.GetChatMember(update.Message.Chat.Id, userid).Result;
-                    
-                    // The same text AddBanList stores below: what the admin typed, or the message
-                    // the ban replied to.
+
+                    // What the admin typed, or the message the ban replied to: in the ban history and,
+                    // for /status, in the ban list.
                     var banReason = !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
+                    object[] arguments =
+                    {
+                        Methods.GetNick(update.Message, args, userid),
+                        Methods.GetNick(update.Message, args, true)
+                    };
                     var res = Methods.BanUser(update.Message.Chat.Id, userid, lang.Doc, banReason,
-                        update.Message.From.Id);
+                        update.Message.From.Id,
+                        // Counted in their ban record only when they were in the group, not for a ban of someone gone.
+                        stat: isChatMember.Status == ChatMemberStatus.Member ? "ban" : null,
+                        banListReason: banReason ?? "", banListName: arguments[0].ToString());
                     if (res)
                     {
-                        var chatId = update.Message.Chat.Id;
-                        // Was the chat id, so the tempban cleanup and ban stats below never matched.
-                        var userId = userid;
-#if NORMAL
-                        var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbanned", userId).Result;
-#endif
-#if PREMIUM
-                        var isAlreadyTempbanned = Redis.db.SetContainsAsync($"chat:{chatId}:tempbannedPremium", userId).Result;
-#endif
-                        if (isAlreadyTempbanned)
-                        {
-#if NORMAL
-                            var all = Redis.db.HashGetAllAsync("tempbanned").Result;
-#endif
-#if PREMIUM
-                            var all = Redis.db.HashGetAllAsync("tempbannedPremium").Result;
-#endif
-                            foreach (var mem in all)
-                            {
-                                // Values are "{chat}:{user}:{name}:{group}"; an exact match never hit,
-                                // so the tempban timer later unbanned someone who had been /banned.
-                                if (ChannelPosts.IsTempbanEntryFor(mem.Value, chatId, userId))
-                                {
-#if NORMAL
-                                     Redis.db.HashDeleteAsync("tempbanned", mem.Name);
-#endif
-#if PREMIUM
-                                     Redis.db.HashDeleteAsync("tempbannedPremium", mem.Name);
-#endif
-                                }
-                            }
-#if NORMAL
-                             Redis.db.SetRemoveAsync($"chat:{chatId}:tempbanned", userId);
-#endif
-#if PREMIUM
-                             Redis.db.SetRemoveAsync($"chat:{chatId}:tempbannedPremium", userId);
-#endif
-                        }
-                        if (isChatMember.Status == ChatMemberStatus.Member)
-                        {
-                            Methods.SaveBan(userId, "ban");
-                        }
                         if (userid == 321720895 | userid == 9375804)
                         {
                             Redis.db.SetAdd("bot:lookaround",
                                 $"{userid}:\n{update.Message.Chat.Id} {update.Message.Chat.Title} {update.Message.From.Id} {update.Message.From.FirstName}");
                         }
-                        object[] arguments =
-                        {
-                            Methods.GetNick(update.Message, args, userid),
-                            Methods.GetNick(update.Message, args, true)
-                        };
-                        string why;
-                        if (!string.IsNullOrEmpty(args[1]))
-                        {
-                            why = args[1];
-                        }
-                        else
-                        {
-                            why = $"{update.Message.ReplyToMessage.Text}";
-                        }
-                        Methods.AddBanList(chatId, userid, arguments[0].ToString(), why);
-                         Redis.db.HashDeleteAsync($"{update.Message.Chat.Id}:userJoin", userId);
                         try
                         {
                             // Service messages (joins, title changes) cannot be forwarded, and a
@@ -469,16 +419,7 @@ namespace Enforcer5
                 return;
             }
 
-            var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
-            if (isBanned.HasValue)
-            {
-#if NORMAL
-                Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
-#endif
-#if PREMIUM
-                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
-#endif
-            }
+            // The unban also ends any tempban in the schedule (ActionEffects).
             var res = Methods.UnbanUser(chatId, userId, lang, update.Message.From.Id);
             if (res)
             {
@@ -496,68 +437,16 @@ namespace Enforcer5
             long? actorId = null, ActionSource? source = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-                // Must be pure UTC: this value is both stored as the expiry key and handed to
-                // Telegram as untilDate, which Telegram always interprets as UTC.
-                var dataUnbanTime = System.DateTime.UtcNow.AddSeconds(time * 60);
-            var unbanTime = dataUnbanTime.ToUnixTime();
-                var hash = $"{chatId}:{userId}:{Redis.db.HashGetAsync($"user:{userId}", "name").Result}:{Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result}";
-            var res = Methods.TempBanUser(chatId, userId, dataUnbanTime, lang, reason, actorId, source);
-                var isBanned = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
-            if (isBanned.HasValue)
-            {
-#if NORMAL
-                Redis.db.HashDeleteAsync("tempbanned", isBanned.ToString());
-#endif
-#if PREMIUM
-                Redis.db.HashDeleteAsync("tempbannedPremium", isBanned.ToString());
-#endif
-            }
-            if (res.Equals(true))
-                {
-                    Methods.SaveBan(userId, "tempban");
-                    Redis.db.HashDeleteAsync($"chat:{chatId}:userJoin", userId);
-
-                // Two tempbans ending in the same second share a schedule slot, so the later one moves
-                // on a second. Claimed with HSETNX: a read then a write let two tempbans running side
-                // by side take the same slot, and the one overwritten was never lifted. (The step used
-                // to be discarded too, DateTime being immutable, which spun the loop forever.)
-#if NORMAL
-                const string schedule = "tempbanned";
-#endif
-#if PREMIUM
-                const string schedule = "tempbannedPremium";
-#endif
-                while (!Redis.db.HashSetAsync(schedule, unbanTime, hash, StackExchange.Redis.When.NotExists).Result)
-                {
-                    dataUnbanTime = dataUnbanTime.AddSeconds(1);
-                    unbanTime = dataUnbanTime.ToUnixTime();
-                }
-                var timeBanned = TimeSpan.FromMinutes(time);
-                    string timeText = timeBanned.ToString(@"dd\:hh\:mm");
-                    if (message == null)
-                    {
-                        message = Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
-                    }
-                    if (update != null)
-                    {
-                        Bot.SendReply(message,update);
-                    }
-                    else
-                    {
-                        Bot.Send(message, chatId);
-                    } 
-
-                Redis.db.StringSetAsync($"chat:{chatId}:tempbanned:{userId}", unbanTime, TimeSpan.FromMinutes(time));
-#if NORMAL
-                Redis.db.SetAddAsync($"chat:{chatId}:tempbanned", userId);                    
-#endif
-#if PREMIUM
-                     Redis.db.SetAddAsync($"chat:{chatId}:tempbannedPremium", userId);
-#endif
-                    return true;
-                }
-            return false;
-        }        
+            // Pure UTC: it is handed to Telegram as untilDate. The action schedules its end and forgets any
+            // earlier tempban (ActionEffects).
+            var until = Clock.UtcNow.AddSeconds(time * 60);
+            if (!Methods.TempBanUser(chatId, userId, until, lang, reason, actorId, source, stat: "tempban")) return false;
+            var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
+            message ??= Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
+            if (update != null) Bot.SendReply(message, update);
+            else Bot.Send(message, chatId);
+            return true;
+        }
 
         [Command(Trigger = "tempban", InGroupOnly = true, GroupAdminOnly = true)]
         public static void Tempban(Update update, string[] args)

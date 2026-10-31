@@ -51,7 +51,7 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/TelegramGateway.cs`, `FloodControl.cs` | Every Telegram call: pacing under Telegram's limits and 429 handling, per lane (see Rate limits) |
 | `src/Enforcer5/Helpers/Clock.cs` | Time for the new code; simulated in the harness |
 | `src/Enforcer5/Enforcement/` | The enforcement queue: every ban, kick, mute, unban, delete and permission change |
-| `src/Enforcer5/Actions/` | The action seam (`docs/action-seam.md`): `ActionSeam.Run(ActionRequest)` is the one way to act on a member, with where it came from (`ActionSource`). Step A so far: bans, tempbans, unbans, kicks, mutes, tempmutes and unmutes from `Methods.*` and `Commands.Tempban`; scripting (`docs/scripting-design.md`) builds on it |
+| `src/Enforcer5/Actions/` | The action seam (`docs/action-seam.md`): `ActionSeam.Run(ActionRequest)` is the one way to act on a member, with where it came from (`ActionSource`). Steps A and B so far: bans, tempbans, unbans, kicks, mutes, tempmutes and unmutes from `Methods.*` and `Commands.Tempban`, and `ActionEffects` owns the tempban schedule, the ban list and the ban record; scripting (`docs/scripting-design.md`) builds on it |
 | `src/Enforcer5/Helpers/CommandLimiter.cs`, `CommandGate.cs` | Command, button and @admin limits and the slow lane |
 | `src/Enforcer5/Raids/` | Raid detection, raid mode and raid telemetry; `Helpers/RaidCapture`, `MemberEvents`, `MemberTrust` feed it |
 | `src/Enforcer5/Data/` | Repository interfaces, their Redis and PostgreSQL implementations, and `Repositories` (the composition root) |

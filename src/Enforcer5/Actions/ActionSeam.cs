@@ -6,9 +6,9 @@ using Enforcer5.Helpers;
 namespace Enforcer5.Actions
 {
     /// <summary>
-    /// The one way to act on a member (<c>docs/action-seam.md</c>). Step A: the request is carried out
-    /// through <see cref="EnforcementQueue"/> exactly as the <c>Methods</c> helpers did; the steps before
-    /// it (authorise, guards, hooks) and the effects each action owns arrive in the later steps.
+    /// The one way to act on a member (<c>docs/action-seam.md</c>). The request is carried out through
+    /// <see cref="EnforcementQueue"/>, then what it owns is recorded (<see cref="ActionEffects"/>: the tempban
+    /// schedule, the ban list, the ban record). The steps before it (authorise, guards, hooks) arrive later.
     /// </summary>
     internal static class ActionSeam
     {
@@ -33,6 +33,7 @@ namespace Enforcer5.Actions
                 enforcement = EnforcementResult.Refuse(Refusal.Other, e);
             }
             var result = new ActionResult(request, enforcement);
+            ActionEffects.Apply(result);
             try
             {
                 Ran?.Invoke(result);

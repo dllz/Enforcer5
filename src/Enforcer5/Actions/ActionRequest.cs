@@ -73,6 +73,15 @@ namespace Enforcer5.Actions
         public ReportRef Report { get; init; }
         /// <summary>False leaves it out of the sanction history (/kickme).</summary>
         public bool Record { get; init; } = true;
+        /// <summary>
+        /// The counter of the member's ban record (<c>ban:{user}</c>, shown by /user) this adds one to: ban,
+        /// tempban, kick, flood, maxWarn, ... Null counts nothing.
+        /// </summary>
+        public string Stat { get; init; }
+        /// <summary>A ban: why, as /status shows it. Null writes nothing.</summary>
+        public string BanListReason { get; init; }
+        /// <summary>A ban: the name kept with <see cref="BanListReason"/>.</summary>
+        public string BanListName { get; init; }
     }
 
     internal enum ActionOutcome

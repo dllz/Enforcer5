@@ -635,25 +635,11 @@ namespace Enforcer5.Handlers
         }
 
         /// <summary>
-        /// Someone tempbanned here is back (an admin let them in early): their entry in the expiry
-        /// schedule goes, so the expiry check does not act on them later. The schedule is keyed by the
-        /// unban time, which two tempbans can share, so only an entry that names this chat and user is
-        /// removed.
+        /// Someone tempbanned here is back (an admin let them in early): their tempban is forgotten, so the
+        /// expiry check does not act on them later and /tempbans no longer lists them.
         /// </summary>
-        private static void ForgetTempban(long chatId, long userId)
-        {
-#if PREMIUM
-            const string index = "tempbannedPremium";
-#else
-            const string index = "tempbanned";
-#endif
-            var until = Redis.db.StringGetAsync($"chat:{chatId}:tempbanned:{userId}").Result;
-            if (!until.HasValue) return;
-            var entry = Redis.db.HashGetAsync(index, until.ToString()).Result;
-            if (entry.HasValue && Data.RedisTempbanRepository.TryParseEntry(entry.ToString(), out var entryChat, out var entryUser) &&
-                entryChat == chatId && entryUser == userId)
-                Redis.db.HashDeleteAsync(index, until.ToString());
-        }
+        private static void ForgetTempban(long chatId, long userId) =>
+            Data.Repositories.Tempbans.CancelAsync(chatId, userId).GetAwaiter().GetResult();
 
         // One-time schema migrations. These were re-checked against Redis on every group message
         // forever - four blocking round-trips per message. Once a chat has been seen in this

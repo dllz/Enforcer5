@@ -211,7 +211,6 @@ namespace Enforcer5.Enforcement
                         if (note.Record) BanHistory.Kicked(job.ChatId, job.TargetId, note.Reason, note.ActorId, trigger, report);
                         break;
                     case EnforcementKind.Unban:
-                        Redis.db.SetRemoveAsync($"chat:{job.ChatId}:bannedlist", job.TargetId);
                         BanHistory.Unbanned(job.ChatId, job.TargetId, note.End, note.ActorId);
                         break;
                     case EnforcementKind.Mute:

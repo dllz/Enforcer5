@@ -134,16 +134,5 @@ namespace Enforcer5.Models
         internal static string Describe(Chat channel) =>
             channel == null ? "" :
             channel.Username != null ? $"{channel.Title} (@{channel.Username}, {channel.Id})" : $"{channel.Title} ({channel.Id})";
-
-        /// <summary>
-        /// Whether a value in the tempban hash belongs to this user in this chat. Values are
-        /// "{chatId}:{userId}:{name}:{group}" (see Commands.Tempban), so a prefix match is needed.
-        /// </summary>
-        internal static bool IsTempbanEntryFor(string value, long chatId, long userId)
-        {
-            if (string.IsNullOrEmpty(value)) return false;
-            var prefix = $"{chatId}:{userId}";
-            return value == prefix || value.StartsWith(prefix + ":", StringComparison.Ordinal);
-        }
     }
 }

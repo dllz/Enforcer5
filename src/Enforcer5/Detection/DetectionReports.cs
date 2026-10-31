@@ -401,7 +401,7 @@ namespace Enforcer5.Detection
             switch (decision)
             {
                 case "ban":
-                    if (Methods.BanUser(chatId, userId, lang, Reason, actor)) Methods.SaveBan(userId, "ban");
+                    Methods.BanUser(chatId, userId, lang, Reason, actor, stat: "ban");
                     // The file of the post it was about, if any, is banned in the group (step 12).
                     if (report.MessageId is { } posted)
                         Bot.Dispatch(() => BannedMedia.FromReportAsync(chatId, posted, actor), "BannedMedia.FromReport");
