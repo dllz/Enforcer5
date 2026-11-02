@@ -2630,7 +2630,94 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
     <value>Revisar miembros veteranos</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Permitir bots de este grupo</value>
+    <value>Omitir mensajes vía bots del grupo</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Quien envía demasiados mensajes en poco tiempo recibe la acción de flood. El límite, la acción y qué mensajes cuentan están en Flood, en /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Este interruptor ya no se usa y no cambia nada.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ saluda a los nuevos miembros con el texto de bienvenida del grupo, 🚫 no saluda a nadie. /welcome on y /welcome off hacen lo mismo.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ borra el mensaje de bienvenida anterior al dar la bienvenida al siguiente miembro, así solo queda el último en el chat.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 el bot responde en el grupo, 👤 envía la respuesta al miembro en privado.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ silencia a cada miembro nuevo al unirse, hasta que un admin lo desilencie. /unmutenewjoiners los desilencia a todos.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>Activado borra los mensajes enviados como canal y banea el canal. Salvo admins anónimos, tu canal vinculado y los canales de /allowchannel.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Qué eliminaciones de advertencias piden antes un motivo. Off: ninguna. Advertencias, luego también pre-advertencias, luego Todas: también multimedia.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ estos mensajes cuentan para el límite de flood, ❌ no cuentan.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ permitido. ❌ se borra y el miembro recibe una advertencia de multimedia; al llegar al límite de abajo recibe la acción indicada allí.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Los miembros cuyo nombre es más largo que el número indicado reciben la acción de abajo cuando escriben. Cambia el número con /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Los mensajes con más caracteres o líneas de lo indicado (caracteres : líneas) reciben la acción de abajo. Cámbialos con /maxtl y /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Un mensaje editado mucho después de publicarse se reporta a los admins. La multimedia cambiada en una edición siempre se borra y se reporta, diga lo que diga esto.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>Activado también borra la edición tardía de un miembro que aún es nuevo aquí, en vez de solo reportarla.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>Activado reporta también las ediciones tardías de miembros que llevan tiempo aquí. Desactivado revisa solo a los nuevos.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Los mensajes, nombres y usuarios con letras árabes reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Caracteres ocultos que invierten la dirección del texto, usados para disfrazar enlaces y nombres. Lo que coincida recibe la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Los mensajes y nombres con letras cirílicas (ruso, ucraniano y otras) reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Los mensajes y nombres con caracteres chinos, japoneses o coreanos reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Los mensajes y nombres con letras hebreas reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Los mensajes y nombres con letras devanagari (hindi y otras) reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Palabras que mezclan letras latinas con cirílicas o griegas que se ven iguales, para falsificar nombres. Lo que coincida recibe la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Caracteres que no se ven, usados para nombres en blanco o para colar palabras por los filtros. Lo que coincida recibe la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Los mensajes con un enlace de invitación a un grupo o canal privado (t.me/+…) reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Los mensajes con un número de teléfono reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Los mensajes con una dirección de monedero de criptomonedas reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Los nombres y usuarios con palabras como admin, soporte u oficial, usados para hacerse pasar por el equipo, reciben la acción elegida a la derecha.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>Activado aplica los filtros a todos. Desactivado solo a los miembros que aún son nuevos aquí. Los admins nunca se revisan.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>Activado no filtra el texto de los mensajes enviados con un bot inline que está en este grupo. Sus nombres sí se revisan.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} fue silenciado: {1}</value>

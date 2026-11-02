@@ -1254,7 +1254,94 @@ Example:
     <value>检查老成员</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>允许本群的机器人</value>
+    <value>跳过经本群机器人发送的消息</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>短时间内发送过多消息的成员会受到刷屏处理。上限、处理方式和哪些消息计入，都在 /menu 的刷屏里设置。</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>这个开关已不再使用，不会改变任何东西。</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ 用本群的欢迎语欢迎新成员，🚫 不欢迎任何人。/welcome on 和 /welcome off 效果相同。</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ 欢迎下一位成员时删除上一条欢迎消息，聊天里只保留最新的一条。</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 机器人在群里回复，👤 改为私聊把回复发给该成员。</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ 新成员一加入就被禁言，直到管理员解除。/unmutenewjoiners 可以一次解除所有人。</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>开启后，删除成员以频道身份发送的消息并封禁该频道。匿名管理员、你的关联频道和用 /allowchannel 允许的频道不受影响。</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>哪些移除警告的操作要先请管理员填写原因。关闭：都不需要。警告，然后加上预警告，然后全部：连媒体警告也要。</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ 这类消息计入刷屏上限，❌ 不计入。</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ 允许。❌ 删除，并给该成员一次媒体警告；达到下方上限时执行那里显示的处理。</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>名字长度超过显示数字的成员发言时，会受到下方的处理。用 /maxnl 修改这个数字。</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>字数或行数超过显示值（字数 : 行数）的消息会受到下方的处理。用 /maxtl 和 /maxl 修改。</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>发送很久之后才编辑的消息会报告给管理员。通过编辑替换的媒体无论此项如何设置，都会被删除并报告。</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>开启后，对仍是新成员的延迟编辑直接删除，而不只是报告。</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>开启后，也报告已在群里一段时间的成员的延迟编辑。关闭则只检查新成员。</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>含阿拉伯字母的消息、名字和用户名，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>翻转文字方向的隐藏字符，用来伪装链接和名字。匹配的内容会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>含西里尔字母（俄语、乌克兰语等）的消息和名字，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>含中文、日文或韩文字符的消息和名字，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>含希伯来字母的消息和名字，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>含天城文字母（印地语等）的消息和名字，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>把拉丁字母和长得一样的西里尔或希腊字母混在一起的词，用来冒充名字。匹配的内容会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>看不见的字符，用于空白名字或让词语躲过过滤。匹配的内容会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>含有私密群组或频道邀请链接（t.me/+…）的消息，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>含电话号码的消息，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>含加密货币钱包地址的消息，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>名字和用户名里带 admin、客服或官方之类字眼、用来冒充管理团队的，会受到右侧选择的处理。</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>开启后对所有人使用过滤器。关闭则只对仍是新成员的人使用。管理员永远不会被检查。</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>开启后，不过滤经本群内联机器人发送的消息文字。名字仍会检查。</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} 已被禁言：{1}</value>

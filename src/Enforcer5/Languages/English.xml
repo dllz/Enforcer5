@@ -2616,7 +2616,94 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>Check established members</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Allow bots in this group</value>
+    <value>Skip messages via group's bots</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Members who send too many messages in a short time get the flood action. The limit, the action and which messages count are under Flood in /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>This switch is no longer used and changes nothing.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ greets new members with the group's welcome text, 🚫 greets no one. /welcome on and /welcome off do the same.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ deletes the previous welcome message when the next member is welcomed, so only the latest one stays in the chat.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 the bot answers in the group, 👤 it sends the answer to the member in private instead.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ mutes every new member as they join, until an admin unmutes them. /unmutenewjoiners unmutes them all.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>On deletes messages members send as a channel and bans the channel. Anonymous admins, your linked channel and channels allowed with /allowchannel are left alone.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Which warn removals ask the admin for a reason first. Off: none. Warns, then pre-warns too, then All: media warns as well.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ these messages count towards the flood limit, ❌ they do not.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ allowed. ❌ deleted, and the member gets a media warn; at the limit below they get the action shown there.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Members whose name is longer than the number shown get the action below when they post. Change the number with /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Messages with more characters or lines than shown (characters : lines) get the action below. Change them with /maxtl and /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>A message edited long after it was posted is reported to the admins. Media swapped in an edit is always deleted and reported, whatever this says.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>On also deletes a late edit by a member who is still new here, instead of only reporting it.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>On reports late edits by members who have been here a while too. Off checks only new members.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Messages, names and usernames with Arabic letters get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Hidden characters that flip the direction of text, used to disguise links and names. Matches get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Messages and names with Cyrillic letters (Russian, Ukrainian and others) get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Messages and names with Chinese, Japanese or Korean characters get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Messages and names with Hebrew letters get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Messages and names with Devanagari letters (Hindi and others) get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Words mixing Latin letters with Cyrillic or Greek ones that look the same, used to fake names. Matches get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Characters that show as nothing, used for blank names or to slip words past filters. Matches get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Messages with an invite link to a private group or channel (t.me/+…) get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Messages with a phone number get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Messages with a cryptocurrency wallet address get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Names and usernames with words like admin, support or official, used to pose as staff, get the action chosen on the right.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>On applies the filters to everyone. Off applies them only to members who are still new here. Admins are never checked.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>On does not filter the text of messages sent through an inline bot that is in this group. Their names are still checked.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} was muted: {1}</value>

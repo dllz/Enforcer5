@@ -193,18 +193,28 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
-        public async Task GroupSettings_TheNameOfASettingTogglesItToo()
+        public async Task GroupSettings_TheNameOfASettingExplainsIt_TheValueTogglesIt()
         {
+            // Until 2026-11-03 the name toggled too, so admins tapping it to learn what it meant switched it.
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             await chat.SendAsync(admin, "/menu");
             await chat.PressDataAsync(admin, LastPrivate(chat, admin), $"openGroupMenu:{chat.ChatId}");
             var groupMenu = chat.Telegram.Accepted.Last(c => c.Method == "editMessageText" && c.ChatId == admin.Id);
             var markup = (InlineKeyboardMarkup)((Telegram.Bot.Requests.EditMessageTextRequest)groupMenu.Request).ReplyMarkup;
-            var row = markup.InlineKeyboard.First(r => r.Any(b => b.CallbackData == $"menuMuteOnJoin:{chat.ChatId}"));
-            Assert.IsTrue(row.All(b => b.CallbackData == $"menuMuteOnJoin:{chat.ChatId}"), "name and value both toggle");
+            var row = markup.InlineKeyboard.First(r => r.Any(b => b.CallbackData == $"menuMuteOnJoin:{chat.ChatId}")).ToArray();
+            Assert.AreEqual($"menuinfo:{chat.ChatId}:MuteOnJoin", row[0].CallbackData);
 
-            await chat.PressDataAsync(admin, PrivateMenu(chat, admin), row.First().CallbackData);
+            var shown = PrivateMenu(chat, admin);
+            shown.ReplyMarkup = markup;
+            await chat.PressDataAsync(admin, shown, row[0].CallbackData);
+            Assert.IsFalse((await Stored(chat))?.MuteOnJoin ?? false, "the name changes nothing");
+            var answer = (Telegram.Bot.Requests.AnswerCallbackQueryRequest)chat.Telegram.Accepted.Last(c => c.Method == "answerCallbackQuery").Request;
+            Assert.IsTrue(answer.ShowAlert);
+            StringAssert.StartsWith(answer.Text, "Mute On Join: ✅ mutes every new member");
+
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
+            await chat.PressDataAsync(admin, shown, row[1].CallbackData);
             Assert.IsTrue((await Stored(chat)).MuteOnJoin);
             AssertNoErrors(chat);
         }

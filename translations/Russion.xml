@@ -1297,7 +1297,94 @@ $title - заменяется названием группы.
     <value>Проверять давних участников</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Разрешить ботов этой группы</value>
+    <value>Пропускать сообщения через ботов группы</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Кто шлёт слишком много сообщений за короткое время, получает действие за флуд. Лимит, действие и какие сообщения считаются — в разделе Флуд в /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Этот переключатель больше не используется и ничего не меняет.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ приветствует новых участников текстом приветствия группы, 🚫 никого не приветствует. /welcome on и /welcome off делают то же самое.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ удаляет прошлое приветствие, когда приветствуется следующий участник, чтобы в чате оставалось только последнее.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 бот отвечает в группе, 👤 отправляет ответ участнику в личные сообщения.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ заглушает каждого нового участника при входе, пока админ не снимет ограничение. /unmutenewjoiners снимает его со всех.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>Вкл. удаляет сообщения, отправленные участниками от имени канала, и банит канал. Анонимных админов, привязанный канал и каналы из /allowchannel это не касается.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Какие снятия предупреждений сначала требуют от админа причину. Выкл.: никакие. Предупреждения, затем и пред-предупреждения, затем Все: и медиа-предупреждения.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ эти сообщения учитываются в лимите флуда, ❌ не учитываются.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ разрешено. ❌ удаляется, и участник получает медиа-предупреждение; при лимите ниже он получает указанное там действие.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Участники с именем длиннее указанного числа получают действие ниже, когда пишут. Число меняется командой /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Сообщения, в которых символов или строк больше указанного (символы : строки), получают действие ниже. Меняется через /maxtl и /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Сообщение, изменённое спустя долгое время после отправки, отправляется админам на проверку. Медиа, заменённое правкой, всегда удаляется, и об этом сообщается.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>Вкл. также удаляет позднюю правку участника, который здесь ещё новичок, а не только сообщает о ней.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>Вкл. сообщает и о поздних правках тех, кто здесь давно. Выкл. проверяет только новичков.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Сообщения, имена и юзернеймы с арабскими буквами получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Скрытые символы, меняющие направление текста, чтобы маскировать ссылки и имена. Совпадения получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Сообщения и имена с кириллицей (русский, украинский и другие) получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Сообщения и имена с китайскими, японскими или корейскими символами получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Сообщения и имена с еврейскими буквами получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Сообщения и имена с буквами деванагари (хинди и другие) получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Слова, где латиница смешана с похожими кириллическими или греческими буквами, чтобы подделать имя. Совпадения получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Невидимые символы, для пустых имён или чтобы протащить слова мимо фильтров. Совпадения получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Сообщения со ссылкой-приглашением в закрытую группу или канал (t.me/+…) получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Сообщения с номером телефона получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Сообщения с адресом криптокошелька получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Имена и юзернеймы со словами вроде admin, support или official, чтобы выдать себя за команду, получают действие, выбранное справа.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>Вкл. применяет фильтры ко всем. Выкл. только к участникам, которые здесь ещё новички. Админов не проверяют никогда.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>Вкл. не фильтрует текст сообщений, отправленных через инлайн-бота, который есть в этой группе. Имена всё равно проверяются.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} заглушен(а): {1}</value>

@@ -47,8 +47,7 @@ namespace Enforcer5
                 .Append("text");
             foreach (var type in types)
             {
-                exeMenu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{type}Button"),
-                    $"floodSettings:{type}"));
+                exeMenu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"{type}Button"), chatId, "floodType", type));
                 exeMenu.Buttons.Add(new InlineButton(flood.IsExempt(type) || type == "text" && !flood.Counted.ContainsKey(type) ? "❌" : "✅",
                     $"flood{type}:{chatId}"));
             }

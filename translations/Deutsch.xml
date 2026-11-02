@@ -1609,7 +1609,94 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>Etablierte Mitglieder prüfen</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Bots in dieser Gruppe erlauben</value>
+    <value>Nachrichten über Gruppen-Bots auslassen</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Wer in kurzer Zeit zu viele Nachrichten schickt, bekommt die Flood-Aktion. Grenze, Aktion und welche Nachrichten zählen, findest du unter Flood in /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Dieser Schalter wird nicht mehr verwendet und ändert nichts.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ begrüßt neue Mitglieder mit dem Willkommenstext der Gruppe, 🚫 begrüßt niemanden. /welcome on und /welcome off tun dasselbe.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ löscht die vorige Willkommensnachricht, wenn das nächste Mitglied begrüßt wird, sodass nur die neueste im Chat bleibt.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 der Bot antwortet in der Gruppe, 👤 er schickt die Antwort dem Mitglied privat.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ schaltet jedes neue Mitglied beim Beitritt stumm, bis ein Admin es freigibt. /unmutenewjoiners gibt alle frei.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>An löscht als Kanal gesendete Nachrichten und sperrt den Kanal. Ausgenommen: anonyme Admins, euer verknüpfter Kanal und Kanäle aus /allowchannel.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Welche Verwarnungs-Entfernungen den Admin zuerst nach einem Grund fragen. Aus: keine. Verwarnungen, dann auch Vorwarnungen, dann Alle: auch Medien-Verwarnungen.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ diese Nachrichten zählen zur Flood-Grenze, ❌ sie zählen nicht.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ erlaubt. ❌ gelöscht, und das Mitglied bekommt eine Medien-Verwarnung; bei der Grenze unten bekommt es die dort gezeigte Aktion.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Mitglieder, deren Name länger ist als die gezeigte Zahl, bekommen die Aktion darunter, wenn sie schreiben. Die Zahl änderst du mit /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Nachrichten mit mehr Zeichen oder Zeilen als gezeigt (Zeichen : Zeilen) bekommen die Aktion darunter. Ändern mit /maxtl und /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Eine Nachricht, die lange nach dem Senden bearbeitet wird, wird den Admins gemeldet. Per Bearbeitung ausgetauschte Medien werden immer gelöscht und gemeldet.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>An löscht die späte Bearbeitung eines Mitglieds, das hier noch neu ist, statt sie nur zu melden.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>An meldet auch späte Bearbeitungen von Mitgliedern, die schon länger hier sind. Aus prüft nur neue Mitglieder.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Nachrichten, Namen und Benutzernamen mit arabischen Buchstaben bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Versteckte Zeichen, die die Schreibrichtung umdrehen, um Links und Namen zu tarnen. Treffer bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Nachrichten und Namen mit kyrillischen Buchstaben (Russisch, Ukrainisch und andere) bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Nachrichten und Namen mit chinesischen, japanischen oder koreanischen Zeichen bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Nachrichten und Namen mit hebräischen Buchstaben bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Nachrichten und Namen mit Devanagari-Buchstaben (Hindi und andere) bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Wörter, die lateinische mit gleich aussehenden kyrillischen oder griechischen Buchstaben mischen, um Namen zu fälschen. Treffer: die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Zeichen, die man nicht sieht, für leere Namen oder um Wörter an Filtern vorbeizuschmuggeln. Treffer bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Nachrichten mit einem Einladungslink in eine private Gruppe oder einen privaten Kanal (t.me/+…) bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Nachrichten mit einer Telefonnummer bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Nachrichten mit einer Krypto-Wallet-Adresse bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Namen und Benutzernamen mit Wörtern wie Admin, Support oder Offiziell, mit denen sich jemand als Team ausgibt, bekommen die rechts gewählte Aktion.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>An wendet die Filter auf alle an. Aus nur auf Mitglieder, die hier noch neu sind. Admins werden nie geprüft.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>An filtert den Text von Nachrichten nicht, die über einen Inline-Bot gesendet wurden, der in dieser Gruppe ist. Namen werden weiter geprüft.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} wurde stummgeschaltet: {1}</value>

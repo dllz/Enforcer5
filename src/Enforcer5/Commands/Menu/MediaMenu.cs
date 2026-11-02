@@ -25,8 +25,7 @@ namespace Enforcer5
                 : Detection.MediaSettings.MenuTypes.AsEnumerable();
             foreach (var type in types)
             {
-                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"{type}Button"),
-                    $"mediasettings:{type}"));
+                menu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"{type}Button"), chatId, "mediaType", type));
                 menu.Buttons.Add(new InlineButton(media.IsBlocked(type) ? "❌" : "✅", $"media{type}:{chatId}"));
             }
             var warnTitle = new Menu(1);

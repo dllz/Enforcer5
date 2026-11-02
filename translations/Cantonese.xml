@@ -1146,7 +1146,94 @@ UPDATE LOG
     <value>檢查老成員</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>容許本群嘅機械人</value>
+    <value>跳過經本群機械人發嘅訊息</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>短時間內發太多訊息嘅成員會受到洗版處理。上限、處理方法同邊啲訊息計數，喺 /menu 嘅洗版入面設定。</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>呢個掣已經冇用，唔會改變任何嘢。</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ 用本群嘅歡迎訊息歡迎新成員，🚫 唔歡迎任何人。/welcome on 同 /welcome off 效果一樣。</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ 歡迎下一位成員嗰陣刪除上一條歡迎訊息，聊天入面淨係留低最新嗰條。</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 機械人喺群組度回覆，👤 改為私訊將回覆發俾嗰位成員。</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ 新成員一入嚟就被禁言，直至管理員解除。/unmutenewjoiners 可以一次過解除晒。</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>開咗之後，刪除成員以頻道身份發嘅訊息並封鎖嗰個頻道。匿名管理員、你嘅連結頻道同用 /allowchannel 允許嘅頻道唔受影響。</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>邊啲移除警告嘅操作要先叫管理員講原因。關：全部唔使。警告，然後連預警告，然後全部：連媒體警告都要。</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ 呢類訊息計入洗版上限，❌ 唔計。</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ 容許。❌ 刪除，並俾嗰位成員一次媒體警告；夠咗下面嘅上限就執行嗰度顯示嘅處理。</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>名字長過顯示數字嘅成員發言時，會受到下面嘅處理。用 /maxnl 改呢個數字。</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>字數或行數超過顯示值（字數 : 行數）嘅訊息會受到下面嘅處理。用 /maxtl 同 /maxl 修改。</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>發咗好耐先編輯嘅訊息會報告俾管理員。透過編輯換咗嘅媒體，無論呢度點設定，都一定會被刪除同報告。</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>開咗之後，仍然係新成員嘅延遲編輯會直接刪除，唔止報告。</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>開咗之後，連喺度有一段時間嘅成員嘅延遲編輯都會報告。關咗就淨係檢查新成員。</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>有阿拉伯字母嘅訊息、名字同用戶名，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>反轉文字方向嘅隱藏字元，用嚟偽裝連結同名字。符合嘅會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>有西里爾字母（俄文、烏克蘭文等）嘅訊息同名字，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>有中文、日文或者韓文字元嘅訊息同名字，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>有希伯來字母嘅訊息同名字，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>有天城文字母（印地文等）嘅訊息同名字，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>將拉丁字母同睇落一樣嘅西里爾或希臘字母撈埋一齊嘅字，用嚟扮人個名。符合嘅會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>睇唔到嘅字元，用嚟整空白名字或者令啲字避過過濾。符合嘅會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>有私人群組或頻道邀請連結（t.me/+…）嘅訊息，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>有電話號碼嘅訊息，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>有加密貨幣錢包地址嘅訊息，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>名字同用戶名有 admin、客服或者官方之類嘅字、用嚟扮管理團隊嘅，會受到右邊揀咗嘅處理。</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>開咗就對所有人用過濾器。關咗就淨係對仍然係新成員嘅人用。管理員永遠唔會被檢查。</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>開咗之後，唔會過濾經本群內嵌機械人發嘅訊息文字。名字照樣會檢查。</value>
   </string>
   <string key="mutedByFilter">
     <value>【{0}】已被禁言：{1}</value>

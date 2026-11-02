@@ -24,7 +24,7 @@ namespace Enforcer5
             var menu = new Menu(2);
             void Toggle(string label, bool on, string what)
             {
-                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, label), $"editstoggle:{chatId}:{what}"));
+                menu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, label), chatId, label.Replace("Button", "")));
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, on ? "on" : "off"), $"editstoggle:{chatId}:{what}")
                     { Style = on ? KeyboardButtonStyle.Success : null });
             }

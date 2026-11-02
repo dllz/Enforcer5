@@ -1572,7 +1572,94 @@
     <value>Eski üyeleri de kontrol et</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Bu gruptaki botlara izin ver</value>
+    <value>Grup botlarıyla gelen mesajları atla</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Kısa sürede çok fazla mesaj gönderen üyeler flood işlemini alır. Sınır, işlem ve hangi mesajların sayıldığı /menu içinde Flood altındadır.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Bu düğme artık kullanılmıyor ve hiçbir şeyi değiştirmez.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ yeni üyeleri grubun hoş geldin metniyle karşılar, 🚫 kimseyi karşılamaz. /welcome on ve /welcome off aynı işi yapar.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ bir sonraki üye karşılandığında önceki hoş geldin mesajını siler, böylece sohbette yalnızca sonuncusu kalır.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 bot grupta cevap verir, 👤 cevabı üyeye özelden gönderir.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ her yeni üyeyi katılırken susturur, bir yönetici susturmayı kaldırana kadar. /unmutenewjoiners hepsinin susturmasını kaldırır.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>Açık, kanal olarak gönderilen mesajları siler ve kanalı yasaklar. Anonim yöneticiler, bağlı kanal ve /allowchannel ile izin verilenler hariç.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Hangi uyarı kaldırmalarının önce yöneticiden sebep istediği. Kapalı: hiçbiri. Uyarılar, sonra ön uyarılar da, sonra Tümü: medya uyarıları da.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ bu mesajlar flood sınırına sayılır, ❌ sayılmaz.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ izinli. ❌ silinir ve üye bir medya uyarısı alır; aşağıdaki sınıra ulaşınca orada gösterilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Adı gösterilen sayıdan uzun olan üyeler mesaj yazınca aşağıdaki işlemi alır. Sayıyı /maxnl ile değiştirin.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Gösterilenden fazla karakter veya satır içeren mesajlar (karakter : satır) aşağıdaki işlemi alır. /maxtl ve /maxl ile değiştirin.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Gönderildikten çok sonra düzenlenen bir mesaj yöneticilere bildirilir. Düzenlemeyle değiştirilen medya, bu ayar ne olursa olsun her zaman silinir ve bildirilir.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>Açık, burada hâlâ yeni olan bir üyenin geç düzenlemesini yalnızca bildirmek yerine siler de.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>Açık, bir süredir burada olan üyelerin geç düzenlemelerini de bildirir. Kapalı yalnızca yeni üyeleri kontrol eder.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Arap harfleri içeren mesajlar, isimler ve kullanıcı adları sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Yazı yönünü çeviren gizli karakterler; bağlantıları ve isimleri gizlemek için kullanılır. Eşleşenler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Kiril harfleri (Rusça, Ukraynaca ve diğerleri) içeren mesajlar ve isimler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Çince, Japonca veya Korece karakter içeren mesajlar ve isimler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>İbrani harfleri içeren mesajlar ve isimler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Devanagari harfleri (Hintçe ve diğerleri) içeren mesajlar ve isimler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Latin harflerini aynı görünen Kiril veya Yunan harfleriyle karıştıran kelimeler; sahte isimler için kullanılır. Eşleşenler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Görünmeyen karakterler; boş isimler için ya da kelimeleri filtrelerden kaçırmak için kullanılır. Eşleşenler sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Özel bir gruba veya kanala davet bağlantısı (t.me/+…) içeren mesajlar sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Telefon numarası içeren mesajlar sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Kripto para cüzdan adresi içeren mesajlar sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Yetkili gibi görünmek için admin, destek veya resmi gibi kelimeler içeren isimler ve kullanıcı adları sağda seçilen işlemi alır.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>Açık, filtreleri herkese uygular. Kapalı yalnızca burada hâlâ yeni olan üyelere uygular. Yöneticiler asla kontrol edilmez.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>Açık, bu grupta bulunan bir satır içi botla gönderilen mesajların metnini filtrelemez. İsimler yine de kontrol edilir.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} susturuldu: {1}</value>

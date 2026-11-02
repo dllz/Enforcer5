@@ -1554,7 +1554,94 @@
     <value>Controlla i membri abituali</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Consenti i bot di questo gruppo</value>
+    <value>Salta i messaggi via bot del gruppo</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Chi invia troppi messaggi in poco tempo riceve l'azione anti-flood. Limite, azione e quali messaggi contano si trovano in Flood, in /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Questo interruttore non è più usato e non cambia nulla.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ accoglie i nuovi membri con il messaggio di benvenuto del gruppo, 🚫 non accoglie nessuno. /welcome on e /welcome off fanno lo stesso.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ elimina il benvenuto precedente quando arriva il membro successivo, così in chat resta solo l'ultimo.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 il bot risponde nel gruppo, 👤 invia la risposta al membro in privato.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ silenzia ogni nuovo membro appena entra, finché un admin non lo riattiva. /unmutenewjoiners li riattiva tutti.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>Attivo elimina i messaggi inviati come canale e banna il canale. Esclusi: admin anonimi, il canale collegato e i canali consentiti con /allowchannel.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Quali rimozioni di avvertimenti chiedono prima un motivo all'admin. Off: nessuna. Avvertimenti, poi anche i pre-avvertimenti, poi Tutti: anche quelli dei media.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ questi messaggi contano per il limite di flood, ❌ non contano.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ consentito. ❌ eliminato, e il membro riceve un avvertimento media; al limite qui sotto riceve l'azione indicata lì.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>I membri con un nome più lungo del numero indicato ricevono l'azione qui sotto quando scrivono. Cambia il numero con /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>I messaggi con più caratteri o righe di quanto indicato (caratteri : righe) ricevono l'azione qui sotto. Cambiali con /maxtl e /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Un messaggio modificato molto dopo l'invio viene segnalato agli admin. I media sostituiti con una modifica sono sempre eliminati e segnalati.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>Attivo elimina anche la modifica tardiva di un membro ancora nuovo, invece di segnalarla soltanto.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>Attivo segnala anche le modifiche tardive di chi è qui da tempo. Disattivo controlla solo i nuovi membri.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Messaggi, nomi e username con lettere arabe ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Caratteri nascosti che invertono la direzione del testo, usati per camuffare link e nomi. Ciò che corrisponde riceve l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Messaggi e nomi con lettere cirilliche (russo, ucraino e altre) ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Messaggi e nomi con caratteri cinesi, giapponesi o coreani ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Messaggi e nomi con lettere ebraiche ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Messaggi e nomi con lettere devanagari (hindi e altre) ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Parole che mescolano lettere latine con lettere cirilliche o greche identiche, usate per falsificare nomi. Ciò che corrisponde riceve l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Caratteri che non si vedono, usati per nomi vuoti o per far passare parole dai filtri. Ciò che corrisponde riceve l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>I messaggi con un link di invito a un gruppo o canale privato (t.me/+…) ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>I messaggi con un numero di telefono ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>I messaggi con l'indirizzo di un wallet di criptovalute ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Nomi e username con parole come admin, supporto o ufficiale, usate per spacciarsi per lo staff, ricevono l'azione scelta a destra.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>Attivo applica i filtri a tutti. Disattivo solo ai membri ancora nuovi. Gli admin non vengono mai controllati.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>Attivo non filtra il testo dei messaggi inviati tramite un bot inline presente in questo gruppo. I loro nomi vengono comunque controllati.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} è stato silenziato: {1}</value>

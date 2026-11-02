@@ -22,10 +22,10 @@ namespace Enforcer5
             var text = policy.TextLength;
 
             var menu = new Menu(2);
-            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "nameSettingsHeader"), "null"));
+            menu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "nameSettingsHeader"), chatId, "nameLength"));
             menu.Buttons.Add(new InlineButton($"{name.MaxCharacters ?? OnMessage.DefaultMaxNameLength}", "null"));
             AddLengthButtons(menu, lang, name, $"namesettings:{chatId}", $"namesettingsaction:{chatId}");
-            menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "textSettingsHeader"), "null"));
+            menu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "textSettingsHeader"), chatId, "textLength"));
             menu.Buttons.Add(new InlineButton(
                 $"{text.MaxCharacters ?? OnMessage.DefaultMaxTextLength} : {text.MaxLines ?? OnMessage.DefaultMaxTextLines}", "null"));
             AddLengthButtons(menu, lang, text, $"textsettings:{chatId}", $"textsettingsaction:{chatId}");

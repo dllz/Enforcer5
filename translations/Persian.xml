@@ -1540,7 +1540,94 @@ exaple: /{0}
     <value>بررسی اعضای قدیمی</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>اجازه به ربات‌های این گروه</value>
+    <value>نادیده گرفتن پیام‌ها از طریق ربات‌های گروه</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>اعضایی که در زمان کوتاه پیام زیادی بفرستند، اقدام فلود را دریافت می‌کنند. حد، اقدام و اینکه کدام پیام‌ها شمرده شوند در بخش فلود در /menu است.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>این کلید دیگر استفاده نمی‌شود و چیزی را تغییر نمی‌دهد.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ به اعضای جدید با متن خوش‌آمد گروه خوش‌آمد می‌گوید، 🚫 به هیچ‌کس خوش‌آمد نمی‌گوید. /welcome on و /welcome off همین کار را می‌کنند.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ با خوش‌آمد به عضو بعدی، پیام خوش‌آمد قبلی را پاک می‌کند تا فقط آخرین آن در گفتگو بماند.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 ربات در گروه جواب می‌دهد، 👤 جواب را به‌صورت خصوصی برای عضو می‌فرستد.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ هر عضو جدید را هنگام ورود ساکت می‌کند تا یک ادمین آن را باز کند. /unmutenewjoiners همه را باز می‌کند.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>روشن پیام‌هایی را که به‌نام یک کانال فرستاده شوند پاک و کانال را مسدود می‌کند. به‌جز ادمین‌های ناشناس، کانال متصل و کانال‌های /allowchannel.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>کدام حذف اخطارها اول از ادمین دلیل می‌خواهند. خاموش: هیچ‌کدام. اخطارها، سپس پیش‌اخطارها هم، سپس همه: اخطارهای رسانه هم.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ این پیام‌ها در حد فلود شمرده می‌شوند، ❌ شمرده نمی‌شوند.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ مجاز. ❌ پاک می‌شود و عضو یک اخطار رسانه می‌گیرد؛ با رسیدن به حد پایین، اقدام نشان‌داده‌شده در آنجا را می‌گیرد.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>اعضایی که نامشان از عدد نشان‌داده‌شده بلندتر است، هنگام نوشتن اقدام زیر را می‌گیرند. عدد را با /maxnl تغییر دهید.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>پیام‌هایی با نویسه یا خط بیشتر از مقدار نشان‌داده‌شده (نویسه : خط) اقدام زیر را می‌گیرند. با /maxtl و /maxl تغییرشان دهید.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>پیامی که مدت‌ها بعد از ارسال ویرایش شود به ادمین‌ها گزارش می‌شود. رسانه‌ای که با ویرایش عوض شود همیشه پاک و گزارش می‌شود.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>روشن ویرایش دیرهنگام عضوی را که هنوز تازه‌وارد است به‌جای فقط گزارش، پاک هم می‌کند.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>روشن ویرایش‌های دیرهنگام اعضایی را که مدتی اینجا هستند هم گزارش می‌کند. خاموش فقط اعضای تازه را بررسی می‌کند.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>پیام‌ها، نام‌ها و نام‌های کاربری با حروف عربی اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>نویسه‌های پنهانی که جهت متن را برمی‌گردانند تا لینک‌ها و نام‌ها را پنهان کنند. موارد منطبق اقدام سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>پیام‌ها و نام‌ها با حروف سیریلیک (روسی، اوکراینی و غیره) اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>پیام‌ها و نام‌ها با نویسه‌های چینی، ژاپنی یا کره‌ای اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>پیام‌ها و نام‌ها با حروف عبری اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>پیام‌ها و نام‌ها با حروف دوناگری (هندی و غیره) اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>واژه‌هایی که حروف لاتین را با حروف سیریلیک یا یونانیِ هم‌شکل قاطی می‌کنند تا نامی جعل شود. موارد منطبق اقدام سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>نویسه‌هایی که دیده نمی‌شوند، برای نام‌های خالی یا رد کردن واژه‌ها از فیلترها. موارد منطبق اقدام سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>پیام‌هایی با لینک دعوت به گروه یا کانال خصوصی (t.me/+…) اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>پیام‌هایی با شماره تلفن اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>پیام‌هایی با آدرس کیف پول ارز دیجیتال اقدام انتخاب‌شده در سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>نام‌ها و نام‌های کاربری با واژه‌هایی مثل ادمین، پشتیبانی یا رسمی، برای جا زدن خود به‌جای تیم، اقدام سمت راست را می‌گیرند.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>روشن فیلترها را روی همه اعمال می‌کند. خاموش فقط روی اعضایی که هنوز تازه‌وارد هستند. ادمین‌ها هرگز بررسی نمی‌شوند.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>روشن متن پیام‌هایی را که با یک ربات اینلاین عضو این گروه فرستاده شده‌اند فیلتر نمی‌کند. نام‌ها همچنان بررسی می‌شوند.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} بی‌صدا شد: {1}</value>

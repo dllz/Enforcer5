@@ -31,15 +31,15 @@ namespace Enforcer5
             var presets = new Menu(2);
             foreach (var preset in FilterPresets.All)
             {
-                presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"filterPreset_{preset.Name}"), $"filterpreset:{chatId}:{preset.Name}"));
+                presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"filterPreset_{preset.Name}"), chatId, $"filter_{preset.Name}"));
                 var action = filters.PresetAction(preset.Name);
                 presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, $"filterAction_{action ?? "off"}"),
                     $"filterpreset:{chatId}:{preset.Name}") { Style = ActionStyle(action) });
             }
-            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filterEstablishedButton"), $"filtertoggle:{chatId}:established"));
+            presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "filterEstablishedButton"), chatId, "filterEstablished"));
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.IncludeEstablished ? "on" : "off"), $"filtertoggle:{chatId}:established")
                 { Style = filters.IncludeEstablished ? KeyboardButtonStyle.Success : null });
-            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "filterGroupBotsButton"), $"filtertoggle:{chatId}:bots"));
+            presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "filterGroupBotsButton"), chatId, "filterGroupBots"));
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.ExemptGroupBots ? "on" : "off"), $"filtertoggle:{chatId}:bots")
                 { Style = filters.ExemptGroupBots ? KeyboardButtonStyle.Success : null });
             var back = new Menu(1);

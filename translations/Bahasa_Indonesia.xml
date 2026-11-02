@@ -1795,7 +1795,94 @@
     <value>Periksa anggota lama</value>
   </string>
   <string key="filterGroupBotsButton">
-    <value>Izinkan bot di grup ini</value>
+    <value>Lewati pesan via bot grup</value>
+  </string>
+  <string key="menuInfo_Flood">
+    <value>Anggota yang mengirim terlalu banyak pesan dalam waktu singkat kena tindakan flood. Batas, tindakan, dan pesan yang dihitung ada di Flood pada /menu.</value>
+  </string>
+  <string key="menuInfo_Report">
+    <value>Tombol ini sudah tidak dipakai dan tidak mengubah apa pun.</value>
+  </string>
+  <string key="menuInfo_Welcome">
+    <value>✅ menyambut anggota baru dengan teks sambutan grup, 🚫 tidak menyambut siapa pun. /welcome on dan /welcome off sama saja.</value>
+  </string>
+  <string key="menuInfo_DeleteLastWelcome">
+    <value>✅ menghapus pesan sambutan sebelumnya saat anggota berikutnya disambut, jadi hanya yang terakhir yang tersisa di obrolan.</value>
+  </string>
+  <string key="menuInfo_sendIn">
+    <value>👥 bot menjawab di grup, 👤 bot mengirim jawabannya ke anggota lewat pesan pribadi.</value>
+  </string>
+  <string key="menuInfo_MuteOnJoin">
+    <value>✅ membisukan setiap anggota baru saat bergabung, sampai admin membukanya. /unmutenewjoiners membuka semuanya.</value>
+  </string>
+  <string key="menuInfo_ChannelPosts">
+    <value>Aktif menghapus pesan anggota yang dikirim sebagai channel dan memblokir channel itu. Kecuali admin anonim, channel tertaut, dan channel dari /allowchannel.</value>
+  </string>
+  <string key="menuInfo_WarnReasons">
+    <value>Penghapusan peringatan mana yang meminta alasan dari admin dulu. Off: tidak ada. Peringatan, lalu juga pra-peringatan, lalu Semua: juga peringatan media.</value>
+  </string>
+  <string key="menuInfo_floodType">
+    <value>✅ pesan ini dihitung untuk batas flood, ❌ tidak dihitung.</value>
+  </string>
+  <string key="menuInfo_mediaType">
+    <value>✅ diizinkan. ❌ dihapus, dan anggota mendapat peringatan media; saat mencapai batas di bawah, ia kena tindakan yang tertera di sana.</value>
+  </string>
+  <string key="menuInfo_nameLength">
+    <value>Anggota yang namanya lebih panjang dari angka yang tertera kena tindakan di bawah saat mengirim pesan. Ubah angkanya dengan /maxnl.</value>
+  </string>
+  <string key="menuInfo_textLength">
+    <value>Pesan dengan karakter atau baris lebih banyak dari yang tertera (karakter : baris) kena tindakan di bawah. Ubah dengan /maxtl dan /maxl.</value>
+  </string>
+  <string key="menuInfo_editsLate">
+    <value>Pesan yang diedit lama setelah dikirim dilaporkan ke admin. Media yang ditukar lewat edit selalu dihapus dan dilaporkan, apa pun pengaturan ini.</value>
+  </string>
+  <string key="menuInfo_editsDeleteNew">
+    <value>Aktif juga menghapus editan terlambat dari anggota yang masih baru di sini, bukan hanya melaporkannya.</value>
+  </string>
+  <string key="menuInfo_editsEstablished">
+    <value>Aktif juga melaporkan editan terlambat dari anggota yang sudah lama di sini. Nonaktif hanya memeriksa anggota baru.</value>
+  </string>
+  <string key="menuInfo_filter_arabic">
+    <value>Pesan, nama, dan username dengan huruf Arab kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_rtl">
+    <value>Karakter tersembunyi yang membalik arah teks, dipakai untuk menyamarkan tautan dan nama. Yang cocok kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_cyrillic">
+    <value>Pesan dan nama dengan huruf Sirilik (Rusia, Ukraina, dan lainnya) kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_cjk">
+    <value>Pesan dan nama dengan aksara Tionghoa, Jepang, atau Korea kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_hebrew">
+    <value>Pesan dan nama dengan huruf Ibrani kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_devanagari">
+    <value>Pesan dan nama dengan huruf Dewanagari (Hindi dan lainnya) kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_lookalikes">
+    <value>Kata yang mencampur huruf Latin dengan huruf Sirilik atau Yunani yang tampak sama, dipakai untuk memalsukan nama. Yang cocok kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_zero_width">
+    <value>Karakter yang tidak terlihat, dipakai untuk nama kosong atau menyelipkan kata melewati filter. Yang cocok kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_invite_link">
+    <value>Pesan dengan tautan undangan ke grup atau channel privat (t.me/+…) kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_phone">
+    <value>Pesan dengan nomor telepon kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_crypto">
+    <value>Pesan dengan alamat dompet kripto kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filter_staff_words">
+    <value>Nama dan username dengan kata seperti admin, support, atau official, yang dipakai untuk menyamar sebagai staf, kena tindakan yang dipilih di kanan.</value>
+  </string>
+  <string key="menuInfo_filterEstablished">
+    <value>Aktif menerapkan filter ke semua orang. Nonaktif hanya ke anggota yang masih baru di sini. Admin tidak pernah diperiksa.</value>
+  </string>
+  <string key="menuInfo_filterGroupBots">
+    <value>Aktif tidak memfilter teks pesan yang dikirim lewat bot inline yang ada di grup ini. Nama tetap diperiksa.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} dibisukan: {1}</value>
