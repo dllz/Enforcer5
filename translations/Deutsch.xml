@@ -2441,6 +2441,30 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="botSource_summoned">
     <value>von einem Mitglied gerufen</value>
   </string>
+  <string key="botSource_global">
+    <value>in allen Gruppen vertraut</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 Der Bot {0} ist vom Enforcer-Team in allen Gruppen gesperrt und wurde deshalb entfernt.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} hat den Bot {1} hinzugefügt. Er ist in allen Gruppen vertraut und bleibt deshalb.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>In allen Gruppen vertraut:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Nur für Entwickler. Vertraut einem Bot in allen Gruppen: Er wird nicht geprüft, und Sperren durch Enforcer werden aufgehoben. Das /untrustbot einer Gruppe entfernt ihn dort trotzdem. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Nur für Entwickler. Entfernt einen Bot aus jeder Gruppe, in der er schreibt oder hinzugefügt wird, auch wo ihm vertraut wird. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Nur für Entwickler. Vergisst das Vertrauen oder die Sperre eines Bots in allen Gruppen: Die Entscheidung jeder Gruppe zählt wieder. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Nur für Entwickler. Zeigt die Bots, die in allen Gruppen vertraut oder gesperrt sind, und die Bots, denen Premium-Gruppen vertrauen.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Vertraut einem Bot in dieser Gruppe: Seine Beiträge und seine Antworten, wenn ihn jemand erwähnt, werden durchgelassen, und ein Bann durch Enforcer wird aufgehoben. Antworte auf eine seiner Nachrichten oder gib seinen @Benutzernamen oder seine ID an. Von einem Admin hinzugefügte Bots sind bereits vertrauenswürdig; ein Bot, den ein Mitglied hinzufügt oder erwähnt, damit er hier antwortet, wird gebannt.</value>
   </string>

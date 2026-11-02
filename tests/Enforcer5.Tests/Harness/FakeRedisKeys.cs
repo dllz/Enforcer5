@@ -134,6 +134,8 @@ namespace Enforcer5.Tests.Harness
         /// <summary>Adds to a set, to seed a scenario.</summary>
         internal void AddToSet(string key, string value) => Locked(() => Set(key, true).Add(value));
 
+        internal void RemoveFromSet(string key, string value) => Locked(() => Set(key, false)?.Remove(value) ?? false);
+
         /// <summary>A copy of a sorted set, by score.</summary>
         internal IReadOnlyList<(string Member, double Score)> SortedSetEntries(string key) =>
             Locked(() => SortedSet(key, false)?.OrderBy(p => p.Value).Select(p => (p.Key.ToString(), p.Value)).ToList()

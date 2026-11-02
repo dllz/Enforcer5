@@ -2132,6 +2132,30 @@ $title - заменяется названием группы.
   <string key="botSource_summoned">
     <value>вызван участником</value>
   </string>
+  <string key="botSource_global">
+    <value>доверенный во всех группах</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 Бот {0} заблокирован командой Enforcer во всех группах, поэтому он удалён.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} добавил бота {1}. Он доверенный во всех группах, поэтому остаётся.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Доверенные во всех группах:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Только для разработчиков. Делает бота доверенным во всех группах: он не проверяется, а баны от Enforcer снимаются. /untrustbot в группе всё равно удаляет его там. Ответьте на его сообщение или укажите его id или @username.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Только для разработчиков. Удаляет бота из всех групп, где он пишет или куда его добавляют, даже там, где он доверенный. Ответьте на его сообщение или укажите его id или @username.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Только для разработчиков. Забывает доверие или блокировку бота во всех группах: снова действует решение каждой группы. Ответьте на его сообщение или укажите его id или @username.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Только для разработчиков. Показывает ботов, доверенных или заблокированных во всех группах, и ботов, которым доверяют премиум-группы.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Делает бота доверенным в этой группе: его сообщения и ответы, когда его упоминают, пропускаются, а бан от Enforcer снимается. Ответьте на одно из его сообщений или укажите его @username или id. Боты, добавленные админом, уже доверенные; бот, которого добавил участник или упомянул участник, чтобы тот ответил здесь, банится.</value>
   </string>

@@ -1984,6 +1984,30 @@ UPDATE LOG
   <string key="botSource_summoned">
     <value>由成員召喚</value>
   </string>
+  <string key="botSource_global">
+    <value>喺所有群組都受信任</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 機械人 {0} 已經俾 Enforcer 團隊喺所有群組封鎖，所以已經被移除。</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} 加咗機械人 {1}。佢喺所有群組都受信任，所以會留低。</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>喺所有群組都受信任：</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>只限開發者。喺所有群組信任一個機械人：唔會再檢查佢，Enforcer 對佢嘅封鎖亦會解除。群組自己嘅 /untrustbot 仍然會喺嗰個群組移除佢。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>只限開發者。將機械人從佢發言或者被加入嘅每個群組移除，就算喺信任佢嘅群組都係。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>只限開發者。忘記機械人喺所有群組嘅信任或者封鎖：每個群組自己嘅決定會重新生效。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>只限開發者。列出喺所有群組受信任或者被封鎖嘅機械人，同埋高級群組信任嘅機械人。</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>喺呢個群組信任一個機械人：佢嘅訊息同埋有人提到佢時嘅回覆都會放行，Enforcer 嘅封鎖會解除。請回覆佢嘅一條訊息，或者俾出佢嘅 @用戶名 或 ID。管理員加入嘅機械人已經受信任；成員加入嘅機械人，或者成員提到叫佢喺度回覆嘅機械人，會被封鎖。</value>
   </string>

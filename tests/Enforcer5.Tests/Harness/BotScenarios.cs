@@ -313,5 +313,139 @@ WHERE a.telegram_user_id = @Id ORDER BY d.detection_id", new { user.Id })).ToArr
             Assert.AreEqual(0, (await GroupBots(chat)).Length);
             AssertNoErrors(chat);
         }
+
+        // Bots trusted in every group (Daniel, 2026-11-02): by a dev, or by the admins of a premium group.
+
+        private static HarnessUser Dev(HarnessChat chat) => chat.Add("Dev", id: Models.Constants.Devs[0]);
+
+        private static async Task<(string Status, long? SetBy)[]> GlobalRows(HarnessChat chat)
+        {
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            return (await connection.QueryAsync<(string, long?)>(@"
+SELECT x.status, b.telegram_user_id FROM global_bots x
+LEFT JOIN telegram_accounts b ON b.account_id = x.set_by_account_id")).ToArray();
+        }
+
+        [TestMethod]
+        public async Task ABotADevTrusts_IsLetBeEverywhere_Unchecked_AndOurBansLifted()
+        {
+            await using var chat = await StartAsync();
+            var dev = Dev(chat);
+            var member = chat.Add("Member");
+            var bot = chat.Add("Helper", MemberState.Left, username: "helperbot", isBot: true);
+
+            // Banned first: a member summoned it.
+            await chat.PostAsync(GuestReply(chat, bot, member, await chat.SendAsync(member, "@helperbot hi")));
+            Assert.AreEqual(MemberState.Kicked, State(chat, bot));
+
+            await chat.SendAsync(dev, $"/globaltrustbot {bot.Id}");
+            await chat.CompleteAsync();
+            Assert.AreEqual(("allowed", (long?)dev.Id), (await GlobalRows(chat)).Single());
+            Assert.AreNotEqual(MemberState.Kicked, State(chat, bot), "our ban is lifted");
+            Assert.AreEqual(("allowed", "global"), ((await GroupBots(chat)).Single().Status, (await GroupBots(chat)).Single().Source));
+
+            // A member may summon it now, and add it; its posts are not checked (too long for the group here).
+            await chat.ChangeSettingsAsync(p => p with { TextLength = new LengthSettings(true, 100, 50, "kick") });
+            var answer = await chat.PostAsync(GuestReply(chat, bot, member, await chat.SendAsync(member, "@helperbot hi"), new string('a', 150)));
+            CollectionAssert.Contains(chat.Telegram.MessagesFrom(chat.ChatId, bot.Id).ToList(), answer.MessageId);
+            chat.Telegram.SetMember(chat.ChatId, bot.Id, MemberState.Left);
+            await chat.PostAsync(chat.Join(bot, addedBy: member));
+            Assert.AreEqual(MemberState.Member, State(chat, bot));
+            StringAssert.Contains(Logs(chat).Last(), "trusted in every group");
+            Assert.AreEqual(1, (await Signs(chat, member)).Count(x => x == SignCatalog.SummonedBot.Name), "only the first summoning gave a sign");
+
+            await chat.SendAsync(dev, "/globalbots");
+            StringAssert.Contains(chat.Replies.Last(), bot.Id.ToString());
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AGroupsOwnUntrust_BeatsTrustFromOutside()
+        {
+            await using var chat = await StartAsync();
+            var dev = Dev(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var bot = chat.Add("Helper", MemberState.Left, username: "helperbot", isBot: true);
+            await chat.SendAsync(dev, $"/globaltrustbot {bot.Id}");
+            await chat.SendAsync(admin, $"/untrustbot {bot.Id}");
+            Assert.AreEqual(MemberState.Kicked, State(chat, bot));
+
+            var answer = await chat.PostAsync(GuestReply(chat, bot, member, await chat.SendAsync(member, "@helperbot hi")));
+            Assert.IsFalse(chat.Telegram.MessagesFrom(chat.ChatId, bot.Id).Contains(answer.MessageId));
+            await BotGuard.ReloadAsync();
+            await chat.CompleteAsync();
+            Assert.AreEqual(MemberState.Kicked, State(chat, bot), "a ban the admins chose is not lifted");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ABotADevBlocks_IsRemovedEverywhere_EvenWhereTrusted()
+        {
+            await using var chat = await StartAsync();
+            var dev = Dev(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var bot = chat.Add("Quiz", MemberState.Left, username: "quizbot", isBot: true);
+            await chat.PostAsync(chat.Join(bot, addedBy: admin));
+            await chat.SendAsync(bot, "Question 1");
+            Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, bot.Id).Count);
+
+            await chat.SendAsync(dev, $"/globaluntrustbot {bot.Id}");
+            await chat.SendAsync(bot, "Question 2");
+            Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, bot.Id).Count, "deleted");
+            Assert.AreEqual(MemberState.Kicked, State(chat, bot));
+            Assert.AreEqual(1, Logs(chat).Count(l => l.Contains("blocked in every group")));
+
+            // Added again, even by an admin: banned.
+            chat.Telegram.SetMember(chat.ChatId, bot.Id, MemberState.Left);
+            await chat.AdvanceAsync(BotGuard.SameJoin);
+            await chat.PostAsync(chat.Join(bot, addedBy: admin));
+            Assert.AreEqual(MemberState.Kicked, State(chat, bot));
+
+            // Forgotten: the group's own decision counts again.
+            await chat.SendAsync(dev, $"/globalforgetbot {bot.Id}");
+            Assert.AreEqual(0, (await GlobalRows(chat)).Length);
+            Assert.IsFalse(BotGuard.IsGloballyBlocked(bot.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ABotAPremiumGroupTrusts_IsTrustedEverywhere_UntilTheGroupIsNoLongerPremium()
+        {
+            await using var premium = await StartAsync();
+            var other = premium.Group(-100777);
+            premium.Keys.AddToSet("premiumBot", premium.ChatId.ToString());
+            var admin = premium.Add("Admin", MemberState.Administrator);
+            var member = other.Add("Member");
+            var bot = premium.Add("Helper", MemberState.Left, username: "helperbot", isBot: true);
+            other.Telegram.SetMember(other.ChatId, bot.Id, MemberState.Left);
+            await BotGuard.ReloadAsync();
+
+            // Banned in the other group first, summoned by a member there.
+            await other.PostAsync(GuestReply(other, bot, member, await other.SendAsync(member, "@helperbot hi")));
+            Assert.AreEqual(MemberState.Kicked, other.Telegram.GetMember(other.ChatId, bot.Id));
+
+            await premium.SendAsync(admin, $"/trustbot {bot.Id}");
+            Assert.IsTrue(BotGuard.IsTrustedEverywhere(bot.Id), "at once");
+            await BotGuard.ReloadAsync();
+            await other.CompleteAsync();
+            Assert.AreNotEqual(MemberState.Kicked, other.Telegram.GetMember(other.ChatId, bot.Id), "our ban there is lifted");
+
+            var answer = await other.PostAsync(GuestReply(other, bot, member, await other.SendAsync(member, "@helperbot hi"), "Hello"));
+            CollectionAssert.Contains(other.Telegram.MessagesFrom(other.ChatId, bot.Id).ToList(), answer.MessageId);
+
+            // A bot merely found in a premium group is not trusted elsewhere.
+            var present = premium.Add("Game", username: "somegamebot", isBot: true);
+            await premium.SendAsync(present, "Round 1");
+            await BotGuard.ReloadAsync();
+            Assert.IsFalse(BotGuard.IsTrustedEverywhere(present.Id));
+
+            premium.Keys.RemoveFromSet("premiumBot", premium.ChatId.ToString());
+            await BotGuard.ReloadAsync();
+            Assert.IsFalse(BotGuard.IsTrustedEverywhere(bot.Id), "no longer premium");
+            var later = await other.PostAsync(GuestReply(other, bot, member, await other.SendAsync(member, "@helperbot hi"), "Hello"));
+            Assert.IsFalse(other.Telegram.MessagesFrom(other.ChatId, bot.Id).Contains(later.MessageId));
+            AssertNoErrors(premium);
+        }
     }
 }

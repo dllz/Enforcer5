@@ -3463,6 +3463,30 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="botSource_summoned">
     <value>llamado por un miembro</value>
   </string>
+  <string key="botSource_global">
+    <value>de confianza en todos los grupos</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 El bot {0} está bloqueado en todos los grupos por el equipo de Enforcer, así que fue eliminado.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} añadió el bot {1}. Es de confianza en todos los grupos, así que se queda.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>De confianza en todos los grupos:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Solo para desarrolladores. Confía en un bot en todos los grupos: no se revisa y se levantan los baneos de Enforcer. El /untrustbot de un grupo lo sigue eliminando allí. Responde a uno de sus mensajes o indica su id o @usuario.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Solo para desarrolladores. Elimina un bot de todos los grupos donde publique o sea añadido, incluso donde es de confianza. Responde a uno de sus mensajes o indica su id o @usuario.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Solo para desarrolladores. Olvida la confianza o el bloqueo de un bot en todos los grupos: vuelve a contar la decisión de cada grupo. Responde a uno de sus mensajes o indica su id o @usuario.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Solo para desarrolladores. Muestra los bots de confianza o bloqueados en todos los grupos, y los bots en los que confían los grupos premium.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Marca un bot como de confianza en este grupo: sus mensajes y sus respuestas cuando alguien lo menciona se dejan pasar, y se levanta un baneo de Enforcer. Responde a uno de sus mensajes, o indica su @usuario o su id. Los bots que añade un admin ya son de confianza; un bot que añade un miembro, o que un miembro menciona para que responda aquí, es baneado.</value>
   </string>

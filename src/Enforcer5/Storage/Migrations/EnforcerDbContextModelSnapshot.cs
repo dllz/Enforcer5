@@ -637,6 +637,37 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("domain_reputation", (string)null);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GlobalBotEntity", b =>
+                {
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("SetByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("set_by_account_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("AccountId");
+
+                    b.HasIndex("SetByAccountId");
+
+                    b.ToTable("global_bots", null, t =>
+                        {
+                            t.HasCheckConstraint("global_bots_status_check", "status IN ('allowed', 'blocked')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
                 {
                     b.Property<long>("GlobalSanctionId")
@@ -756,7 +787,7 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("group_bots", null, t =>
                         {
-                            t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned')");
+                            t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned', 'global')");
 
                             t.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
                         });
@@ -2676,6 +2707,20 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GlobalBotEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SetByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>

@@ -41,7 +41,13 @@ namespace Enforcer5.Detection
     /// flood aside: a bot that breaks the group's rules is dealt with as a member would be. Admins trust a bot
     /// with /trustbot and remove one with /untrustbot.
     /// <para>
-    /// PostgreSQL holds the decisions (<c>group_bots</c>) and who added or summoned which bot (<c>bot_events</c>);
+    /// Some bots are trusted in every group (Daniel, 2026-11-02): those a dev trusts with /globaltrustbot, and those
+    /// an admin of a premium group added or trusted there. They are let be everywhere, unchecked, as the game's
+    /// bots are; only a group's own /untrustbot still removes one there. A dev's /globaluntrustbot removes a bot
+    /// from every group, premium trust or not (a group's admin bots aside: Telegram would refuse their ban).
+    /// </para>
+    /// <para>
+    /// PostgreSQL holds the decisions (<c>group_bots</c>, <c>global_bots</c>) and who added or summoned which bot (<c>bot_events</c>);
     /// memory answers, reloaded every <see cref="ReloadEvery"/> for the other edition's changes.
     /// </para>
     /// </summary>
@@ -61,6 +67,10 @@ namespace Enforcer5.Detection
         private const long GroupAnonymousBot = 1087968824;
 
         private static volatile ConcurrentDictionary<(long Chat, long Bot), GroupBotRecord> _records = new();
+        private static volatile ConcurrentDictionary<long, GlobalBotRecord> _global = new();
+        // The premium groups, from Redis at each reload, and the bots their admins chose (TrustedByPremium).
+        private static volatile HashSet<long> _premiumChats = new();
+        private static volatile HashSet<long> _premiumTrusted = new();
         private static readonly ConcurrentDictionary<(long Chat, long Bot), DateTime> Removed = new();
         private static readonly ConcurrentDictionary<(long Chat, long Bot), DateTime> Joins = new();
         // A post that summoned several bots is one sign for its sender, not one per bot.
@@ -69,9 +79,43 @@ namespace Enforcer5.Detection
         internal static GroupBotRecord Get(long chatId, long botId) =>
             _records.TryGetValue((chatId, botId), out var record) ? record : null;
 
+        /// <summary>
+        /// The group's decision that counts now: a ban lifted because the bot was trusted everywhere ("global")
+        /// counts only while it still is, and is then as if the group had decided nothing.
+        /// </summary>
+        private static GroupBotRecord Effective(long chatId, long botId) =>
+            Get(chatId, botId) is var record && record?.Source == "global" && !IsTrustedEverywhere(botId) ? null : record;
+
         /// <summary>The bots a group decided about, allowed ones first.</summary>
         internal static IReadOnlyList<GroupBotRecord> ForChat(long chatId) =>
             _records.Values.Where(r => r.ChatId == chatId).OrderBy(r => r.IsAllowed ? 0 : 1).ThenBy(r => r.SetAt).ToList();
+
+        /// <summary>The bots decided about for every group.</summary>
+        internal static IReadOnlyList<GlobalBotRecord> Global() =>
+            _global.Values.OrderBy(r => r.IsAllowed ? 0 : 1).ThenBy(r => r.SetAt).ToList();
+
+        /// <summary>The bots an admin of a premium group added or trusted there.</summary>
+        internal static IReadOnlyCollection<long> PremiumTrusted() => _premiumTrusted;
+
+        internal static bool IsGloballyBlocked(long botId) => _global.TryGetValue(botId, out var r) && !r.IsAllowed;
+
+        /// <summary>Trusted in every group: by a dev, or by the admins of a premium group, and not blocked by a dev.</summary>
+        internal static bool IsTrustedEverywhere(long botId) =>
+            _global.TryGetValue(botId, out var r) ? r.IsAllowed : _premiumTrusted.Contains(botId);
+
+        /// <summary>A group's admins removed it themselves: that beats any trust from outside the group.</summary>
+        private static bool UntrustedByAdmins(GroupBotRecord record) => record is { IsAllowed: false, Source: "command" };
+
+        /// <summary>An admin chose the bot: added it, or trusted it with /trustbot. Not a bot found already there.</summary>
+        private static bool ChosenByAdmins(GroupBotRecord record) =>
+            record is { IsAllowed: true, Source: "admin_added" or "command" };
+
+        private static void RecomputePremiumTrusted()
+        {
+            var premium = _premiumChats;
+            _premiumTrusted = _records.Values.Where(r => premium.Contains(r.ChatId) && ChosenByAdmins(r))
+                .Select(r => r.BotId).ToHashSet();
+        }
 
         internal static void Start(CancellationToken stop) =>
             Bot.StartService(async ct =>
@@ -90,12 +134,92 @@ namespace Enforcer5.Detection
             try
             {
                 var all = await Repositories.GroupBots.AllAsync();
+                var global = await Repositories.GroupBots.AllGlobalAsync();
                 _records = new ConcurrentDictionary<(long, long), GroupBotRecord>(all.ToDictionary(r => (r.ChatId, r.BotId)));
+                _global = new ConcurrentDictionary<long, GlobalBotRecord>(global.ToDictionary(r => r.BotId));
             }
             catch (Exception e)
             {
                 ErrorReporter.Report(e, "Loading the groups' bots");
+                return;
             }
+            try
+            {
+                var premium = await Redis.db.SetMembersAsync("premiumBot");
+                _premiumChats = premium.Select(v => long.TryParse(v.ToString(), out var id) ? id : 0).Where(id => id != 0).ToHashSet();
+            }
+            catch (Exception e)
+            {
+                // Keeps the premium groups it had; the next reload tries again.
+                ErrorReporter.Report(e, "Loading the premium groups for the bots they trust");
+            }
+            RecomputePremiumTrusted();
+            LiftBansOfTrusted();
+        }
+
+        /// <summary>
+        /// A bot banned by our own checks in a group (a member added or summoned it) that is now trusted in every
+        /// group: the ban is lifted and the group's record says why, in the groups this edition serves.
+        /// </summary>
+        private static void LiftBansOfTrusted()
+        {
+            foreach (var record in _records.Values)
+            {
+                if (record.IsAllowed || record.Source is not ("member_added" or "summoned") || !IsTrustedEverywhere(record.BotId))
+                    continue;
+                var (chatId, botId) = (record.ChatId, record.BotId);
+                long? by = _global.TryGetValue(botId, out var global) ? global.SetBy : null;
+                Bot.Dispatch(async () =>
+                {
+                    try
+                    {
+                        // The premium edition lifts it in premium groups, the normal one elsewhere: once, by the bot there.
+                        if (!await Handlers.UpdateHandler.ServesAsync(chatId)) return;
+#if !PREMIUM
+                        if (_premiumChats.Contains(chatId)) return;
+#endif
+                        await RememberAsync(new GroupBotRecord(chatId, botId, GroupBotRecord.Allowed, "global", by, Now), overwrite: true);
+                        Removed.TryRemove((chatId, botId), out _);
+                        GroupBots.Forget(chatId, botId);
+                        await RecordEventAsync(chatId, botId, by, false, "trusted", "none");
+                        Bot.DispatchAction(() =>
+                        {
+                            try
+                            {
+                                Methods.UnbanUser(chatId, botId, Methods.GetGroupLanguage(chatId).Doc, by, ActionSource.Detection);
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorReporter.Report(e, $"Lifting our ban of bot {botId} in {chatId}, trusted everywhere");
+                            }
+                        }, "BotGuard.LiftBan");
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorReporter.Report(e, $"Lifting our ban of bot {botId} in {chatId}, trusted everywhere");
+                    }
+                }, "BotGuard.LiftBan");
+            }
+        }
+
+        /// <summary>A dev trusts the bot in every group (<paramref name="allowed"/>) or removes it from every group.</summary>
+        internal static async Task SetGlobalAsync(long botId, bool allowed, long devId)
+        {
+            var record = new GlobalBotRecord(botId, allowed ? GroupBotRecord.Allowed : GroupBotRecord.Blocked, devId, Now);
+            _global[botId] = record;
+            if (PostgresStorage.Ready) await Repositories.GroupBots.SetGlobalAsync(record);
+            if (allowed)
+            {
+                foreach (var key in Removed.Keys.Where(k => k.Bot == botId).ToList()) Removed.TryRemove(key, out _);
+                LiftBansOfTrusted();
+            }
+        }
+
+        /// <summary>A dev forgets the decision for every group: each group's own, and premium trust, count again.</summary>
+        internal static async Task ForgetGlobalAsync(long botId)
+        {
+            _global.TryRemove(botId, out _);
+            if (PostgresStorage.Ready) await Repositories.GroupBots.RemoveGlobalAsync(botId);
         }
 
         /// <summary>One of ours: this bot, the bots every edition trusts, and the game's bots.</summary>
@@ -124,7 +248,11 @@ namespace Enforcer5.Detection
             if (message.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return BotVerdict.Ignore;
             if (AdminChats.IsAdminChat(chatId)) return BotVerdict.Ignore;
 
-            var record = Get(chatId, bot.Id);
+            var record = Effective(chatId, bot.Id);
+            if (UntrustedByAdmins(record)) return BotVerdict.Remove;
+            if (IsGloballyBlocked(bot.Id))
+                return await GroupBots.IsAdminAsync(chatId, bot.Id) ? BotVerdict.Ignore : BotVerdict.Remove;
+            if (IsTrustedEverywhere(bot.Id)) return BotVerdict.Ignore;
             if (record != null && !record.IsAllowed) return BotVerdict.Remove;
             if (await GroupBots.IsAdminAsync(chatId, bot.Id)) return BotVerdict.Ignore;
             if (record != null) return BotVerdict.Check;
@@ -162,15 +290,19 @@ namespace Enforcer5.Detection
         {
             var chatId = message.Chat.Id;
             var bot = message.From;
-            var record = Get(chatId, bot.Id);
-            var summoned = record == null || record.Source == "summoned";
+            var record = Effective(chatId, bot.Id);
+            var lapsed = record == null && Get(chatId, bot.Id) != null;
+            // Blocked by a dev and not by the group itself: no group record, and only a marked guest was summoned.
+            var global = IsGloballyBlocked(bot.Id) && record is not { IsAllowed: false };
+            var summoned = global ? IsGuestReply(message) : record == null || record.Source == "summoned";
             var caller = summoned ? Caller(message) : null;
             var now = Clock.UtcNow;
             var first = TryClaimRemoval(chatId, bot.Id, now);
 
             if (summoned && first)
             {
-                Remember(new GroupBotRecord(chatId, bot.Id, GroupBotRecord.Blocked, "summoned", caller?.Id, Now), overwrite: false);
+                if (!global)
+                    Remember(new GroupBotRecord(chatId, bot.Id, GroupBotRecord.Blocked, "summoned", caller?.Id, Now), overwrite: lapsed);
                 RecordEvent(chatId, bot.Id, caller?.Id, false, "summoned", "banned");
             }
             Bot.DispatchAction(() =>
@@ -180,8 +312,11 @@ namespace Enforcer5.Detection
                     EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, message.MessageId)).GetAwaiter().GetResult();
                     if (!first) return;
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
-                    Methods.BanUser(chatId, bot.Id, lang, summoned ? "bot:summoned" : $"bot:{record.Source}", source: ActionSource.Detection);
-                    if (summoned)
+                    Methods.BanUser(chatId, bot.Id, lang, global ? "bot:global" : summoned ? "bot:summoned" : $"bot:{record.Source}",
+                        source: ActionSource.Detection);
+                    if (global)
+                        Log(chatId, Methods.GetLocaleString(lang, "botGlobalBlockedLog", BotName(bot)), caller?.Id);
+                    else if (summoned)
                         Log(chatId, Methods.GetLocaleString(lang, "botSummonedLog", Name(caller), BotName(bot)), caller?.Id);
                 }
                 catch (Exception e)
@@ -239,11 +374,35 @@ namespace Enforcer5.Detection
                     var byAdmin = addedBy != null && (addedBy.Id == GroupAnonymousBot ||
                                                       await AdminDirectory.IsAdminAsync(chatId, addedBy.Id) == true);
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
+                    if (IsGloballyBlocked(bot.Id))
+                    {
+                        RecordEvent(chatId, bot.Id, addedBy?.Id, byAdmin, "added", "banned");
+                        TryClaimRemoval(chatId, bot.Id, Clock.UtcNow);
+                        Bot.DispatchAction(() =>
+                        {
+                            try
+                            {
+                                Methods.BanUser(chatId, bot.Id, lang, "bot:global", source: ActionSource.Detection);
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorReporter.Report(e, $"Banning bot {bot.Id}, blocked everywhere, added to {chatId}");
+                            }
+                        }, "BotGuard.GlobalBan");
+                        Log(chatId, Methods.GetLocaleString(lang, "botGlobalBlockedLog", BotName(bot)), addedBy?.Id);
+                        return;
+                    }
                     if (byAdmin)
                     {
                         Remember(new GroupBotRecord(chatId, bot.Id, GroupBotRecord.Allowed, "admin_added", addedBy.Id, Now), overwrite: true);
                         RecordEvent(chatId, bot.Id, addedBy.Id, true, "added", "none");
                         Log(chatId, Methods.GetLocaleString(lang, "botAddedByAdminLog", Name(addedBy), BotName(bot)), addedBy.Id);
+                        return;
+                    }
+                    if (IsTrustedEverywhere(bot.Id) && !UntrustedByAdmins(Get(chatId, bot.Id)))
+                    {
+                        RecordEvent(chatId, bot.Id, addedBy?.Id, false, "added", "none");
+                        Log(chatId, Methods.GetLocaleString(lang, "botAddedTrustedLog", Name(addedBy), BotName(bot)), addedBy?.Id);
                         return;
                     }
                     Remember(new GroupBotRecord(chatId, bot.Id, GroupBotRecord.Blocked, "member_added", addedBy?.Id, Now), overwrite: true);
@@ -302,6 +461,7 @@ namespace Enforcer5.Detection
             var key = (record.ChatId, record.BotId);
             if (overwrite) _records[key] = record;
             else if (!_records.TryAdd(key, record)) return;
+            if (_premiumChats.Contains(record.ChatId)) RecomputePremiumTrusted();
             if (!PostgresStorage.Ready) return;
             try
             {
@@ -349,6 +509,9 @@ namespace Enforcer5.Detection
         internal static void ResetForTests()
         {
             _records = new ConcurrentDictionary<(long, long), GroupBotRecord>();
+            _global = new ConcurrentDictionary<long, GlobalBotRecord>();
+            _premiumChats = new HashSet<long>();
+            _premiumTrusted = new HashSet<long>();
             Removed.Clear();
             Joins.Clear();
             Summonings.Clear();

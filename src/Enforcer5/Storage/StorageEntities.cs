@@ -429,6 +429,19 @@ namespace Enforcer5.Storage
     }
 
     /// <summary>
+    /// A bot the bot's team decided about for every group (Detection/BotGuard, /globaltrustbot): <c>allowed</c>
+    /// is left alone everywhere, as the game's bots are; <c>blocked</c> is removed from every group, whoever
+    /// added or summoned it.
+    /// </summary>
+    internal sealed class GlobalBotEntity
+    {
+        public long AccountId { get; set; }
+        public string Status { get; set; }
+        public long? SetByAccountId { get; set; }
+        public DateTimeOffset SetAt { get; set; }
+    }
+
+    /// <summary>
     /// Every bot added to a group or summoned into it as a guest, and every admin's trust or untrust, with who did
     /// it and whether they were an admin: who brings bots in, kept for the admins and for us.
     /// </summary>

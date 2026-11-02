@@ -3443,6 +3443,30 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="botSource_summoned">
     <value>summoned by a member</value>
   </string>
+  <string key="botSource_global">
+    <value>trusted in every group</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 The bot {0} is blocked in every group by the Enforcer team, so it was removed.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} added the bot {1}. It is trusted in every group, so it stays.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Trusted in every group:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Devs only. Trusts a bot in every group: it is not checked, and Enforcer's bans of it are lifted. A group's own /untrustbot still removes it there. Reply to one of its messages, or give its id or @username.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Devs only. Removes a bot from every group it posts in or is added to, even where it is trusted. Reply to one of its messages, or give its id or @username.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Devs only. Forgets a bot's trust or block in every group: each group's own decision counts again. Reply to one of its messages, or give its id or @username.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Devs only. Lists the bots trusted or blocked in every group, and the bots that premium groups trust.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Trusts a bot in this group: its posts, and its answers when someone mentions it, are let through, and a ban by Enforcer is lifted. Reply to one of its messages, or give its @username or id. Bots added by an admin are trusted already; a bot added by a member, or mentioned by a member to answer here, is banned.</value>
   </string>

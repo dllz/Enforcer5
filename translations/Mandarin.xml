@@ -2092,6 +2092,30 @@ Example:
   <string key="botSource_summoned">
     <value>由成员召唤</value>
   </string>
+  <string key="botSource_global">
+    <value>在所有群组中受信任</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 机器人 {0} 已被 Enforcer 团队在所有群组中封禁，因此已被移除。</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} 添加了机器人 {1}。它在所有群组中受信任，因此保留。</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>在所有群组中受信任：</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>仅限开发者。在所有群组中信任一个机器人：不再检查它，并解除 Enforcer 对它的封禁。群组自己的 /untrustbot 仍会在该群组移除它。回复它的一条消息，或提供它的 id 或 @用户名。</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>仅限开发者。将机器人从它发言或被添加的每个群组中移除，即使在信任它的群组中也是如此。回复它的一条消息，或提供它的 id 或 @用户名。</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>仅限开发者。忘记机器人在所有群组中的信任或封禁：各群组自己的决定重新生效。回复它的一条消息，或提供它的 id 或 @用户名。</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>仅限开发者。列出在所有群组中受信任或被封禁的机器人，以及高级群组信任的机器人。</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>在本群信任一个机器人：它的消息以及有人提到它时的回复都会放行，Enforcer 的封禁会被解除。请回复它的一条消息，或者给出它的 @用户名 或 ID。管理员添加的机器人已经受信任；成员添加的机器人，或成员提到让它在这里回复的机器人，会被封禁。</value>
   </string>

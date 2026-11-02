@@ -2630,6 +2630,30 @@
   <string key="botSource_summoned">
     <value>dipanggil oleh anggota</value>
   </string>
+  <string key="botSource_global">
+    <value>dipercaya di semua grup</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 Bot {0} diblokir di semua grup oleh tim Enforcer, jadi bot itu dikeluarkan.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} menambahkan bot {1}. Bot ini dipercaya di semua grup, jadi tetap di sini.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Dipercaya di semua grup:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Khusus pengembang. Mempercayai bot di semua grup: bot tidak diperiksa dan ban dari Enforcer dicabut. /untrustbot di sebuah grup tetap mengeluarkannya dari grup itu. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Khusus pengembang. Mengeluarkan bot dari setiap grup tempat ia mengirim pesan atau ditambahkan, bahkan di grup yang mempercayainya. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Khusus pengembang. Melupakan status percaya atau blokir sebuah bot di semua grup: keputusan masing-masing grup berlaku lagi. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Khusus pengembang. Menampilkan bot yang dipercaya atau diblokir di semua grup, dan bot yang dipercaya oleh grup premium.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Mempercayai bot di grup ini: pesannya dan balasannya saat seseorang menyebutnya dibiarkan lewat, dan blokir dari Enforcer dicabut. Balas salah satu pesannya, atau tulis @username atau id-nya. Bot yang ditambahkan admin sudah dipercaya; bot yang ditambahkan anggota, atau disebut anggota agar membalas di sini, diblokir.</value>
   </string>

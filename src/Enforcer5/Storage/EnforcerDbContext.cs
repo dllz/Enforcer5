@@ -145,13 +145,24 @@ namespace Enforcer5.Storage
                 {
                     table.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
                     table.HasCheckConstraint("group_bots_source_check",
-                        "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned')");
+                        "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned', 'global')");
                 });
                 entity.HasKey(x => new { x.GroupId, x.AccountId });
                 entity.Property(x => x.Status).IsRequired();
                 entity.Property(x => x.Source).IsRequired();
                 entity.Property(x => x.SetAt).HasDefaultValueSql("now()");
                 entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.SetByAccountId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<GlobalBotEntity>(entity =>
+            {
+                entity.ToTable("global_bots", table => table.HasCheckConstraint("global_bots_status_check", "status IN ('allowed', 'blocked')"));
+                entity.HasKey(x => x.AccountId);
+                entity.Property(x => x.AccountId).ValueGeneratedNever();
+                entity.Property(x => x.Status).IsRequired();
+                entity.Property(x => x.SetAt).HasDefaultValueSql("now()");
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.SetByAccountId).OnDelete(DeleteBehavior.SetNull);
             });

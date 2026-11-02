@@ -148,7 +148,10 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
   bots are ignored; a guest bot (Bot API 10.0: mentioned by a member, it answers without joining,
   `GuestBotCallerUser`) or a bot added by a non-admin is removed and banned, its caller or adder
   reported; the rest are checked like a member's message, flood aside. `getChatAdministrators`
-  leaves other bots out, so a bot's admin status comes from `GroupBots` (getChatMember).
+  leaves other bots out, so a bot's admin status comes from `GroupBots` (getChatMember). Bots trusted
+  in every group (`global_bots` via the dev's `/globaltrustbot`, or added/trusted by an admin of a
+  premium group) are ignored everywhere like our own; a group's own `/untrustbot` still wins there,
+  and the dev's `/globaluntrustbot` beats every trust.
 
 ---
 

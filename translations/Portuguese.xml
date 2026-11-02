@@ -2397,6 +2397,30 @@
   <string key="botSource_summoned">
     <value>chamado por um membro</value>
   </string>
+  <string key="botSource_global">
+    <value>confiável em todos os grupos</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 O bot {0} está bloqueado em todos os grupos pela equipe do Enforcer, por isso foi removido.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} adicionou o bot {1}. Ele é confiável em todos os grupos, por isso fica.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Confiáveis em todos os grupos:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Só para desenvolvedores. Torna um bot confiável em todos os grupos: ele não é verificado e os banimentos do Enforcer são retirados. O /untrustbot de um grupo ainda o remove lá. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Só para desenvolvedores. Remove um bot de todos os grupos em que ele publicar ou for adicionado, mesmo onde é confiável. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Só para desenvolvedores. Esquece a confiança ou o bloqueio de um bot em todos os grupos: volta a valer a decisão de cada grupo. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Só para desenvolvedores. Lista os bots confiáveis ou bloqueados em todos os grupos e os bots em que os grupos premium confiam.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Marca um bot como de confiança neste grupo: as mensagens dele e as respostas quando alguém o menciona passam, e um banimento do Enforcer é retirado. Responda a uma das mensagens dele, ou informe o @usuário ou o id. Bots adicionados por um admin já são de confiança; um bot adicionado por um membro, ou mencionado por um membro para responder aqui, é banido.</value>
   </string>

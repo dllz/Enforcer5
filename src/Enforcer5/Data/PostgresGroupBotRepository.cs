@@ -88,5 +88,51 @@ VALUES (@GroupId, @BotAccountId, @Actor, @ActorWasAdmin, @Kind, @Action, @Editio
                 }, transaction));
             await transaction.CommitAsync();
         }
+
+        private sealed class GlobalRow
+        {
+            public long BotId { get; set; }
+            public string Status { get; set; }
+            public long? SetBy { get; set; }
+            public DateTime SetAt { get; set; }
+        }
+
+        public async Task<IReadOnlyList<GlobalBotRecord>> AllGlobalAsync()
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<GlobalRow>(@"
+SELECT a.telegram_user_id AS BotId, x.status AS Status, b.telegram_user_id AS SetBy, x.set_at AS SetAt
+FROM global_bots x
+JOIN telegram_accounts a ON a.account_id = x.account_id
+LEFT JOIN telegram_accounts b ON b.account_id = x.set_by_account_id");
+            return rows.Select(r => new GlobalBotRecord(r.BotId, r.Status, r.SetBy,
+                new DateTimeOffset(DateTime.SpecifyKind(r.SetAt, DateTimeKind.Utc)))).ToList();
+        }
+
+        public async Task SetGlobalAsync(GlobalBotRecord record)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            await connection.ExecuteAsync(new CommandDefinition("SELECT pg_advisory_xact_lock(@Lock)",
+                new { Lock = PostgresPrincipalRepository.PrincipalLock }, transaction));
+            var bot = await PrincipalResolver.EnsureUserAsync(connection, transaction, record.BotId, isBot: true);
+            long? by = record.SetBy is { } setBy && setBy != record.BotId
+                ? (await PrincipalResolver.EnsureUserAsync(connection, transaction, setBy)).AccountId
+                : null;
+            await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO global_bots (account_id, status, set_by_account_id, set_at)
+VALUES (@AccountId, @Status, @By, @At)
+ON CONFLICT (account_id) DO UPDATE SET status = excluded.status, set_by_account_id = excluded.set_by_account_id, set_at = excluded.set_at",
+                new { bot.AccountId, record.Status, By = by, At = record.SetAt.UtcDateTime }, transaction));
+            await transaction.CommitAsync();
+        }
+
+        public async Task RemoveGlobalAsync(long botId)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            await connection.ExecuteAsync(@"
+DELETE FROM global_bots x USING telegram_accounts a
+WHERE a.account_id = x.account_id AND a.telegram_user_id = @BotId", new { BotId = botId });
+        }
     }
 }

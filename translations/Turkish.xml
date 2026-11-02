@@ -2410,6 +2410,30 @@
   <string key="botSource_summoned">
     <value>bir üye çağırdı</value>
   </string>
+  <string key="botSource_global">
+    <value>tüm gruplarda güvenilir</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 {0} botu Enforcer ekibi tarafından tüm gruplarda engellendi, bu yüzden kaldırıldı.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0}, {1} botunu ekledi. Bot tüm gruplarda güvenilir olduğu için kalıyor.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Tüm gruplarda güvenilir:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Yalnızca geliştiriciler için. Bir botu tüm gruplarda güvenilir yapar: kontrol edilmez ve Enforcer'ın yasakları kaldırılır. Bir grubun kendi /untrustbot komutu onu orada yine kaldırır. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Yalnızca geliştiriciler için. Bir botu, güvenilir olduğu yerler dahil, yazdığı veya eklendiği her gruptan kaldırır. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Yalnızca geliştiriciler için. Bir botun tüm gruplardaki güvenini veya engelini unutur: her grubun kendi kararı yeniden geçerli olur. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Yalnızca geliştiriciler için. Tüm gruplarda güvenilir veya engelli botları ve premium grupların güvendiği botları listeler.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Bu grupta bir botu güvenilir yapar: mesajları ve biri onu andığında verdiği cevaplar geçer, Enforcer'ın koyduğu yasak kaldırılır. Mesajlarından birine cevap verin ya da @kullanıcı adını veya kimliğini yazın. Bir yöneticinin eklediği botlar zaten güvenilirdir; bir üyenin eklediği ya da burada cevap vermesi için andığı bot yasaklanır.</value>
   </string>

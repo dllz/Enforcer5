@@ -2389,6 +2389,30 @@
   <string key="botSource_summoned">
     <value>chiamato da un membro</value>
   </string>
+  <string key="botSource_global">
+    <value>fidato in tutti i gruppi</value>
+  </string>
+  <string key="botGlobalBlockedLog">
+    <value>🤖 Il bot {0} è bloccato in tutti i gruppi dal team di Enforcer, quindi è stato rimosso.</value>
+  </string>
+  <string key="botAddedTrustedLog">
+    <value>🤖 {0} ha aggiunto il bot {1}. È fidato in tutti i gruppi, quindi resta.</value>
+  </string>
+  <string key="trustedBotsEverywhere">
+    <value>Fidati in tutti i gruppi:</value>
+  </string>
+  <string key="hcommandglobaltrustbot">
+    <value>Solo per gli sviluppatori. Rende fidato un bot in tutti i gruppi: non viene controllato e i ban di Enforcer vengono rimossi. Il /untrustbot di un gruppo lo rimuove comunque lì. Rispondi a un suo messaggio o indica il suo id o @username.</value>
+  </string>
+  <string key="hcommandglobaluntrustbot">
+    <value>Solo per gli sviluppatori. Rimuove un bot da ogni gruppo in cui scrive o viene aggiunto, anche dove è fidato. Rispondi a un suo messaggio o indica il suo id o @username.</value>
+  </string>
+  <string key="hcommandglobalforgetbot">
+    <value>Solo per gli sviluppatori. Dimentica la fiducia o il blocco di un bot in tutti i gruppi: torna a valere la decisione di ogni gruppo. Rispondi a un suo messaggio o indica il suo id o @username.</value>
+  </string>
+  <string key="hcommandglobalbots">
+    <value>Solo per gli sviluppatori. Elenca i bot fidati o bloccati in tutti i gruppi e i bot di cui si fidano i gruppi premium.</value>
+  </string>
   <string key="hcommandtrustbot">
     <value>Rende fidato un bot in questo gruppo: i suoi messaggi e le sue risposte quando qualcuno lo menziona passano, e un ban di Enforcer viene tolto. Rispondi a uno dei suoi messaggi, oppure indica il suo @username o il suo id. I bot aggiunti da un admin sono già fidati; un bot aggiunto da un membro, o menzionato da un membro perché risponda qui, viene bannato.</value>
   </string>
