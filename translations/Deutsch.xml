@@ -237,13 +237,13 @@
     <value>Keine Eingabe mit dem Befehl.</value>
   </string>
   <string key="Support">
-    <value><![CDATA[Klicke <a href="https://telegram.me/greywolfsupport">hier</a>, um der Support Gruppe beizutreten und Hilfe zu erhalten.]]></value>
+    <value><![CDATA[Klicke <a href="https://telegram.me/{0}">hier</a>, um der Support Gruppe beizutreten und Hilfe zu erhalten.]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Ich konnte die ID des Users nicht herausfinden.</value>
   </string>
   <string key="globalBan">
-    <value>{0} ist bekannt für {1} und wurde automatisch gebannt.\nDer Benutzer kann @greywolfsupport beitreten, um diesen Bann anzufechten.</value>
+    <value>{0} ist bekannt für {1} und wurde automatisch gebannt.\nDer Benutzer kann {2} beitreten, um diesen Bann anzufechten.</value>
   </string>
   <string key="goToMessage">
     <value>Gehe zur Nachricht</value>
@@ -428,7 +428,7 @@
   </string>
   <string key ="globalBanNotif">
     <value>{0} wurde automatisch gebannt wegen eines Hintergrunds von: {1}!
-            Der Benutzer kann @greywolfsupport beitreten, um diesen Bann anzufechten.
+            Der Benutzer kann {2} beitreten, um diesen Bann anzufechten.
     </value>
   </string>
   <string key="GetLang">
@@ -533,7 +533,7 @@
   
   <!-- Update 6.4.2017 -->
   <string key="helpNoRequest">
-  <value>Enforcer ist ein Bot um Gruppen einfacher zu verwalten. Updates sind unter t.me/greywolfdev zu finden.
+  <value>Enforcer ist ein Bot um Gruppen einfacher zu verwalten. Updates sind unter https://t.me/{0} zu finden.
 		Die Funktionen dieses Bots sind unter Anderem Antispam, Anti Media, zeitlich begrenzte Banns, Verwarnungen, Extra Befehle (der Bot antwortet bestimmte Dinge auf bestimmte Hashtags)
 		* Dieser Bot muss Gruppenadmin sein um richtig funktionieren zu k&#246;nnen.
 		* Dieser Bot funktioniert am Besten in Supergruppen.
@@ -2583,5 +2583,56 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="batchLog">
     <value>{0} hat in {1} einen Stapel ausgeführt: {2}. Gestartet von {3}. Erledigt {4}, abgelehnt {5}, blockiert {6}, ausgelassen {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Dies sind die momentanen Einstellungen der Gruppe:</value>
+  </string>
+  <string key="hcommanddashboard">
+  <value>
+		Sends you a dashboard of all current group settings in private.
+		
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandping">
+  <value>
+		Pings the bot to see how long it takes it to respond.
+		
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandgetcommands">
+  <value>
+		Get a list of all bot commands. Note that some of them are only for global bot admins so you can't use them.
+		
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>Verwendung von Markdown in Wilkommensnachrichten, Regeln, Beschreibungen und Extra-Befehlen:</b>
+  
+  
+  <b>FETT</b> = &lt;b&gt;FETT&lt;/b&gt;
+  
+  <i>KURSIV</i> = &lt;i&gt;KURSIV&lt;/i&gt;
+  
+  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filter</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} an</value>
   </string>
 </strings>

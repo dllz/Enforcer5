@@ -362,9 +362,6 @@
   <string key="off">
     <value>Выкл</value>
   </string>
-  <string key="textButton">
-    <value>Текст</value>
-  </string>
   <string key="stickerButton">
     <value>Стикер</value>
   </string>
@@ -2274,5 +2271,18 @@ $title - заменяется названием группы.
   </string>
   <string key="batchLog">
     <value>{0} выполнил пачку в {1}: {2}. Запустил {3}. Выполнено {4}, отказано {5}, заблокировано {6}, пропущено {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Настройки, которые установлены в группе:</value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>Отправляет панель инструментов текущих настроек в ЛС бота.
+Пример: /{0}.</value>
+  </string>
+  <string key="FiltersButton">
+    <value>Фильтры</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>включено: {0}</value>
   </string>
 </strings>

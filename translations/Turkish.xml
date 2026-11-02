@@ -238,13 +238,13 @@
     <value>Komut girilmedi</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Bot destek grubundan yardım almak için tıklayınız.</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">Bot destek grubundan yardım almak için tıklayınız.</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Kullanıcı kimliği alınmadı</value>
   </string>
   <string key="globalBan">
-    <value>{0} bu yüzden otomatik olarak banlandınız:{1}\nKullanıcı destek almak için admine yazabilir.</value>
+    <value>{0} şu nedenle otomatik olarak banlandı: {1}\nKullanıcı bu bana itiraz etmek için {2} grubuna gidebilir.</value>
   </string>
   <string key="goToMessage">
     <value>Mesaja git</value>
@@ -402,9 +402,6 @@
   <string key="linkButton">
     <value>Link</value>
   </string>
-  <string key="textButton">
-    <value>yazı</value>
-  </string>
   <string key="doNothing">
     <value>Hiçbirşey yapamam</value>
   </string>
@@ -424,10 +421,7 @@
     <value>{0} latin olmayan karakter kullandığı için banlandı</value>
   </string>
   <string key ="globalBanNotif">
-    <value>
-      {0} otomatik olarak banlandı: {1}
-      
-    </value>
+    <value>{0} şu geçmişi nedeniyle otomatik olarak banlandı: {1}\nKullanıcı bu bana {2} grubunda itiraz edebilir.</value>
   </string>
   <string key="GetLang">
     <value>Hangi dilde dosya almak istiyorsun?</value>
@@ -523,7 +517,7 @@
   </string>
   <string key="helpNoRequest">
     <value>
-      Bu bot gruplarınızı daha kolay yönetmek yapmak yardımcı olmak için tasarlanmış bir bottur. Yenilikler için https://t.me/greywolfdev.
+      Bu bot gruplarınızı daha kolay yönetmek yapmak yardımcı olmak için tasarlanmış bir bottur. Yenilikler için https://t.me/{0}.
       antispam, anti medya, geçici ban, uyarı, gibi özellikleri içerir.
       * Botun çalışması için grubunda admin olmalıdır.
       * Bu botun özellikleri süpergrupda çalışır.
@@ -2552,5 +2546,22 @@
   </string>
   <string key="batchLog">
     <value>{0}, {1} içinde bir toplu işlem çalıştırdı: {2}. Başlatan: {3}. Tamamlanan {4}, reddedilen {5}, engellenen {6}, dışarıda kalan {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Grupta ne ayarlanacak:</value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>
+      Tüm grup ayarlarını değiştirmek için bir mesaj gönderir.
+
+      Örnek:
+      /{0}
+    </value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtreler</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} açık</value>
   </string>
 </strings>

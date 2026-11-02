@@ -294,7 +294,7 @@
   </string>
   
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/greywolfsupport">klik disini untuk bantuan grup support</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">klik disini untuk bantuan grup support</a>]]></value>
   </string>
   
   <string key="UnableToGetID">
@@ -302,7 +302,7 @@
   </string>
   
   <string key="globalBan">
-    <value>{0} telah di blokir otomatis karena : {1}\nUser bisa menghubungi @greywolfsupport menghilangkan ban ini.</value>
+    <value>{0} telah di blokir otomatis karena : {1}\nUser bisa menghubungi {2} menghilangkan ban ini.</value>
   </string>
   
   <string key="goToMessage">
@@ -442,9 +442,6 @@
   <string key="off">
     <value>Off</value>
   </string>
-  <string key="textButton">
-    <value>Text</value>
-  </string>
   <string key="stickerButton">
     <value>Stiker</value>
   </string>
@@ -505,7 +502,7 @@
   
   <string key ="globalBanNotif">
     <value>{0} telah dibanned otomatis karena pernah : {1}
-            dia bisa mengajukan banding ke @greywolfsupport
+            dia bisa mengajukan banding ke {2}
     </value>
   </string>
   
@@ -628,7 +625,7 @@
   </string>
   
   <string key="helpNoRequest">
-  <value>Enforcer merupakan sebuah bot yang dirancang untuk membantu dalam mengelolah grup kamu biar lebih mudah. untuk update silakan cek di https://telegram.me/greywolfdev.
+  <value>Enforcer merupakan sebuah bot yang dirancang untuk membantu dalam mengelolah grup kamu biar lebih mudah. untuk update silakan cek di https://t.me/{0}.
   		hal ini bisa dilakukan dengan menerapkan fitur anti spam, anti media, tempbans, peringatan, dan lainnya.
 		* This bot needs to be an admin of the group chat to function properly.
 		* This bot functions best in supergroups.
@@ -1159,9 +1156,6 @@
 	<value>Command ini hanya untuk developer enforcer!</value>
   </string>  
   
-  <string key="hcommandrektlist">
-	<value>Command ini hanya untuk developer enforcer!</value>
-  </string>
   
   <string key="hcommandhelp">
   <value> 
@@ -2775,5 +2769,54 @@
   </string>
   <string key="batchLog">
     <value>{0} menjalankan batch di {1}: {2}. Dijalankan oleh {3}. Selesai {4}, ditolak {5}, diblokir {6}, dilewati {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Settingan dalam grup ini adalah:</value>
+  </string>
+  <string key="hcommanddashboard">
+  <value>
+		Mengirimi Anda dashboard semua pengaturan grup saat ini secara pribadi.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandping">
+  <value>
+		Ping bot untuk melihat berapa lama waktu yang dibutuhkan untuk respon.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandgetcommands">
+  <value>
+		Dapatkan daftar semua perintah bot. Perhatikan bahwa beberapa di antaranya hanya untuk admin bot global sehingga Anda tidak dapat menggunakannya.
+		
+		Contoh:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>Bagaimana cara menggunakan Markdown:</b>
+  
+  
+  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+  
+  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+  
+  <a href="telegram.me/greywolfdev">LINK</a> = &lt;a href="telegram.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filter</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} aktif</value>
   </string>
 </strings>

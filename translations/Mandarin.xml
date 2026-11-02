@@ -118,9 +118,6 @@
   <string key="AboutSet">
     <value>新描述已设置</value>
   </string>
-  <string key="extraSaved">
-    <value>{0} 命令已保存</value>
-  </string>
   <string key="noExtra">
     <value>没有设置命令</value>
   </string>
@@ -236,14 +233,14 @@
     <value>命令没有参数</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">点此进入支持群组</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">点此进入支持群组</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>无法获取用户ID</value>
   </string>
   <string key="globalBan">
     <value>{0} 因 {1} 已被全局封禁。
-            可通过 @werewolfsupport 上诉这个封禁。</value>
+            可通过 {2} 上诉这个封禁。</value>
   </string>
   <string key="goToMessage">
     <value>Go to message</value>
@@ -339,7 +336,7 @@
     <value>波斯语</value>
   </string>
   <string key="WarnsButton">
-    <value>警告 👇🏼</value>
+    <value>警告操作：{0}</value>
   </string>
   <string key="closeButton">
     <value>完毕</value>
@@ -375,9 +372,6 @@
   </string>
   <string key="off">
     <value>关</value>
-  </string>
-  <string key="textButton">
-    <value>文字</value>
   </string>
   <string key="stickerButton">
     <value>表情</value>
@@ -429,7 +423,7 @@
   </string>
   <string key ="globalBanNotif">
     <value>{0} 因有 {1} 的历史而被全局封禁。
-            可通过 @werewolfsupport 上诉这个封禁。
+            可通过 {2} 上诉这个封禁。
     </value>
   </string>
   <string key="GetLang">
@@ -525,7 +519,7 @@
   <value>由用户提权的用户</value>
   </string>
    <string key="helpNoRequest">
-   <value>Enforcer 是一个帮助群组管理的 bot。关注 https://t.me/greywolfdev 获取更新信息。
+   <value>Enforcer 是一个帮助群组管理的 bot。关注 https://t.me/{0} 获取更新信息。
  		It does this by implementing antispam, anti media, tempbans, warnings, allowing you to set responses to hashtags etc.
  		* 这个 bot 需要群组的管理员权限来正常工作。
  		* This bot functions best in supergroups.
@@ -2234,5 +2228,22 @@ Example:
   </string>
   <string key="batchLog">
     <value>{0} 在 {1} 执行了一个批次：{2}。由 {3} 启动。完成 {4}，被拒绝 {5}，被阻止 {6}，跳过 {7}。</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>本群的设置有：</value>
+  </string>
+  <string key="hcommanddashboard">
+   <value>
+ 		通过私聊将本群的所有设置发送给你。
+
+ 		例子:
+ 		/{0}
+ 	</value>
+   </string>
+  <string key="FiltersButton">
+    <value>过滤器</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>已开启 {0} 个</value>
   </string>
 </strings>

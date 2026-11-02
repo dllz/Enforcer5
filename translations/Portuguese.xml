@@ -366,9 +366,6 @@
   <string key="off">
     <value>Desligado</value>
   </string>
-  <string key="textButton">
-    <value>Texto</value>
-  </string>
   <string key="stickerButton">
     <value>Sticker</value>
   </string>
@@ -2539,5 +2536,29 @@
   </string>
   <string key="batchLog">
     <value>{0} executou um lote em {1}: {2}. Iniciado por {3}. Feitos {4}, recusados {5}, bloqueados {6}, de fora {7}.</value>
+  </string>
+  <string key="mainMenu">
+    <value>
+      Gerenciar as configurações de {0}.
+
+      Outras configurações: para outras configurações, os ícones são auto-explicativos.
+    </value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Aqui estão as configurações definidas nesse grupo:</value>
+  </string>
+  <string key="hcommanddashboard">
+    <value>
+      Envia um painel de todas as configurações atuais do grupo em privado.
+
+      Exemplo:
+      /{0}
+    </value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtros</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} ativos</value>
   </string>
 </strings>

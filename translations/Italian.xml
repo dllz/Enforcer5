@@ -236,13 +236,13 @@
     <value>Nessun input insieme al comando.</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Clicca qui per ricevere aiuto dal gruppo di supporto.</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">Clicca qui per ricevere aiuto dal gruppo di supporto.</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>Non riesco ad ottenere l'ID dell'utente.</value>
   </string>
   <string key="globalBan">
-    <value>{0} &#232; stato automaticamente bannato per :{1}\nL'utente pu&#242; entrare in @werewolfsupport per richiedere lo sban.</value>
+    <value>{0} &#232; stato automaticamente bannato per :{1}\nL'utente pu&#242; entrare in {2} per richiedere lo sban.</value>
   </string>
   <string key="goToMessage">
     <value>Vai al messaggio</value>
@@ -377,9 +377,6 @@
   <string key="off">
     <value>Off</value>
   </string>
-  <string key="textButton">
-    <value>Testo</value>
-  </string>
   <string key="stickerButton">
     <value>Sticker</value>
   </string>
@@ -430,7 +427,7 @@
   </string>
   <string key ="globalBanNotif">
     <value>{0} &#232; stato automaticamente bannato per: {1}
-           Pu&#242; richiedere lo sban in @werewolfsupport
+           Pu&#242; richiedere lo sban in {2}
     </value>
   </string>
   <string key="GetLang">
@@ -529,7 +526,7 @@
   <value>Utenti temporaneamente elevati da utenti:\n</value>
   </string>
   <string key="helpNoRequest">
-  <value>Enforcer &#232; un bot creato per aiutarti a gestire i tuoi gruppi. Per aggiornamenti segui https://t.me/greywolfdev.
+  <value>Enforcer &#232; un bot creato per aiutarti a gestire i tuoi gruppi. Per aggiornamenti segui https://t.me/{0}.
 		Lo fa implementando antispam, antimedia, tempban, warn, permettendoti di impostare risposte ad hashtag ecc.
 		* Il bot necessita di essere admin della chat per funzionare correttamente.
 		* Questo bot funziona meglio nei supergruppi.
@@ -2531,5 +2528,56 @@
   </string>
   <string key="batchLog">
     <value>{0} ha eseguito un lotto in {1}: {2}. Avviato da {3}. Fatti {4}, rifiutati {5}, bloccati {6}, esclusi {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>Queste sono le impostazioni del gruppo:</value>
+  </string>
+  <string key="hcommanddashboard">
+  <value>
+		Invia in privato una dashboard di tutte le impostazioni attuali del gruppo.
+		
+		Esempio:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandping">
+  <value>
+        Pinga il bot per vedere quanto impiega a rispondere.
+		
+		Esempio:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandgetcommands">
+  <value>
+		Restituisce una lista di tutti i comandi del bot. Nota che alcuni di essi sono solo per admin globali.
+		
+		Esempio:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>Come usare i markdown:</b>
+  
+  
+  <b>GRASSETTO</b> = &lt;b&gt;GRASSETTO&lt;/b&gt;
+  
+  <i>CORSIVO</i> = &lt;i&gt;CORSIVO&lt;/i&gt;
+  
+  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  <code>SPAZIATURA FISSA</code> = &lt;code&gt;SPAZIATURA FISSA&lt;/code&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  <string key="FiltersButton">
+    <value>Filtri</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} attivi</value>
   </string>
 </strings>

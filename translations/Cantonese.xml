@@ -124,12 +124,6 @@ UPDATE LOG
 	<string key="AboutSet">
 		<value>已更新『群組簡介』。</value>
 	</string>
-	<string key="extraSaved">
-		<value>已經儲存咗 【{0}】 呢個快捷 Tag。</value>
-	</string>
-	<string key="extraSaved">
-		<value>已紀錄 {0} 個『標籤指令』。</value>
-	</string>
 	<string key="noExtra">
 		<value>尚未有任何『標籤指令』。</value>
 	</string>
@@ -245,13 +239,13 @@ UPDATE LOG
 		<value>指令資料不足。</value>
 	</string>
 	<string key="Support">
-		<value><![CDATA[<a href="https：//telegram.me/werewolfsupport">點此進入官方解答群組（英文）</a>]]></value>
+		<value><![CDATA[<a href="https://telegram.me/{0}">點此進入官方解答群組（英文）</a>]]></value>
 	</string>
 	<string key="UnableToGetID">
 		<value>搵唔到佢嘅用戶 ID。</value>
 	</string>
 	<string key="globalBan">
-		<value>【{0}】因為{1}而被完全封鎖。\n佢可以去 @werewolfsupport 上訴。</value>
+		<value>【{0}】因為{1}而被完全封鎖。\n佢可以去 {2} 上訴。</value>
 	</string>
 	<string key="goToMessage">
 		<value>前往信息</value>
@@ -408,7 +402,7 @@ UPDATE LOG
 		<value>【{0}】使用非拉丁語系文字，已被封鎖。</value>
 	</string>
 	<string key ="globalBanNotif">
-		<value>【{0}】{1}，已被完全封鎖，佢可以去 @werewolfsupport 上訴。</value>
+		<value>【{0}】{1}，已被完全封鎖，佢可以去 {2} 上訴。</value>
 	</string>
 	<string key="GetLang">
 		<value>想要邊個語言檔？</value>
@@ -486,7 +480,7 @@ UPDATE LOG
 		<value>被暫時提高管理權限的成員</value>
 	</string>
 	<string key="helpNoRequest">
-		<value>Enforcer 係幫手管理群組嘅機器人。會幫你手踢除洗版的人、暫時封鎖成員、警告成員、設定標籤指令和回應等等。\n\n．需要群組管理員的權限\n．最好在超級群組使用\n．透過「/menu」召喚設定介面\n．利用「/help（指令）」來查詢各個指令的用途。\n．需要幫助時可利用「/support」進入我地嘅官方解答群組\n\n想掌握更新情報可到 https://t.me/greywolfdev</value>
+		<value>Enforcer 係幫手管理群組嘅機器人。會幫你手踢除洗版的人、暫時封鎖成員、警告成員、設定標籤指令和回應等等。\n\n．需要群組管理員的權限\n．最好在超級群組使用\n．透過「/menu」召喚設定介面\n．利用「/help（指令）」來查詢各個指令的用途。\n．需要幫助時可利用「/support」進入我地嘅官方解答群組\n\n想掌握更新情報可到 https://t.me/{0}</value>
 	</string>
 	<string key="helpOptionNotImplemented">
 		<value>關於【{0}】的資料尚待補完，請到解答群組 /support 查詢。</value>
@@ -2126,5 +2120,17 @@ UPDATE LOG
   </string>
   <string key="batchLog">
     <value>{0} 喺 {1} 執行咗一個批次：{2}。由 {3} 開始。完成 {4}，被拒絕 {5}，被阻止 {6}，略過 {7}。</value>
+  </string>
+  <string key="dashboardMenu">		
+		<value>以下係呢個群組現有嘅設定︰</value>		
+	</string>
+  <string key="hcommanddashboard">
+		<value>私訊個設定列表俾你睇吓群組設定。\n\n例子︰\n/{0}</value>
+	</string>
+  <string key="FiltersButton">
+    <value>過濾器</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>開咗 {0} 個</value>
   </string>
 </strings>

@@ -236,16 +236,13 @@
     <value>برای این دستور ورودی معتبری استفاده نشده است.</value>
   </string>
   <string key="Support">
-    <value><![CDATA[<a href="https://telegram.me/werewolfsupport">Click here to get help from the support group</a>]]></value>
+    <value><![CDATA[<a href="https://telegram.me/{0}">برای دریافت کمک از گروه پشتیبانی اینجا کلیک کنید</a>]]></value>
   </string>
   <string key="UnableToGetID">
     <value>من نمیتوانم آی دی این یوزر را پیدا کنم.</value>
   </string>
   <string key="globalBan">
-        <value>كاربر  {0}  به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1}  مي باشند ، براي تجديد نظر در مورد بن خود ميتوانند به گروه پشتيباني  مراجعه 
-كنند
-@werewolfsupport 
-    </value> 
+        <value>كاربر {0} به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1} مي باشد.\nبراي تجديد نظر در مورد اين بن ميتواند به {2} مراجعه كند.</value> 
   </string>
   <string key="goToMessage">
     <value>برو ب پيام</value>
@@ -383,9 +380,6 @@
   <string key="off">
     <value> خاموش </value>
   </string>
-  <string key="textButton">
-    <value>Text</value>
-  </string>
   <string key="stickerButton">
     <value>Sticker</value>
   </string>
@@ -435,10 +429,7 @@
     <value>كاربر{0} بار  به دليل استفاده از حروف غير لاتين ريمو شده است.</value> 
   </string> 
   <string key ="globalBanNotif"> 
-    <value>كاربر  {0}  به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1}  مي باشند ، براي تجديد نظر در مورد بن خود ميتوانند به گروه پشتيباني  مراجعه 
-كنند
-@werewolfsupport 
-    </value> 
+    <value>كاربر {0} به صورت اتوماتيك بن شده است چرا كه داراي سابقه {1} مي باشد.\nبراي تجديد نظر در مورد اين بن ميتواند به {2} مراجعه كند.</value> 
   </string>
   <string key="GetLang">
     <value>دريافت كدام فايل زبان؟  </value>
@@ -532,7 +523,7 @@
   <value><![CDATA[\n<b>Users temp elavated by users:</b>\n]]></value>
   </string>
   <string key="helpNoRequest">
-  <value>این ربات به شما کمک میکند تا بتوانید گروه خود را به خوبی مدریت کنید برای دریافت اخبار و آخرین تغییرات میتوانید در کانال مقابل عضو شوید https://t.me/greywolfdev.
+  <value>این ربات به شما کمک میکند تا بتوانید گروه خود را به خوبی مدریت کنید برای دریافت اخبار و آخرین تغییرات میتوانید در کانال مقابل عضو شوید https://t.me/{0}.
 		این ربات به شما اجازه میدهد به کاربران هشدار داده ، آن ها را موقتا بن کنید یا از اسپم دادن یا دادن رسانه های غیر مجاز ممنوع کنید
 		* برای این که این ربات بتوانید دستورات را اجرا کند باید حتما در گروه مدیر باشد.
 		* بهتر است که این ربات را در سوپر گروه استفاده کنید
@@ -2523,5 +2514,56 @@ exaple: /{0}
   </string>
   <string key="batchLog">
     <value>{0} در {1} یک دسته اجرا کرد: {2}. اجراکننده: {3}. انجام‌شده {4}، ردشده {5}، مسدود {6}، کنار گذاشته {7}.</value>
+  </string>
+  <string key="dashboardMenu">
+    <value>در اينجا انچه ك تنظيمات گروه شما است مشاهده ميكنيد  </value>
+  </string>
+  <string key="hcommanddashboard">
+  <value>
+	ربات ليستي از تمامي دستورات خود را در پي وي شما ارسال خواهد كرد
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandping">
+  <value>
+		Pings the bot to see how long it takes it to respond.
+		
+		Example:
+		/{0}
+	</value>
+  </string>
+  <string key="hcommandgetcommands">
+  <value>
+		
+لیستي از تمام دستورات ربات ميباشد . توجه داشته باشید که برخی از آنها تنها برای مدیران ربات جهانی مورد استفاده قرار ميگيرن  ، بنابراین شما نميتوانيد از انها استفاده كنيدد. 
+   
+  Example: 
+  /{0} 
+ </value> 
+  </string>
+  <string key="hcommandmarkdown">
+  <value>
+  <![CDATA[
+  <b>How to use markdown:</b>
+  
+  
+  <b>BOLD</b> = &lt;b&gt;BOLD&lt;/b&gt;
+  
+  <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
+  
+  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  
+  <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
+  
+  
+  ]]>
+  </value>
+  </string>
+  <string key="FiltersButton">
+    <value>فیلترها</value>
+  </string>
+  <string key="filtersOnCount">
+    <value>{0} فعال</value>
   </string>
 </strings>
