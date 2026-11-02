@@ -17,6 +17,15 @@ namespace Enforcer5.Tests.Detection
         private static bool Has(string key) => _english.Descendants("string").Any(s => (string)s.Attribute("key") == key);
 
         [TestMethod]
+        public void WhatASignPointedAt_IsNamed_FiveAtMost_LongOnesCut()
+        {
+            Assert.IsNull(DetectionReports.Named(new string[0]));
+            Assert.AreEqual("@a, @b", DetectionReports.Named(new[] { "@a", "@b" }));
+            Assert.AreEqual("1, 2, 3, 4, 5 +2", DetectionReports.Named(new[] { "1", "2", "3", "4", "5", "6", "7" }));
+            Assert.AreEqual(60, DetectionReports.Named(new[] { new string('x', 200) }).Length);
+        }
+
+        [TestMethod]
         public void EverySignThatCanBeReported_HasAName()
         {
             var missing = SignCatalog.All.Where(s => !s.Ported && !s.Name.StartsWith("test_"))

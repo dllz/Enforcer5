@@ -87,8 +87,17 @@ SELECT p.flags FROM account_profile_flags p JOIN telegram_accounts a ON a.accoun
             var channel = await connection.QuerySingleAsync<(string Username, int Members)>(
                 "SELECT username, member_count FROM channel_profiles WHERE telegram_chat_id = -1008881");
             Assert.AreEqual(("gemsdaily", 100), channel);
-            Assert.IsNotNull(chat.Telegram.SentMessages.SingleOrDefault(m => m.Chat.Id == admin.Id && m.Text?.StartsWith("🛡") == true),
-                "a link, a mention and a channel add up to a report");
+            var report = chat.Telegram.SentMessages.SingleOrDefault(m => m.Chat.Id == admin.Id && m.Text?.StartsWith("🛡") == true);
+            Assert.IsNotNull(report, "a link, a mention and a channel add up to a report");
+            // #27: what the bio points at is named, and kept with the sign.
+            StringAssert.Contains(report.Text, "(https://pump.example)");
+            StringAssert.Contains(report.Text, "(@gemsdaily)");
+            var evidence = (await connection.QueryAsync<(string Sign, string Evidence)>(
+                "SELECT sign, evidence::text FROM detections WHERE sign IN ('bio_link', 'bio_mention')")).ToDictionary(r => r.Sign, r => r.Evidence);
+            string[] Listed(string sign, string property) => System.Text.Json.JsonDocument.Parse(evidence[sign]).RootElement
+                .GetProperty(property).EnumerateArray().Select(e => e.GetString()).ToArray();
+            CollectionAssert.AreEqual(new[] { "https://pump.example" }, Listed("bio_link", "urls"));
+            CollectionAssert.AreEqual(new[] { "@gemsdaily" }, Listed("bio_mention", "chats"));
             AssertNoErrors(chat);
         }
 

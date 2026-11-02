@@ -148,8 +148,11 @@ namespace Enforcer5.Detection
                         Name = name, Score = score, MessageId = messageId
                     };
                     // What made up their score, then what fired now.
-                    foreach (var (scored, seenOn) in MemberScores.SignMessages(chatId, userId).Where(s => s.Sign != sign))
+                    foreach (var (scored, seenOn, said) in MemberScores.Seen(chatId, userId).Where(s => s.Sign != sign))
+                    {
                         report.Add(scored, seenOn);
+                        if (said != null) report.Details[scored] = said;
+                    }
                     report.Add(sign, messageId);
                     if (detail != null) report.Details[sign] = detail;
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
@@ -529,6 +532,21 @@ namespace Enforcer5.Detection
             if (!string.IsNullOrEmpty(link))
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "goToMessage")) { Url = link });
             return menu.Buttons.Count == 0 ? null : Key.CreateMarkupFromMenu(menu);
+        }
+
+        /// <summary>The most chats, mentions or links a sign names in a report (and keeps in its evidence).</summary>
+        internal const int MaxNamed = 5;
+
+        /// <summary>
+        /// What a sign pointed at, for its report line: the first <see cref="MaxNamed"/> (each cut at 60 characters),
+        /// then how many more; null for none. Pure, for tests.
+        /// </summary>
+        internal static string Named(IReadOnlyList<string> items)
+        {
+            if (items == null || items.Count == 0) return null;
+            var shown = items.Take(MaxNamed).Select(i => i.Length > 60 ? i[..59] + "…" : i);
+            var text = string.Join(", ", shown);
+            return items.Count > MaxNamed ? $"{text} +{items.Count - MaxNamed}" : text;
         }
 
         /// <summary>How a sign is named to admins: its own string, a filter preset's name, or the rule's number.</summary>

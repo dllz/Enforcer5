@@ -179,10 +179,16 @@ namespace Enforcer5.Detection
             }
             if (!string.IsNullOrEmpty(bio))
             {
-                var links = Links(bio).Count(l => !MessageSigns.IsThisGroup(l, groupName, chatId));
-                if (links > 0) await Hit(chatId, person.Id, message, SignCatalog.BioLink, new { links });
-                var mentions = Mentions(bio).Count(m => !string.Equals(m, groupName, StringComparison.OrdinalIgnoreCase));
-                if (mentions > 0) await Hit(chatId, person.Id, message, SignCatalog.BioMention, new { mentions });
+                // What they point at is named in the report and kept with the sign (#27).
+                var links = Links(bio).Where(l => !MessageSigns.IsThisGroup(l, groupName, chatId)).Distinct().ToList();
+                if (links.Count > 0)
+                    await Hit(chatId, person.Id, message, SignCatalog.BioLink,
+                        new { links = links.Count, urls = links.Take(DetectionReports.MaxNamed).ToArray() }, DetectionReports.Named(links));
+                var mentions = Mentions(bio).Where(m => !string.Equals(m, groupName, StringComparison.OrdinalIgnoreCase))
+                    .Select(m => "@" + m).ToList();
+                if (mentions.Count > 0)
+                    await Hit(chatId, person.Id, message, SignCatalog.BioMention,
+                        new { mentions = mentions.Count, chats = mentions.Take(DetectionReports.MaxNamed).ToArray() }, DetectionReports.Named(mentions));
                 FilterCheck.OnProfile(ctx, person, message, FilterTarget.Bio, bio);
             }
 
@@ -228,8 +234,8 @@ namespace Enforcer5.Detection
             }
         }
 
-        private static Task Hit(long chatId, long userId, Message message, SignDefinition sign, object evidence) =>
-            DetectionEngine.HitAsync(chatId, userId, message, new SignHit(sign.Name, JsonSerializer.Serialize(evidence)));
+        private static Task Hit(long chatId, long userId, Message message, SignDefinition sign, object evidence, string detail = null) =>
+            DetectionEngine.HitAsync(chatId, userId, message, new SignHit(sign.Name, JsonSerializer.Serialize(evidence)) { Detail = detail });
 
         // ------------------------------------------------------------------ once a day
 

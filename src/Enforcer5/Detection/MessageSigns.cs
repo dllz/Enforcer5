@@ -102,7 +102,21 @@ namespace Enforcer5.Detection
                     try { places = await Task.WhenAll(mentions.Select(m => MentionResolver.ResolveAsync(chatId, m, chatUsername))); }
                     finally { Clock.Unpark(); }
                     var outside = places.Count(p => p == MentionPlace.Outside);
-                    if (outside > 0) await Hit(chatId, userId, message, SignCatalog.MentionOutside, new { mentions = outside });
+                    if (outside > 0)
+                    {
+                        // Which ones, so the admins can judge it at once (#27): @name, or for a mention by id what the
+                        // message shows for it.
+                        var named = mentions.Where((m, i) => places[i] == MentionPlace.Outside).ToList();
+                        var shown = named.Select(m => m.Username != null ? "@" + m.Username : MentionText(message, m.UserId)).ToList();
+                        await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.MentionOutside.Name,
+                            System.Text.Json.JsonSerializer.Serialize(new
+                            {
+                                mentions = outside,
+                                chats = named.Where(m => m.Username != null).Select(m => "@" + m.Username).Take(DetectionReports.MaxNamed).ToArray(),
+                                users = named.Where(m => m.Username == null && m.UserId != null).Select(m => m.UserId.Value).Take(DetectionReports.MaxNamed).ToArray()
+                            }))
+                        { Detail = DetectionReports.Named(shown) });
+                    }
                     pointedAt.AddRange(mentions.Where((m, i) => places[i] == MentionPlace.Outside && m.Username != null).Select(m => m.Username));
                 }
 
@@ -168,6 +182,17 @@ namespace Enforcer5.Detection
                 var id = joiner.Id;
                 Bot.Dispatch(() => Hit(chatId, id, null, SignCatalog.JoinedDuringRaid, null), "JoinedDuringRaid");
             }
+        }
+
+        /// <summary>The text a mention by id (no username) shows in <paramref name="message"/>, e.g. the person's name.</summary>
+        internal static string MentionText(Message message, long? userId)
+        {
+            var text = message.Text ?? message.Caption ?? "";
+            var entity = (message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>())
+                .FirstOrDefault(e => e.Type == MessageEntityType.TextMention && e.User?.Id == userId);
+            return entity != null && entity.Offset >= 0 && entity.Offset + entity.Length <= text.Length
+                ? text.Substring(entity.Offset, entity.Length)
+                : userId?.ToString() ?? "?";
         }
 
         private static Task Hit(long chatId, long userId, Message message, SignDefinition sign, object evidence) =>

@@ -17,7 +17,8 @@ namespace Enforcer5.Detection
         private const int MaxMembers = 200_000;
 
         /// <param name="MessageId">The message it was seen on, if any: the report links each sign to it.</param>
-        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null);
+        /// <param name="Detail">What the report says about it (<see cref="SignHit.Detail"/>); in memory only.</param>
+        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null, string Detail = null);
 
         private sealed class Entry
         {
@@ -50,7 +51,7 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>Adds <paramref name="sign"/> unless it already counted for them today.</summary>
-        internal static Change Add(long chatId, long userId, string sign, int weight, long? messageId = null)
+        internal static Change Add(long chatId, long userId, string sign, int weight, long? messageId = null, string detail = null)
         {
             var now = Clock.UtcNow;
             if (Entries.Count > MaxMembers) Prune(now);
@@ -61,7 +62,7 @@ namespace Enforcer5.Detection
                 var before = entry.Hits.Sum(h => h.Weight);
                 if (entry.Hits.Any(h => h.Sign == sign && h.At.Date == now.Date))
                     return new Change(before, before, false);
-                entry.Hits.Add(new Hit(sign, weight, now, messageId));
+                entry.Hits.Add(new Hit(sign, weight, now, messageId, detail));
                 return new Change(before, before + weight, true);
             }
         }
@@ -75,16 +76,17 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>
-        /// The signs that make up their score now, oldest first, each with the last message it was seen on
-        /// (null when none: a join, a profile).
+        /// The signs that make up their score now, oldest first, each with the last message it was seen on (null when
+        /// none: a join) and its last detail (null when none, or loaded back after a restart).
         /// </summary>
-        internal static IReadOnlyList<(string Sign, long? MessageId)> SignMessages(long chatId, long userId)
+        internal static IReadOnlyList<(string Sign, long? MessageId, string Detail)> Seen(long chatId, long userId)
         {
-            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<(string, long?)>();
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<(string, long?, string)>();
             var now = Clock.UtcNow;
             lock (entry)
                 return entry.Hits.Where(h => now - h.At < Window).GroupBy(h => h.Sign)
-                    .Select(g => (g.Key, g.LastOrDefault(h => h.MessageId != null)?.MessageId)).ToList();
+                    .Select(g => (g.Key, g.LastOrDefault(h => h.MessageId != null)?.MessageId, g.LastOrDefault(h => h.Detail != null)?.Detail))
+                    .ToList();
         }
 
         internal static int Of(long chatId, long userId)

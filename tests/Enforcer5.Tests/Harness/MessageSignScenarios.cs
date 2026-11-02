@@ -117,6 +117,32 @@ WHERE d.sign = ANY(@Signs) ORDER BY d.detection_id", new { Signs = MessageSignNa
         }
 
         [TestMethod]
+        public async Task TheReport_NamesTheChatsMentioned_AndTheSignKeepsThem()
+        {
+            // #27: "mention of a chat outside the group" did not say which.
+            await using var chat = await HarnessChat.StartAsync(username: "harnessgroup");
+            await chat.ChangeSettingsAsync(p => p with
+            {
+                Engine = p.Engine with { ObserveUntil = chat.Clock.GetUtcNow().AddMinutes(-1), ReportAt = 1 }
+            });
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            chat.Telegram.AddPublicChat("cryptogems", -1007777);
+            var newcomer = chat.Add("Newcomer");
+            await chat.SendAsync(newcomer, "hi");
+
+            await chat.PostAsync(Marked(chat, newcomer, "join @cryptogems and @harnessgroup"));
+
+            var report = chat.Telegram.SentMessages.Single(m => m.Chat.Id == admin.Id && m.Text?.StartsWith("🛡") == true);
+            StringAssert.Contains(report.Text, "mention of a chat outside the group</a> (@cryptogems)");
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            var evidence = await connection.QuerySingleAsync<string>("SELECT evidence::text FROM detections WHERE sign = 'mention_outside'");
+            var json = System.Text.Json.JsonDocument.Parse(evidence).RootElement;
+            Assert.AreEqual(1, json.GetProperty("mentions").GetInt32());
+            CollectionAssert.AreEqual(new[] { "@cryptogems" }, json.GetProperty("chats").EnumerateArray().Select(e => e.GetString()).ToArray());
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task AForwardFromAChannel_IsASign_UnlessItIsTheGroupsOwnChannel()
         {
             await using var chat = await HarnessChat.StartAsync();

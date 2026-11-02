@@ -22,7 +22,10 @@ namespace Enforcer5.Detection
         /// </summary>
         internal DateTime? At { get; init; }
 
-        /// <summary>What the admins' report says about it, in the group's language; never message content.</summary>
+        /// <summary>
+        /// What the admins' report says about it, in the group's language: never the message's text, but it may name
+        /// what the member pointed at (the chats mentioned, the links in a bio), which the admins need to judge it.
+        /// </summary>
         internal string Detail { get; init; }
 
         /// <summary>For a sign that compares (alike texts or names): how alike, 0 to 1, kept for tuning (step 13).</summary>
@@ -109,7 +112,7 @@ namespace Enforcer5.Detection
                     var current = MemberScores.Of(chatId, userId);
                     change = new MemberScores.Change(current, current, false);
                 }
-                else change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId);
+                else change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId, hit.Detail);
                 if (change.Counted && member.Trust == TrustLevel.New) MemberData.Scored(chatId, userId, change.After);
 
                 var action = settings.Action;
@@ -186,7 +189,7 @@ namespace Enforcer5.Detection
             if (weight > 0 && userId != 0 && !hit.Trial)
             {
                 if (MemberScores.NeedsLoad(chatId, userId)) await LoadScoreAsync(chatId, userId);
-                change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId);
+                change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId, hit.Detail);
             }
             else
             {
