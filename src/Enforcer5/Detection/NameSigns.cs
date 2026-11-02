@@ -55,6 +55,7 @@ namespace Enforcer5.Detection
                 if (ctx.Watched || message.SenderChat != null || message.From == null || message.From.IsBot) return;
                 if (message.NewChatMembers != null || message.LeftChatMember != null) return; // the join itself is checked on its own
                 var chatId = ctx.ChatId;
+                if (!DetectionPilot.Includes(chatId)) return;
                 var person = message.From;
                 if (AdminDirectory.IsKnownAdmin(chatId, person.Id)) return;
                 var admins = AdminDirectory.Known(chatId);
@@ -89,6 +90,7 @@ namespace Enforcer5.Detection
                 BotSeen(chatId, person);
                 return;
             }
+            if (!DetectionPilot.Includes(chatId)) return;
             Bot.Dispatch(async () => await CheckAsync(chatId, person, null, await AdminDirectory.GetAsync(chatId)), "NameSigns.Join");
         }
 

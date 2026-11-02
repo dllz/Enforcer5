@@ -182,6 +182,8 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Raids.RaidGuard.ResetForTests();
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             Enforcer5.Actions.Batches.ResetForTests();
+            // Detection everywhere, as the scenarios were written; DetectionPilotScenarios turn the pilot on.
+            Enforcer5.Detection.DetectionPilot.ResetForTests();
             await SettleAsync();
         }
 

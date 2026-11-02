@@ -125,6 +125,9 @@ namespace Enforcer5.Detection
         {
             var message = ctx.Message;
             if (!ctx.IsGroup || ctx.Watched || message.SenderChat != null || message.From == null || message.From.IsBot) return;
+            // Outside the pilot (DetectionPilot) only for the group's own bio and channel rules, a filter.
+            if (!DetectionPilot.Includes(ctx.ChatId) &&
+                !HasProfileRules((ctx.Policy ?? DetectionSettings.For(ctx.ChatId)).Filters)) return;
             var person = message.From;
             Bot.Dispatch(() => LookUpAsync(ctx, person, message), "ProfileSigns.FirstPost");
         }
@@ -168,9 +171,12 @@ namespace Enforcer5.Detection
             var chatId = ctx.ChatId;
             var groupName = ctx.Message.Chat.Username;
             var bio = profile.Bio;
-            MemberData.Profile(chatId, person.Id, profile.Flags);
-            foreach (var domain in Links(bio).Select(Reputation.DomainOf).Where(d => d != null).Distinct())
-                await Reputation.PointedAsync(chatId, person.Id, message, "domain", domain);
+            if (await DetectionPilot.IncludesAsync(chatId))
+            {
+                MemberData.Profile(chatId, person.Id, profile.Flags);
+                foreach (var domain in Links(bio).Select(Reputation.DomainOf).Where(d => d != null).Distinct())
+                    await Reputation.PointedAsync(chatId, person.Id, message, "domain", domain);
+            }
             if (!string.IsNullOrEmpty(bio))
             {
                 var links = Links(bio).Count(l => !MessageSigns.IsThisGroup(l, groupName, chatId));
@@ -208,9 +214,10 @@ namespace Enforcer5.Detection
                 if (lookups.Count == 0) return;
                 var channels = await Profiles.AwaitAsync(Task.WhenAll(lookups));
                 var linked = await ChatDetails.LinkedChannelAsync(chatId);
+                var pilot = await DetectionPilot.IncludesAsync(chatId);
                 foreach (var channel in channels.Where(c => c != null && c.Id != chatId && c.Id != linked).DistinctBy(c => c.Id))
                 {
-                    await Reputation.PointedAsync(chatId, person.Id, message, "channel", channel.Id.ToString());
+                    if (pilot) await Reputation.PointedAsync(chatId, person.Id, message, "channel", channel.Id.ToString());
                     if (!Claim(chatId, person.Id, $"channel:{channel.Id}")) continue;
                     FilterCheck.OnProfile(ctx, person, message, FilterTarget.Channel, channel.FilterText);
                 }

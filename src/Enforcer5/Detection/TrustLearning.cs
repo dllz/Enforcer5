@@ -72,7 +72,7 @@ namespace Enforcer5.Detection
         internal static void Decided(LabelEvent label, RecordedLabel recorded)
         {
             if (label.Label != "bad" || !Strong.Contains(label.Action) || !AdminSources.Contains(label.Source)) return;
-            if (label.ChatId > 0 || !PostgresStorage.Ready) return;
+            if (label.ChatId > 0 || !PostgresStorage.Ready || !DetectionPilot.Includes(label.ChatId)) return;
             // About the group's own rules (a game rule, its language): says nothing about trust. Not known yet
             // may still be abuse: the signs from just before are written once a minute.
             if (recorded.Category == SignCategory.GroupRule && !label.ReasonIsAbuse) return;
@@ -350,6 +350,7 @@ namespace Enforcer5.Detection
                 try
                 {
                     if (await ChatDetails.GetAsync(chatId) == null) continue; // not in this edition's groups
+                    if (!await DetectionPilot.IncludesAsync(chatId)) continue;
                     var claimed = false;
                     var policy = await DetectionSettings.UpdateAsync(chatId, p =>
                     {

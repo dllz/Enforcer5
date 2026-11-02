@@ -76,6 +76,8 @@ namespace Enforcer5.Detection
             try
             {
                 var sign = SignCatalog.Get(hit.Sign) ?? throw new ArgumentException($"Unknown sign {hit.Sign}");
+                // Outside the pilot only the filters and banned media, which groups rely on, as before.
+                if (!PilotExempt(sign) && !await DetectionPilot.IncludesAsync(chatId)) return null;
                 if (sign.Ported || hit.Done != null) return await RecordCheckAsync(chatId, userId, message, sign, hit);
                 var policy = await DetectionSettings.GetAsync(chatId);
                 var settings = policy.Engine.For(sign.Name);
@@ -151,6 +153,10 @@ namespace Enforcer5.Detection
         /// <param name="evidence">Ids, counts and settings only, never text; serialised to JSON.</param>
         /// <param name="weight">What it adds to the member's score; null is the sign's (0 for the ported checks).</param>
         /// <param name="trial">A rule on trial: recorded as what it would have done; nothing was done and the score is left alone.</param>
+        /// <summary>Signs that work in every group, whatever the pilot (<see cref="DetectionPilot"/>).</summary>
+        internal static bool PilotExempt(SignDefinition sign) =>
+            sign.Name.StartsWith(SignCatalog.FilterPrefix, StringComparison.Ordinal) || sign.Name == SignCatalog.BannedMedia.Name;
+
         internal static void Checked(long chatId, long? userId, Message message, SignDefinition sign, string action,
             bool deleted = false, bool reported = false, object evidence = null, int? weight = null, bool trial = false)
         {

@@ -73,6 +73,8 @@ namespace Enforcer5.Helpers
                     AdminDirectory.Demoted(update.Chat.Id, user.Id);
                     _ = Redis.db.KeyDeleteAsync($"chat:{update.Chat.Id}:adminses:{user.Id}", CommandFlags.FireAndForget);
                 }
+                // Daniel joining or leaving moves the group in or out of Detection's pilot.
+                Detection.DetectionPilot.Seen(update.Chat.Id, update.NewChatMember);
                 // What Telegram said about a bot here (member, admin) is out of date.
                 if (user.IsBot) GroupBots.Forget(update.Chat.Id, user.Id);
                 // An admin's ban, kick or mute made in the Telegram app: history and Detection.

@@ -42,12 +42,15 @@ namespace Enforcer5.Detection
                 var message = ctx.Message;
                 if (ctx.Watched || message.SenderChat != null || message.From == null || message.From.IsBot) return;
                 if (message.NewChatMembers != null || message.LeftChatMember != null) return;
+                // Outside the pilot (DetectionPilot) only for the group's own channel rules, a filter.
+                var pilot = DetectionPilot.Includes(ctx.ChatId);
+                if (!pilot && !ProfileSigns.HasProfileRules((ctx.Policy ?? DetectionSettings.For(ctx.ChatId)).Filters)) return;
                 var links = OutsideLinks(message, message.Chat.Username, ctx.ChatId);
                 var forward = message.ForwardOrigin is MessageOriginChannel or MessageOriginHiddenUser;
                 var mentions = MentionResolver.MentionsIn(message);
                 var content = ContentOf(message, links > 0);
                 if (links == 0 && !forward && mentions.Count == 0 && content == null) return;
-                Bot.Dispatch(() => CheckAsync(ctx, links > 0, forward, mentions, content), "MessageSigns");
+                Bot.Dispatch(() => CheckAsync(ctx, links > 0, forward, mentions, pilot ? content : null, pilot), "MessageSigns");
             }
             catch (Exception e)
             {
@@ -55,7 +58,8 @@ namespace Enforcer5.Detection
             }
         }
 
-        private static async Task CheckAsync(MessageContext ctx, bool link, bool forward, IReadOnlyList<Mention> mentions, Content content)
+        private static async Task CheckAsync(MessageContext ctx, bool link, bool forward, IReadOnlyList<Mention> mentions, Content content,
+            bool pilot)
         {
             try
             {
@@ -65,10 +69,10 @@ namespace Enforcer5.Detection
                 // New members only: the rest is never looked up, nor remembered for comparing.
                 if (await MemberTrust.OfAsync(chatId, userId) != TrustLevel.New) return;
 
-                MemberData.Posted(chatId, message, link ? LinkTargets(message).Count() : 0, mentions.Count, forward);
+                if (pilot) MemberData.Posted(chatId, message, link ? LinkTargets(message).Count() : 0, mentions.Count, forward);
                 if (link) await Hit(chatId, userId, message, SignCatalog.LinkOutside, new { links = 1 });
                 // The websites they pointed at, for their reputation (step 14).
-                if (link)
+                if (link && pilot)
                     foreach (var domain in LinkTargets(message).Select(Reputation.DomainOf).Where(d => d != null).Distinct())
                         await Reputation.PointedAsync(chatId, userId, message, "domain", domain);
                 if (forward && !await FromOwnChannelAsync(chatId, message.ForwardOrigin))
@@ -125,6 +129,7 @@ namespace Enforcer5.Detection
         {
             var message = ctx.Message;
             if (!ctx.IsGroup || ctx.Watched || message.SenderChat != null || message.From == null || message.From.IsBot) return;
+            if (!DetectionPilot.Includes(ctx.ChatId)) return;
             Bot.Dispatch(async () =>
             {
                 try
@@ -156,7 +161,7 @@ namespace Enforcer5.Detection
         internal static void OnJoin(MessageContext ctx)
         {
             var chatId = ctx.ChatId;
-            if (!RaidGuard.Quiet(chatId)) return;
+            if (!RaidGuard.Quiet(chatId) || !DetectionPilot.Includes(chatId)) return;
             foreach (var joiner in ctx.Message.NewChatMembers ?? Array.Empty<User>())
             {
                 if (joiner.IsBot) continue;

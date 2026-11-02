@@ -75,6 +75,7 @@ namespace Enforcer5.Detection
             try
             {
                 var message = ctx.Message;
+                if (!DetectionPilot.Includes(ctx.ChatId)) return;
                 if (message.SenderChat != null || AdminDirectory.IsKnownAdmin(ctx.ChatId, ctx.UserId)) return;
                 var posted = message.Date.ToUniversalTime();
                 var db = Redis.db;
@@ -132,6 +133,7 @@ namespace Enforcer5.Detection
             {
                 var message = ctx.Message;
                 if (message.SenderChat != null || message.From == null || message.From.IsBot || ctx.Watched) return;
+                if (!await DetectionPilot.IncludesAsync(ctx.ChatId)) return;
                 var posted = message.Date.ToUniversalTime();
                 var edited = (message.EditDate ?? ctx.ReceivedAt).ToUniversalTime();
                 var after = Describe(message);
