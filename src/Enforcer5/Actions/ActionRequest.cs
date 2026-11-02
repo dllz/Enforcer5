@@ -118,6 +118,26 @@ namespace Enforcer5.Actions
         public int MessageId { get; init; }
         /// <summary>Delete: the message itself, when the caller has it (what the decision is about).</summary>
         public Message About { get; init; }
+        /// <summary>
+        /// The action's own line for the group's log channel, posted once it went through (<see cref="ActionLog"/>).
+        /// Null: an admin's command is logged as typed, anything else not at all.
+        /// </summary>
+        public ActionLogEntry Log { get; init; }
+    }
+
+    /// <summary>An action's line in the log channel, built from how it went.</summary>
+    internal sealed record ActionLogEntry(Func<ActionResult, string> Text)
+    {
+        /// <summary>
+        /// Posted as the bot's own action ("Enforcer ... replying to the member"), digested during a raid, as
+        /// <see cref="Service.LogBotAction"/> does. False: posted as written, with <see cref="LinkMessageId"/>.
+        /// </summary>
+        public bool ByBot { get; init; } = true;
+        /// <summary>The group message the post links to, when not <see cref="ByBot"/>.</summary>
+        public long? LinkMessageId { get; init; }
+
+        /// <summary>The bot's own line: what it told the group.</summary>
+        internal static ActionLogEntry Bot(string text) => text == null ? null : new(_ => text);
     }
 
     internal enum ActionOutcome

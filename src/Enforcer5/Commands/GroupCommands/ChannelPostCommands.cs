@@ -87,7 +87,6 @@ namespace Enforcer5
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "channelBanned", channel,
                 Methods.GetNick(update.Message, null, true)), update);
-            Service.LogCommand(update, update.Message.Text);
         }
 
         /// <summary>Lets a banned channel post in the chat again. Used by /unban.</summary>
@@ -107,7 +106,6 @@ namespace Enforcer5
                 return;
             }
             Bot.SendReply(Methods.GetLocaleString(lang, "channelUnbanned", channel), update);
-            Service.LogCommand(update, update.Message.Text);
         }
 
         /// <summary>

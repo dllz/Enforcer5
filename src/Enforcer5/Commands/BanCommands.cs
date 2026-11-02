@@ -59,7 +59,6 @@ namespace Enforcer5
                             Methods.GetNick(update.Message, args, true)
                         };
                         Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
-                            Service.LogCommand(update, update.Message.Text);
                     }
  }
                     catch (Exception e)
@@ -84,7 +83,6 @@ namespace Enforcer5
            if (update.Message.ReplyToMessage != null)
            {
                 Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick:Methods.GetNick(update.Message, args, update.Message.From.Id), actorId: update.Message.From.Id);
-               Service.LogCommand(update, update.Message.Text);
             }
            else 
            {
@@ -94,7 +92,6 @@ namespace Enforcer5
                    var chatid = update.Message.Chat.Id;
                    
                    Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", actorId: update.Message.From.Id);
-                    Service.LogCommand(update, update.Message.Text);
                }
                catch (Exception e)
                {
@@ -113,7 +110,6 @@ namespace Enforcer5
             if (update.Message.ReplyToMessage != null)
             {
                 Warn(update.Message.ReplyToMessage.From.Id, update.Message.Chat.Id, update, targetnick: Methods.GetNick(update.Message, args, update.Message.From.Id), preWarn: true, actorId: update.Message.From.Id);
-                Service.LogCommand(update, update.Message.Text);
             }
             else
             {
@@ -123,7 +119,6 @@ namespace Enforcer5
                     var chatid = update.Message.Chat.Id;
 
                     Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", preWarn: true, actorId: update.Message.From.Id);
-                    Service.LogCommand(update, update.Message.Text);
                 }
                 catch (Exception e)
                 {
@@ -144,7 +139,7 @@ namespace Enforcer5
         /// <paramref name="callbackid"/> plus a message.
         /// </summary>
         internal static ActionResult Warn(long warnedId, long chatId, Update update = null, string[] args = null, string targetnick = null, string callbackid = "", long callbackfromid = 0, bool preWarn = false,
-            long? actorId = null, string reason = null, ReportRef report = null, ActionSource? source = null)
+            long? actorId = null, string reason = null, ReportRef report = null, ActionSource? source = null, string logLine = null)
         {
             var result = ActionSeam.Run(new ActionRequest
             {
@@ -154,7 +149,8 @@ namespace Enforcer5
                 ActorId = actorId,
                 Source = source ?? ActionSources.Derive(ErrorReporter.Current?.Update, actorId, report != null),
                 Reason = reason,
-                Report = report
+                Report = report,
+                Log = ActionLogEntry.Bot(logLine)
             });
             if (!result.Succeeded) return result; // an admin, or the bot: never warned, nothing said
             var lang = Methods.GetGroupLanguage(chatId);
@@ -320,7 +316,6 @@ namespace Enforcer5
                                 ErrorReporter.Report(e, "Forwarding the banned message to the admin");
                         }
                          Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulBan", arguments), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
                     }
                 }
                 catch (Exception e)
@@ -384,7 +379,6 @@ namespace Enforcer5
             if (res)
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "userUnbanned"), update);
-                Service.LogCommand(update, update.Message.Text);
             }
         }
 
@@ -394,13 +388,13 @@ namespace Enforcer5
         /// </summary>
         internal static bool Tempban(long userId, long chatId, double time,
             string nick = null, Update update = null, string message = null, string reason = null,
-            long? actorId = null, ActionSource? source = null)
+            long? actorId = null, ActionSource? source = null, string logLine = null)
         {           
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             // Pure UTC: it is handed to Telegram as untilDate. The action schedules its end and forgets any
             // earlier tempban (ActionEffects).
             var until = Clock.UtcNow.AddSeconds(time * 60);
-            if (!Methods.TempBanUser(chatId, userId, until, lang, reason, actorId, source, stat: "tempban")) return false;
+            if (!Methods.TempBanUser(chatId, userId, until, lang, reason, actorId, source, stat: "tempban", logLine: logLine)) return false;
             var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
             message ??= Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
             if (update != null) Bot.SendReply(message, update);
@@ -509,15 +503,14 @@ namespace Enforcer5
             {
                 Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId),
                     actorId: update.Message.From.Id);
-                Service.LogCommand(update, update.Message.Text);
             }
         }
 
         [Command(Trigger = "delmsg", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
-            if (!Methods.DeleteForAdmin(update.Message.ReplyToMessage, update.Message.From.Id, ActionSource.Command)) return;
-            Service.LogCommand(update, update.Message.Text);
+            // Told when refused, logged when done: both by the action.
+            Methods.DeleteForAdmin(update.Message.ReplyToMessage, update.Message.From.Id, ActionSource.Command);
         }
 
         /// <summary>
@@ -565,7 +558,6 @@ namespace Enforcer5
                     Methods.GetNick(update.Message, args, userId),
                     Methods.GetNick(update.Message, args, true)
                 };
-                Service.LogCommand(update, update.Message.Text);
                 Bot.SendReply(Methods.GetLocaleString(lang, "muted", arguments), update);
             }
             catch (Exception e)
@@ -606,7 +598,6 @@ namespace Enforcer5
                 if (!Methods.TempMuteUser(chatId, userId, until, lang, update.Message.ReplyToMessage?.Text,
                         update.Message.From.Id)) return;
 
-                Service.LogCommand(update, update.Message.Text);
                 Bot.SendReply(Methods.GetLocaleString(lang, "temmpmuted", Duration.ToDisplay(duration),
                     Methods.GetNick(update.Message, args, userId), userId), update);
             }
@@ -637,7 +628,6 @@ namespace Enforcer5
                     Methods.GetNick(update.Message, args, true)
                 };
                 Bot.SendReply(Methods.GetLocaleString(lang, "unmuted", arguments), update);
-                Service.LogCommand(update, update.Message.Text);
             }
             catch (Exception e)
             {

@@ -9,7 +9,7 @@ namespace Enforcer5.Actions
     /// <summary>
     /// The one way to act on a member (<c>docs/action-seam.md</c>). The request is carried out through
     /// <see cref="EnforcementQueue"/> (warns by <see cref="WarnActions"/>), then what it owns is recorded (<see cref="ActionEffects"/>: the tempban
-    /// schedule, the ban list, the ban record). The steps before it (authorise, guards, hooks) arrive later.
+    /// schedule, the ban list, the ban record) and logged (<see cref="ActionLog"/>). The steps before it (authorise, guards, hooks) arrive later.
     /// </summary>
     internal static class ActionSeam
     {
@@ -67,6 +67,7 @@ namespace Enforcer5.Actions
         private static ActionResult Finish(ActionResult result)
         {
             ActionEffects.Apply(result);
+            ActionLog.Write(result);
             try
             {
                 Ran?.Invoke(result);

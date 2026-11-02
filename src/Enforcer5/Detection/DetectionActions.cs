@@ -40,8 +40,11 @@ namespace Enforcer5.Detection
         {
             if (action.Report)
                 DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail);
-            if (action.Action is "none" or "score" or "report" && !action.Delete) return;
-            LogAction(action);
+            var deleteOnly = action.Action is "none" or "score" or "report";
+            if (deleteOnly && !action.Delete) return;
+            // A delete alone is logged here; an action logs its own line once it went through.
+            var line = LogLine(action);
+            if (deleteOnly && line != null) Service.LogBotAction(action.ChatId, line, action.UserId);
             Bot.DispatchAction(() =>
             {
                 try
@@ -54,23 +57,25 @@ namespace Enforcer5.Detection
                     switch (action.Action)
                     {
                         case "warn":
-                            Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason, source: ActionSource.Detection);
+                            Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason, source: ActionSource.Detection,
+                                logLine: line);
                             break;
                         case "mute":
-                            Methods.MuteUser(chatId, userId, lang, reason: action.Reason, source: ActionSource.Detection);
+                            Methods.MuteUser(chatId, userId, lang, reason: action.Reason, source: ActionSource.Detection, logLine: line);
                             break;
                         case "tempmute":
                             Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(Methods.GetGroupTempMuteTime(chatId)), lang,
-                                reason: action.Reason, source: ActionSource.Detection);
+                                reason: action.Reason, source: ActionSource.Detection, logLine: line);
                             break;
                         case "kick":
-                            Methods.KickUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection);
+                            Methods.KickUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection, logLine: line);
                             break;
                         case "tempban":
-                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), userId.ToString(), reason: action.Reason, source: ActionSource.Detection);
+                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), userId.ToString(), reason: action.Reason,
+                                source: ActionSource.Detection, logLine: line);
                             break;
                         case "ban":
-                            Methods.BanUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection);
+                            Methods.BanUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection, logLine: line);
                             break;
                     }
                 }
@@ -81,8 +86,8 @@ namespace Enforcer5.Detection
             }, "DetectionAction");
         }
 
-        /// <summary>One line in the group's log channel for what Detection did (design section 6).</summary>
-        private static void LogAction(DetectionAction action)
+        /// <summary>The group's log channel line for what Detection did (design section 6); null when it cannot be built.</summary>
+        private static string LogLine(DetectionAction action)
         {
             try
             {
@@ -90,13 +95,13 @@ namespace Enforcer5.Detection
                 var what = action.Action is "none" or "score" or "report" ? "delete" : action.Action;
                 var name = action.Member != null ? action.Member.FirstName : action.UserId.ToString();
                 var label = DetectionReports.SignLabel(lang, action.Sign);
-                Service.LogBotAction(action.ChatId,
-                    Methods.GetLocaleString(lang, "detectionLogLine", Methods.GetLocaleString(lang, $"filterAction_{what}"),
-                        $"{name}, {action.UserId}", label), action.UserId);
+                return Methods.GetLocaleString(lang, "detectionLogLine", Methods.GetLocaleString(lang, $"filterAction_{what}"),
+                    $"{name}, {action.UserId}", label);
             }
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Logging the Detection action on {action.UserId} in {action.ChatId}");
+                return null;
             }
         }
     }

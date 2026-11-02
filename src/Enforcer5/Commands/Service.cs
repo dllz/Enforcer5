@@ -538,8 +538,42 @@ defSpamValue = 3;
             }
         }
 
+        // Commands already logged: one line per command, whether the command logged itself or the actions it ran
+        // did (Actions/ActionLog), and however many actions it ran.
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Message, object> LoggedCommands = new();
+
+        /// <summary>
+        /// Logs <paramref name="update"/>'s command once it acted on <paramref name="targetId"/> in
+        /// <paramref name="chatId"/> (an action's line, <c>Actions/ActionLog</c>). In the group itself, exactly as
+        /// <see cref="LogCommand(Update, string)"/>; from a private chat, in the group's log channel with the
+        /// member named.
+        /// </summary>
+        internal static void LogCommand(long chatId, long targetId, Update update)
+        {
+            var message = update.Message;
+            if (message.Chat.Id == chatId)
+            {
+                LogCommand(update, message.Text);
+                return;
+            }
+            if (!FirstLog(message)) return;
+            LogCommand(chatId, message.From.Id, message.From.FirstName, GetCachedGroupTitle(chatId), message.Text,
+                targetId > 0 ? ArgTargetName(targetId) : "");
+        }
+
+        private static bool FirstLog(Message message)
+        {
+            lock (LoggedCommands)
+            {
+                if (LoggedCommands.TryGetValue(message, out _)) return false;
+                LoggedCommands.Add(message, null);
+                return true;
+            }
+        }
+
         public static void LogCommand(Update update, string command)
         {          
+                if (!FirstLog(update.Message)) return;
                 var adminUserId = update.Message.From.Id;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;

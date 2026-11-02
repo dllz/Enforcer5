@@ -293,7 +293,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 | B (done, 2026-10-31) | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
 | C (done, 2026-10-31) | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
 | D (done, 2026-11-02) | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | an admin's `/d` is a decision |
-| E | Log channel lines owned by the actions | wording unchanged |
+| E (done, 2026-11-02) | Log channel lines owned by the actions | wording unchanged; a line only when the action went through |
 | F | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none |
 | G | `/batch` | new command |
 
@@ -340,6 +340,24 @@ left for step E, when the record step moves into the actions. A guard test (`Act
 code outside `Actions/` and `Enforcement/` builds a ban, kick, mute, unban, unmute or channel ban job.
 Routine deletes (flood, locks, channel posts, the bot's own messages, `/banmedia`'s file) and raid mode's
 lock stay direct jobs.
+
+Step E notes: `Actions/ActionLog` posts an action's line once it went through (done or queued), in the
+wording the callers used: an admin's command as typed (`Service.LogCommand`, once per command however many
+actions it ran: `Service` remembers which command messages it logged, so a command that still logs itself
+is not logged twice), and the action's own `ActionRequest.Log` when it has one: the bot's own actions
+(length and media limits, filters, Detection, channel posts) log what they told the group through
+`LogBotAction` (digested during a raid), and a warn removal its readable line with the link (built from the
+result: the warns left). The callers' own `LogCommand`/`LogBotAction` after those actions are gone
+(`/ban`, `/kick`, `/warn`, `/prewarn`, `/unban`, `/tempban`, `/mute`, `/tempmute`, `/unmute`, `/delmsg`,
+`/d`, channel bans). What changes: nothing is logged for an action that did not happen (`/warn` of an admin,
+a kick Telegram refused, a filter's tempban of someone it could not ban, which were logged before the
+action ran); an action on oneself (`/d` of one's own post, `/kickme`) is not logged; a command from a private
+chat about a group is logged in that group's channel. Not moved, on purpose: button presses (the
+dispatcher logs each press, `LogCallback`), a warn limit the ban or kick did not follow (a line about a
+refusal, written with the warn message, `WarnLimitText`), Detection's delete-only line and a channel post
+only deleted (routine deletes), BotGuard's lines (events about a bot, not one action), and the commands that
+are not actions. A job refused at first for missing rights and carried out later, once the rights are back,
+is not logged when it happens.
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 

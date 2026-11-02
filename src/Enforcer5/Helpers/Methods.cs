@@ -82,7 +82,7 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static bool KickUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
             WarningRef trigger = null, bool record = true, ReportRef report = null, ActionSource? source = null,
-            string stat = null)
+            string stat = null, string logLine = null)
         {
             // A ban lifted at once, through the enforcement queue: two calls, retried until Telegram
             // has taken them. It used to be a ban, up to ten membership checks and ten unbans.
@@ -90,7 +90,7 @@ namespace Enforcer5.Helpers
             {
                 Kind = ActionKind.Kick, ChatId = chatId, TargetId = userId, ActorId = actorId,
                 Source = source ?? SourceOf(actorId, report), Reason = reason, Trigger = trigger, Report = report,
-                Record = record, Stat = stat
+                Record = record, Stat = stat, Log = ActionLogEntry.Bot(logLine)
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
@@ -868,14 +868,15 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static bool BanUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
             WarningRef trigger = null, ReportRef report = null, bool revokeMessages = false, ActionSource? source = null,
-            string stat = null, string banListReason = null, string banListName = null)
+            string stat = null, string banListReason = null, string banListName = null, string logLine = null)
         {
             // revokeMessages: the same call deletes everything they posted in the chat, for spammers.
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.Ban, ChatId = chatId, TargetId = userId, ActorId = actorId,
                 Source = source ?? SourceOf(actorId, report), Reason = reason, Trigger = trigger, Report = report,
-                RevokeMessages = revokeMessages, Stat = stat, BanListReason = banListReason, BanListName = banListName
+                RevokeMessages = revokeMessages, Stat = stat, BanListReason = banListReason, BanListName = banListName,
+                Log = ActionLogEntry.Bot(logLine)
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
@@ -899,12 +900,13 @@ namespace Enforcer5.Helpers
 
         /// <summary>Tempbans the user until <paramref name="untilDateTime"/> (UTC); see BanUser.</summary>
         internal static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
-            string reason = null, long? actorId = null, ActionSource? source = null, string stat = null)
+            string reason = null, long? actorId = null, ActionSource? source = null, string stat = null, string logLine = null)
         {
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.TempBan, ChatId = chatId, TargetId = userId, ActorId = actorId,
-                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime, Stat = stat
+                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime, Stat = stat,
+                Log = ActionLogEntry.Bot(logLine)
             });
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
@@ -1312,12 +1314,12 @@ namespace Enforcer5.Helpers
         /// </summary>
         /// <para><paramref name="actorId"/> is the admin who asked; null when Enforcer acts on its own.</para>
         internal static bool MuteUser(long chatId, long userId, XDocument doc, string reason = null, long? actorId = null,
-            ActionSource? source = null)
+            ActionSource? source = null, string logLine = null)
         {
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.Mute, ChatId = chatId, TargetId = userId, ActorId = actorId,
-                Source = source ?? SourceOf(actorId, null), Reason = reason
+                Source = source ?? SourceOf(actorId, null), Reason = reason, Log = ActionLogEntry.Bot(logLine)
             });
             return Restricted(result.Enforcement, "Mute", chatId, userId, doc, "cannotmuteadmin",
                 quiet: result.Applied.Source == ActionSource.MuteOnJoin);
@@ -1325,12 +1327,13 @@ namespace Enforcer5.Helpers
 
         /// <summary>Mutes the user until <paramref name="untilDateTime"/> (UTC), when Telegram lifts it.</summary>
         internal static bool TempMuteUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
-            string reason = null, long? actorId = null, ActionSource? source = null)
+            string reason = null, long? actorId = null, ActionSource? source = null, string logLine = null)
         {
             var result = ActionSeam.Run(new ActionRequest
             {
                 Kind = ActionKind.TempMute, ChatId = chatId, TargetId = userId, ActorId = actorId,
-                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime
+                Source = source ?? SourceOf(actorId, null), Reason = reason, UntilUtc = untilDateTime,
+                Log = ActionLogEntry.Bot(logLine)
             });
             return Restricted(result.Enforcement, "Tempmute", chatId, userId, doc, "cannottempmuteadmin");
         }

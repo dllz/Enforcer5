@@ -182,9 +182,9 @@ namespace Enforcer5.Detection
             var label = Label(lang, rule);
             var reason = own?.Reason ?? $"Filter {(rule.Kind == FilterRule.PresetKind ? rule.Preset : "#" + rule.Id)}";
             var quiet = Raids.RaidGuard.Quiet(chatId);
+            // The log channel's line is the action's (logged once it went through); this tells the group.
             void Tell(string reply)
             {
-                Service.LogBotAction(chatId, reply, userId);
                 if (!quiet) Bot.Send(reply, update);
             }
 
@@ -198,41 +198,51 @@ namespace Enforcer5.Detection
                     Commands.Warn(userId, chatId, update, targetnick: userId.ToString(), reason: reason, source: ActionSource.Filter);
                     break;
                 case "mute":
-                    if (Methods.MuteUser(chatId, userId, lang, reason: reason, source: ActionSource.Filter))
-                        Tell(Methods.GetLocaleString(lang, "mutedByFilter", $"{name}, {userId}", label));
+                {
+                    var text = Methods.GetLocaleString(lang, "mutedByFilter", $"{name}, {userId}", label);
+                    if (Methods.MuteUser(chatId, userId, lang, reason: reason, source: ActionSource.Filter, logLine: text)) Tell(text);
                     break;
+                }
                 case "tempmute":
+                {
                     var muteMinutes = Methods.GetGroupTempMuteTime(chatId);
-                    if (Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(muteMinutes), lang, reason: reason, source: ActionSource.Filter))
-                        Tell(Methods.GetLocaleString(lang, "tempmutedByFilter", $"{name}, {userId}", label,
-                            TimeSpan.FromMinutes(muteMinutes).ToString(@"dd\:hh\:mm")));
+                    var text = Methods.GetLocaleString(lang, "tempmutedByFilter", $"{name}, {userId}", label,
+                        TimeSpan.FromMinutes(muteMinutes).ToString(@"dd\:hh\:mm"));
+                    if (Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(muteMinutes), lang, reason: reason, source: ActionSource.Filter,
+                            logLine: text))
+                        Tell(text);
                     break;
+                }
                 case "kick":
-                    Methods.KickUser(chatId, userId, lang, reason, source: ActionSource.Filter);
-                    Tell(own != null
+                {
+                    var text = own != null
                         ? Methods.GetLocaleString(lang, own.Kicked, $"{name}, {userId}")
-                        : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {userId}", label));
+                        : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {userId}", label);
+                    Methods.KickUser(chatId, userId, lang, reason, source: ActionSource.Filter, logLine: text);
+                    Tell(text);
                     break;
+                }
                 case "ban":
+                {
+                    var text = own != null
+                        ? Methods.GetLocaleString(lang, own.Banned, $"{name}, {userId}")
+                        : Methods.GetLocaleString(lang, "bannedByFilter", $"{name}, {userId}", label);
                     if (Methods.BanUser(chatId, userId, lang, reason, source: ActionSource.Filter, stat: own?.SavedAs ?? "filter",
                             banListReason: own != null
                                 ? Methods.GetLocaleString(lang, own.Banned, ".")
                                 : Methods.GetLocaleString(lang, "bannedByFilter", ".", label),
-                            banListName: person.FirstName))
-                    {
-                        Tell(own != null
-                            ? Methods.GetLocaleString(lang, own.Banned, $"{name}, {userId}")
-                            : Methods.GetLocaleString(lang, "bannedByFilter", $"{name}, {userId}", label));
-                    }
+                            banListName: person.FirstName, logLine: text))
+                        Tell(text);
                     break;
+                }
                 case "tempban":
                     var minutes = Methods.GetGroupTempbanTime(chatId);
                     var timeText = TimeSpan.FromMinutes(minutes).ToString(@"dd\:hh\:mm");
-                    var text = own != null
+                    var tempbanText = own != null
                         ? Methods.GetLocaleString(lang, own.Tempbanned, $"{name}, {userId}", timeText)
                         : Methods.GetLocaleString(lang, "tempbannedByFilter", $"{name}, {userId}", label, timeText);
-                    Service.LogBotAction(chatId, text, userId);
-                    Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: text, reason: reason, source: ActionSource.Filter);
+                    Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: tempbanText, reason: reason, source: ActionSource.Filter,
+                        logLine: tempbanText);
                     break;
                 case "report":
                     DetectionReports.Report(chatId, userId, message?.MessageId, rule.Sign, person);

@@ -204,7 +204,10 @@ namespace Enforcer5
                 Source = ActionSources.Derive(ErrorReporter.Current?.Update, adminId, false),
                 Reason = reason,
                 WarnKind = change.Kind,
-                AlsoMediaWarns = change.AlsoMediaWarns
+                AlsoMediaWarns = change.AlsoMediaWarns,
+                // Who took what off whom, why and what is left, linked to where it was asked for.
+                Log = new ActionLogEntry(r => LogText(lang, change, adminName, adminId, target, Service.GetCachedGroupTitle(chatId),
+                    chatId, r.Count, reason)) { ByBot = false, LinkMessageId = sourceMessageId }
             });
             if (result.Outcome == ActionOutcome.NothingToDo)
             {
@@ -233,10 +236,6 @@ namespace Enforcer5
                 }
             }
             if (!shown) Bot.SendReply(text, chatId, sourceMessageId);
-
-            var group = Service.GetCachedGroupTitle(chatId);
-            Service.SendToLogChannel(chatId, lang,
-                () => LogText(lang, change, adminName, adminId, target, group, chatId, left, reason), sourceMessageId);
         }
 
         private static void TryDelete(long chatId, int messageId)

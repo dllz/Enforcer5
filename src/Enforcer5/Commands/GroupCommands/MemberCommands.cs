@@ -128,8 +128,8 @@ namespace Enforcer5
             var own = update.Message.From.Id == update.Message.ReplyToMessage.From?.Id;
             if (own || Methods.IsGroupAdmin(update))
             {
-                // An admin deleting someone else's post decided about them (Detection learns from it); the
-                // seam leaves one's own post out of that.
+                // An admin deleting someone else's post decided about them (Detection learns from it) and is
+                // logged; the seam leaves one's own post out of both.
                 if (!Methods.DeleteForAdmin(update.Message.ReplyToMessage, update.Message.From.Id, ActionSource.Command)) return;
                 try
                 {
@@ -140,7 +140,6 @@ namespace Enforcer5
                     // The post itself went: the right is there, so a failure here is unexpected.
                     ErrorReporter.Report(e, $"Deleting the /d command {update.Message.MessageId}");
                 }
-                if (!own) Service.LogCommand(update, update.Message.Text);
             }
         }
 
