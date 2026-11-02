@@ -134,6 +134,9 @@ namespace Enforcer5.Detection
                 var message = ctx.Message;
                 if (message.SenderChat != null || message.From == null || message.From.IsBot || ctx.Watched) return;
                 if (!await DetectionPilot.IncludesAsync(ctx.ChatId)) return;
+                // Sent through an inline bot the group trusts (a whisper bot replacing its placeholder): the bot made
+                // the edit, not the member. An untrusted one is checked: it could rewrite a post after the checks.
+                if (message.ViaBot != null && await BotGuard.IsTrustedHereAsync(ctx.ChatId, message.ViaBot)) return;
                 var posted = message.Date.ToUniversalTime();
                 var edited = (message.EditDate ?? ctx.ReceivedAt).ToUniversalTime();
                 var after = Describe(message);

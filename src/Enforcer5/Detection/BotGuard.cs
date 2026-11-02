@@ -227,6 +227,23 @@ namespace Enforcer5.Detection
             bot != null && (bot.Id == Bot.Me?.Id || BotSenderFilter.TrustedBotIds.Contains(bot.Id) ||
                             bot.Username != null && KnownBots.Contains(bot.Username, StringComparer.OrdinalIgnoreCase));
 
+        /// <summary>
+        /// Whether the group can vouch for what <paramref name="bot"/> posts on a member's behalf (an inline bot's post, its
+        /// later edits): one of ours, trusted in every group, chosen by the group's admins (added or /trustbot), or an admin
+        /// of the group. Never when the group's admins removed it or a dev blocked it. A bot merely found in the group does
+        /// not count: anyone could post through an inline bot that rewrites its posts.
+        /// </summary>
+        internal static async Task<bool> IsTrustedHereAsync(long chatId, User bot)
+        {
+            if (bot == null) return false;
+            if (IsKnown(bot)) return true;
+            var record = Effective(chatId, bot.Id);
+            if (UntrustedByAdmins(record) || IsGloballyBlocked(bot.Id)) return false;
+            if (IsTrustedEverywhere(bot.Id) || ChosenByAdmins(record)) return true;
+            if (record is { IsAllowed: false }) return false;
+            return await GroupBots.IsAdminAsync(chatId, bot.Id);
+        }
+
         /// <summary>A guest bot's answer: it was mentioned and replied without being in the group.</summary>
         internal static bool IsGuestReply(Message message) =>
             message.GuestBotCallerUser != null || message.GuestBotCallerChat != null || !string.IsNullOrEmpty(message.GuestQueryId);

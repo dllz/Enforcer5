@@ -206,6 +206,41 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task AnEditByAnInlineBot_IsLeftOut_OnlyWhenTheGroupTrustsTheBot()
+        {
+            // #26: a whisper bot replaces its placeholder text; the bot made the edit, not the member.
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            var trusted = new User { Id = 7_000_001, IsBot = true, FirstName = "Whisper", Username = "whisperbot" };
+            var untrusted = new User { Id = 7_000_002, IsBot = true, FirstName = "Rewriter", Username = "rewriterbot" };
+            var game = new User { Id = 7_000_003, IsBot = true, FirstName = "Werewolf", Username = "werewolfbot" };
+            await BotGuard.TrustAsync(chat.ChatId, trusted.Id, admin.Id); // what /trustbot does
+            await chat.CompleteAsync();
+
+            async Task<Message> Via(User bot)
+            {
+                var post = chat.Text(member, "a whisper for someone");
+                post.ViaBot = bot;
+                return await chat.PostAsync(post);
+            }
+            var viaTrusted = await Via(trusted);
+            var viaUntrusted = await Via(untrusted);
+            var viaGame = await Via(game);
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(11));
+            foreach (var post in new[] { viaTrusted, viaUntrusted, viaGame })
+            {
+                var edit = chat.Text(member, "someone read the whisper");
+                edit.ViaBot = post.ViaBot;
+                await chat.EditAsync(post, edit);
+            }
+
+            Assert.AreEqual(1, (await Detections(chat)).Length, "only the untrusted bot's edit is the member's");
+            Assert.AreEqual(1, Reports(chat, admin).Length);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task AnEditedMessage_GoesThroughTheFilters()
         {
             await using var chat = await HarnessChat.StartAsync();
