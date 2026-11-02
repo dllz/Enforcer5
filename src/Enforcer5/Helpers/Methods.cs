@@ -880,6 +880,23 @@ namespace Enforcer5.Helpers
             return Answered(result.Enforcement, chatId, doc, "cannotbanadmin");
         }
 
+        /// <summary>
+        /// Deletes a message because an admin asked (/delmsg, /d): a decision about its author, unless it is
+        /// the admin's own. False, after telling the group why (the bot may not delete), when it was refused.
+        /// </summary>
+        internal static bool DeleteForAdmin(Message message, long actorId, ActionSource source)
+        {
+            var chatId = message.Chat.Id;
+            var result = ActionSeam.Run(new ActionRequest
+            {
+                Kind = ActionKind.Delete, ChatId = chatId, MessageId = message.MessageId, About = message,
+                // A post made as a channel has a placeholder sender: nobody to decide about.
+                TargetId = message.SenderChat == null ? message.From?.Id ?? 0 : 0,
+                ActorId = actorId, Source = source
+            });
+            return Answered(result.Enforcement, chatId, GetGroupLanguage(chatId).Doc, null);
+        }
+
         /// <summary>Tempbans the user until <paramref name="untilDateTime"/> (UTC); see BanUser.</summary>
         internal static bool TempBanUser(long chatId, long userId, DateTime untilDateTime, XDocument doc,
             string reason = null, long? actorId = null, ActionSource? source = null, string stat = null)

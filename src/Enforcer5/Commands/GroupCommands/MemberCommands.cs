@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Enforcer5.Actions;
 using Enforcer5.Attributes;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
@@ -123,30 +124,23 @@ namespace Enforcer5
         [Command(Trigger = "d", InGroupOnly = true, RequiresReply = true, Menu = Attributes.CommandMenu.Hidden)]
         public static void DeleteOwnMessage(Update update, string[] args)
         {
-            var msgID = update.Message.ReplyToMessage.MessageId;
             var chatId = update.Message.Chat.Id;
-
-            if (update.Message.From.Id ==  update.Message.ReplyToMessage.From.Id || Methods.IsGroupAdmin(update))
+            var own = update.Message.From.Id == update.Message.ReplyToMessage.From?.Id;
+            if (own || Methods.IsGroupAdmin(update))
             {
+                // An admin deleting someone else's post decided about them (Detection learns from it); the
+                // seam leaves one's own post out of that.
+                if (!Methods.DeleteForAdmin(update.Message.ReplyToMessage, update.Message.From.Id, ActionSource.Command)) return;
                 try
                 {
-                    Bot.DeleteMessage(chatId, msgID);
                     Bot.DeleteMessage(chatId, update.Message.MessageId);
-
-                    if (update.Message.ReplyToMessage.From.Id != update.Message.From.Id) Service.LogCommand(update, update.Message.Text);
                 }
-                catch (AggregateException e)
+                catch (Exception e)
                 {
-                    var lang = Methods.GetGroupLanguage(chatId).Doc;
-
-                    if (e.InnerExceptions[0].Message.Equals("Bad Request: message can't be deleted"))
-                        Bot.SendReply(Methods.GetLocaleString(lang, "botNotAdmin"), update.Message);
-                    else
-                    {
-                        ErrorReporter.Report(e, $"Deleting message {msgID}");
-                        Methods.SendError(e.InnerException, chatId, lang);
-                    }
+                    // The post itself went: the right is there, so a failure here is unexpected.
+                    ErrorReporter.Report(e, $"Deleting the /d command {update.Message.MessageId}");
                 }
+                if (!own) Service.LogCommand(update, update.Message.Text);
             }
         }
 

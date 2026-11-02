@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Attributes;
 using Enforcer5.Data;
 using Enforcer5.Helpers;
@@ -73,7 +74,11 @@ namespace Enforcer5
         {
             var channel = new AllowedChannel(channelId, title ?? LookUpTitle(channelId));
             // Through the enforcement queue, which reports anything unexpected.
-            var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.BanSenderChat(update.Message.Chat.Id, channelId));
+            var result = ActionSeam.Run(new ActionRequest
+            {
+                Kind = ActionKind.BanChannel, ChatId = update.Message.Chat.Id, TargetId = channelId,
+                ActorId = update.Message.From.Id, Source = ActionSource.Command
+            }).Enforcement;
             if (!result.Succeeded)
             {
                 Methods.SendError(Bot.AsApiError(result.Error)?.Message ?? result.Error?.Message ?? result.Refusal.ToString(),
@@ -90,7 +95,11 @@ namespace Enforcer5
         {
             var channel = new AllowedChannel(channelId, title ?? LookUpTitle(channelId));
             // Through the enforcement queue, which reports anything unexpected.
-            var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.UnbanSenderChat(update.Message.Chat.Id, channelId));
+            var result = ActionSeam.Run(new ActionRequest
+            {
+                Kind = ActionKind.UnbanChannel, ChatId = update.Message.Chat.Id, TargetId = channelId,
+                ActorId = update.Message.From.Id, Source = ActionSource.Command
+            }).Enforcement;
             if (!result.Succeeded)
             {
                 Methods.SendError(Bot.AsApiError(result.Error)?.Message ?? result.Error?.Message ?? result.Refusal.ToString(),

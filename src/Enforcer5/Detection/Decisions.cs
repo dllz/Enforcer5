@@ -32,7 +32,7 @@ namespace Enforcer5.Detection
         internal static void Undo(long chatId, long userId, string action, long? actorId, string key = null) =>
             Record(chatId, userId, "undo", action, actorId, null, false, key);
 
-        /// <summary>An admin deleted <paramref name="message"/> with /delmsg.</summary>
+        /// <summary>An admin deleted <paramref name="message"/> (/delmsg, /d).</summary>
         internal static void Deleted(Message message, long actorId)
         {
             var target = message?.From?.Id;
@@ -63,9 +63,9 @@ namespace Enforcer5.Detection
             };
         }
 
-        /// <summary>An admin deleted the member's message <paramref name="messageId"/> from a report's button.</summary>
-        internal static void Deleted(long chatId, long userId, long messageId, long actorId) =>
-            Record(chatId, userId, "bad", "delete", actorId, null, true, null, aboutId: messageId);
+        /// <summary>An admin deleted the member's message <paramref name="messageId"/>, from a report's button when <paramref name="fromReport"/>.</summary>
+        internal static void Deleted(long chatId, long userId, long messageId, long actorId, bool fromReport) =>
+            Record(chatId, userId, "bad", "delete", actorId, null, fromReport, null, aboutId: messageId);
 
         private static void Record(long chatId, long userId, string label, string action, long? actorId, string reason,
             bool fromReport, string key, Message about = null, long? aboutId = null)

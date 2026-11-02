@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Attributes;
 using Enforcer5.Data;
 using Enforcer5.Helpers;
@@ -643,13 +644,22 @@ namespace Enforcer5
             var chatid = long.Parse(args[1]);
             var msgid = int.Parse(args[2]);
             var report = FindReport(chatid, args, null, msgid);
-            if (Bot.DeleteMessage(chatid, msgid))
+            // Buttons from before the member's id was added to them say nothing about whom: no decision then.
+            var memberId = args.Length > 4 && long.TryParse(args[4], out var member) ? member : 0;
+            var result = ActionSeam.Run(new ActionRequest
             {
-                ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
-                // Buttons from before the member's id was added to them say nothing about whom.
-                if (args.Length > 4 && long.TryParse(args[4], out var memberId))
-                    Detection.Decisions.Deleted(chatid, memberId, msgid, call.From.Id);
+                Kind = ActionKind.Delete, ChatId = chatid, MessageId = msgid, TargetId = memberId,
+                ActorId = call.From.Id, Source = ActionSource.Report
+            });
+            if (!result.Succeeded)
+            {
+                // Said in the popup; it used to escape as an exception, leaving the button spinning. The queue
+                // reports to the error chat whatever it did not expect.
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(Methods.GetGroupLanguage(chatid).Doc,
+                    result.Refusal == Enforcement.Refusal.BotNotAdmin ? "botNotAdmin" : "Error", result.Refusal.ToString()), true);
+                return;
             }
+            ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
             Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
         }

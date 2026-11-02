@@ -516,8 +516,7 @@ namespace Enforcer5
         [Command(Trigger = "delmsg", InGroupOnly = true, GroupAdminOnly = true, RequiresReply = true)]
         public static void DeleteMessageInGroup(Update update, string[] args)
         {
-            Bot.DeleteMessage(update.Message.Chat.Id, update.Message.ReplyToMessage.MessageId);
-            Detection.Decisions.Deleted(update.Message.ReplyToMessage, update.Message.From.Id);
+            if (!Methods.DeleteForAdmin(update.Message.ReplyToMessage, update.Message.From.Id, ActionSource.Command)) return;
             Service.LogCommand(update, update.Message.Text);
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Actions;
 using Enforcer5.Data;
 using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
@@ -215,8 +216,8 @@ namespace Enforcer5.Raids
                     if (release) incident.Muted--;
                 }
                 if (release)
-                    Bot.Dispatch(async () => await EnforcementQueue.SubmitAsync(EnforcementJob.Unmute(join.ChatId, join.UserId).For("Approved join request", null)),
-                        "RaidVetted");
+                    Bot.Dispatch(async () => await ActionSeam.SubmitAsync(RaidAction(ActionKind.Unmute, join.ChatId, join.UserId,
+                        "Approved join request")), "RaidVetted");
             }
             catch (Exception e)
             {
@@ -911,9 +912,11 @@ namespace Enforcer5.Raids
 
         private static void Quarantine(long chatId, long userId)
         {
-            var job = EnforcementJob.Mute(chatId, userId, Clock.UtcNow + Limits.QuarantineFor).For("Raid quarantine", null);
-            job.Note.NewJoiner = true;
-            Bot.Dispatch(async () => await EnforcementQueue.SubmitAsync(job), "RaidQuarantine");
+            var request = RaidAction(ActionKind.TempMute, chatId, userId, "Raid quarantine") with
+            {
+                UntilUtc = Clock.UtcNow + Limits.QuarantineFor, NewJoiner = true
+            };
+            Bot.Dispatch(async () => await ActionSeam.SubmitAsync(request), "RaidQuarantine");
             RaidTelemetry.Action(chatId, "quarantine", userId);
         }
 
@@ -924,8 +927,8 @@ namespace Enforcer5.Raids
                 BanChannel(chatId, userId, messages);
                 return;
             }
-            var job = EnforcementJob.Ban(chatId, userId, revokeMessages: true).For("Raid", null);
-            Bot.Dispatch(async () => await EnforcementQueue.SubmitAsync(job), "RaidBan");
+            var request = RaidAction(ActionKind.Ban, chatId, userId, "Raid") with { RevokeMessages = true };
+            Bot.Dispatch(async () => await ActionSeam.SubmitAsync(request), "RaidBan");
             RaidTelemetry.Action(chatId, "ban", userId);
         }
 
@@ -938,10 +941,10 @@ namespace Enforcer5.Raids
                 BanChannel(chatId, userId, messages);
                 return;
             }
-            var job = EnforcementJob.Mute(chatId, userId, Clock.UtcNow + Limits.QuarantineFor).For("Raid suspect", null);
+            var request = RaidAction(ActionKind.TempMute, chatId, userId, "Raid suspect") with { UntilUtc = Clock.UtcNow + Limits.QuarantineFor };
             Bot.Dispatch(async () =>
             {
-                await EnforcementQueue.SubmitAsync(job);
+                await ActionSeam.SubmitAsync(request);
                 if (messages.Count > 0) await EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, messages.ToArray()));
             }, "RaidMute");
             RaidTelemetry.Action(chatId, "mute", userId);
@@ -954,13 +957,22 @@ namespace Enforcer5.Raids
             Bot.Dispatch(async () =>
             {
                 if (await LinkedChannelAsync(chatId) == channelId) return;
-                await EnforcementQueue.SubmitAsync(EnforcementJob.BanSenderChat(chatId, channelId).For("Raid", null));
+                await ActionSeam.SubmitAsync(RaidAction(ActionKind.BanChannel, chatId, channelId, "Raid"));
                 if (messages.Count > 0) await EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, messages.ToArray()));
             }, "RaidBanChannel");
             RaidTelemetry.Action(chatId, "ban", channelId);
         }
 
         private static Task<long> LinkedChannelAsync(long chatId) => ChatDetails.LinkedChannelAsync(chatId);
+
+        /// <summary>
+        /// One of raid mode's own actions on a member. Queued through the seam without waiting
+        /// (<see cref="ActionSeam.SubmitAsync"/>), and never blockable: a raid makes hundreds of these.
+        /// </summary>
+        private static ActionRequest RaidAction(ActionKind kind, long chatId, long targetId, string reason) => new()
+        {
+            Kind = kind, ChatId = chatId, TargetId = targetId, Source = ActionSource.Raid, Reason = reason
+        };
 
         // ---------------------------------------------------------------- ending
 
@@ -1115,7 +1127,8 @@ namespace Enforcer5.Raids
                 .Select(v => long.TryParse(v.ToString(), out var id) ? id : 0).Where(id => id != 0).ToList();
             Redis.db.KeyDeleteAsync(key).GetAwaiter().GetResult();
             foreach (var u in users)
-                Bot.Dispatch(async () => await EnforcementQueue.SubmitAsync(EnforcementJob.Unmute(chatId, u).For("Raid over", by)), "RaidRelease");
+                Bot.Dispatch(async () => await ActionSeam.SubmitAsync(RaidAction(ActionKind.Unmute, chatId, u, "Raid over") with { ActorId = by }),
+                    "RaidRelease");
             return users.Count > 0;
         }
 

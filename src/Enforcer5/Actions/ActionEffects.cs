@@ -1,5 +1,6 @@
 using System;
 using Enforcer5.Data;
+using Enforcer5.Detection;
 using Enforcer5.Helpers;
 
 namespace Enforcer5.Actions
@@ -37,6 +38,15 @@ namespace Enforcer5.Actions
                     case ActionKind.Unban:
                         Repositories.Tempbans.CancelAsync(request.ChatId, request.TargetId).GetAwaiter().GetResult();
                         Repositories.BanList.ClearAsync(request.ChatId, request.TargetId).GetAwaiter().GetResult();
+                        break;
+                    case ActionKind.Delete:
+                        // An admin deleting a member's post decided about them; deleting one's own (/d) did not.
+                        if (request.ActorId is { } actor && request.TargetId > 0 && request.TargetId != actor)
+                        {
+                            if (request.About != null) Decisions.Deleted(request.About, actor);
+                            else Decisions.Deleted(request.ChatId, request.TargetId, request.MessageId, actor,
+                                request.Source == ActionSource.Report);
+                        }
                         break;
                 }
                 if (request.Stat != null) Methods.SaveBan(request.TargetId, request.Stat);

@@ -59,7 +59,7 @@ namespace Enforcer5.Tests.Actions
         public void TheBotsOwnSources_AreLabelledAuto()
         {
             foreach (var source in new[] { ActionSource.Auto, ActionSource.Escalation, ActionSource.Detection, ActionSource.Filter,
-                         ActionSource.Flood, ActionSource.Limits, ActionSource.GlobalBan, ActionSource.MuteOnJoin, ActionSource.Expiry })
+                         ActionSource.Flood, ActionSource.Limits, ActionSource.GlobalBan, ActionSource.MuteOnJoin, ActionSource.Expiry, ActionSource.ChannelPost })
                 Assert.AreEqual("auto", ActionSources.Label(source), source.ToString());
         }
 
@@ -81,8 +81,11 @@ namespace Enforcer5.Tests.Actions
                 (Request(ActionKind.Mute), EnforcementKind.Mute, null),
                 (Request(ActionKind.TempMute, until: until), EnforcementKind.Mute, until),
                 (Request(ActionKind.Unmute), EnforcementKind.Unmute, null),
+                (Request(ActionKind.BanChannel), EnforcementKind.BanSenderChat, null),
+                (Request(ActionKind.UnbanChannel), EnforcementKind.UnbanSenderChat, null),
             };
-            Assert.AreEqual(Enum.GetValues<ActionKind>().Count(k => !WarnActions.Handles(k)), cases.Length, "every kind is covered");
+            // Plus Delete, below.
+            Assert.AreEqual(Enum.GetValues<ActionKind>().Count(k => !WarnActions.Handles(k)) - 1, cases.Length, "every kind is covered");
             foreach (var (request, kind, expectedUntil) in cases)
             {
                 var job = ActionSeam.ToJob(request);
@@ -106,6 +109,17 @@ namespace Enforcer5.Tests.Actions
             Assert.AreEqual(BanEnd.Expired, ActionSeam.ToJob(Request(ActionKind.Unban, ActionSource.Expiry)).Note.End);
             Assert.IsTrue(ActionSeam.ToJob(Request(ActionKind.Mute, ActionSource.MuteOnJoin)).Note.NewJoiner);
             Assert.IsFalse(ActionSeam.ToJob(Request(ActionKind.Mute, ActionSource.Detection)).Note.NewJoiner);
+            Assert.IsTrue(ActionSeam.ToJob(Request(ActionKind.TempMute, ActionSource.Raid, DateTime.UtcNow) with { NewJoiner = true }).Note.NewJoiner,
+                "raid quarantine");
+        }
+
+        [TestMethod]
+        public void ADelete_IsADeleteJobForTheMessage_NotForTheMember()
+        {
+            var job = ActionSeam.ToJob(Request(ActionKind.Delete) with { MessageId = 77 });
+            Assert.AreEqual((EnforcementKind.Delete, -100L, 0L), (job.Kind, job.ChatId, job.TargetId),
+                "no member: the queue's known-admin refusal is not for deletes");
+            CollectionAssert.AreEqual(new[] { 77 }, job.MessageIds);
         }
 
         [TestMethod]
@@ -154,6 +168,26 @@ namespace Enforcer5.Tests.Actions
             var refused = new ActionResult(request, EnforcementResult.Refuse(Refusal.TargetIsAdmin));
             Assert.AreEqual((ActionOutcome.Refused, Refusal.TargetIsAdmin, false), (refused.Outcome, refused.Refusal, refused.Succeeded));
             Assert.IsTrue(new ActionResult(request, EnforcementResult.Queued).Succeeded);
+        }
+
+        /// <summary>
+        /// Section 12 of the design: every ban, kick, mute, unban, unmute and channel ban goes through the seam,
+        /// so nothing outside <c>Actions/</c> and <c>Enforcement/</c> builds those jobs. Routine deletes and raid
+        /// mode's lock of the group (SetPermissions) are not actions on a member and stay direct.
+        /// </summary>
+        [TestMethod]
+        public void OnlyTheSeam_BuildsJobsThatActOnAMember()
+        {
+            var pattern = new System.Text.RegularExpressions.Regex(
+                @"EnforcementJob\s*\.\s*(Ban|Kick|Mute|Unban|Unmute|BanSenderChat|UnbanSenderChat)\s*\(");
+            var root = TestEnvironment.SourceRoot;
+            var offenders = System.IO.Directory.GetFiles(root, "*.cs", System.IO.SearchOption.AllDirectories)
+                .Where(f => !f.Contains($"{System.IO.Path.DirectorySeparatorChar}obj{System.IO.Path.DirectorySeparatorChar}")
+                            && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}bin{System.IO.Path.DirectorySeparatorChar}"))
+                .Select(f => (File: System.IO.Path.GetRelativePath(root, f), Text: System.IO.File.ReadAllText(f)))
+                .Where(f => !f.File.StartsWith("Actions") && !f.File.StartsWith("Enforcement") && pattern.IsMatch(f.Text))
+                .Select(f => f.File).ToArray();
+            Assert.AreEqual(0, offenders.Length, "Act on members through ActionSeam: " + string.Join(", ", offenders));
         }
     }
 }

@@ -2,12 +2,13 @@ using System;
 using Enforcer5.Enforcement;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
+using Telegram.Bot.Types;
 
 namespace Enforcer5.Actions
 {
     /// <summary>
-    /// An action on a member that goes through the action seam (<c>docs/action-seam.md</c>). Deletes and
-    /// channel bans join in a later step.
+    /// An action on a member that goes through the action seam (<c>docs/action-seam.md</c>). Routine deletes
+    /// (flood, locks, housekeeping) and raid mode's lock of the group stay direct queue jobs.
     /// </summary>
     internal enum ActionKind
     {
@@ -27,7 +28,16 @@ namespace Enforcer5.Actions
         /// <summary>Takes one warn of <see cref="ActionRequest.WarnKind"/> off.</summary>
         RemoveWarn,
         /// <summary>Clears the warns of <see cref="ActionRequest.WarnKind"/> (and media warns, if asked).</summary>
-        ResetWarns
+        ResetWarns,
+        /// <summary>
+        /// A message deleted because an admin asked (/delmsg, /d, a report's Delete button): a decision about
+        /// its author. <see cref="ActionRequest.TargetId"/> is the author, 0 when not known.
+        /// </summary>
+        Delete,
+        /// <summary>A channel banned from posting in the group; <see cref="ActionRequest.TargetId"/> is the channel.</summary>
+        BanChannel,
+        /// <summary>A channel allowed to post in the group again.</summary>
+        UnbanChannel
     }
 
     /// <summary>
@@ -61,7 +71,9 @@ namespace Enforcer5.Actions
         /// <summary>Mute On Join.</summary>
         MuteOnJoin,
         /// <summary>A tempban that ran out.</summary>
-        Expiry
+        Expiry,
+        /// <summary>A post made as a channel the group does not allow.</summary>
+        ChannelPost
     }
 
     /// <summary>One action on one member in one chat.</summary>
@@ -97,6 +109,15 @@ namespace Enforcer5.Actions
         public WarnKind WarnKind { get; init; }
         /// <summary>ResetWarns of warns: the media warns go too (the reset button under a warn).</summary>
         public bool AlsoMediaWarns { get; init; }
+        /// <summary>
+        /// A mute of someone who just joined (Mute On Join, raid quarantine): kept in the joiners' list, and
+        /// no decision, since it is the group's setting and not a verdict on the member.
+        /// </summary>
+        public bool NewJoiner { get; init; }
+        /// <summary>Delete: the message.</summary>
+        public int MessageId { get; init; }
+        /// <summary>Delete: the message itself, when the caller has it (what the decision is about).</summary>
+        public Message About { get; init; }
     }
 
     internal enum ActionOutcome

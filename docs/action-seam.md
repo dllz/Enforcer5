@@ -292,7 +292,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 | A (done, 2026-10-31) | `Actions/`: types, `ActionSeam.Run`, no hooks. `Methods.*`, `Commands.Tempban` become thin wrappers building a request; source passed explicitly at the automatic call sites (Detection, filters, flood, limits) and derived for commands and buttons (moving the logic out of `Decisions.cs:74-84`) | none |
 | B (done, 2026-10-31) | Ban side effects into the Ban, TempBan, Unban kinds; callers drop their copies | fixes #24 |
 | C (done, 2026-10-31) | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
-| D | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | none |
+| D (done, 2026-11-02) | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | an admin's `/d` is a decision |
 | E | Log channel lines owned by the actions | wording unchanged |
 | F | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none |
 | G | `/batch` | new command |
@@ -324,6 +324,22 @@ they stay and the warn message and log channel say why (`warnMaxBanNotDone`/`war
 member by id or @username when they do not reply. Removal reasons are remembered for the prompt
 only when an admin gave them (the media limit's "Media limit" is not). Strings: 4 new keys, and the
 help of `/removewarn` and `/resetwarns` changed.
+
+Step D notes: new kinds `Delete` (target: the author, 0 when not known; `MessageId`, and `About` when the
+caller has the message), `BanChannel` and `UnbanChannel`, and the source `ChannelPost` (a post made as a
+channel the group does not allow; label `auto`). `/delmsg`, `/d` and a report's Delete button run a
+`Delete` (`Methods.DeleteForAdmin`); `ActionEffects` records the decision about the author when an admin
+deleted someone else's post, so `/d` by an admin is now a decision and `/d` on one's own post is not. A
+refused delete is told (the bot may not delete) instead of escaping as an exception; the report button
+answers with a popup. Raid mode's quarantine, suspect mutes, bans, channel bans and releases are requests
+with `Source = Raid` through `ActionSeam.SubmitAsync`: queued and journaled as before, never waited on, and
+what the action owns (a permanent ban ends a running tempban) recorded once Telegram took it. `NewJoiner`
+moved onto the request (raid quarantine). Labels are still worked out by `Decisions` from the update, which
+gives raid mode's own actions `auto` and a raid button's `raid`, as before; taking them from the request is
+left for step E, when the record step moves into the actions. A guard test (`ActionSeamTests`) fails when
+code outside `Actions/` and `Enforcement/` builds a ban, kick, mute, unban, unmute or channel ban job.
+Routine deletes (flood, locks, channel posts, the bot's own messages, `/banmedia`'s file) and raid mode's
+lock stay direct jobs.
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 
