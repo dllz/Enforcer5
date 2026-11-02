@@ -199,9 +199,20 @@ namespace Enforcer5.Tests.Raids
         }
 
         [TestMethod]
-        public void RejoiningRecently_MakesYouNewAgain()
+        public void JoiningRecently_MakesYouNew_UnlessYouHaveTenTimesTheUsualCount()
         {
-            Assert.AreEqual(TrustLevel.New, MemberTrust.Level(-1, 400, null, Unix(Now.AddHours(-1)), Now));
+            // #28: a member with tens of thousands of messages was new again after a rejoin.
+            Assert.AreEqual(TrustLevel.New, MemberTrust.Level(-1, 199, null, Unix(Now.AddHours(-1)), Now));
+            Assert.AreEqual(TrustLevel.Established, MemberTrust.Level(-1, 200, null, Unix(Now.AddHours(-1)), Now));
+            Assert.AreEqual(TrustLevel.Established, MemberTrust.Level(-1, 30000, Unix(Now.AddHours(-1)), Unix(Now.AddHours(-1)), Now));
+        }
+
+        [TestMethod]
+        public void TenTimes_IsOfTheGroupsUsualCount()
+        {
+            MemberTrust.SetNormsForTests(new GroupNorms(-1, 1000, 30, 5, 500));
+            Assert.AreEqual(TrustLevel.New, MemberTrust.Level(-1, 9999, null, Unix(Now.AddDays(-1)), Now));
+            Assert.AreEqual(TrustLevel.Established, MemberTrust.Level(-1, 10000, null, Unix(Now.AddDays(-1)), Now));
         }
     }
 }

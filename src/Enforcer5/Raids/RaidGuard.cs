@@ -281,6 +281,8 @@ namespace Enforcer5.Raids
                 var print = MessageFingerprint.Of(message, mentionOutside);
                 var key = ContentKey(message, print);
                 var harmful = key != null && IsHarmfulContent(message, print);
+                // A link from an inline bot the group trusts (a game bot's invite) is the bot's output, not the member's (#28).
+                var bareLink = print.BareLink && !(message.ViaBot != null && await Detection.BotGuard.IsTrustedHereAsync(chatId, message.ViaBot));
                 var sketch = key != null && print.MediaUniqueId == null ? MessageFingerprint.Sketch(message.Text ?? message.Caption) : null;
 
                 IReadOnlyList<RaidSigns.Posting> same = Array.Empty<RaidSigns.Posting>();
@@ -297,7 +299,7 @@ namespace Enforcer5.Raids
                 var postedSoon = !edited && joinedAt.HasValue && now - joinedAt.Value <= Limits.PostSoonAfterJoin;
                 var sameContent = posters.Count >= Limits.SameContentUsers;
                 var knownSpam = known != KnownContent.None;
-                if (!sameContent && !print.BareLink && !postedSoon && !knownSpam)
+                if (!sameContent && !bareLink && !postedSoon && !knownSpam)
                 {
                     RaidTelemetry.Message(chatId, user, print, null);
                     return;
@@ -344,7 +346,7 @@ namespace Enforcer5.Raids
                         // The raid's content, however long after the others.
                         Suspect(user, known == KnownContent.Echo ? echoers : null);
                     }
-                    if (print.BareLink && senderUntrusted)
+                    if (bareLink && senderUntrusted)
                     {
                         signs.BareLink(user, now);
                         Suspect(user);
@@ -353,7 +355,7 @@ namespace Enforcer5.Raids
                 }
                 if (newSuspects.Count > 0) Suspected(chatId, newSuspects);
                 if (echoers.Count > 0) Suspected(chatId, echoers, weak: true);
-                if (print.BareLink && senderUntrusted && user > 0) ReportLink(ctx);
+                if (bareLink && senderUntrusted && user > 0) ReportLink(ctx);
                 Evaluate(chatId);
             }
             catch (Exception e)

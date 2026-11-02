@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using Enforcer5.Data;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -135,8 +136,9 @@ namespace Enforcer5.Helpers
                 }
                 return;
             }
-            // When they joined, for the trust levels when PostgreSQL is not there.
-            _ = Redis.db.HashSetAsync($"{join.ChatId}:users:{join.UserId}", "joined", join.At.ToUnixTimeSeconds(), When.Always, CommandFlags.FireAndForget);
+            // When they joined, for the trust levels when PostgreSQL is not there. Only for someone who never talked
+            // here: a rejoin keeps their history, or a long-standing member was new again for weeks (#28).
+            _ = RecordJoinedAsync(join);
             try
             {
                 Joined?.Invoke(join);
@@ -144,6 +146,20 @@ namespace Enforcer5.Helpers
             catch (Exception e)
             {
                 ErrorReporter.Report(e, "Join listener");
+            }
+        }
+
+        private static async Task RecordJoinedAsync(JoinEvent join)
+        {
+            try
+            {
+                var key = $"{join.ChatId}:users:{join.UserId}";
+                if (await Redis.db.HashExistsAsync(key, "msgs")) return;
+                await Redis.db.HashSetAsync(key, "joined", join.At.ToUnixTimeSeconds());
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, "Recording a join");
             }
         }
 

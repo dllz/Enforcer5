@@ -26,16 +26,23 @@ namespace Enforcer5.Helpers
     /// <summary>
     /// Works out <see cref="TrustLevel"/>s, from Redis so it works without PostgreSQL:
     /// <c>{chat}:users:{user}</c> holds the message count (<c>msgs</c>), when they first talked there
-    /// (<c>first</c>, only for members whose first message came after it was added) and when they last
-    /// joined (<c>joined</c>). The thresholds scale with the group (<see cref="GroupNorms"/>, recomputed
-    /// nightly in PostgreSQL): from 20 messages in a quiet group to 1000 in a busy one, 3 to 30 days.
-    /// A member with no <c>first</c> but a count that high was there before any of this, and counts
-    /// as established.
+    /// (<c>first</c>, only for members whose first message came after it was added) and when they
+    /// joined (<c>joined</c>, written only while they have never talked there: a rejoin keeps their history). The
+    /// thresholds scale with the group (<see cref="GroupNorms"/>, recomputed nightly in PostgreSQL): from 20
+    /// messages in a quiet group to 1000 in a busy one, 3 to 30 days. A member with no <c>first</c> but a
+    /// count that high was there before any of this, and counts as established, as does anyone with
+    /// <see cref="HistoryFactor"/> times the usual count, whatever the dates.
     /// </summary>
     internal static class MemberTrust
     {
         internal const int DefaultMessages = 20;
         internal const int DefaultDays = 7;
+
+        /// <summary>
+        /// A member with this many times the usual count of messages is established however recently they (re)joined.
+        /// Above what trust learning can raise the level to (<see cref="Detection.TrustLearning.CapFactor"/>).
+        /// </summary>
+        internal const int HistoryFactor = 10;
 
         private static readonly ConcurrentDictionary<long, GroupNorms> Norms = new();
 
@@ -126,6 +133,9 @@ namespace Enforcer5.Helpers
         {
             var (needMessages, needDays) = Thresholds(chatId);
             if ((messages ?? 0) < needMessages) return TrustLevel.New;
+            // Far past the usual count (and past anything learning can raise it to): known here, whatever the
+            // dates say. A rejoin from before "joined" was kept used to make such members new for weeks.
+            if (messages >= (long)UsualThresholds(chatId).Messages * HistoryFactor) return TrustLevel.Established;
             var days = TimeSpan.FromDays(needDays);
             if (joinedUnix is { } joined && now - DateTimeOffset.FromUnixTimeSeconds(joined).UtcDateTime < days) return TrustLevel.New;
             if (firstUnix is { } first && now - DateTimeOffset.FromUnixTimeSeconds(first).UtcDateTime < days) return TrustLevel.New;

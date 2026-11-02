@@ -198,6 +198,40 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task ALongStandingMember_WhoLeftAndRejoined_IsNotNew_AndAGameBotsLinkIsNotABareLink()
+        {
+            // #28: a member with a long history rejoined; their next link, and a newcomer's game invite through the
+            // game's inline bot, were reported as "new here and posted nothing but a link".
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            var veteran = chat.Add("Veteran", MemberState.Left);
+            chat.Hashes[$"{chat.ChatId}:users:{veteran.Id}", "msgs"] = "30000"; // no "first": from before it was kept
+            var talker = chat.Add("Talker", MemberState.Left);
+            chat.Hashes[$"{chat.ChatId}:users:{talker.Id}", "msgs"] = "25"; // past 20, far from 10x
+            var newcomer = chat.Add("Newcomer", MemberState.Left);
+            await chat.JoinAsync(veteran);
+            await chat.JoinAsync(talker);
+            await chat.JoinAsync(newcomer);
+
+            Assert.IsNull(chat.Hashes[$"{chat.ChatId}:users:{veteran.Id}", "joined"], "a rejoin keeps their history");
+            Assert.IsNotNull(chat.Hashes[$"{chat.ChatId}:users:{newcomer.Id}", "joined"]);
+            Assert.AreEqual(Helpers.TrustLevel.Established, await Helpers.MemberTrust.OfAsync(chat.ChatId, veteran.Id));
+            Assert.AreEqual(Helpers.TrustLevel.Established, await Helpers.MemberTrust.OfAsync(chat.ChatId, talker.Id),
+                "joined is not rewritten for someone who talked here");
+
+            await chat.SendAsync(veteran, "https://example.com/news");
+            var invite = chat.Text(newcomer, "https://t.me/werewolfbot?startgroup=game");
+            invite.ViaBot = new Telegram.Bot.Types.User { Id = 7_000_003, IsBot = true, FirstName = "Werewolf", Username = "werewolfbot" };
+            await chat.PostAsync(invite);
+            Assert.IsFalse(chat.Telegram.SentMessages.Any(m => m.Text?.Contains("posted nothing but a link") == true));
+
+            await chat.SendAsync(newcomer, "https://t.me/+cheapfollowers");
+            Assert.AreEqual(1, chat.Telegram.SentMessages.Count(m => m.Text?.Contains("posted nothing but a link") == true),
+                "the newcomer's own link still is");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
         public async Task SlashRaid_LocksAtOnce_AndSlashRaidOff_PutsThePermissionsBack()
         {
             await using var chat = await HarnessChat.StartAsync();
