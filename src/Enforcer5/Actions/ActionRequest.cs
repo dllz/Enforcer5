@@ -149,7 +149,9 @@ namespace Enforcer5.Actions
         /// <summary>Telegram refused it for good, or the target cannot be warned; see <see cref="ActionResult.Refusal"/>.</summary>
         Refused,
         /// <summary>Nothing to take off: no warns of that kind.</summary>
-        NothingToDo
+        NothingToDo,
+        /// <summary>An action hook said no; see <see cref="ActionResult.BlockedBy"/> and <see cref="ActionResult.BlockMessage"/>.</summary>
+        Blocked
     }
 
     /// <summary>How an action ended, for the caller to tell the group. <see cref="Applied"/> is what was done.</summary>
@@ -172,8 +174,15 @@ namespace Enforcer5.Actions
         {
             EnforcementOutcome.Done => ActionOutcome.Done,
             EnforcementOutcome.Queued => ActionOutcome.Queued,
+            _ when Enforcement.Refusal == Refusal.Blocked => ActionOutcome.Blocked,
             _ => ActionOutcome.Refused
         };
+
+        /// <summary>Blocked: the hook that said no.</summary>
+        internal string BlockedBy => (Enforcement.Error as ActionBlockedException)?.Hook;
+
+        /// <summary>Blocked: what the hook said, for the admin (may be empty).</summary>
+        internal string BlockMessage => (Enforcement.Error as ActionBlockedException)?.Message;
 
         internal Refusal Refusal => Enforcement.Refusal;
 

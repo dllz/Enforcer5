@@ -45,7 +45,12 @@ namespace Enforcer5.Enforcement
         TargetIsAdmin,
         /// <summary>Telegram has no such member or user.</summary>
         NotFound,
-        Other
+        Other,
+        /// <summary>
+        /// Never from Telegram: an action hook said no before anything was asked (<c>Actions/ActionHooks</c>).
+        /// The error is an <c>ActionBlockedException</c> naming the hook and what it said.
+        /// </summary>
+        Blocked
     }
 
     internal readonly record struct EnforcementResult(EnforcementOutcome Outcome, Refusal Refusal = Refusal.None, Exception Error = null)

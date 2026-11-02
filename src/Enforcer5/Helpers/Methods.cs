@@ -127,6 +127,10 @@ namespace Enforcer5.Helpers
                 case Refusal.NotFound:
                     // The person is not (or no longer) in the chat: nothing to tell.
                     break;
+                case Refusal.Blocked:
+                    // An action hook's own words, if it had any.
+                    if (!string.IsNullOrEmpty(result.Error?.Message)) Bot.Send(result.Error.Message, chatId);
+                    break;
                 default:
                     if (result.Error != null) SendError(result.Error, chatId, doc);
                     break;

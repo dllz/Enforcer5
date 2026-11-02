@@ -189,5 +189,27 @@ namespace Enforcer5.Tests.Actions
                 .Select(f => f.File).ToArray();
             Assert.AreEqual(0, offenders.Length, "Act on members through ActionSeam: " + string.Join(", ", offenders));
         }
+
+        /// <summary>Section 5 of the design: which sources hooks may block or change, and which they hear about.</summary>
+        [TestMethod]
+        public void TheHooks_RunOnTheSourcesOfSectionFive()
+        {
+            var before = new[] { ActionSource.Command, ActionSource.Button, ActionSource.Report, ActionSource.Escalation };
+            var neither = new[] { ActionSource.Flood, ActionSource.Raid, ActionSource.GlobalBan, ActionSource.MuteOnJoin };
+            foreach (var source in Enum.GetValues<ActionSource>())
+            {
+                Assert.AreEqual(before.Contains(source), ActionHooks.BeforeRuns(source), $"before, {source}");
+                Assert.AreEqual(!neither.Contains(source), ActionHooks.AfterRuns(source), $"after, {source}");
+            }
+        }
+
+        [TestMethod]
+        public void ABlockedResult_SaysWhoAndWhy_AndIsNoSuccess()
+        {
+            var blocked = new ActionResult(Request(ActionKind.Ban),
+                EnforcementResult.Refuse(Refusal.Blocked, new ActionBlockedException("rule 7", "Not today")));
+            Assert.AreEqual((ActionOutcome.Blocked, "rule 7", "Not today", false),
+                (blocked.Outcome, blocked.BlockedBy, blocked.BlockMessage, blocked.Succeeded));
+        }
     }
 }

@@ -9,7 +9,8 @@ namespace Enforcer5.Actions
     /// <summary>
     /// The one way to act on a member (<c>docs/action-seam.md</c>). The request is carried out through
     /// <see cref="EnforcementQueue"/> (warns by <see cref="WarnActions"/>), then what it owns is recorded (<see cref="ActionEffects"/>: the tempban
-    /// schedule, the ban list, the ban record) and logged (<see cref="ActionLog"/>). The steps before it (authorise, guards, hooks) arrive later.
+    /// schedule, the ban list, the ban record) and logged (<see cref="ActionLog"/>). Before hooks may block or change it first, after
+    /// hooks hear about it last (<see cref="ActionHooks"/>). Authorising and the guards stay with the dispatcher and the queue for now.
     /// </summary>
     internal static class ActionSeam
     {
@@ -22,6 +23,9 @@ namespace Enforcer5.Actions
         /// </summary>
         internal static ActionResult Run(ActionRequest request)
         {
+            var (allowed, blocked) = ActionHooks.Before(request);
+            if (blocked != null) return Finish(blocked);
+            request = allowed;
             ActionResult result;
             try
             {
@@ -40,7 +44,7 @@ namespace Enforcer5.Actions
 
         /// <summary>
         /// Queues the action without waiting for Telegram, for the bot's defences (raid mode), which act on
-        /// many members at once and must never wait on one. Awaiting it waits only until the job is
+        /// many members at once and must never wait on one; no before hook runs on them (<see cref="ActionHooks"/>). Awaiting it waits only until the job is
         /// journaled; the inner task ends when Telegram has done it or refused, and what the action owns is
         /// recorded then. Never throws. Warn kinds are not queued: use <see cref="Run"/>.
         /// </summary>
@@ -76,6 +80,7 @@ namespace Enforcer5.Actions
             {
                 ErrorReporter.Report(e, $"Telling observers about the {result.Applied.Kind} of {result.Applied.TargetId} in {result.Applied.ChatId}");
             }
+            ActionHooks.After(result);
             return result;
         }
 

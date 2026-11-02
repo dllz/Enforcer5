@@ -152,6 +152,12 @@ namespace Enforcer5
                 Report = report,
                 Log = ActionLogEntry.Bot(logLine)
             });
+            if (result.Outcome == ActionOutcome.Blocked && !string.IsNullOrEmpty(result.BlockMessage))
+            {
+                // An action hook said no, in its own words.
+                if (update != null) Bot.SendReply(result.BlockMessage, update.Message);
+                else Bot.Send(result.BlockMessage, chatId);
+            }
             if (!result.Succeeded) return result; // an admin, or the bot: never warned, nothing said
             var lang = Methods.GetGroupLanguage(chatId);
             if (preWarn)
@@ -239,12 +245,15 @@ namespace Enforcer5
             var kick = escalation.Applied.Kind == ActionKind.Kick;
             if (escalation.Succeeded)
                 return Methods.GetLocaleString(lang, kick ? "warnMaxKick" : "warnMaxBan", name);
-            var why = Methods.GetLocaleString(lang, escalation.Refusal switch
-            {
-                Enforcement.Refusal.BotNotAdmin => "warnLimitBotNotAdmin",
-                Enforcement.Refusal.TargetIsAdmin => "cannotbanadmin",
-                _ => "warnLimitRefused"
-            });
+            // An action hook that blocked it says why in its own words; without words, as any refusal.
+            var why = escalation.Outcome == ActionOutcome.Blocked && !string.IsNullOrEmpty(escalation.BlockMessage)
+                ? escalation.BlockMessage
+                : Methods.GetLocaleString(lang, escalation.Refusal switch
+                {
+                    Enforcement.Refusal.BotNotAdmin => "warnLimitBotNotAdmin",
+                    Enforcement.Refusal.TargetIsAdmin => "cannotbanadmin",
+                    _ => "warnLimitRefused"
+                });
             var text = Methods.GetLocaleString(lang, kick ? "warnMaxKickNotDone" : "warnMaxBanNotDone", name, warn.Count, warn.Max, why);
             Service.LogBotAction(warn.Applied.ChatId, text, warn.Applied.TargetId);
             return text;

@@ -294,7 +294,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 | C (done, 2026-10-31) | Warns into the seam: one warn handler, escalation as its own action, `RemoveWarn`/`ResetWarns` (and they accept an id), media strikes | the warn button behaves like `/warn` |
 | D (done, 2026-11-02) | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | an admin's `/d` is a decision |
 | E (done, 2026-11-02) | Log channel lines owned by the actions | wording unchanged; a line only when the action went through |
-| F | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none |
+| F (done, 2026-11-02) | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none (no hook is registered) |
 | G | `/batch` | new command |
 
 Step A notes: global bans and Mute On Join already reach the seam through `Methods.*`, with their
@@ -358,6 +358,24 @@ refusal, written with the warn message, `WarnLimitText`), Detection's delete-onl
 only deleted (routine deletes), BotGuard's lines (events about a bot, not one action), and the commands that
 are not actions. A job refused at first for missing rights and carried out later, once the rights are back,
 is not logged when it happens.
+
+Step F notes: `Actions/ActionHooks` holds the registered `IActionHook`s (`Name`, `Wants(request)` in memory,
+`BeforeAsync` returning a `HookVerdict`: allow, `Block(message)`, or a new `Reason` and, for tempbans and
+tempmutes, `UntilUtc`; `AfterAsync` with the result). `ActionSeam.Run` asks the before hooks first, in the
+order they were added, the first block winning; a blocked action is an `ActionResult` with outcome `Blocked`
+(`Refusal.Blocked`, carrying an `ActionBlockedException` with the hook's name and words), nothing is asked of
+Telegram, nothing recorded or logged, and the admin gets the hook's words (`Methods.Answered`, the warn
+message, the report popup); a blocked escalation keeps the warns and says why in those words. After hooks
+get every result, blocked ones too, through `Bot.Dispatch`, so nobody waits for them. Section 5's table is
+`BeforeRuns`/`AfterRuns`: before only for Command, Button, Report and Escalation; after for everything but
+Flood, Raid, GlobalBan and MuteOnJoin (and `ActionSeam.SubmitAsync`, raid mode's path, never asks). The group
+creator's and devs' actions skip the before hooks (the creator read from `AdminDirectory`, only when a hook
+wants the action). Budgets: a before hook gets 200 ms (`BeforeBudget`), started on the thread pool so a loop
+only costs that; an after hook 5 s (`AfterBudget`); a hook that throws or overruns counts as allow and goes
+to `ErrorReporter`. Cost with no hook registered: one array read. Not yet: `also(...)` (extra actions from a
+hook, `Source = Script`, `Depth`, `ParentId`), `Silent`, and what section 7 loads for a hook to read: they
+come with the script host, which is their first user. Step 2 (authorise) and step 3 (guards) stay with the
+dispatcher and the queue until `/batch` (step G) needs them in the seam.
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 

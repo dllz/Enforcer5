@@ -655,8 +655,10 @@ namespace Enforcer5
             {
                 // Said in the popup; it used to escape as an exception, leaving the button spinning. The queue
                 // reports to the error chat whatever it did not expect.
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(Methods.GetGroupLanguage(chatid).Doc,
-                    result.Refusal == Enforcement.Refusal.BotNotAdmin ? "botNotAdmin" : "Error", result.Refusal.ToString()), true);
+                Bot.Api.AnswerCallbackQuery(call.Id, result.Outcome == ActionOutcome.Blocked && !string.IsNullOrEmpty(result.BlockMessage)
+                    ? result.BlockMessage
+                    : Methods.GetLocaleString(Methods.GetGroupLanguage(chatid).Doc,
+                        result.Refusal == Enforcement.Refusal.BotNotAdmin ? "botNotAdmin" : "Error", result.Refusal.ToString()), true);
                 return;
             }
             ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
