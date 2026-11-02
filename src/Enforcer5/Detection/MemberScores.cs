@@ -16,7 +16,8 @@ namespace Enforcer5.Detection
         internal static readonly TimeSpan Window = TimeSpan.FromHours(24);
         private const int MaxMembers = 200_000;
 
-        internal sealed record Hit(string Sign, int Weight, DateTime At);
+        /// <param name="MessageId">The message it was seen on, if any: the report links each sign to it.</param>
+        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null);
 
         private sealed class Entry
         {
@@ -49,7 +50,7 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>Adds <paramref name="sign"/> unless it already counted for them today.</summary>
-        internal static Change Add(long chatId, long userId, string sign, int weight)
+        internal static Change Add(long chatId, long userId, string sign, int weight, long? messageId = null)
         {
             var now = Clock.UtcNow;
             if (Entries.Count > MaxMembers) Prune(now);
@@ -60,7 +61,7 @@ namespace Enforcer5.Detection
                 var before = entry.Hits.Sum(h => h.Weight);
                 if (entry.Hits.Any(h => h.Sign == sign && h.At.Date == now.Date))
                     return new Change(before, before, false);
-                entry.Hits.Add(new Hit(sign, weight, now));
+                entry.Hits.Add(new Hit(sign, weight, now, messageId));
                 return new Change(before, before + weight, true);
             }
         }
@@ -71,6 +72,19 @@ namespace Enforcer5.Detection
             if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<string>();
             var now = Clock.UtcNow;
             lock (entry) return entry.Hits.Where(h => now - h.At < Window).Select(h => h.Sign).Distinct().ToList();
+        }
+
+        /// <summary>
+        /// The signs that make up their score now, oldest first, each with the last message it was seen on
+        /// (null when none: a join, a profile).
+        /// </summary>
+        internal static IReadOnlyList<(string Sign, long? MessageId)> SignMessages(long chatId, long userId)
+        {
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<(string, long?)>();
+            var now = Clock.UtcNow;
+            lock (entry)
+                return entry.Hits.Where(h => now - h.At < Window).GroupBy(h => h.Sign)
+                    .Select(g => (g.Key, g.LastOrDefault(h => h.MessageId != null)?.MessageId)).ToList();
         }
 
         internal static int Of(long chatId, long userId)

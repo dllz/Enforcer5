@@ -132,7 +132,10 @@ namespace Enforcer5.Data
         /// </summary>
         Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since);
 
-        /// <summary>The live signs that counted or reported for a member since <paramref name="since"/>, with how often: a report's contents after a restart.</summary>
-        Task<IReadOnlyList<(string Sign, int Count)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
+        /// <summary>
+        /// The live signs that counted or reported for a member since <paramref name="since"/>, with how often and the last
+        /// message each was seen on (null when none): a report's contents after a restart.
+        /// </summary>
+        Task<IReadOnlyList<(string Sign, int Count, long? MessageId)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
     }
 }

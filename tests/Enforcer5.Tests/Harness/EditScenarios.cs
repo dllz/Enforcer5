@@ -112,7 +112,7 @@ namespace Enforcer5.Tests.Harness
             Assert.IsTrue(Deleted(chat, newcomer, newPost));
             Assert.IsFalse(Deleted(chat, regular, regularPost));
             Assert.AreEqual(2, Reports(chat, admin).Length);
-            StringAssert.Contains(Reports(chat, admin).Last().Text, "edited long after posting (11 min after posting)");
+            StringAssert.Contains(Reports(chat, admin).Last().Text, "edited long after posting</a> (11 min after posting)");
             AssertNoErrors(chat);
         }
 

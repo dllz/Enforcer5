@@ -171,7 +171,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
 
             Assert.AreEqual(1, ReportsTo(chat, admin.Id).Length, "one report a day");
             var edit = Edits(chat, admin.Id).Single();
-            StringAssert.Contains(edit.Text, "test_reported ×3");
+            StringAssert.Contains(edit.Text, "test_reported</a> ×3");
             StringAssert.Contains(edit.Text, S(chat, "reportScore", 3));
             Assert.AreEqual(Methods.GetChatMessageLink(chat.ChatId, second.MessageId.ToString()), Buttons(edit).Single(b => b.Url != null).Url);
 
@@ -258,6 +258,37 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
         }
 
         [TestMethod]
+        public async Task EachSign_LinksToTheMessageItWasSeenOn_AlsoAfterARestart()
+        {
+            // #25: one "Go to message" button for signs seen on different messages.
+            await using var chat = await HarnessChat.StartAsync();
+            await GoLive(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var first = await chat.SendAsync(member, "one");
+            await DetectionEngine.HitAsync(chat.ChatId, member.Id, first, new SignHit(Scored.Name));
+            var second = await chat.SendAsync(member, "two");
+            await Hit(chat, member, second, Reported);
+            string Link(Message m) => Methods.GetChatMessageLink(chat.ChatId, m.MessageId.ToString());
+
+            var report = ReportsTo(chat, admin.Id).Single();
+            StringAssert.Contains(report.Text, $"<a href=\"{Link(first)}\">test_scored</a>");
+            StringAssert.Contains(report.Text, $"<a href=\"{Link(second)}\">test_reported</a>");
+            Assert.AreEqual(Link(second), Buttons(report).Single(b => b.Url != null).Url, "the button: the latest message");
+
+            await DetectionRecorder.FlushAsync();
+            await chat.CrashAndRestartAsync();
+            var third = await chat.SendAsync(member, "three");
+            await Hit(chat, member, third, Reported);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(31));
+            var edit = Edits(chat, admin.Id).Last();
+            StringAssert.Contains(edit.Text, $"<a href=\"{Link(first)}\">test_scored</a>");
+            StringAssert.Contains(edit.Text, $"<a href=\"{Link(third)}\">test_reported</a> ×2");
+            Assert.AreEqual(Link(third), Buttons(edit).Single(b => b.Url != null).Url);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task AfterARestart_ANewSignEditsTheSameReport_AndItsButtonsStillWork()
         {
             await using var chat = await HarnessChat.StartAsync();
@@ -273,7 +304,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             await Hit(chat, member, message, Reported);
             await chat.AdvanceAsync(TimeSpan.FromSeconds(31));
             Assert.AreEqual(1, ReportsTo(chat, admin.Id).Length);
-            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "test_reported ×2");
+            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "test_reported</a> ×2");
 
             await chat.CrashAndRestartAsync();
             await chat.PressDataAsync(admin, report, Buttons(report).Single(b => b.CallbackData?.EndsWith(":mute") == true).CallbackData);

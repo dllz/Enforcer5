@@ -48,7 +48,10 @@ namespace Enforcer5.Detection
             internal string Name;
             internal readonly List<(string Sign, int Count)> Signs = new();
             internal readonly Dictionary<string, string> Details = new();
+            /// <summary>The last message each sign was seen on; signs seen on none (a join, a profile) are not here.</summary>
+            internal readonly Dictionary<string, long> Messages = new();
             internal int Score;
+            /// <summary>The latest message the report is about: the Go to message button, and the file a Ban bans.</summary>
             internal long? MessageId;
             internal readonly List<ReportCopy> Copies = new();
             internal string Decision;
@@ -56,12 +59,17 @@ namespace Enforcer5.Detection
             internal bool EditPending;
             internal DateTime OpenedUtc => Key.OpenedAt.UtcDateTime;
 
-            internal void Add(string sign)
+            internal void Add(string sign, long? messageId)
             {
                 var at = Signs.FindIndex(s => s.Sign == sign);
                 if (at >= 0) Signs[at] = (sign, Signs[at].Count + 1);
                 else Signs.Add((sign, 1));
+                if (messageId is { } id) Messages[sign] = id;
             }
+
+            /// <summary>Each sign's link to its message, for the text.</summary>
+            internal Dictionary<string, string> Links() =>
+                Messages.ToDictionary(m => m.Key, m => Methods.GetChatMessageLink(Key.ChatId, m.Value.ToString()));
         }
 
         private static readonly ConcurrentDictionary<(long Chat, long User), OpenReport> Open = new();
@@ -125,7 +133,7 @@ namespace Enforcer5.Detection
                     if (report != null)
                     {
                         if (report.Decision != null) return; // decided: nothing to add
-                        report.Add(sign);
+                        report.Add(sign, messageId);
                         if (detail != null) report.Details[sign] = detail;
                         report.Score = Math.Max(report.Score, score);
                         report.MessageId = messageId ?? report.MessageId;
@@ -140,8 +148,9 @@ namespace Enforcer5.Detection
                         Name = name, Score = score, MessageId = messageId
                     };
                     // What made up their score, then what fired now.
-                    foreach (var scored in MemberScores.Signs(chatId, userId).Where(s => s != sign)) report.Add(scored);
-                    report.Add(sign);
+                    foreach (var (scored, seenOn) in MemberScores.SignMessages(chatId, userId).Where(s => s.Sign != sign))
+                        report.Add(scored, seenOn);
+                    report.Add(sign, messageId);
                     if (detail != null) report.Details[sign] = detail;
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
                     var copies = await SendAsync(chatId, Text(lang, report, await TitleAsync(chatId)), Buttons(lang, report));
@@ -184,8 +193,13 @@ namespace Enforcer5.Detection
                 Key = key, Name = StoredName(key.UserId.Value), Decision = stored.Decision, DecidedBy = stored.DecidedBy
             };
             report.Copies.AddRange(stored.Copies);
-            foreach (var (sign, count) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
+            foreach (var (sign, count, messageId) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
+            {
                 report.Signs.Add((sign, count));
+                if (messageId is { } id) report.Messages[sign] = id;
+            }
+            // The latest of them, for the button.
+            if (report.Messages.Count > 0) report.MessageId = report.Messages.Values.Max();
             report.Score = MemberScores.Of(key.ChatId, key.UserId.Value);
             Open[(key.ChatId, key.UserId.Value)] = report;
             return report;
@@ -462,8 +476,9 @@ namespace Enforcer5.Detection
 
         // ------------------------------------------------------------------ text
 
+        /// <param name="links">For each sign seen on a message, a link to it: the sign's name links there.</param>
         internal static string Text(XDocument lang, long userId, string name, string title, IReadOnlyList<(string Sign, int Count)> signs,
-            int score, string decisionLine, IReadOnlyDictionary<string, string> details = null)
+            int score, string decisionLine, IReadOnlyDictionary<string, string> details = null, IReadOnlyDictionary<string, string> links = null)
         {
             var lines = new List<string>
             {
@@ -475,7 +490,10 @@ namespace Enforcer5.Detection
             };
             lines.AddRange(signs.Select(s =>
             {
-                var line = s.Count > 1 ? $"• {SignLabel(lang, s.Sign).FormatHTML()} ×{s.Count}" : $"• {SignLabel(lang, s.Sign).FormatHTML()}";
+                var label = SignLabel(lang, s.Sign).FormatHTML();
+                if (links != null && links.TryGetValue(s.Sign, out var link) && !string.IsNullOrEmpty(link))
+                    label = $"<a href=\"{link.FormatHTML()}\">{label}</a>";
+                var line = s.Count > 1 ? $"• {label} ×{s.Count}" : $"• {label}";
                 return details != null && details.TryGetValue(s.Sign, out var detail) ? $"{line} ({detail.FormatHTML()})" : line;
             }));
             if (score > 0) lines.Add(Methods.GetLocaleString(lang, "reportScore", score));
@@ -485,7 +503,7 @@ namespace Enforcer5.Detection
 
         private static string Text(XDocument lang, OpenReport report, string title) =>
             Text(lang, report.Key.UserId.Value, report.Name, title, report.Signs, report.Score,
-                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details);
+                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details, report.Links());
 
         /// <summary>"Banned by …" for a decision: HTML with a link to the admin, or plain text for a button's answer.</summary>
         internal static string DecisionLine(XDocument lang, string decision, long? by, bool html = true)

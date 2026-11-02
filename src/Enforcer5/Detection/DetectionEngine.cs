@@ -109,7 +109,7 @@ namespace Enforcer5.Detection
                     var current = MemberScores.Of(chatId, userId);
                     change = new MemberScores.Change(current, current, false);
                 }
-                else change = MemberScores.Add(chatId, userId, sign.Name, weight);
+                else change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId);
                 if (change.Counted && member.Trust == TrustLevel.New) MemberData.Scored(chatId, userId, change.After);
 
                 var action = settings.Action;
@@ -186,7 +186,7 @@ namespace Enforcer5.Detection
             if (weight > 0 && userId != 0 && !hit.Trial)
             {
                 if (MemberScores.NeedsLoad(chatId, userId)) await LoadScoreAsync(chatId, userId);
-                change = MemberScores.Add(chatId, userId, sign.Name, weight);
+                change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId);
             }
             else
             {
