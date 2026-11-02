@@ -75,6 +75,9 @@ WHERE a.telegram_user_id = @Id ORDER BY d.detection_id", new { user.Id })).ToArr
         private static string[] Logs(HarnessChat chat) =>
             chat.Telegram.SentMessages.Where(m => m.Chat.Id == LogChannel).Select(m => m.Text).ToArray();
 
+        /// <summary>Log posts split into entries: the log queue merges a backlog into one post, a blank line between entries.</summary>
+        private static string[] LogEntries(HarnessChat chat) => Logs(chat).SelectMany(l => l.Split("\n\n")).ToArray();
+
         private static MemberState State(HarnessChat chat, HarnessUser user) => chat.Telegram.GetMember(chat.ChatId, user.Id);
 
         private static void AssertNoErrors(HarnessChat chat) =>
@@ -111,7 +114,7 @@ WHERE a.telegram_user_id = @Id ORDER BY d.detection_id", new { user.Id })).ToArr
             CollectionAssert.Contains(await Signs(chat, member), SignCatalog.SummonedBot.Name);
             Assert.IsTrue((await GroupBots(chat)).All(b => b.Status == "blocked" && b.Source == "summoned" && b.SetBy == member.Id));
             Assert.AreEqual(3, (await Events(chat)).Count(e => e.Kind == "summoned" && e.ActorId == member.Id && e.Action == "banned"));
-            Assert.AreEqual(3, Logs(chat).Count(l => l.Contains("🤖") && l.Contains(member.Id.ToString())), "each bot logged once");
+            Assert.AreEqual(3, LogEntries(chat).Count(l => l.Contains("🤖") && l.Contains(member.Id.ToString())), "each bot logged once");
             Assert.AreEqual(1, (await Signs(chat, member)).Count(s => s == SignCatalog.SummonedBot.Name), "one sign for one post");
 
             // The next wave: deleted again, without another ban or log line.
@@ -119,7 +122,7 @@ WHERE a.telegram_user_id = @Id ORDER BY d.detection_id", new { user.Id })).ToArr
             await chat.PostAsync(GuestReply(chat, bots[0], member, again));
             Assert.AreEqual(0, chat.Telegram.MessagesFrom(chat.ChatId, bots[0].Id).Count);
             Assert.AreEqual(1, chat.Telegram.Accepted.Count(c => c.Method == "banChatMember" && c.UserId == bots[0].Id));
-            Assert.AreEqual(3, Logs(chat).Count(l => l.Contains("🤖")));
+            Assert.AreEqual(3, LogEntries(chat).Count(l => l.Contains("🤖")));
             AssertNoErrors(chat);
         }
 
