@@ -295,7 +295,7 @@ touched, and is one local commit. A, B and C are worth having even if scripting 
 | D (done, 2026-11-02) | Raid's own queue jobs (`RaidGuard`, `ChannelPostCommands`, `OnMessage` channel posts) through the seam (never blockable), deletes asked for by admins (`/d` records a decision) | an admin's `/d` is a decision |
 | E (done, 2026-11-02) | Log channel lines owned by the actions | wording unchanged; a line only when the action went through |
 | F (done, 2026-11-02) | Hook points: before and after, with in-process C# hooks only; source table of section 5; budgets; a guard test (below) | none (no hook is registered) |
-| G | `/batch` | new command |
+| G (done, 2026-11-02) | `/batch` | new command |
 
 Step A notes: global bans and Mute On Join already reach the seam through `Methods.*`, with their
 own sources; the premium mass add is `Detection`; the raid link report's Ban button is derived as
@@ -370,12 +370,36 @@ get every result, blocked ones too, through `Bot.Dispatch`, so nobody waits for 
 `BeforeRuns`/`AfterRuns`: before only for Command, Button, Report and Escalation; after for everything but
 Flood, Raid, GlobalBan and MuteOnJoin (and `ActionSeam.SubmitAsync`, raid mode's path, never asks). The group
 creator's and devs' actions skip the before hooks (the creator read from `AdminDirectory`, only when a hook
-wants the action). Budgets: a before hook gets 200 ms (`BeforeBudget`), started on the thread pool so a loop
-only costs that; an after hook 5 s (`AfterBudget`); a hook that throws or overruns counts as allow and goes
+wants the action). Budgets: a before hook gets 200 ms (`BeforeBudget`) for what it leaves running (it is
+called inline: starting it on the thread pool made a hook that answers at once miss its budget under load;
+the script host bounds a script's own CPU with its engine's limits); an after hook 5 s (`AfterBudget`); a hook that throws or overruns counts as allow and goes
 to `ErrorReporter`. Cost with no hook registered: one array read. Not yet: `also(...)` (extra actions from a
 hook, `Source = Script`, `Depth`, `ParentId`), `Silent`, and what section 7 loads for a hook to read: they
 come with the script host, which is their first user. Step 2 (authorise) and step 3 (guards) stay with the
 dispatcher and the queue until `/batch` (step G) needs them in the seam.
+
+Step G notes: `Actions/BatchPlan` is the command map (trigger, kind, how its arguments read: a reason, or a
+duration then a reason, read as `/tempban` and `/tempmute` read theirs, the group's default when none) and
+reads the list (every 5-15 digit number standing on its own, from the replied message or a `.txt`/`.csv`
+file up to 1 MB); `Actions/Batches` is the rest. The preview leaves out duplicates, admins (from
+`AdminDirectory`), the bot and the admin who asked, members already in the ban list (ban) and members without
+warns (warn removals), with no Telegram call per member; it lives in memory for 10 minutes, so a restart
+forgets previews, not batches. Run creates the `batches` row and its `batch_items` (Telegram user ids, not
+accounts: a list names thousands nobody has seen) in one transaction; `batches_one_running_idx` keeps it to
+one running batch per group (a second Run says so and keeps the preview). The worker runs each item through
+`ActionSeam.Run` (source `Batch`, the admin who asked as actor, `BatchId`, no notice per member, the ban
+record and ban list as the commands keep them), checks before each that the admin who asked is still an
+admin (no: the batch stops, "notadmin"), stores each outcome (done, refused with Telegram's reason, blocked
+with the hook's name, nothing), and edits the progress message at most every 5 seconds. Stop ends it between
+two members; the rest are skipped. A restart carries on from the first item without an outcome
+(`Batches.Start`, and `ResumeAsync` in the harness); an item in flight at the crash may run twice, which every
+action allows. At the end: the summary (with the reasons) in the progress message, and one line in the log
+channel; button presses on a batch are not logged one by one. Detection labels the decisions `batch`
+(`ErrorContext.LabelSource`, set by the worker; `member_labels_source_check` widened, with `script` for later)
+and, for now, counts them nowhere: `TrustLearning`, the report-level learning and the "missed" mark read only
+`command`, `button`, `report`, `app` and `raid`, because a list carries no message for Detection to learn
+from. Before hooks run on batch items (section 5). Not yet: a job journaled before a crash and carried out
+after it is labelled `auto` (the context is not journaled).
 
 Then the script host and rules (`docs/scripting-design.md`, section 10).
 

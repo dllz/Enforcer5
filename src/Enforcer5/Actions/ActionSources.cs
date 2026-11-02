@@ -36,6 +36,7 @@ namespace Enforcer5.Actions
             ActionSource.Button => "button",
             ActionSource.Report => "report",
             ActionSource.Raid => "raid",
+            ActionSource.Batch => "batch",
             _ => "auto"
         };
     }

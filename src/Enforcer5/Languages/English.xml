@@ -3511,4 +3511,84 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="welcomeTurnedOff">
     <value>The welcome message is off.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Runs one command on a list of members. Reply to a message holding their user ids (one per line, or anywhere in the text), or to a .txt or .csv file of them, with /{0} and the command. Up to 5000 ids.
+
+      Commands: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Add a reason after the command, and for tempban and tempmute a duration first (without one, the group's default).
+
+      I first show what would happen: how many ids, and who is left out (duplicates, admins, members already banned or with no warns to remove). Any admin of the group can then press Run or Cancel within 10 minutes. The members are done one at a time, without a message for each; a Stop button ends it early, and a summary follows, with one line in the log channel.
+
+      Examples:
+      /{0} ban spam ring
+      /{0} tempban 2d raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Run a command on a list of members</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Reply to a list of user ids (or a .txt or .csv file) with <code>/batch</code> and a command: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn or resetwarns. For example <code>/batch ban spam ring</code> or <code>/batch tempban 2d raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>I found no user ids in the message you replied to. Reply to a message or a .txt or .csv file with the ids.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>That list is too long: one batch takes at most {0} members. Split it up.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Batches cannot run right now (the database is not available). Try again later.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Batch: {0}</b>\nIds in the list: {1}\nWill be done for: <b>{2}</b>\nLeft out: {3} duplicates, {4} admins, {5} with nothing to do.\n\nAny admin can run it within 10 minutes.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Run</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Cancel</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Stop</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Batch cancelled. Nothing was done.</value>
+  </string>
+  <string key="batchExpired">
+    <value>This batch is no longer open. Send /batch again.</value>
+  </string>
+  <string key="batchRunning">
+    <value>Another batch is running in this group. Wait for it to end, or stop it, then press Run again.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Batch #{0}: {1}</b>\nDone {2} of {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Batch #{0}: {1}</b> is finished.\nDone: {2}\nRefused: {3}\nBlocked by a rule: {4}\nLeft out: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Batch #{0}: {1}</b> was stopped.\nDone: {2}\nRefused: {3}\nBlocked by a rule: {4}\nLeft out: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• not in the group or no such user: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• admins: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• I lack the rights: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• other errors: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• stopped: the admin who asked is no longer an admin</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• blocked by {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} ran a batch in {1}: {2}. Run by {3}. Done {4}, refused {5}, blocked {6}, left out {7}.</value>
+  </string>
 </strings>

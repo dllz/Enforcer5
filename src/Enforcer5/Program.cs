@@ -125,6 +125,8 @@ namespace Enforcer5
             Detection.BotGuard.Start(Bot.ShutdownToken);
             // Data recovered after a data loss: offered to each group's admins once a dev releases it.
             Recovery.RecoveryOffers.Start(Bot.ShutdownToken);
+            // /batch: carries on with the batches that were running when the bot stopped.
+            Actions.Batches.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

@@ -181,6 +181,7 @@ namespace Enforcer5.Tests.Harness
             LogQueue.ResetForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
+            Enforcer5.Actions.Batches.ResetForTests();
             await SettleAsync();
         }
 
@@ -192,6 +193,7 @@ namespace Enforcer5.Tests.Harness
         {
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
+            Enforcer5.Actions.Batches.ResetForTests();
             LogQueue.ResetForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();
             // What a group's settings were in memory, and the members' scores; the Redis cache and
@@ -205,6 +207,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             await LogQueue.StartAsync();
+            await Enforcer5.Actions.Batches.ResumeAsync();
             await SettleAsync();
         }
 
@@ -473,6 +476,7 @@ namespace Enforcer5.Tests.Harness
             if (!_owner) return;
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.ResetForTests();
+            Enforcer5.Actions.Batches.ResetForTests();
             // Let whatever still waits on this clock run out, so nothing is left holding a permit or
             // a static for the next scenario.
             try { await HarnessTime.CompleteAsync(Clock, TimeSpan.FromHours(2)); } catch (TimeoutException) { }

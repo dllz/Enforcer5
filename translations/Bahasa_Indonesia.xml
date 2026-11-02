@@ -2696,4 +2696,84 @@
   <string key="welcomeTurnedOff">
     <value>Pesan sambutan nonaktif.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Menjalankan satu perintah pada daftar anggota. Balas pesan berisi ID pengguna mereka (satu per baris, atau di mana saja dalam teks), atau file .txt atau .csv berisi ID tersebut, dengan /{0} dan perintahnya. Paling banyak 5000 ID.
+
+      Perintah: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Tambahkan alasan setelah perintah, dan untuk tempban dan tempmute, durasi lebih dulu (tanpa durasi, dipakai bawaan grup).
+
+      Saya tunjukkan dulu apa yang akan terjadi: berapa ID dan siapa yang dilewati (duplikat, admin, anggota yang sudah diblokir atau tidak punya peringatan untuk dihapus). Admin grup mana pun lalu bisa menekan Jalankan atau Batal dalam 10 menit. Anggota diproses satu per satu, tanpa pesan untuk masing-masing; tombol Hentikan mengakhirinya lebih awal, lalu ada ringkasan, dengan satu baris di kanal log.
+
+      Contoh:
+      /{0} ban jaringan spam
+      /{0} tempban 2d raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Jalankan perintah pada daftar anggota</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Balas daftar ID pengguna (atau file .txt atau .csv) dengan <code>/batch</code> dan sebuah perintah: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn atau resetwarns. Misalnya <code>/batch ban jaringan spam</code> atau <code>/batch tempban 2d raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>Saya tidak menemukan ID pengguna di pesan yang kamu balas. Balas pesan atau file .txt atau .csv yang berisi ID.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Daftar itu terlalu panjang: satu batch paling banyak {0} anggota. Pecah daftarnya.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Batch tidak bisa dijalankan sekarang (database tidak tersedia). Coba lagi nanti.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Batch: {0}</b>\nID dalam daftar: {1}\nAkan dijalankan untuk: <b>{2}</b>\nDilewati: {3} duplikat, {4} admin, {5} tanpa tindakan.\n\nAdmin mana pun bisa menjalankannya dalam 10 menit.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Jalankan</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Batal</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Hentikan</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Batch dibatalkan. Tidak ada yang dilakukan.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Batch ini sudah tidak terbuka. Kirim /batch lagi.</value>
+  </string>
+  <string key="batchRunning">
+    <value>Batch lain sedang berjalan di grup ini. Tunggu sampai selesai atau hentikan, lalu tekan Jalankan lagi.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Batch #{0}: {1}</b>\nSelesai {2} dari {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Batch #{0}: {1}</b> selesai.\nSelesai: {2}\nDitolak: {3}\nDiblokir aturan: {4}\nDilewati: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Batch #{0}: {1}</b> dihentikan.\nSelesai: {2}\nDitolak: {3}\nDiblokir aturan: {4}\nDilewati: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• tidak ada di grup atau tidak dikenal: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• admin: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• saya tidak punya izin: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• kesalahan lain: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• dihentikan: yang meminta sudah bukan admin</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• diblokir oleh {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} menjalankan batch di {1}: {2}. Dijalankan oleh {3}. Selesai {4}, ditolak {5}, diblokir {6}, dilewati {7}.</value>
+  </string>
 </strings>

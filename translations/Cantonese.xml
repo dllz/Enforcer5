@@ -2047,4 +2047,84 @@ UPDATE LOG
   <string key="welcomeTurnedOff">
     <value>歡迎訊息已經關咗。</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      對一批成員執行同一個指令。用 /{0} 加指令回覆一條有佢哋用戶 ID 嘅訊息（每行一個，或者喺文字任何位置），或者回覆一個有呢啲 ID 嘅 .txt 或 .csv 檔案。最多 5000 個 ID。
+
+      指令：ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns。喺指令後面加原因；tempban 同 tempmute 要先寫時長（唔寫就用群組預設時長）。
+
+      我會先顯示會發生咩事：有幾多個 ID，同邊啲會被略過（重複嘅、管理員、已經被封或者冇警告可以移除嘅成員）。群入面任何管理員都可以喺 10 分鐘內撳「執行」或者「取消」。成員會逐個處理，唔會每個都出訊息；「停止」掣可以提早結束，之後會有一份總結，同埋喺日誌頻道寫一行。
+
+      例子：
+      /{0} ban 垃圾訊息集團
+      /{0} tempban 2d 突襲
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>對一批成員執行指令</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[用 <code>/batch</code> 加一個指令回覆用戶 ID 列表（或者 .txt、.csv 檔案）：ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns。例如 <code>/batch ban 垃圾訊息集團</code> 或者 <code>/batch tempban 2d 突襲</code>。]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>你回覆嘅訊息入面搵唔到用戶 ID。請回覆有 ID 嘅訊息或者 .txt、.csv 檔案。</value>
+  </string>
+  <string key="batchTooMany">
+    <value>個列表太長：一個批次最多 {0} 個成員。請分開處理。</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>而家執行唔到批次（資料庫用唔到）。請遲啲再試。</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>批次：{0}</b>\n列表入面嘅 ID：{1}\n會執行喺：<b>{2}</b>\n略過：{3} 個重複，{4} 個管理員，{5} 個唔使處理。\n\n任何管理員都可以喺 10 分鐘內執行。]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ 執行</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ 取消</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ 停止</value>
+  </string>
+  <string key="batchCancelled">
+    <value>批次已取消，乜都冇做。</value>
+  </string>
+  <string key="batchExpired">
+    <value>呢個批次已經唔再開放。請再發一次 /batch。</value>
+  </string>
+  <string key="batchRunning">
+    <value>呢個群已經有另一個批次喺度行緊。等佢完或者停咗佢，然後再撳「執行」。</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>批次 #{0}：{1}</b>\n完成咗 {2} / {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>批次 #{0}：{1}</b> 完成咗。\n完成：{2}\n被拒絕：{3}\n被規則阻止：{4}\n略過：{5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>批次 #{0}：{1}</b> 停咗。\n完成：{2}\n被拒絕：{3}\n被規則阻止：{4}\n略過：{5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• 唔喺群入面或者唔存在：{0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• 管理員：{0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• 我冇權限：{0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• 其他錯誤：{0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• 停咗：發起人已經唔係管理員</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• 被 {0} 阻止：{1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} 喺 {1} 執行咗一個批次：{2}。由 {3} 開始。完成 {4}，被拒絕 {5}，被阻止 {6}，略過 {7}。</value>
+  </string>
 </strings>

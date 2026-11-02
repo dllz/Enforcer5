@@ -2460,4 +2460,84 @@
   <string key="welcomeTurnedOff">
     <value>A mensagem de boas-vindas está desativada.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Executa um comando numa lista de membros. Responde com /{0} e o comando a uma mensagem com os IDs de utilizador deles (um por linha, ou em qualquer parte do texto), ou a um ficheiro .txt ou .csv com eles. Até 5000 IDs.
+
+      Comandos: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Acrescenta um motivo depois do comando e, para tempban e tempmute, primeiro uma duração (sem ela, a predefinida do grupo).
+
+      Primeiro mostro o que aconteceria: quantos IDs há e quem fica de fora (duplicados, admins, membros já banidos ou sem avisos para retirar). Qualquer admin do grupo pode depois carregar em Executar ou Cancelar dentro de 10 minutos. Os membros são tratados um de cada vez, sem uma mensagem para cada; um botão Parar termina antes, e depois vem um resumo, com uma linha no canal de registo.
+
+      Exemplos:
+      /{0} ban rede de spam
+      /{0} tempban 2d raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Executar um comando numa lista de membros</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Responde a uma lista de IDs de utilizador (ou a um ficheiro .txt ou .csv) com <code>/batch</code> e um comando: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn ou resetwarns. Por exemplo <code>/batch ban rede de spam</code> ou <code>/batch tempban 2d raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>Não encontrei IDs de utilizador na mensagem a que respondeste. Responde a uma mensagem ou a um ficheiro .txt ou .csv com os IDs.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Essa lista é demasiado longa: um lote aceita no máximo {0} membros. Divide-a.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>De momento não é possível executar lotes (a base de dados não está disponível). Tenta mais tarde.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Lote: {0}</b>\nIDs na lista: {1}\nSerá aplicado a: <b>{2}</b>\nDe fora: {3} duplicados, {4} admins, {5} sem nada a fazer.\n\nQualquer admin pode executá-lo nos próximos 10 minutos.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Executar</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Cancelar</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Parar</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Lote cancelado. Nada foi feito.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Este lote já não está aberto. Envia /batch de novo.</value>
+  </string>
+  <string key="batchRunning">
+    <value>Já há outro lote a decorrer neste grupo. Espera que termine ou para-o, e carrega de novo em Executar.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Lote #{0}: {1}</b>\nFeitos {2} de {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Lote #{0}: {1}</b> terminou.\nFeitos: {2}\nRecusados: {3}\nBloqueados por uma regra: {4}\nDe fora: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Lote #{0}: {1}</b> foi parado.\nFeitos: {2}\nRecusados: {3}\nBloqueados por uma regra: {4}\nDe fora: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• não estão no grupo ou não existem: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• admins: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• faltam-me as permissões: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• outros erros: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• parado: quem o pediu já não é admin</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• bloqueados por {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} executou um lote em {1}: {2}. Iniciado por {3}. Feitos {4}, recusados {5}, bloqueados {6}, de fora {7}.</value>
+  </string>
 </strings>

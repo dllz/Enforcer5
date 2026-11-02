@@ -43,7 +43,7 @@ namespace Enforcer5.Storage
                 {
                     table.HasCheckConstraint("member_labels_label_check", "label IN ('bad', 'fine', 'undo')");
                     table.HasCheckConstraint("member_labels_action_check", $"action IN ({LabelActions})");
-                    table.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established')");
+                    table.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established', 'batch', 'script')");
                     table.HasCheckConstraint("member_labels_edition_check", "edition IN ('normal', 'premium')");
                     table.HasCheckConstraint("member_labels_undone_check", "(undone_at IS NULL) = (undone_by_label_id IS NULL)");
                     table.HasCheckConstraint("member_labels_category_check", "category IS NULL OR category IN ('abuse', 'group')");
@@ -676,6 +676,39 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.Result).HasColumnType("jsonb");
                 entity.HasOne<RecoveryOfferEntity>().WithMany().HasForeignKey(x => x.OfferId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<BatchEntity>(entity =>
+            {
+                entity.ToTable("batches", table =>
+                {
+                    table.HasCheckConstraint("batches_status_check", "status IN ('running', 'done', 'stopped')");
+                    table.HasCheckConstraint("batches_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("batches_kind_check",
+                        "kind IN ('ban', 'tempban', 'unban', 'kick', 'mute', 'tempmute', 'unmute', 'warn', 'prewarn', 'removewarn', 'resetwarns')");
+                });
+                entity.HasKey(x => x.BatchId);
+                entity.Property(x => x.BatchId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Edition).IsRequired();
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.CommandText).IsRequired();
+                entity.Property(x => x.Status).IsRequired().HasDefaultValue("running");
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.RequestedByAccountId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.ConfirmedByAccountId).OnDelete(DeleteBehavior.Restrict);
+                // One running batch per group.
+                entity.HasIndex(x => x.GroupId, "batches_one_running_idx").IsUnique().HasFilter("status = 'running'");
+                entity.HasIndex(x => new { x.Edition, x.Status }, "batches_edition_status_idx");
+            });
+
+            modelBuilder.Entity<BatchItemEntity>(entity =>
+            {
+                entity.ToTable("batch_items", table =>
+                    table.HasCheckConstraint("batch_items_outcome_check",
+                        "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped')"));
+                entity.HasKey(x => new { x.BatchId, x.Position });
+                entity.HasOne<BatchEntity>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
             });
         }
 

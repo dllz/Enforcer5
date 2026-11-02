@@ -798,4 +798,42 @@ namespace Enforcer5.Storage
         public string Outcome { get; set; }
         public string Result { get; set; }
     }
+
+    /// <summary>
+    /// An admin's /batch (<c>Actions/Batches</c>): one command (<c>kind</c>: ban, tempban, ...) run on a list of
+    /// members, one at a time, by the edition that took it. <c>status</c>: running until every item is done, then
+    /// done, or stopped (the Stop button, or the admin who asked no longer an admin). At most one running per group.
+    /// </summary>
+    internal sealed class BatchEntity
+    {
+        public long BatchId { get; set; }
+        public long GroupId { get; set; }
+        public string Edition { get; set; }
+        public string Kind { get; set; }
+        public string Reason { get; set; }
+        public int? DurationMinutes { get; set; }
+        public string CommandText { get; set; }
+        public long RequestedByAccountId { get; set; }
+        public long ConfirmedByAccountId { get; set; }
+        public string Status { get; set; }
+        public int? ProgressMessageId { get; set; }
+        public int Skipped { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? FinishedAt { get; set; }
+    }
+
+    /// <summary>
+    /// One member of a <see cref="BatchEntity"/>, by Telegram user id (a list may name thousands nobody has
+    /// seen yet). <c>outcome</c> null until it ran: done (or queued), refused (<c>detail</c>: why Telegram said
+    /// no), blocked (<c>detail</c>: the rule), nothing (nothing to do), skipped (not run: the batch stopped).
+    /// </summary>
+    internal sealed class BatchItemEntity
+    {
+        public long BatchId { get; set; }
+        public int Position { get; set; }
+        public long TelegramUserId { get; set; }
+        public string Outcome { get; set; }
+        public string Detail { get; set; }
+        public DateTimeOffset? DoneAt { get; set; }
+    }
 }

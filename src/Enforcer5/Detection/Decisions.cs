@@ -77,7 +77,8 @@ namespace Enforcer5.Detection
                 var buttonSource = ButtonSource(update?.CallbackQuery?.Data);
                 // What raid mode does when an admin presses a raid button (ban the suspects) is theirs.
                 if (actorId == null && key == null && buttonSource == "raid") actorId = update.CallbackQuery.From.Id;
-                var source = key != null ? "app" : ActionSources.Label(ActionSources.Derive(update, actorId, fromReport));
+                var source = key != null ? "app"
+                    : ErrorReporter.Current?.LabelSource ?? ActionSources.Label(ActionSources.Derive(update, actorId, fromReport));
                 about ??= AboutMessage(update, userId, actorId);
                 var fingerprint = about != null ? MessageFingerprint.Of(about) : null;
                 var labelEvent = new LabelEvent(chatId, userId, label, action, source, actorId,

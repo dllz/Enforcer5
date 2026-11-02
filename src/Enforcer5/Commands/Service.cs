@@ -441,7 +441,9 @@ defSpamValue = 3;
         {
             "resetwarns", "removewarn", "resetPrewarns", "removePrewarn",
             "userbuttonresetwarn", "userbuttonremwarns", "usermediaremwarns", "usermediaresetwarn",
-            "warnreason", Recovery.RecoveryOffers.Trigger
+            "warnreason", Recovery.RecoveryOffers.Trigger,
+            // One line for the whole batch, at its end.
+            Actions.Batches.Trigger
         };
 
         /// <summary>

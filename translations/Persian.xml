@@ -2444,4 +2444,84 @@ exaple: /{0}
   <string key="welcomeTurnedOff">
     <value>پیام خوش‌آمد خاموش است.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      یک دستور را روی فهرستی از اعضا اجرا می‌کند. به پیامی که شناسه‌های کاربری آن‌ها را دارد (هر خط یکی، یا هر جای متن) یا به یک فایل .txt یا .csv از آن‌ها، با /{0} و دستور پاسخ بده. حداکثر ۵۰۰۰ شناسه.
+
+      دستورها: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. بعد از دستور دلیل را بنویس و برای tempban و tempmute اول مدت را (بدون آن، مدت پیش‌فرض گروه).
+
+      اول نشان می‌دهم چه می‌شود: چند شناسه هست و چه کسانی کنار گذاشته می‌شوند (تکراری‌ها، ادمین‌ها، اعضایی که از قبل بن شده‌اند یا اخطاری برای برداشتن ندارند). هر ادمین گروه می‌تواند تا ۱۰ دقیقه «اجرا» یا «لغو» را بزند. اعضا یکی‌یکی انجام می‌شوند، بدون پیام برای هر نفر؛ دکمهٔ «توقف» آن را زودتر تمام می‌کند و بعد یک خلاصه و یک خط در کانال گزارش می‌آید.
+
+      مثال‌ها:
+      /{0} ban شبکهٔ اسپم
+      /{0} tempban 2d حمله
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>اجرای یک دستور روی فهرستی از اعضا</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[به فهرستی از شناسه‌های کاربری (یا یک فایل .txt یا .csv) با <code>/batch</code> و یک دستور پاسخ بده: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn یا resetwarns. مثلاً <code>/batch ban شبکهٔ اسپم</code> یا <code>/batch tempban 2d حمله</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>در پیامی که به آن پاسخ دادی شناسهٔ کاربری پیدا نکردم. به پیام یا فایل .txt یا .csv شامل شناسه‌ها پاسخ بده.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>این فهرست خیلی بلند است: هر دسته حداکثر {0} عضو می‌گیرد. آن را تقسیم کن.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>الان نمی‌شود دسته‌ها را اجرا کرد (پایگاه داده در دسترس نیست). بعداً دوباره امتحان کن.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>دسته: {0}</b>\nشناسه‌های فهرست: {1}\nانجام می‌شود برای: <b>{2}</b>\nکنار گذاشته: {3} تکراری، {4} ادمین، {5} بدون کاری برای انجام.\n\nهر ادمینی تا ۱۰ دقیقه می‌تواند آن را اجرا کند.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ اجرا</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ لغو</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ توقف</value>
+  </string>
+  <string key="batchCancelled">
+    <value>دسته لغو شد. کاری انجام نشد.</value>
+  </string>
+  <string key="batchExpired">
+    <value>این دسته دیگر باز نیست. دوباره /batch بفرست.</value>
+  </string>
+  <string key="batchRunning">
+    <value>دستهٔ دیگری در این گروه در حال اجراست. صبر کن تمام شود یا متوقفش کن، بعد دوباره «اجرا» را بزن.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>دسته #{0}: {1}</b>\n{2} از {3} انجام شد…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>دسته #{0}: {1}</b> تمام شد.\nانجام‌شده: {2}\nردشده: {3}\nمسدود با یک قاعده: {4}\nکنار گذاشته: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>دسته #{0}: {1}</b> متوقف شد.\nانجام‌شده: {2}\nردشده: {3}\nمسدود با یک قاعده: {4}\nکنار گذاشته: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• در گروه نیستند یا وجود ندارند: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• ادمین‌ها: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• دسترسی لازم را ندارم: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• خطاهای دیگر: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• متوقف شد: درخواست‌کننده دیگر ادمین نیست</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• مسدود با {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} در {1} یک دسته اجرا کرد: {2}. اجراکننده: {3}. انجام‌شده {4}، ردشده {5}، مسدود {6}، کنار گذاشته {7}.</value>
+  </string>
 </strings>

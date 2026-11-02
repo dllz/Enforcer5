@@ -194,7 +194,7 @@ namespace Enforcer5.Tests.Actions
         [TestMethod]
         public void TheHooks_RunOnTheSourcesOfSectionFive()
         {
-            var before = new[] { ActionSource.Command, ActionSource.Button, ActionSource.Report, ActionSource.Escalation };
+            var before = new[] { ActionSource.Command, ActionSource.Button, ActionSource.Report, ActionSource.Escalation, ActionSource.Batch };
             var neither = new[] { ActionSource.Flood, ActionSource.Raid, ActionSource.GlobalBan, ActionSource.MuteOnJoin };
             foreach (var source in Enum.GetValues<ActionSource>())
             {

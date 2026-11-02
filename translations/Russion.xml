@@ -2195,4 +2195,84 @@ $title - заменяется названием группы.
   <string key="welcomeTurnedOff">
     <value>Приветствие выключено.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Выполняет одну команду для списка участников. Ответь командой /{0} с нужной командой на сообщение с их ID пользователей (по одному в строке или где угодно в тексте) или на файл .txt или .csv с ними. До 5000 ID.
+
+      Команды: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. После команды добавь причину, а для tempban и tempmute сначала срок (без него используется срок группы по умолчанию).
+
+      Сначала я покажу, что произойдёт: сколько ID и кто будет пропущен (повторы, админы, уже забаненные или без предупреждений для снятия). Любой админ группы может затем нажать «Запустить» или «Отмена» в течение 10 минут. Участники обрабатываются по одному, без сообщения о каждом; кнопка «Стоп» завершает раньше, затем приходит итог и одна строка в канале логов.
+
+      Примеры:
+      /{0} ban спам-сеть
+      /{0} tempban 2d рейд
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Выполнить команду для списка участников</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Ответь на список ID пользователей (или на файл .txt или .csv) командой <code>/batch</code> и командой: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn или resetwarns. Например <code>/batch ban спам-сеть</code> или <code>/batch tempban 2d рейд</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>В сообщении, на которое ты ответил, нет ID пользователей. Ответь на сообщение или файл .txt или .csv с ID.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Список слишком длинный: в одной пачке не больше {0} участников. Раздели его.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Сейчас пачки запускать нельзя (база данных недоступна). Попробуй позже.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Пачка: {0}</b>\nID в списке: {1}\nБудет выполнено для: <b>{2}</b>\nПропущено: {3} повторов, {4} админов, {5} без действий.\n\nЛюбой админ может запустить её в течение 10 минут.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Запустить</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Отмена</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Стоп</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Пачка отменена. Ничего не сделано.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Эта пачка больше не открыта. Отправь /batch ещё раз.</value>
+  </string>
+  <string key="batchRunning">
+    <value>В этой группе уже выполняется другая пачка. Дождись её окончания или останови её, затем снова нажми «Запустить».</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Пачка #{0}: {1}</b>\nВыполнено {2} из {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Пачка #{0}: {1}</b> завершена.\nВыполнено: {2}\nОтказано: {3}\nЗаблокировано правилом: {4}\nПропущено: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Пачка #{0}: {1}</b> остановлена.\nВыполнено: {2}\nОтказано: {3}\nЗаблокировано правилом: {4}\nПропущено: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• нет в группе или не существуют: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• админы: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• у меня нет прав: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• другие ошибки: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• остановлено: запросивший больше не админ</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• заблокировано правилом {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} выполнил пачку в {1}: {2}. Запустил {3}. Выполнено {4}, отказано {5}, заблокировано {6}, пропущено {7}.</value>
+  </string>
 </strings>

@@ -73,7 +73,9 @@ namespace Enforcer5.Actions
         /// <summary>A tempban that ran out.</summary>
         Expiry,
         /// <summary>A post made as a channel the group does not allow.</summary>
-        ChannelPost
+        ChannelPost,
+        /// <summary>An admin's /batch: one of many members on a list, confirmed by an admin.</summary>
+        Batch
     }
 
     /// <summary>One action on one member in one chat.</summary>
@@ -123,6 +125,8 @@ namespace Enforcer5.Actions
         /// Null: an admin's command is logged as typed, anything else not at all.
         /// </summary>
         public ActionLogEntry Log { get; init; }
+        /// <summary>The /batch this is an item of.</summary>
+        public long? BatchId { get; init; }
     }
 
     /// <summary>An action's line in the log channel, built from how it went.</summary>

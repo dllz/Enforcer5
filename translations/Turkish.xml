@@ -2473,4 +2473,84 @@
   <string key="welcomeTurnedOff">
     <value>Karşılama mesajı kapalı.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Bir komutu bir üye listesi üzerinde çalıştırır. Kullanıcı ID'lerini içeren bir mesaja (her satıra bir tane ya da metnin herhangi bir yerinde) veya bunları içeren bir .txt ya da .csv dosyasına /{0} ve komutla yanıt ver. En fazla 5000 ID.
+
+      Komutlar: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Komuttan sonra bir sebep ekle; tempban ve tempmute için önce bir süre (süre yoksa grubun varsayılanı).
+
+      Önce ne olacağını gösteririm: kaç ID olduğunu ve kimlerin dışarıda kaldığını (tekrarlar, adminler, zaten banlanmış ya da kaldırılacak uyarısı olmayan üyeler). Gruptaki herhangi bir admin 10 dakika içinde Çalıştır veya İptal'e basabilir. Üyeler tek tek işlenir, her biri için mesaj atılmaz; Durdur düğmesi erken bitirir, sonra bir özet ve günlük kanalında bir satır gelir.
+
+      Örnekler:
+      /{0} ban spam ağı
+      /{0} tempban 2d baskın
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Bir üye listesinde komut çalıştır</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Bir kullanıcı ID listesine (veya .txt ya da .csv dosyasına) <code>/batch</code> ve bir komutla yanıt ver: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn veya resetwarns. Örneğin <code>/batch ban spam ağı</code> veya <code>/batch tempban 2d baskın</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>Yanıt verdiğin mesajda kullanıcı ID'si bulamadım. ID'leri içeren bir mesaja veya .txt ya da .csv dosyasına yanıt ver.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Bu liste çok uzun: bir toplu işlem en fazla {0} üye alır. Listeyi böl.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Toplu işlemler şu an çalıştırılamıyor (veritabanına ulaşılamıyor). Daha sonra tekrar dene.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Toplu işlem: {0}</b>\nListedeki ID'ler: {1}\nUygulanacak: <b>{2}</b>\nDışarıda: {3} tekrar, {4} admin, {5} yapılacak bir şey yok.\n\nHerhangi bir admin 10 dakika içinde çalıştırabilir.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Çalıştır</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ İptal</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Durdur</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Toplu işlem iptal edildi. Hiçbir şey yapılmadı.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Bu toplu işlem artık açık değil. /batch'i tekrar gönder.</value>
+  </string>
+  <string key="batchRunning">
+    <value>Bu grupta zaten başka bir toplu işlem çalışıyor. Bitmesini bekle ya da durdur, sonra tekrar Çalıştır'a bas.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Toplu işlem #{0}: {1}</b>\n{3} içinden {2} tamamlandı…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Toplu işlem #{0}: {1}</b> bitti.\nTamamlanan: {2}\nReddedilen: {3}\nBir kuralca engellenen: {4}\nDışarıda kalan: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Toplu işlem #{0}: {1}</b> durduruldu.\nTamamlanan: {2}\nReddedilen: {3}\nBir kuralca engellenen: {4}\nDışarıda kalan: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• grupta değil veya böyle bir kullanıcı yok: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• adminler: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• yetkim yok: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• diğer hatalar: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• durduruldu: isteyen kişi artık admin değil</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• {0} tarafından engellenen: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0}, {1} içinde bir toplu işlem çalıştırdı: {2}. Başlatan: {3}. Tamamlanan {4}, reddedilen {5}, engellenen {6}, dışarıda kalan {7}.</value>
+  </string>
 </strings>

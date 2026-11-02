@@ -2504,4 +2504,84 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="welcomeTurnedOff">
     <value>Die Willkommensnachricht ist aus.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Führt einen Befehl für eine Liste von Mitgliedern aus. Antworte mit /{0} und dem Befehl auf eine Nachricht mit ihren Nutzer-IDs (eine pro Zeile oder irgendwo im Text) oder auf eine .txt- oder .csv-Datei damit. Bis zu 5000 IDs.
+
+      Befehle: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Gib nach dem Befehl einen Grund an, bei tempban und tempmute zuerst eine Dauer (ohne sie gilt die Standarddauer der Gruppe).
+
+      Zuerst zeige ich, was passieren würde: wie viele IDs es sind und wer ausgelassen wird (Doppelte, Admins, bereits gebannte Mitglieder oder solche ohne Verwarnungen zum Entfernen). Jeder Admin der Gruppe kann dann innerhalb von 10 Minuten Ausführen oder Abbrechen drücken. Die Mitglieder werden einzeln abgearbeitet, ohne eine Nachricht für jedes; mit Stopp endet es vorzeitig, danach folgt eine Zusammenfassung und eine Zeile im Log-Kanal.
+
+      Beispiele:
+      /{0} ban Spam-Ring
+      /{0} tempban 2d Raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Einen Befehl für eine Liste von Mitgliedern ausführen</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Antworte auf eine Liste von Nutzer-IDs (oder eine .txt- oder .csv-Datei) mit <code>/batch</code> und einem Befehl: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn oder resetwarns. Zum Beispiel <code>/batch ban Spam-Ring</code> oder <code>/batch tempban 2d Raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>In der Nachricht, auf die du geantwortet hast, habe ich keine Nutzer-IDs gefunden. Antworte auf eine Nachricht oder eine .txt- oder .csv-Datei mit den IDs.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Diese Liste ist zu lang: Ein Stapel nimmt höchstens {0} Mitglieder. Teile sie auf.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Stapel können gerade nicht laufen (die Datenbank ist nicht erreichbar). Versuch es später noch einmal.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Stapel: {0}</b>\nIDs in der Liste: {1}\nWird ausgeführt für: <b>{2}</b>\nAusgelassen: {3} doppelt, {4} Admins, {5} ohne etwas zu tun.\n\nJeder Admin kann ihn innerhalb von 10 Minuten starten.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Ausführen</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Abbrechen</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Stopp</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Stapel abgebrochen. Es wurde nichts getan.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Dieser Stapel ist nicht mehr offen. Sende /batch erneut.</value>
+  </string>
+  <string key="batchRunning">
+    <value>In dieser Gruppe läuft schon ein anderer Stapel. Warte, bis er endet, oder stoppe ihn, und drücke dann erneut Ausführen.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Stapel #{0}: {1}</b>\n{2} von {3} erledigt…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Stapel #{0}: {1}</b> ist fertig.\nErledigt: {2}\nAbgelehnt: {3}\nVon einer Regel blockiert: {4}\nAusgelassen: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Stapel #{0}: {1}</b> wurde gestoppt.\nErledigt: {2}\nAbgelehnt: {3}\nVon einer Regel blockiert: {4}\nAusgelassen: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• nicht in der Gruppe oder unbekannt: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• Admins: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• mir fehlen die Rechte: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• andere Fehler: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• gestoppt: wer ihn angefordert hat, ist kein Admin mehr</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• blockiert von {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} hat in {1} einen Stapel ausgeführt: {2}. Gestartet von {3}. Erledigt {4}, abgelehnt {5}, blockiert {6}, ausgelassen {7}.</value>
+  </string>
 </strings>

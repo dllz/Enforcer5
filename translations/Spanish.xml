@@ -3525,4 +3525,84 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="welcomeTurnedOff">
     <value>El mensaje de bienvenida está desactivado.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Ejecuta un comando sobre una lista de miembros. Responde con /{0} y el comando a un mensaje con sus IDs de usuario (uno por línea, o en cualquier parte del texto), o a un archivo .txt o .csv con ellos. Hasta 5000 IDs.
+
+      Comandos: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Añade un motivo después del comando y, para tempban y tempmute, primero una duración (sin ella, la predeterminada del grupo).
+
+      Primero muestro lo que pasaría: cuántos IDs hay y a quién se deja fuera (duplicados, administradores, miembros ya baneados o sin advertencias que quitar). Cualquier administrador del grupo puede pulsar Ejecutar o Cancelar en 10 minutos. Los miembros se procesan de uno en uno, sin un mensaje por cada uno; un botón Detener lo termina antes, y después llega un resumen, con una línea en el canal de registro.
+
+      Ejemplos:
+      /{0} ban red de spam
+      /{0} tempban 2d raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Ejecutar un comando sobre una lista de miembros</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Responde a una lista de IDs de usuario (o a un archivo .txt o .csv) con <code>/batch</code> y un comando: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn o resetwarns. Por ejemplo <code>/batch ban red de spam</code> o <code>/batch tempban 2d raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>No he encontrado IDs de usuario en el mensaje al que respondiste. Responde a un mensaje o a un archivo .txt o .csv con los IDs.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>Esa lista es demasiado larga: un lote admite como máximo {0} miembros. Divídela.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Ahora mismo no se pueden ejecutar lotes (la base de datos no está disponible). Inténtalo más tarde.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Lote: {0}</b>\nIDs en la lista: {1}\nSe aplicará a: <b>{2}</b>\nFuera: {3} duplicados, {4} administradores, {5} sin nada que hacer.\n\nCualquier administrador puede ejecutarlo en los próximos 10 minutos.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Ejecutar</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Cancelar</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Detener</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Lote cancelado. No se ha hecho nada.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Este lote ya no está abierto. Envía /batch de nuevo.</value>
+  </string>
+  <string key="batchRunning">
+    <value>Ya hay otro lote en marcha en este grupo. Espera a que termine o detenlo, y vuelve a pulsar Ejecutar.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Lote #{0}: {1}</b>\nHechos {2} de {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Lote #{0}: {1}</b> ha terminado.\nHechos: {2}\nRechazados: {3}\nBloqueados por una regla: {4}\nFuera: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Lote #{0}: {1}</b> se ha detenido.\nHechos: {2}\nRechazados: {3}\nBloqueados por una regla: {4}\nFuera: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• no están en el grupo o no existen: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• administradores: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• me faltan los permisos: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• otros errores: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• detenido: quien lo pidió ya no es administrador</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• bloqueados por {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} ejecutó un lote en {1}: {2}. Lo puso en marcha {3}. Hechos {4}, rechazados {5}, bloqueados {6}, fuera {7}.</value>
+  </string>
 </strings>

@@ -2452,4 +2452,84 @@
   <string key="welcomeTurnedOff">
     <value>Il messaggio di benvenuto è disattivato.</value>
   </string>
+  <string key="hcommandbatch">
+    <value>
+      Esegue un comando su un elenco di membri. Rispondi con /{0} e il comando a un messaggio con i loro ID utente (uno per riga, o ovunque nel testo), o a un file .txt o .csv che li contiene. Fino a 5000 ID.
+
+      Comandi: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn, resetwarns. Aggiungi un motivo dopo il comando e, per tempban e tempmute, prima una durata (senza, quella predefinita del gruppo).
+
+      Prima mostro cosa succederebbe: quanti ID ci sono e chi resta escluso (duplicati, admin, membri già bannati o senza avvisi da togliere). Qualsiasi admin del gruppo può poi premere Esegui o Annulla entro 10 minuti. I membri vengono trattati uno alla volta, senza un messaggio per ciascuno; un pulsante Ferma lo termina prima, poi arriva un riepilogo, con una riga nel canale di log.
+
+      Esempi:
+      /{0} ban rete di spam
+      /{0} tempban 2d raid
+      /{0} unmute
+    </value>
+  </string>
+  <string key="cmdbatch">
+    <value>Esegui un comando su un elenco di membri</value>
+  </string>
+  <string key="batchUsage">
+    <value><![CDATA[Rispondi a un elenco di ID utente (o a un file .txt o .csv) con <code>/batch</code> e un comando: ban, tempban, unban, kick, mute, tempmute, unmute, warn, prewarn, removewarn o resetwarns. Per esempio <code>/batch ban rete di spam</code> o <code>/batch tempban 2d raid</code>.]]></value>
+  </string>
+  <string key="batchNoIds">
+    <value>Non ho trovato ID utente nel messaggio a cui hai risposto. Rispondi a un messaggio o a un file .txt o .csv con gli ID.</value>
+  </string>
+  <string key="batchTooMany">
+    <value>L'elenco è troppo lungo: un lotto accetta al massimo {0} membri. Dividilo.</value>
+  </string>
+  <string key="batchNoDatabase">
+    <value>Al momento i lotti non possono essere eseguiti (il database non è disponibile). Riprova più tardi.</value>
+  </string>
+  <string key="batchPreview">
+    <value><![CDATA[<b>Lotto: {0}</b>\nID nell'elenco: {1}\nVerrà applicato a: <b>{2}</b>\nEsclusi: {3} duplicati, {4} admin, {5} senza nulla da fare.\n\nQualsiasi admin può eseguirlo entro 10 minuti.]]></value>
+  </string>
+  <string key="batchRun">
+    <value>▶️ Esegui</value>
+  </string>
+  <string key="batchCancel">
+    <value>✖️ Annulla</value>
+  </string>
+  <string key="batchStop">
+    <value>⏹ Ferma</value>
+  </string>
+  <string key="batchCancelled">
+    <value>Lotto annullato. Non è stato fatto nulla.</value>
+  </string>
+  <string key="batchExpired">
+    <value>Questo lotto non è più aperto. Invia di nuovo /batch.</value>
+  </string>
+  <string key="batchRunning">
+    <value>In questo gruppo è già in corso un altro lotto. Aspetta che finisca o fermalo, poi premi di nuovo Esegui.</value>
+  </string>
+  <string key="batchProgress">
+    <value><![CDATA[<b>Lotto #{0}: {1}</b>\nFatti {2} di {3}…]]></value>
+  </string>
+  <string key="batchDone">
+    <value><![CDATA[<b>Lotto #{0}: {1}</b> è terminato.\nFatti: {2}\nRifiutati: {3}\nBloccati da una regola: {4}\nEsclusi: {5}]]></value>
+  </string>
+  <string key="batchStopped">
+    <value><![CDATA[<b>Lotto #{0}: {1}</b> è stato fermato.\nFatti: {2}\nRifiutati: {3}\nBloccati da una regola: {4}\nEsclusi: {5}]]></value>
+  </string>
+  <string key="batchWhyNotFound">
+    <value>• non nel gruppo o inesistenti: {0}</value>
+  </string>
+  <string key="batchWhyAdmin">
+    <value>• admin: {0}</value>
+  </string>
+  <string key="batchWhyNoRights">
+    <value>• mi mancano i permessi: {0}</value>
+  </string>
+  <string key="batchWhyOther">
+    <value>• altri errori: {0}</value>
+  </string>
+  <string key="batchWhyNotAdmin">
+    <value>• fermato: chi l'ha chiesto non è più admin</value>
+  </string>
+  <string key="batchWhyRule">
+    <value>• bloccati da {0}: {1}</value>
+  </string>
+  <string key="batchLog">
+    <value>{0} ha eseguito un lotto in {1}: {2}. Avviato da {3}. Fatti {4}, rifiutati {5}, bloccati {6}, esclusi {7}.</value>
+  </string>
 </strings>

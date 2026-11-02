@@ -108,6 +108,131 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BatchEntity", b =>
+                {
+                    b.Property<long>("BatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("BatchId"));
+
+                    b.Property<string>("CommandText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("command_text");
+
+                    b.Property<long>("ConfirmedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("confirmed_by_account_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<int?>("ProgressMessageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("progress_message_id");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<long>("RequestedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("requested_by_account_id");
+
+                    b.Property<int>("Skipped")
+                        .HasColumnType("integer")
+                        .HasColumnName("skipped");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("running")
+                        .HasColumnName("status");
+
+                    b.HasKey("BatchId");
+
+                    b.HasIndex("ConfirmedByAccountId");
+
+                    b.HasIndex("RequestedByAccountId");
+
+                    b.HasIndex(new[] { "Edition", "Status" }, "batches_edition_status_idx");
+
+                    b.HasIndex(new[] { "GroupId" }, "batches_one_running_idx")
+                        .IsUnique()
+                        .HasFilter("status = 'running'");
+
+                    b.ToTable("batches", null, t =>
+                        {
+                            t.HasCheckConstraint("batches_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("batches_kind_check", "kind IN ('ban', 'tempban', 'unban', 'kick', 'mute', 'tempmute', 'unmute', 'warn', 'prewarn', 'removewarn', 'resetwarns')");
+
+                            t.HasCheckConstraint("batches_status_check", "status IN ('running', 'done', 'stopped')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.BatchItemEntity", b =>
+                {
+                    b.Property<long>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<string>("Detail")
+                        .HasColumnType("text")
+                        .HasColumnName("detail");
+
+                    b.Property<DateTimeOffset?>("DoneAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("done_at");
+
+                    b.Property<string>("Outcome")
+                        .HasColumnType("text")
+                        .HasColumnName("outcome");
+
+                    b.Property<long>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
+                    b.HasKey("BatchId", "Position");
+
+                    b.ToTable("batch_items", null, t =>
+                        {
+                            t.HasCheckConstraint("batch_items_outcome_check", "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.BotEventEntity", b =>
                 {
                     b.Property<long>("EventId")
@@ -1298,7 +1423,7 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("member_labels_label_check", "label IN ('bad', 'fine', 'undo')");
 
-                            t.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established')");
+                            t.HasCheckConstraint("member_labels_source_check", "source IN ('command', 'button', 'report', 'app', 'auto', 'raid', 'global', 'established', 'batch', 'script')");
 
                             t.HasCheckConstraint("member_labels_undone_check", "(undone_at IS NULL) = (undone_by_label_id IS NULL)");
                         });
@@ -2614,6 +2739,36 @@ namespace Enforcer5.Storage.Migrations
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
                         .WithMany()
                         .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.BatchEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ConfirmedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.BatchItemEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.BatchEntity", null)
+                        .WithMany()
+                        .HasForeignKey("BatchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

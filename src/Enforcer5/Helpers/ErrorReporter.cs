@@ -24,6 +24,12 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal Update Update { get; init; }
 
+        /// <summary>
+        /// For work that has no update, but an admin behind it (a batch): the source Detection's decisions
+        /// are labelled with (<c>member_labels.source</c>), instead of one worked out from the update.
+        /// </summary>
+        internal string LabelSource { get; init; }
+
         internal static ErrorContext From(Update update)
         {
             if (update == null) return null;
