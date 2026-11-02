@@ -88,7 +88,8 @@ namespace Enforcer5.Actions
 
         /// <summary>Whether before hooks may block or change an action from <paramref name="source"/>.</summary>
         internal static bool BeforeRuns(ActionSource source) =>
-            source is ActionSource.Command or ActionSource.Button or ActionSource.Report or ActionSource.Escalation;
+            source is ActionSource.Command or ActionSource.Button or ActionSource.Report or ActionSource.Escalation
+                or ActionSource.Batch;
 
         /// <summary>Whether after hooks hear about an action from <paramref name="source"/>.</summary>
         internal static bool AfterRuns(ActionSource source) =>
@@ -165,8 +166,11 @@ namespace Enforcer5.Actions
         {
             try
             {
-                // Started apart from the action's thread, so a hook that never returns (a loop) only costs its budget.
-                var asked = Task.Run(() => hook.BeforeAsync(request) ?? Task.FromResult<HookVerdict>(null));
+                // Called inline: a hook that answers at once costs no thread hop, which under load could
+                // itself overrun the budget. What it leaves running (I/O, a script) gets the budget. A
+                // hook's own CPU is its business: the script host bounds a script's with its engine's limits.
+                var asked = hook.BeforeAsync(request);
+                if (asked == null) return null;
                 if (!Clock.Wait(asked, BeforeBudget))
                 {
                     Over(hook, "before", request);
