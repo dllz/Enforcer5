@@ -110,6 +110,9 @@ namespace Enforcer5.Data
             new RedisTempbanRepository(() => Redis.db, "tempbanned");
 #endif
 
+        /// <summary>Posts Detection deleted, for their reports (a cache, 24 hours).</summary>
+        internal static IDeletedPostRepository DeletedPosts { get; set; } = new RedisDeletedPostRepository(() => Redis.db);
+
         internal static ISlowLaneRepository SlowLane { get; set; } =
             new RedisSlowLaneRepository(() => Redis.db, TimeSpan.FromHours(24));
 

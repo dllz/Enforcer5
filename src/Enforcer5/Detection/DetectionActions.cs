@@ -15,6 +15,9 @@ namespace Enforcer5.Detection
         /// <summary>The member, when the message showed who they are; for the report.</summary>
         internal Telegram.Bot.Types.User Member { get; init; }
 
+        /// <summary>The message it was about, if any: a report quotes it when it is deleted.</summary>
+        internal Telegram.Bot.Types.Message Message { get; init; }
+
         /// <summary>Their score after the sign, for the report.</summary>
         internal int Score { get; init; }
 
@@ -39,7 +42,8 @@ namespace Enforcer5.Detection
         public void Execute(DetectionAction action)
         {
             if (action.Report)
-                DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail);
+                DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail,
+                    action.Delete ? DeletedPost.From(action.Message) : null);
             var deleteOnly = action.Action is "none" or "score" or "report";
             if (deleteOnly && !action.Delete) return;
             // A delete alone is logged here; an action logs its own line once it went through.

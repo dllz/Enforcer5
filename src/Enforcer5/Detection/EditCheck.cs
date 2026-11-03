@@ -31,8 +31,8 @@ namespace Enforcer5.Detection
     /// nothing: Telegram sends an edit of every recent post of a member whose tag an admin or a bot changed,
     /// with a new edit date and nothing changed (2026-10-29, 70 posts of 3 members reported in one group).</item>
     /// </list>
-    /// Admins and approved members are left out (the engine). The admins' report says what changed and when,
-    /// never the content. Two HGETs per edit; pipelined HSETs per message, never waited for.
+    /// Admins and approved members are left out (the engine). The admins' report says what changed and when;
+    /// a deleted post is quoted, its file only sent to an admin who asks (<see cref="DeletedPost"/>). Two HGETs per edit; pipelined HSETs per message, never waited for.
     /// </summary>
     internal static class EditCheck
     {
@@ -189,11 +189,10 @@ namespace Enforcer5.Detection
         // The types with a name of their own; any other is "media".
         private static readonly string[] Named = { "text", "photo", "video", "gif", "sticker", "document", "voice", "audio", "videonote" };
 
-        private static string TypeName(XDocument lang, string type)
-        {
-            var key = Array.IndexOf(Named, type) >= 0 ? $"editType_{type}" : "editType_other";
-            return Methods.GetLocaleStringNoFormat(lang, key);
-        }
+        private static string TypeName(XDocument lang, string type) => Methods.GetLocaleStringNoFormat(lang, TypeKey(type));
+
+        /// <summary>The string naming a kind of message (<see cref="MessageFingerprint.ContentTypeOf"/>).</summary>
+        internal static string TypeKey(string type) => Array.IndexOf(Named, type) >= 0 ? $"editType_{type}" : "editType_other";
 
         private static string Age(XDocument lang, TimeSpan age) =>
             age.TotalDays >= 1 ? Methods.GetLocaleStringNoFormat(lang, "editAgeDays", (int)age.TotalDays)

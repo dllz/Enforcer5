@@ -1510,6 +1510,21 @@ UPDATE LOG
   <string key="reportGone">
     <value>呢份報告太舊，已經處理唔到。</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 已刪除嘅訊息（48 個鐘內喺群組嘅「最近動作」都睇到）：</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 睇已刪除嘅訊息</value>
+  </string>
+  <string key="reportShowSent">
+    <value>已經私訊咗俾你，唔可以轉發或者儲存。</value>
+  </string>
+  <string key="reportShowStart">
+    <value>請先喺私訊度啟動我，再撳多次。</value>
+  </string>
+  <string key="reportShowGone">
+    <value>呢個訊息已經冇咗。</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 已被 {0} 封鎖</value>
   </string>

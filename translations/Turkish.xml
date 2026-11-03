@@ -1936,6 +1936,21 @@
   <string key="reportGone">
     <value>Bu rapor işlem yapmak için çok eski.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Silinen mesaj (48 saat boyunca grubun Son İşlemler bölümünde de görünür):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Silinen mesajı göster</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Size özelden gönderildi. İletilemez veya kaydedilemez.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Önce beni özelden başlatın, sonra tekrar basın.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Bu mesaj artık mevcut değil.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 {0} tarafından yasaklandı</value>
   </string>

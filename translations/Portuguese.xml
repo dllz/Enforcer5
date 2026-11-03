@@ -1926,6 +1926,21 @@
   <string key="reportGone">
     <value>Este alerta é antigo demais para agir.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Mensagem apagada (também nas Ações recentes do grupo por 48 horas):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Mostrar mensagem apagada</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Enviada a você no privado. Não pode ser encaminhada nem salva.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Inicie-me no privado primeiro e depois toque de novo.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Essa mensagem não está mais disponível.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Banido por {0}</value>
   </string>

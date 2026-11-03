@@ -2159,6 +2159,21 @@
   <string key="reportGone">
     <value>Laporan ini sudah terlalu lama untuk ditindaklanjuti.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Pesan yang dihapus (juga ada di Tindakan Terbaru grup selama 48 jam):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Tampilkan pesan yang dihapus</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Dikirim ke Anda secara pribadi. Pesan ini tidak bisa diteruskan atau disimpan.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Mulai chat pribadi dengan saya dulu, lalu tekan lagi.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Pesan itu sudah tidak tersedia.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Diblokir oleh {0}</value>
   </string>

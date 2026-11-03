@@ -2994,6 +2994,21 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="reportGone">
     <value>Este aviso es demasiado antiguo para actuar.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Mensaje eliminado (también en las Acciones recientes del grupo durante 48 horas):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Mostrar mensaje eliminado</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Enviado por privado. No se puede reenviar ni guardar.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Primero inicia el bot en privado y luego pulsa otra vez.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Ese mensaje ya no está disponible.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Baneado por {0}</value>
   </string>

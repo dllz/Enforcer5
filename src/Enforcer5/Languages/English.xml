@@ -2980,6 +2980,21 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="reportGone">
     <value>This report is too old to act on.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Deleted post (also in the group's Recent actions for 48 hours):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Show deleted post</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Sent to you in private. It cannot be forwarded or saved.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Start me in private first, then press again.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>That post is no longer available.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Banned by {0}</value>
   </string>

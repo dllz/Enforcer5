@@ -18,7 +18,8 @@ namespace Enforcer5.Detection
 
         /// <param name="MessageId">The message it was seen on, if any: the report links each sign to it.</param>
         /// <param name="Detail">What the report says about it (<see cref="SignHit.Detail"/>); in memory only.</param>
-        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null, string Detail = null);
+        /// <param name="Deleted">The message was deleted: the report does not link to it.</param>
+        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null, string Detail = null, bool Deleted = false);
 
         private sealed class Entry
         {
@@ -67,6 +68,15 @@ namespace Enforcer5.Detection
             }
         }
 
+        /// <summary>Detection deleted <paramref name="messageId"/>: the hits seen on it say so.</summary>
+        internal static void MarkDeleted(long chatId, long userId, long messageId)
+        {
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return;
+            lock (entry)
+                for (var i = 0; i < entry.Hits.Count; i++)
+                    if (entry.Hits[i].MessageId == messageId) entry.Hits[i] = entry.Hits[i] with { Deleted = true };
+        }
+
         /// <summary>The signs that make up their score now, oldest first.</summary>
         internal static IReadOnlyList<string> Signs(long chatId, long userId)
         {
@@ -77,15 +87,20 @@ namespace Enforcer5.Detection
 
         /// <summary>
         /// The signs that make up their score now, oldest first, each with the last message it was seen on (null when
-        /// none: a join) and its last detail (null when none, or loaded back after a restart).
+        /// none: a join), whether Detection deleted that message, and its last detail (null when none, or loaded back
+        /// after a restart).
         /// </summary>
-        internal static IReadOnlyList<(string Sign, long? MessageId, string Detail)> Seen(long chatId, long userId)
+        internal static IReadOnlyList<(string Sign, long? MessageId, bool Deleted, string Detail)> Seen(long chatId, long userId)
         {
-            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<(string, long?, string)>();
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<(string, long?, bool, string)>();
             var now = Clock.UtcNow;
             lock (entry)
                 return entry.Hits.Where(h => now - h.At < Window).GroupBy(h => h.Sign)
-                    .Select(g => (g.Key, g.LastOrDefault(h => h.MessageId != null)?.MessageId, g.LastOrDefault(h => h.Detail != null)?.Detail))
+                    .Select(g =>
+                    {
+                        var seenOn = g.LastOrDefault(h => h.MessageId != null);
+                        return (g.Key, seenOn?.MessageId, seenOn?.Deleted == true, g.LastOrDefault(h => h.Detail != null)?.Detail);
+                    })
                     .ToList();
         }
 

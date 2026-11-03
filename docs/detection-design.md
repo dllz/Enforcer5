@@ -139,8 +139,11 @@ Telegram sends the original `date` with every edit, so "late" needs no record. A
   - post older than the record window → `edit_late`;
   - `edit_date - date` > 10 min → `edit_late`.
 - Edits also run the newcomer checks and the filters on the new content.
-- The report says what changed ("photo replaced by a sticker, 3 weeks after posting"), never the
-  content. A swapped image goes to the NSFW model when AI is on.
+- The report says what changed ("photo replaced by a sticker, 3 weeks after posting"). A swap is
+  deleted, so the report cannot link to it: it quotes the post instead (text and caption, and what
+  Telegram says about the file), never posting the file itself; "Show deleted post" sends the file
+  to the admin who asks, alone, in private, protected from forwarding (Daniel, 2026-11-03). The same
+  goes for every post Detection deletes. A swapped image goes to the NSFW model when AI is on.
 
 ## 5. Filters and presets
 

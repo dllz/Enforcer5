@@ -1618,6 +1618,21 @@ Example:
   <string key="reportGone">
     <value>这份报告太旧，无法再处理。</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 已删除的消息（48 小时内也可在群组的“最近操作”中查看）：</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 查看已删除的消息</value>
+  </string>
+  <string key="reportShowSent">
+    <value>已私信发送给你，无法转发或保存。</value>
+  </string>
+  <string key="reportShowStart">
+    <value>请先在私聊中启动我，然后再按一次。</value>
+  </string>
+  <string key="reportShowGone">
+    <value>该消息已不可用。</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 已被 {0} 封禁</value>
   </string>

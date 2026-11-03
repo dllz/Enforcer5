@@ -30,8 +30,11 @@ namespace Enforcer5.Detection
     /// <item>During a raid (<see cref="Raids.RaidGuard.Quiet"/>) nothing is sent: the members are held and
     /// summed up in one report when it ends.</item>
     /// </list>
+    /// <item>A message Detection deleted is never linked to (the link would go nowhere): the report quotes the
+    /// latest one instead (<see cref="DeletedPost"/>), and Show deleted post sends its file to the admin who
+    /// asks, in private (Daniel, 2026-11-03).</item>
     /// Reports never hold up the message handler or the enforcement queue: they are dispatched work, and
-    /// a failure is reported, not thrown. Never message text: what was seen, by its sign.
+    /// a failure is reported, not thrown. What was seen, by its sign; message text only from a deleted post.
     /// </summary>
     internal static class DetectionReports
     {
@@ -51,25 +54,37 @@ namespace Enforcer5.Detection
             /// <summary>The last message each sign was seen on; signs seen on none (a join, a profile) are not here.</summary>
             internal readonly Dictionary<string, long> Messages = new();
             internal int Score;
-            /// <summary>The latest message the report is about: the Go to message button, and the file a Ban bans.</summary>
+            /// <summary>The latest message the report is about: the file a Ban bans.</summary>
             internal long? MessageId;
+            /// <summary>The messages Detection deleted: nothing links to them.</summary>
+            internal readonly HashSet<long> Gone = new();
+            /// <summary>The latest deleted post, quoted in the text; null when none (or not known after a restart).</summary>
+            internal DeletedPost Post;
             internal readonly List<ReportCopy> Copies = new();
             internal string Decision;
             internal long? DecidedBy;
             internal bool EditPending;
             internal DateTime OpenedUtc => Key.OpenedAt.UtcDateTime;
 
-            internal void Add(string sign, long? messageId)
+            internal void Add(string sign, long? messageId, bool deleted = false)
             {
                 var at = Signs.FindIndex(s => s.Sign == sign);
                 if (at >= 0) Signs[at] = (sign, Signs[at].Count + 1);
                 else Signs.Add((sign, 1));
-                if (messageId is { } id) Messages[sign] = id;
+                if (messageId is not { } id) return;
+                Messages[sign] = id;
+                if (deleted) Gone.Add(id);
             }
 
-            /// <summary>Each sign's link to its message, for the text.</summary>
+            /// <summary>Each sign's link to its message, for the text; none to a deleted one.</summary>
             internal Dictionary<string, string> Links() =>
-                Messages.ToDictionary(m => m.Key, m => Methods.GetChatMessageLink(Key.ChatId, m.Value.ToString()));
+                Messages.Where(m => !Gone.Contains(m.Value))
+                    .ToDictionary(m => m.Key, m => Methods.GetChatMessageLink(Key.ChatId, m.Value.ToString()));
+
+            /// <summary>Where Go to message goes: the latest message still there; null when none is.</summary>
+            internal long? LinkTarget =>
+                MessageId is { } latest && !Gone.Contains(latest) ? latest
+                : Messages.Values.Where(id => !Gone.Contains(id)).Select(id => (long?)id).Max();
         }
 
         private static readonly ConcurrentDictionary<(long Chat, long User), OpenReport> Open = new();
@@ -105,15 +120,16 @@ namespace Enforcer5.Detection
         /// <param name="member">Who they are, when the caller has it; else their name is looked up.</param>
         /// <param name="score">Their score now, 0 when the sign does not score.</param>
         /// <param name="detail">What the report says about the sign (what an edit changed), in the group's language.</param>
+        /// <param name="deleted">The message, when Detection deleted it: quoted rather than linked to.</param>
         internal static void Report(long chatId, long userId, long? messageId, string sign, User member = null, int score = 0,
-            string detail = null)
+            string detail = null, DeletedPost deleted = null)
         {
             if (chatId > 0 || userId == 0) return;
-            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score, detail), "DetectionReport");
+            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score, detail, deleted), "DetectionReport");
         }
 
         internal static async Task ReportAsync(long chatId, long userId, long? messageId, string sign, User member, int score,
-            string detail = null)
+            string detail = null, DeletedPost deleted = null)
         {
             try
             {
@@ -129,11 +145,13 @@ namespace Enforcer5.Detection
                 await EnterAsync(gate);
                 try
                 {
+                    if (deleted != null) await KeepAsync(chatId, deleted);
                     var report = await CurrentAsync(chatId, userId);
                     if (report != null)
                     {
                         if (report.Decision != null) return; // decided: nothing to add
-                        report.Add(sign, messageId);
+                        report.Add(sign, messageId, deleted != null);
+                        if (deleted != null) report.Post = deleted;
                         if (detail != null) report.Details[sign] = detail;
                         report.Score = Math.Max(report.Score, score);
                         report.MessageId = messageId ?? report.MessageId;
@@ -145,15 +163,15 @@ namespace Enforcer5.Detection
                     report = new OpenReport
                     {
                         Key = ReportKey.ForMember(chatId, userId, DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(now).ToUnixTimeSeconds())),
-                        Name = name, Score = score, MessageId = messageId
+                        Name = name, Score = score, MessageId = messageId, Post = deleted
                     };
                     // What made up their score, then what fired now.
-                    foreach (var (scored, seenOn, said) in MemberScores.Seen(chatId, userId).Where(s => s.Sign != sign))
+                    foreach (var (scored, seenOn, gone, said) in MemberScores.Seen(chatId, userId).Where(s => s.Sign != sign))
                     {
-                        report.Add(scored, seenOn);
+                        report.Add(scored, seenOn, gone);
                         if (said != null) report.Details[scored] = said;
                     }
-                    report.Add(sign, messageId);
+                    report.Add(sign, messageId, deleted != null);
                     if (detail != null) report.Details[sign] = detail;
                     var lang = Methods.GetGroupLanguage(chatId).Doc;
                     var copies = await SendAsync(chatId, Text(lang, report, await TitleAsync(chatId)), Buttons(lang, report));
@@ -170,6 +188,33 @@ namespace Enforcer5.Detection
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Reporting {userId} in {chatId} for {sign}");
+            }
+        }
+
+        /// <summary>Keeps a deleted post for its report after a restart. Failing only loses that: reported, never thrown.</summary>
+        private static async Task KeepAsync(long chatId, DeletedPost post)
+        {
+            try
+            {
+                await Repositories.DeletedPosts.SaveAsync(chatId, post);
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Keeping the deleted post {post.MessageId} of {chatId} for its report");
+            }
+        }
+
+        /// <summary>The kept deleted post <paramref name="messageId"/>, or null (none, expired, or Redis failed: reported).</summary>
+        private static async Task<DeletedPost> KeptAsync(long chatId, long messageId)
+        {
+            try
+            {
+                return await Repositories.DeletedPosts.GetAsync(chatId, messageId);
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Reading the deleted post {messageId} of {chatId} for its report");
+                return null;
             }
         }
 
@@ -196,13 +241,16 @@ namespace Enforcer5.Detection
                 Key = key, Name = StoredName(key.UserId.Value), Decision = stored.Decision, DecidedBy = stored.DecidedBy
             };
             report.Copies.AddRange(stored.Copies);
-            foreach (var (sign, count, messageId) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
+            foreach (var (sign, count, messageId, deleted) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
             {
                 report.Signs.Add((sign, count));
-                if (messageId is { } id) report.Messages[sign] = id;
+                if (messageId is not { } id) continue;
+                report.Messages[sign] = id;
+                if (deleted) report.Gone.Add(id);
             }
-            // The latest of them, for the button.
+            // The latest of them, for Ban; the latest deleted one is quoted.
             if (report.Messages.Count > 0) report.MessageId = report.Messages.Values.Max();
+            if (report.Gone.Count > 0) report.Post = await KeptAsync(key.ChatId, report.Gone.Max());
             report.Score = MemberScores.Of(key.ChatId, key.UserId.Value);
             Open[(key.ChatId, key.UserId.Value)] = report;
             return report;
@@ -437,6 +485,55 @@ namespace Enforcer5.Detection
 
         private static Task Answer(CallbackQuery call, string text) => Bot.Api.AnswerCallbackQuery(call.Id, text);
 
+        /// <summary>
+        /// Show deleted post under a report: <c>dreport:{chat}:{user}:{opened}:show</c>. The file goes to the admin who
+        /// pressed it, alone, in private, protected from forwarding and saving; nothing else changes. Only the group's
+        /// admins get here (GroupAdminOnly), and the log channel's line for the press says who looked.
+        /// </summary>
+        internal static async Task ShowAsync(CallbackQuery call, long chatId, long userId, long opened)
+        {
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var key = ReportKey.ForMember(chatId, userId, DateTimeOffset.FromUnixTimeSeconds(opened));
+            var report = Open.TryGetValue((chatId, userId), out var open) && open.Key.OpenedAt == key.OpenedAt ? open : null;
+            if (report == null && PostgresStorage.Ready && await Repositories.DetectionReports.GetAsync(key) is { } stored)
+            {
+                var gate = Gate(chatId, userId);
+                await EnterAsync(gate);
+                try
+                {
+                    report = await RestoreAsync(stored);
+                }
+                finally
+                {
+                    gate.Release();
+                }
+            }
+            var post = report?.Post;
+            if (post?.FileId == null)
+            {
+                await Answer(call, Methods.GetLocaleString(lang, "reportShowGone"));
+                return;
+            }
+            try
+            {
+                await post.SendAsync(call.From.Id);
+            }
+            catch (Exception e)
+            {
+                var api = Bot.AsApiError(e);
+                // 403: they never started the bot in private; 400: Telegram no longer has the file. Both are answered.
+                if (api?.ErrorCode == 403)
+                {
+                    await Answer(call, Methods.GetLocaleString(lang, "reportShowStart"));
+                    return;
+                }
+                if (api?.ErrorCode != 400) ErrorReporter.Report(e, $"Showing the deleted post {post.MessageId} of {chatId} to {call.From.Id}");
+                await Answer(call, Methods.GetLocaleString(lang, "reportShowGone"));
+                return;
+            }
+            await Answer(call, Methods.GetLocaleString(lang, "reportShowSent"));
+        }
+
         // ------------------------------------------------------------------ raids
 
         private static void Hold(long chatId, long userId, string name, string sign)
@@ -480,8 +577,10 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ text
 
         /// <param name="links">For each sign seen on a message, a link to it: the sign's name links there.</param>
+        /// <param name="deleted">The latest post Detection deleted, quoted after the signs.</param>
         internal static string Text(XDocument lang, long userId, string name, string title, IReadOnlyList<(string Sign, int Count)> signs,
-            int score, string decisionLine, IReadOnlyDictionary<string, string> details = null, IReadOnlyDictionary<string, string> links = null)
+            int score, string decisionLine, IReadOnlyDictionary<string, string> details = null, IReadOnlyDictionary<string, string> links = null,
+            DeletedPost deleted = null)
         {
             var lines = new List<string>
             {
@@ -500,13 +599,14 @@ namespace Enforcer5.Detection
                 return details != null && details.TryGetValue(s.Sign, out var detail) ? $"{line} ({detail.FormatHTML()})" : line;
             }));
             if (score > 0) lines.Add(Methods.GetLocaleString(lang, "reportScore", score));
+            if (deleted != null) lines.AddRange(new[] { "", deleted.Html(lang) });
             if (decisionLine != null) lines.AddRange(new[] { "", decisionLine });
             return string.Join("\n", lines);
         }
 
         private static string Text(XDocument lang, OpenReport report, string title) =>
             Text(lang, report.Key.UserId.Value, report.Name, title, report.Signs, report.Score,
-                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details, report.Links());
+                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details, report.Links(), report.Post);
 
         /// <summary>"Banned by …" for a decision: HTML with a link to the admin, or plain text for a button's answer.</summary>
         internal static string DecisionLine(XDocument lang, string decision, long? by, bool html = true)
@@ -521,7 +621,7 @@ namespace Enforcer5.Detection
         {
             var key = report.Key;
             var data = $"{Trigger}:{key.ChatId}:{key.UserId}:{key.OpenedAt.ToUnixTimeSeconds()}";
-            var link = report.MessageId is { } m ? Methods.GetChatMessageLink(key.ChatId, m.ToString()) : null;
+            var link = report.LinkTarget is { } m ? Methods.GetChatMessageLink(key.ChatId, m.ToString()) : null;
             var menu = new Menu(2);
             if (report.Decision == null)
             {
@@ -531,6 +631,8 @@ namespace Enforcer5.Detection
             }
             if (!string.IsNullOrEmpty(link))
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "goToMessage")) { Url = link });
+            if (report.Post?.FileId != null)
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportShowPost"), $"{data}:show"));
             return menu.Buttons.Count == 0 ? null : Key.CreateMarkupFromMenu(menu);
         }
 

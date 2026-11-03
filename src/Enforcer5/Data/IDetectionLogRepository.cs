@@ -134,8 +134,8 @@ namespace Enforcer5.Data
 
         /// <summary>
         /// The live signs that counted or reported for a member since <paramref name="since"/>, with how often and the last
-        /// message each was seen on (null when none): a report's contents after a restart.
+        /// message each was seen on (null when none) and whether Detection deleted it: a report's contents after a restart.
         /// </summary>
-        Task<IReadOnlyList<(string Sign, int Count, long? MessageId)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
+        Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
     }
 }

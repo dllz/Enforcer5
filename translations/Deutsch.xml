@@ -1973,6 +1973,21 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="reportGone">
     <value>Diese Meldung ist zu alt, um noch darauf zu reagieren.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Gelöschter Beitrag (48 Stunden lang auch in den „Letzten Aktionen“ der Gruppe):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Gelöschten Beitrag zeigen</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Dir privat geschickt. Er lässt sich nicht weiterleiten oder speichern.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Starte mich zuerst im Privatchat und drücke dann noch einmal.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Dieser Beitrag ist nicht mehr verfügbar.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Gebannt von {0}</value>
   </string>

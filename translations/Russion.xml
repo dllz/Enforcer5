@@ -1661,6 +1661,21 @@ $title - заменяется названием группы.
   <string key="reportGone">
     <value>Этот отчёт слишком старый, по нему уже нельзя действовать.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Удалённое сообщение (48 часов также видно в «Недавних действиях» группы):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Показать удалённое сообщение</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Отправлено вам в личные сообщения. Его нельзя переслать или сохранить.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Сначала запустите меня в личных сообщениях, затем нажмите ещё раз.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Это сообщение больше недоступно.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Забанен(а): {0}</value>
   </string>

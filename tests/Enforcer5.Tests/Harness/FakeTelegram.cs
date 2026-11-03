@@ -222,6 +222,12 @@ namespace Enforcer5.Tests.Harness
                 case SendMessageRequest r: return Limited("sendMessage", r.ChatId, null, r.Text, r, () => { Parse(r.Text, r.ParseMode); return Sent(r); });
                 case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => { Parse(r.Caption, r.ParseMode); KeepFile(r); return NewMessage(r.ChatId, r.Caption); });
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
+                case SendAnimationRequest r: return Limited("sendAnimation", r.ChatId, null, r.Caption, r, () => SentById(r.ChatId, "sendAnimation", r.Animation, r.ProtectContent));
+                case SendVideoRequest r: return Limited("sendVideo", r.ChatId, null, r.Caption, r, () => SentById(r.ChatId, "sendVideo", r.Video, r.ProtectContent));
+                case SendStickerRequest r: return Limited("sendSticker", r.ChatId, null, null, r, () => SentById(r.ChatId, "sendSticker", r.Sticker, r.ProtectContent));
+                case SendVoiceRequest r: return Limited("sendVoice", r.ChatId, null, r.Caption, r, () => SentById(r.ChatId, "sendVoice", r.Voice, r.ProtectContent));
+                case SendAudioRequest r: return Limited("sendAudio", r.ChatId, null, r.Caption, r, () => SentById(r.ChatId, "sendAudio", r.Audio, r.ProtectContent));
+                case SendVideoNoteRequest r: return Limited("sendVideoNote", r.ChatId, null, null, r, () => SentById(r.ChatId, "sendVideoNote", r.VideoNote, r.ProtectContent));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => { Parse(r.Text, r.ParseMode); return Edited(r); });
                 case EditEphemeralMessageTextRequest r: return Limited("editEphemeralMessageText", r.ChatId, r.ReceiverUserId, r.Text, r, () => EditEphemeral(r));
@@ -455,6 +461,22 @@ namespace Enforcer5.Tests.Harness
             using var content = new System.IO.MemoryStream();
             upload.Content.CopyTo(content);
             _files.Enqueue(new SentFile(Id(r.ChatId), upload.FileName, r.Caption, content.ToArray(), r.ReplyParameters?.MessageId));
+        }
+
+        /// <summary>A file sent again by its file id (sendAudio, sendSticker, ...): where, how, and whether it was protected.</summary>
+        internal sealed record ResentFile(long ChatId, string Method, string FileId, bool Protected);
+
+        private readonly ConcurrentQueue<ResentFile> _resent = new();
+
+        /// <summary>Files sent by file id with sendAnimation, sendVideo, sendSticker, sendVoice, sendAudio or sendVideoNote.</summary>
+        internal IReadOnlyList<ResentFile> ResentFiles => _resent.ToList();
+
+        private Message SentById(ChatId chat, string method, InputFile file, bool protect)
+        {
+            if (chat.Identifier is long to && to > 0 && _notStarted.ContainsKey(to))
+                throw new ApiRequestException("Forbidden: bot can't initiate conversation with a user", 403);
+            _resent.Enqueue(new ResentFile(Id(chat), method, (file as InputFileId)?.Id, protect));
+            return NewMessage(chat);
         }
 
         private Message NewMessage(ChatId chat, string text = null) => new Message

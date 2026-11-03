@@ -1918,6 +1918,21 @@
   <string key="reportGone">
     <value>Questa segnalazione è troppo vecchia per intervenire.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 Messaggio eliminato (anche nelle Azioni recenti del gruppo per 48 ore):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 Mostra messaggio eliminato</value>
+  </string>
+  <string key="reportShowSent">
+    <value>Inviato a te in privato. Non può essere inoltrato né salvato.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>Avviami prima in privato, poi premi di nuovo.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>Quel messaggio non è più disponibile.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Bannato da {0}</value>
   </string>

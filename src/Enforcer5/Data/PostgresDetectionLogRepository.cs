@@ -231,8 +231,8 @@ FROM compared GROUP BY 1, 2, 3 ORDER BY 1, 3, 2", new { Since = Utc(since) });
         public async Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since)
         {
             await using var connection = await Database.OpenConnectionAsync();
-            var rows = await connection.QueryAsync<(string Sign, int Weight, DateTime At, long? MessageId)>(new CommandDefinition(@"
-SELECT d.sign, d.weight, d.detected_at, d.message_id
+            var rows = await connection.QueryAsync<(string Sign, int Weight, DateTime At, long? MessageId, bool Deleted)>(new CommandDefinition(@"
+SELECT d.sign, d.weight, d.detected_at, d.message_id, d.deleted
 FROM detections d
 JOIN groups g ON g.group_id = d.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
@@ -241,7 +241,8 @@ WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detect
   AND d.score_after > d.score_before
 ORDER BY d.detected_at",
                 new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
-            return rows.Select(r => new MemberScores.Hit(r.Sign, r.Weight, DateTime.SpecifyKind(r.At, DateTimeKind.Utc), r.MessageId)).ToList();
+            return rows.Select(r => new MemberScores.Hit(r.Sign, r.Weight, DateTime.SpecifyKind(r.At, DateTimeKind.Utc), r.MessageId,
+                Deleted: r.Deleted)).ToList();
         }
 
         public async Task<IReadOnlyList<(string Name, string Username)>> RecentMemberNamesAsync(long chatId, DateTimeOffset since, int limit)
@@ -377,11 +378,13 @@ ORDER BY l.decided_at", new { ChatId = chatId, UserId = userId, Since = Utc(sinc
             return rows.Select(r => (r.Signs, new DateTimeOffset(DateTime.SpecifyKind(r.At, DateTimeKind.Utc)))).ToList();
         }
 
-        public async Task<IReadOnlyList<(string Sign, int Count, long? MessageId)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since)
+        public async Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted)>> SignsSinceAsync(long chatId, long userId,
+            DateTimeOffset since)
         {
             await using var connection = await Database.OpenConnectionAsync();
-            var rows = await connection.QueryAsync<(string Sign, long Count, long? MessageId)>(new CommandDefinition(@"
-SELECT d.sign, count(*), (array_agg(d.message_id ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1]
+            var rows = await connection.QueryAsync<(string Sign, long Count, long? MessageId, bool? Deleted)>(new CommandDefinition(@"
+SELECT d.sign, count(*), (array_agg(d.message_id ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1],
+       (array_agg(d.deleted ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1]
 FROM detections d
 JOIN groups g ON g.group_id = d.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
@@ -389,7 +392,7 @@ JOIN telegram_accounts a ON a.account_id = d.account_id
 WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @Since AND d.mode = 'live'
   AND (d.score_after > d.score_before OR d.reported)
 GROUP BY d.sign ORDER BY min(d.detected_at)", new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
-            return rows.Select(r => (r.Sign, (int)r.Count, r.MessageId)).ToList();
+            return rows.Select(r => (r.Sign, (int)r.Count, r.MessageId, r.Deleted == true)).ToList();
         }
 
         /// <summary>The decisions an undo takes back.</summary>

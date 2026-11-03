@@ -126,11 +126,14 @@ namespace Enforcer5.Detection
                 }
                 deleted &= message != null;
                 var outcome = new DetectionOutcome(mode, action, deleted, reported, change.Before, change.After);
+                // A later report must not link to it.
+                if (deleted && mode == "live") MemberScores.MarkDeleted(chatId, userId, message.MessageId);
 
                 if (outcome.Acted)
                     Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported)
                     {
                         Member = message?.From?.Id == userId ? message.From : null,
+                        Message = message,
                         Score = change.After,
                         Detail = hit.Detail
                     });

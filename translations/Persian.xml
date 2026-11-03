@@ -1904,6 +1904,21 @@ exaple: /{0}
   <string key="reportGone">
     <value>این گزارش قدیمی‌تر از آن است که بشود کاری کرد.</value>
   </string>
+  <string key="reportDeletedPost">
+    <value>🗑 پیام حذف‌شده (تا ۴۸ ساعت در «اقدامات اخیر» گروه هم دیده می‌شود):</value>
+  </string>
+  <string key="reportShowPost">
+    <value>👁 نمایش پیام حذف‌شده</value>
+  </string>
+  <string key="reportShowSent">
+    <value>به‌صورت خصوصی برای شما فرستاده شد. نمی‌توان آن را هدایت یا ذخیره کرد.</value>
+  </string>
+  <string key="reportShowStart">
+    <value>اول ربات را در چت خصوصی استارت کنید، بعد دوباره بزنید.</value>
+  </string>
+  <string key="reportShowGone">
+    <value>این پیام دیگر در دسترس نیست.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 مسدود شد توسط {0}</value>
   </string>

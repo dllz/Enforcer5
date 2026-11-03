@@ -12,8 +12,8 @@ namespace Enforcer5.Tests.Harness
     /// <summary>
     /// Detection step 8: the edit rules. Swapped media and text turned into media are reported and deleted,
     /// always; late edits by default are deleted for new members and reported for everyone; admins and
-    /// approved members are left out; the report says what changed and when, never the content. Needs the
-    /// test database.
+    /// approved members are left out; the report says what changed and when. A deleted post is quoted, not
+    /// linked to, and its file goes to an admin who asks for it, in private. Needs the test database.
     /// </summary>
     [TestClass]
     [TestCategory("Harness")]
@@ -35,6 +35,21 @@ namespace Enforcer5.Tests.Harness
             Id = chat.Telegram.NextMessageId(),
             From = from.ToUser(),
             Sticker = new Sticker { FileId = "s" + uniqueId, FileUniqueId = uniqueId, Width = 1, Height = 1 }
+        };
+
+        private static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] Buttons(Message message) =>
+            message.ReplyMarkup?.InlineKeyboard.SelectMany(r => r).ToArray() ?? Array.Empty<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+
+        private static string Link(HarnessChat chat, Message message) => Methods.GetChatMessageLink(chat.ChatId, message.MessageId.ToString());
+
+        private static string LastAnswer(HarnessChat chat) => chat.Telegram.Accepted.Last(c => c.Method == "answerCallbackQuery").Text;
+
+        private static Message Audio(HarnessChat chat, HarnessUser from) => new Message
+        {
+            Id = chat.Telegram.NextMessageId(),
+            From = from.ToUser(),
+            Audio = new Audio { FileId = "audio-file", FileUniqueId = "audio-unique", Duration = 42, Title = "Song", Performer = "Band", FileSize = 3_250_000 },
+            Caption = "listen <now>"
         };
 
         private static async Task<(string Sign, string Mode, bool Deleted, bool Reported)[]> Detections(HarnessChat chat)
@@ -252,6 +267,89 @@ namespace Enforcer5.Tests.Harness
             await chat.EditAsync(post, chat.Text(member, "join t.me/+abcdefghijk"));
 
             Assert.IsTrue(Deleted(chat, member, post));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ASwapIsDeleted_SoTheReportQuotesIt_AndShowsTheFileOnlyToTheAdminWhoAsks()
+        {
+            // 2026-11-03: "Go to message" under a swap's report went nowhere: the bot had deleted the post.
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Telegram.ParsesHtml = true;
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var other = chat.Add("Other admin", MemberState.Administrator);
+            var member = Established(chat, "Member"); // no newcomer signs on the photo: only the swap
+            await chat.PostAsync(chat.Photo(member, "first")); // recording starts here
+            var text = await chat.SendAsync(member, "hello");
+
+            await chat.EditAsync(text, Audio(chat, member));
+
+            Assert.IsTrue(Deleted(chat, member, text));
+            var report = Reports(chat, admin).Single();
+            Assert.IsFalse(report.Text.Contains(Link(chat, text)), "no link to the deleted post");
+            Assert.IsFalse(Buttons(report).Any(b => b.Url != null), "no Go to message");
+            StringAssert.Contains(report.Text, "Deleted post");
+            StringAssert.Contains(report.Text, "<blockquote expandable>audio · 0:42 · Song – Band · 3.1 MB\nlisten &lt;now&gt;</blockquote>");
+
+            chat.Telegram.SetNotStarted(other.Id);
+            var show = Buttons(report).Single(b => b.CallbackData?.EndsWith(":show") == true).CallbackData;
+            await chat.PressDataAsync(member, report, show);
+            Assert.AreEqual(0, chat.Telegram.ResentFiles.Count, "only the group's admins");
+            await chat.PressDataAsync(other, report, show);
+            Assert.AreEqual("Start me in private first, then press again.", LastAnswer(chat));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(15));
+            await chat.PressDataAsync(admin, report, show);
+            Assert.AreEqual("Sent to you in private. It cannot be forwarded or saved.", LastAnswer(chat));
+            Assert.AreEqual(new FakeTelegram.ResentFile(admin.Id, "sendAudio", "audio-file", true), chat.Telegram.ResentFiles.Single());
+            Assert.IsFalse(chat.Telegram.Accepted.Any(c => c.ChatId == chat.ChatId && c.Method == "sendAudio"), "never in the group");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AfterARestart_TheReportStillQuotesTheDeletedPost_AndShowStillWorks()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            var photo = await chat.PostAsync(chat.Photo(member, "cat"));
+            await chat.EditAsync(photo, Sticker(chat, member, "bad"));
+            var report = Reports(chat, admin).Single();
+            await DetectionRecorder.FlushAsync();
+
+            await chat.CrashAndRestartAsync();
+            var post = await chat.SendAsync(member, "still here");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(11));
+            await chat.EditAsync(post, chat.Text(member, "still here, edited"));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(31));
+
+            var edit = chat.Telegram.Accepted.Last(c => c.Method == "editMessageText" && c.ChatId == admin.Id);
+            StringAssert.Contains(edit.Text, "<blockquote expandable>sticker</blockquote>");
+            StringAssert.Contains(edit.Text, $"<a href=\"{Link(chat, post)}\">edited long after posting</a>", "the late edit was not deleted");
+            Assert.IsFalse(edit.Text.Contains(Link(chat, photo)));
+            var buttons = ((Telegram.Bot.Requests.EditMessageTextRequest)edit.Request).ReplyMarkup.InlineKeyboard.SelectMany(r => r).ToArray();
+            Assert.AreEqual(Link(chat, post), buttons.Single(b => b.Url != null).Url, "Go to message: the post still there");
+
+            await chat.CrashAndRestartAsync();
+            await chat.PressDataAsync(admin, report, buttons.Single(b => b.CallbackData?.EndsWith(":show") == true).CallbackData);
+            Assert.AreEqual(new FakeTelegram.ResentFile(admin.Id, "sendSticker", "sbad", true), chat.Telegram.ResentFiles.Single());
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ALateEdit_DeletedForANewMember_IsQuoted_WithoutAShowButton()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var newcomer = chat.Add("Newcomer");
+            var post = await chat.SendAsync(newcomer, "hi");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(11));
+
+            await chat.EditAsync(post, chat.Text(newcomer, "buy cheap followers"));
+
+            var report = Reports(chat, admin).Single();
+            StringAssert.Contains(report.Text, "<blockquote expandable>buy cheap followers</blockquote>");
+            Assert.IsFalse(report.Text.Contains(Link(chat, post)));
+            Assert.IsFalse(Buttons(report).Any(b => b.Url != null || b.CallbackData?.EndsWith(":show") == true));
             AssertNoErrors(chat);
         }
     }
