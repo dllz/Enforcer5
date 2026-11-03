@@ -37,6 +37,23 @@ namespace Enforcer5.Tests
             _english = XDocument.Load(TestEnvironment.EnglishXmlPath);
         }
 
+        /// <summary>
+        /// GreyWolf is gone: its support group and @greywolfdev no longer exist, and its name lingered in the
+        /// translations and the premium edition's notice until November 2026.
+        /// </summary>
+        [TestMethod]
+        public void NothingNamesGreyWolf()
+        {
+            var files = new[] { TestEnvironment.EnglishXmlPath }
+                .Concat(Directory.GetFiles(Path.Combine(TestEnvironment.RepoRoot, "translations"), "*.xml"))
+                .Concat(Directory.GetFiles(TestEnvironment.SourceRoot, "*.cs", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") &&
+                                !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}")));
+            var found = files.Where(f => File.ReadAllText(f).Contains("greywolf", StringComparison.OrdinalIgnoreCase))
+                .Select(Path.GetFileName).ToList();
+            Assert.AreEqual(0, found.Count, "GreyWolf in: " + string.Join(", ", found));
+        }
+
         private static HashSet<string> Keys() =>
             new HashSet<string>(_english.Descendants("string").Select(s => s.Attribute("key")?.Value), StringComparer.Ordinal);
 

@@ -613,7 +613,7 @@ UPDATE LOG
 
 	<string key="hcommandmarkdown">
 		<value>
-			<![CDATA[<b>【Markdown 教學】</b>\n\n<b>粗體 BOLD</b> = &lt;b&gt;粗體 BOLD&lt;/b&gt;\n<i>斜體 ITALIC</i>= &lt;i&gt;斜體 ITALIC&lt;/i&gt;\n<code>等距 MONOSPACE</code> = &lt;code&gt;等距 MONOSPACE&lt;/code&gt;\n<a href="t.me/greywolfdev">連結 LINK</a> = &lt;a href="t.me/greywolfdev"&gt;連結 LINK&lt;/a&gt;]]>
+			<![CDATA[<b>【Markdown 教學】</b>\n\n<b>粗體 BOLD</b> = &lt;b&gt;粗體 BOLD&lt;/b&gt;\n<i>斜體 ITALIC</i>= &lt;i&gt;斜體 ITALIC&lt;/i&gt;\n<code>等距 MONOSPACE</code> = &lt;code&gt;等距 MONOSPACE&lt;/code&gt;\n<a href="t.me/BlackWolfAnnouncements">連結 LINK</a> = &lt;a href="t.me/BlackWolfAnnouncements"&gt;連結 LINK&lt;/a&gt;]]>
 		</value>
 	</string>
 	<string key="actionNotSettext">

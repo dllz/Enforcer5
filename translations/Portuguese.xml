@@ -709,7 +709,7 @@
   </string>
   <string key="hcommandsupport">
     <value>
-      Dá um link para o grupo de suporte GreyWolf.
+      Dá um link para o grupo de suporte Blackwolf.
 
       Exemplo:
       /{0}
@@ -935,7 +935,7 @@
 
   &lt;i&gt;ITALIC&lt;/i&gt; = &amp;lt;i&amp;gt;ITÁLICO&amp;lt;/i&amp;gt;
 
-  &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt; = &amp;lt;a href="t.me/greywolfdev"&amp;gt;LINK&amp;lt;/a&amp;gt;
+  &lt;a href="t.me/BlackWolfAnnouncements"&gt;LINK&lt;/a&gt; = &amp;lt;a href="t.me/BlackWolfAnnouncements"&amp;gt;LINK&amp;lt;/a&amp;gt;
 
   &lt;code&gt;MONOSPACE&lt;/code&gt; = &amp;lt;code&amp;gt;MONOSPACE&amp;lt;/code&amp;gt;
 

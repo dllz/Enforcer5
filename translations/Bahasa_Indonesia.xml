@@ -842,7 +842,7 @@
   
   <string key="hcommandsupport">
   <value>
-		Gives out link to GreyWolf support group.
+		Gives out link to Blackwolf support group.
 		
 		Contoh:
 		/{0}
@@ -2894,7 +2894,7 @@
   
   <i>ITALIC</i> = &lt;i&gt;ITALIC&lt;/i&gt;
   
-  <a href="telegram.me/greywolfdev">LINK</a> = &lt;a href="telegram.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  <a href="telegram.me/BlackWolfAnnouncements">LINK</a> = &lt;a href="telegram.me/BlackWolfAnnouncements"&gt;LINK&lt;/a&gt;
   
   
   ]]>

@@ -733,7 +733,7 @@
   </string>	
   <string key="hcommandsupport">
   <value>
-		Kann verwendet werden, um den Link zur GreyWolf Support Gruppe zu erhalten.
+		Kann verwendet werden, um den Link zur Blackwolf Support Gruppe zu erhalten.
 		
 		Beispiel:
 		/{0}
@@ -2708,7 +2708,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   
   <i>KURSIV</i> = &lt;i&gt;KURSIV&lt;/i&gt;
   
-  <a href="t.me/greywolfdev">LINK</a> = &lt;a href="t.me/greywolfdev"&gt;LINK&lt;/a&gt;
+  <a href="t.me/BlackWolfAnnouncements">LINK</a> = &lt;a href="t.me/BlackWolfAnnouncements"&gt;LINK&lt;/a&gt;
   
   <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
   

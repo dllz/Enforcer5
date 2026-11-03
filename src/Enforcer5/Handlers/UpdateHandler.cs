@@ -526,8 +526,10 @@ namespace Enforcer5.Handlers
         }
 
 #if PREMIUM
-        private const string NoLongerActive =
-            "Hi there, this bot is no longer active, please use @enforcerbot instead of this bot and remove this bot from your group to stop the spam.\nIt has the same features and more.\nRemember to subscribe to our channel @greywolfdev for updates for @enforcerbot and more";
+        /// <summary>What the premium edition says before it leaves a group that is not premium.</summary>
+        internal static string NoLongerActive =>
+            "This bot only works in Enforcer Premium groups, so it is leaving this one. Please add @enforcerbot instead: " +
+            $"it has the same features. News and updates: @{Constants.announcementGroup}";
 
         /// <summary>
         /// Whether the premium edition serves this group: a premium group, or the admin chat of one. Otherwise it

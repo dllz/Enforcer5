@@ -148,7 +148,7 @@ namespace Enforcer5.Tests.Harness
 #if PREMIUM
             Assert.IsTrue(group.Telegram.Accepted.Any(c => c.Method == "leaveChat" && c.ChatId == AdminChatId), "premium leaves");
             Assert.IsFalse(group.Telegram.Accepted.Any(c => c.Method == "sendMessage" && c.ChatId == AdminChatId &&
-                c.Text?.Contains("no longer active") == true), "quietly");
+                c.Text?.Contains(Enforcer5.Handlers.UpdateHandler.NoLongerActive) == true), "quietly");
 #else
             await adminChat.SendAsync(member, LongText);
             await adminChat.AdvanceAsync(TimeSpan.FromSeconds(10));
@@ -180,7 +180,7 @@ namespace Enforcer5.Tests.Harness
             await adminChat.SendAsync(admin, "hello admins");
 
             Assert.IsFalse(group.Telegram.Accepted.Any(c => c.Method == "leaveChat"), "stays");
-            Assert.IsFalse(adminChat.Replies.Any(r => r.Contains("no longer active")));
+            Assert.IsFalse(adminChat.Replies.Any(r => r.Contains(Enforcer5.Handlers.UpdateHandler.NoLongerActive)));
             AssertNoErrors(group);
         }
 
@@ -199,7 +199,7 @@ namespace Enforcer5.Tests.Harness
             await other.SendAsync(admin, "hi");
             await other.SettleAsync();
             Assert.IsTrue(group.Telegram.Accepted.Any(c => c.Method == "leaveChat" && c.ChatId == AdminChatId));
-            Assert.AreEqual(1, other.Replies.Count(r => r.Contains("no longer active")));
+            Assert.AreEqual(1, other.Replies.Count(r => r.Contains(Enforcer5.Handlers.UpdateHandler.NoLongerActive)));
         }
 #endif
     }

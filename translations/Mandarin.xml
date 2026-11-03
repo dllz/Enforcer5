@@ -720,7 +720,7 @@
    </string>
    <string key="hcommandsupport">
    <value>
- 		获取GreyWolf的支持群组链接。
+ 		获取Blackwolf的支持群组链接。
 
  		例子:
  		/{0}
@@ -932,7 +932,7 @@
   
   <i>斜体</i> = &lt;i&gt;斜体&lt;/i&gt;
   
-  <a href="t.me/greywolfdev">链接</a> = &lt;a href="t.me/greywolfdev"&gt;链接&lt;/a&gt;
+  <a href="t.me/BlackWolfAnnouncements">链接</a> = &lt;a href="t.me/BlackWolfAnnouncements"&gt;链接&lt;/a&gt;
   
   <code>MONOSPACE</code> = &lt;code&gt;MONOSPACE&lt;/code&gt;
   
