@@ -98,7 +98,7 @@
     <value><![CDATA[<b>سازنده</b>: {0}\n<b>ادمين ها</b>:{1}]]></value> 
   </string> 
   <string key="defaultWelcome"> 
-    <value> سلام {0} خوش اومديد به  {1}. </value>   
+    <value><![CDATA[👋 {0} عزیز، به <b>{1}</b> خوش آمدید!]]></value>   
   </string> 
   <string key="noAbout"> 
     <value>توضيحاتي براي اين گروه ثبت نشده است</value> 

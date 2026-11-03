@@ -143,20 +143,21 @@ defSpamValue = 3;
                     {
                         var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
                         var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
+                        var html = WelcomeText.Html(content, message.NewChatMember, message.Chat.Title);
+                        var plain = WelcomeText.Plain(content, message.NewChatMember, message.Chat.Title);
                         // "true" with no GIF saved sends the text alone rather than failing.
                         if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true") && !file.IsNullOrEmpty)
                         {
-                            var text = GetCustomWelcome(message, content);
-                            Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(file), text).Result;
+                            Message response = SendWelcomeGif(message.Chat.Id, file, html, plain);
 
                             Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
-                            var text = GetCustomWelcome(message, content);
-                            Message response = Bot.Send(text, message.Chat.Id);
+                            Message response = Bot.Send(html, message.Chat.Id, plainText: plain);
 
-                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
+                            // Null when a 429 deferred it.
+                            if (response != null) Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
@@ -179,10 +180,12 @@ defSpamValue = 3;
                                 return;
                             }
                         }
+                        // The member's name links to their profile (Daniel, 2026-11-03). Sent as HTML: the rules,
+                        // about and admin list below are HTML, and showed their tags while this went out plain.
+                        var greeting = DefaultWelcome(lang, message);
                         if (!content.Equals("no"))
                         {
-                            var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
-                                message.Chat.Title);
+                            var text = greeting;
                             switch (content)
                             {
                                 case "a":
@@ -207,17 +210,16 @@ defSpamValue = 3;
                                     text = $"{text}\n\n{Methods.GetAbout(message.Chat.Id, lang)}\n{Methods.GetRules(message.Chat.Id, lang)}\n{Methods.GetAdminList(message, lang)}";
                                     break;
                             }
-                            Message response = Bot.Api.SendMessage(message.Chat.Id, text).Result;
+                            // If the group's rules or about do not parse, the text goes out without its markup.
+                            Message response = Bot.Send(text, message.Chat.Id, plainText: WelcomeText.Unformat(text));
 
-                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
+                            if (response != null) Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
-                            var text = Methods.GetLocaleString(lang, "defaultWelcome", message.NewChatMember.FirstName,
-                                message.Chat.Title);
-                            Message response = Bot.Api.SendMessage(message.Chat.Id, text).Result;
+                            Message response = Bot.Send(greeting, message.Chat.Id, plainText: WelcomeText.Unformat(greeting));
 
-                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
+                            if (response != null) Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
                     break;
@@ -282,24 +284,25 @@ defSpamValue = 3;
             }, "WelcomeFromMemberUpdate");
         }
 
-        private static string GetCustomWelcome(Message message, RedisValue content)
+        /// <summary>The default welcome's greeting, as HTML with the member's name linked to their profile.</summary>
+        private static string DefaultWelcome(XDocument lang, Message message) =>
+            Methods.GetLocaleStringNoFormat(lang, "defaultWelcome", WelcomeText.Mention(message.NewChatMember),
+                message.Chat.Title.FormatHTML());
+
+        /// <summary>
+        /// A custom welcome with its GIF, the text as an HTML caption. If the admin's HTML does not parse, the
+        /// caption goes out unformatted with the plain name, as it always did.
+        /// </summary>
+        private static Message SendWelcomeGif(long chatId, string fileId, string html, string plain)
         {
-            var name = message.NewChatMember.FirstName;
-            var id = message.NewChatMember.Id;
-            string username;
-            if (!string.IsNullOrEmpty(message.NewChatMember.Username))
+            try
             {
-                username = $"@{message.NewChatMember.Username}";
+                return Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), html, ParseMode.Html).Result;
             }
-            else
+            catch (Exception e) when (Bot.IsParseFailure(Bot.AsApiError(e)))
             {
-                username = "(no username)";
+                return Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), plain).Result;
             }
-            string welcome = content.ToString().Replace("$name", Methods.FormatHTML(name));
-            welcome = welcome.Replace("$username", username);
-            welcome = welcome.Replace("$id", id.ToString());
-            welcome = welcome.Replace("$title", Methods.FormatHTML(message.Chat.Title));
-            return welcome;
         }
 
         public static void BotAdded(Message updateMessage)

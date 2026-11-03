@@ -101,7 +101,7 @@
     <value>&lt;b&gt;Criador&lt;/b&gt;: {0}\n&lt;b&gt;Admins&lt;/b&gt;:{1}</value>
   </string>
   <string key="defaultWelcome">
-    <value>Oi {0}, seja bem vindo a {1}</value>
+    <value><![CDATA[👋 {0}, seja bem-vindo(a) ao grupo <b>{1}</b>!]]></value>
   </string>
   <string key="noAbout">
     <value>Sem descrição definida para esse grupo.</value>

@@ -100,7 +100,7 @@
     <value><![CDATA[<b>Kurucu</b>: {0}\n<b>Adminler</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Merhaba {0} hoş geldin {1}</value>
+    <value><![CDATA[👋 <b>{1}</b> grubuna hoş geldin, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>Grup açıklaması ayarlanmadı.</value>

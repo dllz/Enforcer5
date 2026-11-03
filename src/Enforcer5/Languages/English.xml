@@ -100,7 +100,7 @@
     <value><![CDATA[<b>Creator</b>: {0}\n<b>Admins</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Hi {0} welcome to {1}</value>
+    <value><![CDATA[👋 Welcome to <b>{1}</b>, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>No about set for this group</value>

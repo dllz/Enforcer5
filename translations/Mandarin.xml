@@ -98,7 +98,7 @@
     <value><![CDATA[<b>创建者</b>: {0}\n<b>管理员</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>你好 {0}，欢迎加入 {1}</value>
+    <value><![CDATA[👋 欢迎 {0} 加入 <b>{1}</b>！]]></value>
   </string>
   <string key="noAbout">
     <value>本群没有设置描述</value>

@@ -99,7 +99,7 @@
            <b>Administratoren</b>: {1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Hallo {0}, und willkommen zu {1}!</value>
+    <value><![CDATA[👋 Willkommen in <b>{1}</b>, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>F&#252;r diese Gruppe wurde noch kein Beschreibungstext festgelegt.</value>

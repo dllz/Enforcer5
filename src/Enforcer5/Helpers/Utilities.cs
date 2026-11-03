@@ -829,8 +829,13 @@ namespace Enforcer5.Helpers
                 update.Message.MessageId);
         }
 
+        /// <param name="plainText">
+        /// Sent unformatted instead of <paramref name="message"/> if Telegram cannot parse the latter, for a
+        /// message whose markup would otherwise show as raw tags (a welcome's link to the new member).
+        /// </param>
         internal static Message Send(string message, long id,
-            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "")
+            InlineKeyboardMarkup customMenu = null, ParseMode parseMode = ParseMode.Html, [CallerMemberName]string parentMethod = "",
+            string plainText = null)
         {
             Message result = null;
             try
@@ -854,7 +859,7 @@ namespace Enforcer5.Helpers
                 else if (IsParseFailure(api))
                 {
                     // Send it unformatted rather than losing the message entirely.
-                    result = CatchSend(message, id, customMenu, ParseMode.None);
+                    result = CatchSend(plainText ?? message, id, customMenu, ParseMode.None);
                 }
                 else if (api != null && api.Message.Contains("message is too long"))
                 {

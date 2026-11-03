@@ -98,7 +98,7 @@
     <value><![CDATA[<b>Creatore</b>: {0}\n<b>Admin</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Hi {0} benvenuto\a in {1}</value>
+    <value><![CDATA[👋 Benvenuto/a in <b>{1}</b>, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>Nessuna descrizione impostata per questo gruppo.</value>

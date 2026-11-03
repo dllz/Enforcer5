@@ -98,7 +98,7 @@
     <value><![CDATA[<b>Создатель</b>: {0}\n<b>Администраторы</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Привет, {0}! Добро пожаловать в {1}!</value>
+    <value><![CDATA[👋 Добро пожаловать в <b>{1}</b>, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>Нет установленного описания для данной группы.</value>

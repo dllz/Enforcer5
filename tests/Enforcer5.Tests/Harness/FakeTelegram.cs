@@ -113,6 +113,34 @@ namespace Enforcer5.Tests.Harness
         /// <summary>429s that came from going over a limit rather than from an injected storm.</summary>
         internal IReadOnlyList<TelegramCall> LimitRefusals => _calls.Where(c => c.Refused && !c.Injected).ToList();
 
+        /// <summary>
+        /// Refuse HTML Telegram could not parse (a stray &lt;, a tag it does not know, one left open) with its 400
+        /// "can't parse entities", for sendMessage and sendDocument. Off by default: most scenarios do not care.
+        /// </summary>
+        internal bool ParsesHtml { get; set; }
+
+        private static readonly System.Text.RegularExpressions.Regex HtmlTag = new(
+            @"\G<(/?)(b|strong|i|em|u|ins|s|strike|del|a|code|pre|tg-spoiler|span|blockquote|tg-emoji)(\s[^<>]*)?>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        private void Parse(string text, ParseMode? mode)
+        {
+            if (!ParsesHtml || mode != ParseMode.Html || text == null) return;
+            var open = new Stack<string>();
+            for (var i = text.IndexOf('<'); i >= 0; i = text.IndexOf('<', i + 1))
+            {
+                var tag = HtmlTag.Match(text, i);
+                if (!tag.Success)
+                    throw new ApiRequestException($"Bad Request: can't parse entities: unsupported start tag at byte offset {i}", 400);
+                var name = tag.Groups[2].Value.ToLowerInvariant();
+                if (tag.Groups[1].Value == "") open.Push(name);
+                else if (open.Count == 0 || open.Pop() != name)
+                    throw new ApiRequestException($"Bad Request: can't parse entities: unmatched end tag at byte offset {i}", 400);
+            }
+            if (open.Count > 0)
+                throw new ApiRequestException("Bad Request: can't parse entities: can't find end tag", 400);
+        }
+
         internal void SetMember(long chatId, long userId, MemberState state) => _members[(chatId, userId)] = state;
 
         private readonly ConcurrentDictionary<long, User> _users = new();
@@ -191,8 +219,8 @@ namespace Enforcer5.Tests.Harness
         {
             switch (request)
             {
-                case SendMessageRequest r: return Limited("sendMessage", r.ChatId, null, r.Text, r, () => Sent(r));
-                case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => NewMessage(r.ChatId, r.Caption));
+                case SendMessageRequest r: return Limited("sendMessage", r.ChatId, null, r.Text, r, () => { Parse(r.Text, r.ParseMode); return Sent(r); });
+                case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => { Parse(r.Caption, r.ParseMode); return NewMessage(r.ChatId, r.Caption); });
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => Edited(r));

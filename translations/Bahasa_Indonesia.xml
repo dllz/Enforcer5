@@ -120,7 +120,7 @@
     <value><![CDATA[<b>Pembuat Grup</b>: {0}\n<b>Admin</b>:{1}]]></value>
   </string>
   <string key="defaultWelcome">
-    <value>Hallo {0} Selamat datang di {1}</value>
+    <value><![CDATA[👋 Selamat datang di <b>{1}</b>, {0}!]]></value>
   </string>
   <string key="noAbout">
     <value>No about set for this group</value>
