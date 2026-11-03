@@ -223,7 +223,7 @@ namespace Enforcer5.Tests.Harness
                 case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => { Parse(r.Caption, r.ParseMode); KeepFile(r); return NewMessage(r.ChatId, r.Caption); });
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
-                case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => Edited(r));
+                case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => { Parse(r.Text, r.ParseMode); return Edited(r); });
                 case EditEphemeralMessageTextRequest r: return Limited("editEphemeralMessageText", r.ChatId, r.ReceiverUserId, r.Text, r, () => EditEphemeral(r));
                 case DeleteEphemeralMessageRequest r: return Limited("deleteEphemeralMessage", r.ChatId, r.ReceiverUserId, null, r, () => DeleteEphemeral(r));
                 case EditMessageReplyMarkupRequest r: return Limited("editMessageReplyMarkup", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
@@ -382,9 +382,16 @@ namespace Enforcer5.Tests.Harness
             var message = NewMessage(r.ChatId, r.Text);
             // Kept so a scenario can press the buttons under it.
             message.ReplyMarkup = r.ReplyMarkup as Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup;
+            _parseModes[(message.Chat.Id, message.MessageId)] = r.ParseMode;
             _sent.Enqueue(message);
             return message;
         }
+
+        private readonly ConcurrentDictionary<(long Chat, int Id), ParseMode> _parseModes = new();
+
+        /// <summary>How the message's current text was sent or last edited: as HTML, or as plain text.</summary>
+        internal ParseMode ParseModeOf(long chatId, int messageId) =>
+            _parseModes.TryGetValue((chatId, messageId), out var mode) ? mode : ParseMode.None;
 
         private readonly ConcurrentDictionary<(long Chat, long Receiver, int Id), Message> _ephemeral = new();
 
@@ -427,6 +434,7 @@ namespace Enforcer5.Tests.Harness
             if (message == null) return NewMessage(r.ChatId, r.Text);
             message.Text = r.Text;
             message.ReplyMarkup = r.ReplyMarkup;
+            _parseModes[(message.Chat.Id, message.MessageId)] = r.ParseMode;
             return message;
         }
 

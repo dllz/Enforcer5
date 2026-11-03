@@ -132,6 +132,31 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
         }
 
         [TestMethod]
+        public async Task TheProgressAndTheSummary_AreHtml_AndWhatTheAdminTyped_IsEscapedOnce()
+        {
+            await using var chat = await StartAsync();
+            chat.Telegram.ParsesHtml = true;
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var members = Members(chat, 2);
+            var list = await chat.SendAsync(admin, List(members));
+
+            await chat.SendAsync(admin, "/batch kick bye <3 & see you", replyTo: list);
+
+            var preview = Preview(chat);
+            StringAssert.Contains(preview.Text, "bye &lt;3 &amp; see you", "a '<' in the reason would make Telegram refuse the preview");
+            await chat.PressAsync(admin, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            var summary = Text(chat, preview.MessageId);
+            StringAssert.Contains(summary, "is finished");
+            StringAssert.Contains(summary, "bye &lt;3 &amp; see you");
+            Assert.AreEqual(Telegram.Bot.Types.Enums.ParseMode.Html, chat.Telegram.ParseModeOf(chat.ChatId, preview.MessageId),
+                "the summary replaces the preview by an edit, and its <b> must not show as text");
+            StringAssert.Contains(chat.Telegram.SentMessages.Single(m => m.Chat.Id == LogChannel).Text, "bye &lt;3");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task ListsTooLongForTheMessage_AreCut_AndSentWholeAsAFile()
         {
             var (previewBudget, logBudget) = (BatchLists.PreviewBudget, BatchLists.LogBudget);

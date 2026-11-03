@@ -729,10 +729,12 @@ namespace Enforcer5.Helpers
             return Edit(query.Message.Chat.Id, query.Message.MessageId, text, replyMarkup);
         }
 
-        internal static Task<Message> Edit(long id, int msgId, string text, InlineKeyboardMarkup replyMarkup = null)
+        /// <summary>Replaces a message's text. Plain text unless <paramref name="parseMode"/> says otherwise.</summary>
+        internal static Task<Message> Edit(long id, int msgId, string text, InlineKeyboardMarkup replyMarkup = null,
+            ParseMode parseMode = ParseMode.None)
         {
             Interlocked.Increment(ref MessagesSent);
-            return Bot.Api.EditMessageText(id, msgId, text, replyMarkup: replyMarkup);
+            return Bot.Api.EditMessageText(id, msgId, text, parseMode, replyMarkup: replyMarkup);
         }
 
         /// <summary>

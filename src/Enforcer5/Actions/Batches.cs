@@ -273,7 +273,7 @@ namespace Enforcer5.Actions
         {
             try
             {
-                Bot.Edit(chatId, messageId, text, markup).GetAwaiter().GetResult();
+                Bot.Edit(chatId, messageId, text, markup, ParseMode.Html).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
