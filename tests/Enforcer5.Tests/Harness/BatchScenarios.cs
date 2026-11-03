@@ -157,6 +157,38 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
         }
 
         [TestMethod]
+        public async Task TheSummaryAndTheLog_SayWhoThePreviewLeftOut_AndTheProgressCountsOnlyThoseRun()
+        {
+            await using var chat = await StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var other = chat.Add("Other admin", MemberState.Administrator);
+            var members = Members(chat, 3);
+            foreach (var warned in members.Take(2))
+                await chat.SendAsync(admin, "/warn", replyTo: await chat.SendAsync(warned, "hi"));
+            var list = await chat.SendAsync(admin, $"{List(members)}\n{other.Id}");
+
+            await chat.SendAsync(admin, "/batch resetwarns reward", replyTo: list);
+            var preview = Preview(chat);
+            StringAssert.Contains(preview.Text, $"Nothing to do: {members[2].Id}");
+            await chat.PressAsync(admin, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            var batch = await Data.Repositories.Batches.GetAsync((await BatchAsync(chat)).Id);
+            Assert.AreEqual((2, 0), (batch.Total, batch.Skipped), "those left out are items, but not counted in Done X of Y");
+            var summary = Text(chat, preview.MessageId);
+            StringAssert.Contains(summary, "Done: 2");
+            StringAssert.Contains(summary, "Left out: 2");
+            StringAssert.Contains(summary, $"Done: {members[0].Id}, {members[1].Id}", "the preview's lists are gone: the summary says who");
+            StringAssert.Contains(summary, $"Admins, left out: {other.Id}");
+            StringAssert.Contains(summary, $"Nothing to do: {members[2].Id}");
+            var log = chat.Telegram.SentMessages.Last(m => m.Chat.Id == LogChannel).Text;
+            StringAssert.Contains(log, "left out 2");
+            StringAssert.Contains(log, $"Admins, left out: {other.Id}");
+            StringAssert.Contains(log, $"Nothing to do: {members[2].Id}");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task ListsTooLongForTheMessage_AreCut_AndSentWholeAsAFile()
         {
             var (previewBudget, logBudget) = (BatchLists.PreviewBudget, BatchLists.LogBudget);
@@ -183,15 +215,21 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
                 await chat.PressAsync(admin, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
                 await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
 
+                var (id, _, _) = await BatchAsync(chat);
+                var summaryFile = chat.Telegram.SentFiles.Single(f => f.ChatId == chat.ChatId && f.FileName != "batch-preview.csv");
+                Assert.AreEqual(($"batch-{id}.csv", preview.MessageId), (summaryFile.FileName, summaryFile.ReplyTo),
+                    "the summary's lists are cut too: the whole of them replies to it");
+                StringAssert.Contains(Text(chat, preview.MessageId), "more");
+
                 var log = chat.Telegram.SentMessages.Single(m => m.Chat.Id == LogChannel);
                 StringAssert.Contains(log.Text, "more");
                 var logFile = chat.Telegram.SentFiles.Last();
                 Assert.AreEqual(LogChannel, logFile.ChatId);
-                var (id, _, _) = await BatchAsync(chat);
                 Assert.AreEqual($"batch-{id}.csv", logFile.FileName);
                 var logRows = Encoding.UTF8.GetString(logFile.Content).Trim().Split('\n');
                 Assert.AreEqual("id,member,outcome,reason", logRows[0]);
-                Assert.AreEqual(6, logRows.Length - 1, "every member of the run");
+                Assert.AreEqual(7, logRows.Length - 1, "every member of the run, and the admin the preview left out");
+                Assert.IsTrue(logRows.Single(r => r.StartsWith(admin.Id + ",")).EndsWith(",admin,"), string.Join("\n", logRows));
                 Assert.IsTrue(members.Take(5).All(m => logRows.Single(r => r.StartsWith(m.Id + ",")).EndsWith(",done,")), string.Join("\n", logRows));
                 Assert.IsTrue(logRows.Single(r => r.StartsWith(members[5].Id + ",")).EndsWith(",blocked,VIP rule"), logRows.Last());
                 AssertNoErrors(chat);

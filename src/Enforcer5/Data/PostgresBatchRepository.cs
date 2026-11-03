@@ -9,9 +9,16 @@ using Npgsql;
 namespace Enforcer5.Data
 {
     /// <summary>A /batch as confirmed: what to run, for whom, on which members.</summary>
+    /// <summary>
+    /// A confirmed batch. <see cref="Members"/> run; <see cref="Admins"/> and <see cref="NothingToDo"/> were left out by
+    /// the preview and are stored only to say who (outcome admin, and nothing), never run.
+    /// </summary>
     internal sealed record NewBatch(long ChatId, string Edition, string Kind, string Reason, int? DurationMinutes,
-        string CommandText, long RequestedBy, long ConfirmedBy, int Skipped, IReadOnlyList<long> Members);
+        string CommandText, long RequestedBy, long ConfirmedBy, IReadOnlyList<long> Members,
+        IReadOnlyList<long> Admins = null, IReadOnlyList<long> NothingToDo = null);
 
+    /// <param name="Skipped">Left out by the preview and not stored as items: batches from before 2026-11-03 only.</param>
+    /// <param name="Total">The items that run, without those the preview left out.</param>
     internal sealed record BatchRecord(long BatchId, long ChatId, string Edition, string Kind, string Reason, int? DurationMinutes,
         string CommandText, long RequestedBy, long ConfirmedBy, string Status, int? ProgressMessageId, int Skipped, int Total);
 
@@ -86,12 +93,12 @@ namespace Enforcer5.Data
                 id = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"
 INSERT INTO batches (group_id, edition, kind, reason, duration_minutes, command_text, requested_by_account_id,
                      confirmed_by_account_id, skipped)
-VALUES (@GroupId, @Edition, @Kind, @Reason, @DurationMinutes, @CommandText, @Requested, @Confirmed, @Skipped)
+VALUES (@GroupId, @Edition, @Kind, @Reason, @DurationMinutes, @CommandText, @Requested, @Confirmed, 0)
 RETURNING batch_id",
                     new
                     {
                         group.GroupId, batch.Edition, batch.Kind, batch.Reason, batch.DurationMinutes, batch.CommandText,
-                        Requested = requested.AccountId, Confirmed = confirmed.AccountId, batch.Skipped
+                        Requested = requested.AccountId, Confirmed = confirmed.AccountId
                     }, transaction));
             }
             catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.UniqueViolation)
@@ -105,6 +112,21 @@ RETURNING batch_id",
 INSERT INTO batch_items (batch_id, position, telegram_user_id)
 SELECT @Id, m.position - 1, m.member FROM unnest(@Members) WITH ORDINALITY AS m(member, position)",
                 new { Id = id, Members = batch.Members.ToArray() }, transaction));
+            // Then those the preview left out, after them, already ended: the summary and the log say who.
+            var leftOut = (batch.Admins ?? Array.Empty<long>()).Select(m => (Member: m, Outcome: "admin"))
+                .Concat((batch.NothingToDo ?? Array.Empty<long>()).Select(m => (Member: m, Outcome: "nothing")))
+                .ToArray();
+            if (leftOut.Length > 0)
+                await connection.ExecuteAsync(new CommandDefinition(@"
+INSERT INTO batch_items (batch_id, position, telegram_user_id, outcome, left_out)
+SELECT @Id, @Start + m.position - 1, m.member, o.outcome, true
+FROM unnest(@Members) WITH ORDINALITY AS m(member, position)
+JOIN unnest(@Outcomes) WITH ORDINALITY AS o(outcome, position) ON o.position = m.position",
+                    new
+                    {
+                        Id = id, Start = batch.Members.Count, Members = leftOut.Select(l => l.Member).ToArray(),
+                        Outcomes = leftOut.Select(l => l.Outcome).ToArray()
+                    }, transaction));
             await transaction.CommitAsync();
             return id;
         }
@@ -116,7 +138,7 @@ SELECT @Id, m.position - 1, m.member FROM unnest(@Members) WITH ORDINALITY AS m(
 SELECT b.batch_id AS BatchId, c.telegram_chat_id AS ChatId, b.edition AS Edition, b.kind AS Kind, b.reason AS Reason,
        b.duration_minutes AS DurationMinutes, b.command_text AS CommandText, r.telegram_user_id AS RequestedBy,
        f.telegram_user_id AS ConfirmedBy, b.status AS Status, b.progress_message_id AS ProgressMessageId, b.skipped AS Skipped,
-       (SELECT count(*)::int FROM batch_items i WHERE i.batch_id = b.batch_id) AS Total
+       (SELECT count(*)::int FROM batch_items i WHERE i.batch_id = b.batch_id AND NOT i.left_out) AS Total
 FROM batches b
 JOIN groups g ON g.group_id = b.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id

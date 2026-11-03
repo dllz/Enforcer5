@@ -706,7 +706,7 @@ namespace Enforcer5.Storage
             {
                 entity.ToTable("batch_items", table =>
                     table.HasCheckConstraint("batch_items_outcome_check",
-                        "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped')"));
+                        "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped', 'admin')"));
                 entity.HasKey(x => new { x.BatchId, x.Position });
                 entity.HasOne<BatchEntity>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
             });

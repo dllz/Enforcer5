@@ -217,6 +217,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("done_at");
 
+                    b.Property<bool>("LeftOut")
+                        .HasColumnType("boolean")
+                        .HasColumnName("left_out");
+
                     b.Property<string>("Outcome")
                         .HasColumnType("text")
                         .HasColumnName("outcome");
@@ -229,7 +233,7 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("batch_items", null, t =>
                         {
-                            t.HasCheckConstraint("batch_items_outcome_check", "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped')");
+                            t.HasCheckConstraint("batch_items_outcome_check", "outcome IS NULL OR outcome IN ('done', 'refused', 'blocked', 'nothing', 'skipped', 'admin')");
                         });
                 });
 

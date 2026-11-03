@@ -385,7 +385,8 @@ file up to 1 MB); `Actions/Batches` is the rest. The preview leaves out duplicat
 `AdminDirectory`), the bot and the admin who asked, members already in the ban list (ban) and members without
 warns (warn removals), with no Telegram call per member; it lives in memory for 10 minutes, so a restart
 forgets previews, not batches. Run creates the `batches` row and its `batch_items` (Telegram user ids, not
-accounts: a list names thousands nobody has seen) in one transaction; `batches_one_running_idx` keeps it to
+accounts: a list names thousands nobody has seen) in one transaction, with those the preview left out after
+them (outcome `admin` or `nothing`, `left_out`, never run, not counted in "Done X of Y"); `batches_one_running_idx` keeps it to
 one running batch per group (a second Run says so and keeps the preview). The worker runs each item through
 `ActionSeam.Run` (source `Batch`, the admin who asked as actor, `BatchId`, no notice per member, the ban
 record and ban list as the commands keep them), checks before each that the admin who asked is still an
@@ -394,7 +395,9 @@ with the hook's name, nothing), and edits the progress message at most every 5 s
 two members; the rest are skipped. A restart carries on from the first item without an outcome
 (`Batches.Start`, and `ResumeAsync` in the harness); an item in flight at the crash may run twice, which every
 action allows. At the end: the summary (with the reasons) in the progress message, and one line in the log
-channel; button presses on a batch are not logged one by one. Detection labels the decisions `batch`
+channel, both listing the members by id by outcome (done, refused, blocked, admins and nothing to do left out,
+not run), with a CSV of all of them where a list is cut (the summary replaces the preview, so its lists are
+otherwise gone); button presses on a batch are not logged one by one. Detection labels the decisions `batch`
 (`ErrorContext.LabelSource`, set by the worker; `member_labels_source_check` widened, with `script` for later)
 and, for now, counts them nowhere: `TrustLearning`, the report-level learning and the "missed" mark read only
 `command`, `button`, `report`, `app` and `raid`, because a list carries no message for Detection to learn

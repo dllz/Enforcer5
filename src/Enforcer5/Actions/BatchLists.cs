@@ -13,7 +13,7 @@ namespace Enforcer5.Actions
     /// </summary>
     internal static class BatchLists
     {
-        /// <summary>Room for the lists in the preview, below Telegram's 4096 with the preview's own text.</summary>
+        /// <summary>Room for the lists in the preview and in the summary that replaces it, below Telegram's 4096 with their own text.</summary>
         internal static int PreviewBudget = 3300;
 
         /// <summary>Room for the lists in the log post (settable for tests, as is the preview's), below <see cref="Helpers.LogQueue.MaxLength"/> with the line itself.</summary>

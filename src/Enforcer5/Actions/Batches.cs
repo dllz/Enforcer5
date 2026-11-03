@@ -40,8 +40,8 @@ namespace Enforcer5.Actions
 
         private const int Chunk = 50;
 
-        private sealed record Preview(long ChatId, long RequestedBy, BatchOrder Order, IReadOnlyList<long> Members, int Skipped,
-            DateTime ExpiresUtc);
+        private sealed record Preview(long ChatId, long RequestedBy, BatchOrder Order, IReadOnlyList<long> Members,
+            IReadOnlyList<long> Admins, IReadOnlyList<long> NothingToDo, DateTime ExpiresUtc);
 
         private static readonly ConcurrentDictionary<string, Preview> Previews = new();
         private static readonly ConcurrentDictionary<long, byte> Running = new();
@@ -98,13 +98,13 @@ namespace Enforcer5.Actions
             var adminCount = distinct.Count - notAdmins.Count;
             var nothing = notAdmins.Count - members.Count;
 
-            var token = Guid.NewGuid().ToString("N")[..10];
-            Previews[token] = new Preview(chatId, message.From.Id, order, members, adminCount + nothing, Clock.UtcNow + PreviewFor);
-            var text = Methods.GetLocaleString(lang, "batchPreview", order.Text, ids.Count, members.Count, duplicates, adminCount, nothing);
-            // Who would get what, by id (Daniel, 2026-11-03).
             var adminIds = distinct.Where(admins.Contains).ToList();
             var keep = members.ToHashSet();
             var nothingIds = notAdmins.Where(id => !keep.Contains(id)).ToList();
+            var token = Guid.NewGuid().ToString("N")[..10];
+            Previews[token] = new Preview(chatId, message.From.Id, order, members, adminIds, nothingIds, Clock.UtcNow + PreviewFor);
+            var text = Methods.GetLocaleString(lang, "batchPreview", order.Text, ids.Count, members.Count, duplicates, adminCount, nothing);
+            // Who would get what, by id (Daniel, 2026-11-03).
             text += "\n" + Lists(lang, new[]
             {
                 new BatchLists.Section("batchListWill", members),
@@ -227,7 +227,7 @@ namespace Enforcer5.Actions
             var order = preview.Order;
             var id = Repositories.Batches.CreateAsync(new NewBatch(chatId, BanHistory.Edition, order.Command.Trigger, order.Reason,
                     order.Duration is { } d ? (int)d.TotalMinutes : null, order.Text, preview.RequestedBy, call.From.Id,
-                    preview.Skipped, preview.Members))
+                    preview.Members, preview.Admins, preview.NothingToDo))
                 .GetAwaiter().GetResult();
             if (id == null)
             {
@@ -439,36 +439,45 @@ namespace Enforcer5.Actions
             var done = Count("done");
             var refused = Count("refused");
             var blocked = Count("blocked");
-            var skipped = Count("skipped", "nothing") + batch.Skipped;
+            // Left out: by the preview (admins, nothing to do; batches from before 2026-11-03 only as a number), and in the run.
+            var skipped = Count("skipped", "nothing", "admin") + batch.Skipped;
             var details = string.Join("\n", tally.Where(t => t.Outcome is "refused" or "blocked" || t.Detail == "notadmin")
                 .Select(t => WhyLine(lang, t)));
-            var ended = batch.Status == "stopped" ? "batchStopped" : "batchDone";
-            var summary = Methods.GetLocaleString(lang, ended, batch.BatchId, batch.CommandText, done, refused, blocked, skipped);
-            if (details.Length > 0) summary += "\n" + details;
-            if (batch.ProgressMessageId is { } progress) Edit(batch.ChatId, progress, summary, null);
-            else Bot.Send(summary, batch.ChatId);
             var group = Service.GetCachedGroupTitle(batch.ChatId);
-            // Who it was done to, by id: the members' own actions are silent, so this is the only record in the log.
+            // Who, by id, in the summary and in the log (Daniel, 2026-11-03): the summary replaces the preview, whose
+            // lists would otherwise be gone, and the members' own actions are silent, so these are the only record.
             var items = await Repositories.Batches.OutcomesAsync(batchId);
             List<long> With(params string[] outcomes) => items.Where(i => outcomes.Contains(i.Outcome)).Select(i => i.MemberId).ToList();
-            var lists = Lists(lang, new[]
+            var sections = new[]
             {
                 new BatchLists.Section("batchListDone", With("done")),
                 new BatchLists.Section("batchListRefused", With("refused")),
                 new BatchLists.Section("batchListBlocked", With("blocked")),
+                new BatchLists.Section("batchListAdmins", With("admin")),
                 new BatchLists.Section("batchListNothing", With("nothing")),
                 new BatchLists.Section("batchListNotRun", With("skipped"))
-            }, BatchLists.LogBudget, out var cut);
+            };
+            var csv = BatchLists.Csv(new[] { "id", "member", "outcome", "reason" }, items.Select(i => (IReadOnlyList<string>)new[]
+                { i.MemberId.ToString(), Service.GetCachedUserLabel(i.MemberId), i.Outcome, i.Detail ?? "" }));
+            var fileName = $"batch-{batch.BatchId}.csv";
+            string FileCaption() => Methods.GetLocaleString(lang, "batchListLogFile", batch.BatchId, batch.CommandText, $"{group} ({batch.ChatId})");
+
+            var ended = batch.Status == "stopped" ? "batchStopped" : "batchDone";
+            var summary = Methods.GetLocaleString(lang, ended, batch.BatchId, batch.CommandText, done, refused, blocked, skipped);
+            if (details.Length > 0) summary += "\n" + details;
+            var summaryLists = Lists(lang, sections, BatchLists.PreviewBudget, out var summaryCut);
+            if (summaryLists.Length > 0) summary += "\n" + summaryLists;
+            int? summaryId = batch.ProgressMessageId;
+            if (batch.ProgressMessageId is { } progress) Edit(batch.ChatId, progress, summary, null);
+            else summaryId = Bot.Send(summary, batch.ChatId)?.MessageId;
+            if (summaryCut) SendCsv(batch.ChatId, csv, fileName, FileCaption(), summaryId);
+
+            var lists = Lists(lang, sections, BatchLists.LogBudget, out var cut);
             Service.SendToLogChannel(batch.ChatId, lang, () => Methods.GetLocaleString(lang, "batchLog",
                 Service.GetCachedUserLabel(batch.RequestedBy), $"{group} ({batch.ChatId})", batch.CommandText,
                 Service.GetCachedUserLabel(batch.ConfirmedBy), done, refused, blocked, skipped) + lists, batch.ProgressMessageId);
             if (cut && Service.LogChannelOf(batch.ChatId) is { } logChat)
-            {
-                var rows = items.Select(i => (IReadOnlyList<string>)new[]
-                    { i.MemberId.ToString(), Service.GetCachedUserLabel(i.MemberId), i.Outcome, i.Detail ?? "" });
-                SendCsv(logChat, BatchLists.Csv(new[] { "id", "member", "outcome", "reason" }, rows), $"batch-{batch.BatchId}.csv",
-                    Methods.GetLocaleString(lang, "batchListLogFile", batch.BatchId, batch.CommandText, $"{group} ({batch.ChatId})"), null);
-            }
+                SendCsv(logChat, csv, fileName, FileCaption(), null);
         }
 
         private static DateTimeOffset Now => new(Clock.UtcNow, TimeSpan.Zero);

@@ -835,5 +835,8 @@ namespace Enforcer5.Storage
         public string Outcome { get; set; }
         public string Detail { get; set; }
         public DateTimeOffset? DoneAt { get; set; }
+
+        /// <summary>Left out by the preview (an admin, or nothing to do): kept to say who, never run.</summary>
+        public bool LeftOut { get; set; }
     }
 }
