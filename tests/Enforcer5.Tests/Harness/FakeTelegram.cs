@@ -220,7 +220,7 @@ namespace Enforcer5.Tests.Harness
             switch (request)
             {
                 case SendMessageRequest r: return Limited("sendMessage", r.ChatId, null, r.Text, r, () => { Parse(r.Text, r.ParseMode); return Sent(r); });
-                case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => { Parse(r.Caption, r.ParseMode); return NewMessage(r.ChatId, r.Caption); });
+                case SendDocumentRequest r: return Limited("sendDocument", r.ChatId, null, (r.Document as InputFileId)?.Id, r, () => { Parse(r.Caption, r.ParseMode); KeepFile(r); return NewMessage(r.ChatId, r.Caption); });
                 case SendPhotoRequest r: return Limited("sendPhoto", r.ChatId, null, r.Caption, r, () => NewMessage(r.ChatId, r.Caption));
                 case ForwardMessageRequest r: return Limited("forwardMessage", r.ChatId, null, null, r, () => NewMessage(r.ChatId));
                 case EditMessageTextRequest r: return Limited("editMessageText", r.ChatId, null, r.Text, r, () => Edited(r));
@@ -432,6 +432,22 @@ namespace Enforcer5.Tests.Harness
 
         /// <summary>The messages the bot sent, oldest first, with their inline buttons.</summary>
         internal IReadOnlyList<Message> SentMessages => _sent.ToList();
+
+        /// <summary>A file the bot uploaded (not one it sent by file id), with its content as sent.</summary>
+        internal sealed record SentFile(long ChatId, string FileName, string Caption, byte[] Content, int? ReplyTo);
+
+        private readonly ConcurrentQueue<SentFile> _files = new();
+
+        /// <summary>The files the bot uploaded, oldest first.</summary>
+        internal IReadOnlyList<SentFile> SentFiles => _files.ToList();
+
+        private void KeepFile(SendDocumentRequest r)
+        {
+            if (r.Document is not InputFileStream upload) return;
+            using var content = new System.IO.MemoryStream();
+            upload.Content.CopyTo(content);
+            _files.Enqueue(new SentFile(Id(r.ChatId), upload.FileName, r.Caption, content.ToArray(), r.ReplyParameters?.MessageId));
+        }
 
         private Message NewMessage(ChatId chat, string text = null) => new Message
         {

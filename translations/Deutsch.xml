@@ -2671,6 +2671,36 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="batchLog">
     <value>{0} hat in {1} einen Stapel ausgeführt: {2}. Gestartet von {3}. Erledigt {4}, abgelehnt {5}, blockiert {6}, ausgelassen {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Wird ausgeführt für: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Admins, ausgelassen: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Nichts zu tun: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Erledigt: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Abgelehnt: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Von einer Regel blockiert: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Nicht ausgeführt: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…und {0} weitere</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Stapel: {0}. Jede ID der Liste und was passieren würde.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Stapel #{0}: {1} in {2}. Jedes Mitglied und was passiert ist.</value>
+  </string>
   <string key="dashboardMenu">
     <value>Dies sind die momentanen Einstellungen der Gruppe:</value>
   </string>

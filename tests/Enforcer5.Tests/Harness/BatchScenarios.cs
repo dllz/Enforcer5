@@ -106,6 +106,8 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
             StringAssert.Contains(preview.Text, "ban spam ring");
             StringAssert.Contains(preview.Text, "<b>3</b>");
             StringAssert.Contains(preview.Text, "1 duplicates, 2 admins");
+            StringAssert.Contains(preview.Text, $"Will be done for: {string.Join(", ", members.Select(m => m.Id))}", "who, by id");
+            StringAssert.Contains(preview.Text, $"Admins, left out: {other.Id}, {HarnessChat.BotUser.Id}");
             Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Member), "nothing before Run");
 
             await chat.PressAsync(other, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
@@ -124,7 +126,55 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
             var logs = chat.Telegram.SentMessages.Where(m => m.Chat.Id == LogChannel).ToArray();
             Assert.AreEqual(1, logs.Length, "one line for the whole batch");
             StringAssert.Contains(logs[0].Text, "Done 3");
+            StringAssert.Contains(logs[0].Text, $"Done: {string.Join(", ", members.Select(m => m.Id))}", "the log says who");
+            Assert.AreEqual(0, chat.Telegram.SentFiles.Count, "short lists need no file");
             AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ListsTooLongForTheMessage_AreCut_AndSentWholeAsAFile()
+        {
+            var (previewBudget, logBudget) = (BatchLists.PreviewBudget, BatchLists.LogBudget);
+            BatchLists.PreviewBudget = BatchLists.LogBudget = 30;
+            try
+            {
+                await using var chat = await StartAsync();
+                var admin = chat.Add("Admin", MemberState.Administrator);
+                var members = Members(chat, 6);
+                using var rule = new BlockSome(members[5].Id);
+                var list = await chat.SendAsync(admin, $"{List(members)}\n{admin.Id}");
+
+                await chat.SendAsync(admin, "/batch kick", replyTo: list);
+
+                var preview = Preview(chat);
+                StringAssert.Contains(preview.Text, "more");
+                var previewFile = chat.Telegram.SentFiles.Single();
+                Assert.AreEqual((chat.ChatId, "batch-preview.csv", preview.MessageId), (previewFile.ChatId, previewFile.FileName, previewFile.ReplyTo));
+                var rows = Encoding.UTF8.GetString(previewFile.Content).Trim().Split('\n');
+                Assert.AreEqual("id,outcome", rows[0]);
+                CollectionAssert.AreEqual(members.Select(m => $"{m.Id},will be done").Append($"{admin.Id},\"admin, left out\"").ToArray(),
+                    rows.Skip(1).ToArray());
+
+                await chat.PressAsync(admin, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
+                await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+                var log = chat.Telegram.SentMessages.Single(m => m.Chat.Id == LogChannel);
+                StringAssert.Contains(log.Text, "more");
+                var logFile = chat.Telegram.SentFiles.Last();
+                Assert.AreEqual(LogChannel, logFile.ChatId);
+                var (id, _, _) = await BatchAsync(chat);
+                Assert.AreEqual($"batch-{id}.csv", logFile.FileName);
+                var logRows = Encoding.UTF8.GetString(logFile.Content).Trim().Split('\n');
+                Assert.AreEqual("id,member,outcome,reason", logRows[0]);
+                Assert.AreEqual(6, logRows.Length - 1, "every member of the run");
+                Assert.IsTrue(members.Take(5).All(m => logRows.Single(r => r.StartsWith(m.Id + ",")).EndsWith(",done,")), string.Join("\n", logRows));
+                Assert.IsTrue(logRows.Single(r => r.StartsWith(members[5].Id + ",")).EndsWith(",blocked,VIP rule"), logRows.Last());
+                AssertNoErrors(chat);
+            }
+            finally
+            {
+                (BatchLists.PreviewBudget, BatchLists.LogBudget) = (previewBudget, logBudget);
+            }
         }
 
         [TestMethod]

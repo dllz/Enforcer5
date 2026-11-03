@@ -2602,6 +2602,36 @@ exaple: /{0}
   <string key="batchLog">
     <value>{0} در {1} یک دسته اجرا کرد: {2}. اجراکننده: {3}. انجام‌شده {4}، ردشده {5}، مسدود {6}، کنار گذاشته {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>انجام می‌شود برای: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>ادمین‌ها، کنار گذاشته: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>کاری برای انجام نیست: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>انجام‌شده: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>ردشده: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>مسدود با یک قاعده: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>اجرا نشده: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…و {0} مورد دیگر</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>دسته: {0}. هر شناسه در فهرست و آنچه رخ خواهد داد.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>دسته #{0}: {1} در {2}. هر عضو و آنچه رخ داد.</value>
+  </string>
   <string key="dashboardMenu">
     <value>در اينجا انچه ك تنظيمات گروه شما است مشاهده ميكنيد  </value>
   </string>

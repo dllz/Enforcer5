@@ -2359,6 +2359,36 @@ $title - заменяется названием группы.
   <string key="batchLog">
     <value>{0} выполнил пачку в {1}: {2}. Запустил {3}. Выполнено {4}, отказано {5}, заблокировано {6}, пропущено {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Будет выполнено для: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Админы, пропущены: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Нечего делать: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Выполнено: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Отказано: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Заблокировано правилом: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Не выполнено: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…и ещё {0}</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Пачка: {0}. Каждый id из списка и что произойдёт.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Пачка #{0}: {1} в {2}. Каждый участник и что произошло.</value>
+  </string>
   <string key="dashboardMenu">
     <value>Настройки, которые установлены в группе:</value>
   </string>

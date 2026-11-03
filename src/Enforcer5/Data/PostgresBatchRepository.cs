@@ -17,6 +17,9 @@ namespace Enforcer5.Data
 
     internal sealed record BatchItem(int Position, long MemberId);
 
+    /// <summary>One member of a batch and how it ended for them (outcome and reason as <see cref="BatchTally"/>).</summary>
+    internal sealed record BatchItemOutcome(long MemberId, string Outcome, string Detail);
+
     /// <summary>How many items ended one way (<see cref="Outcome"/>) for one reason (<see cref="Detail"/>).</summary>
     internal sealed record BatchTally(string Outcome, string Detail, int Count);
 
@@ -46,6 +49,9 @@ namespace Enforcer5.Data
 
         /// <summary>The items so far, counted by outcome and reason.</summary>
         Task<IReadOnlyList<BatchTally>> TallyAsync(long batchId);
+
+        /// <summary>Every item that has an outcome, in list order: who the batch did what to.</summary>
+        Task<IReadOnlyList<BatchItemOutcome>> OutcomesAsync(long batchId);
     }
 
     internal sealed class PostgresBatchRepository : IBatchRepository
@@ -172,6 +178,15 @@ WHERE batch_id = @BatchId AND outcome IS NULL ORDER BY position LIMIT @Limit",
             return (await connection.QueryAsync<BatchTally>(@"
 SELECT outcome AS Outcome, detail AS Detail, count(*)::int AS Count FROM batch_items
 WHERE batch_id = @BatchId AND outcome IS NOT NULL GROUP BY outcome, detail ORDER BY outcome, detail",
+                new { BatchId = batchId })).ToList();
+        }
+
+        public async Task<IReadOnlyList<BatchItemOutcome>> OutcomesAsync(long batchId)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return (await connection.QueryAsync<BatchItemOutcome>(@"
+SELECT telegram_user_id AS MemberId, outcome AS Outcome, detail AS Detail FROM batch_items
+WHERE batch_id = @BatchId AND outcome IS NOT NULL ORDER BY position",
                 new { BatchId = batchId })).ToList();
         }
     }

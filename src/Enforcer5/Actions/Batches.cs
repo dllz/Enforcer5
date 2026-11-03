@@ -13,6 +13,7 @@ using Enforcer5.Models;
 using Enforcer5.Storage;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Enforcer5.Actions
@@ -24,7 +25,8 @@ namespace Enforcer5.Actions
     /// <see cref="ActionSource.Batch"/>, the admin who asked as actor, no notice per member), paced by the
     /// enforcement queue like everything else, editing one progress message at most every 5 seconds, with a
     /// Stop button. The batch and its items are in PostgreSQL, so a restart carries on where it was. At the end:
-    /// a summary, and one line in the log channel.
+    /// a summary, and one line in the log channel. The preview and the log line list the members by id, by what
+    /// would happen or what did (<see cref="BatchLists"/>), with a CSV of all of them when a list does not fit.
     /// </summary>
     internal static class Batches
     {
@@ -99,6 +101,16 @@ namespace Enforcer5.Actions
             var token = Guid.NewGuid().ToString("N")[..10];
             Previews[token] = new Preview(chatId, message.From.Id, order, members, adminCount + nothing, Clock.UtcNow + PreviewFor);
             var text = Methods.GetLocaleString(lang, "batchPreview", order.Text, ids.Count, members.Count, duplicates, adminCount, nothing);
+            // Who would get what, by id (Daniel, 2026-11-03).
+            var adminIds = distinct.Where(admins.Contains).ToList();
+            var keep = members.ToHashSet();
+            var nothingIds = notAdmins.Where(id => !keep.Contains(id)).ToList();
+            text += "\n" + Lists(lang, new[]
+            {
+                new BatchLists.Section("batchListWill", members),
+                new BatchLists.Section("batchListAdmins", adminIds),
+                new BatchLists.Section("batchListNothing", nothingIds)
+            }, BatchLists.PreviewBudget, out var cut);
             var buttons = members.Count == 0
                 ? null
                 : new InlineKeyboardMarkup(new[]
@@ -106,7 +118,35 @@ namespace Enforcer5.Actions
                     InlineKeyboardButton.WithCallbackData(Methods.GetLocaleString(lang, "batchRun"), $"{Trigger}:{chatId}:run:{token}"),
                     InlineKeyboardButton.WithCallbackData(Methods.GetLocaleString(lang, "batchCancel"), $"{Trigger}:{chatId}:cancel:{token}")
                 });
-            Bot.SendReply(text, update, buttons);
+            var sent = Bot.SendReply(text, update, buttons);
+            if (!cut) return;
+            var rows = members.Select(id => (id, "will be done"))
+                .Concat(adminIds.Select(id => (id, "admin, left out")))
+                .Concat(nothingIds.Select(id => (id, "nothing to do, left out")))
+                .Select(r => (IReadOnlyList<string>)new[] { r.id.ToString(), r.Item2 });
+            SendCsv(chatId, BatchLists.Csv(new[] { "id", "outcome" }, rows), "batch-preview.csv",
+                Methods.GetLocaleString(lang, "batchListPreviewFile", order.Text), sent?.MessageId ?? message.MessageId);
+        }
+
+        /// <summary>The lists of ids, one line each, below a preview or a log line.</summary>
+        private static string Lists(XDocument lang, IEnumerable<BatchLists.Section> sections, int budget, out bool cut) =>
+            BatchLists.Lines(sections, budget, (key, ids) => Methods.GetLocaleString(lang, key, ids),
+                left => Methods.GetLocaleString(lang, "batchListMore", left), out cut);
+
+        /// <summary>A list too long for its message, whole, as a file. Never throws.</summary>
+        private static void SendCsv(long chatId, byte[] csv, string fileName, string caption, int? replyTo)
+        {
+            try
+            {
+                using var stream = new System.IO.MemoryStream(csv);
+                Bot.Api.SendDocument(chatId, InputFile.FromStream(stream, fileName), caption, ParseMode.Html,
+                    replyParameters: replyTo is { } id ? new ReplyParameters { MessageId = id, AllowSendingWithoutReply = true } : null)
+                    .GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Sending the batch list {fileName} to {chatId}");
+            }
         }
 
         /// <summary>The ids of the replied message: its text and caption, or its .txt/.csv file.</summary>
@@ -408,9 +448,27 @@ namespace Enforcer5.Actions
             if (batch.ProgressMessageId is { } progress) Edit(batch.ChatId, progress, summary, null);
             else Bot.Send(summary, batch.ChatId);
             var group = Service.GetCachedGroupTitle(batch.ChatId);
+            // Who it was done to, by id: the members' own actions are silent, so this is the only record in the log.
+            var items = await Repositories.Batches.OutcomesAsync(batchId);
+            List<long> With(params string[] outcomes) => items.Where(i => outcomes.Contains(i.Outcome)).Select(i => i.MemberId).ToList();
+            var lists = Lists(lang, new[]
+            {
+                new BatchLists.Section("batchListDone", With("done")),
+                new BatchLists.Section("batchListRefused", With("refused")),
+                new BatchLists.Section("batchListBlocked", With("blocked")),
+                new BatchLists.Section("batchListNothing", With("nothing")),
+                new BatchLists.Section("batchListNotRun", With("skipped"))
+            }, BatchLists.LogBudget, out var cut);
             Service.SendToLogChannel(batch.ChatId, lang, () => Methods.GetLocaleString(lang, "batchLog",
                 Service.GetCachedUserLabel(batch.RequestedBy), $"{group} ({batch.ChatId})", batch.CommandText,
-                Service.GetCachedUserLabel(batch.ConfirmedBy), done, refused, blocked, skipped), batch.ProgressMessageId);
+                Service.GetCachedUserLabel(batch.ConfirmedBy), done, refused, blocked, skipped) + lists, batch.ProgressMessageId);
+            if (cut && Service.LogChannelOf(batch.ChatId) is { } logChat)
+            {
+                var rows = items.Select(i => (IReadOnlyList<string>)new[]
+                    { i.MemberId.ToString(), Service.GetCachedUserLabel(i.MemberId), i.Outcome, i.Detail ?? "" });
+                SendCsv(logChat, BatchLists.Csv(new[] { "id", "member", "outcome", "reason" }, rows), $"batch-{batch.BatchId}.csv",
+                    Methods.GetLocaleString(lang, "batchListLogFile", batch.BatchId, batch.CommandText, $"{group} ({batch.ChatId})"), null);
+            }
         }
 
         private static DateTimeOffset Now => new(Clock.UtcNow, TimeSpan.Zero);

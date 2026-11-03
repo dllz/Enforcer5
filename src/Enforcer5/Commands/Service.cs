@@ -653,20 +653,19 @@ defSpamValue = 3;
         internal static void SendToLogChannel(long chatId, XDocument lang, Func<string> text, long? linkMessageId = null,
             bool digestDuringRaid = false)
         {
-            if (Redis.db.SetContainsAsync("logChatGroups", chatId).Result)
+            if (LogChannelOf(chatId) is { } logChat)
             {
-                var logChatID = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
                 try
                 {
                     // The bot's own actions during a raid: one post every LogDigest.Every with all of
                     // them, not one per raider. What admins do is still posted at once.
                     if (digestDuringRaid && Raids.RaidGuard.Quiet(chatId))
                     {
-                        LogDigest.Add(chatId, long.Parse(logChatID), lang, text());
+                        LogDigest.Add(chatId, logChat, lang, text());
                         return;
                     }
                     // Posted in the background (LogQueue), which also handles a channel the bot lost.
-                    LogQueue.Enqueue(chatId, long.Parse(logChatID), text(), LogLinkUrl(chatId, linkMessageId),
+                    LogQueue.Enqueue(chatId, logChat, text(), LogLinkUrl(chatId, linkMessageId),
                         Methods.GetLocaleString(lang, "goToMessage"));
                 }
                 catch (Exception e)
@@ -674,6 +673,14 @@ defSpamValue = 3;
                     ErrorReporter.Report(e, $"Posting to the log channel of {chatId}");
                 }
             }
+        }
+
+        /// <summary>The group's log channel; null when it has none.</summary>
+        internal static long? LogChannelOf(long chatId)
+        {
+            if (!Redis.db.SetContainsAsync("logChatGroups", chatId).Result) return null;
+            var logChat = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
+            return long.TryParse(logChat, out var id) ? id : null;
         }
 
         public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")

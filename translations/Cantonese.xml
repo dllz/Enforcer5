@@ -2208,6 +2208,36 @@ UPDATE LOG
   <string key="batchLog">
     <value>{0} 喺 {1} 執行咗一個批次：{2}。由 {3} 開始。完成 {4}，被拒絕 {5}，被阻止 {6}，略過 {7}。</value>
   </string>
+  <string key="batchListWill">
+    <value>會執行：{0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>管理員，略過：{0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>唔使做嘢：{0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>完成：{0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>被拒絕：{0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>被規則阻止：{0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>未執行：{0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…仲有 {0} 個</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>批次：{0}。名單上每個 id 同會發生咩事。</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>批次 #{0}：{1}，喺 {2}。每個成員同發生咗咩事。</value>
+  </string>
   <string key="dashboardMenu">		
 		<value>以下係呢個群組現有嘅設定︰</value>		
 	</string>

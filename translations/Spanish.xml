@@ -3692,4 +3692,34 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="batchLog">
     <value>{0} ejecutó un lote en {1}: {2}. Lo puso en marcha {3}. Hechos {4}, rechazados {5}, bloqueados {6}, fuera {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Se hará para: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Administradores, fuera: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Nada que hacer: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Hechos: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Rechazados: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Bloqueados por una regla: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>No ejecutados: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…y {0} más</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Lote: {0}. Cada id de la lista y lo que pasaría.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Lote #{0}: {1} en {2}. Cada miembro y lo que pasó.</value>
+  </string>
 </strings>

@@ -2616,6 +2616,36 @@
   <string key="batchLog">
     <value>{0} ha eseguito un lotto in {1}: {2}. Avviato da {3}. Fatti {4}, rifiutati {5}, bloccati {6}, esclusi {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Sarà fatto per: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Admin, esclusi: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Niente da fare: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Fatti: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Rifiutati: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Bloccati da una regola: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Non eseguiti: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…e altri {0}</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Lotto: {0}. Ogni id della lista e cosa succederebbe.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Lotto #{0}: {1} in {2}. Ogni membro e cosa è successo.</value>
+  </string>
   <string key="dashboardMenu">
     <value>Queste sono le impostazioni del gruppo:</value>
   </string>

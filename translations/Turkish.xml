@@ -2634,6 +2634,36 @@
   <string key="batchLog">
     <value>{0}, {1} içinde bir toplu işlem çalıştırdı: {2}. Başlatan: {3}. Tamamlanan {4}, reddedilen {5}, engellenen {6}, dışarıda kalan {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Yapılacak: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Adminler, dışarıda kalan: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Yapılacak bir şey yok: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Tamamlanan: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Reddedilen: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Bir kuralca engellenen: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Çalıştırılmayan: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…ve {0} kişi daha</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Toplu işlem: {0}. Listedeki her id ve ne olacağı.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Toplu işlem #{0}: {1}, {2} içinde. Her üye ve ne olduğu.</value>
+  </string>
   <string key="dashboardMenu">
     <value>Grupta ne ayarlanacak:</value>
   </string>

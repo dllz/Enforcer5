@@ -3678,4 +3678,34 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="batchLog">
     <value>{0} ran a batch in {1}: {2}. Run by {3}. Done {4}, refused {5}, blocked {6}, left out {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Will be done for: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Admins, left out: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Nothing to do: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Done: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Refused: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Blocked by a rule: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Not run: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…and {0} more</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Batch: {0}. Every id on the list and what would happen.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Batch #{0}: {1} in {2}. Every member and what happened.</value>
+  </string>
 </strings>

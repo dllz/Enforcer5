@@ -2857,6 +2857,36 @@
   <string key="batchLog">
     <value>{0} menjalankan batch di {1}: {2}. Dijalankan oleh {3}. Selesai {4}, ditolak {5}, diblokir {6}, dilewati {7}.</value>
   </string>
+  <string key="batchListWill">
+    <value>Akan dilakukan untuk: {0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>Admin, dilewati: {0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>Tidak ada yang perlu dilakukan: {0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>Selesai: {0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>Ditolak: {0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>Diblokir aturan: {0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>Tidak dijalankan: {0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…dan {0} lainnya</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>Batch: {0}. Setiap id di daftar dan apa yang akan terjadi.</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>Batch #{0}: {1} di {2}. Setiap anggota dan apa yang terjadi.</value>
+  </string>
   <string key="dashboardMenu">
     <value>Settingan dalam grup ini adalah:</value>
   </string>

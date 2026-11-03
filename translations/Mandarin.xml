@@ -2316,6 +2316,36 @@ Example:
   <string key="batchLog">
     <value>{0} 在 {1} 执行了一个批次：{2}。由 {3} 启动。完成 {4}，被拒绝 {5}，被阻止 {6}，跳过 {7}。</value>
   </string>
+  <string key="batchListWill">
+    <value>将执行：{0}</value>
+  </string>
+  <string key="batchListAdmins">
+    <value>管理员，跳过：{0}</value>
+  </string>
+  <string key="batchListNothing">
+    <value>无需操作：{0}</value>
+  </string>
+  <string key="batchListDone">
+    <value>完成：{0}</value>
+  </string>
+  <string key="batchListRefused">
+    <value>被拒绝：{0}</value>
+  </string>
+  <string key="batchListBlocked">
+    <value>被规则阻止：{0}</value>
+  </string>
+  <string key="batchListNotRun">
+    <value>未执行：{0}</value>
+  </string>
+  <string key="batchListMore">
+    <value>…还有 {0} 个</value>
+  </string>
+  <string key="batchListPreviewFile">
+    <value>批次：{0}。名单上的每个 id 以及将会发生什么。</value>
+  </string>
+  <string key="batchListLogFile">
+    <value>批次 #{0}：{1}，在 {2}。每个成员以及发生了什么。</value>
+  </string>
   <string key="dashboardMenu">
     <value>本群的设置有：</value>
   </string>
