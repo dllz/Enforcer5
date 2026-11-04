@@ -91,7 +91,8 @@ namespace Enforcer5
             }
 
             {
-                var name = update.Message.From.FirstName;
+                // Unescaped (a language argument), the name a mention.
+                var name = Ids.Mention(userid, update.Message.From.FirstName);
                 if (update.Message.From.Username != null) name = $"{name} (@{update.Message.From.Username})";
                 var groupId = chatId;
                 // The flood itself goes, whatever the action: in one call for up to 100 messages.
@@ -131,7 +132,7 @@ namespace Enforcer5
                                 }
                                 break;
                             case "warn":
-                                Commands.Warn(userid, groupId, update, targetnick: Ids.Mark(userid), reason: "Flood", source: ActionSource.Flood);
+                                Commands.Warn(userid, groupId, update, targetnick: Ids.Named(userid, update.Message.From.FirstName), reason: "Flood", source: ActionSource.Flood);
                                 Methods.SaveBan(userid, "flood");
                                 break;
                             case "tempban":
@@ -139,7 +140,7 @@ namespace Enforcer5
                                 var timeBanned = TimeSpan.FromMinutes(time2);
                                 string timeText = timeBanned.ToString(@"dd\:hh\:mm");
                                 var message = Methods.GetLocaleString(lang, "tempbannedForFlood",
-                                    Ids.Mark(userid), timeText);
+                                    Ids.Named(userid, update.Message.From.FirstName), timeText);
                                 // Counted as a tempban, and as flood as before.
                                 if (Commands.Tempban(userid, groupId, time2, userid.ToString(), message: message, reason: "Flood", source: ActionSource.Flood))
                                 {
@@ -339,7 +340,7 @@ namespace Enforcer5
             if (!settings.IsBlocked(media)) return Task.CompletedTask;
 
             var lang = ctx.Lang;
-            var name = $"{message.From.FirstName} [{Ids.Mark(message.From.Id)}]";
+            var name = $"{Ids.Mention(message.From.Id, message.From.FirstName)} [{Ids.Mark(message.From.Id)}]";
             if (message.From.Username != null)
                 name = $"{name} (@{message.From.Username})";
             var configuredAction = settings.Action;

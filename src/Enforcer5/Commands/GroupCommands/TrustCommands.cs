@@ -57,7 +57,7 @@ namespace Enforcer5
         /// <summary>Sets the member back to new or restores them; the answer for the admin.</summary>
         internal static string ChangeTrust(long chatId, long userId, long adminId, bool untrust, XDocument lang)
         {
-            var name = DetectionReports.StoredName(userId);
+            var name = Ids.Mention(userId, DetectionReports.StoredName(userId));
             if (untrust)
             {
                 if (Methods.IsGroupAdmin(userId, chatId) || userId == Bot.Me.Id) return Methods.GetLocaleString(lang, "untrustAdmin");

@@ -493,15 +493,15 @@ namespace Enforcer5.Helpers
         {
             if (sender)
             {
-                return $"{msg.From.FirstName} ({Ids.Mark(msg.From.Id)})";
+                return Ids.Named(msg.From.Id, msg.From.FirstName);
             }
             if (msg.ReplyToMessage != null)
             {
-                return $"{msg.ReplyToMessage.From.FirstName} ({Ids.Mark(msg.ReplyToMessage.From.Id)})";
+                return Ids.Named(msg.ReplyToMessage.From.Id, msg.ReplyToMessage.From.FirstName);
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({Ids.Mark(userid)})";
+                return Ids.Named(userid, Redis.db.HashGetAsync($"user:{userid}", "name").Result);
             }
             else
             {
@@ -513,15 +513,15 @@ namespace Enforcer5.Helpers
         {
             if (sender)
             {
-                return $"{msg.From.FirstName} ({Ids.Mark(msg.From.Id)})";
+                return Ids.Named(msg.From.Id, msg.From.FirstName);
             }
             if (msg.ReplyToMessage != null)
             {
-                return $"{msg.ReplyToMessage.From.FirstName} ({Ids.Mark(msg.ReplyToMessage.From.Id)})";
+                return Ids.Named(msg.ReplyToMessage.From.Id, msg.ReplyToMessage.From.FirstName);
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({Ids.Mark(userid)})";
+                return Ids.Named(userid, Redis.db.HashGetAsync($"user:{userid}", "name").Result);
             }
             else
             {
@@ -674,11 +674,11 @@ namespace Enforcer5.Helpers
             {
                 if (member.Status.Equals(ChatMemberStatus.Administrator))
                 {
-                    adminList = $"{adminList}\n{member.User.FirstName.FormatHTML()}";
+                    adminList = $"{adminList}\n{Ids.Mention(member.User.Id, member.User.FirstName)}";
                 }
                 else if (member.Status.Equals(ChatMemberStatus.Creator))
                 {
-                    creater = member.User.FirstName.FormatHTML();
+                    creater = Ids.Mention(member.User.Id, member.User.FirstName);
                 }
             }
             return Methods.GetLocaleString(lang, "adminList", creater, adminList);
@@ -827,7 +827,7 @@ namespace Enforcer5.Helpers
                     // suppress the record forever if the dispatched send never ran.
                     Bot.DispatchAction(() =>
                     {
-                        Bot.Send($"{name.FormatHTML()} ({Ids.Mark(id)}) has a global ban record.\nDetails: {reason.FormatHTML()}", update);
+                        Bot.Send($"{Ids.NamedHtml(id, name)} has a global ban record.\nDetails: {reason.FormatHTML()}", update);
                         GlobalBans.MarkNotifiedAsync(id).GetAwaiter().GetResult();
                     }, "IsRekt");
                 }
@@ -846,8 +846,8 @@ namespace Enforcer5.Helpers
                         source: ActionSource.GlobalBan, stat: "ban");
                     if (temp)
                     {
-                        Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
-                        Bot.Send($"{name.FormatHTML()}, ({Ids.Mark(id)}) has been banned for {reason.FormatHTML()} and notified in {Ids.Mark(update.Message.Chat.Id)} {update.Message.Chat.Title.FormatHTML()}", Constants.Devs[0]);
+                        Bot.Send(GetLocaleString(lang, "globalBan", Ids.Mention(id, name), reason, Constants.supportUsernameWithAt), update);
+                        Bot.Send($"{Ids.NamedHtml(id, name)} has been banned for {reason.FormatHTML()} and notified in {Ids.Mark(update.Message.Chat.Id)} {update.Message.Chat.Title.FormatHTML()}", Constants.Devs[0]);
                     }
                 }
                 catch (AggregateException e)

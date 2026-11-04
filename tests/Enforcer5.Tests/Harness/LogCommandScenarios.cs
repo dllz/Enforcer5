@@ -38,7 +38,7 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(admin, "/warn @somebody spam");
 
-            StringAssert.Contains(LastLog(chat), $"Member (<code>{member.Id}</code>)");
+            StringAssert.Contains(LastLog(chat), $"<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>)");
             Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
         }
 
@@ -65,7 +65,7 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(admin, "/warn", replyTo: post);
 
-            StringAssert.Contains(LastLog(chat), $"Member (<code>{member.Id}</code>)");
+            StringAssert.Contains(LastLog(chat), $"<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>)");
         }
     }
 }

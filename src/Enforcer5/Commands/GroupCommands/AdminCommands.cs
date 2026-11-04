@@ -523,7 +523,7 @@ namespace Enforcer5
                 {
                     var user = Bot.Api.GetChatMember(chatId, userId).Result;
                     var status = user.Status;
-                    var name = user.User.FirstName;
+                    var name = Ids.Mention(userId, user.User.FirstName);
                     if (user.User.Username != null)
                         name = $"{name} - @{user.User.Username}";
                     if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
@@ -545,7 +545,7 @@ namespace Enforcer5
                 userId = update.Message.ReplyToMessage.From.Id;
                 var user = Bot.Api.GetChatMember(chatId, userId).Result;
                 var status = user.Status;
-                var name = user.User.FirstName;
+                var name = Ids.Mention(userId, user.User.FirstName);
                 if (user.User.Username != null)
                     name = $"{name} - @{user.User.Username}";
                 if (update.Message.Chat.Type == ChatType.Group && Methods.IsBanned(chatId, userId))
@@ -606,56 +606,56 @@ namespace Enforcer5
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("r"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "r");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("m"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "m");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("ar") || args[1].Equals("ra"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ra");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("mr") || args[1].Equals("rm"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "rm");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("am") || args[1].Equals("ma"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "am");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else if (args[1].Equals("no"))
                     {
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update.Message);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else
@@ -665,7 +665,7 @@ namespace Enforcer5
                         try
                         {
                             var res = Bot.SendReply(args[1], update);
-                            var result = Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName));
+                            var result = Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), ParseMode.Html);
                             Service.LogCommand(update, update.Message.Text);
                         }
                         catch (AggregateException e)
@@ -687,7 +687,7 @@ namespace Enforcer5
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileID);
                         Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", update.Message.From.FirstName), update);
+                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update);
                         Service.LogCommand(update, update.Message.Text);
                     }
                 }

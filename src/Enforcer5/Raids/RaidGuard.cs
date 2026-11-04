@@ -1199,7 +1199,7 @@ namespace Enforcer5.Raids
                 var admins = AdminDirectory.Get(chatId);
                 if (admins == null) return "";
                 return string.Join(" ", admins.Where(a => !a.User.IsBot)
-                    .Select(a => $"<a href=\"tg://user?id={a.User.Id}\">{a.User.FirstName.FormatHTML()}</a>"));
+                    .Select(a => Ids.MentionHtml(a.User.Id, a.User.FirstName)));
             }
             catch (Exception e)
             {
@@ -1233,7 +1233,7 @@ namespace Enforcer5.Raids
             Bot.Dispatch(() =>
             {
                 var lang = ctx.Lang ?? Methods.GetGroupLanguage(chatId).Doc;
-                var name = message.From.FirstName;
+                var name = Ids.Mention(message.From.Id, message.From.FirstName);
                 var text = Methods.GetLocaleString(lang, "raidSuspectLink", name);
                 var markup = new InlineKeyboardMarkup(new[]
                 {

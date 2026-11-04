@@ -216,7 +216,7 @@ namespace Enforcer5
                 var bios = Profiles.RecentBios(chatId);
                 total = bios.Count;
                 matches = bios.Where(p => FilterRegex.Matches(rule.Pattern, p.Bio))
-                    .Select(p => $"{DetectionReports.StoredName(p.UserId)} ({Ids.Mark(p.UserId)})").ToList();
+                    .Select(p => Ids.Named(p.UserId, DetectionReports.StoredName(p.UserId))).ToList();
                 key = "filterTestBios";
             }
             else

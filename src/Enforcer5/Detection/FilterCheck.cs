@@ -177,7 +177,8 @@ namespace Enforcer5.Detection
         private static void Act(long chatId, User person, Message message, Update update, XDocument lang, FilterRule rule, string action)
         {
             var userId = person.Id;
-            var name = person.Username != null ? $"{person.FirstName} (@{person.Username})" : person.FirstName;
+            // Unescaped (a language argument), the name a mention.
+            var name = Ids.Mention(userId, person.FirstName) + (person.Username != null ? $" (@{person.Username})" : "");
             var own = NoticesFor(rule);
             var label = Label(lang, rule);
             var reason = own?.Reason ?? $"Filter {(rule.Kind == FilterRule.PresetKind ? rule.Preset : "#" + rule.Id)}";
@@ -195,7 +196,7 @@ namespace Enforcer5.Detection
                         EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, message.MessageId)).GetAwaiter().GetResult();
                     break;
                 case "warn":
-                    Commands.Warn(userId, chatId, update, targetnick: Ids.Mark(userId), reason: reason, source: ActionSource.Filter);
+                    Commands.Warn(userId, chatId, update, targetnick: Ids.Named(userId, person.FirstName), reason: reason, source: ActionSource.Filter);
                     break;
                 case "mute":
                 {

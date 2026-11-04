@@ -147,7 +147,7 @@ namespace Enforcer5
              Bot.SendReply("Stopping bot", update);
             if (update.Message.From.Id != Constants.Devs[0])
             {
-                 Bot.Send($"The bot has been stopped by {Ids.Mark(update.Message.From.Id)} {update.Message.From.FirstName.FormatHTML()}",
+                 Bot.Send($"The bot has been stopped by {Ids.Mark(update.Message.From.Id)} {Ids.MentionHtml(update.Message.From.Id, update.Message.From.FirstName)}",
                     Constants.Devs[0]);
             }
             try
@@ -598,7 +598,7 @@ namespace Enforcer5
         public static void WhoIs(Update update, string[] args)
         {
             var id = Methods.GetUserId(update, args);
-            var name = Methods.GetName(id);
+            var name = Ids.MentionHtml(id, Redis.db.HashGetAsync($"user:{id}", "name").Result);
             var username = Methods.GetUsername(id);           
             Bot.SendReply($"Name: {name}\nID: {Ids.Mark(id)}\nUsername: {username}", update);
 

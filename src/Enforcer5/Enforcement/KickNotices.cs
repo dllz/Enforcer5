@@ -141,10 +141,20 @@ namespace Enforcer5.Enforcement
                 ? Methods.GetLocaleString(lang, "kickRemovedBy", Shown(job.Note.Kick.TargetName), Shown(actor))
                 : Methods.GetLocaleString(lang, "kickRemoved", Shown(job.Note.Kick.TargetName));
 
-        private static readonly System.Text.RegularExpressions.Regex TrailingId = new(@"^-?\d+$|(?<=\()-?\d+(?=\)$)");
+        private static readonly System.Text.RegularExpressions.Regex Stored = new(@"^(?:(?<name>.*) \((?<id>-?\d+)\)|(?<id>-?\d+))$",
+            System.Text.RegularExpressions.RegexOptions.Singleline);
 
-        // The stored "Name (id)" (kept plain in the journal) as shown, with the id copyable (Ids).
-        internal static string Shown(string name) => name == null ? null : TrailingId.Replace(name, m => Ids.Mark(m.Value), 1);
+        /// <summary>
+        /// The stored "Name (id)" (kept plain in the journal, the name HTML-escaped by <see cref="NameOf"/>) as shown:
+        /// the name a mention, the id copyable (<see cref="Ids"/>). Unescaped, for a language argument.
+        /// </summary>
+        internal static string Shown(string name)
+        {
+            if (name == null) return null;
+            var m = Stored.Match(name);
+            if (!m.Success || !long.TryParse(m.Groups["id"].Value, out var id)) return name;
+            return m.Groups["name"].Success ? Ids.Named(id, System.Net.WebUtility.HtmlDecode(m.Groups["name"].Value)) : Ids.Mark(id);
+        }
 
         private static XDocument Lang(EnforcementJob job) => Methods.GetGroupLanguage(job.ChatId).Doc;
 

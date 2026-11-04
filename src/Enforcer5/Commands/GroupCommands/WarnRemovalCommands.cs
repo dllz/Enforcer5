@@ -183,7 +183,8 @@ namespace Enforcer5
             menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "warnReasonCancel"),
                 $"{ReasonCallback}:{chatId}:{CancelChoice}"));
 
-            var prompt = Bot.SendReply(PromptText(lang, change, adminName, target, current), chatId, sourceMessageId,
+            // adminName is kept plain with the pending removal; shown, it is a mention.
+            var prompt = Bot.SendReply(PromptText(lang, change, Ids.Mention(adminId, adminName), target, current), chatId, sourceMessageId,
                 Key.CreateMarkupFromMenu(menu));
             if (prompt == null) return; // could not ask, so nothing changes
 
@@ -206,7 +207,7 @@ namespace Enforcer5
                 WarnKind = change.Kind,
                 AlsoMediaWarns = change.AlsoMediaWarns,
                 // Who took what off whom, why and what is left, linked to where it was asked for.
-                Log = new ActionLogEntry(r => LogText(lang, change, adminName, adminId, target, Service.GetCachedGroupTitle(chatId),
+                Log = new ActionLogEntry(r => LogText(lang, change, Ids.Mention(adminId, adminName), adminId, target, Service.GetCachedGroupTitle(chatId),
                     chatId, r.Count, reason)) { ByBot = false, LinkMessageId = sourceMessageId }
             });
             if (result.Outcome == ActionOutcome.NothingToDo)
@@ -218,7 +219,7 @@ namespace Enforcer5
             if (!result.Succeeded) return; // reported by the seam
             var left = result.Count;
 
-            var text = ResultText(lang, change, adminName, target, left, reason);
+            var text = ResultText(lang, change, Ids.Mention(adminId, adminName), target, left, reason);
             var shown = false;
             if (sourceIsBotMessage)
             {

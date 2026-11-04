@@ -28,7 +28,8 @@ namespace Enforcer5
                     InputMessageContent = new InputTextMessageContent()
                     {
                         LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
-                        MessageText = $"{u.name} ({Ids.Mark(u.userId)})\n<b>{u.groupName}</b>\n<code>{u.unbanTime}</code>",
+                        // u.name is escaped already, so it goes into the mention as it is.
+                        MessageText = $"{(long.TryParse(u.userId, out var uid) ? Ids.Mention(uid, u.name) : u.name)} ({Ids.Mark(u.userId)})\n<b>{u.groupName}</b>\n<code>{u.unbanTime}</code>",
                         ParseMode = ParseMode.Html
                     }
                 });

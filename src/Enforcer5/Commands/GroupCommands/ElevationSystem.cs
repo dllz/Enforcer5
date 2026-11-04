@@ -38,7 +38,7 @@ namespace Enforcer5
                     Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
                     if (blocked.HasValue)
                         Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Named(userid, Redis.db.HashGetAsync($"user:{userid}", "name").Result), Ids.Named(update.Message.From.Id, update.Message.From.FirstName)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
                 else if (!upriv & blocked.HasValue == false & Methods.IsGroupAdmin(update))
@@ -47,7 +47,7 @@ namespace Enforcer5
                     Redis.db.SetAddAsync($"chat:{chat}:modlog",
                         $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
                     Redis.db.StringSetAsync($"chat:{chat}:blockList:{userid}", userid, TimeSpan.FromMinutes(31));
-                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Named(userid, Redis.db.HashGetAsync($"user:{userid}", "name").Result), Ids.Named(update.Message.From.Id, update.Message.From.FirstName)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
 
@@ -86,7 +86,7 @@ namespace Enforcer5
                     // Removing the elevation; a "false" here used to hide a real admin as well.
                     Redis.db.KeyDeleteAsync($"chat:{chat}:adminses:{userid}").Wait();
                     Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", Ids.Named(userid, Redis.db.HashGetAsync($"user:{userid}", "name").Result), Ids.Named(update.Message.From.Id, update.Message.From.FirstName)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
             }
@@ -111,10 +111,22 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
-            // Stored as "Name (id) by Name (id) at …": escaped for HTML, the ids copyable.
-            var shown = log.Select(l => System.Text.RegularExpressions.Regex.Replace(l.FormatHTML(), @"\((-?\d+)\)",
-                m => $"({Ids.Mark(m.Groups[1].Value)})"));
+            // Stored as "Name (id) by Name (id) at …": escaped for HTML, the names mentions, the ids copyable.
+            var shown = log.Select(ShownModLog);
             Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", shown)}", update);
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex ModLogLine = new(
+            @"^(?<who>.*) \((?<whoId>-?\d+)\) by (?<by>.*) \((?<byId>-?\d+)\)(?<rest> at .*)$",
+            System.Text.RegularExpressions.RegexOptions.Singleline);
+
+        /// <summary>A stored /elevatelog line as HTML: the names mentions, the ids copyable.</summary>
+        internal static string ShownModLog(string line)
+        {
+            var m = ModLogLine.Match(line);
+            if (m.Success && long.TryParse(m.Groups["whoId"].Value, out var who) && long.TryParse(m.Groups["byId"].Value, out var by))
+                return $"{Ids.NamedHtml(who, m.Groups["who"].Value)} by {Ids.NamedHtml(by, m.Groups["by"].Value)}{m.Groups["rest"].Value.FormatHTML()}";
+            return System.Text.RegularExpressions.Regex.Replace(line.FormatHTML(), @"\((-?\d+)\)", g => $"({Ids.Mark(g.Groups[1].Value)})");
         }
 
         [Command(Trigger = "auth", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]

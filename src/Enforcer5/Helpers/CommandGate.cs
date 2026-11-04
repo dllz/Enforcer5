@@ -151,7 +151,8 @@ namespace Enforcer5.Helpers
         {
             var chatId = message?.Chat.Id ?? query?.Message?.Chat.Id ?? userId;
             var lang = Methods.GetGroupLanguage(groupId != 0 ? groupId : chatId).Doc;
-            var name = (message?.From ?? query?.From)?.FirstName ?? Ids.Mark(userId);
+            var from = message?.From ?? query?.From;
+            var name = from != null ? Ids.Mention(userId, from.FirstName) : Ids.Mark(userId);
             var wait = CommandLimiter.FormatWait(decision.RetryIn);
             string text;
             switch (decision.Scope)

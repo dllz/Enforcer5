@@ -88,13 +88,14 @@ namespace Enforcer5
             var result = Read(shown, redrawn, data, Title(shownText));
             if (result.Kind == Kind.Unknown) return false;
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var name = Methods.FormatHTML(admin.FirstName);
+            // Unescaped: GetLocaleString escapes its arguments.
+            var name = Ids.Mention(admin.Id, admin.FirstName);
             var title = Service.GetCachedGroupTitle(chatId);
-            var group = string.IsNullOrEmpty(title) ? Ids.Mark(chatId) : $"{Methods.FormatHTML(title)} ({Ids.Mark(chatId)})";
+            var group = string.IsNullOrEmpty(title) ? Ids.Mark(chatId) : $"{title} ({Ids.Mark(chatId)})";
             Service.SendToLogChannel(chatId, lang, () => result.Kind == Kind.Changed
-                ? Methods.GetLocaleString(lang, "logSettingChanged", name, Ids.Mark(admin.Id), Methods.FormatHTML(result.Label), group,
-                    Methods.FormatHTML(result.From), Methods.FormatHTML(result.To))
-                : Methods.GetLocaleString(lang, "logButtonPressed", name, Ids.Mark(admin.Id), Methods.FormatHTML(result.Label), group));
+                ? Methods.GetLocaleString(lang, "logSettingChanged", name, Ids.Mark(admin.Id), result.Label, group,
+                    result.From, result.To)
+                : Methods.GetLocaleString(lang, "logButtonPressed", name, Ids.Mark(admin.Id), result.Label, group));
             return true;
         }
     }

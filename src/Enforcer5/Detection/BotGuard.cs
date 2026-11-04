@@ -544,7 +544,7 @@ namespace Enforcer5.Detection
         }
 
         // For the log lines, with the id copyable (Ids); the sign's stored Detail takes it plain.
-        private static string Name(User user) => user == null ? "?" : $"{user.FirstName} ({Ids.Mark(user.Id)})";
+        private static string Name(User user) => user == null ? "?" : Ids.Named(user.Id, user.FirstName);
 
         private static string BotName(User bot) => BotName(bot, Ids.Mark);
 

@@ -55,7 +55,9 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
-            var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => ($"{Redis.db.HashGetAsync($"user:{e.ToString()}", "name").Result.ToString()} ({e.ToString()})")).ToList();
+            var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => long.TryParse(e.ToString(), out var mod)
+                    ? Ids.NamedHtml(mod, Redis.db.HashGetAsync($"user:{mod}", "name").Result)
+                    : e.ToString().FormatHTML()).ToList();
             if (mods.Count > 0)
             {
                 text = $"{text}\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";
@@ -149,6 +151,7 @@ namespace Enforcer5
             long id;
             string user = "";
             string name;
+            var isUser = update.Message.ReplyToMessage != null; // a person's name is a mention; a group's title is not
             if (update.Message.ReplyToMessage != null)
             {
                 if (update.Message.ReplyToMessage.ForwardFrom != null)
@@ -177,11 +180,12 @@ namespace Enforcer5
                 if (!string.IsNullOrEmpty(update.Message.Chat.Username))
                     user = update.Message.Chat.Username;
             }
+            var shown = isUser ? Ids.MentionHtml(id, name) : name.FormatHTML();
             if (!string.IsNullOrEmpty(user))
             {
                 try
                 {
-                    Bot.SendReply($"{Ids.Mark(id)}\n{name.FormatHTML()}\n@{user}", update.Message);
+                    Bot.SendReply($"{Ids.Mark(id)}\n{shown}\n@{user}", update.Message);
                 }
                 catch (AggregateException e)
                 {
@@ -194,7 +198,7 @@ namespace Enforcer5
             {
                 try
                 {
-                    Bot.SendReply($"{Ids.Mark(id)}\n{name.FormatHTML()}", update.Message);
+                    Bot.SendReply($"{Ids.Mark(id)}\n{shown}", update.Message);
                 }
                 catch (AggregateException e)
                 {
@@ -443,7 +447,7 @@ namespace Enforcer5
                     message = update.Message.ReplyToMessage.Text;
                     date = update.Message.ReplyToMessage.Date;
                 }
-                var msg = $"<b>Message:</b> {message.FormatHTML()}\n<b>Name:</b> {name.FormatHTML()} {lastname.FormatHTML()} (@{username} / {Ids.Mark(id)})\n<b>Language:</b> {language}\n<b>Time:</b> {date.ToString("r")}";
+                var msg = $"<b>Message:</b> {message.FormatHTML()}\n<b>Name:</b> {Ids.MentionHtml(id, $"{name} {lastname}".Trim())} (@{username} / {Ids.Mark(id)})\n<b>Language:</b> {language}\n<b>Time:</b> {date.ToString("r")}";
                 Bot.SendReply(msg, update);
             
             }

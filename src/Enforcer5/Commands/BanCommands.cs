@@ -81,7 +81,7 @@ namespace Enforcer5
                    var warnedid = Methods.GetUserId(update, args);
                    var chatid = update.Message.Chat.Id;
                    
-                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({Ids.Mark(warnedid)})", actorId: update.Message.From.Id);
+                   Warn(warnedid, chatid, update, targetnick: Ids.Named(warnedid, Redis.db.HashGetAsync($"user:{warnedid}", "name").Result), actorId: update.Message.From.Id);
                }
                catch (Exception e)
                {
@@ -108,7 +108,7 @@ namespace Enforcer5
                     var warnedid = Methods.GetUserId(update, args);
                     var chatid = update.Message.Chat.Id;
 
-                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({Ids.Mark(warnedid)})", preWarn: true, actorId: update.Message.From.Id);
+                    Warn(warnedid, chatid, update, targetnick: Ids.Named(warnedid, Redis.db.HashGetAsync($"user:{warnedid}", "name").Result), preWarn: true, actorId: update.Message.From.Id);
                 }
                 catch (Exception e)
                 {
@@ -197,7 +197,7 @@ namespace Enforcer5
                 else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({Ids.Mark(callbackfromid)})", result.Count, result.Max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, Ids.Named(callbackfromid, nick), result.Count, result.Max);
                     Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
@@ -724,20 +724,16 @@ namespace Enforcer5
             return lines;
         }
 
-        /// <summary>"Name @username (id)", HTML-escaped. Falls back to the stored name, then the id alone.</summary>
+        /// <summary>
+        /// "Name @username (id)", the name a mention and the id copyable, unescaped (a language argument). Falls back
+        /// to the stored name, then the id alone.
+        /// </summary>
         internal static string DescribeUser(long userId, User user)
         {
-            string name;
-            if (user != null)
-            {
-                name = user.FirstName.FormatHTML();
-                if (!string.IsNullOrEmpty(user.Username)) name += $" @{user.Username}";
-            }
-            else
-            {
-                name = Methods.GetName(userId);
-            }
-            return string.IsNullOrWhiteSpace(name) ? Ids.Mark(userId) : $"{name} ({Ids.Mark(userId)})";
+            string name = user != null ? user.FirstName : Redis.db.HashGetAsync($"user:{userId}", "name").Result;
+            if (string.IsNullOrWhiteSpace(name)) return Ids.Mark(userId);
+            var username = string.IsNullOrEmpty(user?.Username) ? "" : $" @{user.Username}";
+            return $"{Ids.Mention(userId, name)}{username} ({Ids.Mark(userId)})";
         }
 
     }

@@ -266,7 +266,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             await chat.SendAsync(admin, $"/untrust {member.Id}");
             await chat.SettleAsync();
 
-            Assert.AreEqual(S(chat, "untrustDone", member.Id.ToString()), chat.Replies.Last());
+            Assert.AreEqual(Ids.ToHtml(S(chat, "untrustDone", Ids.Mention(member.Id, member.Id.ToString()))), chat.Replies.Last());
             Assert.AreEqual(TrustLevel.New, await MemberTrust.OfAsync(chat.ChatId, member.Id));
             Assert.AreEqual(31, (await Engine(chat)).TrustMessages);
             StringAssert.Contains(Learned(chat, admin).Single().Text, "set back to new");
@@ -274,12 +274,12 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             await chat.CrashAndRestartAsync();
             Assert.AreEqual(TrustLevel.New, await MemberTrust.OfAsync(chat.ChatId, member.Id), "kept in PostgreSQL");
             await chat.SendAsync(admin, $"/untrust {member.Id}");
-            Assert.AreEqual(S(chat, "untrustAlready", member.Id.ToString()), chat.Replies.Last());
+            Assert.AreEqual(Ids.ToHtml(S(chat, "untrustAlready", Ids.Mention(member.Id, member.Id.ToString()))), chat.Replies.Last());
             await chat.SendAsync(admin, $"/untrust {other.Id}");
             Assert.AreEqual(S(chat, "untrustAdmin"), chat.Replies.Last());
 
             await chat.SendAsync(admin, $"/trust {member.Id}");
-            Assert.AreEqual(S(chat, "trustDone", member.Id.ToString()), chat.Replies.Last());
+            Assert.AreEqual(Ids.ToHtml(S(chat, "trustDone", Ids.Mention(member.Id, member.Id.ToString()))), chat.Replies.Last());
             Assert.AreEqual(TrustLevel.Established, await MemberTrust.OfAsync(chat.ChatId, member.Id), "40 messages: above 31");
             AssertNoErrors(chat);
         }

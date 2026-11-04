@@ -100,7 +100,7 @@ namespace Enforcer5.Detection
                 var name = action.Member != null ? action.Member.FirstName : null;
                 var label = DetectionReports.SignLabel(lang, action.Sign);
                 return Methods.GetLocaleString(lang, "detectionLogLine", Methods.GetLocaleString(lang, $"filterAction_{what}"),
-                    name == null ? Ids.Mark(action.UserId) : $"{name}, {Ids.Mark(action.UserId)}", label);
+                    name == null ? Ids.Mark(action.UserId) : $"{Ids.Mention(action.UserId, name)}, {Ids.Mark(action.UserId)}", label);
             }
             catch (Exception e)
             {

@@ -45,7 +45,7 @@ namespace Enforcer5.Tests.Harness
 
             var line = (await LogsAsync(chat)).Single();
             StringAssert.Contains(line, "/ban selling followers");
-            StringAssert.Contains(line, $"Member (<code>{member.Id}</code>)");
+            StringAssert.Contains(line, $"<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>)");
             AssertNoErrors(chat);
         }
 

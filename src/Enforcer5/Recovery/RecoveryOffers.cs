@@ -348,7 +348,7 @@ namespace Enforcer5.Recovery
 
         private static void Log(RecoveryOffer offer, long actor, string actorName, string what, long? member = null)
         {
-            Service.LogCommand(offer.ChatId, actor, Methods.FormatHTML(actorName), Service.GetCachedGroupName(offer.ChatId), what,
+            Service.LogCommand(offer.ChatId, actor, actorName, Service.GetCachedGroupTitle(offer.ChatId), what,
                 member is { } m ? Service.ArgTargetName(m) : "");
         }
 

@@ -43,7 +43,7 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(asker, "/id", replyTo: post);
 
-            Assert.AreEqual($"<code>{member.Id}</code>\nA&lt;B", chat.Replies.Last());
+            Assert.AreEqual($"<code>{member.Id}</code>\n<a href=\"tg://user?id={member.Id}\">A&lt;B</a>", chat.Replies.Last());
             AssertNoErrors(chat);
         }
 
@@ -72,7 +72,7 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(admin, "/warn", replyTo: post);
 
-            StringAssert.Contains(chat.Replies.Last(), $"Member (<code>{member.Id}</code>)");
+            StringAssert.Contains(chat.Replies.Last(), $"<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>)");
             AssertNoMarks(chat);
             AssertNoErrors(chat);
         }
