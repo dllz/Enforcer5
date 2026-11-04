@@ -47,20 +47,10 @@ namespace Enforcer5
                             return;
                         // As /ban: what the admin typed, or the message the kick replied to.
                         var reason = args.Length > 1 && !string.IsNullOrEmpty(args[1]) ? args[1] : update.Message.ReplyToMessage?.Text;
-                        var res = Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc, reason, update.Message.From.Id,
+                        // The group hears it from the kick's own message (KickNotices), edited once they can rejoin.
+                        Methods.KickUser(update.Message.Chat.Id, userid, lang.Doc, reason, update.Message.From.Id,
                             stat: "kick");
-                        
-                        if (res)
-                        {
-                                
-                            object[] arguments =
-                            {
-                            Methods.GetNick(update.Message, args, userid),
-                            Methods.GetNick(update.Message, args, true)
-                        };
-                        Bot.SendReply(Methods.GetLocaleString(lang.Doc, "SuccesfulKick", arguments), update.Message);
                     }
- }
                     catch (Exception e)
                     {
                         // An unknown @username is the admin's typo, not a bug.

@@ -133,6 +133,24 @@
   <string key="SuccesfulKick">
     <value>{0} ha sido expulsado/a por {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} fue eliminado del grupo (baneado).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} fue eliminado del grupo por {1} (baneado).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} ha sido desbaneado y puede volver a unirse.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>No se pudo desbanear a {0}: el bot perdió sus permisos de administrador. Un administrador debe desbanearlo, o no podrá volver a unirse.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>No se pudo desbanear a {0}: Telegram seguía teniéndolo baneado tras 10 minutos de intentos. Un administrador debe desbanearlo, o no podrá volver a unirse.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>Fuiste eliminado de {0}, pero el bot no pudo desbanearte, así que aún no puedes volver a unirte. Pide a un administrador del grupo que te desbanee.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} ha sido baneado/a por {1}.</value>
   </string>

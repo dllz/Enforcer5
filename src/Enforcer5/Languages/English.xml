@@ -135,6 +135,24 @@
   <string key="SuccesfulKick">
     <value>{0} has been kicked by {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} was removed from the group (banned).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} was removed from the group by {1} (banned).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} has been unbanned and can rejoin.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>Could not unban {0}: the bot lost its admin rights. An admin needs to unban them, or they cannot rejoin.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>Could not unban {0}: Telegram still had them banned after 10 minutes of trying. An admin needs to unban them, or they cannot rejoin.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>You were removed from {0}, but the bot could not unban you, so you cannot rejoin yet. Ask an admin of the group to unban you.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} has been banned by {1}.</value>
   </string>

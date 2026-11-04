@@ -133,6 +133,24 @@
   <string key="SuccesfulKick">
     <value>{0} &#232; stato kickato da {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} è stato rimosso dal gruppo (bannato).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} è stato rimosso dal gruppo da {1} (bannato).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} è stato sbannato e può rientrare.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>Impossibile sbannare {0}: il bot ha perso i permessi di amministratore. Un amministratore deve sbannarlo, altrimenti non potrà rientrare.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>Impossibile sbannare {0}: Telegram lo risultava ancora bannato dopo 10 minuti di tentativi. Un amministratore deve sbannarlo, altrimenti non potrà rientrare.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>Sei stato rimosso da {0}, ma il bot non è riuscito a sbannarti, quindi non puoi ancora rientrare. Chiedi a un amministratore del gruppo di sbannarti.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} &#232; stato bannato da {1}.</value>
   </string>

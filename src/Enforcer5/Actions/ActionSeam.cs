@@ -105,6 +105,9 @@ namespace Enforcer5.Actions
             job.For(request.Reason, request.ActorId, request.Trigger, request.Report, request.Record);
             // Kept in the joiners' list and not a decision: Mute On Join is the group's setting, not a verdict.
             job.Note.NewJoiner = request.NewJoiner || request.Source == ActionSource.MuteOnJoin;
+            // Every kick tells the group how it went; a batch only a failure, its summary says the rest.
+            if (request.Kind == ActionKind.Kick)
+                job.Note.Kick = KickNotices.Describe(request.ChatId, request.TargetId, request.ActorId, failuresOnly: request.Source == ActionSource.Batch);
             return job;
         }
 

@@ -37,14 +37,12 @@ namespace Enforcer5.Enforcement
         private static readonly TimeSpan RightsRetry = TimeSpan.FromMinutes(1);
         private const int MaxTransientAttempts = 8;
 
-        /// <summary>The longest a kick waits between tries at lifting its ban. It never stops trying.</summary>
-        internal static readonly TimeSpan MaxKickUnbanWait = TimeSpan.FromMinutes(10);
-        // The error chat hears about a kick still banned after this many tries (about a minute), then at every longest wait.
-        private const int ReportKickUnbanAfter = 6;
+        /// <summary>How long a kick keeps trying to lift its ban before it gives up and says so.</summary>
+        internal static readonly TimeSpan KickUnbanFor = TimeSpan.FromMinutes(10);
 
-        /// <summary>The wait before a kick's next try at lifting its ban: 2 s, doubling, at most <see cref="MaxKickUnbanWait"/>.</summary>
+        /// <summary>The wait before a kick's next try at lifting its ban: 2 s, doubling.</summary>
         internal static TimeSpan KickUnbanBackoff(int attempts) =>
-            TimeSpan.FromSeconds(Math.Min(MaxKickUnbanWait.TotalSeconds, Math.Pow(2, Math.Clamp(attempts, 1, 30))));
+            TimeSpan.FromSeconds(Math.Pow(2, Math.Clamp(attempts, 1, 20)));
 
         // With the lock held. A ban, kick or unban of the same person submitted after this job.
         private static bool HasLaterMembershipJob(EnforcementJob job) =>
@@ -433,8 +431,8 @@ namespace Enforcer5.Enforcement
             var now = Clock.UtcNow;
             EnforcementResult? result = null;
             var keep = false;
-            // A kick whose ban went through but whose unban did not: the person must never be left
-            // banned, so it is never given up (2026-11-04, /kickme left people banned).
+            // A kick whose ban went through but whose unban did not: tried for ten minutes, then the
+            // group and the person are told; never left banned without a word (Daniel, 2026-11-04).
             var unbanPending = false;
             if (job.Kind == EnforcementKind.Kick && job.Stage == 1 && attempt.Kind is AttemptKind.Transient or AttemptKind.Refused)
             {
@@ -447,38 +445,50 @@ namespace Enforcer5.Enforcement
             if (unbanPending)
             {
                 job.Attempts++;
+                job.UnbanSinceUtc ??= now;
                 // They are out of the group, which is what the caller asked for.
                 CompleteOnce(job, EnforcementResult.Done);
                 bool superseded;
                 lock (Lock) superseded = HasLaterMembershipJob(job);
+                var left = job.UnbanSinceUtc.Value + KickUnbanFor - now;
                 if (superseded)
                 {
                     // A later ban, kick or unban of theirs decides whether they are banned.
                     LogHelper.Info($"{job}: unban left to the later job for them ({attempt.Error?.Message})");
+                    KickNotices.Forget(job);
+                    result = EnforcementResult.Done;
+                }
+                else if (attempt.Refusal == Refusal.BotNotAdmin)
+                {
+                    // Lost the rights between the ban and the unban: said, and left there.
+                    LogHelper.Error($"{job}: the bot lost its rights before the unban ({attempt.Error?.Message})");
+                    lock (Lock)
+                        if (!NoRightsSince.ContainsKey(job.ChatId)) NoRightsSince[job.ChatId] = now;
+                    KickNotices.Failed(job, KickFailure.NoRights);
+                    result = EnforcementResult.Done;
+                }
+                else if (left <= TimeSpan.Zero)
+                {
+                    ErrorReporter.Report(attempt.Error, $"{job}: still banned after {KickUnbanFor.TotalMinutes:0} minutes of unbanning, given up");
+                    KickNotices.Failed(job, KickFailure.GaveUp);
                     result = EnforcementResult.Done;
                 }
                 else
                 {
-                    if (attempt.Refusal == Refusal.BotNotAdmin)
-                    {
-                        // Tried again at once when the rights come back (RightsChanged).
-                        job.RefusedSinceUtc ??= now;
-                        lock (Lock)
-                            if (!NoRightsSince.ContainsKey(job.ChatId)) NoRightsSince[job.ChatId] = now;
-                    }
+                    if (job.Attempts == 1) KickNotices.Removed(job);
+                    // The last try is at the ten minutes.
                     var wait = KickUnbanBackoff(job.Attempts);
+                    if (wait > left) wait = left;
                     job.DueUtc = now + wait;
                     keep = true;
-                    var what = $"{job}: the kick's unban is not done yet (try {job.Attempts}), trying again in {wait.TotalSeconds:0}s";
-                    LogHelper.Error($"{what} ({attempt.Error?.Message})");
-                    if (job.Attempts == ReportKickUnbanAfter || wait == MaxKickUnbanWait)
-                        ErrorReporter.Report(attempt.Error, what);
+                    LogHelper.Error($"{job}: the kick's unban is not done yet (try {job.Attempts}), trying again in {wait.TotalSeconds:0}s ({attempt.Error?.Message})");
                 }
             }
             else switch (attempt.Kind)
             {
                 case AttemptKind.Success:
                     EnforcementExecutor.Record(job);
+                    if (job.Kind == EnforcementKind.Kick) KickNotices.Unbanned(job);
                     result = EnforcementResult.Done;
                     lock (Lock)
                     {
@@ -589,6 +599,7 @@ namespace Enforcer5.Enforcement
         internal static void CrashForTests()
         {
             Interlocked.Increment(ref _generation);
+            KickNotices.ResetForTests();
             lock (Lock)
             {
                 _stop?.Cancel();

@@ -55,6 +55,8 @@ namespace Enforcer5.Tests.Harness
             CommandGate.ResetForTests();
             FloodTracker.ResetForTests();
             ErrorReporter.Observer = report => bot._errors.Enqueue(report);
+            // A kick's message in the group (KickNotices) is read from the language files.
+            if (!Program.LangaugeList.Any()) Methods.IntialiseLanguages();
             EnforcementQueue.ResetForTests();
             EnforcementQueue.Start(bot._queueStop.Token);
             await bot.SettleAsync();

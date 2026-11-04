@@ -203,7 +203,9 @@ ORDER BY s.sanction_id")).ToArray();
             Assert.AreEqual(MemberState.Left, State(chat, talker));
             Assert.AreEqual(0, chat.Telegram.MessagesFrom(chat.ChatId, talker.Id).Count);
             Assert.AreEqual(("kick", "Long message"), ((await Sanctions(chat)).Single().Kind, (await Sanctions(chat)).Single().Reason));
-            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains(talker.Id.ToString())));
+            // Why, and the kick's own message (KickNotices).
+            Assert.AreEqual(2, chat.Replies.Count(r => r.Contains(talker.Id.ToString())));
+            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains("has been unbanned and can rejoin")));
             AssertNoErrors(chat);
         }
 

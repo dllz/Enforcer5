@@ -136,6 +136,24 @@
   <string key="SuccesfulKick">
     <value>{0} foi removido por {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} foi removido do grupo (banido).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} foi removido do grupo por {1} (banido).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} foi desbanido e pode voltar ao grupo.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>Não foi possível desbanir {0}: o bot perdeu as permissões de administrador. Um administrador precisa desbani-lo, senão ele não poderá voltar.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>Não foi possível desbanir {0}: o Telegram ainda o mantinha banido após 10 minutos de tentativas. Um administrador precisa desbani-lo, senão ele não poderá voltar.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>Você foi removido de {0}, mas o bot não conseguiu te desbanir, então ainda não pode voltar. Peça a um administrador do grupo para te desbanir.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} foi banido por {1}.</value>
   </string>

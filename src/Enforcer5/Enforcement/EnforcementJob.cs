@@ -80,6 +80,26 @@ namespace Enforcer5.Enforcement
         public bool NewJoiner { get; set; }
         /// <summary>For an unban: lifted by an admin, or a tempban that ran out.</summary>
         public BanEnd End { get; set; } = BanEnd.Unbanned;
+
+        /// <summary>A kick that tells the group how it went (<see cref="KickNotices"/>).</summary>
+        public KickNotice Kick { get; set; }
+    }
+
+    /// <summary>
+    /// What a kick's message in the group needs, taken when it was asked for (names as HTML), and the
+    /// message once posted, so it is edited after a restart too.
+    /// </summary>
+    internal sealed class KickNotice
+    {
+        public string TargetName { get; set; }
+        /// <summary>The admin who asked, null for the bot's own kick or /kickme.</summary>
+        public string ActorName { get; set; }
+        /// <summary>The message to reply to: the command, the report, the post that broke a rule.</summary>
+        public int? ReplyTo { get; set; }
+        /// <summary>Only a failed unban is told (a batch, which reports at its end).</summary>
+        public bool FailuresOnly { get; set; }
+        /// <summary>The "removed" message, once posted.</summary>
+        public int? MessageId { get; set; }
     }
 
     /// <summary>
@@ -101,6 +121,8 @@ namespace Enforcer5.Enforcement
         public EnforcementNote Note { get; set; } = new EnforcementNote();
         /// <summary>How far a two-call job (a kick) got: 1 once the ban went through.</summary>
         public int Stage { get; set; }
+        /// <summary>When a kick's ban went through and its unban was first not done: it is tried for ten minutes from then.</summary>
+        public DateTime? UnbanSinceUtc { get; set; }
         public int Attempts { get; set; }
         /// <summary>Not to be carried out before this time: a notice deleted once it has said its piece.</summary>
         public DateTime? NotBeforeUtc { get; set; }

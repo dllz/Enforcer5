@@ -133,6 +133,24 @@
   <string key="SuccesfulKick">
    <value> كاربر{0}  توسط  {1}كيك شده است. </value>  
   </string>
+  <string key="kickRemoved">
+    <value>{0} از گروه حذف شد (بن شد).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} توسط {1} از گروه حذف شد (بن شد).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>بن {0} برداشته شد و می‌تواند دوباره به گروه بپیوندد.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>برداشتن بن {0} ممکن نشد: ربات دسترسی ادمین خود را از دست داد. یک ادمین باید بن را بردارد، وگرنه نمی‌تواند دوباره بپیوندد.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>برداشتن بن {0} ممکن نشد: پس از ۱۰ دقیقه تلاش، تلگرام هنوز او را بن‌شده نشان می‌داد. یک ادمین باید بن را بردارد، وگرنه نمی‌تواند دوباره بپیوندد.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>شما از {0} حذف شدید، اما ربات نتوانست بن شما را بردارد، پس هنوز نمی‌توانید دوباره بپیوندید. از یکی از ادمین‌های گروه بخواهید بن شما را بردارد.</value>
+  </string>
   <string key="SuccesfulBan">
     <value> كاربر{0}  توسط  {1}بن شده است.  </value> 
   </string>

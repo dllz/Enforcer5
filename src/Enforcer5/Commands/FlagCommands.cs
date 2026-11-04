@@ -532,13 +532,8 @@ namespace Enforcer5
             var report = FindReport(chatId, args, userId, null);
             var res = Methods.KickUser(chatId, userId, lang, "Reported", call.From.Id, report: report, stat: "kick");
             if (res) ReportHistory.Acted(report, ReportAction.Kicked, call.From.Id);
-            if (res)
-            {
-                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
-                Bot.Send(Methods.GetLocaleString(lang, "SuccesfulKick", nick, admin), chatId);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
-            }
+            // The group hears it from the kick's own message (KickNotices), edited once they can rejoin.
+            if (res) Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userlang, "userKicked"));
         }
 
         [Callback(Trigger = "warnflag", GroupAdminOnly = true)]

@@ -135,6 +135,24 @@
   <string key="SuccesfulKick">
     <value>{0} tarafından bankandınız {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} gruptan çıkarıldı (yasaklandı).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0}, {1} tarafından gruptan çıkarıldı (yasaklandı).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} kullanıcısının yasağı kaldırıldı, gruba yeniden katılabilir.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>{0} kullanıcısının yasağı kaldırılamadı: bot yönetici yetkilerini kaybetti. Bir yöneticinin yasağı kaldırması gerekiyor, yoksa gruba yeniden katılamaz.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>{0} kullanıcısının yasağı kaldırılamadı: Telegram 10 dakikalık denemeden sonra hâlâ yasaklı gösteriyordu. Bir yöneticinin yasağı kaldırması gerekiyor, yoksa gruba yeniden katılamaz.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>{0} grubundan çıkarıldın, ancak bot yasağını kaldıramadı, bu yüzden henüz yeniden katılamazsın. Grubun bir yöneticisinden yasağını kaldırmasını iste.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} tarafından banlandınuz {1}.</value>
   </string>

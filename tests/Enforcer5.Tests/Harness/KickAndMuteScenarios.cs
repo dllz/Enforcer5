@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -56,6 +57,11 @@ ORDER BY s.sanction_id")).ToArray();
             var kick = (await Sanctions(chat)).Single();
             Assert.AreEqual(("kick", "completed", "being rude", (long?)admin.Id, member.Id, true),
                 (kick.Kind, kick.Status, kick.Reason, kick.ActorTelegramId, kick.TargetTelegramId, kick.Resolved));
+            var told = chat.Telegram.LastMessageTo(chat.ChatId);
+            Assert.AreEqual($"Member ({member.Id}) was removed from the group by Admin ({admin.Id}) (banned).\nMember ({member.Id}) has been unbanned and can rejoin.",
+                told.Text, "one message, replying to the command, instead of \"has been kicked by\"");
+            var sent = chat.Telegram.Calls.Last(c => c.Method == "sendMessage" && c.ChatId == chat.ChatId).Request;
+            Assert.IsNotNull(((Telegram.Bot.Requests.SendMessageRequest)sent).ReplyParameters, "a reply to the command");
             AssertNoErrors(chat);
         }
 
@@ -69,7 +75,26 @@ ORDER BY s.sanction_id")).ToArray();
 
             Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
             Assert.AreEqual(0, (await Sanctions(chat)).Length);
+            Assert.AreEqual($"Member ({member.Id}) was removed from the group (banned).\nMember ({member.Id}) has been unbanned and can rejoin.",
+                chat.Telegram.LastMessageTo(chat.ChatId).Text);
             AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task KickMe_WhoseUnbanTelegramDoesNotTake_IsToldInTheGroupAndInPrivate()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var member = chat.Add("Member");
+            chat.Telegram.IgnoreUnbans(chat.ChatId, int.MaxValue);
+
+            await chat.SendAsync(member, "/kickme");
+            Assert.AreEqual($"Member ({member.Id}) was removed from the group (banned).", chat.Telegram.LastMessageTo(chat.ChatId).Text);
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(11));
+
+            StringAssert.Contains(chat.Telegram.LastMessageTo(chat.ChatId).Text,
+                $"Member ({member.Id}) was removed from the group (banned).\nCould not unban Member ({member.Id})");
+            StringAssert.Contains(chat.Telegram.LastMessageTo(member.Id).Text, "but the bot could not unban you");
+            Assert.IsTrue(chat.Errors.Single().Contains("given up"));
         }
 
         [TestMethod]

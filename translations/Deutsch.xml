@@ -134,6 +134,24 @@
   <string key="SuccesfulKick">
     <value>{0} wurde entfernt von {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} wurde aus der Gruppe entfernt (gebannt).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} wurde von {1} aus der Gruppe entfernt (gebannt).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} wurde entbannt und kann wieder beitreten.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>{0} konnte nicht entbannt werden: Der Bot hat seine Adminrechte verloren. Ein Admin muss den Bann aufheben, sonst kann {0} nicht wieder beitreten.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>{0} konnte nicht entbannt werden: Telegram hatte den Bann nach 10 Minuten Versuchen immer noch. Ein Admin muss den Bann aufheben, sonst kann {0} nicht wieder beitreten.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>Du wurdest aus {0} entfernt, aber der Bot konnte deinen Bann nicht aufheben, daher kannst du noch nicht wieder beitreten. Bitte einen Admin der Gruppe, deinen Bann aufzuheben.</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} wurde gebannt von {1}.</value>
   </string>

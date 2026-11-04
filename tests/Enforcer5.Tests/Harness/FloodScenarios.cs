@@ -39,7 +39,9 @@ namespace Enforcer5.Tests.Harness
             Assert.AreEqual(1, chat.Telegram.Accepted.Count(c => c.Method == "banChatMember"), "kicked once, not once per message");
             Assert.AreEqual(0, chat.Telegram.MessagesFrom(chat.ChatId, flooder.Id).Count, "the flood is gone");
             Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, bystander.Id).Count, "nobody else's");
-            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains("Flooder")));
+            // Why, and the kick's own message (KickNotices).
+            Assert.AreEqual(2, chat.Replies.Count(r => r.Contains("Flooder")));
+            Assert.AreEqual(1, chat.Replies.Count(r => r.Contains("has been unbanned and can rejoin")));
             AssertNoErrors(chat);
         }
 

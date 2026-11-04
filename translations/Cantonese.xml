@@ -136,6 +136,24 @@ UPDATE LOG
 	<string key="SuccesfulKick">
 		<value>管理員【{1}】驅逐【{0}】。</value>
 	</string>
+	<string key="kickRemoved">
+		<value>{0} 已經被踢出群組（封鎖咗）。</value>
+	</string>
+	<string key="kickRemovedBy">
+		<value>{0} 已經被 {1} 踢出群組（封鎖咗）。</value>
+	</string>
+	<string key="kickUnbanned">
+		<value>{0} 已經解除封鎖，可以重新加入。</value>
+	</string>
+	<string key="kickUnbanFailedRights">
+		<value>解除唔到 {0} 嘅封鎖：機械人冇咗管理員權限。要搵管理員解除封鎖，唔係就入唔返嚟。</value>
+	</string>
+	<string key="kickUnbanFailedTimeout">
+		<value>解除唔到 {0} 嘅封鎖：試咗 10 分鐘之後 Telegram 仲係顯示佢被封鎖。要搵管理員解除封鎖，唔係就入唔返嚟。</value>
+	</string>
+	<string key="kickUnbanFailedPrivate">
+		<value>你已經被踢出 {0}，但係機械人解除唔到你嘅封鎖，所以你暫時入唔返嚟。請搵群組管理員幫你解除封鎖。</value>
+	</string>
 	<string key="SuccesfulBan">
 		<value>管理員【{1}】封咗【{0}】。</value>
 	</string>

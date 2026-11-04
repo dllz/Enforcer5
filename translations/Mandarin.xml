@@ -130,6 +130,24 @@
   <string key="SuccesfulKick">
     <value>{0} 已被 {1} 踢出。</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} 已被移出群组（封禁）。</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} 已被 {1} 移出群组（封禁）。</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>{0} 已解除封禁，可以重新加入。</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>无法解除 {0} 的封禁：机器人失去了管理员权限。需要管理员解除封禁，否则无法重新加入。</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>无法解除 {0} 的封禁：尝试 10 分钟后 Telegram 仍显示其被封禁。需要管理员解除封禁，否则无法重新加入。</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>你已被移出 {0}，但机器人未能解除你的封禁，所以你暂时无法重新加入。请联系群组管理员为你解除封禁。</value>
+  </string>
   <string key="SuccesfulBan">
     <value>{0} 已被 {1} 封禁。</value>
   </string>

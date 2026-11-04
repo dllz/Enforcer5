@@ -160,6 +160,24 @@
   <string key="SuccesfulKick">
     <value>{0} telah ditendang oleh {1}.</value>
   </string>
+  <string key="kickRemoved">
+    <value>{0} telah dikeluarkan dari grup (diblokir).</value>
+  </string>
+  <string key="kickRemovedBy">
+    <value>{0} telah dikeluarkan dari grup oleh {1} (diblokir).</value>
+  </string>
+  <string key="kickUnbanned">
+    <value>Blokir {0} telah dibuka dan dia dapat bergabung kembali.</value>
+  </string>
+  <string key="kickUnbanFailedRights">
+    <value>Gagal membuka blokir {0}: bot kehilangan hak admin. Seorang admin perlu membuka blokirnya, atau dia tidak bisa bergabung kembali.</value>
+  </string>
+  <string key="kickUnbanFailedTimeout">
+    <value>Gagal membuka blokir {0}: Telegram masih memblokirnya setelah 10 menit mencoba. Seorang admin perlu membuka blokirnya, atau dia tidak bisa bergabung kembali.</value>
+  </string>
+  <string key="kickUnbanFailedPrivate">
+    <value>Kamu telah dikeluarkan dari {0}, tetapi bot gagal membuka blokirmu, jadi kamu belum bisa bergabung kembali. Minta admin grup untuk membuka blokirmu.</value>
+  </string>
   
   <string key="SuccesfulBan">
     <value>{0} telah diblokir oleh {1}.</value>
