@@ -192,12 +192,14 @@ namespace Enforcer5
         }
 
         /// <summary>
-        /// The bot the admin means: the sender of the message they replied to, or the id or @username given, as
-        /// Telegram knows it in the group. A guest bot was never in the group; a username ending in "bot" (as
-        /// every bot's does) or a bot the group already has a record of is taken as one.
+        /// The bot the admin means: the inline bot the message they replied to was sent through, else its sender, or the
+        /// id or @username given, as Telegram knows it in the group. A guest bot was never in the group; a username ending
+        /// in "bot" (as every bot's does) or a bot the group already has a record of is taken as one.
         /// </summary>
         private static User TargetBot(Update update, string[] args)
         {
+            // A member's post through an inline bot: its sender is the member, the bot is the one meant.
+            if (update.Message.ReplyToMessage?.ViaBot is { } via) return via;
             if (update.Message.ReplyToMessage?.From is { } from) return from;
             var chatId = update.Message.Chat.Id;
             var id = Methods.GetUserId(update, args);

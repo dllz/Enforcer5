@@ -1694,6 +1694,21 @@ $title - заменяется названием группы.
   <string key="reportShowGone">
     <value>Это сообщение больше недоступно.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 Отправлено через инлайн-бота {0}. Если группа пользуется этим ботом, сделайте его доверенным: сообщения через него здесь больше не будут проверяться.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Отправлено через инлайн-бота {0}, которому эта группа теперь доверяет: сообщения через него здесь больше не проверяются.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 Доверять {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} теперь доверенный в этой группе. Сообщения через него здесь больше не проверяются.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} удалён из этой группы (через /untrustbot или командой Enforcer), поэтому его нельзя сделать доверенным из отчёта.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Забанен(а): {0}</value>
   </string>
@@ -2266,6 +2281,9 @@ $title - заменяется названием группы.
   </string>
   <string key="botSource_global">
     <value>доверенный во всех группах</value>
+  </string>
+  <string key="botSource_report">
+    <value>доверие админа из отчёта Обнаружения</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 Бот {0} заблокирован командой Enforcer во всех группах, поэтому он удалён.</value>

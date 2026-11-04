@@ -7,8 +7,9 @@ namespace Enforcer5.Data
     /// <summary>What a group decided about a bot; see <c>group_bots</c> and Detection/BotGuard.</summary>
     /// <param name="Status"><c>allowed</c> or <c>blocked</c>.</param>
     /// <param name="Source">
-    /// How: <c>admin_added</c>, <c>command</c>, <c>present</c>, <c>member_added</c>, <c>summoned</c>, or <c>global</c>
-    /// (a ban of ours lifted because the bot became trusted in every group).
+    /// How: <c>admin_added</c>, <c>command</c>, <c>present</c>, <c>member_added</c>, <c>summoned</c>, <c>global</c>
+    /// (a ban of ours lifted because the bot became trusted in every group), or <c>report</c> (an admin's Trust under a
+    /// Detection report: this group only).
     /// </param>
     internal sealed record GroupBotRecord(long ChatId, long BotId, string Status, string Source, long? SetBy, DateTimeOffset SetAt)
     {

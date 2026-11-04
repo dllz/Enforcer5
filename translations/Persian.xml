@@ -1937,6 +1937,21 @@ exaple: /{0}
   <string key="reportShowGone">
     <value>این پیام دیگر در دسترس نیست.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 از طریق ربات اینلاین {0} فرستاده شده. اگر گروه از این ربات استفاده می‌کند، به آن اعتماد کنید: پیام‌هایی که از طریق آن فرستاده می‌شوند دیگر اینجا بررسی نمی‌شوند.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 از طریق ربات اینلاین {0} فرستاده شده که این گروه اکنون به آن اعتماد دارد: پیام‌هایی که از طریق آن فرستاده می‌شوند دیگر اینجا بررسی نمی‌شوند.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 اعتماد به {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} اکنون در این گروه مورد اعتماد است. پیام‌هایی که از طریق آن فرستاده می‌شوند دیگر اینجا بررسی نمی‌شوند.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} از این گروه حذف شده است (با /untrustbot یا توسط تیم Enforcer)، پس نمی‌توان از طریق گزارش به آن اعتماد کرد.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 مسدود شد توسط {0}</value>
   </string>
@@ -2509,6 +2524,9 @@ exaple: /{0}
   </string>
   <string key="botSource_global">
     <value>مورد اعتماد در همه گروه‌ها</value>
+  </string>
+  <string key="botSource_report">
+    <value>مورد اعتماد یک ادمین از طریق گزارش تشخیص</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 ربات {0} توسط تیم Enforcer در همه گروه‌ها مسدود شده است، بنابراین حذف شد.</value>

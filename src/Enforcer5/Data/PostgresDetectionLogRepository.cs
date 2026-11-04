@@ -402,6 +402,21 @@ GROUP BY d.sign ORDER BY min(d.detected_at)", new { ChatId = chatId, UserId = us
             return rows.Select(r => (r.Sign, (int)r.Count, r.MessageId, r.Deleted == true)).ToList();
         }
 
+        public async Task<(long BotId, string Username)?> ViaBotSinceAsync(long chatId, long userId, DateTimeOffset since)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var row = await connection.QueryFirstOrDefaultAsync<(long? BotId, string Username)>(new CommandDefinition(@"
+SELECT (d.evidence->>'via_bot')::bigint, d.evidence->>'via_bot_username'
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = d.account_id
+WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @Since AND d.mode = 'live'
+  AND (d.score_after > d.score_before OR d.reported) AND d.evidence->>'via_bot' IS NOT NULL
+ORDER BY d.detected_at DESC LIMIT 1", new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
+            return row.BotId is { } id ? (id, row.Username) : null;
+        }
+
         /// <summary>The decisions an undo takes back.</summary>
         internal static string[] UndoneActions(string undo) => undo switch
         {

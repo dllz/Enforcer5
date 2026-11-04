@@ -2192,6 +2192,21 @@
   <string key="reportShowGone">
     <value>Pesan itu sudah tidak tersedia.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 Dikirim lewat bot inline {0}. Jika grup ini memakai bot tersebut, percayai bot itu: pesan yang dikirim lewat bot itu tidak lagi diperiksa di sini.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Dikirim lewat bot inline {0}, yang sekarang dipercaya grup ini: pesan yang dikirim lewat bot itu tidak lagi diperiksa di sini.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 Percayai {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} sekarang dipercaya di grup ini. Pesan yang dikirim lewat bot itu tidak lagi diperiksa di sini.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} telah dikeluarkan dari grup ini (dengan /untrustbot atau oleh tim Enforcer), jadi tidak bisa dipercaya dari laporan.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Diblokir oleh {0}</value>
   </string>
@@ -2764,6 +2779,9 @@
   </string>
   <string key="botSource_global">
     <value>dipercaya di semua grup</value>
+  </string>
+  <string key="botSource_report">
+    <value>dipercaya oleh admin dari laporan Deteksi</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 Bot {0} diblokir di semua grup oleh tim Enforcer, jadi bot itu dikeluarkan.</value>

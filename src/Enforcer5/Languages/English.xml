@@ -3013,6 +3013,21 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="reportShowGone">
     <value>That post is no longer available.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 Sent through the inline bot {0}. If the group uses this bot, trust it: posts sent through it are then no longer checked here.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Sent through the inline bot {0}, which this group trusts now: posts sent through it are no longer checked here.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 Trust {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} is trusted in this group now. Posts sent through it are no longer checked here.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} was removed from this group (with /untrustbot or by the Enforcer team), so it cannot be trusted from a report.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Banned by {0}</value>
   </string>
@@ -3585,6 +3600,9 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="botSource_global">
     <value>trusted in every group</value>
+  </string>
+  <string key="botSource_report">
+    <value>trusted by an admin from a Detection report</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 The bot {0} is blocked in every group by the Enforcer team, so it was removed.</value>

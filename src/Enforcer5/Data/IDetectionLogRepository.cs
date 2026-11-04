@@ -141,5 +141,11 @@ namespace Enforcer5.Data
         /// message each was seen on (null when none) and whether Detection deleted it: a report's contents after a restart.
         /// </summary>
         Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
+
+        /// <summary>
+        /// The inline bot of the latest of those signs seen on a post sent through one (evidence <c>via_bot</c>), or null:
+        /// a report's Trust button after a restart.
+        /// </summary>
+        Task<(long BotId, string Username)?> ViaBotSinceAsync(long chatId, long userId, DateTimeOffset since);
     }
 }

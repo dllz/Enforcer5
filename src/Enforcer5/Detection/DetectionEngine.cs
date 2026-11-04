@@ -213,8 +213,31 @@ namespace Enforcer5.Detection
             DetectionRecorder.Add(new DetectionRecord(chatId, userId, sign.Name, sign.Phase == SignPhase.Inline ? "inline" : "enriched",
                 weight, outcome.ScoreBefore, outcome.ScoreAfter, outcome.Action, outcome.Deleted, outcome.Reported, outcome.Mode,
                 message?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
-                member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, hit.Evidence,
+                member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, WithViaBot(hit.Evidence, message?.ViaBot),
                 BanHistory.Edition, now) { Category = SignCatalog.CategoryOf(sign.Name, policy.Filters), Similarity = hit.Similarity });
+        }
+
+        /// <summary>
+        /// <paramref name="evidence"/> with the inline bot the post was sent through (<c>via_bot</c>, and its public
+        /// <c>via_bot_username</c>): a report restored after a restart still names it and offers to trust it. Pure, for tests.
+        /// </summary>
+        internal static string WithViaBot(string evidence, User viaBot)
+        {
+            if (viaBot == null) return evidence;
+            System.Text.Json.Nodes.JsonObject json;
+            try
+            {
+                json = (evidence == null ? null : System.Text.Json.Nodes.JsonNode.Parse(evidence) as System.Text.Json.Nodes.JsonObject)
+                       ?? new System.Text.Json.Nodes.JsonObject();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Evidence is our own JSON; should one ever not be an object, it is kept as it was.
+                return evidence;
+            }
+            json["via_bot"] = viaBot.Id;
+            if (viaBot.Username != null) json["via_bot_username"] = viaBot.Username;
+            return json.ToJsonString();
         }
 
         /// <summary>The stronger of two actions, in the order of <see cref="DetectionPolicy.Actions"/>.</summary>

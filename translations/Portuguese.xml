@@ -1959,6 +1959,21 @@
   <string key="reportShowGone">
     <value>Essa mensagem não está mais disponível.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 Enviado pelo bot inline {0}. Se o grupo usa este bot, marque-o como de confiança: as mensagens enviadas por ele deixam de ser verificadas aqui.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Enviado pelo bot inline {0}, que agora é de confiança neste grupo: as mensagens enviadas por ele não são mais verificadas aqui.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 Confiar em {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} agora é de confiança neste grupo. As mensagens enviadas por ele não são mais verificadas aqui.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} foi removido deste grupo (com /untrustbot ou pela equipe do Enforcer), então não pode ser marcado como de confiança por um relatório.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Banido por {0}</value>
   </string>
@@ -2531,6 +2546,9 @@
   </string>
   <string key="botSource_global">
     <value>confiável em todos os grupos</value>
+  </string>
+  <string key="botSource_report">
+    <value>de confiança por um admin a partir de um relatório da Detecção</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 O bot {0} está bloqueado em todos os grupos pela equipe do Enforcer, por isso foi removido.</value>

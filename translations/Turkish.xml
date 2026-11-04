@@ -1969,6 +1969,21 @@
   <string key="reportShowGone">
     <value>Bu mesaj artık mevcut değil.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 {0} satır içi botu üzerinden gönderildi. Grup bu botu kullanıyorsa ona güvenin: onun üzerinden gönderilen mesajlar artık burada kontrol edilmez.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Bu grubun artık güvendiği {0} satır içi botu üzerinden gönderildi: onun üzerinden gönderilen mesajlar artık burada kontrol edilmez.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 {0} botuna güven</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} artık bu grupta güvenilir. Onun üzerinden gönderilen mesajlar artık burada kontrol edilmez.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} bu gruptan çıkarıldı (/untrustbot ile veya Enforcer ekibi tarafından), bu yüzden bir rapordan güvenilir yapılamaz.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 {0} tarafından yasaklandı</value>
   </string>
@@ -2541,6 +2556,9 @@
   </string>
   <string key="botSource_global">
     <value>tüm gruplarda güvenilir</value>
+  </string>
+  <string key="botSource_report">
+    <value>bir yönetici tarafından bir Algılama raporundan güvenildi</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 {0} botu Enforcer ekibi tarafından tüm gruplarda engellendi, bu yüzden kaldırıldı.</value>

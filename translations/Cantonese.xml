@@ -1543,6 +1543,21 @@ UPDATE LOG
   <string key="reportShowGone">
     <value>呢個訊息已經冇咗。</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 經 inline bot {0} 發出。如果個群有用呢個 bot，就信任佢：之後經佢發出嘅訊息喺度唔會再被檢查。</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 經 inline bot {0} 發出，呢個群而家信任佢：經佢發出嘅訊息喺度唔會再被檢查。</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 信任 {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} 而家喺呢個群受信任。經佢發出嘅訊息喺度唔會再被檢查。</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} 已經喺呢個群被移除（用 /untrustbot 或者由 Enforcer 團隊），所以唔可以喺報告度信任佢。</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 已被 {0} 封鎖</value>
   </string>
@@ -2115,6 +2130,9 @@ UPDATE LOG
   </string>
   <string key="botSource_global">
     <value>喺所有群組都受信任</value>
+  </string>
+  <string key="botSource_report">
+    <value>管理員喺偵測報告度信任</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 機械人 {0} 已經俾 Enforcer 團隊喺所有群組封鎖，所以已經被移除。</value>

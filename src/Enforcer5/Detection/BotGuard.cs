@@ -110,6 +110,28 @@ namespace Enforcer5.Detection
         private static bool ChosenByAdmins(GroupBotRecord record) =>
             record is { IsAllowed: true, Source: "admin_added" or "command" };
 
+        /// <summary>
+        /// An admin chose the bot for this group: as <see cref="ChosenByAdmins"/>, or with Trust under a Detection report
+        /// (<c>report</c>). One tap on a report is for the group only: it never makes a premium group's bot trusted
+        /// everywhere (Daniel, 2026-11-04).
+        /// </summary>
+        private static bool ChosenHere(GroupBotRecord record) => ChosenByAdmins(record) || record is { IsAllowed: true, Source: "report" };
+
+        /// <summary>
+        /// Whether <paramref name="botId"/> is trusted in the group by a decision (ours, a dev's, the admins'), without a
+        /// lookup: a Detection report offers Trust only for a bot this says no to. A bot trusted for being an admin of the
+        /// group is not seen here; its posts are not reported anyway.
+        /// </summary>
+        internal static bool IsChosenHere(long chatId, long botId)
+        {
+            var record = Effective(chatId, botId);
+            if (UntrustedByAdmins(record) || IsGloballyBlocked(botId)) return false;
+            return IsTrustedEverywhere(botId) || ChosenHere(record);
+        }
+
+        /// <summary>The group's admins removed it with /untrustbot, or a dev blocked it everywhere: a report never offers to trust it.</summary>
+        internal static bool IsBlockedHere(long chatId, long botId) => UntrustedByAdmins(Effective(chatId, botId)) || IsGloballyBlocked(botId);
+
         private static void RecomputePremiumTrusted()
         {
             var premium = _premiumChats;
@@ -239,7 +261,7 @@ namespace Enforcer5.Detection
             if (IsKnown(bot)) return true;
             var record = Effective(chatId, bot.Id);
             if (UntrustedByAdmins(record) || IsGloballyBlocked(bot.Id)) return false;
-            if (IsTrustedEverywhere(bot.Id) || ChosenByAdmins(record)) return true;
+            if (IsTrustedEverywhere(bot.Id) || ChosenHere(record)) return true;
             if (record is { IsAllowed: false }) return false;
             return await GroupBots.IsAdminAsync(chatId, bot.Id);
         }
@@ -449,10 +471,12 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>An admin trusts the bot: its messages and guest answers are let through, and a ban of ours is lifted.</summary>
-        internal static async Task TrustAsync(long chatId, long botId, long adminId)
+        /// <param name="source"><c>command</c> (/trustbot; in a premium group, trusted everywhere) or <c>report</c> (Trust under a
+        /// Detection report; this group only).</param>
+        internal static async Task TrustAsync(long chatId, long botId, long adminId, string source = "command")
         {
             var before = Get(chatId, botId);
-            await RememberAsync(new GroupBotRecord(chatId, botId, GroupBotRecord.Allowed, "command", adminId, Now), overwrite: true);
+            await RememberAsync(new GroupBotRecord(chatId, botId, GroupBotRecord.Allowed, source, adminId, Now), overwrite: true);
             Removed.TryRemove((chatId, botId), out _);
             GroupBots.Forget(chatId, botId);
             await RecordEventAsync(chatId, botId, adminId, true, "trusted", "none");

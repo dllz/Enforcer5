@@ -245,7 +245,7 @@ namespace Enforcer5.Detection
                         logLine: tempbanText);
                     break;
                 case "report":
-                    DetectionReports.Report(chatId, userId, message?.MessageId, rule.Sign, person);
+                    DetectionReports.Report(chatId, userId, message?.MessageId, rule.Sign, person, viaBot: message?.ViaBot);
                     break;
                 // none and score: recorded above.
             }

@@ -352,5 +352,144 @@ namespace Enforcer5.Tests.Harness
             Assert.IsFalse(Buttons(report).Any(b => b.Url != null || b.CallbackData?.EndsWith(":show") == true));
             AssertNoErrors(chat);
         }
+
+        // ------------------------------------------------------------------ an inline bot's swap (Daniel, 2026-11-04)
+
+        private static readonly User MusicBot = new() { Id = 7_000_010, IsBot = true, FirstName = "Music", Username = "musicbot" };
+
+        /// <summary>A music bot's inline post: a placeholder text, which the bot edits into the song.</summary>
+        private static async Task<Message> SongThroughTheBot(HarnessChat chat, HarnessUser member)
+        {
+            var placeholder = chat.Text(member, "Loading the song…");
+            placeholder.ViaBot = MusicBot;
+            var post = await chat.PostAsync(placeholder);
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(1));
+            var song = Audio(chat, member);
+            song.ViaBot = MusicBot;
+            await chat.EditAsync(post, song);
+            return post;
+        }
+
+        private static async Task<(string Status, string Source)[]> GroupBotRows(HarnessChat chat)
+        {
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            return (await connection.QueryAsync<(string, string)>("SELECT status, source FROM group_bots")).ToArray();
+        }
+
+        [TestMethod]
+        public async Task AnInlineBotsSwap_NamesTheBot_AndTrustUnderTheReport_TrustsItInThisGroupOnly_AndMarksTheMemberFine()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Telegram.ParsesHtml = true;
+            chat.Keys.AddToSet("premiumBot", chat.ChatId.ToString()); // even in a premium group: this group only
+            await BotGuard.ReloadAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            await chat.PostAsync(chat.Photo(member, "first")); // recording starts here
+
+            var song = await SongThroughTheBot(chat, member);
+
+            Assert.IsTrue(Deleted(chat, member, song), "an untrusted bot's swap is the member's");
+            var report = Reports(chat, admin).Single();
+            StringAssert.Contains(report.Text, "text replaced by audio");
+            StringAssert.Contains(report.Text, "🤖 Sent through the inline bot <a href=\"https://t.me/musicbot\">@musicbot</a>.");
+            var trust = Buttons(report).Single(b => b.CallbackData?.EndsWith(":trustbot") == true);
+            Assert.AreEqual("🤖 Trust @musicbot", trust.Text);
+            Assert.IsTrue(trust.CallbackData.Length <= 64, trust.CallbackData);
+
+            await chat.PressDataAsync(member, report, trust.CallbackData);
+            Assert.AreEqual(0, (await GroupBotRows(chat)).Length, "only the group's admins");
+
+            await chat.PressDataAsync(admin, report, trust.CallbackData);
+            Assert.AreEqual("@musicbot is trusted in this group now. Posts sent through it are no longer checked here.", LastAnswer(chat));
+            CollectionAssert.AreEqual(new[] { ("allowed", "report") }, await GroupBotRows(chat));
+            Assert.IsFalse(BotGuard.IsTrustedEverywhere(MusicBot.Id), "one tap on a report never trusts a bot in every group");
+            var edit = chat.Telegram.Accepted.Last(c => c.Method == "editMessageText" && c.ChatId == admin.Id);
+            StringAssert.Contains(edit.Text, "which this group trusts now");
+            StringAssert.Contains(edit.Text, "Marked fine by");
+            var buttons = ((Telegram.Bot.Requests.EditMessageTextRequest)edit.Request).ReplyMarkup?.InlineKeyboard.SelectMany(r => r).ToArray()
+                          ?? Array.Empty<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
+            Assert.IsFalse(buttons.Any(b => b.CallbackData?.EndsWith(":trustbot") == true), "nothing left to trust");
+
+            // The next song through it is the bot's doing, and left alone, for any member.
+            var newcomer = chat.Add("Newcomer");
+            await chat.PostAsync(chat.Photo(newcomer, "hello"));
+            var next = await SongThroughTheBot(chat, newcomer);
+            Assert.IsFalse(Deleted(chat, newcomer, next));
+            Assert.AreEqual(1, (await Detections(chat)).Length);
+
+            await chat.SendAsync(admin, "/trustedbots");
+            StringAssert.Contains(chat.Replies.Last(), "trusted by an admin from a Detection report");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AfterARestart_TheReportStillNamesTheBot_AndTrustStillWorks()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            await chat.PostAsync(chat.Photo(member, "first"));
+            await SongThroughTheBot(chat, member);
+            var report = Reports(chat, admin).Single();
+            var trust = Buttons(report).Single(b => b.CallbackData?.EndsWith(":trustbot") == true).CallbackData;
+            await DetectionRecorder.FlushAsync();
+
+            await chat.CrashAndRestartAsync();
+            await chat.PressDataAsync(admin, report, trust);
+
+            Assert.AreEqual("@musicbot is trusted in this group now. Posts sent through it are no longer checked here.", LastAnswer(chat));
+            CollectionAssert.AreEqual(new[] { ("allowed", "report") }, await GroupBotRows(chat));
+            StringAssert.Contains(chat.Telegram.Accepted.Last(c => c.Method == "editMessageText" && c.ChatId == admin.Id).Text,
+                "@musicbot</a>, which this group trusts now");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ABotTheAdminsRemoved_IsNamed_ButNeverTrustedFromAReport()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            await chat.PostAsync(chat.Photo(member, "first"));
+            await SongThroughTheBot(chat, member);
+            var report = Reports(chat, admin).Single();
+            var trust = Buttons(report).Single(b => b.CallbackData?.EndsWith(":trustbot") == true).CallbackData;
+
+            await BotGuard.UntrustAsync(chat.ChatId, MusicBot.Id, admin.Id); // what /untrustbot does
+            await chat.CompleteAsync();
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(15));
+            await chat.PressDataAsync(admin, report, trust);
+
+            StringAssert.StartsWith(LastAnswer(chat), "@musicbot was removed from this group");
+            CollectionAssert.AreEqual(new[] { ("blocked", "command") }, await GroupBotRows(chat));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task TrustBot_InReplyToAPostSentThroughAnInlineBot_TrustsTheBot_NotTheMember()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = Established(chat, "Member");
+            var post = chat.Text(member, "a song");
+            post.ViaBot = MusicBot;
+            post = await chat.PostAsync(post);
+
+            await chat.SendAsync(admin, "/trustbot", post);
+
+            CollectionAssert.AreEqual(new[] { ("allowed", "command") }, await GroupBotRows(chat));
+            Assert.IsTrue(await BotGuard.IsTrustedHereAsync(chat.ChatId, MusicBot));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public void WithViaBot_AddsTheBotToTheEvidence_AndKeepsWhatWasThere()
+        {
+            Assert.IsNull(DetectionEngine.WithViaBot(null, null));
+            Assert.AreEqual("{\"a\":1}", DetectionEngine.WithViaBot("{\"a\":1}", null));
+            Assert.AreEqual("{\"a\":1,\"via_bot\":7000010,\"via_bot_username\":\"musicbot\"}", DetectionEngine.WithViaBot("{\"a\":1}", MusicBot));
+            Assert.AreEqual("{\"via_bot\":5}", DetectionEngine.WithViaBot(null, new User { Id = 5, IsBot = true }));
+        }
     }
 }

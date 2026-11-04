@@ -60,6 +60,8 @@ namespace Enforcer5.Detection
             internal readonly HashSet<long> Gone = new();
             /// <summary>The latest deleted post, quoted in the text; null when none (or not known after a restart).</summary>
             internal DeletedPost Post;
+            /// <summary>The inline bot the latest post sent through one went through; null when none. Its line and Trust button.</summary>
+            internal ViaBot Via;
             internal readonly List<ReportCopy> Copies = new();
             internal string Decision;
             internal long? DecidedBy;
@@ -121,16 +123,18 @@ namespace Enforcer5.Detection
         /// <param name="score">Their score now, 0 when the sign does not score.</param>
         /// <param name="detail">What the report says about the sign (what an edit changed), in the group's language.</param>
         /// <param name="deleted">The message, when Detection deleted it: quoted rather than linked to.</param>
+        /// <param name="viaBot">The inline bot the message was sent through, if any: the report names it and offers to trust it.</param>
         internal static void Report(long chatId, long userId, long? messageId, string sign, User member = null, int score = 0,
-            string detail = null, DeletedPost deleted = null)
+            string detail = null, DeletedPost deleted = null, User viaBot = null)
         {
             if (chatId > 0 || userId == 0) return;
-            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score, detail, deleted), "DetectionReport");
+            Bot.Dispatch(() => ReportAsync(chatId, userId, messageId, sign, member, score, detail, deleted, viaBot), "DetectionReport");
         }
 
         internal static async Task ReportAsync(long chatId, long userId, long? messageId, string sign, User member, int score,
-            string detail = null, DeletedPost deleted = null)
+            string detail = null, DeletedPost deleted = null, User viaBot = null)
         {
+            var via = viaBot is { IsBot: true } ? new ViaBot(viaBot.Id, viaBot.Username) : null;
             try
             {
                 if (await Fines.ExemptAsync(chatId, userId, sign)) return;
@@ -155,6 +159,7 @@ namespace Enforcer5.Detection
                         if (detail != null) report.Details[sign] = detail;
                         report.Score = Math.Max(report.Score, score);
                         report.MessageId = messageId ?? report.MessageId;
+                        report.Via = via ?? report.Via;
                         ScheduleEdit(report);
                         return;
                     }
@@ -163,7 +168,7 @@ namespace Enforcer5.Detection
                     report = new OpenReport
                     {
                         Key = ReportKey.ForMember(chatId, userId, DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(now).ToUnixTimeSeconds())),
-                        Name = name, Score = score, MessageId = messageId, Post = deleted
+                        Name = name, Score = score, MessageId = messageId, Post = deleted, Via = via
                     };
                     // What made up their score, then what fired now.
                     foreach (var (scored, seenOn, gone, said) in MemberScores.Seen(chatId, userId).Where(s => s.Sign != sign))
@@ -251,6 +256,8 @@ namespace Enforcer5.Detection
             // The latest of them, for Ban; the latest deleted one is quoted.
             if (report.Messages.Count > 0) report.MessageId = report.Messages.Values.Max();
             if (report.Gone.Count > 0) report.Post = await KeptAsync(key.ChatId, report.Gone.Max());
+            if (await Repositories.DetectionLog.ViaBotSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt) is { } via)
+                report.Via = new ViaBot(via.BotId, via.Username);
             report.Score = MemberScores.Of(key.ChatId, key.UserId.Value);
             Open[(key.ChatId, key.UserId.Value)] = report;
             return report;
@@ -414,11 +421,18 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ decisions
 
         /// <summary>
-        /// A button under a report: <c>dreport:{chat}:{user}:{opened}:{ban|mute|fine}</c>. Only the group's
+        /// A button under a report: <c>dreport:{chat}:{user}:{opened}:{ban|mute|fine|trustbot}</c>. Only the group's
         /// admins get here (the callback is GroupAdminOnly on the chat id).
+        /// <para>
+        /// <c>trustbot</c>: the inline bot the post went through is trusted in this group (<see cref="BotGuard.TrustAsync"/>,
+        /// source <c>report</c>: never everywhere, premium or not), and the member is marked fine if nobody decided yet: what
+        /// was seen was the bot's doing (Daniel, 2026-11-04).
+        /// </para>
         /// </summary>
         internal static async Task PressAsync(CallbackQuery call, long chatId, long userId, long opened, string decision)
         {
+            var trustBot = decision == "trustbot";
+            if (trustBot) decision = "fine";
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var actor = call.From.Id;
             var key = ReportKey.ForMember(chatId, userId, DateTimeOffset.FromUnixTimeSeconds(opened));
@@ -432,11 +446,20 @@ namespace Enforcer5.Detection
                 report = Open.TryGetValue((chatId, userId), out var open) && open.Key.OpenedAt == key.OpenedAt ? open : null;
                 if (report == null && PostgresStorage.Ready && await Repositories.DetectionReports.GetAsync(key) is { } stored)
                     report = await RestoreAsync(stored);
-                if (report == null)
+                if (report == null || trustBot && report.Via == null)
                 {
                     await Answer(call, Methods.GetLocaleString(lang, "reportGone"));
                     return;
                 }
+                // A button from before the admins or a dev removed the bot: their decision stands, nothing changes.
+                if (trustBot && BotGuard.IsBlockedHere(chatId, report.Via.Id))
+                {
+                    await Answer(call, Methods.GetLocaleString(lang, "reportTrustBotBlocked", report.Via.Name));
+                    return;
+                }
+                // The press is in the log channel as every report button is (Service.LogCallback).
+                if (trustBot && !BotGuard.IsChosenHere(chatId, report.Via.Id))
+                    await BotGuard.TrustAsync(chatId, report.Via.Id, actor, source: "report");
                 if (report.Decision == null)
                 {
                     (standing, by) = PostgresStorage.Ready
@@ -453,7 +476,9 @@ namespace Enforcer5.Detection
                 gate.Release();
             }
 
-            if (standing == decision && by == actor && report.Decision == decision)
+            if (trustBot)
+                await Answer(call, Methods.GetLocaleString(lang, "reportTrustBotDone", report.Via.Name));
+            else if (standing == decision && by == actor && report.Decision == decision)
                 await Answer(call, Methods.GetLocaleString(lang, "reportDone"));
             else
                 await Answer(call, DecisionLine(lang, standing, by, html: false));
@@ -578,9 +603,10 @@ namespace Enforcer5.Detection
 
         /// <param name="links">For each sign seen on a message, a link to it: the sign's name links there.</param>
         /// <param name="deleted">The latest post Detection deleted, quoted after the signs.</param>
+        /// <param name="viaLine">Which inline bot the post went through (<see cref="ViaLine"/>), after the score; HTML.</param>
         internal static string Text(XDocument lang, long userId, string name, string title, IReadOnlyList<(string Sign, int Count)> signs,
             int score, string decisionLine, IReadOnlyDictionary<string, string> details = null, IReadOnlyDictionary<string, string> links = null,
-            DeletedPost deleted = null)
+            DeletedPost deleted = null, string viaLine = null)
         {
             var lines = new List<string>
             {
@@ -599,6 +625,7 @@ namespace Enforcer5.Detection
                 return details != null && details.TryGetValue(s.Sign, out var detail) ? $"{line} ({detail.FormatHTML()})" : line;
             }));
             if (score > 0) lines.Add(Methods.GetLocaleString(lang, "reportScore", score));
+            if (viaLine != null) lines.Add(viaLine);
             if (deleted != null) lines.AddRange(new[] { "", deleted.Html(lang) });
             if (decisionLine != null) lines.AddRange(new[] { "", decisionLine });
             return string.Join("\n", lines);
@@ -606,7 +633,12 @@ namespace Enforcer5.Detection
 
         private static string Text(XDocument lang, OpenReport report, string title) =>
             Text(lang, report.Key.UserId.Value, report.Name, title, report.Signs, report.Score,
-                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details, report.Links(), report.Post);
+                report.Decision != null ? DecisionLine(lang, report.Decision, report.DecidedBy) : null, report.Details, report.Links(), report.Post,
+                report.Via == null ? null : ViaLine(lang, report.Via, BotGuard.IsChosenHere(report.Key.ChatId, report.Via.Id)));
+
+        /// <summary>"Sent through the inline bot @x", and whether the group trusts it now; HTML.</summary>
+        internal static string ViaLine(XDocument lang, ViaBot via, bool trusted) =>
+            Methods.GetLocaleStringNoFormat(lang, trusted ? "reportViaBotTrusted" : "reportViaBot", via.Html);
 
         /// <summary>"Banned by …" for a decision: HTML with a link to the admin, or plain text for a button's answer.</summary>
         internal static string DecisionLine(XDocument lang, string decision, long? by, bool html = true)
@@ -633,6 +665,10 @@ namespace Enforcer5.Detection
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "goToMessage")) { Url = link });
             if (report.Post?.FileId != null)
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportShowPost"), $"{data}:show"));
+            // Whatever was decided: an admin who banned the member may still want the bot.
+            if (report.Via is { } via && !BotGuard.IsKnown(via.AsUser()) && !BotGuard.IsChosenHere(key.ChatId, via.Id) &&
+                !BotGuard.IsBlockedHere(key.ChatId, via.Id))
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportTrustBot", via.Name), $"{data}:trustbot"));
             return menu.Buttons.Count == 0 ? null : Key.CreateMarkupFromMenu(menu);
         }
 
@@ -720,5 +756,19 @@ namespace Enforcer5.Detection
             Gates.Clear();
             OptOuts.Clear();
         }
+    }
+
+    /// <summary>An inline bot a reported post was sent through (<c>Message.ViaBot</c>).</summary>
+    internal sealed record ViaBot(long Id, string Username)
+    {
+        /// <summary>@username, or the id for a bot without one.</summary>
+        internal string Name => Username != null ? $"@{Username}" : Id.ToString();
+
+        /// <summary>A link to the bot, for a report's text.</summary>
+        internal string Html => Username != null
+            ? $"<a href=\"https://t.me/{Username.FormatHTML()}\">@{Username.FormatHTML()}</a>"
+            : $"<code>{Id}</code>";
+
+        internal User AsUser() => new() { Id = Id, IsBot = true, Username = Username, FirstName = Username ?? Id.ToString() };
     }
 }

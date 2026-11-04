@@ -1651,6 +1651,21 @@ Example:
   <string key="reportShowGone">
     <value>该消息已不可用。</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 通过内联机器人 {0} 发送。如果本群使用这个机器人，请信任它：之后通过它发送的消息在这里不再被检查。</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 通过内联机器人 {0} 发送，本群现在信任它：通过它发送的消息在这里不再被检查。</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 信任 {0}</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} 现在在本群受信任。通过它发送的消息在这里不再被检查。</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} 已从本群移除（通过 /untrustbot 或由 Enforcer 团队），因此无法从报告中信任它。</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 已被 {0} 封禁</value>
   </string>
@@ -2223,6 +2238,9 @@ Example:
   </string>
   <string key="botSource_global">
     <value>在所有群组中受信任</value>
+  </string>
+  <string key="botSource_report">
+    <value>管理员从检测报告中信任</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 机器人 {0} 已被 Enforcer 团队在所有群组中封禁，因此已被移除。</value>

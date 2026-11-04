@@ -2006,6 +2006,21 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="reportShowGone">
     <value>Dieser Beitrag ist nicht mehr verfügbar.</value>
   </string>
+  <string key="reportViaBot">
+    <value>🤖 Über den Inline-Bot {0} gesendet. Wenn die Gruppe diesen Bot nutzt, vertraue ihm: Beiträge über ihn werden hier dann nicht mehr geprüft.</value>
+  </string>
+  <string key="reportViaBotTrusted">
+    <value>🤖 Über den Inline-Bot {0} gesendet, dem diese Gruppe jetzt vertraut: Beiträge über ihn werden hier nicht mehr geprüft.</value>
+  </string>
+  <string key="reportTrustBot">
+    <value>🤖 {0} vertrauen</value>
+  </string>
+  <string key="reportTrustBotDone">
+    <value>{0} ist in dieser Gruppe jetzt vertrauenswürdig. Beiträge über ihn werden hier nicht mehr geprüft.</value>
+  </string>
+  <string key="reportTrustBotBlocked">
+    <value>{0} wurde aus dieser Gruppe entfernt (mit /untrustbot oder vom Enforcer-Team), daher kann ihm nicht über eine Meldung vertraut werden.</value>
+  </string>
   <string key="reportDecided_ban">
     <value>🔨 Gebannt von {0}</value>
   </string>
@@ -2578,6 +2593,9 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="botSource_global">
     <value>in allen Gruppen vertraut</value>
+  </string>
+  <string key="botSource_report">
+    <value>von einem Admin über eine Erkennungsmeldung vertraut</value>
   </string>
   <string key="botGlobalBlockedLog">
     <value>🤖 Der Bot {0} ist vom Enforcer-Team in allen Gruppen gesperrt und wurde deshalb entfernt.</value>

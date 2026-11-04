@@ -916,7 +916,7 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("group_bots", null, t =>
                         {
-                            t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned', 'global')");
+                            t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned', 'global', 'report')");
 
                             t.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
                         });

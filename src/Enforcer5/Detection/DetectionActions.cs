@@ -43,7 +43,7 @@ namespace Enforcer5.Detection
         {
             if (action.Report)
                 DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail,
-                    action.Delete ? DeletedPost.From(action.Message) : null);
+                    action.Delete ? DeletedPost.From(action.Message) : null, action.Message?.ViaBot);
             var deleteOnly = action.Action is "none" or "score" or "report";
             if (deleteOnly && !action.Delete) return;
             // A delete alone is logged here; an action logs its own line once it went through.
