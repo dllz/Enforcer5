@@ -330,7 +330,7 @@ dotnet test Enforcer5.slnx -c Premium    # PREMIUM code paths
 ```
 
 PostgreSQL tests are skipped unless `ENFORCER_TEST_POSTGRES` holds a connection string; each test
-creates and drops a schema of its own. Run them against a scratch database whenever `Storage/` or
+uses a schema of its own. Run them against a scratch database whenever `Storage/` or
 a PostgreSQL repository changes.
 
 ### Group-chat harness (`tests/Enforcer5.Tests/Harness/`)
@@ -377,8 +377,15 @@ seed each. It lists the failing seeds and exits non-zero. A failure names its se
 with `ENFORCER_CHAOS_SEED=<seed>`; `ENFORCER_CHAOS_PROGRESS=<file>` logs each seed as it finishes.
 
 The PostgreSQL tests reuse migrated schemas (`TestPostgres.MigratedSchemaAsync`, emptied between
-tests) and turn `synchronous_commit` off: subprod takes 250-800 ms to flush a commit, which made a
-single raid scenario take minutes.
+tests by deleting the rows of the filled tables: TRUNCATE took 0.7 s a test) and turn
+`synchronous_commit` off: subprod takes 250-800 ms to flush a commit, which made a single raid
+scenario take minutes.
+
+**The whole suite with the database:** `enf-sql subprod --run -- tools/test.sh [shards] [config]`
+splits the test classes over 2 processes (`ENFORCER_TEST_SHARDS`; the connection cap again), about
+3 minutes, against about 5 in one process (2026-11-04). Keep it there: `Bot.WaitIdleAsync` runs at
+every step of simulated time, so anything slow in it is paid per timer (a `Task.Delay(1)` there made
+a simulated day cost 6 s).
 
 `tests/Enforcer5.Tests` is MSTest + Moq, matching blackwolf. It reaches the app's internals
 through `InternalsVisibleTo`. Without the database the suite runs in about six seconds.
