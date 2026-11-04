@@ -8,6 +8,9 @@ namespace Enforcer5.Data
     /// <summary>One entry of the tempban schedule: the slot (Unix seconds it ends) and who it is for.</summary>
     internal sealed record TempbanEntry(string Slot, long ChatId, long UserId);
 
+    /// <summary>A tempban of one user: the chat, and when it ends (UTC).</summary>
+    internal sealed record UserTempban(long ChatId, DateTime UntilUtc);
+
     /// <summary>
     /// The tempbans running in each chat and the schedule the expiry check works through. Written only by
     /// the TempBan, Ban and Unban actions (<c>Actions/ActionEffects</c>), the expiry check and a rejoin.
@@ -29,6 +32,9 @@ namespace Enforcer5.Data
         /// expiry key. Cheap when there is none.
         /// </summary>
         Task CancelAsync(long chatId, long userId);
+
+        /// <summary>The user's tempbans that end after <paramref name="nowUtc"/>, one per chat, soonest first.</summary>
+        Task<IReadOnlyList<UserTempban>> OfUserAsync(long userId, DateTime nowUtc);
 
         /// <summary>Schedule entries that ended at or before <paramref name="nowUtc"/>.</summary>
         Task<IReadOnlyList<TempbanEntry>> DueAsync(DateTime nowUtc);

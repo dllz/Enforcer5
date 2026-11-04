@@ -108,6 +108,32 @@ namespace Enforcer5.Data
             await db.KeyDeleteAsync(expiryKey);
         }
 
+        public async Task<IReadOnlyList<UserTempban>> OfUserAsync(long userId, DateTime nowUtc)
+        {
+            var db = _database();
+            // The schedule is about a hundred entries (109 normal, 32 premium on 2026-11-04).
+            var latest = new Dictionary<long, long>();
+            foreach (var entry in await db.HashGetAllAsync(_index))
+            {
+                if (!long.TryParse(entry.Name.ToString(), out var seconds)) continue;
+                if (!TryParseEntry(entry.Value.ToString(), out var chatId, out var entryUser) || entryUser != userId) continue;
+                if (!latest.TryGetValue(chatId, out var known) || seconds > known) latest[chatId] = seconds;
+            }
+            // As in GetActiveAsync, the chat's expiry key wins: each new tempban rewrites it.
+            var chats = latest.Keys.ToList();
+            var expiries = await Task.WhenAll(chats.Select(c => db.StringGetAsync($"chat:{c}:tempbanned:{userId}")));
+            for (var i = 0; i < chats.Count; i++)
+                if (long.TryParse(expiries[i].ToString(), out var seconds)) latest[chats[i]] = seconds;
+
+            var now = Unix(nowUtc);
+            var latestRepresentable = DateTimeOffset.MaxValue.ToUnixTimeSeconds();
+            return latest
+                .Where(p => p.Value > now && p.Value <= latestRepresentable)
+                .OrderBy(p => p.Value)
+                .Select(p => new UserTempban(p.Key, DateTimeOffset.FromUnixTimeSeconds(p.Value).UtcDateTime))
+                .ToList();
+        }
+
         public async Task<IReadOnlyList<TempbanEntry>> DueAsync(DateTime nowUtc)
         {
             var now = Unix(nowUtc);

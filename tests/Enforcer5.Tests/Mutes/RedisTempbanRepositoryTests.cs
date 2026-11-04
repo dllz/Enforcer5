@@ -261,5 +261,22 @@ namespace Enforcer5.Tests.Mutes
             Assert.AreEqual(chatId, parsedChat);
             Assert.AreEqual(userId, parsedUser);
         }
-    }
+    
+        [TestMethod]
+        public async Task OfUser_ListsTheirRunningTempbans_OnePerChat_SoonestFirst()
+        {
+            Tempban(ChatId, 1, Now.AddDays(1));
+            Tempban(OtherChat, 1, Now.AddHours(1));
+            Tempban(OtherChat, 2, Now.AddHours(2)); // someone else
+            Tempban(-1005, 1, Now.AddMinutes(-1)); // ended
+            // An older entry left behind in the schedule: the chat's expiry key says when it ends.
+            Hash("tempbanned")[Unix(Now.AddMinutes(30))] = $"{ChatId}:1:Some Name:Some Group";
+
+            var mine = await Repository().OfUserAsync(1, Now);
+
+            CollectionAssert.AreEqual(
+                new[] { new UserTempban(OtherChat, Now.AddHours(1)), new UserTempban(ChatId, Now.AddDays(1)) },
+                mine.ToArray());
+        }
+}
 }

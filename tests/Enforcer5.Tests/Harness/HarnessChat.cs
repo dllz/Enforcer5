@@ -411,6 +411,20 @@ namespace Enforcer5.Tests.Harness
             await CompleteAsync();
         }
 
+        /// <summary>An inline query (<c>@bot text</c>) from <paramref name="from"/>; the bot's answer, once it is sent.</summary>
+        internal async Task<Telegram.Bot.Requests.AnswerInlineQueryRequest> InlineAsync(HarnessUser from, string text)
+        {
+            var id = $"iq{Telegram.NextMessageId()}";
+            Route(new Update
+            {
+                Id = _world.NextUpdateId++,
+                InlineQuery = new InlineQuery { Id = id, From = from.ToUser(), Query = text, Offset = "" }
+            });
+            await CompleteAsync();
+            return Telegram.Accepted.Select(c => c.Request).OfType<Telegram.Bot.Requests.AnswerInlineQueryRequest>()
+                .LastOrDefault(r => r.InlineQueryId == id);
+        }
+
         /// <summary>The bot's last message to this chat, with its buttons.</summary>
         internal Message LastBotMessage => Telegram.SentMessages.Last(m => m.Chat.Id == ChatId);
 

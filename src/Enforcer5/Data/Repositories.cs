@@ -110,6 +110,20 @@ namespace Enforcer5.Data
             new RedisTempbanRepository(() => Redis.db, "tempbanned");
 #endif
 
+        /// <summary>
+        /// Both editions' tempbans, this one's first: the inline <c>tempban</c> query shows a user theirs from
+        /// either bot.
+        /// </summary>
+        internal static ITempbanRepository[] TempbansOfBothEditions { get; set; } =
+        {
+            Tempbans,
+#if PREMIUM
+            new RedisTempbanRepository(() => Redis.db, "tempbanned")
+#else
+            new RedisTempbanRepository(() => Redis.db, "tempbannedPremium")
+#endif
+        };
+
         /// <summary>Posts Detection deleted, for their reports (a cache, 24 hours).</summary>
         internal static IDeletedPostRepository DeletedPosts { get; set; } = new RedisDeletedPostRepository(() => Redis.db);
 

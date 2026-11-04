@@ -172,5 +172,28 @@ namespace Enforcer5.Tests.Harness
 
             Assert.AreEqual(1, Scheduled(chat), "nothing happened, so nothing is forgotten");
         }
-    }
+    
+        [TestMethod]
+        public async Task TheInlineTempbanQuery_ShowsTheMembersOwnTempban_AndItsRealEnd()
+        {
+            await using var chat = await HarnessChat.StartAsync(title: "Cats & Dogs");
+            chat.Hashes[$"chat:{chat.ChatId}:details", "name"] = "Cats & Dogs";
+            var (_, member, _) = await TempbannedAsync(chat);
+            var other = chat.Add("Other");
+
+            var answer = await chat.InlineAsync(member, "tempban");
+
+            Assert.IsNotNull(answer, "answered");
+            var result = (Telegram.Bot.Types.InlineQueryResults.InlineQueryResultArticle)answer.Results.Single();
+            Assert.AreEqual("Cats & Dogs", result.Description, "plain text, escaped nowhere");
+            var text = ((Telegram.Bot.Types.InlineQueryResults.InputTextMessageContent)result.InputMessageContent).MessageText;
+            StringAssert.Contains(text, "<b>Cats &amp; Dogs</b>");
+            var ends = DateTimeOffset.FromUnixTimeSeconds(long.Parse(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{member.Id}"])).UtcDateTime;
+            StringAssert.Contains(text, $"{ends:HH:mm:ss dd-MM-yyyy} UTC", "when it really ends, no two hours off");
+
+            var nothing = await chat.InlineAsync(other, "tempban");
+            Assert.AreEqual("Nothing Found", ((Telegram.Bot.Types.InlineQueryResults.InlineQueryResultArticle)nothing.Results.Single()).Title);
+            Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
+        }
+}
 }

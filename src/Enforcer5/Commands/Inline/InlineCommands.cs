@@ -23,8 +23,9 @@ namespace Enforcer5
                 result.Add(new InlineQueryResultArticle()
                 {
                     Description = u.groupName,
-                    Id = $"{u.unbanTime} + 1",
-                    Title = $"{u.name} ({u.userId})",
+                    // One per group; two tempbans ending in the same second shared an id, which Telegram refuses.
+                    Id = string.IsNullOrEmpty(u.groupId) ? "none" : $"tempban{u.groupId}",
+                    Title = string.IsNullOrEmpty(u.userId) ? u.name : $"{u.name} ({u.userId})",
                     InputMessageContent = new InputTextMessageContent()
                     {
                         LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },

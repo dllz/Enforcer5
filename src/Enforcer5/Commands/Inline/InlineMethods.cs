@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Types;
@@ -14,69 +15,49 @@ namespace Enforcer5
     public static class InlineMethods
     {
         
+        /// <summary>
+        /// The asking user's own running tempbans, in either edition, filtered by <paramref name="args"/> (part of
+        /// the group's title or the id). Names and titles are raw: the result's title and description are plain
+        /// text, and the message escapes them. Until 2026-11-04 this never found anything (a string id compared
+        /// with a number, issue #30), read the schedules itself and took two hours off the end.
+        /// </summary>
         internal static TempbanUser[] GetTempbanUserDetails(User user, string args, XDocument lang)
         {
-            var bitBan = Redis.db.HashGetAllAsync("tempbanned").Result.ToList();
-            bitBan.AddRange(Redis.db.HashGetAllAsync("tempbannedPremium").Result);
-            
-            // Names and titles stay raw: the result's title and description are plain text; the message escapes them.
-            var results = new List<TempbanUser>();            
-            if (args != null)
+            var now = Clock.UtcNow;
+            var name = Redis.db.HashGetAsync($"user:{user.Id}", "name").Result;
+            var shownName = name.HasValue ? name.ToString() : user.FirstName;
+            var results = new List<TempbanUser>();
+            var seen = new HashSet<long>();
+            foreach (var repository in Repositories.TempbansOfBothEditions)
             {
-                string userId, chatId, name = "", groupname = "";
-                foreach (var x in bitBan)
+                IReadOnlyList<UserTempban> tempbans;
+                try
                 {
-                    userId = x.Value.ToString().Split(':')[1];
-                    chatId = x.Value.ToString().Split(':')[0];                    
-                    if (userId.Equals(user.Id))
-                    {
-                        var tempname = Redis.db.HashGetAsync($"user:{userId}", "name").Result;
-                        if (tempname.HasValue)
-                            name = tempname.ToString();
-                        var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
-                        if (tempgroupname.HasValue)
-                        {
-                            groupname = tempgroupname.ToString();
-                        }
-                        if (name.ToLower().Contains(args.ToLower()) | groupname.ToLower().Contains(args.ToLower()) | userId.Contains(args))
-                        {
-                            results.Add(new TempbanUser()
-                            {
-                                userId = userId,
-                                name = name,
-                                groupName = groupname,
-                                unbanTime =
-                                    $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                                groupId = chatId
-                            });
-                        }                      
-                    }
+                    tempbans = repository.OfUserAsync(user.Id, now).GetAwaiter().GetResult();
                 }
-            }
-            else
-            {
-                string userId, chatId, groupname = "Unknown Group Name";
-                foreach (var x in bitBan)
+                catch (Exception e)
                 {
-                    userId = x.Value.ToString().Split(':')[1];
-                    chatId = x.Value.ToString().Split(':')[0];
-                    if (userId.Equals(user.Id))
+                    ErrorReporter.Report(e, $"Reading the tempbans of {user.Id} for the inline query");
+                    continue;
+                }
+                foreach (var tempban in tempbans)
+                {
+                    if (!seen.Add(tempban.ChatId)) continue;
+                    var title = Service.GetCachedGroupTitle(tempban.ChatId);
+                    var groupName = string.IsNullOrEmpty(title) ? tempban.ChatId.ToString() : title;
+                    if (!string.IsNullOrEmpty(args) &&
+                        !groupName.Contains(args, StringComparison.OrdinalIgnoreCase) &&
+                        !(shownName ?? "").Contains(args, StringComparison.OrdinalIgnoreCase) &&
+                        !tempban.ChatId.ToString().Contains(args) && !user.Id.ToString().Contains(args))
+                        continue;
+                    results.Add(new TempbanUser
                     {
-                        var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
-                        if (tempgroupname.HasValue)
-                        {
-                            groupname = tempgroupname.ToString();
-                        }
-                        results.Add(new TempbanUser()
-                        {
-                            userId = userId,
-                            name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString(),
-                            groupName = groupname,
-                            unbanTime =
-                                $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",
-                            groupId = chatId
-                        });
-                    }
+                        userId = user.Id.ToString(),
+                        name = shownName,
+                        groupName = groupName,
+                        unbanTime = $"{tempban.UntilUtc:HH:mm:ss dd-MM-yyyy} {Methods.GetLocaleString(lang, "uct")}",
+                        groupId = tempban.ChatId.ToString()
+                    });
                 }
             }
             if (results.Count == 0)
