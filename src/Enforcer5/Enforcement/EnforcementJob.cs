@@ -136,6 +136,12 @@ namespace Enforcer5.Enforcement
         // Kept in memory only: what the submitter is waiting on, and references whose ids may only
         // be known once earlier history writes ran.
         [JsonIgnore] internal TaskCompletionSource<EnforcementResult> Completion;
+        /// <summary>
+        /// Its first write to the journal, done (or failed). The job can be carried out before that write lands;
+        /// its removal from the journal waits for it, or the late write would leave a finished job there to run
+        /// again after a restart. Done already for a job loaded from the journal.
+        /// </summary>
+        [JsonIgnore] internal Task Journaled = Task.CompletedTask;
         [JsonIgnore] internal WarningRef Trigger;
         [JsonIgnore] internal ReportRef Report;
         [JsonIgnore] internal ErrorContext Context;

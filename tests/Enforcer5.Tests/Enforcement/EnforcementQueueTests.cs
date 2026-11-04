@@ -42,6 +42,62 @@ namespace Enforcer5.Tests.Enforcement
             AssertNoErrors(bot);
         }
 
+        /// <summary>The journal, with the first write of one job held back until the test lets it go.</summary>
+        private sealed class SlowJournal : IEnforcementJournal
+        {
+            private readonly IEnforcementJournal _inner;
+            internal readonly TaskCompletionSource Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal string HeldJob;
+            internal SlowJournal(IEnforcementJournal inner) => _inner = inner;
+
+            public async Task SaveAsync(EnforcementJob job)
+            {
+                if (job.Id == HeldJob) { HeldJob = null; await Release.Task; }
+                await _inner.SaveAsync(job);
+            }
+
+            public Task RemoveAsync(string jobId) => _inner.RemoveAsync(jobId);
+            public Task<System.Collections.Generic.IReadOnlyList<EnforcementJob>> LoadAsync() => _inner.LoadAsync();
+        }
+
+        [TestMethod]
+        public async Task AJobCarriedOutBeforeItsJournalWriteLanded_LeavesTheJournal_AndIsNotRunAgainAfterARestart()
+        {
+            // The worker can pick a job up the moment it is queued, before its first journal write is done. Its
+            // removal used to land first, the late write then left it in the journal, and a restart ran it again:
+            // a raid's lock put back after its unlock (2026-11-04).
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1, 2);
+            var previous = Repositories.EnforcementJournal;
+            var journal = new SlowJournal(previous);
+            Repositories.EnforcementJournal = journal;
+            try
+            {
+                var held = EnforcementJob.Ban(Raided, 1);
+                journal.HeldJob = held.Id;
+                var submitting = EnforcementQueue.SubmitAsync(held); // waits on the held write
+                await bot.SettleAsync();
+                bot.Submit(EnforcementJob.Ban(Raided, 2)); // wakes the worker, which takes both
+                await bot.AdvanceAsync(TimeSpan.FromSeconds(5));
+                Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1), "carried out before its write landed");
+
+                journal.Release.TrySetResult();
+                await submitting;
+                await bot.AdvanceAsync(TimeSpan.FromSeconds(5));
+                Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count, "done jobs leave the journal");
+
+                bot.Telegram.SetMember(Raided, 1, MemberState.Member); // an admin let them back in
+                await bot.CrashAndRestartAsync();
+                await bot.AdvanceAsync(TimeSpan.FromMinutes(1));
+                Assert.AreEqual(MemberState.Member, bot.Telegram.GetMember(Raided, 1), "not banned again after the restart");
+            }
+            finally
+            {
+                Repositories.EnforcementJournal = previous;
+            }
+            AssertNoErrors(bot);
+        }
+
         // A kick as the action seam builds it, telling the group how it went.
         private static EnforcementJob KickWithNotice(long chatId, long userId, string actor = null)
         {

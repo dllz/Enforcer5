@@ -142,6 +142,16 @@ namespace Enforcer5.Enforcement
             }
         }
 
+        // Waits for the job's first journal write. Waiting on whoever submitted it: parked for the harness, like a
+        // permit (Bot's dispatch), so it can move time on meanwhile.
+        private static async Task AfterWrittenAsync(EnforcementJob job)
+        {
+            if (job.Journaled.IsCompleted) return;
+            Clock.Park();
+            try { await job.Journaled; }
+            finally { Clock.Unpark(); }
+        }
+
         /// <summary>
         /// Queues a job; the task ends when it is done or refused for good. The same job already
         /// waiting (same kind, chat and target) is not queued twice: both get its result.
@@ -151,6 +161,7 @@ namespace Enforcer5.Enforcement
             var now = Clock.UtcNow;
             EnforcementJob existing = null;
             var refusedForNow = false;
+            var journaled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (Lock)
             {
                 // Telegram already said this person is an admin there: asking again is a wasted call.
@@ -194,6 +205,7 @@ namespace Enforcer5.Enforcement
                 {
                     existing = null;
                     job.Completion = new TaskCompletionSource<EnforcementResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    job.Journaled = journaled.Task;
                     job.Context ??= ErrorReporter.Current;
                     job.CreatedUtc = now;
                     job.DueUtc = job.NotBeforeUtc is { } notBefore && notBefore > now ? notBefore : now;
@@ -214,6 +226,10 @@ namespace Enforcer5.Enforcement
             {
                 // Still carried out from memory; only a restart before then would lose it.
                 ErrorReporter.Report(e, $"Journaling {job}");
+            }
+            finally
+            {
+                journaled.TrySetResult();
             }
             if (refusedForNow) CompleteOnce(job, EnforcementResult.Refuse(Refusal.BotNotAdmin));
             Wake();
@@ -547,6 +563,11 @@ namespace Enforcer5.Enforcement
 
             try
             {
+                // Its first write may still be on its way (the worker can pick a job up the moment it is queued):
+                // removing it before then left it in the journal, and a restart ran it again. Seen as a raid's
+                // lock put back after its unlock, so the group stayed locked (2026-11-04).
+                await AfterWrittenAsync(job);
+                foreach (var rider in job.Riders) await AfterWrittenAsync(rider);
                 if (keep) await Journal.SaveAsync(job);
                 else await Journal.RemoveAsync(job.Id);
                 // Deletes that rode along are in the lead job now (saved above when it stays).
