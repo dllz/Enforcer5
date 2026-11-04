@@ -372,7 +372,7 @@ rights and crashes, checking every rule after each. It runs 3 seeds by default. 
 change to `Helpers/TelegramGateway`, `FloodControl`, `Enforcement/`, `CommandLimiter` or `Raids/`,
 run 500:** `enf-sql subprod --run -- tools/chaos.sh 500`. It splits the seeds over several test
 processes (seeds cannot share one: the harness takes over static state); each uses up to 5
-connections and subprod's role allows 10, so it runs 2 (`ENFORCER_CHAOS_SHARDS`), about 4.5 s a
+connections; it runs 2 (`ENFORCER_CHAOS_SHARDS`: 6 made subprod time out on 9 of 500 seeds), about 2.5 s a
 seed each. It lists the failing seeds and exits non-zero. A failure names its seed; replay it alone
 with `ENFORCER_CHAOS_SEED=<seed>`; `ENFORCER_CHAOS_PROGRESS=<file>` logs each seed as it finishes.
 
@@ -382,8 +382,9 @@ tests by deleting the rows of the filled tables: TRUNCATE took 0.7 s a test) and
 scenario take minutes.
 
 **The whole suite with the database:** `enf-sql subprod --run -- tools/test.sh [shards] [config]`
-splits the test classes over 2 processes (`ENFORCER_TEST_SHARDS`; the connection cap again), about
-3 minutes, against about 5 in one process (2026-11-04). Keep it there: `Bot.WaitIdleAsync` runs at
+splits the test classes over 6 processes (`ENFORCER_TEST_SHARDS`; subprod's role allows 64 connections
+since 2026-11-04), balanced by each class's time in the last run, about 2 minutes against about 5 in one
+process. `tools/chaos.sh` stays at 2: its seeds write so much that 6 processes made subprod time out. Keep it there: `Bot.WaitIdleAsync` runs at
 every step of simulated time, so anything slow in it is paid per timer (a `Task.Delay(1)` there made
 a simulated day cost 6 s).
 
