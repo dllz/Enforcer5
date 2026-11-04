@@ -195,5 +195,23 @@ namespace Enforcer5.Tests.Harness
             Assert.AreEqual("Nothing Found", ((Telegram.Bot.Types.InlineQueryResults.InlineQueryResultArticle)nothing.Results.Single()).Title);
             Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
         }
+
+        [TestMethod]
+        public async Task Tempban_WithAShortUnit_LastsThatLong()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var a = chat.Add("A");
+            var b = chat.Add("B");
+
+            await chat.SendAsync(admin, "/tempban 2 h", replyTo: await chat.SendAsync(a, "x"));
+            await chat.SendAsync(admin, "/tempban 3d", replyTo: await chat.SendAsync(b, "y"));
+
+            long Ends(HarnessUser u) => long.Parse(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{u.Id}"]);
+            var now = new DateTimeOffset(chat.Clock.UtcNow).ToUnixTimeSeconds();
+            Assert.AreEqual(2 * 3600, Ends(a) - now, 5, "two hours, not two minutes");
+            Assert.AreEqual(3 * 86400, Ends(b) - now, 5, "three days");
+            Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
+        }
 }
 }

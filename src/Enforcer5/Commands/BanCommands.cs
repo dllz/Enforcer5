@@ -249,6 +249,19 @@ namespace Enforcer5
             return text;
         }
 
+        /// <summary>
+        /// The length of a tempban in minutes: <paramref name="time"/> in <paramref name="units"/>. Short units (m, h,
+        /// d, w) are understood: "/tempban 2 h" gave 2 minutes until 2026-11-04 (issue #31). Anything else counts as
+        /// minutes, as before, since the word after the number may be the start of a reason.
+        /// </summary>
+        internal static double TempbanMinutes(long time, string units) => (units ?? "").ToLowerInvariant() switch
+        {
+            "h" or "hr" or "hrs" or "hour" or "hours" => TimeSpan.FromHours(time).TotalMinutes,
+            "d" or "day" or "days" => TimeSpan.FromDays(time).TotalMinutes,
+            "w" or "week" or "weeks" => TimeSpan.FromDays(7 * time).TotalMinutes,
+            _ => time // m, min, mins, minute, minutes, and none
+        };
+
         [Command(Trigger = "ban", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Ban(Update update, string[] args)
         {
@@ -469,6 +482,14 @@ namespace Enforcer5
                 }
             }
 
+            // "2h" as well as "2 h": the unit written onto the number.
+            var glued = System.Text.RegularExpressions.Regex.Match(length ?? "", @"^(\d+)(m|min|mins|h|hr|hrs|d|w)$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (glued.Success)
+            {
+                length = glued.Groups[1].Value;
+                units = glued.Groups[2].Value;
+            }
             if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
@@ -477,27 +498,7 @@ namespace Enforcer5
             {
                 time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
             }
-            double calculatedTime = 0;
-            switch (units)
-            {
-                case "min":
-                case "mins":
-                case "minutes":
-                case "minute":
-                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                    break;
-                case "hour":
-                case "hours":
-                    calculatedTime = TimeSpan.FromHours(time).TotalMinutes;
-                    break;
-                case "days":
-                case "day":
-                    calculatedTime = TimeSpan.FromDays(time).TotalMinutes;
-                    break;
-                default:
-                    calculatedTime = TimeSpan.FromMinutes(time).TotalMinutes;
-                    break;
-            }
+            double calculatedTime = TempbanMinutes(time, units);
             if (userId != 0)
             {
                 Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId),
