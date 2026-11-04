@@ -111,7 +111,8 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(member, new string('a', 150));
 
-            var told = chat.Telegram.SentMessages.Last(m => m.Chat.Id == chat.ChatId).Text;
+            // Its kick notice ("was removed from the group") also goes to the group, in either order.
+            var told = chat.Telegram.SentMessages.Last(m => m.Chat.Id == chat.ChatId && m.Text.Contains("too long")).Text;
             var line = (await LogsAsync(chat)).Single();
             // In the log the line sits inside the command's own code block, where an id cannot be code again.
             StringAssert.Contains(line, told.Replace("<code>", "").Replace("</code>", ""));
