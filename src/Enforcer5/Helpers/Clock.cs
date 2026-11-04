@@ -93,11 +93,31 @@ namespace Enforcer5.Helpers
         internal static bool Wait(Task task, TimeSpan timeout)
         {
             if (task.IsCompleted) return true;
-            using var cancel = new CancellationTokenSource();
-            var timer = WaitAsync(timeout, cancel.Token);
-            Task.WhenAny(task, timer).GetAwaiter().GetResult();
-            cancel.Cancel();
+            WaitUntil(task, timeout).Wait();
             return task.IsCompleted;
+        }
+
+        /// <summary>
+        /// Waits for <paramref name="task"/> at most <paramref name="timeout"/> on this clock. True when the task
+        /// finished in time.
+        /// </summary>
+        internal static async Task<bool> WaitForAsync(Task task, TimeSpan timeout)
+        {
+            if (task.IsCompleted) return true;
+            await WaitUntil(task, timeout);
+            return task.IsCompleted;
+        }
+
+        // The clock wait, ended by the task finishing. It is ended (and so stops counting as parked) from the
+        // task's own continuation, not once the waiter resumes: the work that finished the task may have ended by
+        // then, and for that moment the harness would see nothing running and move the clock on.
+        private static Task<bool> WaitUntil(Task task, TimeSpan timeout)
+        {
+            var cancel = new CancellationTokenSource();
+            var wait = WaitAsync(timeout, cancel.Token);
+            task.ContinueWith(static (_, c) => ((CancellationTokenSource)c).Cancel(), cancel, CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            return wait;
         }
     }
 }

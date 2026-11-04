@@ -409,21 +409,35 @@ namespace Enforcer5.Helpers
         internal static async Task WaitIdleAsync(TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
-            // The counts are exact at every moment (work is counted before it is dispatched, and
-            // a wait stops being parked inside the timer that ends it), so idle twice in a row a
-            // moment apart is enough. Checked often: the harness waits here thousands of times.
-            var idleTicks = 0;
+            // The counts are exact at every moment for work that is dispatched (counted before it is dispatched,
+            // and a wait stops being parked inside the timer, or the continuation of the task, that ends it), and a
+            // continuation queued but not yet run shows in the thread pool's queue. What neither shows is a moment
+            // inside code that has not been dispatched: an await the caller did not keep, a thread just woken. So
+            // idle must hold twice, QuietFor apart.
+            // The harness waits here thousands of times (each tick of a background loop in a simulated week), so it
+            // spins rather than sleeps: Task.Delay(1) took over a millisecond, which made a simulated day cost 6 s.
+            var spins = 0;
             while (true)
             {
                 if (DateTime.UtcNow > deadline)
                     throw new TimeoutException(
                         $"{Volatile.Read(ref _inFlight)} dispatched tasks still running, {Clock.Parked} of them waiting on the clock; busy: {Busy()}");
-                idleTicks = Volatile.Read(ref _inFlight) <= Clock.Parked ? idleTicks + 1 : 0;
-                if (idleTicks >= 2) return;
-                if (idleTicks == 1) await Task.Yield();
+                if (Idle())
+                {
+                    var quiet = Stopwatch.StartNew();
+                    while (quiet.Elapsed < QuietFor) Thread.SpinWait(20);
+                    if (Idle()) return;
+                }
+                if (++spins < 200) await Task.Yield();
                 else await Task.Delay(1);
             }
         }
+
+        // How long idle must last to count, in WaitIdleAsync.
+        private static readonly TimeSpan QuietFor = TimeSpan.FromMicroseconds(100);
+
+        private static bool Idle() =>
+            Volatile.Read(ref _inFlight) <= Clock.Parked && ThreadPool.PendingWorkItemCount == 0;
 
         /// <summary>
         /// Starts a long-running background loop (the enforcement queue's worker, for one). It
@@ -479,9 +493,12 @@ namespace Enforcer5.Helpers
                     {
                         // Waiting for a permit is waiting on whoever holds it: when they are all
                         // waiting on the clock, so is this.
-                        Clock.Park();
-                        try { await gate.WaitAsync(); }
-                        finally { Clock.Unpark(); }
+                        if (!gate.Wait(0))
+                        {
+                            Clock.Park();
+                            try { await gate.WaitAsync(); }
+                            finally { Clock.Unpark(); }
+                        }
                     }
                     catch (Exception e)
                     {

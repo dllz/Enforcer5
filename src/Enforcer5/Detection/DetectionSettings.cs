@@ -92,9 +92,7 @@ namespace Enforcer5.Detection
             var load = StartLoad(chatId);
             if (load != null)
             {
-                using var cancel = new CancellationTokenSource();
-                await Task.WhenAny(load, Clock.WaitAsync(ColdWait, cancel.Token));
-                cancel.Cancel();
+                await Clock.WaitForAsync(load, ColdWait);
                 if (load.IsCompletedSuccessfully && load.Result != null) return load.Result;
             }
             var legacy = LegacySettings.Map(await LegacySettings.ReadAsync(Redis.db, chatId));

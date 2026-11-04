@@ -45,9 +45,12 @@ JOIN telegram_accounts a ON a.account_id = n.account_id ORDER BY n.near_miss_id"
             Assert.AreEqual(0.7f, miss.Threshold, 1e-6);
 
             await using var connection = await chat.Database.OpenConnectionAsync();
-            var similarities = (await connection.QueryAsync<float?>(
-                "SELECT similarity FROM detections WHERE sign = 'same_as_newcomers' ORDER BY detection_id")).ToArray();
-            Assert.AreEqual(1f, similarities.First(), "the third posted the first's text");
+            // The third's own row: the rows are written in the background, so not always in the order of the posts.
+            var similarities = (await connection.QueryAsync<(long User, float? Similarity)>(
+                "SELECT a.telegram_user_id, d.similarity FROM detections d JOIN telegram_accounts a ON a.account_id = d.account_id " +
+                "WHERE d.sign = 'same_as_newcomers' ORDER BY d.detection_id")).ToArray();
+            Assert.AreEqual(1f, similarities.First(s => s.User == third.Id).Similarity,
+                "the third posted the first's text: " + string.Join(", ", similarities));
             AssertNoErrors(chat);
         }
 
