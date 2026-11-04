@@ -651,11 +651,29 @@ namespace Enforcer5.Tests.Harness
             var state = GetMember(chatId, userId);
             if (state is MemberState.Creator or MemberState.Administrator)
                 throw new ApiRequestException("Bad Request: user is an administrator of the chat", 400);
+            // Telegram not showing the ban yet: the unban answers OK and changes nothing.
+            lock (_lock)
+                if (_ignoredUnbans.TryGetValue(chatId, out var ignored) && ignored > 0)
+                {
+                    _ignoredUnbans[chatId] = ignored - 1;
+                    return true;
+                }
             // Without only_if_banned Telegram also removes a current member, which is how a kick
             // is done in two calls.
             if (state == MemberState.Kicked || (!onlyIfBanned && state is MemberState.Member or MemberState.Restricted))
                 SetMember(chatId, userId, MemberState.Left);
             return true;
+        }
+
+        private readonly Dictionary<long, int> _ignoredUnbans = new();
+
+        /// <summary>
+        /// The next <paramref name="count"/> unbans in <paramref name="chatId"/> answer OK and change nothing, as
+        /// Telegram does when it does not show a ban made a moment before yet.
+        /// </summary>
+        internal void IgnoreUnbans(long chatId, int count)
+        {
+            lock (_lock) _ignoredUnbans[chatId] = count;
         }
 
         private bool SetPermissions(long chatId, ChatPermissions permissions)

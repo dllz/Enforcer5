@@ -9,6 +9,7 @@ using StackExchange.Redis;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Enforcer5.Enforcement
 {
@@ -30,6 +31,12 @@ namespace Enforcer5.Enforcement
         Refused,
         /// <summary>Network trouble or a timeout: try again soon.</summary>
         Transient
+    }
+
+    /// <summary>A kick's unban went through, yet Telegram still has the person as banned.</summary>
+    internal sealed class StillBannedException : Exception
+    {
+        internal StillBannedException(EnforcementJob job) : base($"{job}: still banned after the unban") { }
     }
 
     /// <summary>
@@ -101,8 +108,15 @@ namespace Enforcer5.Enforcement
                         {
                             await api.BanChatMember(job.ChatId, job.TargetId, revokeMessages: job.RevokeMessages);
                             job.Stage = 1;
+                            job.Attempts = 0;
                         }
-                        await api.UnbanChatMember(job.ChatId, job.TargetId, onlyIfBanned: true);
+                        // Not only_if_banned: Telegram may not show the ban yet, and then that unban did
+                        // nothing and still answered OK, leaving the person banned (/kickme, 2026-11). They
+                        // are being removed either way, so this cannot remove anyone who should stay.
+                        await api.UnbanChatMember(job.ChatId, job.TargetId);
+                        // Checked, as the code before the queue did: a kick must never end as a ban.
+                        var member = await api.GetChatMember(job.ChatId, job.TargetId);
+                        if (member.Status == ChatMemberStatus.Kicked) return Attempt.Transient(new StillBannedException(job));
                         break;
                     case EnforcementKind.Unban:
                         // only_if_banned: without it Telegram removes a current member, so /unban of
