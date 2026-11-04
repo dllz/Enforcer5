@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -118,22 +119,64 @@ namespace Enforcer5.Tests.Storage
             return connectionString;
         }
 
-        /// <summary>Empties a schema from <see cref="MigratedSchemaAsync"/> and keeps it for the next test.</summary>
+        /// <summary>
+        /// Empties a schema from <see cref="MigratedSchemaAsync"/> and keeps it for the next test: deletes the rows
+        /// of the tables that hold any, those referring to others first, and restarts the sequences that were
+        /// used. TRUNCATE of every table took 0.55 to 0.7 s a test on subprod (2026-11-04, about 45 tables;
+        /// TRUNCATE ... CASCADE of only the filled ones as long, since nearly every table refers to the account
+        /// tables), most of each harness scenario's time; deleting the few rows a test writes takes milliseconds.
+        /// </summary>
         internal static async Task ReleaseMigratedAsync(string connectionString)
         {
             var schema = new NpgsqlConnectionStringBuilder(connectionString).SearchPath;
             await using (var connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                var tables = (await connection.QueryAsync<string>(
-                    "SELECT quote_ident(table_name) FROM information_schema.tables " +
-                    "WHERE table_schema = @schema AND table_type = 'BASE TABLE' AND table_name <> '__EFMigrationsHistory'",
-                    new { schema })).ToList();
+                var tables = _tables ??= await TablesInDeleteOrderAsync(connection, schema);
                 if (tables.Count > 0)
-                    await connection.ExecuteAsync($"TRUNCATE {string.Join(", ", tables)} RESTART IDENTITY CASCADE");
+                {
+                    var filled = (await connection.QueryAsync<string>(string.Join(" UNION ALL ",
+                        tables.Select(t => $"SELECT '{t.Replace("'", "''")}' WHERE EXISTS (SELECT 1 FROM {t})")))).ToHashSet();
+                    var used = (await connection.QueryAsync<string>(
+                        "SELECT quote_ident(sequencename) FROM pg_sequences WHERE schemaname = @schema AND last_value IS NOT NULL",
+                        new { schema })).ToList();
+                    var reset = tables.Where(filled.Contains).Select(t => $"DELETE FROM {t}")
+                        .Concat(used.Select(q => $"ALTER SEQUENCE {q} RESTART")).ToList();
+                    if (reset.Count > 0) await connection.ExecuteAsync(string.Join("; ", reset));
+                }
             }
             Migrated.Add(connectionString);
         }
+
+        // Every migrated schema has the same tables: read once, those referring to others before them.
+        private static List<string> _tables;
+
+        private static async Task<List<string>> TablesInDeleteOrderAsync(NpgsqlConnection connection, string schema)
+        {
+            var tables = (await connection.QueryAsync<string>(
+                "SELECT table_name FROM information_schema.tables " +
+                "WHERE table_schema = @schema AND table_type = 'BASE TABLE' AND table_name <> '__EFMigrationsHistory'",
+                new { schema })).ToList();
+            var refers = (await connection.QueryAsync<(string From, string To)>(
+                "SELECT c.conrelid::regclass::text, c.confrelid::regclass::text FROM pg_constraint c " +
+                "JOIN pg_namespace n ON n.oid = c.connamespace WHERE c.contype = 'f' AND n.nspname = @schema",
+                new { schema }))
+                .Select(r => (From: Bare(r.From), To: Bare(r.To))).Where(r => r.From != r.To).ToList();
+            // Depth-first: a table goes after every table that refers to it.
+            var ordered = new List<string>();
+            var seen = new HashSet<string>();
+            void Visit(string table)
+            {
+                if (!seen.Add(table)) return;
+                foreach (var from in refers.Where(r => r.To == table).Select(r => r.From)) Visit(from);
+                ordered.Add(table);
+            }
+            foreach (var table in tables) Visit(table);
+            return ordered.Where(tables.Contains).Select(t => "\"" + t.Replace("\"", "\"\"") + "\"").ToList();
+        }
+
+        // regclass text is schema-qualified (and quoted) only when off the search path; ours is on it.
+        private static string Bare(string regclass) => regclass.Split('.').Last().Trim('"');
 
         /// <summary>Drops every reused schema. Called once the test run is over.</summary>
         internal static async Task DropMigratedAsync()
