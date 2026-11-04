@@ -422,11 +422,20 @@ defSpamValue = 3;
             }
         }
 
-        public static void LogBotAction(long chatId, string command, long? targetId = null)
+        /// <summary>
+        /// Logs what the bot did on its own. <paramref name="line"/> is the HTML the bot told the group (a language
+        /// string, its arguments escaped already); it goes into the log line's &lt;code&gt;, as plain text, since
+        /// LogCommand escapes it again (names showed as A&amp;amp;B, issue #29).
+        /// </summary>
+        public static void LogBotAction(long chatId, string line, long? targetId = null)
         {
             var target = targetId.HasValue ? GetCachedUserName(targetId.Value) : "";
-            LogCommand(chatId, -1, "Enforcer", GetCachedGroupTitle(chatId), command, target, digestDuringRaid: true);
+            LogCommand(chatId, -1, "Enforcer", GetCachedGroupTitle(chatId), PlainText(line), target, digestDuringRaid: true);
         }
+
+        /// <summary>HTML as the reader sees it: tags dropped, entities decoded. Marked ids and mentions are kept.</summary>
+        internal static string PlainText(string html) =>
+            html == null ? null : System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*>", ""));
 
         // Callbacks whose data is "trigger:chatId:userId", so args[2] is the affected user.
         private static readonly HashSet<string> UserTargetCallbacks = new(StringComparer.OrdinalIgnoreCase)

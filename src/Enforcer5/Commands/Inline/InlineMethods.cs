@@ -19,6 +19,7 @@ namespace Enforcer5
             var bitBan = Redis.db.HashGetAllAsync("tempbanned").Result.ToList();
             bitBan.AddRange(Redis.db.HashGetAllAsync("tempbannedPremium").Result);
             
+            // Names and titles stay raw: the result's title and description are plain text; the message escapes them.
             var results = new List<TempbanUser>();            
             if (args != null)
             {
@@ -31,11 +32,11 @@ namespace Enforcer5
                     {
                         var tempname = Redis.db.HashGetAsync($"user:{userId}", "name").Result;
                         if (tempname.HasValue)
-                            name = tempname.ToString().FormatHTML();
+                            name = tempname.ToString();
                         var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
                         if (tempgroupname.HasValue)
                         {
-                            groupname = tempgroupname.ToString().FormatHTML();
+                            groupname = tempgroupname.ToString();
                         }
                         if (name.ToLower().Contains(args.ToLower()) | groupname.ToLower().Contains(args.ToLower()) | userId.Contains(args))
                         {
@@ -64,13 +65,12 @@ namespace Enforcer5
                         var tempgroupname = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").Result;
                         if (tempgroupname.HasValue)
                         {
-                            groupname = tempgroupname.ToString().FormatHTML();
+                            groupname = tempgroupname.ToString();
                         }
                         results.Add(new TempbanUser()
                         {
                             userId = userId,
-                            name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString()
-                                .FormatHTML(),
+                            name = Redis.db.HashGetAsync($"user:{userId}", "name").Result.ToString(),
                             groupName = groupname,
                             unbanTime =
                                 $"{long.Parse(x.Name).FromUnixTime().AddHours(-2).ToString("hh:mm:ss dd-MM-yyyy")} {Methods.GetLocaleString(lang, "uct")}",

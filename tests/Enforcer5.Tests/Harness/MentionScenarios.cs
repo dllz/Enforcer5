@@ -77,5 +77,26 @@ namespace Enforcer5.Tests.Harness
             StringAssert.Contains(report, $"{Link(reporter.Id, "Rita")} (@rita)");
             AssertClean(chat);
         }
-    }
+    
+        [TestMethod]
+        public async Task TheBotsOwnLogLine_ShowsANameOnce_NotEscapedTwice()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Keys.AddToSet("logChatGroups", chat.ChatId.ToString());
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "logchat"] = LogChannel.ToString();
+            var member = chat.Add("A&B");
+            var lang = Helpers.Methods.GetGroupLanguage(chat.ChatId).Doc;
+            // What the bot told the group (as the filters, Detection and BotGuard build it), logged as its own action.
+            var told = Helpers.Methods.GetLocaleString(lang, "bannedByFilter", $"{Helpers.Ids.Mention(member.Id, "A&B")}, {Helpers.Ids.Mark(member.Id)}", "x<y");
+
+            Service.LogBotAction(chat.ChatId, told, member.Id);
+            await chat.AdvanceAsync(System.TimeSpan.FromSeconds(5));
+
+            var line = chat.Telegram.SentMessages.Last(m => m.Chat.Id == LogChannel).Text;
+            StringAssert.Contains(line, "A&amp;B", line);
+            StringAssert.Contains(line, "x&lt;y", line);
+            Assert.IsFalse(line.Contains("&amp;amp;") || line.Contains("&amp;lt;"), line);
+            AssertClean(chat);
+        }
+}
 }
