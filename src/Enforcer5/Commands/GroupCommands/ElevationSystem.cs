@@ -38,7 +38,7 @@ namespace Enforcer5
                     Redis.db.StringSetAsync($"chat:{chat}:adminses:{userid}", "true");
                     if (blocked.HasValue)
                         Redis.db.SetRemoveAsync($"chat:{chat}:blockList", userid);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
                 else if (!upriv & blocked.HasValue == false & Methods.IsGroupAdmin(update))
@@ -47,7 +47,7 @@ namespace Enforcer5
                     Redis.db.SetAddAsync($"chat:{chat}:modlog",
                         $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result.ToString()} ({userid}) by {update.Message.From.FirstName} ({update.Message.From.Id}) at {System.DateTime.UtcNow} UTC");
                     Redis.db.StringSetAsync($"chat:{chat}:blockList:{userid}", userid, TimeSpan.FromMinutes(31));
-                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", userid, update.Message.From.Id), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "evlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
 
@@ -86,7 +86,7 @@ namespace Enforcer5
                     // Removing the elevation; a "false" here used to hide a real admin as well.
                     Redis.db.KeyDeleteAsync($"chat:{chat}:adminses:{userid}").Wait();
                     Redis.db.SetRemoveAsync($"chat:{chat}:mod", userid);
-                    Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", userid, update.Message.From.Id), update);
+                    Bot.SendReply(Methods.GetLocaleString(lang, "devlavated", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                     Service.LogCommand(update, update.Message.Text);
                 }
             }
@@ -111,7 +111,10 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var log = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:modlog").Result.Select(e => e.ToString()).ToList();
-            Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", log)}", update);
+            // Stored as "Name (id) by Name (id) at …": escaped for HTML, the ids copyable.
+            var shown = log.Select(l => System.Text.RegularExpressions.Regex.Replace(l.FormatHTML(), @"\((-?\d+)\)",
+                m => $"({Ids.Mark(m.Groups[1].Value)})"));
+            Bot.SendReply($"{Methods.GetLocaleString(lang, "prevMods")} {string.Join("\n", shown)}", update);
         }
 
         [Command(Trigger = "auth", InGroupOnly = true, Menu = Attributes.CommandMenu.GroupAdmins)]
@@ -128,7 +131,7 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetAddAsync($"chat:{chat}:auth", userid);
-                Bot.SendReply(Methods.GetLocaleString(lang, "auth", userid, update.Message.From.Id), update);
+                Bot.SendReply(Methods.GetLocaleString(lang, "auth", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }
@@ -147,7 +150,7 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetAddAsync($"chat:{chat}:deauth", userid);
-                Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", userid, update.Message.From.Id), update);
+                Bot.SendReply(Methods.GetLocaleString(lang, "elevateBlocked", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }
@@ -166,7 +169,7 @@ namespace Enforcer5
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
 
                 Redis.db.SetRemoveAsync($"chat:{chat}:deauth", userid);
-                Bot.SendReply(Methods.GetLocaleString(lang, "elevateUnblocked", userid, update.Message.From.Id), update);
+                Bot.SendReply(Methods.GetLocaleString(lang, "elevateUnblocked", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }
@@ -184,7 +187,7 @@ namespace Enforcer5
             {
                 var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
                 Redis.db.SetRemoveAsync($"chat:{chat}:auth", userid);
-                Bot.SendReply(Methods.GetLocaleString(lang, "dauth", userid, update.Message.From.Id), update);
+                Bot.SendReply(Methods.GetLocaleString(lang, "dauth", Ids.Mark(userid), Ids.Mark(update.Message.From.Id)), update);
                 Service.LogCommand(update, update.Message.Text);
             }
         }

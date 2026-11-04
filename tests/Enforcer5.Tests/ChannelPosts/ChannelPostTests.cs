@@ -190,8 +190,9 @@ namespace Enforcer5.Tests.ChannelPostTests
         [TestMethod]
         public void AllowedChannel_DisplaysTitleAndId()
         {
-            Assert.AreEqual("News (-1008)", new AllowedChannel(-1008, "News").ToString());
-            Assert.AreEqual("-1008", new AllowedChannel(-1008, null).ToString());
+            Assert.AreEqual("News (-1008)", Enforcer5.Helpers.Ids.Strip(new AllowedChannel(-1008, "News").ToString()));
+            Assert.AreEqual("News (<code>-1008</code>)", Enforcer5.Helpers.Ids.ToHtml(new AllowedChannel(-1008, "News").ToString()));
+            Assert.AreEqual("<code>-1008</code>", Enforcer5.Helpers.Ids.ToHtml(new AllowedChannel(-1008, null).ToString()));
         }
     }
 }

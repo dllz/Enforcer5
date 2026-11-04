@@ -610,7 +610,7 @@ namespace Enforcer5.Handlers
                         try
                         {
                             // No pause between them: the enforcement queue and the gateway pace the calls.
-                            bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {update.Message.NewChatMembers[i].Id} has been tempbanned for an hour as they were added by {update.Message.From.Id}", reason: "Added in a mass add", source: ActionSource.Detection);
+                            bool res = Commands.Tempban(update.Message.NewChatMembers[i].Id, update.Message.Chat.Id, 60, message: $"User: {Ids.Mark(update.Message.NewChatMembers[i].Id)} has been tempbanned for an hour as they were added by {Ids.Mark(update.Message.From.Id)}", reason: "Added in a mass add", source: ActionSource.Detection);
                         }
                         catch (Exception e)
                         {
@@ -621,7 +621,7 @@ namespace Enforcer5.Handlers
                         "tempban", evidence: new { added = update.Message.NewChatMembers.Length, adder = true });
                     try
                     {
-                        bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {update.Message.From.Id} has been tempbanned for 2 hours as they added to many members", reason: "Mass-added members", source: ActionSource.Detection);
+                        bool res = Commands.Tempban(update.Message.From.Id, update.Message.Chat.Id, 120, message: $"User: {Ids.Mark(update.Message.From.Id)} has been tempbanned for 2 hours as they added to many members", reason: "Mass-added members", source: ActionSource.Detection);
                     }
                     catch (Exception e)
                     {

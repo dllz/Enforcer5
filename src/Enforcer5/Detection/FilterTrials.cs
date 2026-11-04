@@ -69,7 +69,7 @@ namespace Enforcer5.Detection
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var stats = await Repositories.DetectionLog.SignStatsAsync(chatId, new[] { rule.Sign });
             var (hits, removed) = stats.TryGetValue(rule.Sign, out var found) ? found : (0, 0);
-            var title = (await ChatDetails.GetAsync(chatId))?.Title ?? chatId.ToString();
+            var title = (await ChatDetails.GetAsync(chatId))?.Title ?? Ids.Mark(chatId);
             var text = Text(lang, rule, title, hits, removed, null);
             var key = ReportKey.ForTrial(chatId, rule.Id, DateTimeOffset.FromUnixTimeSeconds(now.ToUnixTimeSeconds()));
             var copies = await DetectionReports.SendAsync(chatId, text, Buttons(lang, chatId, rule.Id, key.OpenedAt));
@@ -153,7 +153,7 @@ namespace Enforcer5.Detection
                 ? Methods.GetLocaleString(lang, "reportDone")
                 : DetectionReports.DecisionLine(lang, $"trial_{standing}", by, html: false));
             // The notice as it was, with who decided what and no buttons.
-            var title = (await ChatDetails.GetAsync(chatId))?.Title ?? chatId.ToString();
+            var title = (await ChatDetails.GetAsync(chatId))?.Title ?? Ids.Mark(chatId);
             var stats = await Repositories.DetectionLog.SignStatsAsync(chatId, new[] { $"filter:{filterId}" });
             var (hits, removed) = stats.TryGetValue($"filter:{filterId}", out var found) ? found : (0, 0);
             var shown = rule ?? new FilterRule(filterId, FilterRule.RegexKind, null, "text", "", null, false, FilterRule.Trial, null, null);

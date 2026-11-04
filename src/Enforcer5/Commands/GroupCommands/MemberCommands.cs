@@ -181,7 +181,7 @@ namespace Enforcer5
             {
                 try
                 {
-                    Bot.SendReply($"{id}\n{name}\n@{user}", update.Message);
+                    Bot.SendReply($"{Ids.Mark(id)}\n{name.FormatHTML()}\n@{user}", update.Message);
                 }
                 catch (AggregateException e)
                 {
@@ -194,7 +194,7 @@ namespace Enforcer5
             {
                 try
                 {
-                    Bot.SendReply($"{id}\n{name}", update.Message);
+                    Bot.SendReply($"{Ids.Mark(id)}\n{name.FormatHTML()}", update.Message);
                 }
                 catch (AggregateException e)
                 {
@@ -443,7 +443,7 @@ namespace Enforcer5
                     message = update.Message.ReplyToMessage.Text;
                     date = update.Message.ReplyToMessage.Date;
                 }
-                var msg = $"<b>Message:</b> {message}\n<b>Name:</b> {name} {lastname} (@{username} / {id})\n<b>Language:</b> {language}\n<b>Time:</b> {date.ToString("r")}";
+                var msg = $"<b>Message:</b> {message.FormatHTML()}\n<b>Name:</b> {name.FormatHTML()} {lastname.FormatHTML()} (@{username} / {Ids.Mark(id)})\n<b>Language:</b> {language}\n<b>Time:</b> {date.ToString("r")}";
                 Bot.SendReply(msg, update);
             
             }

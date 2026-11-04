@@ -26,7 +26,8 @@ namespace Enforcer5.Actions
                         // A permanent ban ends any tempban: left in the schedule, it would unban them when it ran out.
                         Repositories.Tempbans.CancelAsync(request.ChatId, request.TargetId).GetAwaiter().GetResult();
                         if (request.BanListReason != null)
-                            Repositories.BanList.SetAsync(request.ChatId, request.TargetId, request.BanListName, request.BanListReason)
+                            // A name built for showing can carry a copyable id (Ids); the list stores it plain.
+                            Repositories.BanList.SetAsync(request.ChatId, request.TargetId, Ids.Strip(request.BanListName), Ids.Strip(request.BanListReason))
                                 .GetAwaiter().GetResult();
                         break;
                     case ActionKind.TempBan:

@@ -81,7 +81,7 @@ namespace Enforcer5
                    var warnedid = Methods.GetUserId(update, args);
                    var chatid = update.Message.Chat.Id;
                    
-                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", actorId: update.Message.From.Id);
+                   Warn(warnedid, chatid, update, targetnick:$"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({Ids.Mark(warnedid)})", actorId: update.Message.From.Id);
                }
                catch (Exception e)
                {
@@ -108,7 +108,7 @@ namespace Enforcer5
                     var warnedid = Methods.GetUserId(update, args);
                     var chatid = update.Message.Chat.Id;
 
-                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({warnedid})", preWarn: true, actorId: update.Message.From.Id);
+                    Warn(warnedid, chatid, update, targetnick: $"{Redis.db.HashGetAsync($"user:{warnedid}", "name").Result} ({Ids.Mark(warnedid)})", preWarn: true, actorId: update.Message.From.Id);
                 }
                 catch (Exception e)
                 {
@@ -197,13 +197,13 @@ namespace Enforcer5
                 else if (!string.IsNullOrEmpty(callbackid) && !string.IsNullOrEmpty(targetnick))
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({callbackfromid})", result.Count, result.Max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, $"{nick} ({Ids.Mark(callbackfromid)})", result.Count, result.Max);
                     Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
-                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", warnedId, callbackfromid, result.Count, result.Max);
+                    text = Methods.GetLocaleString(lang.Doc, "warnFlag", Ids.Mark(warnedId), Ids.Mark(callbackfromid), result.Count, result.Max);
                     Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
                     Bot.Send(text, chatId);
                 }
@@ -288,7 +288,7 @@ namespace Enforcer5
                         update.Message.From.Id,
                         // Counted in their ban record only when they were in the group, not for a ban of someone gone.
                         stat: isChatMember.Status == ChatMemberStatus.Member ? "ban" : null,
-                        banListReason: banReason ?? "", banListName: arguments[0].ToString());
+                        banListReason: banReason ?? "", banListName: Ids.Strip(arguments[0].ToString()));
                     if (res)
                     {
                         if (userid == 321720895 | userid == 9375804)
@@ -395,7 +395,7 @@ namespace Enforcer5
             var until = Clock.UtcNow.AddSeconds(time * 60);
             if (!Methods.TempBanUser(chatId, userId, until, lang, reason, actorId, source, stat: "tempban", logLine: logLine)) return false;
             var timeText = TimeSpan.FromMinutes(time).ToString(@"dd\:hh\:mm");
-            message ??= Methods.GetLocaleString(lang, "tempbanned", timeText, nick, userId);
+            message ??= Methods.GetLocaleString(lang, "tempbanned", timeText, nick, Ids.Mark(userId));
             if (update != null) Bot.SendReply(message, update);
             else Bot.Send(message, chatId);
             return true;
@@ -737,7 +737,7 @@ namespace Enforcer5
             {
                 name = Methods.GetName(userId);
             }
-            return string.IsNullOrWhiteSpace(name) ? $"{userId}" : $"{name} ({userId})";
+            return string.IsNullOrWhiteSpace(name) ? Ids.Mark(userId) : $"{name} ({Ids.Mark(userId)})";
         }
 
     }

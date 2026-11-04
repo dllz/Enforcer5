@@ -121,12 +121,12 @@ namespace Enforcer5.Tests.Storage
             var bans = Enumerable.Range(1, Commands.RektListShown + 5)
                 .Select(i => Ban(i, i == 1 ? "<b>spam</b>" : "spam")).ToList();
 
-            var text = Commands.FormatRektList(bans);
+            var text = Ids.ToHtml(Commands.FormatRektList(bans));
 
             var lines = text.Split('\n');
             Assert.AreEqual($"{bans.Count} active global bans, newest {Commands.RektListShown}:", lines[0]);
             Assert.AreEqual(Commands.RektListShown + 1, lines.Length);
-            Assert.AreEqual("1: &lt;b&gt;spam&lt;/b&gt; (2026-10-26)", lines[1]);
+            Assert.AreEqual("<code>1</code>: &lt;b&gt;spam&lt;/b&gt; (2026-10-26)", lines[1]);
             Assert.AreEqual("No active global bans.", Commands.FormatRektList(new List<GlobalBanRecord>()));
         }
 

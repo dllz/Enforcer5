@@ -48,7 +48,7 @@ namespace Enforcer5
             int sourceMessageId, bool sourceIsBotMessage, string callbackId = null)
         {
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var target = Service.GetCachedUserLabel(change.TargetId);
+            var target = Service.ShownUserLabel(change.TargetId);
 
             var current = CountAsync(Repositories.Warns, chatId, change).GetAwaiter().GetResult();
             if (current == 0)
@@ -118,7 +118,7 @@ namespace Enforcer5
             }
             Bot.Api.AnswerCallbackQuery(call.Id);
             Complete(chatId, lang, pending.Change, call.From.Id, call.From.FirstName,
-                Service.GetCachedUserLabel(pending.Change.TargetId), reason, pending.SourceMessageId, pending.SourceIsBotMessage);
+                Service.ShownUserLabel(pending.Change.TargetId), reason, pending.SourceMessageId, pending.SourceIsBotMessage);
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace Enforcer5
             var adminId = anonymous ? pending.AdminId : message.From.Id;
             var adminName = anonymous ? pending.AdminName : message.From.FirstName;
             Complete(chatId, lang, pending.Change, adminId, adminName,
-                Service.GetCachedUserLabel(pending.Change.TargetId), reason, pending.SourceMessageId, pending.SourceIsBotMessage);
+                Service.ShownUserLabel(pending.Change.TargetId), reason, pending.SourceMessageId, pending.SourceIsBotMessage);
         }
 
         private static void Ask(long chatId, XDocument lang, WarnChange change, long adminId, string adminName,
@@ -337,7 +337,7 @@ namespace Enforcer5
             var lines = new List<string>
             {
                 Methods.GetLocaleString(lang, change.Reset ? "logWarnReset" : "logWarnRemoved",
-                    adminName, adminId, target, string.IsNullOrEmpty(group) ? $"{chatId}" : $"{group} ({chatId})"),
+                    adminName, Ids.Mark(adminId), target, string.IsNullOrEmpty(group) ? Ids.Mark(chatId) : $"{group} ({Ids.Mark(chatId)})"),
                 Methods.GetLocaleString(lang, "warnCountLine", KindLabel(lang, change.Kind), left),
                 reason != null
                     ? Methods.GetLocaleString(lang, "warnChangeReason", reason)

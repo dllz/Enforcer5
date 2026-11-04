@@ -731,12 +731,12 @@ namespace Enforcer5.Detection
         {
             try
             {
-                return (await ChatDetails.GetAsync(chatId))?.Title ?? chatId.ToString();
+                return (await ChatDetails.GetAsync(chatId))?.Title ?? Ids.Mark(chatId);
             }
             catch (Exception)
             {
                 // A title is only shown; the id does as well.
-                return chatId.ToString();
+                return Ids.Mark(chatId);
             }
         }
 

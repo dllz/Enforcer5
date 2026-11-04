@@ -19,7 +19,8 @@ namespace Enforcer5.Models
     /// <summary>A channel on a chat's allowlist, with the title it had when it was added.</summary>
     internal sealed record AllowedChannel(long Id, string Title)
     {
-        public override string ToString() => string.IsNullOrEmpty(Title) ? Id.ToString() : $"{Title} ({Id})";
+        /// <summary>For showing, with the id copyable (<see cref="Helpers.Ids"/>).</summary>
+        public override string ToString() => string.IsNullOrEmpty(Title) ? Helpers.Ids.Mark(Id) : $"{Title} ({Helpers.Ids.Mark(Id)})";
     }
 
     internal enum ChannelPostDecision
@@ -133,6 +134,6 @@ namespace Enforcer5.Models
         /// <summary>How a channel is shown to admins and in the log channel.</summary>
         internal static string Describe(Chat channel) =>
             channel == null ? "" :
-            channel.Username != null ? $"{channel.Title} (@{channel.Username}, {channel.Id})" : $"{channel.Title} ({channel.Id})";
+            channel.Username != null ? $"{channel.Title} (@{channel.Username}, {Helpers.Ids.Mark(channel.Id)})" : $"{channel.Title} ({Helpers.Ids.Mark(channel.Id)})";
     }
 }

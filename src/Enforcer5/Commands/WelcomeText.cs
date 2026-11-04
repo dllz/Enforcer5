@@ -29,7 +29,8 @@ namespace Enforcer5
                 m.Value == "$name"
                     ? Mention(joiner)
                     : m.Value.Replace("$name", name));
-            return Fill(text, joiner, chatTitle.FormatHTML());
+            // $id can be copied with a tap, except inside a tag or the admin's own link or code (Ids.ToHtml).
+            return Fill(text, joiner, chatTitle.FormatHTML(), Ids.Mark(joiner.Id));
         }
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace Enforcer5
         /// plain name, as it was sent before the link.
         /// </summary>
         internal static string Plain(string template, User joiner, string chatTitle) =>
-            Fill((template ?? "").Replace("$name", joiner.FirstName), joiner, chatTitle);
+            Fill((template ?? "").Replace("$name", joiner.FirstName), joiner, chatTitle, joiner.Id.ToString());
 
         private static readonly Regex FormattingTag = new(@"</?(b|strong|i|em|u|ins|s|strike|del|code|pre|a|tg-spoiler|blockquote)(\s[^>]*)?>",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -49,11 +50,11 @@ namespace Enforcer5
         internal static string Unformat(string html) =>
             System.Net.WebUtility.HtmlDecode(FormattingTag.Replace(html ?? "", ""));
 
-        private static string Fill(string text, User joiner, string chatTitle)
+        private static string Fill(string text, User joiner, string chatTitle, string id)
         {
             var username = string.IsNullOrEmpty(joiner.Username) ? "(no username)" : $"@{joiner.Username}";
             return text.Replace("$username", username)
-                .Replace("$id", joiner.Id.ToString())
+                .Replace("$id", id)
                 .Replace("$title", chatTitle);
         }
     }

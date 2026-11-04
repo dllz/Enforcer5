@@ -179,7 +179,7 @@ namespace Enforcer5
                 Bot.SendReply(Methods.GetLocaleString(lang, "trustBotNotABot"), update);
                 return;
             }
-            var name = bot.Username != null ? $"@{bot.Username}" : bot.FirstName ?? bot.Id.ToString();
+            var name = bot.Username != null ? $"@{bot.Username}" : bot.FirstName ?? Ids.Mark(bot.Id);
             if (BotGuard.IsKnown(bot))
             {
                 Bot.SendReply(Methods.GetLocaleString(lang, "trustBotKnown", name), update);

@@ -520,13 +520,18 @@ defSpamValue = 3;
             }
         }
 
-        private static string GetCachedUserName(long userId) => Methods.FormatHTML(GetCachedUserLabel(userId));
+        private static string GetCachedUserName(long userId) => Methods.FormatHTML(ShownUserLabel(userId));
+
+        /// <summary><see cref="GetCachedUserLabel"/> to show, with the id copyable (<see cref="Ids"/>). Never store it.</summary>
+        internal static string ShownUserLabel(long userId) => GetCachedUserLabel(userId, Ids.Mark);
 
         /// <summary>
         /// "Name @username (id)" from the stats cache, unescaped, for passing to GetLocaleString
         /// (which escapes its arguments). Just the id if the user is not cached.
         /// </summary>
-        internal static string GetCachedUserLabel(long userId)
+        internal static string GetCachedUserLabel(long userId) => GetCachedUserLabel(userId, id => id.ToString());
+
+        private static string GetCachedUserLabel(long userId, Func<long, string> showId)
         {
             try
             {
@@ -534,12 +539,12 @@ defSpamValue = 3;
                 var name = fields[0].IsNullOrEmpty ? null : fields[0].ToString();
                 var username = fields[1].IsNullOrEmpty ? null : fields[1].ToString();
                 var label = string.Join(" ", new[] { name, username }.Where(s => s != null));
-                return string.IsNullOrEmpty(label) ? userId.ToString() : $"{label} ({userId})";
+                return string.IsNullOrEmpty(label) ? showId(userId) : $"{label} ({showId(userId)})";
             }
             catch (Exception ex)
             {
                 ErrorReporter.Report(ex, $"Reading the cached name of {userId}");
-                return userId.ToString();
+                return showId(userId);
             }
         }
 
@@ -584,7 +589,7 @@ defSpamValue = 3;
                 var groupName = update.Message.Chat.Title;
                 var messageId = update.Message.MessageId;
                 if(update.Message.ReplyToMessage != null)
-                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})", linkMessageId: messageId);
+                    LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({Ids.Mark(update.Message.ReplyToMessage.From.Id)})", linkMessageId: messageId);
                 else if (Methods.ArgTarget(update) is long target)
                     // Named by id, mention or @username: log the id too, as a reply does.
                     LogCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, ArgTargetName(target), linkMessageId: messageId);
@@ -606,7 +611,7 @@ defSpamValue = 3;
             {
                 // A missing name only costs the name: the id is what the log needs.
             }
-            return string.IsNullOrWhiteSpace(name) ? userId.ToString() : $"{name} ({userId})";
+            return string.IsNullOrWhiteSpace(name) ? Ids.Mark(userId) : $"{name} ({Ids.Mark(userId)})";
         }
 
          public static void LogDevCommand(Update update, string command)
@@ -615,7 +620,7 @@ defSpamValue = 3;
                 var adminUserName = update.Message.From.FirstName;
                 var groupName = update.Message.Chat.Title;
                 if(update.Message.ReplyToMessage != null)
-                    LogDevCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({update.Message.ReplyToMessage.From.Id})");
+                    LogDevCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command, $"{update.Message.ReplyToMessage.From.FirstName} ({Ids.Mark(update.Message.ReplyToMessage.From.Id)})");
                 else
                 {
                     LogDevCommand(update.Message.Chat.Id, adminUserId, adminUserName, groupName, command);
@@ -634,14 +639,17 @@ defSpamValue = 3;
 
             if (!isCallback)
             {
-                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto), linkMessageId,
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCommand", adminName, ShownActor(adminId), command, $"{groupname} ({Ids.Mark(chatId)})", replyto), linkMessageId,
                     digestDuringRaid);
             }
             else
             {
-                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"), linkMessageId);
+                SendToLogChannel(chatId, lang, () => Methods.GetLocaleString(lang, "logMessageCallback", adminName, ShownActor(adminId), command, Ids.Mark(chatId)), linkMessageId);
             }
         }
+
+        // The bot's own lines are "Enforcer (-1)": that is no id to copy.
+        private static string ShownActor(long adminId) => adminId > 0 ? Ids.Mark(adminId) : adminId.ToString();
 
         /// <summary>
         /// Posts <paramref name="text"/> (HTML) to the group's log channel, if it has one. If the bot
@@ -697,12 +705,12 @@ defSpamValue = 3;
                     if (groupname != null)
                     {
                         LogQueue.Enqueue(0, -1001141798933,
-                            Methods.GetLocaleString(lang, "logMessageCommand", adminName, adminId, command, $"{groupname} ({chatId})", replyto));
+                            Methods.GetLocaleString(lang, "logMessageCommand", adminName, ShownActor(adminId), command, $"{groupname} ({Ids.Mark(chatId)})", replyto));
                     }
                     else
                     {
                         LogQueue.Enqueue(0, -1001141798933,
-                            Methods.GetLocaleString(lang, "logMessageCallback", adminName, adminId, command, $"{chatId}"));
+                            Methods.GetLocaleString(lang, "logMessageCallback", adminName, ShownActor(adminId), command, Ids.Mark(chatId)));
                     }
 
                 }

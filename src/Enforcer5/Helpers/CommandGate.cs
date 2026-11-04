@@ -90,7 +90,7 @@ namespace Enforcer5.Helpers
                 }
             }
             if (decision.AlertOwner)
-                Bot.Send($"#throttle Commands paused in {groupId} for {CommandLimiter.FormatWait(decision.RetryIn)}: too many at once.",
+                Bot.Send($"#throttle Commands paused in {Ids.Mark(groupId)} for {CommandLimiter.FormatWait(decision.RetryIn)}: too many at once.",
                     Bot.ErrorChatId);
             LogHelper.Info($"Throttled {userId} in {groupId}: {decision.Scope} for {CommandLimiter.FormatWait(decision.RetryIn)}");
             return false;
@@ -151,7 +151,7 @@ namespace Enforcer5.Helpers
         {
             var chatId = message?.Chat.Id ?? query?.Message?.Chat.Id ?? userId;
             var lang = Methods.GetGroupLanguage(groupId != 0 ? groupId : chatId).Doc;
-            var name = (message?.From ?? query?.From)?.FirstName ?? userId.ToString();
+            var name = (message?.From ?? query?.From)?.FirstName ?? Ids.Mark(userId);
             var wait = CommandLimiter.FormatWait(decision.RetryIn);
             string text;
             switch (decision.Scope)

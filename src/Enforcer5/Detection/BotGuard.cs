@@ -368,7 +368,7 @@ namespace Enforcer5.Detection
             if (caller != null && !caller.IsBot && (summoning == null || Claim(Summonings, (chatId, summoning.MessageId), now, RemovedFor)))
             {
                 var hit = new SignHit(SignCatalog.SummonedBot.Name, JsonSerializer.Serialize(new { bot = bot.Id }))
-                    { Detail = BotName(bot) };
+                    { Detail = BotName(bot, id => id.ToString()) };
                 Bot.Dispatch(async () => await DetectionEngine.HitAsync(chatId, caller.Id, summoning, hit), "BotGuard.Summoned");
             }
         }
@@ -461,7 +461,7 @@ namespace Enforcer5.Detection
                     Log(chatId, Methods.GetLocaleString(lang, "botAddedByMemberLog", Name(addedBy), BotName(bot)), addedBy?.Id);
                     if (addedBy is { IsBot: false })
                         await DetectionEngine.HitAsync(chatId, addedBy.Id, null,
-                            new SignHit(SignCatalog.AddedBot.Name, JsonSerializer.Serialize(new { bot = bot.Id })) { Detail = BotName(bot) });
+                            new SignHit(SignCatalog.AddedBot.Name, JsonSerializer.Serialize(new { bot = bot.Id })) { Detail = BotName(bot, id => id.ToString()) });
                 }
                 catch (Exception e)
                 {
@@ -543,9 +543,13 @@ namespace Enforcer5.Detection
             }
         }
 
-        private static string Name(User user) => user == null ? "?" : $"{user.FirstName} ({user.Id})";
+        // For the log lines, with the id copyable (Ids); the sign's stored Detail takes it plain.
+        private static string Name(User user) => user == null ? "?" : $"{user.FirstName} ({Ids.Mark(user.Id)})";
 
-        private static string BotName(User bot) => bot.Username != null ? $"@{bot.Username}" : $"{bot.FirstName} ({bot.Id})";
+        private static string BotName(User bot) => BotName(bot, Ids.Mark);
+
+        private static string BotName(User bot, Func<long, string> showId) =>
+            bot.Username != null ? $"@{bot.Username}" : $"{bot.FirstName} ({showId(bot.Id)})";
 
         internal static void ResetForTests()
         {

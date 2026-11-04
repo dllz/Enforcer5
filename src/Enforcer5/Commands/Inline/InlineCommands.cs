@@ -28,7 +28,7 @@ namespace Enforcer5
                     InputMessageContent = new InputTextMessageContent()
                     {
                         LinkPreviewOptions = new LinkPreviewOptions { IsDisabled = true },
-                        MessageText = $"{u.name} ({u.userId})\n<b>{u.groupName}</b>\n<code>{u.unbanTime}</code>",
+                        MessageText = $"{u.name} ({Ids.Mark(u.userId)})\n<b>{u.groupName}</b>\n<code>{u.unbanTime}</code>",
                         ParseMode = ParseMode.Html
                     }
                 });

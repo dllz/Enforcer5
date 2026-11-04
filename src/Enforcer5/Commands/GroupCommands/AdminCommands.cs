@@ -767,7 +767,7 @@ namespace Enforcer5
                     var status = Check(userid, update.Message.Chat.Id);
                     var n = Redis.db.HashGetAsync($"{update.Message.Chat.Id}:users:{userid}", "msgs").Result;
                     var number = n.HasValue ? long.Parse(n.ToString()) : 0;
-                    Bot.SendReply(Methods.GetLocaleString(lang, $"usergroupstatus{status}", userid, number), update.Message);
+                    Bot.SendReply(Methods.GetLocaleString(lang, $"usergroupstatus{status}", Ids.Mark(userid), number), update.Message);
                 }
                 catch (Exception e)
                 {
@@ -1043,15 +1043,15 @@ namespace Enforcer5
             if (!result.Succeeded) return; // an admin: never warned
             var lang = Methods.GetGroupLanguage(call.Message,true).Doc;
             var preText = result.Converted > 0
-                ? Methods.GetLocaleString(lang, "preWarnConverted", userId, result.Converted) + "\n"
+                ? Methods.GetLocaleString(lang, "preWarnConverted", Ids.Mark(userId), result.Converted) + "\n"
                 : "";
             if (result.Escalation != null)
             {
-                Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + Commands.WarnLimitText(lang, result, userId),
+                Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + Commands.WarnLimitText(lang, result, Ids.Mark(userId)),
                     parseMode: ParseMode.Html);
                 return;
             }
-            var text = Methods.GetLocaleString(lang, "warn", userId, result.Count, result.Max);
+            var text = Methods.GetLocaleString(lang, "warn", Ids.Mark(userId), result.Count, result.Max);
             Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + text,
                 replyMarkup: Key.CreateMarkupFromMenu(Commands.WarnButtons(lang, chatId, userId)), parseMode: ParseMode.Html);
         }

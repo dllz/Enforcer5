@@ -216,7 +216,7 @@ namespace Enforcer5
                 var bios = Profiles.RecentBios(chatId);
                 total = bios.Count;
                 matches = bios.Where(p => FilterRegex.Matches(rule.Pattern, p.Bio))
-                    .Select(p => $"{DetectionReports.StoredName(p.UserId)} ({p.UserId})").ToList();
+                    .Select(p => $"{DetectionReports.StoredName(p.UserId)} ({Ids.Mark(p.UserId)})").ToList();
                 key = "filterTestBios";
             }
             else
@@ -224,7 +224,7 @@ namespace Enforcer5
                 var channels = Profiles.RecentChannels(chatId);
                 total = channels.Count;
                 matches = channels.Where(c => FilterRegex.Matches(rule.Pattern, c.FilterText))
-                    .Select(c => c.Username != null ? $"{c.Title} (@{c.Username})" : c.Title ?? c.Id.ToString()).ToList();
+                    .Select(c => c.Username != null ? $"{c.Title} (@{c.Username})" : c.Title ?? Ids.Mark(c.Id)).ToList();
                 key = "filterTestChannels";
             }
             var result = Methods.GetLocaleString(lang, key, matches.Count, total);

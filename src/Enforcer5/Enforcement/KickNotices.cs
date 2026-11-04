@@ -74,7 +74,7 @@ namespace Enforcer5.Enforcement
             Bot.Dispatch(async () =>
             {
                 var lang = Lang(job);
-                await Update(job, $"{RemovedLine(job, lang)}\n{Methods.GetLocaleString(lang, "kickUnbanned", job.Note.Kick.TargetName)}");
+                await Update(job, $"{RemovedLine(job, lang)}\n{Methods.GetLocaleString(lang, "kickUnbanned", Shown(job.Note.Kick.TargetName))}");
             }, "KickNotice");
         }
 
@@ -92,7 +92,7 @@ namespace Enforcer5.Enforcement
             {
                 var lang = Lang(job);
                 var failed = Methods.GetLocaleString(lang, why == KickFailure.NoRights ? "kickUnbanFailedRights" : "kickUnbanFailedTimeout",
-                    notice.TargetName);
+                    Shown(notice.TargetName));
                 await Update(job, $"{RemovedLine(job, lang)}\n{failed}");
                 var group = GroupName(job.ChatId);
                 // Bot.Send says nothing about someone who never started the bot or blocked it; the group heard it.
@@ -138,8 +138,13 @@ namespace Enforcer5.Enforcement
 
         private static string RemovedLine(EnforcementJob job, XDocument lang) =>
             job.Note.Kick.ActorName is { } actor
-                ? Methods.GetLocaleString(lang, "kickRemovedBy", job.Note.Kick.TargetName, actor)
-                : Methods.GetLocaleString(lang, "kickRemoved", job.Note.Kick.TargetName);
+                ? Methods.GetLocaleString(lang, "kickRemovedBy", Shown(job.Note.Kick.TargetName), Shown(actor))
+                : Methods.GetLocaleString(lang, "kickRemoved", Shown(job.Note.Kick.TargetName));
+
+        private static readonly System.Text.RegularExpressions.Regex TrailingId = new(@"^-?\d+$|(?<=\()-?\d+(?=\)$)");
+
+        // The stored "Name (id)" (kept plain in the journal) as shown, with the id copyable (Ids).
+        internal static string Shown(string name) => name == null ? null : TrailingId.Replace(name, m => Ids.Mark(m.Value), 1);
 
         private static XDocument Lang(EnforcementJob job) => Methods.GetGroupLanguage(job.ChatId).Doc;
 
@@ -178,7 +183,7 @@ namespace Enforcer5.Enforcement
                 // The id is a poor name, but the message still goes out.
                 LogHelper.Error($"Reading the name of {chatId}: {e.Message}");
             }
-            return chatId.ToString();
+            return Ids.Mark(chatId);
         }
 
         internal static void ResetForTests() => Posting.Clear();

@@ -106,8 +106,8 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
             StringAssert.Contains(preview.Text, "ban spam ring");
             StringAssert.Contains(preview.Text, "<b>3</b>");
             StringAssert.Contains(preview.Text, "1 duplicates, 2 admins");
-            StringAssert.Contains(preview.Text, $"Will be done for: {string.Join(", ", members.Select(m => m.Id))}", "who, by id");
-            StringAssert.Contains(preview.Text, $"Admins, left out: {other.Id}, {HarnessChat.BotUser.Id}");
+            StringAssert.Contains(preview.Text, $"Will be done for: <code>{string.Join(", ", members.Select(m => m.Id))}</code>", "who, by id");
+            StringAssert.Contains(preview.Text, $"Admins, left out: <code>{other.Id}, {HarnessChat.BotUser.Id}</code>");
             Assert.IsTrue(members.All(m => chat.Telegram.GetMember(chat.ChatId, m.Id) == MemberState.Member), "nothing before Run");
 
             await chat.PressAsync(other, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
@@ -126,7 +126,7 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
             var logs = chat.Telegram.SentMessages.Where(m => m.Chat.Id == LogChannel).ToArray();
             Assert.AreEqual(1, logs.Length, "one line for the whole batch");
             StringAssert.Contains(logs[0].Text, "Done 3");
-            StringAssert.Contains(logs[0].Text, $"Done: {string.Join(", ", members.Select(m => m.Id))}", "the log says who");
+            StringAssert.Contains(logs[0].Text, $"Done: <code>{string.Join(", ", members.Select(m => m.Id))}</code>", "the log says who");
             Assert.AreEqual(0, chat.Telegram.SentFiles.Count, "short lists need no file");
             AssertNoErrors(chat);
         }
@@ -169,7 +169,7 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
 
             await chat.SendAsync(admin, "/batch resetwarns reward", replyTo: list);
             var preview = Preview(chat);
-            StringAssert.Contains(preview.Text, $"Nothing to do: {members[2].Id}");
+            StringAssert.Contains(preview.Text, $"Nothing to do: <code>{members[2].Id}</code>");
             await chat.PressAsync(admin, preview, $"{Batches.Trigger}:{chat.ChatId}:run:");
             await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
 
@@ -178,13 +178,13 @@ WHERE a.telegram_user_id = @UserId", new { UserId = userId })).ToArray();
             var summary = Text(chat, preview.MessageId);
             StringAssert.Contains(summary, "Done: 2");
             StringAssert.Contains(summary, "Left out: 2");
-            StringAssert.Contains(summary, $"Done: {members[0].Id}, {members[1].Id}", "the preview's lists are gone: the summary says who");
-            StringAssert.Contains(summary, $"Admins, left out: {other.Id}");
-            StringAssert.Contains(summary, $"Nothing to do: {members[2].Id}");
+            StringAssert.Contains(summary, $"Done: <code>{members[0].Id}, {members[1].Id}</code>", "the preview's lists are gone: the summary says who");
+            StringAssert.Contains(summary, $"Admins, left out: <code>{other.Id}</code>");
+            StringAssert.Contains(summary, $"Nothing to do: <code>{members[2].Id}</code>");
             var log = chat.Telegram.SentMessages.Last(m => m.Chat.Id == LogChannel).Text;
             StringAssert.Contains(log, "left out 2");
-            StringAssert.Contains(log, $"Admins, left out: {other.Id}");
-            StringAssert.Contains(log, $"Nothing to do: {members[2].Id}");
+            StringAssert.Contains(log, $"Admins, left out: <code>{other.Id}</code>");
+            StringAssert.Contains(log, $"Nothing to do: <code>{members[2].Id}</code>");
             AssertNoErrors(chat);
         }
 

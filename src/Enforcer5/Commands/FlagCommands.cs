@@ -131,12 +131,12 @@ namespace Enforcer5
                     string text;
                     if (!reporter.HasValue)
                     {
-                        text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {update.Message.From.Id}", solvedAt,
+                        text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {Ids.Mark(update.Message.From.Id)}", solvedAt,
                             update.Message.Chat.Title, reporter);
                     }
                     else
                     {
-                        text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {update.Message.From.Id}", solvedAt,
+                        text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {Ids.Mark(update.Message.From.Id)}", solvedAt,
                             update.Message.Chat.Title);
                     }
                     for (int i = 0; i < counter; i++)
@@ -155,7 +155,7 @@ namespace Enforcer5
                         else
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
                         }
                        
                     }
@@ -226,7 +226,7 @@ namespace Enforcer5
                                     else
                                     {
                                         Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
                                     }                                    
                                 }
                                 catch (Exception e)
@@ -515,8 +515,8 @@ namespace Enforcer5
             if (res) ReportHistory.Acted(report, ReportAction.Banned, call.From.Id);
             if (res)
             {
-                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
-                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({call.From.Id})";
+                var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({Ids.Mark(userId)})";
+                var admin = Redis.db.HashGetAsync($"user:{call.From.Id}", "name").Result + $" ({Ids.Mark(call.From.Id)})";
                 Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
             }
@@ -543,7 +543,7 @@ namespace Enforcer5
             var userId = long.Parse(args[2]);
             var callId = call.Id;
             var callFromId = call.From.Id;
-            var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({userId})";
+            var nick = Redis.db.HashGetAsync($"user:{userId}", "name").Result + $" ({Ids.Mark(userId)})";
             Commands.Warn(userId, chatId, targetnick: nick, callbackid: callId, callbackfromid: callFromId, actorId: callFromId,
                 report: FindReport(chatId, args, userId, null));
         }
@@ -587,13 +587,13 @@ namespace Enforcer5
                 string text;
                 if (!reporter.HasValue)
                 {
-                    text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {call.From.Id}", solvedAt,
-                        chatid, reporter);
+                    text = Methods.GetLocaleString(lang, "solvedByReporter", $"{solvedBy} {Ids.Mark(call.From.Id)}", solvedAt,
+                        Ids.Mark(chatid), reporter);
                 }
                 else
                 {
-                    text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {call.From.Id}", solvedAt,
-                        chatid);
+                    text = Methods.GetLocaleString(lang, "solvedBy", $"{solvedBy} {Ids.Mark(call.From.Id)}", solvedAt,
+                        Ids.Mark(chatid));
                 }
                 for (int i = 0; i < counter; i++)
                 {
@@ -613,7 +613,7 @@ namespace Enforcer5
                         else
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}");
+                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
                         }
                     }
                     catch (Exception e)

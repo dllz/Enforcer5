@@ -90,11 +90,11 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var name = Methods.FormatHTML(admin.FirstName);
             var title = Service.GetCachedGroupTitle(chatId);
-            var group = string.IsNullOrEmpty(title) ? $"{chatId}" : $"{Methods.FormatHTML(title)} ({chatId})";
+            var group = string.IsNullOrEmpty(title) ? Ids.Mark(chatId) : $"{Methods.FormatHTML(title)} ({Ids.Mark(chatId)})";
             Service.SendToLogChannel(chatId, lang, () => result.Kind == Kind.Changed
-                ? Methods.GetLocaleString(lang, "logSettingChanged", name, admin.Id, Methods.FormatHTML(result.Label), group,
+                ? Methods.GetLocaleString(lang, "logSettingChanged", name, Ids.Mark(admin.Id), Methods.FormatHTML(result.Label), group,
                     Methods.FormatHTML(result.From), Methods.FormatHTML(result.To))
-                : Methods.GetLocaleString(lang, "logButtonPressed", name, admin.Id, Methods.FormatHTML(result.Label), group));
+                : Methods.GetLocaleString(lang, "logButtonPressed", name, Ids.Mark(admin.Id), Methods.FormatHTML(result.Label), group));
             return true;
         }
     }

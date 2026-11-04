@@ -195,18 +195,18 @@ namespace Enforcer5.Detection
                         EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, message.MessageId)).GetAwaiter().GetResult();
                     break;
                 case "warn":
-                    Commands.Warn(userId, chatId, update, targetnick: userId.ToString(), reason: reason, source: ActionSource.Filter);
+                    Commands.Warn(userId, chatId, update, targetnick: Ids.Mark(userId), reason: reason, source: ActionSource.Filter);
                     break;
                 case "mute":
                 {
-                    var text = Methods.GetLocaleString(lang, "mutedByFilter", $"{name}, {userId}", label);
+                    var text = Methods.GetLocaleString(lang, "mutedByFilter", $"{name}, {Ids.Mark(userId)}", label);
                     if (Methods.MuteUser(chatId, userId, lang, reason: reason, source: ActionSource.Filter, logLine: text)) Tell(text);
                     break;
                 }
                 case "tempmute":
                 {
                     var muteMinutes = Methods.GetGroupTempMuteTime(chatId);
-                    var text = Methods.GetLocaleString(lang, "tempmutedByFilter", $"{name}, {userId}", label,
+                    var text = Methods.GetLocaleString(lang, "tempmutedByFilter", $"{name}, {Ids.Mark(userId)}", label,
                         TimeSpan.FromMinutes(muteMinutes).ToString(@"dd\:hh\:mm"));
                     if (Methods.TempMuteUser(chatId, userId, Clock.UtcNow.AddMinutes(muteMinutes), lang, reason: reason, source: ActionSource.Filter,
                             logLine: text))
@@ -216,8 +216,8 @@ namespace Enforcer5.Detection
                 case "kick":
                 {
                     var text = own != null
-                        ? Methods.GetLocaleString(lang, own.Kicked, $"{name}, {userId}")
-                        : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {userId}", label);
+                        ? Methods.GetLocaleString(lang, own.Kicked, $"{name}, {Ids.Mark(userId)}")
+                        : Methods.GetLocaleString(lang, "kickedByFilter", $"{name}, {Ids.Mark(userId)}", label);
                     Methods.KickUser(chatId, userId, lang, reason, source: ActionSource.Filter, logLine: text);
                     Tell(text);
                     break;
@@ -225,8 +225,8 @@ namespace Enforcer5.Detection
                 case "ban":
                 {
                     var text = own != null
-                        ? Methods.GetLocaleString(lang, own.Banned, $"{name}, {userId}")
-                        : Methods.GetLocaleString(lang, "bannedByFilter", $"{name}, {userId}", label);
+                        ? Methods.GetLocaleString(lang, own.Banned, $"{name}, {Ids.Mark(userId)}")
+                        : Methods.GetLocaleString(lang, "bannedByFilter", $"{name}, {Ids.Mark(userId)}", label);
                     if (Methods.BanUser(chatId, userId, lang, reason, source: ActionSource.Filter, stat: own?.SavedAs ?? "filter",
                             banListReason: own != null
                                 ? Methods.GetLocaleString(lang, own.Banned, ".")
@@ -239,8 +239,8 @@ namespace Enforcer5.Detection
                     var minutes = Methods.GetGroupTempbanTime(chatId);
                     var timeText = TimeSpan.FromMinutes(minutes).ToString(@"dd\:hh\:mm");
                     var tempbanText = own != null
-                        ? Methods.GetLocaleString(lang, own.Tempbanned, $"{name}, {userId}", timeText)
-                        : Methods.GetLocaleString(lang, "tempbannedByFilter", $"{name}, {userId}", label, timeText);
+                        ? Methods.GetLocaleString(lang, own.Tempbanned, $"{name}, {Ids.Mark(userId)}", timeText)
+                        : Methods.GetLocaleString(lang, "tempbannedByFilter", $"{name}, {Ids.Mark(userId)}", label, timeText);
                     Commands.Tempban(userId, chatId, minutes, userId.ToString(), message: tempbanText, reason: reason, source: ActionSource.Filter,
                         logLine: tempbanText);
                     break;

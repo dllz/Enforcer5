@@ -203,12 +203,12 @@ namespace Enforcer5
 
         private static (string Kind, string Value, string Label) ResolvePointer(string input)
         {
-            if (long.TryParse(input, out var id)) return ("channel", id.ToString(), id.ToString());
+            if (long.TryParse(input, out var id)) return ("channel", id.ToString(), Ids.Mark(id));
             var name = input.StartsWith('@') ? input[1..] : ProfileSigns.TelegramName(input);
             if (name != null)
             {
                 var channel = Profiles.AwaitAsync(Profiles.ChannelAsync(0, name)).GetAwaiter().GetResult();
-                return channel == null ? ("channel", null, input) : ("channel", channel.Id.ToString(), $"@{name} ({channel.Id})");
+                return channel == null ? ("channel", null, input) : ("channel", channel.Id.ToString(), $"@{name} ({Ids.Mark(channel.Id)})");
             }
             var domain = Reputation.DomainOf(input.Contains("://") ? input : "https://" + input);
             return ("domain", domain, domain);

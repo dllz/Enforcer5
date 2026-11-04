@@ -20,7 +20,7 @@ namespace Enforcer5.Tests.Harness
         // /id without a reply answers with the chat's id.
         private static int Answers(HarnessChat chat, HarnessUser user) =>
             chat.Telegram.Accepted.Count(c => c.Method == "sendMessage" && c.ChatId == chat.ChatId &&
-                                              c.Text.StartsWith(chat.ChatId.ToString(), StringComparison.Ordinal));
+                                              c.Text.StartsWith($"<code>{chat.ChatId}</code>", StringComparison.Ordinal));
 
         [TestMethod]
         public async Task CommandSpam_EndsInTheSlowLane_ToldOnce_AndBackToNormalAfterQuiet()

@@ -45,7 +45,7 @@ namespace Enforcer5.Tests.Harness
 
             var line = (await LogsAsync(chat)).Single();
             StringAssert.Contains(line, "/ban selling followers");
-            StringAssert.Contains(line, $"Member ({member.Id})");
+            StringAssert.Contains(line, $"Member (<code>{member.Id}</code>)");
             AssertNoErrors(chat);
         }
 
@@ -113,7 +113,8 @@ namespace Enforcer5.Tests.Harness
 
             var told = chat.Telegram.SentMessages.Last(m => m.Chat.Id == chat.ChatId).Text;
             var line = (await LogsAsync(chat)).Single();
-            StringAssert.Contains(line, told);
+            // In the log the line sits inside the command's own code block, where an id cannot be code again.
+            StringAssert.Contains(line, told.Replace("<code>", "").Replace("</code>", ""));
             StringAssert.Contains(line, "Enforcer");
             AssertNoErrors(chat);
         }

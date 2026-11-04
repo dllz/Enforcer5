@@ -70,14 +70,14 @@ ORDER BY gs.global_sanction_id")).ToArray();
             Assert.AreEqual((spammer.Id, (long?)admin.Id, "ban", "active", "spam network", false),
                 (ban.TargetTelegramId, ban.ActorTelegramId, ban.Kind, ban.Status, ban.Reason, ban.Resolved));
             Assert.AreEqual("spam network", GlobalBans.Get(spammer.Id)?.Reason);
-            Assert.AreEqual($"{spammer.Id} has been rekt for spam network", chat.Replies.Last());
+            Assert.AreEqual($"<code>{spammer.Id}</code> has been rekt for spam network", chat.Replies.Last());
 
             await chat.SendAsync(admin, $"/unrekt {spammer.Id}:appeal accepted");
 
             var lifted = (await GlobalSanctions(chat)).Single();
             Assert.AreEqual(("revoked", "appeal accepted", true), (lifted.Status, lifted.ResolutionReason, lifted.Resolved));
             Assert.IsNull(GlobalBans.Get(spammer.Id));
-            Assert.AreEqual($"{spammer.Id} has been unrekt for appeal accepted", chat.Replies.Last());
+            Assert.AreEqual($"<code>{spammer.Id}</code> has been unrekt for appeal accepted", chat.Replies.Last());
             AssertNoErrors(chat);
         }
 
@@ -120,7 +120,7 @@ ORDER BY gs.global_sanction_id")).ToArray();
 
             await chat.SendAsync(admin, "/unrekt 5550003:nothing");
 
-            Assert.AreEqual("5550003 has no global ban", chat.Replies.Last());
+            Assert.AreEqual("<code>5550003</code> has no global ban", chat.Replies.Last());
             Assert.AreEqual(0, (await GlobalSanctions(chat)).Length);
             AssertNoErrors(chat);
         }
@@ -208,7 +208,7 @@ ORDER BY gs.global_sanction_id")).ToArray();
 
             var reply = chat.Replies.Last();
             StringAssert.StartsWith(reply, "1 active global bans:");
-            StringAssert.Contains(reply, "5550006: raid");
+            StringAssert.Contains(reply, "<code>5550006</code>: raid");
             Assert.IsFalse(reply.Contains("5550007"));
             AssertNoErrors(chat);
         }

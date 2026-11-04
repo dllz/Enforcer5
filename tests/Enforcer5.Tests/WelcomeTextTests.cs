@@ -19,7 +19,7 @@ namespace Enforcer5.Tests
         public void NameInsideTheAdminsOwnLink_IsPlain()
         {
             Assert.AreEqual("<a href=\"tg://user?id=42\">A&lt;B &amp; C</a> and " + Linked,
-                WelcomeText.Html("<a href=\"tg://user?id=$id\">$name</a> and $name", Joiner, "T"));
+                Helpers.Ids.ToHtml(WelcomeText.Html("<a href=\"tg://user?id=$id\">$name</a> and $name", Joiner, "T")));
         }
 
         [TestMethod]
@@ -38,8 +38,23 @@ namespace Enforcer5.Tests
         [TestMethod]
         public void OtherPlaceholders_AreFilled()
         {
-            Assert.AreEqual("@abc 42", WelcomeText.Html("$username $id", Joiner, "T"));
+            Assert.AreEqual("@abc <code>42</code>", Helpers.Ids.ToHtml(WelcomeText.Html("$username $id", Joiner, "T")));
             Assert.AreEqual("(no username)", WelcomeText.Html("$username", new User { Id = 1, FirstName = "x" }, "T"));
+        }
+
+        [TestMethod]
+        public void Id_CanBeCopied_ExceptInsideATagLinkOrCode()
+        {
+            Assert.AreEqual("<b>ID <code>42</code></b>", Helpers.Ids.ToHtml(WelcomeText.Html("<b>ID $id</b>", Joiner, "T")));
+            Assert.AreEqual("<a href=\"tg://user?id=42\">x 42</a> <code>42</code>",
+                Helpers.Ids.ToHtml(WelcomeText.Html("<a href=\"tg://user?id=$id\">x $id</a> $id", Joiner, "T")));
+            Assert.AreEqual("<code>id 42</code>", Helpers.Ids.ToHtml(WelcomeText.Html("<code>id $id</code>", Joiner, "T")));
+        }
+
+        [TestMethod]
+        public void Plain_HasThePlainId()
+        {
+            Assert.AreEqual("id 42", WelcomeText.Plain("id $id", Joiner, "T"));
         }
 
         [TestMethod]

@@ -424,16 +424,17 @@ namespace Enforcer5.Tests.Warns
         public void LogEntry_NamesAdminTargetGroupAndReason()
         {
             var change = new WarnChange(WarnKind.Prewarn, true, 42);
-            var text = Enforcer5.WarnRemovals.LogText(_english, change, "Admin", 7, "Player (42)", "Wolves", ChatId, 0, "Mistake");
-            StringAssert.Contains(text, "Admin (7)");
+            var text = Enforcer5.Helpers.Ids.ToHtml(
+                Enforcer5.WarnRemovals.LogText(_english, change, "Admin", 7, "Player (42)", "Wolves", ChatId, 0, "Mistake"));
+            StringAssert.Contains(text, "Admin (<code>7</code>)");
             StringAssert.Contains(text, "Player (42)");
-            StringAssert.Contains(text, $"Wolves ({ChatId})");
+            StringAssert.Contains(text, $"Wolves (<code>{ChatId}</code>)");
             StringAssert.Contains(text, "Pre-warns: 0");
             StringAssert.Contains(text, "Mistake");
 
             var noReason = Enforcer5.WarnRemovals.LogText(_english, change, "Admin", 7, "Player (42)", "", ChatId, 0, null);
             StringAssert.Contains(noReason, Methods.GetLocaleString(_english, "warnChangeNoReason"));
-            StringAssert.Contains(noReason, $"in {ChatId}.");
+            StringAssert.Contains(Enforcer5.Helpers.Ids.Strip(noReason), $"in {ChatId}.");
         }
 
         [TestMethod]

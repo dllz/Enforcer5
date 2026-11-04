@@ -65,7 +65,7 @@ namespace Enforcer5.Tests.Enforcement
             Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1));
             CollectionAssert.AreEqual(new[] { "banChatMember", "unbanChatMember", "getChatMember", "sendMessage" },
                 bot.Telegram.Calls.Select(c => c.Method).ToArray(), "done at once: one message, nothing to edit");
-            CollectionAssert.AreEqual(new[] { "Member (1) was removed from the group by Admin (9) (banned).\nMember (1) has been unbanned and can rejoin." },
+            CollectionAssert.AreEqual(new[] { "Member (<code>1</code>) was removed from the group by Admin (<code>9</code>) (banned).\nMember (<code>1</code>) has been unbanned and can rejoin." },
                 Texts(bot, Raided));
             AssertNoErrors(bot);
         }
@@ -79,14 +79,14 @@ namespace Enforcer5.Tests.Enforcement
 
             var result = await bot.RunAsync(KickWithNotice(Raided, 1));
             Assert.AreEqual(EnforcementOutcome.Done, result.Outcome, "they are out of the group, as asked");
-            CollectionAssert.AreEqual(new[] { "Member (1) was removed from the group (banned)." }, Texts(bot, Raided));
+            CollectionAssert.AreEqual(new[] { "Member (<code>1</code>) was removed from the group (banned)." }, Texts(bot, Raided));
 
             await bot.AdvanceAsync(TimeSpan.FromSeconds(30)); // 2 s, 4 s, 8 s
 
             Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1), "not left banned");
             Assert.AreEqual(1, bot.Telegram.Calls.Count(c => c.Method == "banChatMember"), "banned once");
             Assert.AreEqual(4, bot.Telegram.Calls.Count(c => c.Method == "unbanChatMember"));
-            CollectionAssert.AreEqual(new[] { "Member (1) was removed from the group (banned).\nMember (1) has been unbanned and can rejoin." },
+            CollectionAssert.AreEqual(new[] { "Member (<code>1</code>) was removed from the group (banned).\nMember (<code>1</code>) has been unbanned and can rejoin." },
                 Texts(bot, Raided), "the same message, edited");
             Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
             AssertNoErrors(bot);
@@ -110,7 +110,7 @@ namespace Enforcer5.Tests.Enforcement
             await bot.AdvanceAsync(TimeSpan.FromMinutes(9));
 
             Assert.AreEqual(1, bot.Hashes.All(Journal(bot)).Count, "still trying");
-            CollectionAssert.AreEqual(new[] { "Member (1) was removed from the group (banned)." }, Texts(bot, Raided));
+            CollectionAssert.AreEqual(new[] { "Member (<code>1</code>) was removed from the group (banned)." }, Texts(bot, Raided));
             Assert.AreEqual(0, bot.Errors.Count);
 
             await bot.AdvanceAsync(TimeSpan.FromMinutes(2));
@@ -121,7 +121,7 @@ namespace Enforcer5.Tests.Enforcement
             Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count, "given up");
             var texts = Texts(bot, Raided);
             Assert.AreEqual(1, texts.Length, "the same message, edited");
-            StringAssert.Contains(texts[0], "Could not unban Member (1): Telegram still had them banned after 10 minutes");
+            StringAssert.Contains(texts[0], "Could not unban Member (<code>1</code>): Telegram still had them banned after 10 minutes");
             StringAssert.Contains(Texts(bot, 1).Single(), "but the bot could not unban you");
             Assert.IsTrue(bot.Errors.Single().Contains("given up"), "and the error chat");
         }
@@ -139,7 +139,7 @@ namespace Enforcer5.Tests.Enforcement
 
             var texts = Texts(bot, Raided);
             Assert.AreEqual(1, texts.Length);
-            StringAssert.Contains(texts[0], "Could not unban Member (1): the bot lost its admin rights");
+            StringAssert.Contains(texts[0], "Could not unban Member (<code>1</code>): the bot lost its admin rights");
             StringAssert.Contains(Texts(bot, 1).Single(), "but the bot could not unban you");
             Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count, "left there");
 
@@ -163,7 +163,7 @@ namespace Enforcer5.Tests.Enforcement
 
             Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1));
             Assert.AreEqual(1, bot.Telegram.Calls.Count(c => c.Method == "banChatMember"), "the restart resumed at the unban");
-            CollectionAssert.AreEqual(new[] { "Member (1) was removed from the group (banned).\nMember (1) has been unbanned and can rejoin." },
+            CollectionAssert.AreEqual(new[] { "Member (<code>1</code>) was removed from the group (banned).\nMember (<code>1</code>) has been unbanned and can rejoin." },
                 Texts(bot, Raided), "the message from before the restart, edited");
             AssertNoErrors(bot);
         }

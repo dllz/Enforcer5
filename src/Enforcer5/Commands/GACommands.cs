@@ -147,7 +147,7 @@ namespace Enforcer5
              Bot.SendReply("Stopping bot", update);
             if (update.Message.From.Id != Constants.Devs[0])
             {
-                 Bot.Send($"The bot has been stopped by {update.Message.From.Id} {update.Message.From.FirstName}",
+                 Bot.Send($"The bot has been stopped by {Ids.Mark(update.Message.From.Id)} {update.Message.From.FirstName.FormatHTML()}",
                     Constants.Devs[0]);
             }
             try
@@ -242,7 +242,7 @@ namespace Enforcer5
             if (userId != 0)
             {
                  if (TryRekt(userId, moti, update))
-                     Bot.SendReply($"{userId} has been rekt for {moti}", update);
+                     Bot.SendReply($"{Ids.Mark(userId)} has been rekt for {moti.FormatHTML()}", update);
             }
             else
             {
@@ -267,7 +267,7 @@ namespace Enforcer5
                     {
                         var userId = Methods.ResolveIdFromusername(username);
                         if (TryRekt(userId, moti, update))
-                            idlist = $"{idlist}, {userId}";
+                            idlist = $"{idlist}, {Ids.Mark(userId)}";
                     }
                     catch (Exception e)
                     {
@@ -277,7 +277,7 @@ namespace Enforcer5
                         Bot.SendReply(e.Message, update);
                     }
                 }
-                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+                Bot.SendReply($"{idlist} has been rekt for {moti.FormatHTML()}", update);
             }
             else
             {
@@ -327,7 +327,7 @@ namespace Enforcer5
                     {
                         var userId = long.Parse(username);
                         if (TryRekt(userId, moti, update))
-                            idlist = $"{idlist}, {userId}";
+                            idlist = $"{idlist}, {Ids.Mark(userId)}";
                     }
                     catch (Exception e)
                     {
@@ -337,7 +337,7 @@ namespace Enforcer5
                         Bot.SendReply(e.Message, update);
                     }
                 }
-                Bot.SendReply($"{idlist} has been rekt for {moti}", update);
+                Bot.SendReply($"{idlist} has been rekt for {moti.FormatHTML()}", update);
             }
             else
             {
@@ -405,12 +405,12 @@ namespace Enforcer5
                  catch (Exception e)
                  {
                      ErrorReporter.Report(e, $"Lifting the global ban of {userId}");
-                     Bot.SendReply($"Could not save lifting the global ban of {userId}: {e.Message}", update);
+                     Bot.SendReply($"Could not save lifting the global ban of {Ids.Mark(userId)}: {e.Message.FormatHTML()}", update);
                      return;
                  }
                  Bot.SendReply(lifted
-                     ? $"{userId} has been unrekt for {moti}"
-                     : $"{userId} has no global ban", update);
+                     ? $"{Ids.Mark(userId)} has been unrekt for {moti.FormatHTML()}"
+                     : $"{Ids.Mark(userId)} has no global ban", update);
             }
             else
             {
@@ -459,7 +459,7 @@ namespace Enforcer5
         {
             if (bans.Count == 0) return "No active global bans.";
             var lines = bans.Take(RektListShown).Select(b =>
-                $"{b.UserId}: {System.Net.WebUtility.HtmlEncode(Shorten(b.Reason, 80))} ({b.ImposedAt:yyyy-MM-dd})");
+                $"{Ids.Mark(b.UserId)}: {System.Net.WebUtility.HtmlEncode(Shorten(b.Reason, 80))} ({b.ImposedAt:yyyy-MM-dd})");
             var header = bans.Count > RektListShown
                 ? $"{bans.Count} active global bans, newest {RektListShown}:"
                 : $"{bans.Count} active global bans:";
@@ -496,7 +496,7 @@ namespace Enforcer5
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Global ban of {userId}");
-                Bot.SendReply($"Could not save the global ban of {userId}: {e.Message}", update);
+                Bot.SendReply($"Could not save the global ban of {Ids.Mark(userId)}: {e.Message.FormatHTML()}", update);
                 return false;
             }
         }
@@ -506,14 +506,14 @@ namespace Enforcer5
         {
             var mediaID = Methods.GetMediaId(update.Message);
            
-             Bot.SendReply($"Media: {mediaID}", update);
+             Bot.SendReply($"Media: {Ids.Mark(mediaID)}", update);
         }
 
         [Command(Trigger = "msgid", DevOnly = true, RequiresReply = true, Description = "Id of the replied message")]
         public static void GetMessageID(Update update, string[] args)
         {
            
-            Bot.SendReply($"Message: {update.Message.ReplyToMessage.MessageId}", update);
+            Bot.SendReply($"Message: {Ids.Mark(update.Message.ReplyToMessage.MessageId)}", update);
         }
 
         [Command(Trigger = "langcode", Menu = Attributes.CommandMenu.Devs, Description = "Language code of a user")]
@@ -600,7 +600,7 @@ namespace Enforcer5
             var id = Methods.GetUserId(update, args);
             var name = Methods.GetName(id);
             var username = Methods.GetUsername(id);           
-            Bot.SendReply($"Name: {name}\nID: {id}\nUsername: {username}", update);
+            Bot.SendReply($"Name: {name}\nID: {Ids.Mark(id)}\nUsername: {username}", update);
 
         }
     }

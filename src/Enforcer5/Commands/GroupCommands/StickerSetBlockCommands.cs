@@ -70,7 +70,7 @@ namespace Enforcer5
             if (!TryReadStickerSet(update, args, lang, out var name, out _)) return;
 
             var removed = Repositories.StickerSetBlocks.RemoveAsync(update.Message.Chat.Id, name).GetAwaiter().GetResult();
-            Bot.SendReply(Methods.GetLocaleString(lang, removed ? "stickerBlockRemoved" : "stickerBlockNotFound", name), update);
+            Bot.SendReply(Methods.GetLocaleString(lang, removed ? "stickerBlockRemoved" : "stickerBlockNotFound", Ids.Mark(name)), update);
             if (removed) Service.LogCommand(update, update.Message.Text);
         }
 
@@ -86,7 +86,7 @@ namespace Enforcer5
                 return;
             }
 
-            var list = string.Join("\n", names.OrderBy(name => name, StringComparer.Ordinal));
+            var list = string.Join("\n", names.OrderBy(name => name, StringComparer.Ordinal).Select(n => Ids.Mark(n)));
             Bot.SendReply(Methods.GetLocaleString(lang, "stickerBlockList", list), update);
         }
 
@@ -152,7 +152,7 @@ namespace Enforcer5
         }
 
         private static string StickerSetLabel(string name, StickerSet set) =>
-            string.IsNullOrEmpty(set?.Title) ? name : $"{set.Title} ({name})";
+            string.IsNullOrEmpty(set?.Title) ? Ids.Mark(name) : $"{set.Title} ({Ids.Mark(name)})";
 
         /// <summary>
         /// Fetches the pack from Telegram. Null if that failed; <paramref name="notFound"/> is set

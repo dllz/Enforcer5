@@ -61,7 +61,7 @@ namespace Enforcer5.Detection
                     switch (action.Action)
                     {
                         case "warn":
-                            Commands.Warn(userId, chatId, targetnick: userId.ToString(), reason: action.Reason, source: ActionSource.Detection,
+                            Commands.Warn(userId, chatId, targetnick: Ids.Mark(userId), reason: action.Reason, source: ActionSource.Detection,
                                 logLine: line);
                             break;
                         case "mute":
@@ -75,7 +75,7 @@ namespace Enforcer5.Detection
                             Methods.KickUser(chatId, userId, lang, action.Reason, source: ActionSource.Detection, logLine: line);
                             break;
                         case "tempban":
-                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), userId.ToString(), reason: action.Reason,
+                            Commands.Tempban(userId, chatId, Methods.GetGroupTempbanTime(chatId), Ids.Mark(userId), reason: action.Reason,
                                 source: ActionSource.Detection, logLine: line);
                             break;
                         case "ban":
@@ -97,10 +97,10 @@ namespace Enforcer5.Detection
             {
                 var lang = Methods.GetGroupLanguage(action.ChatId).Doc;
                 var what = action.Action is "none" or "score" or "report" ? "delete" : action.Action;
-                var name = action.Member != null ? action.Member.FirstName : action.UserId.ToString();
+                var name = action.Member != null ? action.Member.FirstName : null;
                 var label = DetectionReports.SignLabel(lang, action.Sign);
                 return Methods.GetLocaleString(lang, "detectionLogLine", Methods.GetLocaleString(lang, $"filterAction_{what}"),
-                    $"{name}, {action.UserId}", label);
+                    name == null ? Ids.Mark(action.UserId) : $"{name}, {Ids.Mark(action.UserId)}", label);
             }
             catch (Exception e)
             {

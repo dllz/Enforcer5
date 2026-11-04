@@ -493,15 +493,15 @@ namespace Enforcer5.Helpers
         {
             if (sender)
             {
-                return $"{msg.From.FirstName} ({msg.From.Id})";
+                return $"{msg.From.FirstName} ({Ids.Mark(msg.From.Id)})";
             }
             if (msg.ReplyToMessage != null)
             {
-                return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
+                return $"{msg.ReplyToMessage.From.FirstName} ({Ids.Mark(msg.ReplyToMessage.From.Id)})";
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({Ids.Mark(userid)})";
             }
             else
             {
@@ -513,15 +513,15 @@ namespace Enforcer5.Helpers
         {
             if (sender)
             {
-                return $"{msg.From.FirstName} ({msg.From.Id})";
+                return $"{msg.From.FirstName} ({Ids.Mark(msg.From.Id)})";
             }
             if (msg.ReplyToMessage != null)
             {
-                return $"{msg.ReplyToMessage.From.FirstName} ({msg.ReplyToMessage.From.Id})";
+                return $"{msg.ReplyToMessage.From.FirstName} ({Ids.Mark(msg.ReplyToMessage.From.Id)})";
             }
             if (userid != 0)
             {
-                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({userid})";
+                return $"{Redis.db.HashGetAsync($"user:{userid}", "name").Result} ({Ids.Mark(userid)})";
             }
             else
             {
@@ -827,7 +827,7 @@ namespace Enforcer5.Helpers
                     // suppress the record forever if the dispatched send never ran.
                     Bot.DispatchAction(() =>
                     {
-                        Bot.Send($"{name} ({id}) has a global ban record.\nDetails: {reason}", update);
+                        Bot.Send($"{name.FormatHTML()} ({Ids.Mark(id)}) has a global ban record.\nDetails: {reason.FormatHTML()}", update);
                         GlobalBans.MarkNotifiedAsync(id).GetAwaiter().GetResult();
                     }, "IsRekt");
                 }
@@ -847,7 +847,7 @@ namespace Enforcer5.Helpers
                     if (temp)
                     {
                         Bot.Send(GetLocaleString(lang, "globalBan", name, reason, Constants.supportUsernameWithAt), update);
-                        Bot.Send($"{name}, ({id}) has been banned for {reason} and notified in {update.Message.Chat.Id} {update.Message.Chat.FirstName}", Constants.Devs[0]);
+                        Bot.Send($"{name.FormatHTML()}, ({Ids.Mark(id)}) has been banned for {reason.FormatHTML()} and notified in {Ids.Mark(update.Message.Chat.Id)} {update.Message.Chat.Title.FormatHTML()}", Constants.Devs[0]);
                     }
                 }
                 catch (AggregateException e)

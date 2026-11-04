@@ -10,7 +10,7 @@ namespace Enforcer5.Tests.Actions
     public class BatchListsTests
     {
         private static string Lines(int budget, out bool cut, params BatchLists.Section[] sections) =>
-            BatchLists.Lines(sections, budget, (key, ids) => $"{key}: {ids}", left => $"+{left}", out cut);
+            Enforcer5.Helpers.Ids.ToHtml(BatchLists.Lines(sections, budget, (key, ids) => $"{key}: {ids}", left => $"+{left}", out cut));
 
         [TestMethod]
         public void EachListWithMembers_IsOneLine_InOrder()
@@ -19,7 +19,7 @@ namespace Enforcer5.Tests.Actions
                 new BatchLists.Section("done", new long[] { 111111, 222222 }),
                 new BatchLists.Section("refused", new long[0]),
                 new BatchLists.Section("blocked", new long[] { 333333 }));
-            Assert.AreEqual("\ndone: 111111, 222222\nblocked: 333333", text);
+            Assert.AreEqual("\ndone: <code>111111, 222222</code>\nblocked: <code>333333</code>", text, "one list copies with one tap");
             Assert.IsFalse(cut);
         }
 
@@ -32,7 +32,7 @@ namespace Enforcer5.Tests.Actions
                 new BatchLists.Section("refused", new long[] { 5555555 }));
             Assert.IsTrue(cut);
             var lines = text.Split('\n').Skip(1).ToArray();
-            StringAssert.StartsWith(lines[0], "done: 1000000, 1000001, 1000002");
+            StringAssert.StartsWith(lines[0], "done: <code>1000000, 1000001, 1000002");
             Assert.IsTrue(lines[0].EndsWith(" +95"), lines[0]);
             Assert.AreEqual("refused: +1", lines[1], "no room left: only how many");
         }

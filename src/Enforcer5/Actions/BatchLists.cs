@@ -36,6 +36,9 @@ namespace Enforcer5.Actions
             foreach (var section in sections.Where(s => s.Ids.Count > 0))
             {
                 var (ids, left) = Join(section.Ids, budget - text.Length);
+                // One list copies as a whole with a tap: one code part per list, since Telegram keeps only
+                // Helpers.Ids.MaxEntities formatted parts of a message, far fewer than the ids a list can hold.
+                ids = Helpers.Ids.Mark(ids);
                 if (left > 0)
                 {
                     cut = true;

@@ -460,7 +460,7 @@ namespace Enforcer5.Actions
             var csv = BatchLists.Csv(new[] { "id", "member", "outcome", "reason" }, items.Select(i => (IReadOnlyList<string>)new[]
                 { i.MemberId.ToString(), Service.GetCachedUserLabel(i.MemberId), i.Outcome, i.Detail ?? "" }));
             var fileName = $"batch-{batch.BatchId}.csv";
-            string FileCaption() => Methods.GetLocaleString(lang, "batchListLogFile", batch.BatchId, batch.CommandText, $"{group} ({batch.ChatId})");
+            string FileCaption() => Methods.GetLocaleString(lang, "batchListLogFile", batch.BatchId, batch.CommandText, $"{group} ({Ids.Mark(batch.ChatId)})");
 
             var ended = batch.Status == "stopped" ? "batchStopped" : "batchDone";
             var summary = Methods.GetLocaleString(lang, ended, batch.BatchId, batch.CommandText, done, refused, blocked, skipped);
@@ -474,8 +474,8 @@ namespace Enforcer5.Actions
 
             var lists = Lists(lang, sections, BatchLists.LogBudget, out var cut);
             Service.SendToLogChannel(batch.ChatId, lang, () => Methods.GetLocaleString(lang, "batchLog",
-                Service.GetCachedUserLabel(batch.RequestedBy), $"{group} ({batch.ChatId})", batch.CommandText,
-                Service.GetCachedUserLabel(batch.ConfirmedBy), done, refused, blocked, skipped) + lists, batch.ProgressMessageId);
+                Service.ShownUserLabel(batch.RequestedBy), $"{group} ({Ids.Mark(batch.ChatId)})", batch.CommandText,
+                Service.ShownUserLabel(batch.ConfirmedBy), done, refused, blocked, skipped) + lists, batch.ProgressMessageId);
             if (cut && Service.LogChannelOf(batch.ChatId) is { } logChat)
                 SendCsv(logChat, csv, fileName, FileCaption(), null);
         }
