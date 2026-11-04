@@ -249,19 +249,6 @@ namespace Enforcer5
             return text;
         }
 
-        /// <summary>
-        /// The length of a tempban in minutes: <paramref name="time"/> in <paramref name="units"/>. Short units (m, h,
-        /// d, w) are understood: "/tempban 2 h" gave 2 minutes until 2026-11-04 (issue #31). Anything else counts as
-        /// minutes, as before, since the word after the number may be the start of a reason.
-        /// </summary>
-        internal static double TempbanMinutes(long time, string units) => (units ?? "").ToLowerInvariant() switch
-        {
-            "h" or "hr" or "hrs" or "hour" or "hours" => TimeSpan.FromHours(time).TotalMinutes,
-            "d" or "day" or "days" => TimeSpan.FromDays(time).TotalMinutes,
-            "w" or "week" or "weeks" => TimeSpan.FromDays(7 * time).TotalMinutes,
-            _ => time // m, min, mins, minute, minutes, and none
-        };
-
         [Command(Trigger = "ban", GroupAdminOnly = true, InGroupOnly = true)]
         public static void Ban(Update update, string[] args)
         {
@@ -419,86 +406,40 @@ namespace Enforcer5
         {
 
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            long userId = 0, time;
-            string length = "";
-            string units = "";
-            if (update.Message.ReplyToMessage != null) // by reply
+            long userId;
+            if (update.Message.ReplyToMessage != null) // by reply: the whole argument is the length
             {
-                userId = update.Message.ReplyToMessage.From.Id; // user id is id of replied message
-                if (userId == Bot.Me.Id) return;
-
-                if (args[1] != null)
-                {
-                    length = args[1].Split(' ')[0];    
-                     
-                    try
-                    {
-                        units = args[1].Split(' ')[1];
-                    }
-                    catch (Exception e)
-                    {
-                        // No unit given after the length: not an error, minutes are the default.
-                        units = "min";
-                    }
-                }
-
+                userId = update.Message.ReplyToMessage.From.Id;
             }
-            else if (args[1] != null)
+            else if (!string.IsNullOrWhiteSpace(args[1])) // an id or @username first, then the length
             {
-                if (args[1].Contains(' ')) // not by reply but contains a space so we might have userid and time
+                var user = args[1].Trim().Split(' ')[0];
+                if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
+                else if (!long.TryParse(user, out userId))
                 {
-                    var user = args[1].Split(' ')[0]; // either username or ID
-                    length = args[1].Split(' ')[1]; // Length of the ban, or the first word of the reason, if no time is specified. Parsing will fail then and time set to 60.
-                    try
-                    {
-                        units = args[1].Split(' ')[2];
-                    }
-                    catch (Exception e)
-                    {
-                        // No unit given after the length: not an error, minutes are the default.
-                        units = "min";
-                    }
-
-                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!long.TryParse(user, out userId)) // If the first argument after command is neither a username nor an ID, it is incorrect.
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                        return;
-                    }
-                    if (userId == Bot.Me.Id) return;
-                }
-                else // not by reply neither we have both ID and time, but if we have ID, standard time is 60 minutes
-                {
-                    var user = args[1];
-                    length = Methods.GetGroupTempbanTime(update.Message.Chat.Id).ToString(); // Length is 60 since there is definitely no length specified.
-
-                    if (user.StartsWith("@")) userId = Methods.ResolveIdFromusername(user);
-                    else if (!long.TryParse(user, out userId)) // If the specified argument after the command is neither a username nor an ID, it is incorrect.
-                    {
-                        Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
-                        return;
-                    }
-                    if (userId == Bot.Me.Id) return;
+                    Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
+                    return;
                 }
             }
+            else return;
+            if (userId == Bot.Me.Id) return;
 
-            // "2h" as well as "2 h": the unit written onto the number.
-            var glued = System.Text.RegularExpressions.Regex.Match(length ?? "", @"^(\d+)(m|min|mins|h|hr|hrs|d|w)$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            if (glued.Success)
+            // The length as /tempmute reads it (Models/Duration): 30, 2 h, 2hours, 1d; a word it does not know, or a
+            // length outside 1 minute to 365 days, is refused. Its own reading took anything but min/hour(s)/day(s)
+            // as minutes, so "/tempban 2 h" banned for 2 minutes (issue #31).
+            double calculatedTime;
+            switch (Duration.TryParse(Duration.AfterTarget(update.Message, args.Length > 1 ? args[1] : null), out var duration))
             {
-                length = glued.Groups[1].Value;
-                units = glued.Groups[2].Value;
+                case DurationParseResult.Ok:
+                    calculatedTime = duration.TotalMinutes;
+                    break;
+                case DurationParseResult.Empty:
+                    calculatedTime = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
+                    break;
+                default:
+                    Bot.SendReply(Methods.GetLocaleString(lang, "invalidDuration"), update);
+                    return;
             }
-            if (!long.TryParse(length, out time)) // Convert our length string into an int, or into 60, if there was no length specified
-            {
-                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
-            }
-            if (time == 0)
-            {
-                time = Methods.GetGroupTempbanTime(update.Message.Chat.Id);
-            }
-            double calculatedTime = TempbanMinutes(time, units);
             if (userId != 0)
             {
                 Tempban(userId, update.Message.Chat.Id, calculatedTime, Methods.GetNick(update.Message, args, userId),

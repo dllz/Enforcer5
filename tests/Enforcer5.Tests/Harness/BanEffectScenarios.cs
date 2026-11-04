@@ -211,6 +211,16 @@ namespace Enforcer5.Tests.Harness
             var now = new DateTimeOffset(chat.Clock.UtcNow).ToUnixTimeSeconds();
             Assert.AreEqual(2 * 3600, Ends(a) - now, 5, "two hours, not two minutes");
             Assert.AreEqual(3 * 86400, Ends(b) - now, 5, "three days");
+
+            var c = chat.Add("C");
+            await chat.SendAsync(admin, $"/tempban {c.Id} 90m");
+            Assert.AreEqual(90 * 60, Ends(c) - now, 5, "by id, as /tempmute reads it");
+
+            var d = chat.Add("D");
+            await chat.SendAsync(admin, "/tempban 2 fortnights", replyTo: await chat.SendAsync(d, "z"));
+            Assert.AreEqual(Helpers.Methods.GetLocaleString(Helpers.Methods.GetGroupLanguage(chat.ChatId).Doc, "invalidDuration"),
+                chat.Replies.Last(), "a unit it does not know is refused, not read as minutes");
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, d.Id));
             Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
         }
 }
