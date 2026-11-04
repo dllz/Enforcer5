@@ -91,14 +91,17 @@ namespace Enforcer5.Detection
                     // Read, never kept: only whether it names spam, ads, scams and the like.
                     ReasonIsAbuse = label == "bad" && AbuseWords.Mentions(reason)
                 };
-                // An admin banned or kicked someone replying to a file: the file is banned in the group (step 12).
-                if (label == "bad" && action is "ban" or "tempban" or "kick" && actorId != null && fingerprint?.MediaUniqueId != null)
-                    BannedMedia.Add(chatId, fingerprint.MediaUniqueId, fingerprint.ContentType, actorId, "ban");
+                // A ban or kick of someone over a file bans the file in the group (step 12): an admin's, replying to it,
+                // and the bot's own, over the message it was handling (source auto; an admin's unban lifts it again).
+                if (label == "bad" && action is "ban" or "tempban" or "kick" && fingerprint?.MediaUniqueId != null &&
+                    (actorId != null || source == "auto"))
+                    BannedMedia.Add(chatId, fingerprint.MediaUniqueId, fingerprint.ContentType, actorId, actorId != null ? "ban" : "auto");
                 HistoryWriter.Enqueue(async () =>
                     {
                         // Once per decision: the other edition may have recorded an app change first.
-                        if (await Repositories.DetectionLog.RecordLabelAsync(labelEvent) is { } recorded)
-                            TrustLearning.Decided(labelEvent, recorded);
+                        if (await Repositories.DetectionLog.RecordLabelAsync(labelEvent) is not { } recorded) return;
+                        if (recorded.LiftedFile != null) BannedMedia.Forget(chatId, recorded.LiftedFile);
+                        TrustLearning.Decided(labelEvent, recorded);
                     },
                     $"Recording the {action} of {userId} in {chatId} for Detection");
             }

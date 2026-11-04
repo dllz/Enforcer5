@@ -19,8 +19,10 @@ namespace Enforcer5.Detection
     /// <list type="bullet">
     /// <item>bans or kicks someone with a command replying to it (<see cref="Decisions"/>),</item>
     /// <item>presses Ban on a Detection report about a post that had it (the post's record from <see cref="EditCheck"/>),</item>
-    /// <item>or replies to it with /banmedia.</item>
+    /// <item>or replies to it with /banmedia;</item>
     /// </list>
+    /// and when the bot bans or kicks someone on its own over a message that had it (source <c>auto</c>; an admin's unban
+    /// of that member lifts it again, <see cref="Forget"/>).
     /// Live from day one, since an admin chose it, also while the group only watches. Each group's list is kept in memory
     /// (read from PostgreSQL once and every <see cref="RefreshEvery"/>, which is when the other edition's additions show),
     /// so a media message costs a lookup in a set and nothing else. At most <see cref="PerGroup"/> files a group, the
@@ -168,7 +170,8 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ banning
 
         /// <summary>Bans a file in the group, at once in memory and then in PostgreSQL. False when it was banned already.</summary>
-        /// <param name="source">ban (a ban or kick replying to it), report (Ban on a report) or command (/banmedia).</param>
+        /// <param name="source">ban (an admin's ban or kick replying to it), auto (the bot's own ban or kick over it), report (Ban on
+        /// a report) or command (/banmedia).</param>
         internal static bool Add(long chatId, string file, string type, long? by, string source)
         {
             if (string.IsNullOrEmpty(file)) return false;
@@ -206,6 +209,18 @@ namespace Enforcer5.Detection
             if (PostgresStorage.Ready)
                 HistoryWriter.Enqueue(() => Repositories.BannedMedia.RemoveAsync(chatId, file), $"Unbanning a file in {chatId}");
             return removed;
+        }
+
+        /// <summary>
+        /// A file already lifted in PostgreSQL (an admin's unban took back the bot's ban that had banned it): taken out of
+        /// memory only. The other edition sees it at its next read.
+        /// </summary>
+        internal static void Forget(long chatId, string file)
+        {
+            lock (Lock)
+            {
+                if (Groups.TryGetValue(chatId, out var entry) && entry.Files.Remove(file)) entry.Order.Remove(file);
+            }
         }
 
         /// <summary>Lifts every ban on files in the group; how many there were.</summary>

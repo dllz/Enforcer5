@@ -345,10 +345,13 @@ WHERE group_id = @GroupId AND account_id = @AccountId AND label_id IS NULL
                     new { LabelId = labelId, label.Action, At = at, Actor = actor, group.GroupId, target.AccountId, LooksBack = DecisionLooksBack },
                     transaction));
             }
-            else if (label.Label == "undo" && UndoneActions(label.Action) is { } undone)
+            string lifted = null;
+            if (label.Label == "undo" && UndoneActions(label.Action) is { } undone)
             {
-                // The latest decision this takes back, and the detections it had reached.
-                await connection.ExecuteAsync(new CommandDefinition(@"
+                // The latest decision this takes back, and the detections it had reached. A ban the bot took on its own
+                // that banned the member's file (source auto) is taken back with it: the file is lifted too. A file an
+                // admin banned (source ban, report, command) stays, whoever's ban it came with.
+                lifted = await connection.ExecuteScalarAsync<string>(new CommandDefinition(@"
 WITH taken_back AS (
     UPDATE member_labels SET undone_at = @At, undone_by_label_id = @LabelId
     WHERE label_id = (
@@ -356,12 +359,16 @@ WITH taken_back AS (
         WHERE group_id = @GroupId AND account_id = @AccountId AND label = 'bad' AND undone_at IS NULL
           AND action = ANY(@Undone) AND decided_at <= @At
         ORDER BY decided_at DESC, label_id DESC LIMIT 1)
-    RETURNING label_id)
-UPDATE detections SET outcome = 'undone' WHERE label_id IN (SELECT label_id FROM taken_back)",
+    RETURNING label_id, source, media_unique_id),
+undone_detections AS (
+    UPDATE detections SET outcome = 'undone' WHERE label_id IN (SELECT label_id FROM taken_back))
+DELETE FROM banned_media b USING taken_back t
+WHERE t.source = 'auto' AND b.group_id = @GroupId AND b.source = 'auto' AND b.media_unique_id = t.media_unique_id
+RETURNING b.media_unique_id",
                     new { At = at, LabelId = labelId, group.GroupId, target.AccountId, Undone = undone }, transaction));
             }
             await transaction.CommitAsync();
-            return new RecordedLabel(labelId, category);
+            return new RecordedLabel(labelId, category, lifted);
         }
 
         public async Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since)

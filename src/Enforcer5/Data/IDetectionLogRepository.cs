@@ -80,8 +80,12 @@ namespace Enforcer5.Data
         internal bool ReasonIsAbuse { get; init; }
     }
 
-    /// <summary>A decision as recorded: its id, and what it was about (abuse, group, or null when not known).</summary>
-    internal sealed record RecordedLabel(long Id, string Category);
+    /// <summary>
+    /// A decision as recorded: its id, and what it was about (abuse, group, or null when not known).
+    /// <paramref name="LiftedFile"/>: an unban took back the bot's own ban, and the file that ban had banned in the
+    /// group (source <c>auto</c>) was lifted with it.
+    /// </summary>
+    internal sealed record RecordedLabel(long Id, string Category, string LiftedFile = null);
 
     /// <summary>
     /// What Detection learns from: every sign that fired (<c>detections</c>) and every decision about a

@@ -104,7 +104,7 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("banned_media", null, t =>
                         {
-                            t.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command')");
+                            t.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command', 'auto')");
                         });
                 });
 

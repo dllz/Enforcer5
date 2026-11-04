@@ -480,7 +480,7 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     script) and `channel_profiles` (id, type, username, flags, member count, linked chat); bios, titles and
     descriptions stay in memory for a day, which is what `/filter test <bio or channel rule>` tries. /privacy says so.
 12. Banned media. **As built (2026-10-28):** `Detection/BannedMedia`, table `banned_media` (group, `file_unique_id`, type,
-    `pdq_hash` for the ML step, added by, source `ban`/`report`/`command`; at most 2000 a group, the oldest dropped). A
+    `pdq_hash` for the ML step, added by, source `ban`/`report`/`command`/`auto`; at most 2000 a group, the oldest dropped). A
     file is banned when an admin bans, tempbans or kicks someone with a command replying to it (`Decisions`), presses Ban
     on a Detection report about a post that had one (its record from step 8, looked for over the last 3 days), or
     replies to it with `/banmedia` (which deletes that post unless an admin made it). `/banmedia` alone gives the count,
@@ -489,6 +489,9 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     so it acts while the group still watches too). Each group's list is kept in memory, read from PostgreSQL on first
     use and every 10 minutes (when the other edition's additions show), so a media message costs a set lookup only.
     Bans in the Telegram app carry no message, so they ban no file. Strings: 11 keys.
+    **Since 2026-11-04 (Daniel):** the bot's own ban, tempban or kick over a message with a file bans it too (source
+    `auto`; 18 automatic bans with a photo in the 30 days before, all guest-bot callers, banned none), and an admin's
+    unban that takes that ban back lifts the file again. An admin's file stays when the ban is undone.
 13. Similarity tuning, fixtures, near-miss recording, `/simtest`, `tools/tuning/`. **As built (2026-10-28):**
     `Detection/SimilarityTuning` holds the text and name thresholds (texts 0.7, near from 0.5; names one letter off up
     to 12 letters, two above, from 5 letters; near from 0.6), each overridable by a `Similarity*` setting of the same

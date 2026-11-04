@@ -615,7 +615,7 @@ namespace Enforcer5.Storage
             modelBuilder.Entity<BannedMediaEntity>(entity =>
             {
                 entity.ToTable("banned_media", table =>
-                    table.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command')"));
+                    table.HasCheckConstraint("banned_media_source_check", "source IN ('ban', 'report', 'command', 'auto')"));
                 entity.HasKey(x => new { x.GroupId, x.MediaUniqueId });
                 entity.Property(x => x.MediaType).IsRequired();
                 entity.Property(x => x.Source).IsRequired();

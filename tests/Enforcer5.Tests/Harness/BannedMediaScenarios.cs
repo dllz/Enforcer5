@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Enforcer5.Tests.Harness
 {
-    /// <summary>Detection step 12: files admins banned are deleted when posted again. Needs the test database.</summary>
+    /// <summary>Detection step 12: banned files (by admins, or by the bot's own bans) are deleted when posted again. Needs the test database.</summary>
     [TestClass]
     [TestCategory("Harness")]
     [TestCategory("Detection")]
@@ -170,6 +170,59 @@ namespace Enforcer5.Tests.Harness
             CollectionAssert.AreEqual(new[] { "pump:report" }, await Stored(chat));
             var repost = await chat.PostAsync(chat.Photo(chat.Add("Another"), uniqueId: "pump"));
             Assert.IsFalse(Present(chat, repost));
+            AssertNoErrors(chat);
+        }
+
+        /// <summary>A guest bot's photo answer to a member's post: the bot bans it on its own (BotGuard).</summary>
+        private static async Task<HarnessUser> GuestBotPostsAsync(HarnessChat chat, string uniqueId)
+        {
+            var caller = chat.Add("Caller");
+            var bot = chat.Add("Spam", MemberState.Left, username: "spamphotobot", isBot: true);
+            var summoning = await chat.SendAsync(caller, "@spamphotobot");
+            var answer = chat.Photo(bot, uniqueId: uniqueId);
+            answer.ReplyToMessage = summoning;
+            answer.GuestBotCallerUser = caller.ToUser();
+            answer.GuestQueryId = $"guest{answer.MessageId}";
+            chat.Deliver(answer);
+            await chat.CompleteAsync();
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, bot.Id), "the bot banned it on its own");
+            return bot;
+        }
+
+        [TestMethod]
+        public async Task TheBotsOwnBanOverAPhoto_BansThePhoto()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            await GuestBotPostsAsync(chat, "promo");
+            CollectionAssert.AreEqual(new[] { "promo:auto" }, await Stored(chat));
+
+            var repost = await chat.PostAsync(chat.Photo(chat.Add("Newcomer"), uniqueId: "promo"));
+            Assert.IsFalse(Present(chat, repost), "the same picture from a member goes too");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AnAdminsUnban_OfTheBotsBan_LiftsItsFile_ButNotAnAdminsFile()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var bot = await GuestBotPostsAsync(chat, "promo");
+            var spammer = chat.Add("Spammer");
+            await chat.SendAsync(admin, "/ban", replyTo: await chat.PostAsync(chat.Photo(spammer, uniqueId: "scam")));
+            CollectionAssert.AreEquivalent(new[] { "promo:auto", "scam:ban" }, await Stored(chat));
+
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(20)); // the command limiter
+            await chat.SendAsync(admin, $"/unban {bot.Id}");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
+            await chat.SendAsync(admin, $"/unban {spammer.Id}");
+            CollectionAssert.AreEqual(new[] { "scam:ban" }, await Stored(chat), "an admin's file stays when the ban is undone");
+
+            var member = chat.Add("Member");
+            var promo = await chat.PostAsync(chat.Photo(member, uniqueId: "promo"));
+            var scam = await chat.PostAsync(chat.Photo(member, uniqueId: "scam"));
+            Assert.IsTrue(Present(chat, promo), "lifted in memory at once");
+            Assert.IsFalse(Present(chat, scam));
             AssertNoErrors(chat);
         }
 

@@ -634,8 +634,9 @@ namespace Enforcer5.Storage
     }
 
     /// <summary>
-    /// A file an admin banned in a group (design section 3, build step 12): by banning or kicking someone with a reply to
-    /// it, with Ban on a Detection report about it, or with /banmedia. Posting it again (the same <c>file_unique_id</c>)
+    /// A file banned in a group (design section 3, build step 12): an admin's, by banning or kicking someone with a reply to
+    /// it, with Ban on a Detection report about it, or with /banmedia; or the bot's (<c>source</c> auto), by banning or
+    /// kicking someone on its own over a message that had it, lifted again by an admin's unban of that member. Posting it again (the same <c>file_unique_id</c>)
     /// is the <c>banned_media</c> sign, which deletes it. Never the file itself. <c>pdq_hash</c> is for the near-copy
     /// check that comes with the ML step.
     /// </summary>
