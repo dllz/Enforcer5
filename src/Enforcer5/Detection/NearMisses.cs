@@ -24,6 +24,10 @@ namespace Enforcer5.Detection
         private static readonly ConcurrentDictionary<(long Chat, long User, string Sign), DateTime> Seen = new();
         private static int _count;
 
+        /// <summary>For /queues: the near misses waiting for the next write (with the detections).</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("near misses", () =>
+            new QueueStatus.Reading(0, 0, $"{System.Threading.Volatile.Read(ref _count)} buffered (of {Capacity})"));
+
         /// <summary>Whether a near miss of this member and sign would be recorded now (none in the last day); does not mark it.</summary>
         internal static bool Due(long chatId, long userId, string sign) =>
             PostgresStorage.Ready && (!Seen.TryGetValue((chatId, userId, sign), out var at) || Clock.UtcNow - at >= OncePer);

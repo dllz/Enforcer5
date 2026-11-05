@@ -46,6 +46,16 @@ namespace Enforcer5.Actions
         private static readonly ConcurrentDictionary<string, Preview> Previews = new();
         private static readonly ConcurrentDictionary<long, byte> Running = new();
         private static readonly ConcurrentDictionary<long, byte> Stopping = new();
+        // Members a batch got through in this process, for /queues.
+        private static long _members;
+
+        /// <summary>For /queues and the watchdog (Helpers/QueueStatus): stuck when a batch runs and no member is done for 2 minutes.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("batches", () =>
+        {
+            var running = Running.Count;
+            var members = Interlocked.Read(ref _members);
+            return new QueueStatus.Reading(running, members, $"{running} running, {members} members done");
+        });
         private static CancellationTokenSource _stop = new();
 
         // ------------------------------------------------------------------ the command
@@ -362,6 +372,7 @@ namespace Enforcer5.Actions
                     var (outcome, detail) = Outcome(result);
                     await Repositories.Batches.SetOutcomeAsync(batchId, item.Position, outcome, detail, Now);
                     done++;
+                    Interlocked.Increment(ref _members);
                     if (Clock.UtcNow - lastEdit >= ProgressEvery && batch.ProgressMessageId is { } progress)
                     {
                         lastEdit = Clock.UtcNow;

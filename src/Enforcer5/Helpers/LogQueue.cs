@@ -88,6 +88,23 @@ namespace Enforcer5.Helpers
             lock (Lock) return ByChannel.TryGetValue(logChat, out var l) ? l.Count : 0;
         }
 
+        // Each post tried (sent, failed or waited out), for /queues.
+        private static long _tries;
+        private static long _posts;
+
+        /// <summary>For /queues and the watchdog (Helpers/QueueStatus): stuck when entries wait and no post is tried for 2 minutes.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("log channels", () =>
+        {
+            int entries, channels;
+            lock (Lock)
+            {
+                entries = ByChannel.Values.Sum(l => l.Count);
+                channels = ByChannel.Count(c => c.Value.Count > 0);
+            }
+            return new QueueStatus.Reading(entries, Interlocked.Read(ref _tries),
+                $"{entries} entries waiting for {channels} channels, {Interlocked.Read(ref _posts)} posts");
+        });
+
         internal static int Count
         {
             get { lock (Lock) return ByChannel.Values.Sum(l => l.Count); }
@@ -190,6 +207,8 @@ namespace Enforcer5.Helpers
                     await Bot.Api.SendMessage(logChat, text, parseMode, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true },
                         replyMarkup: buttons);
                     Interlocked.Increment(ref Bot.MessagesSent);
+                    Interlocked.Increment(ref _posts);
+                    Interlocked.Increment(ref _tries);
                     Done(logChat, batch);
                     attempts = 0;
                     parseMode = ParseMode.Html;
@@ -197,6 +216,7 @@ namespace Enforcer5.Helpers
                 }
                 catch (Exception e)
                 {
+                    Interlocked.Increment(ref _tries);
                     var api = Bot.AsApiError(e);
                     if (Bot.IsRateLimited(api))
                     {

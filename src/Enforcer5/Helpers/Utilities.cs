@@ -275,6 +275,10 @@ namespace Enforcer5.Helpers
                             {
                                 ErrorReporter.Report(e, $"Update {queued.Update?.Id}");
                             }
+                            finally
+                            {
+                                Interlocked.Increment(ref _updatesHandled);
+                            }
                         }
                     }
                     return; // channel completed and empty
@@ -297,8 +301,45 @@ namespace Enforcer5.Helpers
         // waiting on: Telegram discards an unanswered inline query after about ten seconds, and a
         // callback leaves the button spinning. Sharing one gate would let a single raided group
         // stall every command, button and inline query bot-wide.
-        private static readonly SemaphoreSlim _actionGate = new SemaphoreSlim(32);
-        private static readonly SemaphoreSlim _interactiveGate = new SemaphoreSlim(64);
+        private static readonly Gate _actionGate = new Gate(32);
+        private static readonly Gate _interactiveGate = new Gate(64);
+
+        /// <summary>A dispatch gate and its books for /queues: how much work waits for a permit, how much went through.</summary>
+        private sealed class Gate
+        {
+            internal readonly SemaphoreSlim Permits;
+            internal readonly int Size;
+            internal int Waiting;
+            internal long Done;
+
+            internal Gate(int size)
+            {
+                Size = size;
+                Permits = new SemaphoreSlim(size);
+            }
+
+            internal QueueStatus.Reading Read()
+            {
+                var waiting = Volatile.Read(ref Waiting);
+                var done = Interlocked.Read(ref Done);
+                return new QueueStatus.Reading(waiting, done, $"{Size - Permits.CurrentCount} of {Size} busy, {waiting} waiting, {done} done");
+            }
+        }
+
+        private static long _updatesHandled;
+
+        /// <summary>The update queue and the two dispatch gates, for /queues and the watchdog (Helpers/QueueStatus).</summary>
+        internal static readonly QueueStatus[] QueueStatuses =
+        {
+            QueueStatus.Watch("updates", () =>
+            {
+                var waiting = _updates.Reader.Count;
+                var handled = Interlocked.Read(ref _updatesHandled);
+                return new QueueStatus.Reading(waiting, handled, $"{waiting} waiting (of {UpdateQueueDepth}), {handled} handled");
+            }),
+            QueueStatus.Watch("actions", () => _actionGate.Read()),
+            QueueStatus.Watch("interactive", () => _interactiveGate.Read()),
+        };
 
         /// <summary>
         /// Runs blocking enforcement on the pool without holding up an update consumer, capped so
@@ -480,8 +521,9 @@ namespace Enforcer5.Helpers
             });
         }
 
-        private static void Run(SemaphoreSlim gate, Action work, string name)
+        private static void Run(Gate counted, Action work, string name)
         {
+            var gate = counted.Permits;
             Interlocked.Increment(ref _inFlight);
             var unit = new WorkUnit(name);
             _ = Task.Run(async () =>
@@ -495,9 +537,14 @@ namespace Enforcer5.Helpers
                         // waiting on the clock, so is this.
                         if (!gate.Wait(0))
                         {
+                            Interlocked.Increment(ref counted.Waiting);
                             Clock.Park();
                             try { await gate.WaitAsync(); }
-                            finally { Clock.Unpark(); }
+                            finally
+                            {
+                                Clock.Unpark();
+                                Interlocked.Decrement(ref counted.Waiting);
+                            }
                         }
                     }
                     catch (Exception e)
@@ -516,6 +563,7 @@ namespace Enforcer5.Helpers
                     finally
                     {
                         gate.Release();
+                        Interlocked.Increment(ref counted.Done);
                     }
                 }
                 finally

@@ -56,8 +56,12 @@ namespace Enforcer5
                 Bot.SendReply("A scan is already running; I will tell you when it is done. /queues shows where it is.", update);
         }
     
-        /// <summary>/queues, devs only (2026-11-05): each background queue, how much waits, what it works on and since when.</summary>
-        [Command(Trigger = "queues", DevOnly = true, Description = "The background queues: waiting, working on, last progress")]
+        /// <summary>
+        /// /queues, devs only (2026-11-05): every queue (Helpers/QueueStatus): the background lookups and writes, the
+        /// enforcement queue by why its jobs wait, the update queue, the dispatch gates, log channel posts and the buffers;
+        /// how much waits, what moves and since when. ⚠️ marks one the watchdog calls stuck.
+        /// </summary>
+        [Command(Trigger = "queues", DevOnly = true, Description = "Every queue: waiting, moving, stuck")]
         public static void Queues(Update update, string[] args)
         {
             var lines = QueueStatus.Queues.Select(q => q.Read()).Select(q => (q.Stuck ? "⚠️ " : "• ") + q.ToString().FormatHTML());

@@ -21,6 +21,11 @@ namespace Enforcer5.Detection
         private static int _count;
         private static long _dropped;
 
+        /// <summary>For /queues: the detections waiting for the next write (once a minute).</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("detections", () =>
+            new QueueStatus.Reading(0, 0,
+                $"{System.Threading.Volatile.Read(ref _count)} buffered (of {Capacity}), {System.Threading.Interlocked.Read(ref _dropped)} dropped since the last write"));
+
         internal static void Add(DetectionRecord record)
         {
             if (!PostgresStorage.Ready) return;

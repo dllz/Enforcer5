@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -44,6 +45,13 @@ namespace Enforcer5.Helpers
             }
             if (schedule) Bot.Dispatch(() => FlushLaterAsync(chatId), "LogDigest");
         }
+
+        /// <summary>For /queues: the raid digests waiting for their post (each goes out <see cref="Every"/> after its first line).</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("raid log digests", () =>
+        {
+            lock (Lock)
+                return new QueueStatus.Reading(0, 0, $"{Waiting.Values.Sum(p => p.Lines.Count)} lines for {Waiting.Count} groups");
+        });
 
         /// <summary>Entries waiting for a chat, for tests.</summary>
         internal static int WaitingFor(long chatId)

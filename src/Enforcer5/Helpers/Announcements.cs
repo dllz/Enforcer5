@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.Enums;
@@ -33,6 +34,13 @@ namespace Enforcer5.Helpers
 
         private static readonly object Lock = new();
         private static readonly Dictionary<long, Pending> Waiting = new();
+
+        /// <summary>For /queues: the group messages held back by a 429 (each chat's go out once its pause is over).</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("announcements", () =>
+        {
+            lock (Lock)
+                return new QueueStatus.Reading(0, 0, $"{Waiting.Values.Sum(p => p.Lines.Count)} messages for {Waiting.Count} chats held back by a 429");
+        });
 
         /// <summary>Messages waiting for a chat, for tests.</summary>
         internal static int WaitingFor(long chatId)

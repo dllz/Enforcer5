@@ -147,6 +147,8 @@ namespace Enforcer5.Enforcement
         [JsonIgnore] internal ErrorContext Context;
         /// <summary>Deletes folded into this one (see EnforcementQueue), finished with it.</summary>
         [JsonIgnore] internal List<EnforcementJob> Riders = new();
+        /// <summary>Being carried out now (set and cleared under the queue's lock), for /queues.</summary>
+        [JsonIgnore] internal bool InFlight;
 
         /// <summary>
         /// Another job with the same key while this one waits is the same job. Permission changes are

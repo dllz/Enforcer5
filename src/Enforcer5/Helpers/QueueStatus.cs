@@ -14,6 +14,13 @@ namespace Enforcer5.Helpers
     /// when it finished one. <see cref="Check"/> finds a queue with items waiting and nothing finished for
     /// <see cref="StuckAfter"/>: the watchdog (<see cref="Start"/>) tells the error chat once per stall, and again when it
     /// moves.
+    /// <para>
+    /// A queue that keeps its own books (the enforcement queue, the update queue, the dispatch gates, the log channel posts,
+    /// ...) is read instead (<see cref="Watch"/>, Daniel, 2026-11-05: /queues should show every queue): it says how many
+    /// items should be moving now (<see cref="Reading.Due"/>; work that waits on purpose, such as a 429's retry_after or
+    /// the bot's rights, is not due), a counter that grows with each item it got through, and a line of its own. Stuck is
+    /// the same rule: due work and the counter unchanged for <see cref="StuckAfter"/>, measured each time it is read.
+    /// </para>
     /// </summary>
     internal sealed class QueueStatus
     {
@@ -30,6 +37,8 @@ namespace Enforcer5.Helpers
         private long _done;
         private bool _reported;
 
+        private Func<Reading> _poll;
+
         private QueueStatus(string name) => Name = name;
 
         internal string Name { get; }
@@ -37,7 +46,46 @@ namespace Enforcer5.Helpers
         /// <summary>The status of the queue <paramref name="name"/>; the same object every time.</summary>
         internal static QueueStatus Register(string name) => All.GetOrAdd(name, n => new QueueStatus(n));
 
-        internal static IReadOnlyList<QueueStatus> Queues => All.Values.OrderBy(q => q.Name, StringComparer.Ordinal).ToList();
+        /// <summary>
+        /// What a queue that keeps its own books says when read: <paramref name="Due"/> items that should be moving now
+        /// (0: nothing can be stuck), <paramref name="Progress"/> a counter that grows with every item it got through (or
+        /// tried), and <paramref name="Detail"/> its line for /queues (no names).
+        /// </summary>
+        internal readonly record struct Reading(int Due, long Progress, string Detail);
+
+        /// <summary>A queue read by calling <paramref name="poll"/> (under its own lock, cheaply): /queues and the watchdog.</summary>
+        internal static QueueStatus Watch(string name, Func<Reading> poll)
+        {
+            var queue = Register(name);
+            lock (queue._lock) queue._poll = poll;
+            return queue;
+        }
+
+        // The queues that keep their own books register in their static fields, which .NET sets up only when the class is
+        // first used: touched here, so each is listed from the start, also when it has had nothing to do yet.
+        private static int _known;
+
+        private static void EnsureKnown()
+        {
+            if (Interlocked.Exchange(ref _known, 1) != 0) return;
+            _ = Bot.QueueStatuses;
+            _ = Enforcement.EnforcementQueue.Status;
+            _ = LogQueue.Status;
+            _ = LogDigest.Status;
+            _ = Announcements.Status;
+            _ = Actions.Batches.Status;
+            _ = Detection.DetectionRecorder.Status;
+            _ = Detection.NearMisses.Status;
+        }
+
+        internal static IReadOnlyList<QueueStatus> Queues
+        {
+            get
+            {
+                EnsureKnown();
+                return All.Values.OrderBy(q => q.Name, StringComparer.Ordinal).ToList();
+            }
+        }
 
         /// <summary>How many items wait (counting the one being worked on, if the queue counts it so).</summary>
         internal void Waiting(int count)
@@ -76,12 +124,15 @@ namespace Enforcer5.Helpers
         }
 
         /// <summary>A snapshot for /queues and the watchdog.</summary>
-        internal sealed record Snapshot(string Name, int Waiting, string Current, TimeSpan? Busy, TimeSpan SinceProgress, long Done)
+        internal sealed record Snapshot(string Name, int Waiting, string Current, TimeSpan? Busy, TimeSpan SinceProgress, long Done,
+            string Detail = null)
         {
             internal bool Stuck => (Waiting > 0 || Current != null) && SinceProgress >= StuckAfter;
 
             public override string ToString()
             {
+                if (Detail != null)
+                    return Waiting > 0 ? $"{Name}: {Detail}, last moved {Format(SinceProgress)} ago" : $"{Name}: {Detail}";
                 var line = $"{Name}: {Waiting} waiting, {Done} done";
                 if (Current != null) line += $", on {Current} for {Format(Busy ?? TimeSpan.Zero)}";
                 if (Waiting > 0 || Current != null) line += $", last finished {Format(SinceProgress)} ago";
@@ -91,9 +142,36 @@ namespace Enforcer5.Helpers
 
         internal Snapshot Read()
         {
+            Func<Reading> poll;
+            lock (_lock) poll = _poll;
+            if (poll != null) return ReadPolled(poll);
             var now = Clock.UtcNow;
             lock (_lock)
                 return new Snapshot(Name, _waiting, _current, _startedAt is { } at ? now - at : null, now - _lastProgress, _done);
+        }
+
+        // Outside this queue's lock: the queue takes its own.
+        private Snapshot ReadPolled(Func<Reading> poll)
+        {
+            Reading reading;
+            try
+            {
+                reading = poll();
+            }
+            catch (Exception e)
+            {
+                // Shown, not reported: the watchdog would report it every 30 s.
+                reading = new Reading(0, 0, $"could not be read ({e.GetType().Name}: {e.Message})");
+            }
+            var now = Clock.UtcNow;
+            lock (_lock)
+            {
+                // Moved since the last read, or nothing due: the stall clock starts now.
+                if (reading.Progress != _done || reading.Due == 0 || _waiting == 0) _lastProgress = now;
+                _done = reading.Progress;
+                _waiting = reading.Due;
+                return new Snapshot(Name, reading.Due, null, null, now - _lastProgress, reading.Progress, reading.Detail);
+            }
         }
 
         /// <summary>
@@ -104,6 +182,7 @@ namespace Enforcer5.Helpers
         {
             var stuck = new List<Snapshot>();
             var moving = new List<Snapshot>();
+            EnsureKnown();
             foreach (var queue in All.Values)
             {
                 var snapshot = queue.Read();
@@ -167,10 +246,13 @@ namespace Enforcer5.Helpers
             }
         }
 
-        private static string Format(TimeSpan span) =>
+        internal static string Format(TimeSpan span) =>
             span.TotalMinutes >= 1
                 ? string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalMinutes} min {span.Seconds} s")
                 : string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalSeconds} s");
+
+        /// <summary>Forgets a queue a test registered, so it shows nowhere else.</summary>
+        internal static void RemoveForTests(string name) => All.TryRemove(name, out _);
 
         internal static void ResetForTests()
         {

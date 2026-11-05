@@ -98,6 +98,56 @@ namespace Enforcer5.Enforcement
             get { lock (Lock) return ByChat.Values.Sum(l => l.Count); }
         }
 
+        // Each time a job's try ends (carried out, refused, or put back to wait), and each job done with: /queues.
+        private static long _tries;
+        private static long _finished;
+
+        /// <summary>For /queues and the watchdog (Helpers/QueueStatus).</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Watch("enforcement", Read);
+
+        /// <summary>
+        /// What the queue holds, by why each job waits. Due counts what should be moving now: the jobs running, and each chat
+        /// whose next job could be picked (not one waiting out a 429, for the rights, a kick's next unban try or its turn
+        /// behind the same person's earlier job). Stuck is then due work and no try ending for <see cref="QueueStatus.StuckAfter"/>.
+        /// </summary>
+        internal static QueueStatus.Reading Read()
+        {
+            var now = Clock.UtcNow;
+            int jobs, chats, running, ready = 0, due = 0, paused = 0, rights = 0, unbans = 0, later = 0;
+            lock (Lock)
+            {
+                chats = ByChat.Count;
+                running = Running.Count;
+                jobs = 0;
+                foreach (var (chat, list) in ByChat)
+                {
+                    jobs += list.Count;
+                    var chatPaused = ChatNotBefore.TryGetValue(chat, out var notBefore) && notBefore > now;
+                    foreach (var job in list)
+                    {
+                        if (job.InFlight) continue; // counted as running
+                        if (job.Kind == EnforcementKind.Kick && job.Stage == 1 && job.UnbanSinceUtc != null) unbans++;
+                        else if (job.RefusedSinceUtc != null || NoRightsSince.ContainsKey(chat)) rights++;
+                        else if (chatPaused) paused++;
+                        else if (job.DueUtc > now) later++;
+                        else due++;
+                    }
+                    if (Running.Contains(chat) || chatPaused) continue;
+                    var ignored = DateTime.MaxValue;
+                    if (NextIn(list, now, ref ignored) != null) ready++;
+                }
+            }
+            var finished = Interlocked.Read(ref _finished);
+            var parts = new List<string> { $"{jobs} jobs in {chats} chats", $"{running} running" };
+            if (due > 0) parts.Add($"{due} due");
+            if (paused > 0) parts.Add($"{paused} waiting out a 429");
+            if (rights > 0) parts.Add($"{rights} waiting for rights");
+            if (unbans > 0) parts.Add($"{unbans} kick unbans to retry");
+            if (later > 0) parts.Add($"{later} retrying later");
+            parts.Add($"{finished} done");
+            return new QueueStatus.Reading(running + ready, Interlocked.Read(ref _tries), string.Join(", ", parts));
+        }
+
         /// <summary>Jobs waiting or running in one chat.</summary>
         internal static int CountIn(long chatId)
         {
@@ -305,7 +355,11 @@ namespace Enforcer5.Enforcement
                 {
                     _wake = wake;
                     ready = PickReady(Clock.UtcNow, out sleep);
-                    foreach (var job in ready) Running.Add(job.ChatId);
+                    foreach (var job in ready)
+                    {
+                        Running.Add(job.ChatId);
+                        job.InFlight = true;
+                    }
                 }
                 foreach (var job in ready)
                 {
@@ -582,7 +636,10 @@ namespace Enforcer5.Enforcement
             {
                 if (!keep) Remove(job);
                 Running.Remove(job.ChatId);
+                job.InFlight = false;
             }
+            Interlocked.Increment(ref _tries);
+            if (!keep) Interlocked.Add(ref _finished, 1 + job.Riders.Count);
             if (result.HasValue) CompleteOnce(job, result.Value);
             if (!keep) job.Riders.Clear();
             Wake();
@@ -634,6 +691,8 @@ namespace Enforcer5.Enforcement
                 NoRightsSince.Clear();
                 KnownAdmins.Clear();
                 RecentlyMuted.Clear();
+                Interlocked.Exchange(ref _tries, 0);
+                Interlocked.Exchange(ref _finished, 0);
                 _loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             }
         }
