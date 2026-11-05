@@ -319,8 +319,9 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             ImageScans.ImageLimit = TimeSpan.FromMinutes(10);
             chat.Files.Hang("f-stuck");
             chat.Deliver(Sticker(chat, member, "stuck", "whatever"));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(1)); // the stuck one first: two deliveries race otherwise
             chat.Deliver(Sticker(chat, member, "next", "a cat"));
-            await chat.AdvanceAsync(TimeSpan.FromMinutes(1));
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(59));
             QueueStatus.Report();
             Assert.IsFalse(chat.Errors.Any(e => e.Contains("Queue stuck")), "not yet");
 
