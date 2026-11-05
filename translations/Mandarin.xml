@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <strings>
-  <language name="简体中文" base="简体中文" owner="ghost404"/>
+  <language name="简体中文" base="简体中文" owner="ghost404" IEFT="zh-hans"/>
   <string key="statusKicked">
     <value>{0} 已被本群封禁。{1}</value>
   </string>

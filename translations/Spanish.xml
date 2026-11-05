@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <strings>
-  <language name="Español" base="Español" owner="BladeZero"/>
+  <language name="Español" base="Español" owner="BladeZero" IEFT="es"/>
   <string key="statusKicked">
     <value>{0} está baneado/a de este grupo. {1}</value>
   </string>

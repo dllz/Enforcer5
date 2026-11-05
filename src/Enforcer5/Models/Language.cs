@@ -15,6 +15,11 @@ namespace Enforcer5
         public DateTime LatestUpdate { get; }
         public string IEFT { get; set; }
 
+        /// <summary>For tests: a language with only what is set.</summary>
+        internal Language()
+        {
+        }
+
         public Language(string path)
         {
             Doc = XDocument.Load(path);

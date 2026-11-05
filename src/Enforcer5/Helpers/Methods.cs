@@ -174,42 +174,25 @@ namespace Enforcer5.Helpers
             return str?.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
         }
 
-        public static Language GetGroupLanguage(User user)
+        public static Language GetGroupLanguage(User user) =>
+            LanguageForCode(Program.LangaugeList, user.LanguageCode) ?? Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
+
+        /// <summary>
+        /// The language file for a Telegram language code ("de", "pt-br", "zh-hans"): the file with that exact code, else
+        /// one with the same primary code ("zh" of "zh-hans" finds "zh-yue-hk"), the shortest code first so a plain variant
+        /// wins over a regional one. Null when none fits. Files without a code are skipped: the Mandarin and Spanish files had
+        /// none, and matching on them threw for every "zh" and "zh-hans" user (2026-11-05). Pure, for tests.
+        /// </summary>
+        internal static Language LanguageForCode(IEnumerable<Language> languages, string code)
         {
-            if (user.LanguageCode != null)
-            {
-                var language = user.LanguageCode.ToLower();
-                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
-                try
-                {
-                    if (res != null)
-                    {
-                        return res;
-                    }
-                    else
-                    {
-                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
-                        if (res != null)
-                        {
-                            return res;
-                        }
-                        else
-                        {
-                            return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                        }
-                    }
-                }
-                catch (NullReferenceException e)
-                {
-                    ErrorReporter.Report(e, $"Resolving language for code '{language}'");
-                    return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-                }
-            }
-            else
-            {
-                return Program.LangaugeList.FirstOrDefault(x => x.Name == "English");
-            }
-            
+            if (string.IsNullOrWhiteSpace(code)) return null;
+            code = code.Trim().ToLowerInvariant();
+            var coded = languages.Where(l => !string.IsNullOrEmpty(l.IEFT)).ToList();
+            var exact = coded.FirstOrDefault(l => l.IEFT == code);
+            if (exact != null) return exact;
+            static string Primary(string c) => c.Split('-', '_')[0];
+            var primary = Primary(code);
+            return coded.Where(l => Primary(l.IEFT) == primary).OrderBy(l => l.IEFT.Length).FirstOrDefault();
         }
 
         /// <summary>
@@ -287,34 +270,7 @@ namespace Enforcer5.Helpers
             }
             else if (uMessage.From.LanguageCode != null)
             {
-
-                var language = uMessage.From.LanguageCode.ToLower();
-                var res = Program.LangaugeList.FirstOrDefault(x => x.IEFT == language);
-                try
-                {
-                    if (res != null)
-                    {
-                        return res;
-                    }
-                    else
-                    {
-                        language = language.Substring(0, 2);
-                        res = Program.LangaugeList.FirstOrDefault(x => x.IEFT.Contains(language));
-                        if (res != null)
-                        {
-                            return res;
-                        }
-                        else
-                        {
-                            return GetGroupLanguage(uMessage.Chat.Id);
-                        }
-                    }
-                }
-                catch (NullReferenceException e)
-                {
-                    ErrorReporter.Report(e, $"Resolving language for code '{language}'");
-                    return GetGroupLanguage(uMessage.Chat.Id);
-                }
+                return LanguageForCode(Program.LangaugeList, uMessage.From.LanguageCode) ?? GetGroupLanguage(uMessage.Chat.Id);
             }
             else
             {
