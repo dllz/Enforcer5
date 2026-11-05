@@ -30,6 +30,9 @@ namespace Enforcer5.Detection
 
         /// <summary>For a sign that compares (alike texts or names): how alike, 0 to 1, kept for tuning (step 13).</summary>
         internal double? Similarity { get; init; }
+
+        /// <summary>An image the report offers to show when there is no deleted post (a flagged profile photo); null for none.</summary>
+        internal DeletedPost Shown { get; init; }
     }
 
     /// <summary>What a ported check did about a sign (<see cref="SignDefinition.Ported"/>).</summary>
@@ -135,7 +138,8 @@ namespace Enforcer5.Detection
                         Member = message?.From?.Id == userId ? message.From : null,
                         Message = message,
                         Score = change.After,
-                        Detail = hit.Detail
+                        Detail = hit.Detail,
+                        Shown = hit.Shown
                     });
 
                 Record(chatId, userId, message, sign, hit, weight, outcome, member, now, policy);
@@ -318,6 +322,8 @@ namespace Enforcer5.Detection
             DetectionRecorder.ResetForTests();
             GroupBots.ResetForTests();
             BotGuard.ResetForTests();
+            NsfwSigns.ResetForTests();
+            Images.ImageScans.ResetForTests();
         }
     }
 }

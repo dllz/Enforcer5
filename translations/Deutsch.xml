@@ -2803,4 +2803,64 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="filtersOnCount">
     <value>{0} an</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW-Bilder</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW-Bilder\nEnforcer sucht mit zwei Bildmodellen nach Nacktheit. Admins und bestätigte Mitglieder werden nie geprüft.\n\nBilder und Sticker: Fotos, Sticker, als Datei gesendete Bilder und die Vorschaubilder von GIFs und Videos, von allen. Nacktheit wird gelöscht und dir gemeldet.\n\nProfilbilder: jedes Profilbild eines neuen Mitglieds und die neuesten Beiträge seines persönlichen Kanals, beim Beitritt und bei der ersten Nachricht. Was mit ihm geschieht, entscheidest du; die Meldung zeigt dir das Bild.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Bilder und Sticker</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Profilbilder</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Neues Mitglied mit Nacktheit</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Fotos, Sticker, Bilddateien und die Vorschaubilder von GIFs und Videos werden auf Nacktheit geprüft. Was gefunden wird, wird gelöscht und den Admins gemeldet.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Jedes Profilbild eines neuen Mitglieds und die neuesten Beiträge seines persönlichen Kanals werden beim Beitritt und bei der ersten Nachricht auf Nacktheit geprüft.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>Was mit einem neuen Mitglied geschieht, dessen Profil Nacktheit zeigt: stummgeschaltet, gebannt oder nur den Admins gemeldet.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW-Bild</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW-Profil</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>entblößte Genitalien</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>entblößte Brüste</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>entblößter Anus</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>entblößtes Gesäß</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>Nacktheit</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>Profilbild</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>persönlicher Kanal</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Bild in seinem Profil (kann nicht gelöscht werden):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Bild anzeigen</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Nur für Entwickler. Bewertet die NSFW-Prüfung: prüft die Profilbilder und den persönlichen Kanal der als schlecht markierten Mitglieder der Gruppe und nie markierter Mitglieder, unternimmt nichts gegen sie und sendet dir, wie viele jeweils erkannt wurden. /{0} [Gruppen-ID] [schlecht] [andere]; im Privatchat die ID der Gruppe angeben.</value>
+  </string>
 </strings>

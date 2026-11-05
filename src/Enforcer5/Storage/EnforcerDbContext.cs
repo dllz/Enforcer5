@@ -710,6 +710,30 @@ namespace Enforcer5.Storage
                 entity.HasKey(x => new { x.BatchId, x.Position });
                 entity.HasOne<BatchEntity>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<MediaScoreEntity>(entity =>
+            {
+                entity.ToTable("media_scores");
+                entity.HasKey(x => new { x.MediaUniqueId, x.Model });
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.ScoredAt).HasDefaultValueSql("now()");
+                entity.HasIndex(x => x.ScoredAt, "media_scores_scored_idx");
+            });
+
+            modelBuilder.Entity<ProfileScanEntity>(entity =>
+            {
+                entity.ToTable("profile_scans", table =>
+                    table.HasCheckConstraint("profile_scans_source_check", "source IN ('join', 'first_post', 'eval')"));
+                entity.HasKey(x => x.ScanId);
+                entity.Property(x => x.ScanId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Source).IsRequired();
+                entity.Property(x => x.Model).IsRequired();
+                entity.Property(x => x.ScannedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(x => new { x.AccountId, x.ScannedAt }, "profile_scans_account_idx");
+                entity.HasIndex(x => new { x.GroupId, x.ScannedAt }, "profile_scans_group_idx");
+            });
         }
 
         private static void UseSnakeCaseColumns(ModelBuilder modelBuilder)

@@ -2732,4 +2732,64 @@
   <string key="filtersOnCount">
     <value>{0} açık</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW görseller</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW görseller\nEnforcer iki görsel modeliyle çıplaklık arar. Yöneticiler ve onaylı üyeler asla kontrol edilmez.\n\nGörseller ve çıkartmalar: herkesten gelen fotoğraflar, çıkartmalar, dosya olarak gönderilen görseller ve GIF ile videoların önizlemeleri. Çıplaklık silinir ve sana bildirilir.\n\nProfil fotoğrafları: yeni bir üyenin tüm profil fotoğrafları ve kişisel kanalının son gönderileri, katıldığında ve ilk mesajında. Ona ne olacağına sen karar verirsin; bildirim sana görseli gösterir.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Görseller ve çıkartmalar</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Profil fotoğrafları</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Çıplaklık içeren yeni üye</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Fotoğraflar, çıkartmalar, görsel dosyaları ve GIF ile videoların önizlemeleri çıplaklık için kontrol edilir. Bulunan silinir ve yöneticilere bildirilir.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Yeni bir üyenin tüm profil fotoğrafları ve kişisel kanalının son gönderileri, katıldığında ve ilk mesajında çıplaklık için kontrol edilir.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>Profilinde çıplaklık olan yeni bir üyeye ne olacağı: susturulur, yasaklanır ya da yalnızca yöneticilere bildirilir.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW görsel</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW profil</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>açık cinsel organ</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>açık göğüs</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>açık anüs</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>açık kalça</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>çıplaklık</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>profil fotoğrafı</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>kişisel kanal</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Profilindeki görsel (silinemez):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Görseli göster</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Yalnızca geliştiriciler. NSFW kontrolünü değerlendirir: gruptaki kötü olarak işaretlenmiş üyelerin ve hiç işaretlenmemiş üyelerin profil fotoğraflarına ve kişisel kanalına bakar, kimseye bir şey yapmaz ve her iki tarafta kaçının işaretlendiğini sana gönderir. /{0} [grup kimliği] [kötü] [diğer]; özelde grubun kimliğini ver.</value>
+  </string>
 </strings>

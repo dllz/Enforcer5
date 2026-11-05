@@ -232,10 +232,11 @@ namespace Enforcer5.Detection
             }, "Profiles.Save");
         }
 
-        private sealed record Answer<T>(T Value, bool Failed);
+        /// <summary>What a paced lookup got: the answer (default for 400/403, which are answers), or failed (429, other errors).</summary>
+        internal sealed record Answer<T>(T Value, bool Failed);
 
         // One Telegram call, paced with the mention lookups; 400 (not found, not allowed) is an answer: nothing.
-        private static async Task<Answer<T>> TelegramAsync<T>(Func<Task<T>> call)
+        internal static async Task<Answer<T>> TelegramAsync<T>(Func<Task<T>> call)
         {
             await LookupPacer.TurnAsync();
             System.Threading.Interlocked.Increment(ref _lookups);

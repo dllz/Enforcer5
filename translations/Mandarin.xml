@@ -2414,4 +2414,64 @@ Example:
   <string key="filtersOnCount">
     <value>已开启 {0} 个</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW 图片</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW 图片\nEnforcer 使用两个图像模型检测裸露内容。管理员和已批准的成员永远不会被检查。\n\n图片和贴纸：任何人发送的照片、贴纸、以文件发送的图片，以及 GIF 和视频的预览图。裸露内容会被删除并报告给你。\n\n头像：新成员的所有头像及其个人频道的最新帖子，在加入时和发第一条消息时检查。如何处理由你决定；报告会向你展示该图片。</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>图片和贴纸</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>头像</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>有裸露内容的新成员</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>照片、贴纸、图片文件以及 GIF 和视频的预览图会被检查是否有裸露内容。发现的内容会被删除并报告给管理员。</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>新成员的所有头像及其个人频道的最新帖子，会在加入时和发第一条消息时检查是否有裸露内容。</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>资料显示裸露内容的新成员会被如何处理：禁言、封禁，或仅报告给管理员。</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW 图片</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW 资料</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>暴露的生殖器</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>暴露的胸部</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>暴露的肛门</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>暴露的臀部</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>裸露</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>头像</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>个人频道</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 其资料中的图片（无法删除）：</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 显示图片</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>仅限开发者。评估 NSFW 检测：查看群组中被标记为不良的成员和从未被标记的成员的头像和个人频道，不对任何人采取行动，并把每类被检测出的数量发给你。/{0} [群组 id] [不良] [其他]；在私聊中请提供群组 id。</value>
+  </string>
 </strings>

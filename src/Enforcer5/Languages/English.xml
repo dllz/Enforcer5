@@ -3759,4 +3759,64 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="batchListLogFile">
     <value>Batch #{0}: {1} in {2}. Every member and what happened.</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW images</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW images\nEnforcer looks for nudity with two image models. Admins and approved members are never checked.\n\nImages and stickers: photos, stickers, images sent as files and the previews of GIFs and videos, from anyone. Nudity is deleted and reported to you.\n\nProfile photos: every profile photo of a new member, and the latest posts of their personal channel, when they join and on their first message. What happens to them is up to you; the report shows you the image.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Images and stickers</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Profile photos</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>New member with nudity</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Photos, stickers, image files and the previews of GIFs and videos are checked for nudity. What is found is deleted and reported to the admins.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Every profile photo of a new member, and the latest posts of their personal channel, are checked for nudity when they join and on their first message.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>What happens to a new member whose profile shows nudity: muted, banned, or only reported to the admins.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW image</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW profile</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>exposed genitals</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>exposed breasts</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>exposed anus</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>exposed buttocks</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>nudity</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>profile photo</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>personal channel</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Image on their profile (it cannot be deleted):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Show image</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Devs only. Evaluates the NSFW check: looks at the profile photos and personal channel of the group's members labelled bad and of members never labelled, does nothing to anyone, and sends you how many each way were flagged. /{0} [group id] [bad] [others]; in private, give the group's id.</value>
+  </string>
 </strings>

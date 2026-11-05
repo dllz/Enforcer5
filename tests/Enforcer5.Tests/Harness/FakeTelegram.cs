@@ -240,6 +240,8 @@ namespace Enforcer5.Tests.Harness
                 case GetChatAdministratorsRequest r: return Limited("getChatAdministrators", r.ChatId, null, null, r, () => Administrators(Id(r.ChatId)));
                 case GetChatMemberRequest r: return Limited("getChatMember", r.ChatId, r.UserId, null, r, () => ChatMember(Id(r.ChatId), r.UserId));
                 case GetChatRequest r: return Limited("getChat", r.ChatId, null, null, r, () => ChatInfo(r.ChatId));
+                case GetUserProfilePhotosRequest r: return Limited("getUserProfilePhotos", null, r.UserId, null, r, () => ProfilePhotos(r.UserId, r.Offset ?? 0, r.Limit ?? 100));
+                case GetUserPersonalChatMessagesRequest r: return Limited("getUserPersonalChatMessages", null, r.UserId, null, r, () => PersonalPosts(r.UserId, r.Limit));
                 case GetChatMemberCountRequest r: return Limited("getChatMemberCount", r.ChatId, null, null, r, () => MemberCount(Id(r.ChatId)));
                 case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages));
                 case UnbanChatMemberRequest r: return Limited("unbanChatMember", r.ChatId, r.UserId, null, r, () => Unban(Id(r.ChatId), r.UserId, r.OnlyIfBanned == true));
@@ -541,6 +543,26 @@ namespace Enforcer5.Tests.Harness
         }
 
         private readonly ConcurrentDictionary<long, int> _memberCounts = new();
+
+        private readonly ConcurrentDictionary<long, PhotoSize[][]> _profilePhotos = new();
+        private readonly ConcurrentDictionary<long, Message[]> _personalPosts = new();
+
+        /// <summary>A person's profile photos, newest first, as getUserProfilePhotos pages them.</summary>
+        internal void SetProfilePhotos(long userId, params PhotoSize[][] photos) => _profilePhotos[userId] = photos;
+
+        /// <summary>The latest posts of a person's personal channel, as getUserPersonalChatMessages answers.</summary>
+        internal void SetPersonalPosts(long userId, params Message[] posts) => _personalPosts[userId] = posts;
+
+        private UserProfilePhotos ProfilePhotos(long userId, int offset, int limit)
+        {
+            var all = _profilePhotos.TryGetValue(userId, out var photos) ? photos : Array.Empty<PhotoSize[]>();
+            return new UserProfilePhotos { TotalCount = all.Length, Photos = all.Skip(offset).Take(limit).ToArray() };
+        }
+
+        private Message[] PersonalPosts(long userId, int limit) =>
+            _personalPosts.TryGetValue(userId, out var posts)
+                ? posts.Take(limit).ToArray()
+                : throw new ApiRequestException("Bad Request: the user has no personal chat", 400);
 
         /// <summary>What getChat says about a person: their bio and personal channel.</summary>
         internal void SetProfile(long userId, string bio, long? personalChannel = null) => _profiles[userId] = (bio, personalChannel);

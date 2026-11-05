@@ -2734,4 +2734,64 @@ exaple: /{0}
   <string key="filtersOnCount">
     <value>{0} فعال</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 تصاویر NSFW</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 تصاویر NSFW\nEnforcer با دو مدل تصویری به دنبال برهنگی می‌گردد. ادمین‌ها و اعضای تأییدشده هرگز بررسی نمی‌شوند.\n\nتصاویر و استیکرها: عکس‌ها، استیکرها، تصاویری که به صورت فایل فرستاده می‌شوند و پیش‌نمایش گیف‌ها و ویدیوها، از هر کسی. برهنگی حذف و به شما گزارش می‌شود.\n\nعکس‌های پروفایل: همه عکس‌های پروفایل یک عضو جدید و آخرین پست‌های کانال شخصی‌اش، هنگام پیوستن و در اولین پیامش. تصمیم درباره او با شماست؛ گزارش تصویر را به شما نشان می‌دهد.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>تصاویر و استیکرها</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>عکس‌های پروفایل</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>عضو جدید با برهنگی</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>عکس‌ها، استیکرها، فایل‌های تصویری و پیش‌نمایش گیف‌ها و ویدیوها از نظر برهنگی بررسی می‌شوند. آنچه پیدا شود حذف و به ادمین‌ها گزارش می‌شود.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>همه عکس‌های پروفایل یک عضو جدید و آخرین پست‌های کانال شخصی‌اش هنگام پیوستن و در اولین پیامش از نظر برهنگی بررسی می‌شوند.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>آنچه برای عضو جدیدی که پروفایلش برهنگی دارد اتفاق می‌افتد: بی‌صدا، بن، یا فقط گزارش به ادمین‌ها.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>تصویر NSFW</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>پروفایل NSFW</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>اندام تناسلی برهنه</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>سینه برهنه</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>مقعد برهنه</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>باسن برهنه</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>برهنگی</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>عکس پروفایل</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>کانال شخصی</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 تصویر در پروفایل او (قابل حذف نیست):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 نمایش تصویر</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>فقط برای توسعه‌دهندگان. بررسی NSFW را ارزیابی می‌کند: عکس‌های پروفایل و کانال شخصی اعضای گروه که بد علامت خورده‌اند و اعضایی که هرگز علامت نخورده‌اند را بررسی می‌کند، با هیچ‌کس کاری ندارد و تعداد شناسایی‌شده در هر دسته را برای شما می‌فرستد. /{0} [شناسه گروه] [بد] [دیگران]؛ در خصوصی شناسه گروه را بدهید.</value>
+  </string>
 </strings>

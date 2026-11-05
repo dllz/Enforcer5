@@ -3773,4 +3773,64 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="batchListLogFile">
     <value>Lote #{0}: {1} en {2}. Cada miembro y lo que pasó.</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 Imágenes NSFW</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 Imágenes NSFW\nEnforcer busca desnudos con dos modelos de imagen. Los admins y los miembros aprobados nunca se revisan.\n\nImágenes y stickers: fotos, stickers, imágenes enviadas como archivo y las vistas previas de GIFs y vídeos, de cualquiera. Los desnudos se borran y se te reportan.\n\nFotos de perfil: cada foto de perfil de un miembro nuevo y las últimas publicaciones de su canal personal, al unirse y en su primer mensaje. Tú decides qué le pasa; el reporte te muestra la imagen.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Imágenes y stickers</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Fotos de perfil</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Miembro nuevo con desnudos</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Se revisan fotos, stickers, archivos de imagen y las vistas previas de GIFs y vídeos en busca de desnudos. Lo que se encuentra se borra y se reporta a los admins.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Cada foto de perfil de un miembro nuevo y las últimas publicaciones de su canal personal se revisan en busca de desnudos al unirse y en su primer mensaje.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>Qué le pasa a un miembro nuevo cuyo perfil muestra desnudos: silenciado, baneado o solo reportado a los admins.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>imagen NSFW</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>perfil NSFW</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>genitales expuestos</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>pechos expuestos</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>ano expuesto</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>nalgas expuestas</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>desnudo</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>foto de perfil</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>canal personal</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Imagen en su perfil (no se puede borrar):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Ver imagen</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Solo desarrolladores. Evalúa la detección NSFW: revisa las fotos de perfil y el canal personal de los miembros del grupo marcados como malos y de miembros nunca marcados, no hace nada a nadie y te envía cuántos se detectaron en cada caso. /{0} [id del grupo] [malos] [otros]; en privado, indica el id del grupo.</value>
+  </string>
 </strings>

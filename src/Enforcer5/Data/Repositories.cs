@@ -74,6 +74,10 @@ namespace Enforcer5.Data
         internal static IBannedMediaRepository BannedMedia { get; set; } =
             new PostgresBannedMediaRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Images' NSFW scores and the looks at members' profile images (Detection/Images, NsfwSigns).
+        internal static IImageScoreRepository MediaScores { get; set; } =
+            new PostgresImageScoreRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. New members' features, what they pointed at, reputation, retention (Detection/MemberData, Reputation).
         internal static IDetectionDataRepository DetectionData { get; set; } =
             new PostgresDetectionDataRepository(() => Storage.PostgresStorage.Database);

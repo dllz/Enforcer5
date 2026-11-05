@@ -2729,4 +2729,64 @@
   <string key="filtersOnCount">
     <value>{0} ativos</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 Imagens NSFW</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 Imagens NSFW\nO Enforcer procura nudez com dois modelos de imagem. Admins e membros aprovados nunca são verificados.\n\nImagens e stickers: fotos, stickers, imagens enviadas como arquivo e as prévias de GIFs e vídeos, de qualquer um. A nudez é apagada e reportada a você.\n\nFotos de perfil: cada foto de perfil de um novo membro e as últimas publicações do seu canal pessoal, ao entrar e na primeira mensagem. O que acontece com ele é você quem decide; o relatório mostra a imagem.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Imagens e stickers</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Fotos de perfil</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Novo membro com nudez</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Fotos, stickers, arquivos de imagem e as prévias de GIFs e vídeos são verificados em busca de nudez. O que é encontrado é apagado e reportado aos admins.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Cada foto de perfil de um novo membro e as últimas publicações do seu canal pessoal são verificadas em busca de nudez ao entrar e na primeira mensagem.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>O que acontece com um novo membro cujo perfil mostra nudez: silenciado, banido ou apenas reportado aos admins.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>imagem NSFW</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>perfil NSFW</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>genitais expostos</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>seios expostos</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>ânus exposto</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>nádegas expostas</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>nudez</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>foto de perfil</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>canal pessoal</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Imagem no perfil (não pode ser apagada):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Mostrar imagem</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Só desenvolvedores. Avalia a verificação NSFW: examina as fotos de perfil e o canal pessoal dos membros do grupo marcados como ruins e de membros nunca marcados, não faz nada a ninguém e envia a você quantos foram detectados em cada caso. /{0} [id do grupo] [ruins] [outros]; no privado, informe o id do grupo.</value>
+  </string>
 </strings>

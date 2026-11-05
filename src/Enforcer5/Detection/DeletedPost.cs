@@ -23,12 +23,19 @@ namespace Enforcer5.Detection
     /// <param name="FileId">The file to send on Show; null for text and anything without one.</param>
     /// <param name="Facts">What Telegram says about the file (length, name, size, title), language neutral; null when nothing.</param>
     /// <param name="Text">The text or caption, cut at <see cref="DeletedPost.MaxText"/>; null when none.</param>
-    internal sealed record DeletedPost(long MessageId, string Kind, string FileId, string Facts, string Text)
+    /// <param name="Flagged">
+    /// Not a post but an image Detection flagged where it cannot be deleted (a profile photo, a post in the member's personal
+    /// channel; <see cref="NsfwSigns"/>): the report says so, and Show sends it the same way.
+    /// </param>
+    internal sealed record DeletedPost(long MessageId, string Kind, string FileId, string Facts, string Text, bool Flagged = false)
     {
         internal const int MaxText = 500;
 
         /// <summary>How long one is kept: the life of a report.</summary>
         internal static readonly TimeSpan Keep = DetectionReports.Window;
+
+        /// <summary>An image flagged on a member's profile: its file, and where it was (language neutral).</summary>
+        internal static DeletedPost Image(string fileId, string facts) => new DeletedPost(0, "photo", fileId, facts, null, Flagged: true);
 
         /// <summary>What the report needs of <paramref name="message"/>; null when there is none.</summary>
         internal static DeletedPost From(Message message)
@@ -120,7 +127,7 @@ namespace Enforcer5.Detection
                 lines.Add(Facts != null ? $"{kind.FormatHTML()} · {Facts.FormatHTML()}" : kind.FormatHTML());
             }
             if (Text != null) lines.Add(Text.FormatHTML());
-            return Methods.GetLocaleString(lang, "reportDeletedPost") + "\n<blockquote expandable>" + string.Join("\n", lines) + "</blockquote>";
+            return Methods.GetLocaleString(lang, Flagged ? "reportFlaggedImage" : "reportDeletedPost") + "\n<blockquote expandable>" + string.Join("\n", lines) + "</blockquote>";
         }
 
         /// <summary>

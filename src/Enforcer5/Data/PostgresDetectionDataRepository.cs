@@ -48,7 +48,8 @@ namespace Enforcer5.Data
         DateTimeOffset LastSeenAt, DateTimeOffset ComputedAt);
 
     /// <summary>What the nightly retention made anonymous, by table.</summary>
-    internal sealed record RetentionResult(int Detections, int Labels, int NearMisses, int Signals, int Pointers, int ProfileFlags);
+    internal sealed record RetentionResult(int Detections, int Labels, int NearMisses, int Signals, int Pointers, int ProfileFlags,
+        int ProfileScans = 0);
 
     /// <summary>Detection's data (build step 14): member features, what members pointed at, reputation, implicit labels, retention.</summary>
     internal interface IDetectionDataRepository
@@ -300,8 +301,13 @@ FROM groups g LEFT JOIN detection_policies p ON p.group_id = g.group_id AND p.ch
             var flags = await connection.ExecuteAsync(new CommandDefinition(
                 "DELETE FROM account_profile_flags WHERE checked_at < @Cut",
                 new { Cut = (now - TimeSpan.FromDays(profileFlagDays)).UtcDateTime }, transaction));
+            // A look at a member's profile images: the group's retention, and the shortest choice for a dev's evals (no group).
+            var scans = await connection.ExecuteAsync(new CommandDefinition(@"
+DELETE FROM profile_scans x USING kept k WHERE x.group_id = k.group_id AND x.scanned_at < k.cut;
+DELETE FROM profile_scans WHERE group_id IS NULL AND scanned_at < @Cut;",
+                new { Cut = (now - TimeSpan.FromDays(profileFlagDays)).UtcDateTime }, transaction));
             await transaction.CommitAsync();
-            return new RetentionResult(detections, labels, near, signals, pointers, flags);
+            return new RetentionResult(detections, labels, near, signals, pointers, flags, scans);
         }
     }
 }

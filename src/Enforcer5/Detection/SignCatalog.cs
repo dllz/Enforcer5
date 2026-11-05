@@ -90,6 +90,14 @@ namespace Enforcer5.Detection
         internal static readonly SignDefinition EditLate = Register(Add("edit_late", SignPhase.Inline, 1, "report", newcomersOnly: false,
             report: true, liveFromDayOne: true) with { Default = new SignPolicy(true, "report", 1, Report: true, DeleteNewcomers: true) });
 
+        // NSFW images (Daniel, 2026-11-05; NsfwSigns): off until a group turns them on in its Detection menu, then live at once.
+        // An image or sticker anyone but an admin or approved member posts: deleted and reported.
+        internal static readonly SignDefinition ImageNsfw = Register(Add("image_nsfw", SignPhase.Enriched, 3, "delete", newcomersOnly: false,
+            delete: true, report: true, liveFromDayOne: true) with { Default = new SignPolicy(false, "delete", 3, Delete: true, Report: true) });
+        // A new member's profile photos or personal channel: muted and reported (the action is the group's choice).
+        internal static readonly SignDefinition ProfileNsfw = Register(Add("profile_nsfw", SignPhase.Enriched, 3, "mute",
+            report: true, liveFromDayOne: true) with { Default = new SignPolicy(false, "mute", 3, Report: true) });
+
         // The checks that existed before the engine (build step 4). Each applies to whom it always has and
         // does what its own settings say; the engine records it. They add nothing to the score (weight 0),
         // so a member's score still means what the newcomer signs saw.

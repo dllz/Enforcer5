@@ -2301,4 +2301,64 @@ UPDATE LOG
   <string key="filtersOnCount">
     <value>開咗 {0} 個</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW 圖片</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW 圖片\nEnforcer 用兩個圖像模型搵裸露內容。管理員同已批准嘅成員永遠唔會被檢查。\n\n圖片同貼圖：任何人發嘅相、貼圖、用檔案發嘅圖片，同埋 GIF 同影片嘅預覽圖。裸露內容會被刪除並報告俾你。\n\n頭像：新成員所有頭像同佢個人頻道嘅最新帖子，喺佢加入同發第一條訊息嗰陣檢查。點樣處理由你決定；報告會俾你睇到嗰張圖。</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>圖片同貼圖</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>頭像</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>有裸露內容嘅新成員</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>相、貼圖、圖片檔案同 GIF 同影片嘅預覽圖會被檢查有冇裸露內容。搵到嘅會被刪除並報告俾管理員。</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>新成員所有頭像同佢個人頻道嘅最新帖子，會喺佢加入同發第一條訊息嗰陣檢查有冇裸露內容。</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>資料顯示裸露內容嘅新成員會點處理：禁言、封鎖，或者只係報告俾管理員。</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW 圖片</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW 資料</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>暴露嘅生殖器</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>暴露嘅胸部</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>暴露嘅肛門</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>暴露嘅臀部</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>裸露</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>頭像</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>個人頻道</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 佢資料入面嘅圖片（刪唔到）：</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 顯示圖片</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>只限開發者。評估 NSFW 檢測：睇吓群組入面被標記為不良嘅成員同從未被標記嘅成員嘅頭像同個人頻道，唔會對任何人做嘢，再將每類被檢測到嘅數量發俾你。/{0} [群組 id] [不良] [其他]；私聊入面要俾群組 id。</value>
+  </string>
 </strings>

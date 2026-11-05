@@ -2987,4 +2987,64 @@
   <string key="filtersOnCount">
     <value>{0} aktif</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 Gambar NSFW</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 Gambar NSFW\nEnforcer mencari ketelanjangan dengan dua model gambar. Admin dan anggota yang disetujui tidak pernah diperiksa.\n\nGambar dan stiker: foto, stiker, gambar yang dikirim sebagai file, dan pratinjau GIF serta video, dari siapa pun. Ketelanjangan dihapus dan dilaporkan kepadamu.\n\nFoto profil: setiap foto profil anggota baru dan postingan terbaru di channel pribadinya, saat bergabung dan pada pesan pertamanya. Apa yang terjadi padanya terserah kamu; laporan menunjukkan gambarnya.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Gambar dan stiker</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Foto profil</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Anggota baru dengan ketelanjangan</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Foto, stiker, file gambar, dan pratinjau GIF serta video diperiksa untuk ketelanjangan. Yang ditemukan dihapus dan dilaporkan ke admin.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Setiap foto profil anggota baru dan postingan terbaru di channel pribadinya diperiksa untuk ketelanjangan saat bergabung dan pada pesan pertamanya.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>Apa yang terjadi pada anggota baru yang profilnya menunjukkan ketelanjangan: dibisukan, diblokir, atau hanya dilaporkan ke admin.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>gambar NSFW</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>profil NSFW</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>alat kelamin terbuka</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>payudara terbuka</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>anus terbuka</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>bokong terbuka</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>ketelanjangan</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>foto profil</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>channel pribadi</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Gambar di profilnya (tidak bisa dihapus):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Tampilkan gambar</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Khusus pengembang. Mengevaluasi pemeriksaan NSFW: memeriksa foto profil dan channel pribadi anggota grup yang ditandai buruk dan anggota yang tidak pernah ditandai, tidak melakukan apa pun pada siapa pun, dan mengirimimu berapa yang terdeteksi di masing-masing. /{0} [id grup] [buruk] [lainnya]; di obrolan pribadi, berikan id grupnya.</value>
+  </string>
 </strings>

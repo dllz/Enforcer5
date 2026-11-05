@@ -840,4 +840,44 @@ namespace Enforcer5.Storage
         /// <summary>Left out by the preview (an admin, or nothing to do): kept to say who, never run.</summary>
         public bool LeftOut { get; set; }
     }
+
+    /// <summary>
+    /// What the NSFW models made of one image (Daniel, 2026-11-05; <see cref="Enforcer5.Detection.Images.ImageScans"/>), by its
+    /// <c>file_unique_id</c> and the models' version: the same sticker or photo is scored once for every group and both
+    /// editions. Never the image. <c>kind</c> is where it was first seen: photo, sticker, thumbnail, profile_photo or channel_post.
+    /// </summary>
+    internal sealed class MediaScoreEntity
+    {
+        public string MediaUniqueId { get; set; }
+        public string Model { get; set; }
+        public string Kind { get; set; }
+        public float Nsfw { get; set; }
+        public string Part { get; set; }
+        public float PartScore { get; set; }
+        public DateTimeOffset ScoredAt { get; set; }
+    }
+
+    /// <summary>
+    /// One look at a member's profile images (Daniel, 2026-11-05; <see cref="Enforcer5.Detection.NsfwSigns"/>): every profile
+    /// photo and the photos of their personal channel's latest posts, when they joined or first posted in a group with the
+    /// check on, or from a dev's /nsfwscan (<c>source</c> eval). The highest scores, how many images, and the one that
+    /// flagged it; for the evals against <c>member_labels</c> and to look each member up once a day. Never the images.
+    /// </summary>
+    internal sealed class ProfileScanEntity
+    {
+        public long ScanId { get; set; }
+        public long? GroupId { get; set; }
+        public long AccountId { get; set; }
+        public string Source { get; set; }
+        public string Model { get; set; }
+        public int Photos { get; set; }
+        public int ChannelPosts { get; set; }
+        public int Scored { get; set; }
+        public float MaxNsfw { get; set; }
+        public string MaxPart { get; set; }
+        public float MaxPartScore { get; set; }
+        public bool Flagged { get; set; }
+        public string FlaggedMedia { get; set; }
+        public DateTimeOffset ScannedAt { get; set; }
+    }
 }

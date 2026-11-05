@@ -66,6 +66,7 @@ namespace Enforcer5.Handlers
                     Detection.MessageSigns.OnMessage(editCtx);
                     Detection.NameSigns.OnMessage(editCtx);
                     Detection.BannedMedia.OnMessage(editCtx);
+                    Detection.NsfwSigns.OnMessage(editCtx);
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
                     await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
                     break;
@@ -243,6 +244,8 @@ namespace Enforcer5.Handlers
                         Detection.NameSigns.OnMessage(ctx);
                         // A file an admin banned here, posted again (step 12).
                         Detection.BannedMedia.OnMessage(ctx);
+                        // Nudity in a photo or sticker, where the group turned the check on (Detection/NsfwSigns).
+                        Detection.NsfwSigns.OnMessage(ctx);
                     }
 
                     // The group an admin picked for the settings menu (/menu in private).
@@ -583,6 +586,7 @@ namespace Enforcer5.Handlers
                 Detection.FilterCheck.OnJoin(ctx);
                 Detection.MessageSigns.OnJoin(ctx);
                 Detection.ProfileSigns.OnJoin(ctx);
+                Detection.NsfwSigns.OnJoin(ctx);
                 if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
@@ -766,6 +770,8 @@ namespace Enforcer5.Handlers
                                     Detection.MessageSigns.OnFirstPost(ctx);
                                     // Their bio and personal channel, if they are new (step 11).
                                     Detection.ProfileSigns.OnFirstPost(ctx);
+                                    // Their profile photos and personal channel, where the NSFW check is on.
+                                    Detection.NsfwSigns.OnFirstPost(ctx);
                                 }
                             }
                             RaidCapture.Message(updateMessage, count);

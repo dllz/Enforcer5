@@ -2453,4 +2453,64 @@ $title - заменяется названием группы.
   <string key="filtersOnCount">
     <value>включено: {0}</value>
   </string>
+  <string key="detectionNsfwButton">
+    <value>🔞 NSFW-изображения</value>
+  </string>
+  <string key="nsfwImagesMenu">
+    <value>🔞 NSFW-изображения\nEnforcer ищет обнажёнку с помощью двух моделей изображений. Админы и одобренные участники никогда не проверяются.\n\nИзображения и стикеры: фото, стикеры, изображения, отправленные файлом, и превью GIF и видео, от кого угодно. Обнажёнка удаляется, и вам приходит отчёт.\n\nФото профиля: все фото профиля нового участника и последние посты его личного канала, при вступлении и при первом сообщении. Что с ним делать, решаете вы; в отчёте будет изображение.</value>
+  </string>
+  <string key="nsfwImagesButton">
+    <value>Изображения и стикеры</value>
+  </string>
+  <string key="nsfwProfileButton">
+    <value>Фото профиля</value>
+  </string>
+  <string key="nsfwProfileActionButton">
+    <value>Новый участник с обнажёнкой</value>
+  </string>
+  <string key="menuInfo_nsfwImages">
+    <value>Фото, стикеры, файлы изображений и превью GIF и видео проверяются на обнажёнку. Найденное удаляется, и админам приходит отчёт.</value>
+  </string>
+  <string key="menuInfo_nsfwProfile">
+    <value>Все фото профиля нового участника и последние посты его личного канала проверяются на обнажёнку при вступлении и при первом сообщении.</value>
+  </string>
+  <string key="menuInfo_nsfwProfileAction">
+    <value>Что происходит с новым участником, в профиле которого обнажёнка: мут, бан или только отчёт админам.</value>
+  </string>
+  <string key="sign_image_nsfw">
+    <value>NSFW-изображение</value>
+  </string>
+  <string key="sign_profile_nsfw">
+    <value>NSFW-профиль</value>
+  </string>
+  <string key="nsfwPart_genitals">
+    <value>открытые гениталии</value>
+  </string>
+  <string key="nsfwPart_breasts">
+    <value>открытая грудь</value>
+  </string>
+  <string key="nsfwPart_anus">
+    <value>открытый анус</value>
+  </string>
+  <string key="nsfwPart_buttocks">
+    <value>открытые ягодицы</value>
+  </string>
+  <string key="nsfwPart_nudity">
+    <value>обнажёнка</value>
+  </string>
+  <string key="nsfwWhere_profile">
+    <value>фото профиля</value>
+  </string>
+  <string key="nsfwWhere_channel">
+    <value>личный канал</value>
+  </string>
+  <string key="reportFlaggedImage">
+    <value>🔞 Изображение в профиле (его нельзя удалить):</value>
+  </string>
+  <string key="reportShowImage">
+    <value>👁 Показать изображение</value>
+  </string>
+  <string key="hcommandnsfwscan">
+    <value>Только для разработчиков. Оценивает NSFW-проверку: смотрит фото профиля и личный канал участников группы, помеченных как плохие, и никогда не помеченных участников, ничего ни с кем не делает и присылает вам, сколько в каждой группе было отмечено. /{0} [id группы] [плохие] [другие]; в личке укажите id группы.</value>
+  </string>
 </strings>

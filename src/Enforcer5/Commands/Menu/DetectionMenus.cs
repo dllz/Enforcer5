@@ -166,6 +166,9 @@ namespace Enforcer5
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionFiltersButton", filters), $"filtersmenu:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionReportsButton"), $"reportsmenu:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionEditsButton"), $"editsmenu:{chatId}"));
+            // Only where the models are loaded (NsfwModelPath), or the group has it on and should be able to turn it off.
+            if (Detection.Images.ImageScans.Enabled || engine.For(SignCatalog.ImageNsfw.Name).Enabled || engine.For(SignCatalog.ProfileNsfw.Name).Enabled)
+                more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionNsfwButton"), $"nsfwmenu:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionLearnButton"), $"learnmenu:{chatId}"));
             more.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "detectionRetentionButton",
                 Methods.GetLocaleString(lang, $"retention{engine.RetentionDays}")), $"detectionretention:{chatId}"));

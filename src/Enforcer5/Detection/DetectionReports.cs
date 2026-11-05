@@ -149,7 +149,8 @@ namespace Enforcer5.Detection
                 await EnterAsync(gate);
                 try
                 {
-                    if (deleted != null) await KeepAsync(chatId, deleted);
+                    // A flagged profile image is not a post: nothing to keep by message (not shown after a restart).
+                    if (deleted is { Flagged: false }) await KeepAsync(chatId, deleted);
                     var report = await CurrentAsync(chatId, userId);
                     if (report != null)
                     {
@@ -664,7 +665,8 @@ namespace Enforcer5.Detection
             if (!string.IsNullOrEmpty(link))
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "goToMessage")) { Url = link });
             if (report.Post?.FileId != null)
-                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportShowPost"), $"{data}:show"));
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, report.Post.Flagged ? "reportShowImage" : "reportShowPost"),
+                    $"{data}:show"));
             // Whatever was decided: an admin who banned the member may still want the bot.
             if (report.Via is { } via && !BotGuard.IsKnown(via.AsUser()) && !BotGuard.IsChosenHere(key.ChatId, via.Id) &&
                 !BotGuard.IsBlockedHere(key.ChatId, via.Id))

@@ -1316,6 +1316,46 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("group_stats", (string)null);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.MediaScoreEntity", b =>
+                {
+                    b.Property<string>("MediaUniqueId")
+                        .HasColumnType("text")
+                        .HasColumnName("media_unique_id");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<float>("Nsfw")
+                        .HasColumnType("real")
+                        .HasColumnName("nsfw");
+
+                    b.Property<string>("Part")
+                        .HasColumnType("text")
+                        .HasColumnName("part");
+
+                    b.Property<float>("PartScore")
+                        .HasColumnType("real")
+                        .HasColumnName("part_score");
+
+                    b.Property<DateTimeOffset>("ScoredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scored_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("MediaUniqueId", "Model");
+
+                    b.HasIndex(new[] { "ScoredAt" }, "media_scores_scored_idx");
+
+                    b.ToTable("media_scores", (string)null);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.MemberLabelEntity", b =>
                 {
                     b.Property<long>("LabelId")
@@ -1729,6 +1769,83 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("message_fingerprints", null, t =>
                         {
                             t.HasCheckConstraint("message_fingerprints_reason_check", "sample_reason IN ('first', 'sample', 'raid')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ProfileScanEntity", b =>
+                {
+                    b.Property<long>("ScanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("scan_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("ScanId"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("account_id");
+
+                    b.Property<int>("ChannelPosts")
+                        .HasColumnType("integer")
+                        .HasColumnName("channel_posts");
+
+                    b.Property<bool>("Flagged")
+                        .HasColumnType("boolean")
+                        .HasColumnName("flagged");
+
+                    b.Property<string>("FlaggedMedia")
+                        .HasColumnType("text")
+                        .HasColumnName("flagged_media");
+
+                    b.Property<long?>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<float>("MaxNsfw")
+                        .HasColumnType("real")
+                        .HasColumnName("max_nsfw");
+
+                    b.Property<string>("MaxPart")
+                        .HasColumnType("text")
+                        .HasColumnName("max_part");
+
+                    b.Property<float>("MaxPartScore")
+                        .HasColumnType("real")
+                        .HasColumnName("max_part_score");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<int>("Photos")
+                        .HasColumnType("integer")
+                        .HasColumnName("photos");
+
+                    b.Property<DateTimeOffset>("ScannedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scanned_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("Scored")
+                        .HasColumnType("integer")
+                        .HasColumnName("scored");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.HasKey("ScanId");
+
+                    b.HasIndex(new[] { "AccountId", "ScannedAt" }, "profile_scans_account_idx");
+
+                    b.HasIndex(new[] { "GroupId", "ScannedAt" }, "profile_scans_group_idx");
+
+                    b.ToTable("profile_scans", null, t =>
+                        {
+                            t.HasCheckConstraint("profile_scans_source_check", "source IN ('join', 'first_post', 'eval')");
                         });
                 });
 
@@ -3087,6 +3204,20 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.ProfileScanEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.RaidEventEntity", b =>

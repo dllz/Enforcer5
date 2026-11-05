@@ -23,6 +23,9 @@ namespace Enforcer5.Detection
 
         /// <summary>What the report says about the sign (what an edit changed), or null.</summary>
         internal string Detail { get; init; }
+
+        /// <summary>An image the report offers to show when nothing was deleted (a flagged profile photo), or null.</summary>
+        internal DeletedPost Shown { get; init; }
     }
 
     /// <summary>Carries out the engine's decisions. Replaceable in tests.</summary>
@@ -43,7 +46,7 @@ namespace Enforcer5.Detection
         {
             if (action.Report)
                 DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail,
-                    action.Delete ? DeletedPost.From(action.Message) : null, action.Message?.ViaBot);
+                    action.Delete ? DeletedPost.From(action.Message) ?? action.Shown : action.Shown, action.Message?.ViaBot);
             var deleteOnly = action.Action is "none" or "score" or "report";
             if (deleteOnly && !action.Delete) return;
             // A delete alone is logged here; an action logs its own line once it went through.
