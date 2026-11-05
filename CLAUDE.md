@@ -297,7 +297,9 @@ Server-side: `enf status`, `enf restart <config|all>`, `enf logs <config> [servi
 ### Logging
 
 1. `Console.Error.WriteLine` → journald (`journalctl -u enforcer-normal -f`)
-2. `LogHelper.AppendLog` → rotating files under `LogPath`
+2. `LogHelper.AppendLog` → rotating files under `LogPath`: `error.log` (`LogHelper.Error`) and `app.log` (`LogHelper.Info`, at
+   most 50 lines a second; the background queues log each item there: images, profile lookups). Both 10MB + one `.old`.
+   Times are UTC.
 3. `LogPath` is a **50MB tmpfs** mounted by `setup.sh` — logs are RAM-backed and
    intentionally lost on reboot
 

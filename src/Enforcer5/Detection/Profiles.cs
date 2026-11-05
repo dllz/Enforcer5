@@ -134,7 +134,12 @@ namespace Enforcer5.Detection
                 if (already) (value, keep) = (known.Value, known.Until - Clock.UtcNow);
                 else try
                 {
+                    var started = Clock.UtcNow;
                     (value, keep) = next.Kind == "u" ? await LookUpUserAsync(long.Parse(next.Value)) : await LookUpChannelAsync(next);
+                    int queued;
+                    lock (Lock) queued = Queue.Count;
+                    LogHelper.Info($"Profile lookup {next.Kind}{next.Value}: {(value == null ? "nothing" : "found")} in " +
+                                   $"{(Clock.UtcNow - started).TotalMilliseconds:0} ms, {queued} waiting");
                 }
                 catch (Exception e)
                 {

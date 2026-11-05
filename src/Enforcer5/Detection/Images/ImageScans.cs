@@ -63,7 +63,7 @@ namespace Enforcer5.Detection.Images
                     }
                     if (shutdown.IsCancellationRequested) return;
                     Model = models;
-                    LogHelper.Info($"NSFW models loaded from {folder} ({models.Version}).");
+                    LogHelper.Info($"NSFW models loaded from {folder} ({models.Version}, {threads} threads).");
                 }
                 catch (Exception e)
                 {
@@ -149,10 +149,18 @@ namespace Enforcer5.Detection.Images
                     ErrorReporter.Report(e, $"Reading the score of the image {uniqueId}");
                 }
             }
+            var started = Clock.UtcNow;
             var image = await DownloadAsync(fileId);
-            if (image == null) return null;
+            var downloaded = Clock.UtcNow;
+            if (image == null)
+            {
+                LogHelper.Info($"Image {kind} {uniqueId}: not downloaded ({(downloaded - started).TotalMilliseconds:0} ms), {WaitingCount()} waiting");
+                return null;
+            }
             var score = model.Score(image);
             Interlocked.Increment(ref _scored);
+            LogHelper.Info($"Image {kind} {uniqueId}: {image.Length / 1024} KB in {(downloaded - started).TotalMilliseconds:0} ms, " +
+                           $"scored in {(Clock.UtcNow - downloaded).TotalMilliseconds:0} ms ({score}), {WaitingCount()} waiting");
             if (PostgresStorage.Ready)
                 HistoryWriter.Enqueue(() => Repositories.MediaScores.SaveAsync(new MediaScoreRow(uniqueId, kind, model.Version, score,
                     new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero))), $"Saving the score of the image {uniqueId}");
@@ -179,6 +187,11 @@ namespace Enforcer5.Detection.Images
                 throw;
             }
             return content.ToArray();
+        }
+
+        private static int WaitingCount()
+        {
+            lock (Lock) return Waiting.Count;
         }
 
         private static void Remember(string uniqueId, NsfwScore score)

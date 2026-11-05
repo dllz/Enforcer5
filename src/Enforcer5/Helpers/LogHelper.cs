@@ -59,9 +59,45 @@ namespace Enforcer5.Helpers
             try { AppendLog(Path.Combine(Bot.LogDirectory, "error.log"), line + "\n"); } catch { }
         }
 
+        /// <summary>
+        /// What the bot is doing, for reading back after something went wrong without an error (2026-11-05: a queue that
+        /// hung logged nothing). To journald and to <c>app.log</c> beside <c>error.log</c> (same rotation: 10 MB and one
+        /// <c>.old</c>, so both fit the 50 MB tmpfs). At most <see cref="InfoPerSecond"/> lines a second reach the file; the
+        /// next line that gets through says how many were left out.
+        /// </summary>
         public static void Info(string message)
         {
-            try { Console.Error.WriteLine($"[INFO] {DateTime.UtcNow:u} {message}"); } catch { }
+            var line = $"[INFO] {DateTime.UtcNow:u} {message}";
+            try { Console.Error.WriteLine(line); } catch { }
+            try
+            {
+                int dropped;
+                lock (_infoLock)
+                {
+                    var second = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
+                    if (second != _infoSecond)
+                    {
+                        _infoSecond = second;
+                        _infoCount = 0;
+                    }
+                    if (++_infoCount > InfoPerSecond)
+                    {
+                        _infoDropped++;
+                        return;
+                    }
+                    dropped = _infoDropped;
+                    _infoDropped = 0;
+                }
+                if (dropped > 0) line = $"[INFO] {DateTime.UtcNow:u} ({dropped} lines left out)\n" + line;
+                AppendLog(Path.Combine(Bot.LogDirectory, "app.log"), line + "\n");
+            }
+            catch { }
         }
+
+        internal const int InfoPerSecond = 50;
+        private static readonly object _infoLock = new object();
+        private static long _infoSecond;
+        private static int _infoCount;
+        private static int _infoDropped;
     }
 }
