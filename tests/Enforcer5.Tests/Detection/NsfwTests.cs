@@ -79,7 +79,7 @@ namespace Enforcer5.Tests.Detection
         [TestMethod]
         public void TheReportSaysWhy_OrThatNoExposedPartWasSeen()
         {
-            var lang = Enforcer5.Helpers.Methods.GetGroupLanguage(0).Doc;
+            var lang = System.Xml.Linq.XDocument.Load(TestEnvironment.EnglishXmlPath);
             Assert.AreEqual("97% NSFW: exposed genitals 92%, exposed breasts 64%",
                 NsfwSigns.Describe(lang, Score(0.968, ("MALE_GENITALIA_EXPOSED", 0.92), ("FEMALE_BREAST_EXPOSED", 0.64), ("BUTTOCKS_EXPOSED", 0.2)), Thresholds));
             Assert.AreEqual("96% NSFW: no exposed body parts seen", NsfwSigns.Describe(lang, Score(0.96, ("ANUS_EXPOSED", 0.4)), Thresholds));
@@ -173,6 +173,42 @@ namespace Enforcer5.Tests.Detection
             Assert.AreSame(NsfwScore.None, models.Score(new byte[] { 1, 2, 3 }));
             var plain = models.Score(Png(300, 200, new SKColor(40, 90, 200)));
             Assert.IsFalse(plain.Flagged(Thresholds), plain.ToString());
+        }
+
+        /// <summary>
+        /// 2026-11-05: the bot died with SIGSEGV during /nsfwscan. A temporary RunOptions was finalized while ONNX Runtime ran
+        /// on it. Only a Release build collects it that early (Debug keeps locals alive): run with <c>-c Release</c>; it
+        /// crashed the test host within 150 images before the fix.
+        /// </summary>
+        [TestMethod]
+        [TestCategory("Models")]
+        public void TheModels_SurviveTheGarbageCollector()
+        {
+            var folder = Environment.GetEnvironmentVariable("ENFORCER_NSFW_MODELS");
+            if (string.IsNullOrEmpty(folder)) Assert.Inconclusive("ENFORCER_NSFW_MODELS is not set.");
+            using var models = NsfwModels.Load(folder, 2, out var why);
+            Assert.IsNotNull(models, why);
+            var image = Png(320, 320, new SKColor(200, 150, 120));
+            var stop = 0;
+            var collector = new System.Threading.Thread(() =>
+            {
+                while (System.Threading.Volatile.Read(ref stop) == 0)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    System.Threading.Thread.Sleep(1);
+                }
+            });
+            collector.Start();
+            try
+            {
+                for (var i = 0; i < 300; i++) models.Score(image);
+            }
+            finally
+            {
+                System.Threading.Volatile.Write(ref stop, 1);
+                collector.Join();
+            }
         }
     }
 }

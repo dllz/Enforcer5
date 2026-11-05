@@ -49,6 +49,14 @@ namespace Enforcer5.Detection.Images
         private readonly string _vitInput;
         private readonly string _nudeNetInput;
 
+        /// <summary>
+        /// One RunOptions for every run, alive as long as the models. Never a temporary one per run: ONNX Runtime passes only
+        /// its raw handle to the native call, so the garbage collector can finalize a temporary while the model still runs on
+        /// it, a use after free. In a Release build that crashed the bot with SIGSEGV after about 100 images (2026-11-05,
+        /// three times during /nsfwscan); NsfwTests.TheModels_SurviveTheGarbageCollector reproduces it.
+        /// </summary>
+        private readonly RunOptions _runOptions = new();
+
         public string Version => "vit-nsfw-int8+nudenet-320n";
 
         private NsfwModels(InferenceSession vit, InferenceSession nudeNet)
@@ -103,13 +111,13 @@ namespace Enforcer5.Detection.Images
 
             float[] vitOut;
             using (var input = OrtValue.CreateTensorValueFromMemory(VitTensor(bitmap), new long[] { 1, 3, VitSize, VitSize }))
-            using (var results = _vit.Run(new RunOptions(), new Dictionary<string, OrtValue> { [_vitInput] = input }, _vit.OutputNames))
+            using (var results = _vit.Run(_runOptions, new Dictionary<string, OrtValue> { [_vitInput] = input }, _vit.OutputNames))
                 vitOut = results[0].GetTensorDataAsSpan<float>().ToArray();
 
             float[] nudeOut;
             long[] shape;
             using (var input = OrtValue.CreateTensorValueFromMemory(NudeNetTensor(bitmap), new long[] { 1, 3, NudeNetSize, NudeNetSize }))
-            using (var results = _nudeNet.Run(new RunOptions(), new Dictionary<string, OrtValue> { [_nudeNetInput] = input }, _nudeNet.OutputNames))
+            using (var results = _nudeNet.Run(_runOptions, new Dictionary<string, OrtValue> { [_nudeNetInput] = input }, _nudeNet.OutputNames))
             {
                 nudeOut = results[0].GetTensorDataAsSpan<float>().ToArray();
                 shape = results[0].GetTensorTypeAndShape().Shape;
@@ -216,6 +224,7 @@ namespace Enforcer5.Detection.Images
         {
             _vit.Dispose();
             _nudeNet.Dispose();
+            _runOptions.Dispose();
         }
     }
 }
