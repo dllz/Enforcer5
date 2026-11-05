@@ -18,7 +18,8 @@ import csv
 import sys
 from collections import defaultdict
 
-SETTING = {"same_as_newcomers": "SimilarityText", "name_impersonation": "SimilarityNameNear (and the name distances)"}
+SETTING = {"same_as_newcomers": "SimilarityText", "name_impersonation": "SimilarityNameNear (and the name distances)",
+           "similar_to_banned:text": "SimilarityEmbeddingText", "similar_to_banned:image": "SimilarityEmbeddingImage"}
 
 
 def truthy(value):

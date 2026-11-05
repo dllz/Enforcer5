@@ -136,7 +136,30 @@ namespace Enforcer5
                 Bot.SendReply("/simtest first text or name | second text or name", update);
                 return;
             }
-            Bot.SendReply(Compare(parts[0].Trim(), parts[1].Trim()), update);
+            var reply = Compare(parts[0].Trim(), parts[1].Trim());
+            if (Detection.Ml.Embeddings.Enabled) reply += "\n" + EmbeddingLineAsync(parts[0].Trim(), parts[1].Trim()).GetAwaiter().GetResult();
+            Bot.SendReply(reply, update);
+        }
+
+        /// <summary>
+        /// /simtest by the text model (build step 15): the two texts' cosine against <c>similar_to_banned</c>'s threshold, and
+        /// how close the first comes to the messages that got someone removed in any group.
+        /// </summary>
+        internal static async System.Threading.Tasks.Task<string> EmbeddingLineAsync(string a, string b)
+        {
+            static string F(double v) => v.ToString("0.000", CultureInfo.InvariantCulture);
+            var client = Detection.Ml.Embeddings.Client;
+            var vectors = await System.Threading.Tasks.Task.WhenAll(Detection.Ml.Embeddings.TextAsync(a), Detection.Ml.Embeddings.TextAsync(b));
+            if (client == null || vectors.Any(v => v == null)) return "Embedding: the model service gave no answer.";
+            var cosine = Detection.Ml.Vectors.Cosine(vectors[0], vectors[1]);
+            var verdict = cosine >= SimilarityTuning.EmbeddingText ? "alike" : cosine >= SimilarityTuning.EmbeddingTextNear ? "near miss" : "different";
+            var line = $"Embedding ({client.TextModel.FormatHTML()}): {F(cosine)} → {verdict} (alike from {F(SimilarityTuning.EmbeddingText)}, " +
+                       $"near from {F(SimilarityTuning.EmbeddingTextNear)})";
+            await SimilarToBanned.EnsureLoadedAsync();
+            var (texts, images) = SimilarToBanned.Counts;
+            var closest = SimilarToBanned.Closest(SimilarToBanned.TextReferences, 0, vectors[0], null);
+            return line + $"\nRemoved messages known: {texts} ({images} images)" +
+                   (closest is { } c ? $"; the first is {F(c.Similarity)} from the closest ({(c.Reference.Global ? "abuse, every group" : "its group only")})" : "");
         }
 
         /// <summary>The /simtest text; pure, for tests.</summary>

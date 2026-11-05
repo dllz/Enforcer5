@@ -2,14 +2,18 @@
 -- afterwards (bad: removed or muted within 30 days; fine: found fine or an action undone). No ids, names or text.
 -- Run read-only on the quasi box:  enf-sql prod --csv -f tools/tuning/export.sql > /workspace/scratch/similarity.csv
 -- (Detection step 13; tools/tuning/tune.py reads the result.)
+-- similar_to_banned (step 15) is split by what was compared (similar_to_banned:text, :image), and counts while groups only
+-- watch it (mode trial): that is what its eval is.
 WITH compared AS (
-    SELECT d.sign, 'hit' AS kind, d.similarity, d.group_id, d.account_id, d.detected_at,
+    SELECT CASE WHEN d.sign = 'similar_to_banned' THEN d.sign || ':' || coalesce(d.evidence ->> 'kind', 'text') ELSE d.sign END,
+           'hit' AS kind, d.similarity, d.group_id, d.account_id, d.detected_at,
            d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete') AS bad,
            d.outcome IN ('fine', 'undone') AS fine
     FROM detections d
-    WHERE d.similarity IS NOT NULL AND d.mode IN ('live', 'observe') AND d.detected_at >= now() - interval '180 days'
+    WHERE d.similarity IS NOT NULL AND (d.mode IN ('live', 'observe') OR d.sign = 'similar_to_banned' AND d.mode = 'trial') AND d.detected_at >= now() - interval '180 days'
     UNION ALL
-    SELECT n.sign, 'near', n.similarity, n.group_id, n.account_id, n.detected_at,
+    SELECT CASE WHEN n.sign = 'similar_to_banned' THEN n.sign || ':' || coalesce(n.evidence ->> 'kind', 'text') ELSE n.sign END,
+           'near', n.similarity, n.group_id, n.account_id, n.detected_at,
            EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id AND l.label = 'bad'
                      AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete')
                      AND l.decided_at >= n.detected_at AND l.decided_at < n.detected_at + interval '30 days'),
