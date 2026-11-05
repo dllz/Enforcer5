@@ -55,9 +55,6 @@
   <string key="getmedia">
     <value>Удаление за запрещенное медиа: {0}.</value>
   </string>
-  <string key="getnsfwimage">
-    <value>Удаление за NSFW изображения: {0}</value>
-  </string>
   <string key="getNothing">
     <value>Нечего отображать.</value>
   </string>
@@ -475,22 +472,6 @@
   <string key="kickedForNoEnglishScript">
     <value>{0} исключен(а) за использование нелатинских символов.</value>
   </string>
-  <string key="bannedfornsfwimage">
-    <value>{0} заблокирован(а) за отправку NSFW изображения.\nИзображение имело {1}% вероятность быть NSFW.</value>
-  </string>
-  <string key="kickedfornsfwimage">
-    <value>{0} исключен(а) за отправку NSFW изображения.\nИзображение имело {1}% вероятность быть NSFW.</value>
-  </string>
-  <string key="nsfwMenu">
-    <value>Установите, будет ли пользователь исключен или заблокирован.
-Включите или выключите систему обнаружения.
-Обратите внимание, что каждый API ключ ограничен 5000 изображениями в месяц, вы обязаны изменить API ключ группы, когда он израсходуется.
-Эта система работает, запрещая только изображения с 95% вероятностью или выше быть NSFW. Он использует новейшие технологии компьютерного видения, но, поскольку эта область все еще молода, она не идеальна.
-Вот пост о том, как точно настроить обнаружение NSFW: http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
-  </string>
-  <string key="nsfwButton">
-    <value>Обнаружение NSFW</value>
-  </string>
   <string key="getmaxwarn">
     <value>Удален(а) за максимальное количество предупреждений: {0}.</value>
   </string>
@@ -863,12 +844,6 @@ $title - заменяется названием группы.
   <string key="hcommandallowp">
     <value>Данная команда предназначена только для разработчиков Enforcer!</value>
   </string>
-  <string key="hcommandauthnsfw">
-    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
-  </string>
-  <string key="hcommanddeauthnsfw">
-    <value>Данная команда предназначена только для разработчиков Enforcer!</value>
-  </string>
   <string key="hcommandgetuser">
     <value>Данная команда предназначена только для разработчиков Enforcer!</value>
   </string>
@@ -977,18 +952,8 @@ $title - заменяется названием группы.
     <value>Удаляет сообщение, на которое вы отвечаете. Только для администраторов.
 Пример: /{0} отвечая на сообщение.</value>
   </string>
-  <string key="nsfwapikeyset">
-    <value>NSFW API инфо сохранено.</value>
-  </string>
   <string key="apikeysucgen">
     <value>API ключ успешно сгенерирован.</value>
-  </string>
-  <string key="hcommandsetnsfw">
-    <value><![CDATA[Установите обнаружение NSFW изображения для вашей группы. Инфо о том, как именно это сделать, можно найти < href="https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02">здесь</a>.
-Пример: /{0} [ID клиента] [секрет клиента]]]>.</value>
-  </string>
-  <string key="hcommandnsfw">
-    <value>Enforcerbot может автоматически обнаруживать NSFW изображения и наказывать за них. Подробное описание того, как настроить эту функцию, можно найти здесь: https://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-08-02.</value>
   </string>
   <string key="welcomeBack">
     <value>С возвращением в Enforcer. Ваши настройки остались нетронутыми.</value>
@@ -1072,14 +1037,6 @@ $title - заменяется названием группы.
   <string key="cannotbanadmin">
     <value>Я не могу исключить или забанить администратора.</value>
   </string>
-  <string key="hcommanddelnsfw">
-  <value>Удаляет установленный ранее NSFW API ключ. Сначала вам необходимо настроить обнаружение NSFW изображений для вашей группы, введите «/help nsfw» для получения дополнительной информации и с помощью этой команды вы удалите его снова.
-Пример: /{0}.</value>
-  </string>
-  <string key="hcommandchecknsfw">
-  <value>Проверяет насколько изображение является NSFW для Enforcer. Сначала вам необходимо настроить обнаружение NSFW изображений для вашей группы, введите «/help nsfw» для получения дополнительной информации.
-Пример: /{0} отвечая на изображение.</value>
-  </string>
   <string key="hcommandmsgid">
   <value>Данная команда предназначена только для разработчиков Enforcer!</value>
   </string>
@@ -1117,9 +1074,6 @@ $title - заменяется названием группы.
   </string>
   <string key="donateWord">
   <value>Пожертвование</value>
-  </string>
-  <string key="otherhelpList">
-    <value>NSFW</value>
   </string>
   <string key="typeMore">
     <value>Пожалуйста, введите больше, чтобы получить результаты.</value>

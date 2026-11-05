@@ -73,10 +73,6 @@
     <value>Dihapus karena media terlarang:  {0}</value>
   </string>
   
-  <string key="getnsfwimage">
-	<value>Dihapus karena gambar NSFW: {0}</value>
-  </string>
-  
   <string key="getNothing">
     <value>Tidak ada yang dapat ditampilkan</value>
   </string>
@@ -582,28 +578,6 @@
   
   <string key="kickedForNoEnglishScript">
     <value>{0} telah di kick karena menggunakan bahasa karakter non-latin</value>
-  </string>
-  
-  <string key="bannedfornsfwimage">
-	<value>{0} telah di blokir karena telah memposting gambar NSFW.\nGambarnya berkemungkinan {1}% NSFW</value>
-  </string>
-  
-  <string key="kickedfornsfwimage">
-	<value>{0} telah di tendang karena telah memposting gambar NSFW.\nGambarnya berkemungkinan {1}% NSFW</value>
-  </string>
-  
-  <string key="nsfwMenu">
-	<value>Mengatur apakah user di kick atau di ban.
-			nyala atau matikan system pendeteksian.
-			tolong ingat bawah tiap api key dibatasi 5000 gambar tiap bulan, tanggung jawab anda untuk mengubah api key apabila sudah habis digunakan.
-			system hanya akan memblokir gambar yang berkemungkinan 95% NSFW. sistem ini menggunakan computer vision technology tetapi teknologi ini masih muda yang belum sempurna.
-			
-			pilihan anda dibawah ini:
-	</value>
-  </string>
-  
-  <string key="nsfwButton">
-	<value>mendedeksi NSFW</value>
   </string>
   
   <string key="getmaxwarn">
@@ -1162,14 +1136,6 @@
 	<value>Command ini hanya untuk developer enforcer!</value>
   </string>  
   
-  <string key="hcommandauthnsfw">
-	<value>Command ini hanya untuk developer enforcer!</value>
-  </string>  
-  
-  <string key="hcommanddeauthnsfw">
-	<value>Command ini hanya untuk developer enforcer!</value>
-  </string>  
-  
   <string key="hcommandgetuser">
 	<value>Command ini hanya untuk developer enforcer!</value>
   </string>  
@@ -1351,29 +1317,8 @@
   </value>
   </string>
   
-  <string key="nsfwapikeyset">
-  <value>Informasi API NSFW disimpan.</value>
-  </string>
-  
   <string key="apikeysucgen">
   <value>Kunci API berhasil di generate.</value>
-  </string>
-  
-  <string key="hcommandsetnsfw">
-  <value>
-  <![CDATA[Mengatur deteksi gambar NSFW untuk grup Anda. Informasi tentang cara tepatnya melakukannya ditemukan <a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">disini</a>.
-  
-  Contoh:
-  /{0} [clientid] [clientsecret]]]>
-  </value>
-  </string>
-  
-  <string key="hcommandnsfw">
-  <value>
-  Enforcer dapat secara otomatis mendeteksi dan menghukum citra NSFW. Deskripsi rinci tentang cara menyiapkan fitur ini dapat ditemukan di sini:
-  
-  http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
-  </value>
   </string>
   
   <string key="welcomeBack">
@@ -1485,23 +1430,6 @@
   <string key="cannotbanadmin">
     <value>Saya tidak bisa kick atau ban admin</value>
   </string>
-  <string key="hcommanddelnsfw">
-  <value>
-  Delete an NSFW API Key that was set before. You need to set one for NSFW image detection to work (enter "/help nsfw" for more information) and with this command, you remove it again.
-  
-  Example:
-  /{0}
-  </value>
-  </string>
-  
-  <string key="hcommandchecknsfw">
-  <value>
-  Can be used to manually check, how much a picture is NSFW due to enforcer. You need to set up NSFW detection for your group at first, enter "/help nsfw" for more information.
-  
-  Example:
-  /{0} while replying to a picture
-  </value>
-  </string>
   
   <string key="hcommandmsgid">
 	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
@@ -1566,10 +1494,6 @@
   
   <string key="donateWord">
 	<value>Donasi</value>
-  </string>
-  
-  <string key="otherhelpList">
-    <value>nsfw</value>
   </string>
   
   <string key="typeMore">

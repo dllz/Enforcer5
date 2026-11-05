@@ -56,9 +56,6 @@
   <string key="getmedia">
     <value>Removido por mídia desconhecida: {0}</value>
   </string>
-  <string key="getnsfwimage">
-    <value>Removido por imagens NSFW: {0}</value>
-  </string>
   <string key="getNothing">
     <value>Nada para mostrar.</value>
   </string>
@@ -481,27 +478,6 @@
   </string>
   <string key="kickedForNoEnglishScript">
     <value>{0} foi removido por usar caracteres não-Latinos</value>
-  </string>
-  <string key="bannedfornsfwimage">
-    <value>{0} foi banido por postar uma imagem com conteúdo sensível.\nA imagem tem {1}% de chance de ser NSFW.</value>
-  </string>
-  <string key="kickedfornsfwimage">
-    <value>{0} foi removido por postar uma imagem com conteúdo sensível.\nA imagem tem {1}% de chance de ser NSFW.</value>
-  </string>
-  <string key="nsfwMenu">
-    <value>Defina se o usuário é ou não expulso ou banido.
-       Ligue ou desligue o sistema de detecção.
-       Observe que cada tecla API é limitada a 5000 imagens por mês. É sua responsabilidade alterar a tecla API do grupo quando for usada.
-
-       Este sistema funciona banindo apenas imagens com uma chance de 95% ou mais de ser NSFW. Ele usa a mais recente tecnologia de visão computacional, mas como esse campo ainda é jovem, não é perfeito.
-
-       Aqui está um post sobre como configurar exatamente a detecção NSFW:
-       http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
-
-       Suas opções estão abaixo:</value>
-  </string>
-  <string key="nsfwButton">
-    <value>Detecção NSFW</value>
   </string>
   <string key="getmaxwarn">
     <value>Removido por número máximo de warn: {0}</value>
@@ -1033,12 +1009,6 @@
   <string key="hcommandallowp">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
-  <string key="hcommandauthnsfw">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
-  <string key="hcommanddeauthnsfw">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
   <string key="hcommandgetuser">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
@@ -1186,24 +1156,8 @@
       /{0} respondendo a uma mensagem.
     </value>
   </string>
-  <string key="nsfwapikeyset">
-    <value>Informações da API NSFW salvas.</value>
-  </string>
   <string key="apikeysucgen">
     <value>A chave da API foi gerada com sucesso.</value>
-  </string>
-  <string key="hcommandsetnsfw">
-    <value>Configure a detecção de imagem NSFW para o seu grupo. Informações sobre como exatamente fazer isso são encontradas &lt;a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15"&gt;here&lt;/a&gt;.
-  
-  Exemplo:
-  /{0} [clientid] [clientsecret]</value>
-  </string>
-  <string key="hcommandnsfw">
-    <value>
-      O Enforcer pode detectar e punir automaticamente imagens NSFW. Uma descrição detalhada de como configurar esse recurso pode ser encontrada aqui:
-
-      http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
-    </value>
   </string>
   <string key="welcomeBack">
     <value>Bem-vindo de volta ao Enforcer. Suas configurações ainda estão intactas.</value>
@@ -1290,22 +1244,6 @@
   <string key="cannotbanadmin">
     <value>Eu não posso remover ou banir um administrador!</value>
   </string>
-  <string key="hcommanddelnsfw">
-    <value>
-  Exclui uma chave de API NSFW que foi definida anteriormente. Você precisa definir um para que a detecção de imagem NSFW funcione (digite "/help nsfw" para obter mais informações) e, com este comando, remova-o novamente.
-  
-  Exemplo:
-  /{0}
-  </value>
-  </string>
-  <string key="hcommandchecknsfw">
-    <value>
-  Pode ser usado para verificar manualmente quanto uma imagem é NSFW devido ao Enforcer. Você precisa configurar a detecção NSFW para o seu grupo primeiro, digite "/help nsfw" para obter mais informações.
-  
-  Exemplo:
-  /{0} enquanto responde a uma imagem
-  </value>
-  </string>
   <string key="hcommandmsgid">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
@@ -1361,9 +1299,6 @@
   </string>
   <string key="donateWord">
     <value>Doe-nos</value>
-  </string>
-  <string key="otherhelpList">
-    <value>nsfw</value>
   </string>
   <string key="typeMore">
     <value>Digite mais para obter resultados</value>

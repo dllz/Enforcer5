@@ -61,9 +61,6 @@ UPDATE LOG
 	<string key="getmedia">
 		<value>使用不當媒體而被驅逐：{0} 次</value>
 	</string>
-	<string key="getnsfwimage">
-		<value>使用淫褻圖片而被驅逐︰{0} 次</value>
-	</string>
 	<string key="getNothing">
 		<value>乜都搵唔到。</value>
 	</string>
@@ -464,18 +461,6 @@ UPDATE LOG
 	<string key="kickedForNoEnglishScript">
 		<value>【{0}】使用非拉丁語系文字，已被驅逐。</value>
 	</string>
-	<string key="bannedfornsfwimage">
-		<value>【{0}】使用淫褻圖片，已被封鎖。\n該圖片有 {1}% 機會係淫褻圖片。</value>
-	</string>
-	<string key="kickedfornsfwimage">
-		<value>【{0}】使用淫褻圖片，已被驅逐。\n該圖片有 {1}% 機會係淫褻圖片。</value>
-	</string>
-	<string key="nsfwMenu">
-		<value>【淫褻圖片檢測】\n\n開／閂︰是否啟用功能\n懲罰︰驅逐或封鎖。\n\n注意每個 API 只能檢測 5000 張照片，檢查用量係管理員嘅責任。只有 95% 機率係淫褻嘅圖片先會被懲罰。此功能採用最新的電腦辨認技術，但相關技術仍未成熟，不要抱有太高期待。\n\n功能設置教學︰http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
-	</string>
-	<string key="nsfwButton">
-		<value>淫褻圖片檢測</value>
-	</string>
 	<string key="getmaxwarn">
 		<value>【{0}】警告太多，已被懲罰。</value>
 	</string>
@@ -708,14 +693,6 @@ UPDATE LOG
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
 
-	<string key="hcommandauthnsfw">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
-
-	<string key="hcommanddeauthnsfw">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
-
 	<string key="hcommandgetuser">
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
@@ -837,20 +814,8 @@ UPDATE LOG
 		<value>刪除你所回覆嘅訊息。管理指令。\n\n例子︰\n/{0} 回覆時使用</value>
 	</string>
 
-	<string key="nsfwapikeyset">
-		<value>已儲存用嚟檢測淫褻圖片嘅 API。</value>
-	</string>
-
 	<string key="apikeysucgen">
 		<value>成功創建 API Key。</value>
-	</string>
-
-	<string key="hcommandsetnsfw">
-		<value><![CDATA[設定淫褻圖片檢測，<a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">詳情按此（英文）</a>。\n\n例子︰\n/{0}（clientid）（clientsecret）]]></value>
-	</string>
-
-	<string key="hcommandnsfw">
-		<value>Enforcer 可以自動檢測淫褻圖片，並懲罰傳播者。詳細教學可留意（英文）︰\nhttp://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15</value>
 	</string>
 	<string key="welcomeBack">
 		<value>歡迎回家，主人！你先前嘅設定仲喺度。</value>
@@ -940,12 +905,6 @@ UPDATE LOG
 	<string key="cannotbanadmin">
 		<value>我冇辦法驅逐或封鎖管理員。</value>
 	</string>
-	<string key="hcommanddelnsfw">
-		<value>移除之前用嚟檢測淫褻圖片嘅 API Key。輸入「/help nsfw」嚟查詢詳情。\n\n例子︰\n/{0}</value>
-	</string>
-	<string key="hcommandchecknsfw">
-		<value>用嚟手動檢查張相有幾大可能係淫褻圖片。你必須先設定好【淫褻圖片檢測】先可以用，輸入「/help nsfw」嚟查詢詳情。\n\n例子︰\n/{0} 回覆圖片</value>
-	</string>
 	<string key="hcommandmsgid">
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
@@ -972,9 +931,6 @@ UPDATE LOG
 	</string>
 	<string key="donateWord">
 		<value>捐款</value>
-	</string>
-	<string key="otherhelpList">
-		<value>nsfw （淫褻圖片檢測）</value>
 	</string>
 	<string key="typeMore">
 		<value>無法執行，請輸入詳細資料。</value>

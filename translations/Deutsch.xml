@@ -55,9 +55,6 @@
   <string key="getmedia">
     <value>Entfernt wegen verbotener Medien: {0}</value>
   </string>
-  <string key="getnsfwimage">
-  	<value>Entfernt wegen NSFW Bildern: {0}</value>
-  </string>
   <string key="getNothing">
     <value>Es gibt nichts anzuzeigen.</value>
   </string>
@@ -496,28 +493,6 @@
   <!--Update Februar 2017 -->
   <string key="kickedForNoEnglishScript">
     <value><![CDATA[{0} wurde f&#252;r das Verwenden nicht-lateinischer Zeichen ge<b>kick</b>t.]]></value>
-  </string>
-  <string key="bannedfornsfwimage">
-	<value><![CDATA[{0} wurde f&#252;r das Senden eines NSFW Bilds ge<b>bann</b>t.\nDas Bild hatte eine {1}% Chance, NSFW zu sein.]]></value>
-  </string>
-  <string key="kickedfornsfwimage">
-	<value><![CDATA[{0} wurde f&#252;r das Senden eines NSFW Bilds ge<b>kick</b>t.\nDas Bild hatte eine {1}% Chance, NSFW zu sein.]]></value>
-  </string>
-  <string key="nsfwMenu">
-	<value>Stelle ein, ob der Bot den Nutzer kicken oder bannen soll.
-			Schalte das NSFW Erkennungs-System ein oder aus.
-			Bitte beachte, dass jeder API key nur f&#252;r 5000 Bilder pro Monat gilt, wenn dieser Wert &#252;berschritten wird, sind die Gruppenadmins f&#252;r die Erstellung eines neuen verantwortlich.
-			
-			Dieses System wird auf Bilder reagieren, die eine Chance von mindestens 95% haben, NSFW zu sein. Enforcer verwendet die neuste Erkennungstechnologie, die es momentan gibt, dennoch ist sie nat&#252;rlich nicht perfekt.
-			
-			 Hier ist eine (englische) Anleitung, was man tun muss, um die NSFW-Erkennung zu aktivieren:
-			 http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
-			
-			Hier kannst du die Optionen einstellen:
-	</value>
-  </string>
-  <string key="nsfwButton">
-	<value>NSFW Erkennung</value>
   </string>
   <string key="getmaxwarn">
      <value>Entfernt wegen maximaler Verwarnungen: {0}</value>
@@ -1034,14 +1009,6 @@
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
   
-  <string key="hcommandauthnsfw">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
-  
-  <string key="hcommanddeauthnsfw">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
-  
   <string key="hcommandgetuser">
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
@@ -1218,29 +1185,8 @@
   </value>
   </string>
   
-  <string key="nsfwapikeyset">
-  <value>NSFW API Informationen gespeichert.</value>
-  </string>
-  
   <string key="apikeysucgen">
   <value>Der API Key wurde erfolgreich generiert.</value>
-  </string>
-  
-  <string key="hcommandsetnsfw">
-  <value>
-  <![CDATA[Kann verwendet werden, um NSFW-Erkennung f&#252;r eine Gruppe freizuschalten. Was man daf&#252;r genau tun muss, ist <a href="http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15">hier</a> auf Englisch erkl&#228;rt.
-  
-  Beispiel:
-  /{0} [clientid] [clientsecret]]]>
-  </value>
-  </string>
-  
-  <string key="hcommandnsfw">
-  <value>
-  Der Enforcer kann Bilder mit NSFW (= Not safe for work, also z.B. Pornographie) Inhalt automatisch erkennen und bestrafen. F&#252;r dies ist jedoch ein wenig Aufwand n&#246;tig, was genau zu tun ist, ist hier (auf englisch) erklärt:
-  
-  http://telegra.ph/Enforcer-NSFW-Image-Detection-Guide-05-15
-  </value>
   </string>
   
   <string key="welcomeBack">
@@ -1340,22 +1286,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="cannotbanadmin">
     <value>Ich kann einen Administrator nicht kicken/bannen.</value>
   </string>
-  <string key="hcommanddelnsfw">
-  <value>
-  Kann verwendet werden, um eknen NSFW API Key, der zuvor gesetzt wurde, wieder zu l&#246;schen. Das Setzen dieses ist notwendig um dke NSFW Bild Erkennung nutzen zu k&#246;nnen (gib "/help nsfw" f&#252;r mehr Infos ein).
-  
-  Beispiel:
-  /{0}
-  </value>
-  </string>
-  <string key="hcommandchecknsfw">
-  <value>
-  Kann verwendet werden, um manuell herauszufinden, wie sehr Enforcer ein Bild als NSFW einsch&#228;tzt. Um diesen Befehl zu verwenden, muss die NSFW Bild Erkennung f&#252;r die Gruppe eingerichtet sein, nutze "/help nsfw" um mehr dar&#252;ber herauszufinden.
-  
-  Beispiel:
-  /{0} mit Antwort auf ein Bild
-  </value>
-  </string>
   <string key="hcommandmsgid">
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
@@ -1411,9 +1341,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="donateWord">
   <value>Spenden</value>
-  </string>
-  <string key="otherhelpList">
-    <value>nsfw</value>
   </string>
   <string key="typeMore">
     <value>Bitte gebe mehr ein, um Ergebnisse zu erhalten.</value>
