@@ -22,7 +22,10 @@ namespace Enforcer5.Tests.Harness
     [DoNotParallelize] // the harness takes over Bot.Api, Redis.db and PostgresStorage
     public class NsfwScenarios
     {
-        /// <summary>Scores a "file" by its text: "genitals" an exposed part, "nude" the whole image, anything else safe.</summary>
+        private static NsfwScore Parts(double nsfw, params (string Part, double Score)[] parts) =>
+            new(nsfw, parts.ToDictionary(p => p.Part, p => p.Score));
+
+        /// <summary>Scores a "file" by its text: "genitals" flagged with an exposed part, "nude" flagged without one, anything else safe.</summary>
         private sealed class FakeModel : INsfwModel
         {
             public string Version => "fake-1";
@@ -30,9 +33,10 @@ namespace Enforcer5.Tests.Harness
             public NsfwScore Score(byte[] image)
             {
                 var text = Encoding.UTF8.GetString(image);
-                return text.Contains("genitals") ? new NsfwScore(0.3, "MALE_GENITALIA_EXPOSED", 0.92)
-                    : text.Contains("nude") ? new NsfwScore(0.97, "BUTTOCKS_EXPOSED", 0.2)
-                    : new NsfwScore(0.01, "FEMALE_BREAST_EXPOSED", 0.05);
+                return text.Contains("genitals") ? Parts(0.95, ("MALE_GENITALIA_EXPOSED", 0.92))
+                    : text.Contains("nude") ? Parts(0.97, ("BUTTOCKS_EXPOSED", 0.2))
+                    : text.Contains("lots of skin") ? Parts(0.5, ("FEMALE_BREAST_EXPOSED", 0.99)) // NudeNet alone never flags
+                    : Parts(0.01, ("FEMALE_BREAST_EXPOSED", 0.05));
             }
         }
 
@@ -115,7 +119,7 @@ WHERE d.sign LIKE '%nsfw' ORDER BY d.detection_id")).ToArray();
             Assert.IsTrue(Deleted(chat, member, bad));
             var report = Reports(chat, admin).Single();
             StringAssert.Contains(report.Text, "NSFW image");
-            StringAssert.Contains(report.Text, "exposed genitals 92%");
+            StringAssert.Contains(report.Text, "95% NSFW: exposed genitals 92%");
             StringAssert.Contains(report.Text, "Deleted post");
             var show = Buttons(report).Single(b => b.CallbackData?.EndsWith(":show") == true);
             Assert.AreEqual("👁 Show deleted post", show.Text);
@@ -155,10 +159,12 @@ WHERE d.sign LIKE '%nsfw' ORDER BY d.detection_id")).ToArray();
             });
             var fromAdmin = await chat.PostAsync(Photo(chat, admin, "b", "nude"));
             var bad = await chat.PostAsync(Photo(chat, member, "c", "nude"));
+            var skin = await chat.PostAsync(Photo(chat, member, "d", "lots of skin"));
 
             Assert.IsFalse(Deleted(chat, admin, fromAdmin));
             Assert.IsTrue(Deleted(chat, member, bad));
-            StringAssert.Contains(Reports(chat, admin).Single().Text, "nudity 97%");
+            Assert.IsFalse(Deleted(chat, member, skin), "NudeNet alone never flags");
+            StringAssert.Contains(Reports(chat, admin).Single().Text, "97% NSFW: no exposed body parts seen");
             Assert.IsFalse(chat.Telegram.Calls.Any(c => c.Method == "getFile" || c.Text == "thumb"), "the small size is never fetched");
             AssertNoErrors(chat);
         }
@@ -182,7 +188,7 @@ WHERE d.sign LIKE '%nsfw' ORDER BY d.detection_id")).ToArray();
             Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, plain.Id));
             var report = Reports(chat, admin).Single();
             StringAssert.Contains(report.Text, "NSFW profile");
-            StringAssert.Contains(report.Text, "profile photo: exposed genitals 92%");
+            StringAssert.Contains(report.Text, "profile photo · 95% NSFW: exposed genitals 92%");
             StringAssert.Contains(report.Text, "Image on their profile");
             var show = Buttons(report).Single(b => b.CallbackData?.EndsWith(":show") == true);
             Assert.AreEqual("👁 Show image", show.Text);
@@ -226,7 +232,7 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             await chat.JoinAsync(joiner);
 
             Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, joiner.Id), "banned");
-            StringAssert.Contains(Reports(chat, admin).Single().Text, "personal channel: nudity 97%");
+            StringAssert.Contains(Reports(chat, admin).Single().Text, "personal channel · 97% NSFW: no exposed body parts seen");
             AssertNoErrors(chat);
         }
 

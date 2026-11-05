@@ -2717,9 +2717,6 @@
   <string key="nsfwPart_buttocks">
     <value>glutei esposti</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>nudità</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>foto profilo</value>
   </string>
@@ -2734,5 +2731,11 @@
   </string>
   <string key="hcommandnsfwscan">
     <value>Solo sviluppatori. Valuta il controllo NSFW: esamina le foto profilo e il canale personale dei membri del gruppo segnati come cattivi e di membri mai segnati, non fa nulla a nessuno e ti invia quanti sono stati rilevati in ciascun caso. /{0} [id gruppo] [cattivi] [altri]; in privato, indica l'id del gruppo.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>nessuna parte del corpo esposta rilevata</value>
   </string>
 </strings>

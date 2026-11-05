@@ -716,6 +716,7 @@ namespace Enforcer5.Storage
                 entity.ToTable("media_scores");
                 entity.HasKey(x => new { x.MediaUniqueId, x.Model });
                 entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Parts).HasColumnType("jsonb");
                 entity.Property(x => x.ScoredAt).HasDefaultValueSql("now()");
                 entity.HasIndex(x => x.ScoredAt, "media_scores_scored_idx");
             });

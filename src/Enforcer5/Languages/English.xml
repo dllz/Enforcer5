@@ -3727,9 +3727,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="nsfwPart_buttocks">
     <value>exposed buttocks</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>nudity</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>profile photo</value>
   </string>
@@ -3744,5 +3741,11 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="hcommandnsfwscan">
     <value>Devs only. Evaluates the NSFW check: looks at the profile photos and personal channel of the group's members labelled bad and of members never labelled, does nothing to anyone, and sends you how many each way were flagged. /{0} [group id] [bad] [others]; in private, give the group's id.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>no exposed body parts seen</value>
   </string>
 </strings>

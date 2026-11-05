@@ -2717,9 +2717,6 @@ exaple: /{0}
   <string key="nsfwPart_buttocks">
     <value>باسن برهنه</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>برهنگی</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>عکس پروفایل</value>
   </string>
@@ -2734,5 +2731,11 @@ exaple: /{0}
   </string>
   <string key="hcommandnsfwscan">
     <value>فقط برای توسعه‌دهندگان. بررسی NSFW را ارزیابی می‌کند: عکس‌های پروفایل و کانال شخصی اعضای گروه که بد علامت خورده‌اند و اعضایی که هرگز علامت نخورده‌اند را بررسی می‌کند، با هیچ‌کس کاری ندارد و تعداد شناسایی‌شده در هر دسته را برای شما می‌فرستد. /{0} [شناسه گروه] [بد] [دیگران]؛ در خصوصی شناسه گروه را بدهید.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>هیچ عضو برهنه‌ای دیده نشد</value>
   </string>
 </strings>

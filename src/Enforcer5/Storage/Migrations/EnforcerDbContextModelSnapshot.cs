@@ -1343,6 +1343,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("real")
                         .HasColumnName("part_score");
 
+                    b.Property<string>("Parts")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parts");
+
                     b.Property<DateTimeOffset>("ScoredAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")

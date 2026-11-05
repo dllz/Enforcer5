@@ -114,8 +114,7 @@ namespace Enforcer5.Detection.Images
                 nudeOut = results[0].GetTensorDataAsSpan<float>().ToArray();
                 shape = results[0].GetTensorTypeAndShape().Shape;
             }
-            var (part, partScore) = BestExposed(nudeOut, (int)shape[^1]);
-            return new NsfwScore(NsfwOf(vitOut), part, partScore);
+            return new NsfwScore(NsfwOf(vitOut), ExposedScores(nudeOut, (int)shape[^1]));
         }
 
         // ------------------------------------------------------------------ pure, for tests
@@ -131,30 +130,23 @@ namespace Enforcer5.Detection.Images
         }
 
         /// <summary>
-        /// NudeNet's most certain exposed part: its output is (4 box values + one score per class) × <paramref name="anchors"/>,
-        /// row-major; the best score of each exposed class over all anchors, and the best of those. No boxes are needed.
+        /// NudeNet's exposed parts: its output is (4 box values + one score per class) × <paramref name="anchors"/>, row-major;
+        /// the best score of each exposed class over all anchors, those over <paramref name="floor"/>. No boxes are needed.
         /// </summary>
-        internal static (string Part, double Score) BestExposed(IReadOnlyList<float> output, int anchors)
+        internal static Dictionary<string, double> ExposedScores(IReadOnlyList<float> output, int anchors, double floor = 0.05)
         {
-            string best = null;
-            double bestScore = 0;
-            if (output == null || anchors <= 0) return (null, 0);
+            var parts = new Dictionary<string, double>();
+            if (output == null || anchors <= 0) return parts;
             for (var c = 0; c < NudeNetLabels.Length; c++)
             {
                 if (!ExposedParts.Contains(NudeNetLabels[c])) continue;
                 var row = (4 + c) * anchors;
                 if (row + anchors > output.Count) break;
-                for (var a = 0; a < anchors; a++)
-                {
-                    var score = output[row + a];
-                    if (score > bestScore)
-                    {
-                        bestScore = score;
-                        best = NudeNetLabels[c];
-                    }
-                }
+                double best = 0;
+                for (var a = 0; a < anchors; a++) best = Math.Max(best, output[row + a]);
+                if (best >= floor) parts[NudeNetLabels[c]] = Math.Round(best, 4);
             }
-            return (best, bestScore);
+            return parts;
         }
 
         /// <summary>

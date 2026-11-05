@@ -3746,9 +3746,6 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="nsfwPart_buttocks">
     <value>nalgas expuestas</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>desnudo</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>foto de perfil</value>
   </string>
@@ -3763,5 +3760,11 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   </string>
   <string key="hcommandnsfwscan">
     <value>Solo desarrolladores. Evalúa la detección NSFW: revisa las fotos de perfil y el canal personal de los miembros del grupo marcados como malos y de miembros nunca marcados, no hace nada a nadie y te envía cuántos se detectaron en cada caso. /{0} [id del grupo] [malos] [otros]; en privado, indica el id del grupo.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>no se ven partes del cuerpo expuestas</value>
   </string>
 </strings>

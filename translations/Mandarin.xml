@@ -2426,9 +2426,6 @@ Example:
   <string key="nsfwPart_buttocks">
     <value>暴露的臀部</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>裸露</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>头像</value>
   </string>
@@ -2443,5 +2440,11 @@ Example:
   </string>
   <string key="hcommandnsfwscan">
     <value>仅限开发者。评估 NSFW 检测：查看群组中被标记为不良的成员和从未被标记的成员的头像和个人频道，不对任何人采取行动，并把每类被检测出的数量发给你。/{0} [群组 id] [不良] [其他]；在私聊中请提供群组 id。</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW：{1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>未发现暴露的身体部位</value>
   </string>
 </strings>

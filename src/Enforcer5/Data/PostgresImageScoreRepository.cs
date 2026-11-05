@@ -50,27 +50,34 @@ namespace Enforcer5.Data
             public float Nsfw { get; set; }
             public string Part { get; set; }
             public float PartScore { get; set; }
+            public string Parts { get; set; }
         }
 
         public async Task<NsfwScore> GetAsync(string mediaUniqueId, string model)
         {
             await using var connection = await Database.OpenConnectionAsync();
             var row = await connection.QuerySingleOrDefaultAsync<ScoreRow>(@"
-SELECT nsfw AS Nsfw, part AS Part, part_score AS PartScore FROM media_scores WHERE media_unique_id = @Id AND model = @Model",
+SELECT nsfw AS Nsfw, part AS Part, part_score AS PartScore, parts::text AS Parts FROM media_scores
+WHERE media_unique_id = @Id AND model = @Model",
                 new { Id = mediaUniqueId, Model = model });
-            return row == null ? null : new NsfwScore(row.Nsfw, row.Part, row.PartScore);
+            if (row == null) return null;
+            var parts = row.Parts != null
+                ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, double>>(row.Parts)
+                : row.Part != null ? new Dictionary<string, double> { [row.Part] = row.PartScore } : null;
+            return new NsfwScore(row.Nsfw, parts);
         }
 
         public async Task SaveAsync(MediaScoreRow row)
         {
             await using var connection = await Database.OpenConnectionAsync();
             await connection.ExecuteAsync(@"
-INSERT INTO media_scores (media_unique_id, model, kind, nsfw, part, part_score, scored_at)
-VALUES (@Id, @Model, @Kind, @Nsfw, @Part, @PartScore, @At) ON CONFLICT DO NOTHING",
+INSERT INTO media_scores (media_unique_id, model, kind, nsfw, part, part_score, parts, scored_at)
+VALUES (@Id, @Model, @Kind, @Nsfw, @Part, @PartScore, @Parts::jsonb, @At) ON CONFLICT DO NOTHING",
                 new
                 {
                     Id = row.MediaUniqueId, row.Model, row.Kind, Nsfw = (float)row.Score.Nsfw, row.Score.Part,
-                    PartScore = (float)row.Score.PartScore, At = row.ScoredAt.UtcDateTime
+                    PartScore = (float)row.Score.PartScore, Parts = System.Text.Json.JsonSerializer.Serialize(row.Score.Parts),
+                    At = row.ScoredAt.UtcDateTime
                 });
         }
 

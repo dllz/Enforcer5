@@ -2449,9 +2449,6 @@ $title - заменяется названием группы.
   <string key="nsfwPart_buttocks">
     <value>открытые ягодицы</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>обнажёнка</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>фото профиля</value>
   </string>
@@ -2466,5 +2463,11 @@ $title - заменяется названием группы.
   </string>
   <string key="hcommandnsfwscan">
     <value>Только для разработчиков. Оценивает NSFW-проверку: смотрит фото профиля и личный канал участников группы, помеченных как плохие, и никогда не помеченных участников, ничего ни с кем не делает и присылает вам, сколько в каждой группе было отмечено. /{0} [id группы] [плохие] [другие]; в личке укажите id группы.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>открытых частей тела не найдено</value>
   </string>
 </strings>

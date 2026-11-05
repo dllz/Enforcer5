@@ -17,7 +17,7 @@ namespace Enforcer5.Tests.Detection
     [TestClass]
     public class NsfwTests
     {
-        private static readonly NsfwThresholds Thresholds = new(0.9, 0.7);
+        private static readonly NsfwThresholds Thresholds = new(0.9, 0.5);
 
         [TestMethod]
         public void TheVitScore_IsTheSoftmaxOfItsNsfwLogit()
@@ -29,7 +29,7 @@ namespace Enforcer5.Tests.Detection
         }
 
         [TestMethod]
-        public void NudeNet_BestExposedPart_IgnoresCoveredPartsAndFaces()
+        public void NudeNet_ScoresEachExposedPart_AndIgnoresCoveredPartsAndFaces()
         {
             const int anchors = 3;
             var output = new float[(4 + NsfwModels.NudeNetLabels.Length) * anchors];
@@ -38,25 +38,51 @@ namespace Enforcer5.Tests.Detection
             Set("FACE_FEMALE", 0, 0.99f);
             Set("FEMALE_BREAST_COVERED", 1, 0.95f);
             Set("BUTTOCKS_EXPOSED", 2, 0.4f);
+            Set("BUTTOCKS_EXPOSED", 0, 0.3f);
             Set("MALE_GENITALIA_EXPOSED", 1, 0.8f);
+            Set("ANUS_EXPOSED", 1, 0.01f); // under the floor
             output[0] = 300; // box values are not scores
 
-            var (part, score) = NsfwModels.BestExposed(output, anchors);
-            Assert.AreEqual("MALE_GENITALIA_EXPOSED", part);
-            Assert.AreEqual(0.8, score, 1e-6);
-            Assert.AreEqual((null, 0.0), NsfwModels.BestExposed(new float[(4 + 18) * anchors], anchors));
+            var parts = NsfwModels.ExposedScores(output, anchors);
+            CollectionAssert.AreEquivalent(new[] { "MALE_GENITALIA_EXPOSED", "BUTTOCKS_EXPOSED" }, parts.Keys.ToArray());
+            Assert.AreEqual(0.8, parts["MALE_GENITALIA_EXPOSED"], 1e-4);
+            Assert.AreEqual(0.4, parts["BUTTOCKS_EXPOSED"], 1e-4, "the best anchor");
+            Assert.AreEqual(0, NsfwModels.ExposedScores(new float[(4 + 18) * anchors], anchors).Count);
+        }
+
+        private static NsfwScore Score(double nsfw, params (string Part, double Score)[] parts) =>
+            new(nsfw, parts.ToDictionary(p => p.Part, p => p.Score));
+
+        [TestMethod]
+        public void OnlyTheVitScoreFlags_NudeNetNamesTheReasons()
+        {
+            Assert.IsFalse(Score(0.89, ("MALE_GENITALIA_EXPOSED", 0.99)).Flagged(Thresholds), "NudeNet never flags on its own");
+            var both = Score(0.95, ("BUTTOCKS_EXPOSED", 0.6), ("FEMALE_BREAST_EXPOSED", 0.8), ("ANUS_EXPOSED", 0.3));
+            Assert.IsTrue(both.Flagged(Thresholds));
+            CollectionAssert.AreEqual(new[] { ("FEMALE_BREAST_EXPOSED", 0.8), ("BUTTOCKS_EXPOSED", 0.6) }, both.Reasons(Thresholds).ToArray());
+            Assert.AreEqual("FEMALE_BREAST_EXPOSED", both.Part);
+            Assert.AreEqual(0.8, both.PartScore);
+            Assert.AreEqual(0, Score(0.97).Reasons(Thresholds).Count);
+            Assert.IsNull(NsfwScore.None.Part);
         }
 
         [TestMethod]
-        public void AScore_Flags_OnEitherModel_AndNamesThePartOnlyWhenItFlagged()
+        public void AProfilesHighestScores_AreTakenPerKind()
         {
-            Assert.IsFalse(new NsfwScore(0.89, "FEMALE_BREAST_EXPOSED", 0.69).Flagged(Thresholds));
-            Assert.IsTrue(new NsfwScore(0.9, null, 0).Flagged(Thresholds));
-            Assert.IsNull(new NsfwScore(0.95, "BUTTOCKS_EXPOSED", 0.3).Reason(Thresholds), "the whole image flagged it");
-            var part = new NsfwScore(0.1, "ANUS_EXPOSED", 0.75);
-            Assert.IsTrue(part.Flagged(Thresholds));
-            Assert.AreEqual("ANUS_EXPOSED", part.Reason(Thresholds));
-            Assert.AreEqual(0.75, part.Certainty);
+            var max = NsfwScore.Max(new[] { Score(0.2, ("ANUS_EXPOSED", 0.7)), Score(0.9, ("ANUS_EXPOSED", 0.1), ("BUTTOCKS_EXPOSED", 0.4)) });
+            Assert.AreEqual(0.9, max.Nsfw);
+            Assert.AreEqual(0.7, max.Parts["ANUS_EXPOSED"]);
+            Assert.AreEqual(0.4, max.Parts["BUTTOCKS_EXPOSED"]);
+            Assert.AreSame(NsfwScore.None, NsfwScore.Max(Array.Empty<NsfwScore>()));
+        }
+
+        [TestMethod]
+        public void TheReportSaysWhy_OrThatNoExposedPartWasSeen()
+        {
+            var lang = Enforcer5.Helpers.Methods.GetGroupLanguage(0).Doc;
+            Assert.AreEqual("97% NSFW: exposed genitals 92%, exposed breasts 64%",
+                NsfwSigns.Describe(lang, Score(0.968, ("MALE_GENITALIA_EXPOSED", 0.92), ("FEMALE_BREAST_EXPOSED", 0.64), ("BUTTOCKS_EXPOSED", 0.2)), Thresholds));
+            Assert.AreEqual("96% NSFW: no exposed body parts seen", NsfwSigns.Describe(lang, Score(0.96, ("ANUS_EXPOSED", 0.4)), Thresholds));
         }
 
         private static PhotoSize Size(string id, int w, int h) => new() { FileId = "f" + id, FileUniqueId = "u" + id, Width = w, Height = h };
@@ -144,7 +170,7 @@ namespace Enforcer5.Tests.Detection
             var images = Environment.GetEnvironmentVariable("ENFORCER_NSFW_IMAGES");
             foreach (var path in (images ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries))
                 Console.WriteLine($"{Path.GetFileName(path)}: {models.Score(File.ReadAllBytes(path))}");
-            Assert.AreEqual(NsfwScore.None, models.Score(new byte[] { 1, 2, 3 }));
+            Assert.AreSame(NsfwScore.None, models.Score(new byte[] { 1, 2, 3 }));
             var plain = models.Score(Png(300, 200, new SKColor(40, 90, 200)));
             Assert.IsFalse(plain.Flagged(Thresholds), plain.ToString());
         }

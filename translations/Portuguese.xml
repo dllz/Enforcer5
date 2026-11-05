@@ -2706,9 +2706,6 @@
   <string key="nsfwPart_buttocks">
     <value>nádegas expostas</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>nudez</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>foto de perfil</value>
   </string>
@@ -2723,5 +2720,11 @@
   </string>
   <string key="hcommandnsfwscan">
     <value>Só desenvolvedores. Avalia a verificação NSFW: examina as fotos de perfil e o canal pessoal dos membros do grupo marcados como ruins e de membros nunca marcados, não faz nada a ninguém e envia a você quantos foram detectados em cada caso. /{0} [id do grupo] [ruins] [outros]; no privado, informe o id do grupo.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>nenhuma parte do corpo exposta detectada</value>
   </string>
 </strings>

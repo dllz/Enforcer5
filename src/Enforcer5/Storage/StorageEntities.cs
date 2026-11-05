@@ -854,6 +854,8 @@ namespace Enforcer5.Storage
         public float Nsfw { get; set; }
         public string Part { get; set; }
         public float PartScore { get; set; }
+        /// <summary>Every exposed part NudeNet scored, as JSON {part: score}; <c>part</c> is the surest of them.</summary>
+        public string Parts { get; set; }
         public DateTimeOffset ScoredAt { get; set; }
     }
 

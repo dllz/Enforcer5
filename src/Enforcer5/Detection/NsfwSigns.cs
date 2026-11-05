@@ -76,13 +76,18 @@ namespace Enforcer5.Detection
                 : sizes.Where(p => Math.Max(p.Width, p.Height) >= 640).OrderBy(p => p.Width * p.Height).FirstOrDefault()
                   ?? sizes.OrderByDescending(p => p.Width * p.Height).First();
 
-        /// <summary>"exposed genitals 92%" (or "nudity 97%" when the whole image flagged it), in the group's language.</summary>
+        /// <summary>
+        /// Why, in the group's language: "97% NSFW: exposed genitals 92%, exposed breasts 64%", or "96% NSFW: no exposed body
+        /// parts seen" (most likely swimwear or lingerie: the ViT model cannot tell those from nudity).
+        /// </summary>
         internal static string Describe(XDocument lang, NsfwScore score, NsfwThresholds thresholds)
         {
-            var reason = score.Reason(thresholds);
-            var key = reason != null && NsfwParts.Keys.TryGetValue(reason, out var part) ? part : "nsfwPart_nudity";
-            var sure = reason != null ? score.PartScore : score.Nsfw;
-            return Methods.GetLocaleString(lang, key) + " " + Math.Round(sure * 100).ToString(CultureInfo.InvariantCulture) + "%";
+            static string Percent(double v) => Math.Round(v * 100).ToString(CultureInfo.InvariantCulture) + "%";
+            var reasons = score.Reasons(thresholds)
+                .Select(r => Methods.GetLocaleString(lang, NsfwParts.Keys.TryGetValue(r.Part, out var key) ? key : "nsfwPart_genitals") + " " + Percent(r.Score))
+                .Distinct().ToList();
+            return Methods.GetLocaleString(lang, "nsfwScoreLine", Percent(score.Nsfw),
+                reasons.Count > 0 ? string.Join(", ", reasons) : Methods.GetLocaleString(lang, "nsfwNoParts"));
         }
 
         private static string Evidence(string kind, NsfwScore score, string model, object extra = null)
@@ -91,8 +96,7 @@ namespace Enforcer5.Detection
             {
                 ["kind"] = kind,
                 ["nsfw"] = Math.Round(score.Nsfw, 3),
-                ["part"] = score.Part,
-                ["part_score"] = Math.Round(score.PartScore, 3),
+                ["parts"] = score.Parts.ToDictionary(p => p.Key, p => Math.Round(p.Value, 3)),
                 ["model"] = model
             };
             if (extra != null) evidence["scan"] = extra;
@@ -187,7 +191,7 @@ namespace Enforcer5.Detection
                 await DetectionEngine.HitAsync(chatId, person.Id, null, new SignHit(SignCatalog.ProfileNsfw.Name,
                     Evidence(flagged.Kind, flagged.Score, scan.Model, new { photos = scan.Photos, channel_posts = scan.ChannelPosts }))
                 {
-                    Detail = $"{where}: {Describe(lang, flagged.Score, thresholds)}",
+                    Detail = $"{where} · {Describe(lang, flagged.Score, thresholds)}",
                     Shown = DeletedPost.Image(flagged.FileId, null)
                 });
             }
@@ -245,12 +249,8 @@ namespace Enforcer5.Detection
             var scored = unique.Zip(scores, (i, s) => s == null ? null : new ScoredImage(i.Kind, i.UniqueId, i.FileId, s))
                 .Where(s => s != null).ToList();
             var thresholds = NsfwThresholds.Current;
-            var max = scored.Count == 0
-                ? NsfwScore.None
-                : new NsfwScore(scored.Max(s => s.Score.Nsfw),
-                    scored.OrderByDescending(s => s.Score.PartScore).First().Score.Part,
-                    scored.Max(s => s.Score.PartScore));
-            var flagged = scored.Where(s => s.Score.Flagged(thresholds)).OrderByDescending(s => s.Score.Certainty).FirstOrDefault();
+            var max = NsfwScore.Max(scored.Select(s => s.Score));
+            var flagged = scored.Where(s => s.Score.Flagged(thresholds)).OrderByDescending(s => s.Score.Nsfw).FirstOrDefault();
             var scan = new ProfileScan(photos, posts, scored.Count, max, flagged, model.Version);
             if (PostgresStorage.Ready)
                 HistoryWriter.Enqueue(() => Repositories.MediaScores.AddScanAsync(new ProfileScanRow(chatId, userId, source, model.Version, photos,
@@ -290,7 +290,7 @@ namespace Enforcer5.Detection
                 }
                 var badResult = await Run(badIds);
                 var otherResult = await Run(otherIds);
-                Bot.Send($"<b>NSFW profile scan</b> of <code>{chatId}</code> (thresholds: nsfw {thresholds.Nsfw:0.00}, part {thresholds.Part:0.00})\n" +
+                Bot.Send($"<b>NSFW profile scan</b> of <code>{chatId}</code> (flagged at nsfw {thresholds.Nsfw:0.00})\n" +
                          $"Labelled bad: {badResult.Flagged} flagged of {badResult.Scanned} ({badResult.Photos} with images)\n" +
                          $"Never labelled: {otherResult.Flagged} flagged of {otherResult.Scanned} ({otherResult.Photos} with images)\n" +
                          "Every score is in profile_scans (source eval).", devId);

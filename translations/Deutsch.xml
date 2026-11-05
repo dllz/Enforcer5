@@ -2772,9 +2772,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="nsfwPart_buttocks">
     <value>entblößtes Gesäß</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>Nacktheit</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>Profilbild</value>
   </string>
@@ -2789,5 +2786,11 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="hcommandnsfwscan">
     <value>Nur für Entwickler. Bewertet die NSFW-Prüfung: prüft die Profilbilder und den persönlichen Kanal der als schlecht markierten Mitglieder der Gruppe und nie markierter Mitglieder, unternimmt nichts gegen sie und sendet dir, wie viele jeweils erkannt wurden. /{0} [Gruppen-ID] [schlecht] [andere]; im Privatchat die ID der Gruppe angeben.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>keine entblößten Körperteile erkannt</value>
   </string>
 </strings>

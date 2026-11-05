@@ -2953,9 +2953,6 @@
   <string key="nsfwPart_buttocks">
     <value>bokong terbuka</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>ketelanjangan</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>foto profil</value>
   </string>
@@ -2970,5 +2967,11 @@
   </string>
   <string key="hcommandnsfwscan">
     <value>Khusus pengembang. Mengevaluasi pemeriksaan NSFW: memeriksa foto profil dan channel pribadi anggota grup yang ditandai buruk dan anggota yang tidak pernah ditandai, tidak melakukan apa pun pada siapa pun, dan mengirimimu berapa yang terdeteksi di masing-masing. /{0} [id grup] [buruk] [lainnya]; di obrolan pribadi, berikan id grupnya.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>tidak terlihat bagian tubuh yang terbuka</value>
   </string>
 </strings>

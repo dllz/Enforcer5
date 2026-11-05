@@ -2700,9 +2700,6 @@
   <string key="nsfwPart_buttocks">
     <value>açık kalça</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>çıplaklık</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>profil fotoğrafı</value>
   </string>
@@ -2717,5 +2714,11 @@
   </string>
   <string key="hcommandnsfwscan">
     <value>Yalnızca geliştiriciler. NSFW kontrolünü değerlendirir: gruptaki kötü olarak işaretlenmiş üyelerin ve hiç işaretlenmemiş üyelerin profil fotoğraflarına ve kişisel kanalına bakar, kimseye bir şey yapmaz ve her iki tarafta kaçının işaretlendiğini sana gönderir. /{0} [grup kimliği] [kötü] [diğer]; özelde grubun kimliğini ver.</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW: {1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>açık vücut bölgesi görülmedi</value>
   </string>
 </strings>

@@ -2299,9 +2299,6 @@ UPDATE LOG
   <string key="nsfwPart_buttocks">
     <value>暴露嘅臀部</value>
   </string>
-  <string key="nsfwPart_nudity">
-    <value>裸露</value>
-  </string>
   <string key="nsfwWhere_profile">
     <value>頭像</value>
   </string>
@@ -2316,5 +2313,11 @@ UPDATE LOG
   </string>
   <string key="hcommandnsfwscan">
     <value>只限開發者。評估 NSFW 檢測：睇吓群組入面被標記為不良嘅成員同從未被標記嘅成員嘅頭像同個人頻道，唔會對任何人做嘢，再將每類被檢測到嘅數量發俾你。/{0} [群組 id] [不良] [其他]；私聊入面要俾群組 id。</value>
+  </string>
+  <string key="nsfwScoreLine">
+    <value>{0} NSFW：{1}</value>
+  </string>
+  <string key="nsfwNoParts">
+    <value>見唔到暴露嘅身體部位</value>
   </string>
 </strings>
