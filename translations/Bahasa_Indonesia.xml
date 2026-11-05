@@ -1115,10 +1115,6 @@
   <string key="gethelplist">
     <value>Dukungan bantuan saat query adalah:\n{0}</value>
   </string>
-
-  <string key="hcommandleave">
-	<value>Command ini hanya untuk developer enforcer !</value>
-  </string>  
   
   <string key="hcommandlook">
 	<value>Command ini hanya untuk developer enforcer!</value>
@@ -1219,10 +1215,6 @@
   <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
   </string>
 
-  <string key="hcommandhalt">
-  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
-  </string>
-
   <string key="hcommandmakelangadmin">
   <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
   </string>
@@ -1236,10 +1228,6 @@
   </string>
 
   <string key="hcommandunrekt">
-  <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
-  </string>
-
-  <string key="hcommandmediaid">
   <value>Perintah ini hanya bisa digunakan oleh developer enforcer!</value>
   </string>
 
@@ -1431,10 +1419,6 @@
     <value>Saya tidak bisa kick atau ban admin</value>
   </string>
   
-  <string key="hcommandmsgid">
-	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
-  </string>
-  
   <string key="hcommanddellogchannel">
   <value>
   Delete a log channel from a grup, that was added before. For more information about log channels, use "/help addlogchannel".
@@ -1589,14 +1573,6 @@
   Contoh:
   /{0}
   </value>
-  </string>
-  
-  <string key="hcommandbangroup">
-	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
-  </string>
-  
-  <string key="hcommandunbangroup">
-	<value>Command ini hanya bisa digunakan oleh developer enforcer!</value>
   </string>
   
   <string key="registerfortagallclickme">
@@ -2527,15 +2503,6 @@
   <string key="detectStatsNone">
     <value>Tidak ada tanda yang muncul di sini dalam waktu itu.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>Untuk developer: setiap tanda Detection di semua grup, dengan keputusan admin setelahnya, nyaris-cocoknya, dan tanda pembanding menurut kemiripan. /{0} 90 melihat 90 hari.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Untuk developer: seberapa mirip dua teks atau nama menurut ambang yang dipakai Detection. /{0} pertama | kedua</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Untuk developer: bagaimana nasib anggota yang menunjuk ke sebuah channel atau situs web, di semua grup. /{0} @channel, id channel, atau situs web.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;Data yang dipulihkan untuk {0}&lt;/b&gt;\n\nMaaf: antara {1} dan {2} Enforcer kehilangan data yang disimpannya untuk grup kalian, seperti peringatan. Kami mengambil kembali apa yang bisa dari channel log grup. Di bawah ini apa yang akan kami kembalikan, beserta postingan log asal setiap perubahan.\n\nTidak ada yang berubah sampai admin menekan Terapkan, lalu hanya yang dicentang. Hapus centang pada yang tidak kalian inginkan; centang ini sama untuk semua admin grup. Terbuka sampai {3}.</value>
   </string>
@@ -2635,9 +2602,6 @@
   <string key="recoveryWarnReasons">
     <value>Pulihkan daftar alasan menghapus peringatan seperti yang diubah</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>Untuk developer: tawaran pemulihan data ke grup setelah data hilang. Balas file pemulihan dengan /{0} untuk mengimpornya (ditahan), /{0} preview id-chat menampilkan tawaran sebuah grup, /{0} release batch mengirimnya; /{0} saja menampilkan daftarnya.</value>
-  </string>
   <string key="adminChatMode">
     <value>Ini chat admin untuk {0}: saya mengirim laporan dan tawaran di sini dan tidak memoderasi chat ini. Gunakan perintah di grup.</value>
   </string>
@@ -2715,18 +2679,6 @@
   </string>
   <string key="trustedBotsEverywhere">
     <value>Dipercaya di semua grup:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>Khusus pengembang. Mempercayai bot di semua grup: bot tidak diperiksa dan ban dari Enforcer dicabut. /untrustbot di sebuah grup tetap mengeluarkannya dari grup itu. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>Khusus pengembang. Mengeluarkan bot dari setiap grup tempat ia mengirim pesan atau ditambahkan, bahkan di grup yang mempercayainya. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>Khusus pengembang. Melupakan status percaya atau blokir sebuah bot di semua grup: keputusan masing-masing grup berlaku lagi. Balas salah satu pesannya, atau berikan id atau @username-nya.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>Khusus pengembang. Menampilkan bot yang dipercaya atau diblokir di semua grup, dan bot yang dipercaya oleh grup premium.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>Mempercayai bot di grup ini: pesannya dan balasannya saat seseorang menyebutnya dibiarkan lewat, dan blokir dari Enforcer dicabut. Balas salah satu pesannya, atau tulis @username atau id-nya. Bot yang ditambahkan admin sudah dipercaya; bot yang ditambahkan anggota, atau disebut anggota agar membalas di sini, diblokir.</value>
@@ -2965,19 +2917,10 @@
   <string key="reportShowImage">
     <value>👁 Tampilkan gambar</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>Khusus pengembang. Mengevaluasi pemeriksaan NSFW: memeriksa foto profil dan channel pribadi anggota grup yang ditandai buruk dan anggota yang tidak pernah ditandai, tidak melakukan apa pun pada siapa pun, dan mengirimimu berapa yang terdeteksi di masing-masing. /{0} [id grup] [buruk] [lainnya]; di obrolan pribadi, berikan id grupnya.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>tidak terlihat bagian tubuh yang terbuka</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>Khusus pengembang. Menampilkan setiap antrean latar belakang (gambar, pencarian profil, pencarian mention, penulisan riwayat): berapa item menunggu, apa yang sedang dikerjakan dan sejak kapan, dan kapan terakhir menyelesaikan satu. Antrean yang macet 2 menit juga dilaporkan ke obrolan error.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>Khusus pengembang. Balas foto, stiker, GIF, video, atau file gambar dengan /{0}: bot menilainya seperti pemeriksaan NSFW dan menjawab dengan skornya dan apakah akan ditandai. Tidak ada yang dihapus, dilaporkan, atau dicatat.</value>
   </string>
 </strings>

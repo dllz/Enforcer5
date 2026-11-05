@@ -78,7 +78,7 @@ namespace Enforcer5
         {           
             var request = "";
             var results = new List<HelpArticle>();
-            var triggerList = Bot.Commands.Select(e => e.Trigger.ToLower()).ToList();
+            var triggerList = Bot.Commands.Where(e => !e.DevOnly).Select(e => e.Trigger.ToLower()).ToList();
             if (!string.IsNullOrEmpty(args))
             {                
                 foreach (var mem in triggerList)

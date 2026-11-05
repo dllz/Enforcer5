@@ -281,16 +281,24 @@ namespace Enforcer5.Helpers
 
 
 
-        internal static string GetHelpList(XDocument file)
-        {
-            var strings = file.Descendants("string").Where(x => x.Attribute("key").Value.Contains("hcommand"));
-            var list = new List<string>();
-            foreach (var mem in strings)
-            {
-               list.Add(mem.Attribute("key").Value.Substring("hcommand".Length));
-            }
-            return string.Join("\n", list);
-        }
+        /// <summary>
+        /// The commands /help and /helplist name: every hcommand string of <paramref name="file"/>, without the dev-only
+        /// commands (Daniel, 2026-11-05: players saw /recovery, /nsfwscan and the like). /help on one of those still answers.
+        /// </summary>
+        internal static string GetHelpList(XDocument file) =>
+            string.Join("\n", HelpKeys(file).Where(trigger => !DevOnlyTriggers.Contains(trigger)));
+
+        /// <summary>Every command <paramref name="file"/> has an hcommand string for.</summary>
+        internal static IEnumerable<string> HelpKeys(XDocument file) =>
+            file.Descendants("string").Select(x => x.Attribute("key").Value).Where(k => k.Contains("hcommand"))
+                .Select(k => k.Substring(k.IndexOf("hcommand", StringComparison.Ordinal) + "hcommand".Length));
+
+        /// <summary>The triggers of the dev-only commands, lower case. Their help is English only (English.xml).</summary>
+        internal static readonly HashSet<string> DevOnlyTriggers = new(
+            typeof(Commands).GetMethods()
+                .SelectMany(m => m.GetCustomAttributes(typeof(Attributes.Command), false).Cast<Attributes.Command>())
+                .Where(c => c.DevOnly).Select(c => c.Trigger.ToLowerInvariant()),
+            StringComparer.OrdinalIgnoreCase);
 
         public static Language GetGroupLanguage(long chatId)
         {

@@ -989,10 +989,6 @@
     <value>Die momentanen Hilfethemen (zu finden unter /help [Thema] sind:\n\n{0}</value>
   </string>
   
-  <string key="hcommandleave">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
-  
   <string key="hcommandlook">
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
@@ -1092,10 +1088,6 @@
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
   
-  <string key="hcommandhalt">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
-  
   <string key="hcommandmakelangadmin">
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
@@ -1109,10 +1101,6 @@
   </string>
   
   <string key="hcommandunrekt">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
-  
-  <string key="hcommandmediaid">
   <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
   </string>
   
@@ -1286,9 +1274,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="cannotbanadmin">
     <value>Ich kann einen Administrator nicht kicken/bannen.</value>
   </string>
-  <string key="hcommandmsgid">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots!</value>
-  </string>
   <string key="hcommanddellogchannel">
   <value>
   Kann verwendet werden, um einen zuvor hinzugef&#252;gten Log Channel von einer Gruppe zu l&#246;schen. F&#252;r mehr Informationen zu Log Channels, nutze "/help addlogchannel".
@@ -1419,14 +1404,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   
   Beispiel:
   /{0}
-  </value>
-  </string>
-  <string key="hcommandbangroup">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots
-  </value>
-  </string>
-  <string key="hcommandunbangroup">
-  <value>Dieser Befehl ist nur f&#252;r die Entwickler dieses Bots
   </value>
   </string>
   <string key="registerfortagallclickme">
@@ -2344,15 +2321,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="detectStatsNone">
     <value>In dieser Zeit gab es hier keine Anzeichen.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>Für Entwickler: jedes Detection-Anzeichen in allen Gruppen, mit den Entscheidungen der Admins danach, seinen Beinahe-Treffern und den vergleichenden Anzeichen nach Ähnlichkeit. /{0} 90 zeigt 90 Tage.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Für Entwickler: wie ähnlich sich zwei Texte oder Namen nach den Schwellen von Detection sind. /{0} erster | zweiter</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Für Entwickler: was aus den Mitgliedern wurde, die auf einen Kanal oder eine Website verwiesen, über alle Gruppen. /{0} @Kanal, eine Kanal-ID oder eine Website.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;Wiederhergestellte Daten für {0}&lt;/b&gt;\n\nEntschuldigung: Enforcer hat zwischen {1} und {2} Daten verloren, die er für eure Gruppe gespeichert hatte, zum Beispiel Verwarnungen. Wir haben aus dem Log-Kanal der Gruppe zurückgeholt, was ging. Unten steht, was wir wiederherstellen würden, mit den Log-Beiträgen, aus denen jede Änderung stammt.\n\nNichts ändert sich, bis ein Admin auf Übernehmen tippt, und dann nur, was angehakt ist. Entferne den Haken bei allem, was ihr nicht wollt; die Haken gelten für alle Admins der Gruppe. Das bleibt bis {3} offen.</value>
   </string>
@@ -2452,9 +2420,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="recoveryWarnReasons">
     <value>Die Liste der Gründe zum Entfernen von Verwarnungen wiederherstellen, wie sie geändert wurde</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>Für Entwickler: Angebote zur Datenwiederherstellung an Gruppen nach einem Datenverlust. Antworte mit /{0} auf eine Wiederherstellungsdatei, um sie zu importieren (zurückgehalten), /{0} preview Chat-ID zeigt das Angebot einer Gruppe, /{0} release Batch verschickt sie; /{0} allein listet sie auf.</value>
-  </string>
   <string key="adminChatMode">
     <value>Ich bin der Admin-Chat für {0}: Ich schicke hier Meldungen und Angebote und moderiere diesen Chat nicht. Nutze Befehle in der Gruppe.</value>
   </string>
@@ -2532,18 +2497,6 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   </string>
   <string key="trustedBotsEverywhere">
     <value>In allen Gruppen vertraut:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>Nur für Entwickler. Vertraut einem Bot in allen Gruppen: Er wird nicht geprüft, und Sperren durch Enforcer werden aufgehoben. Das /untrustbot einer Gruppe entfernt ihn dort trotzdem. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>Nur für Entwickler. Entfernt einen Bot aus jeder Gruppe, in der er schreibt oder hinzugefügt wird, auch wo ihm vertraut wird. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>Nur für Entwickler. Vergisst das Vertrauen oder die Sperre eines Bots in allen Gruppen: Die Entscheidung jeder Gruppe zählt wieder. Antworte auf eine seiner Nachrichten oder gib seine ID oder seinen @Benutzernamen an.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>Nur für Entwickler. Zeigt die Bots, die in allen Gruppen vertraut oder gesperrt sind, und die Bots, denen Premium-Gruppen vertrauen.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>Vertraut einem Bot in dieser Gruppe: Seine Beiträge und seine Antworten, wenn ihn jemand erwähnt, werden durchgelassen, und ein Bann durch Enforcer wird aufgehoben. Antworte auf eine seiner Nachrichten oder gib seinen @Benutzernamen oder seine ID an. Von einem Admin hinzugefügte Bots sind bereits vertrauenswürdig; ein Bot, den ein Mitglied hinzufügt oder erwähnt, damit er hier antwortet, wird gebannt.</value>
@@ -2784,19 +2737,10 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="reportShowImage">
     <value>👁 Bild anzeigen</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>Nur für Entwickler. Bewertet die NSFW-Prüfung: prüft die Profilbilder und den persönlichen Kanal der als schlecht markierten Mitglieder der Gruppe und nie markierter Mitglieder, unternimmt nichts gegen sie und sendet dir, wie viele jeweils erkannt wurden. /{0} [Gruppen-ID] [schlecht] [andere]; im Privatchat die ID der Gruppe angeben.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>keine entblößten Körperteile erkannt</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>Nur für Entwickler. Zeigt jede Hintergrund-Warteschlange (Bilder, Profilabfragen, Erwähnungsabfragen, Verlaufseinträge): wie viele Einträge warten, woran sie gerade arbeitet und seit wann, und wann sie zuletzt einen fertig hatte. Eine Warteschlange, die 2 Minuten hängt, wird auch an den Fehler-Chat gemeldet.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>Nur für Entwickler. Antworte mit /{0} auf ein Foto, einen Sticker, ein GIF, ein Video oder eine Bilddatei: Der Bot bewertet es wie die NSFW-Prüfung und antwortet mit den Werten und ob es erkannt würde. Nichts wird gelöscht, gemeldet oder gespeichert.</value>
   </string>
 </strings>

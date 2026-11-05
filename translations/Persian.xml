@@ -954,10 +954,6 @@
     <value>The current support help queries are:\n{0}</value>
     </string>
    
-   <string key="hcommandleave"> 
-  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
-  </string> 
-   
   <string key="hcommandlook"> 
   <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
   </string> 
@@ -1057,10 +1053,6 @@ Example:
   <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
   </string>
   
-  <string key="hcommandhalt">
-  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
-  </string>
-  
   <string key="hcommandmakelangadmin">
   <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value> 
   </string>
@@ -1074,10 +1066,6 @@ Example:
   </string>
   
   <string key="hcommandunrekt">
-  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
-  </string>
-  
-  <string key="hcommandmediaid">
   <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
   </string>
   
@@ -1252,9 +1240,6 @@ Example:
   </string>
   <string key="cannotbanadmin"><value>من قادر به کیک یا بن ادمین نمیباشم </value>
 </string>
--<string key="hcommandmsgid">
-<value>از این دستور فقط سازنده های ربات میتوانند استفاده کنند </value>
-</string>
 -<string key="hcommanddellogchannel">
 <value> Delete a log channel from a group, that was added before. For more information about log channels, use "/help addlogchannel". Example: /{0} </value>
 </string>
@@ -1378,12 +1363,6 @@ exaple: /{0}
   Example:
   /{0}
   </value>
-  </string>
-  <string key="hcommandbangroup">
-  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
-  </string>
-  <string key="hcommandunbangroup">
-  <value>اين دستور فقط و فقط مخصوص طراح ربات ميباشد </value>
   </string>
 
 
@@ -2289,15 +2268,6 @@ exaple: /{0}
   <string key="detectStatsNone">
     <value>در این مدت اینجا هیچ نشانه‌ای دیده نشد.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>برای توسعه‌دهندگان: هر نشانه Detection در همه گروه‌ها، با تصمیم‌های بعدی مدیران، موارد نزدیک و نشانه‌های مقایسه‌ای بر اساس شباهت. ‎/{0} 90 نود روز را نشان می‌دهد.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>برای توسعه‌دهندگان: دو متن یا نام طبق آستانه‌های Detection چقدر شبیه‌اند. ‎/{0} اولی | دومی</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>برای توسعه‌دهندگان: اعضایی که به یک کانال یا وب‌سایت اشاره کردند در همه گروه‌ها چه سرنوشتی داشتند. ‎/{0} ‎@کانال، شناسه کانال یا یک وب‌سایت.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;داده‌های بازیابی‌شده برای {0}&lt;/b&gt;\n\nمتأسفیم: Enforcer بین {1} و {2} بخشی از داده‌هایی را که برای گروه شما نگه داشته بود، مثل اخطارها، از دست داد. آنچه را می‌شد از کانال لاگ گروه برگرداندیم. پایین چیزهایی است که برمی‌گردانیم، همراه با پست‌های لاگ که هر تغییر از آن آمده است.\n\nتا وقتی یک ادمین «اعمال» را نزند هیچ چیز تغییر نمی‌کند، و بعد هم فقط موارد تیک‌خورده. تیک هر چیزی را که نمی‌خواهید بردارید؛ تیک‌ها بین همه ادمین‌های گروه مشترک است. این تا {3} باز می‌ماند.</value>
   </string>
@@ -2397,9 +2367,6 @@ exaple: /{0}
   <string key="recoveryWarnReasons">
     <value>بازگرداندن فهرست دلایل حذف اخطار به شکلی که تغییر داده شده بود</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>برای توسعه‌دهندگان: پیشنهادهای بازیابی داده به گروه‌ها پس از از دست رفتن داده. برای وارد کردن یک فایل بازیابی (در انتظار) با ‎/{0} به آن پاسخ دهید، ‎/{0} preview شناسه-چت پیشنهاد یک گروه را نشان می‌دهد، ‎/{0} release دسته آن‌ها را می‌فرستد؛ ‎/{0} به‌تنهایی فهرستشان را نشان می‌دهد.</value>
-  </string>
   <string key="adminChatMode">
     <value>اینجا چت ادمین‌های {0} است: من اینجا گزارش‌ها و پیشنهادها را می‌فرستم و این چت را مدیریت نمی‌کنم. دستورها را در گروه به کار ببرید.</value>
   </string>
@@ -2477,18 +2444,6 @@ exaple: /{0}
   </string>
   <string key="trustedBotsEverywhere">
     <value>مورد اعتماد در همه گروه‌ها:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>فقط برای توسعه‌دهندگان. یک ربات را در همه گروه‌ها مورد اعتماد می‌کند: بررسی نمی‌شود و مسدودسازی‌های Enforcer برداشته می‌شود. /untrustbot هر گروه همچنان آن را در آن گروه حذف می‌کند. به یکی از پیام‌هایش پاسخ دهید یا شناسه یا @نام‌کاربری آن را بنویسید.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>فقط برای توسعه‌دهندگان. یک ربات را از هر گروهی که در آن پیام بفرستد یا اضافه شود حذف می‌کند، حتی جایی که مورد اعتماد است. به یکی از پیام‌هایش پاسخ دهید یا شناسه یا @نام‌کاربری آن را بنویسید.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>فقط برای توسعه‌دهندگان. اعتماد یا مسدودی یک ربات را در همه گروه‌ها فراموش می‌کند: تصمیم خود هر گروه دوباره معتبر می‌شود. به یکی از پیام‌هایش پاسخ دهید یا شناسه یا @نام‌کاربری آن را بنویسید.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>فقط برای توسعه‌دهندگان. ربات‌های مورد اعتماد یا مسدود در همه گروه‌ها و ربات‌هایی که گروه‌های پریمیوم به آن‌ها اعتماد دارند را نشان می‌دهد.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>یک ربات را در این گروه مورد اعتماد می‌کند: پیام‌هایش و پاسخ‌هایش وقتی کسی به آن اشاره می‌کند رد می‌شوند و بنِ Enforcer برداشته می‌شود. به یکی از پیام‌هایش پاسخ دهید، یا @نام‌کاربری یا شناسه‌اش را بنویسید. ربات‌هایی که ادمین اضافه کرده از قبل مورد اعتمادند؛ رباتی که یک عضو اضافه کند، یا یک عضو به آن اشاره کند تا اینجا پاسخ دهد، بن می‌شود.</value>
@@ -2729,19 +2684,10 @@ exaple: /{0}
   <string key="reportShowImage">
     <value>👁 نمایش تصویر</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>فقط برای توسعه‌دهندگان. بررسی NSFW را ارزیابی می‌کند: عکس‌های پروفایل و کانال شخصی اعضای گروه که بد علامت خورده‌اند و اعضایی که هرگز علامت نخورده‌اند را بررسی می‌کند، با هیچ‌کس کاری ندارد و تعداد شناسایی‌شده در هر دسته را برای شما می‌فرستد. /{0} [شناسه گروه] [بد] [دیگران]؛ در خصوصی شناسه گروه را بدهید.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>هیچ عضو برهنه‌ای دیده نشد</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>فقط برای توسعه‌دهندگان. هر صف پس‌زمینه را نشان می‌دهد (تصاویر، جست‌وجوی پروفایل، جست‌وجوی منشن‌ها، ثبت تاریخچه): چند مورد در انتظارند، روی چه چیزی و از کی کار می‌کند، و آخرین بار کی یک مورد را تمام کرده است. صفی که ۲ دقیقه گیر کند به چت خطاها هم گزارش می‌شود.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>فقط برای توسعه‌دهندگان. با /{0} به یک عکس، استیکر، گیف، ویدیو یا فایل تصویری پاسخ دهید: ربات آن را مانند بررسی NSFW امتیاز می‌دهد و امتیازها و اینکه علامت می‌خورد یا نه را می‌گوید. چیزی حذف، گزارش یا ثبت نمی‌شود.</value>
   </string>
 </strings>

@@ -996,10 +996,6 @@
     <value>Mevcut yardımı sorgula:\n{0}</value>
   </string>
 
-  <string key="hcommandleave">
-    <value>Bu komut sadece enforcer admin için!</value>
-  </string>
-
   <string key="hcommandlook">
     <value>Bu komut sadece enforcer admin için!</value>
   </string>
@@ -1098,10 +1094,6 @@
     <value>Bu komut sadece admin için!</value>
   </string>
 
-  <string key="hcommandhalt">
-    <value>Bu komut sadece admin için!</value>
-  </string>
-
   <string key="hcommandmakelangadmin">
     <value>Bu komut sadece admin için!</value>
   </string>
@@ -1115,10 +1107,6 @@
   </string>
 
   <string key="hcommandunrekt">
-    <value>Bu komut sadece admin için!</value>
-  </string>
-
-  <string key="hcommandmediaid">
     <value>Bu komut sadece admin için!</value>
   </string>
 
@@ -1289,9 +1277,6 @@
   </string>
   <string key="cannotbanadmin">
     <value>Admini banlayamam ve gruptan atamam</value>
-  </string>
-  <string key="hcommandmsgid">
-  <value>Bu komut sadece admin için!</value>
   </string>
   <string key="hcommanddellogchannel">
   <value>
@@ -2306,15 +2291,6 @@
   <string key="detectStatsNone">
     <value>Bu sürede burada hiçbir işaret çıkmadı.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>Geliştiriciler için: tüm gruplarda her Detection işareti, yöneticilerin sonraki kararları, az kalan durumları ve benzerliğe göre karşılaştıran işaretler. /{0} 90 son 90 güne bakar.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Geliştiriciler için: iki metnin veya ismin Detection'ın eşiklerine göre ne kadar benzediği. /{0} birinci | ikinci</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Geliştiriciler için: tüm gruplarda bir kanala veya web sitesine işaret eden üyelerin sonu ne oldu. /{0} @kanal, bir kanal kimliği veya bir web sitesi.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;{0} için kurtarılan veriler&lt;/b&gt;\n\nÜzgünüz: Enforcer {1} ile {2} arasında grubunuz için sakladığı bazı verileri, örneğin uyarıları kaybetti. Grubun kayıt kanalından alabildiğimizi geri aldık. Aşağıda geri koyacaklarımız var; her değişikliğin geldiği kayıt gönderileriyle birlikte.\n\nBir yönetici Uygula'ya dokunana kadar hiçbir şey değişmez, sonra da yalnızca işaretli olanlar. İstemediğiniz her şeyin işaretini kaldırın; işaretler grubun tüm yöneticileri için ortaktır. {3} tarihine kadar açık kalır.</value>
   </string>
@@ -2414,9 +2390,6 @@
   <string key="recoveryWarnReasons">
     <value>Uyarı kaldırma nedenleri listesini değiştirildiği hâliyle geri yükle</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>Geliştiriciler için: veri kaybından sonra gruplara veri kurtarma teklifleri. İçe aktarmak için bir kurtarma dosyasını /{0} ile yanıtlayın (bekletilir), /{0} preview sohbet-kimliği bir grubun teklifini gösterir, /{0} release grup onları gönderir; yalnızca /{0} listeler.</value>
-  </string>
   <string key="adminChatMode">
     <value>Burası {0} için yönetici sohbeti: burada rapor ve teklif gönderirim, bu sohbeti yönetmem. Komutları grupta kullanın.</value>
   </string>
@@ -2494,18 +2467,6 @@
   </string>
   <string key="trustedBotsEverywhere">
     <value>Tüm gruplarda güvenilir:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>Yalnızca geliştiriciler için. Bir botu tüm gruplarda güvenilir yapar: kontrol edilmez ve Enforcer'ın yasakları kaldırılır. Bir grubun kendi /untrustbot komutu onu orada yine kaldırır. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>Yalnızca geliştiriciler için. Bir botu, güvenilir olduğu yerler dahil, yazdığı veya eklendiği her gruptan kaldırır. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>Yalnızca geliştiriciler için. Bir botun tüm gruplardaki güvenini veya engelini unutur: her grubun kendi kararı yeniden geçerli olur. Mesajlarından birine yanıt verin ya da id'sini veya @kullanıcı adını yazın.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>Yalnızca geliştiriciler için. Tüm gruplarda güvenilir veya engelli botları ve premium grupların güvendiği botları listeler.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>Bu grupta bir botu güvenilir yapar: mesajları ve biri onu andığında verdiği cevaplar geçer, Enforcer'ın koyduğu yasak kaldırılır. Mesajlarından birine cevap verin ya da @kullanıcı adını veya kimliğini yazın. Bir yöneticinin eklediği botlar zaten güvenilirdir; bir üyenin eklediği ya da burada cevap vermesi için andığı bot yasaklanır.</value>
@@ -2712,19 +2673,10 @@
   <string key="reportShowImage">
     <value>👁 Görseli göster</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>Yalnızca geliştiriciler. NSFW kontrolünü değerlendirir: gruptaki kötü olarak işaretlenmiş üyelerin ve hiç işaretlenmemiş üyelerin profil fotoğraflarına ve kişisel kanalına bakar, kimseye bir şey yapmaz ve her iki tarafta kaçının işaretlendiğini sana gönderir. /{0} [grup kimliği] [kötü] [diğer]; özelde grubun kimliğini ver.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>açık vücut bölgesi görülmedi</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>Yalnızca geliştiriciler. Her arka plan kuyruğunu gösterir (görseller, profil sorguları, bahsetme sorguları, geçmiş kayıtları): kaç öğe beklediğini, neyle ve ne zamandan beri uğraştığını ve en son ne zaman bir öğeyi bitirdiğini. 2 dakika takılı kalan bir kuyruk hata sohbetine de bildirilir.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>Yalnızca geliştiriciler. Bir fotoğrafa, çıkartmaya, GIF'e, videoya veya görsel dosyasına /{0} ile yanıt ver: bot onu NSFW kontrolü gibi puanlar ve puanları ile işaretlenip işaretlenmeyeceğini söyler. Hiçbir şey silinmez, bildirilmez veya kaydedilmez.</value>
   </string>
 </strings>

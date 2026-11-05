@@ -109,6 +109,28 @@ namespace Enforcer5.Tests
             AssertMatchesKnownGaps(missing, KnownMissingHelp, "Commands without an hcommand help string", missing);
         }
 
+        [TestMethod]
+        public void DevOnlyCommands_HaveHelpInEnglishOnly_AndAreNotListedForPlayers()
+        {
+            // Daniel, 2026-11-05: dev help is English only; the other files fall back to English for it.
+            var dev = typeof(Commands).GetMethods()
+                .SelectMany(m => m.GetCustomAttributes<Attributes.Command>())
+                .Where(c => c.DevOnly).Select(c => "hcommand" + c.Trigger.ToLowerInvariant()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            Assert.IsTrue(dev.Contains("hcommandnsfwtest"));
+            var translated = Directory.GetFiles(Path.Combine(TestEnvironment.RepoRoot, "translations"), "*.xml")
+                .SelectMany(f => XDocument.Load(f).Descendants("string")
+                    .Select(x => x.Attribute("key")?.Value)
+                    .Where(k => k != null && dev.Contains(k))
+                    .Select(k => $"{Path.GetFileName(f)}: {k}"))
+                .ToList();
+            Assert.AreEqual(0, translated.Count, "Dev-only help outside English.xml:\n" + string.Join("\n", translated));
+
+            var listed = Enforcer5.Helpers.Methods.GetHelpList(XDocument.Load(TestEnvironment.EnglishXmlPath)).Split('\n');
+            CollectionAssert.DoesNotContain(listed, "nsfwtest");
+            CollectionAssert.DoesNotContain(listed, "recovery");
+            CollectionAssert.Contains(listed, "ban");
+        }
+
         [DataTestMethod]
         [DataRow("inlineBlockUsage")]
         [DataRow("inlineBlockInvalidUsername", "@1x")]

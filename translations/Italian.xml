@@ -981,10 +981,6 @@
     <value>I commandi di cui attualmente esiste l'help sono:\n{0}</value>
   </string>
   
-  <string key="hcommandleave">
-  <value>Questo comando &#232; solo per i developer di Enforcer!</value>
-  </string>
-  
   <string key="hcommandlook">
   <value>Questo comando &#232; solo per i developer di Enforcer!</value>
   </string>
@@ -1082,10 +1078,6 @@
   <value>Questo comando &#232; solo per i developer di Enforcer!</value>
   </string>
   
-  <string key="hcommandhalt">
-  <value>Questo comando &#232; solo per i developer di Enforcer!</value>
-  </string>
-  
   <string key="hcommandmakelangadmin">
   <value>Questo comando &#232; solo per i developer di Enforcer!</value>
   </string>
@@ -1099,9 +1091,6 @@
   </string>
   
   <string key="hcommandunrekt">
-  <value>Questo comando &#232; solo per i developer di Enforcer!</value>
-  </string>
-  <string key="hcommandmediaid">
   <value>Questo comando &#232; solo per i developer di Enforcer!</value>
   </string>
   
@@ -1272,9 +1261,6 @@
   </string>
   <string key="cannotbanadmin">
     <value>Non posso kickare o bannare un admin.</value>
-  </string>
-  <string key="hcommandmsgid">
-  <value>Questo comando &#232; solo per i developer di Enforcer!</value>
   </string>
   <string key="hcommanddellogchannel">
   <value>
@@ -2289,15 +2275,6 @@
   <string key="detectStatsNone">
     <value>In questo periodo qui non è scattato nessun segnale.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>Per gli sviluppatori: ogni segnale di Detection in tutti i gruppi, con le decisioni degli admin dopo, i quasi-casi e i segnali di confronto per somiglianza. /{0} 90 guarda 90 giorni.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Per gli sviluppatori: quanto sono simili due testi o nomi secondo le soglie di Detection. /{0} primo | secondo</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Per gli sviluppatori: com'è andata ai membri che hanno rimandato a un canale o a un sito, in tutti i gruppi. /{0} @canale, un id di canale o un sito.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;Dati recuperati per {0}&lt;/b&gt;\n\nCi dispiace: tra il {1} e il {2} Enforcer ha perso dati che aveva salvato per il tuo gruppo, come gli avvertimenti. Abbiamo recuperato quello che potevamo dal canale di log del gruppo. Qui sotto c'è cosa rimetteremmo, con i post del log da cui viene ogni modifica.\n\nNon cambia niente finché un admin non tocca Applica, e poi solo ciò che è spuntato. Togli la spunta a quello che non vuoi; le spunte sono condivise da tutti gli admin del gruppo. Resta aperto fino al {3}.</value>
   </string>
@@ -2397,9 +2374,6 @@
   <string key="recoveryWarnReasons">
     <value>Ripristina la lista dei motivi per togliere gli avvertimenti com'era stata cambiata</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>Per gli sviluppatori: offerte di recupero dati ai gruppi dopo una perdita di dati. Rispondi a un file di recupero con /{0} per importarlo (in attesa), /{0} preview id-chat mostra l'offerta di un gruppo, /{0} release lotto le invia; /{0} da solo le elenca.</value>
-  </string>
   <string key="adminChatMode">
     <value>Sono la chat degli admin di {0}: qui invio segnalazioni e offerte e non modero questa chat. Usa i comandi nel gruppo.</value>
   </string>
@@ -2477,18 +2451,6 @@
   </string>
   <string key="trustedBotsEverywhere">
     <value>Fidati in tutti i gruppi:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>Solo per gli sviluppatori. Rende fidato un bot in tutti i gruppi: non viene controllato e i ban di Enforcer vengono rimossi. Il /untrustbot di un gruppo lo rimuove comunque lì. Rispondi a un suo messaggio o indica il suo id o @username.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>Solo per gli sviluppatori. Rimuove un bot da ogni gruppo in cui scrive o viene aggiunto, anche dove è fidato. Rispondi a un suo messaggio o indica il suo id o @username.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>Solo per gli sviluppatori. Dimentica la fiducia o il blocco di un bot in tutti i gruppi: torna a valere la decisione di ogni gruppo. Rispondi a un suo messaggio o indica il suo id o @username.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>Solo per gli sviluppatori. Elenca i bot fidati o bloccati in tutti i gruppi e i bot di cui si fidano i gruppi premium.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>Rende fidato un bot in questo gruppo: i suoi messaggi e le sue risposte quando qualcuno lo menziona passano, e un ban di Enforcer viene tolto. Rispondi a uno dei suoi messaggi, oppure indica il suo @username o il suo id. I bot aggiunti da un admin sono già fidati; un bot aggiunto da un membro, o menzionato da un membro perché risponda qui, viene bannato.</value>
@@ -2729,19 +2691,10 @@
   <string key="reportShowImage">
     <value>👁 Mostra immagine</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>Solo sviluppatori. Valuta il controllo NSFW: esamina le foto profilo e il canale personale dei membri del gruppo segnati come cattivi e di membri mai segnati, non fa nulla a nessuno e ti invia quanti sono stati rilevati in ciascun caso. /{0} [id gruppo] [cattivi] [altri]; in privato, indica l'id del gruppo.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>nessuna parte del corpo esposta rilevata</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>Solo sviluppatori. Mostra ogni coda in background (immagini, ricerche di profili, ricerche di menzioni, scritture dello storico): quanti elementi attendono, su cosa sta lavorando e da quando, e quando ne ha finito uno l'ultima volta. Una coda bloccata da 2 minuti viene segnalata anche alla chat degli errori.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>Solo sviluppatori. Rispondi con /{0} a una foto, uno sticker, una GIF, un video o un file immagine: il bot lo valuta come farebbe il controllo NSFW e risponde con i punteggi e se verrebbe segnalato. Nulla viene eliminato, segnalato o registrato.</value>
   </string>
 </strings>

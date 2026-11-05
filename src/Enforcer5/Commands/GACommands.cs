@@ -25,7 +25,7 @@ namespace Enforcer5
         public static void MissingHcommands(Update update, string[] args)
         {
             var commands = Bot.Commands.Select(e => e.Trigger.ToLower()).ToList();
-            var helplist = Methods.GetHelpList(Methods.GetGroupLanguage(Bot.ErrorChatId).Doc).Split('\n').Select(e => e.ToLower()).ToList();
+            var helplist = Methods.HelpKeys(Methods.GetGroupLanguage(Bot.ErrorChatId).Doc).Select(e => e.ToLower()).ToList();
 
             string missing = "<b>Missing hcommand strings:</b>\n";
 

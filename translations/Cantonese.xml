@@ -673,9 +673,6 @@ UPDATE LOG
 	<string key="gethelplist">
 		<value>目前嘅指令有︰\n{0}</value>
 	</string>
-	<string key="hcommandleave">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
 
 	<string key="hcommandlook">
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
@@ -741,10 +738,6 @@ UPDATE LOG
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
 
-	<string key="hcommandhalt">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
-
 	<string key="hcommandmakelangadmin">
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
@@ -758,10 +751,6 @@ UPDATE LOG
 	</string>
 
 	<string key="hcommandunrekt">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
-
-	<string key="hcommandmediaid">
 		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
 
@@ -905,9 +894,6 @@ UPDATE LOG
 	<string key="cannotbanadmin">
 		<value>我冇辦法驅逐或封鎖管理員。</value>
 	</string>
-	<string key="hcommandmsgid">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
 	<string key="hcommanddellogchannel">
 		<value>移除先前儲存嘅『記事頻道』。輸入「/help addlogchannel」嚟查詢詳情。\n\n例子︰\n/{0}</value>
 	</string>
@@ -1001,12 +987,6 @@ UPDATE LOG
 	</string>
 	<string key="hcommandclearkeys">
 		<value>呢個指令係用嚟整走所有訊息底下嘅按鈕。若果你覺得某啲機械人嘅按鈕非常煩厭，你可以用呢個指令嚟清除所有按鈕。\n\n呢個功能係設計嚟對付啲，利用按鈕妨礙正常溝通嘅無聊機械人。\n\n例子︰\n/{0}</value>
-	</string>
-	<string key="hcommandbangroup">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
-	</string>
-	<string key="hcommandunbangroup">
-		<value>呢個指令只有此機械人嘅開發人員先用到。</value>
 	</string>
   <string key="logSettingChanged">
     <value>{0}（{1}）喺 {3} 將 {2} 由 {4} 改成 {5}</value>
@@ -1910,15 +1890,6 @@ UPDATE LOG
   <string key="detectStatsNone">
     <value>呢段時間呢度冇出現任何跡象。</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>開發者用：所有群組入面每個 Detection 跡象，連同管理員之後嘅決定、差少少嘅次數，同埋比較類跡象按相似度分佈。/{0} 90 睇 90 日。</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>開發者用：按 Detection 用嘅門檻，兩段文字或者兩個名有幾相似。/{0} 第一個 | 第二個</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>開發者用：所有群組入面，指向某個頻道或者網站嘅成員最後點樣。/{0} @頻道、頻道 ID 或者網站。</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;{0} 嘅恢復數據&lt;/b&gt;\n\n唔好意思：喺 {1} 至 {2} 之間，Enforcer 遺失咗幫你哋群組儲存嘅部分數據，例如警告。我哋從群組嘅日誌頻道盡量攞返。下面係我哋會恢復嘅內容，附上每項更改來源嘅日誌帖。\n\n管理員撳「套用」之前乜都唔會改，而且只會套用有剔嘅項目。唔想要嘅就取消剔；剔選狀態係群組所有管理員共用嘅。呢個提議開放到 {3}。</value>
   </string>
@@ -2018,9 +1989,6 @@ UPDATE LOG
   <string key="recoveryWarnReasons">
     <value>按改過嘅樣恢復移除警告嘅理由列表</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>開發者用：數據遺失之後向各群組發出嘅數據恢復提議。用 /{0} 回覆恢復檔案就可以匯入（暫時唔發），/{0} preview 群組ID 睇某個群組嘅提議，/{0} release 批次 發出佢哋；單獨 /{0} 列出所有提議。</value>
-  </string>
   <string key="adminChatMode">
     <value>呢度係 {0} 嘅管理員群組：我喺度發報告同提議，唔會管理呢個群組。請喺群組用指令。</value>
   </string>
@@ -2098,18 +2066,6 @@ UPDATE LOG
   </string>
   <string key="trustedBotsEverywhere">
     <value>喺所有群組都受信任：</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>只限開發者。喺所有群組信任一個機械人：唔會再檢查佢，Enforcer 對佢嘅封鎖亦會解除。群組自己嘅 /untrustbot 仍然會喺嗰個群組移除佢。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>只限開發者。將機械人從佢發言或者被加入嘅每個群組移除，就算喺信任佢嘅群組都係。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>只限開發者。忘記機械人喺所有群組嘅信任或者封鎖：每個群組自己嘅決定會重新生效。回覆佢其中一條訊息，或者提供佢嘅 id 或 @用戶名。</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>只限開發者。列出喺所有群組受信任或者被封鎖嘅機械人，同埋高級群組信任嘅機械人。</value>
   </string>
   <string key="hcommandtrustbot">
     <value>喺呢個群組信任一個機械人：佢嘅訊息同埋有人提到佢時嘅回覆都會放行，Enforcer 嘅封鎖會解除。請回覆佢嘅一條訊息，或者俾出佢嘅 @用戶名 或 ID。管理員加入嘅機械人已經受信任；成員加入嘅機械人，或者成員提到叫佢喺度回覆嘅機械人，會被封鎖。</value>
@@ -2311,19 +2267,10 @@ UPDATE LOG
   <string key="reportShowImage">
     <value>👁 顯示圖片</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>只限開發者。評估 NSFW 檢測：睇吓群組入面被標記為不良嘅成員同從未被標記嘅成員嘅頭像同個人頻道，唔會對任何人做嘢，再將每類被檢測到嘅數量發俾你。/{0} [群組 id] [不良] [其他]；私聊入面要俾群組 id。</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW：{1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>見唔到暴露嘅身體部位</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>只限開發者。顯示每個後台隊列（圖片、資料查詢、提及查詢、歷史寫入）：有幾多項喺度等、而家處理緊咩同埋由幾時開始、上次完成一項係幾時。卡住 2 分鐘嘅隊列都會報告去錯誤聊天。</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>只限開發者。用 /{0} 回覆相、貼圖、GIF、影片或者圖片檔案：機械人會好似 NSFW 檢測咁幫佢評分，再回覆分數同埋會唔會被標記。唔會刪除、報告或者記錄任何嘢。</value>
   </string>
 </strings>

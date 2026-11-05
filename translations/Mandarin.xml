@@ -996,10 +996,6 @@
     <value>The current support help queries are:\n{0}</value>
   </string>
   
-  <string key="hcommandleave">
-  <value>这个命令只有 enforcer 的开发者可以使用！</value>
-  </string>
-  
   <string key="hcommandlook">
   <value>这个命令只有 enforcer 的开发者可以使用！</value>
   </string>
@@ -1098,10 +1094,6 @@
   <value>这个命令只有 enforcer 的开发者可以使用！</value>
   </string>
   
-  <string key="hcommandhalt">
-  <value>这个命令只有 enforcer 的开发者可以使用！</value>
-  </string>
-  
   <string key="hcommandmakelangadmin">
   <value>这个命令只有 enforcer 的开发者可以使用！</value>
   </string>
@@ -1115,10 +1107,6 @@
   </string>
   
   <string key="hcommandunrekt">
-  <value>这个命令只有 enforcer 的开发者可以使用！</value>
-  </string>
-  
-  <string key="hcommandmediaid">
   <value>这个命令只有 enforcer 的开发者可以使用！</value>
   </string>
   
@@ -2032,15 +2020,6 @@ Example:
   <string key="detectStatsNone">
     <value>这段时间这里没有出现任何迹象。</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>开发者用：所有群里每个 Detection 迹象，以及管理员之后的决定、差一点的次数和比较类迹象按相似度的分布。/{0} 90 查看 90 天。</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>开发者用：按 Detection 使用的阈值，两段文本或两个名字有多相似。/{0} 第一个 | 第二个</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>开发者用：在所有群里，指向某个频道或网站的成员后来怎样。/{0} @频道、频道 ID 或网站。</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;{0} 的恢复数据&lt;/b&gt;\n\n抱歉：在 {1} 到 {2} 之间，Enforcer 丢失了为你们群保存的部分数据，例如警告。我们从群的日志频道中尽量找回了数据。下面是我们会恢复的内容，并附上每项更改来源的日志消息。\n\n在管理员点击“应用”之前不会有任何更改，并且只应用勾选的项目。不需要的请取消勾选；勾选状态由群里所有管理员共享。此提议开放到 {3}。</value>
   </string>
@@ -2140,9 +2119,6 @@ Example:
   <string key="recoveryWarnReasons">
     <value>按修改后的样子恢复移除警告的理由列表</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>开发者用：数据丢失后向各群发送的数据恢复提议。用 /{0} 回复恢复文件即可导入（暂不发送），/{0} preview 群ID 查看某个群的提议，/{0} release 批次 发送它们；单独 /{0} 列出所有提议。</value>
-  </string>
   <string key="adminChatMode">
     <value>这里是 {0} 的管理员群：我在这里发送报告和提议，不管理这个群。请在群里使用命令。</value>
   </string>
@@ -2220,18 +2196,6 @@ Example:
   </string>
   <string key="trustedBotsEverywhere">
     <value>在所有群组中受信任：</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>仅限开发者。在所有群组中信任一个机器人：不再检查它，并解除 Enforcer 对它的封禁。群组自己的 /untrustbot 仍会在该群组移除它。回复它的一条消息，或提供它的 id 或 @用户名。</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>仅限开发者。将机器人从它发言或被添加的每个群组中移除，即使在信任它的群组中也是如此。回复它的一条消息，或提供它的 id 或 @用户名。</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>仅限开发者。忘记机器人在所有群组中的信任或封禁：各群组自己的决定重新生效。回复它的一条消息，或提供它的 id 或 @用户名。</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>仅限开发者。列出在所有群组中受信任或被封禁的机器人，以及高级群组信任的机器人。</value>
   </string>
   <string key="hcommandtrustbot">
     <value>在本群信任一个机器人：它的消息以及有人提到它时的回复都会放行，Enforcer 的封禁会被解除。请回复它的一条消息，或者给出它的 @用户名 或 ID。管理员添加的机器人已经受信任；成员添加的机器人，或成员提到让它在这里回复的机器人，会被封禁。</value>
@@ -2438,19 +2402,10 @@ Example:
   <string key="reportShowImage">
     <value>👁 显示图片</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>仅限开发者。评估 NSFW 检测：查看群组中被标记为不良的成员和从未被标记的成员的头像和个人频道，不对任何人采取行动，并把每类被检测出的数量发给你。/{0} [群组 id] [不良] [其他]；在私聊中请提供群组 id。</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW：{1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>未发现暴露的身体部位</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>仅限开发者。显示每个后台队列（图片、资料查询、提及查询、历史写入）：有多少项在等待、正在处理什么以及从何时开始、上次完成一项是什么时候。卡住 2 分钟的队列也会报告到错误聊天。</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>仅限开发者。用 /{0} 回复照片、贴纸、GIF、视频或图片文件：机器人会像 NSFW 检测一样为其评分，并回复分数以及是否会被标记。不会删除、报告或记录任何内容。</value>
   </string>
 </strings>

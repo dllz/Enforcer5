@@ -994,9 +994,6 @@
   <string key="gethelplist">
     <value>Os pedidos atuais de ajuda de suporte são:\n{0}</value>
   </string>
-  <string key="hcommandleave">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
   <string key="hcommandlook">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
@@ -1079,9 +1076,6 @@
   <string key="hcommandreloadlang">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
-  <string key="hcommandhalt">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
   <string key="hcommandmakelangadmin">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
@@ -1092,9 +1086,6 @@
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
   <string key="hcommandunrekt">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
-  <string key="hcommandmediaid">
     <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
   <string key="hcommandstart">
@@ -1244,9 +1235,6 @@
   <string key="cannotbanadmin">
     <value>Eu não posso remover ou banir um administrador!</value>
   </string>
-  <string key="hcommandmsgid">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
   <string key="hcommanddellogchannel">
     <value>
   Exclui um canal de registros de um grupo que foi adicionado anteriormente. Para obter mais informações sobre canais de registro, use "/help addlogchannel".
@@ -1377,12 +1365,6 @@
   Exemplo:
   /{0}
   </value>
-  </string>
-  <string key="hcommandbangroup">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
-  </string>
-  <string key="hcommandunbangroup">
-    <value>Esse comando é apenas para os desenvolvedores do Enforcer.</value>
   </string>
   <string key="registerfortagallclickme">
     <value>Para ser mencionado no @pingall, por favor clique no botão abaixo e depois Start.</value>
@@ -2305,15 +2287,6 @@
   <string key="detectStatsNone">
     <value>Nenhum sinal apareceu aqui nesse período.</value>
   </string>
-  <string key="hcommanddetectreview">
-    <value>Para desenvolvedores: cada sinal do Detection em todos os grupos, com as decisões dos admins depois, seus quase-acertos e os sinais de comparação por semelhança. /{0} 90 olha 90 dias.</value>
-  </string>
-  <string key="hcommandsimtest">
-    <value>Para desenvolvedores: quão parecidos são dois textos ou nomes pelos limites que o Detection usa. /{0} primeiro | segundo</value>
-  </string>
-  <string key="hcommandchannelrep">
-    <value>Para desenvolvedores: o que aconteceu com os membros que apontaram para um canal ou site, em todos os grupos. /{0} @canal, um id de canal ou um site.</value>
-  </string>
   <string key="recoveryOffer">
     <value>🛠 &lt;b&gt;Dados recuperados de {0}&lt;/b&gt;\n\nDesculpe: entre {1} e {2} o Enforcer perdeu dados que tinha guardado do seu grupo, como as advertências. Recuperamos o que pudemos do canal de registro do grupo. Abaixo está o que colocaríamos de volta, com as publicações do registro de onde vem cada mudança.\n\nNada muda até um admin tocar em Aplicar, e então só o que estiver marcado. Desmarque o que não quiser; as marcações são compartilhadas por todos os admins do grupo. Fica aberto até {3}.</value>
   </string>
@@ -2413,9 +2386,6 @@
   <string key="recoveryWarnReasons">
     <value>Restaurar a lista de motivos para remover advertências como foi alterada</value>
   </string>
-  <string key="hcommandrecovery">
-    <value>Para desenvolvedores: ofertas de recuperação de dados aos grupos após uma perda de dados. Responda a um arquivo de recuperação com /{0} para importá-lo (retido), /{0} preview id-do-chat mostra a oferta de um grupo, /{0} release lote as envia; /{0} sozinho as lista.</value>
-  </string>
   <string key="adminChatMode">
     <value>Sou o chat de admins de {0}: aqui envio relatórios e ofertas e não modero este chat. Use os comandos no grupo.</value>
   </string>
@@ -2493,18 +2463,6 @@
   </string>
   <string key="trustedBotsEverywhere">
     <value>Confiáveis em todos os grupos:</value>
-  </string>
-  <string key="hcommandglobaltrustbot">
-    <value>Só para desenvolvedores. Torna um bot confiável em todos os grupos: ele não é verificado e os banimentos do Enforcer são retirados. O /untrustbot de um grupo ainda o remove lá. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
-  </string>
-  <string key="hcommandglobaluntrustbot">
-    <value>Só para desenvolvedores. Remove um bot de todos os grupos em que ele publicar ou for adicionado, mesmo onde é confiável. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
-  </string>
-  <string key="hcommandglobalforgetbot">
-    <value>Só para desenvolvedores. Esquece a confiança ou o bloqueio de um bot em todos os grupos: volta a valer a decisão de cada grupo. Responda a uma mensagem dele ou informe o id ou @usuário.</value>
-  </string>
-  <string key="hcommandglobalbots">
-    <value>Só para desenvolvedores. Lista os bots confiáveis ou bloqueados em todos os grupos e os bots em que os grupos premium confiam.</value>
   </string>
   <string key="hcommandtrustbot">
     <value>Marca um bot como de confiança neste grupo: as mensagens dele e as respostas quando alguém o menciona passam, e um banimento do Enforcer é retirado. Responda a uma das mensagens dele, ou informe o @usuário ou o id. Bots adicionados por um admin já são de confiança; um bot adicionado por um membro, ou mencionado por um membro para responder aqui, é banido.</value>
@@ -2718,19 +2676,10 @@
   <string key="reportShowImage">
     <value>👁 Mostrar imagem</value>
   </string>
-  <string key="hcommandnsfwscan">
-    <value>Só desenvolvedores. Avalia a verificação NSFW: examina as fotos de perfil e o canal pessoal dos membros do grupo marcados como ruins e de membros nunca marcados, não faz nada a ninguém e envia a você quantos foram detectados em cada caso. /{0} [id do grupo] [ruins] [outros]; no privado, informe o id do grupo.</value>
-  </string>
   <string key="nsfwScoreLine">
     <value>{0} NSFW: {1}</value>
   </string>
   <string key="nsfwNoParts">
     <value>nenhuma parte do corpo exposta detectada</value>
-  </string>
-  <string key="hcommandqueues">
-    <value>Só desenvolvedores. Mostra cada fila em segundo plano (imagens, consultas de perfil, consultas de menções, gravações do histórico): quantos itens esperam, em que está trabalhando e desde quando, e quando terminou um pela última vez. Uma fila travada por 2 minutos também é informada ao chat de erros.</value>
-  </string>
-  <string key="hcommandnsfwtest">
-    <value>Só desenvolvedores. Responda com /{0} a uma foto, sticker, GIF, vídeo ou arquivo de imagem: o bot o avalia como a verificação NSFW faria e responde com as pontuações e se seria marcado. Nada é apagado, reportado ou registrado.</value>
   </string>
 </strings>
