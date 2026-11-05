@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Enforcer5.Data;
@@ -11,7 +12,8 @@ namespace Enforcer5.Detection.Images
 {
     /// <summary>
     /// One queue for every image the NSFW check looks at (Daniel, 2026-11-05): photos, stickers and thumbnails posted in a
-    /// group, members' profile photos and the posts of their personal channel. Built like <see cref="Profiles"/>:
+    /// group, members' profile photos and the posts of their personal channel; since 2026-11-06 also GIFs, videos and files,
+    /// read as frames (<see cref="Decoder"/>, the worst frame counts). Built like <see cref="Profiles"/>:
     /// <list type="bullet">
     /// <item>an image is known by its <c>file_unique_id</c>: the same file asked for by many is scored once; scores are kept
     /// in memory (<see cref="Remembered"/>) and in PostgreSQL (<c>media_scores</c>, with the model version), so a sticker
@@ -26,14 +28,15 @@ namespace Enforcer5.Detection.Images
     internal static class ImageScans
     {
         internal const int MaxWaiting = 500;
-        internal const long MaxBytes = 10 * 1024 * 1024;
+        /// <summary>The largest file looked at: the most the Bot API lets a bot download. Over it, a video is judged by its preview.</summary>
+        internal const long MaxBytes = 20 * 1024 * 1024;
         internal const int Remembered = 50_000;
 
         private static readonly object Lock = new();
         private static readonly Dictionary<string, NsfwScore> Known = new(StringComparer.Ordinal);
         private static readonly Queue<string> KnownOrder = new();
         private static readonly Dictionary<string, TaskCompletionSource<NsfwScore>> Waiting = new(StringComparer.Ordinal);
-        private sealed record Item(string UniqueId, string FileId, string Kind);
+        private sealed record Item(string UniqueId, string FileId, string Kind, MediaHint Hint);
 
         // Two lanes: what groups are waiting on (posts, joins) always goes before the bulk of a dev's /nsfwscan.
         private static readonly Queue<Item> Urgent = new();
@@ -58,6 +61,9 @@ namespace Enforcer5.Detection.Images
 
         internal static bool Enabled => Model != null;
 
+        /// <summary>Reads files into the images to score (<see cref="MediaDecoder"/>). Replaced in tests.</summary>
+        internal static IMediaDecoder Decoder { get; set; } = new MediaDecoder();
+
         /// <summary>Images the models scored (not from a cache), for tests.</summary>
         internal static int Scored => _scored;
 
@@ -78,6 +84,7 @@ namespace Enforcer5.Detection.Images
                         return;
                     }
                     if (shutdown.IsCancellationRequested) return;
+                    LogHelper.Info($"ffmpeg for videos: {Ffmpeg.Describe()}"); // looked for once, here, not on the first video
                     Model = models;
                     LogHelper.Info($"NSFW models loaded from {folder} ({models.Version}, {threads} threads).");
                 }
@@ -92,9 +99,10 @@ namespace Enforcer5.Detection.Images
         /// The scores of the image <paramref name="uniqueId"/>, downloaded by <paramref name="fileId"/> if it was never
         /// scored; null when it could not be (off, queue full, too large, Telegram refused, over <see cref="ImageLimit"/>).
         /// </summary>
-        /// <param name="kind">photo, sticker, thumbnail, profile_photo or channel_post: kept with the score.</param>
+        /// <param name="kind">photo, sticker, thumbnail, animation, video, video_note, file, profile_photo or channel_post: kept with the score.</param>
         /// <param name="bulk">For a dev's scan: waits behind everything a group is waiting on.</param>
-        internal static Task<NsfwScore> ScoreAsync(string uniqueId, string fileId, string kind, bool bulk = false)
+        /// <param name="hint">What the file is expected to be (<see cref="IMediaDecoder.FramesAsync"/>).</param>
+        internal static Task<NsfwScore> ScoreAsync(string uniqueId, string fileId, string kind, bool bulk = false, MediaHint hint = MediaHint.Image)
         {
             if (Model == null || string.IsNullOrEmpty(uniqueId) || string.IsNullOrEmpty(fileId)) return Task.FromResult<NsfwScore>(null);
             bool start;
@@ -105,17 +113,17 @@ namespace Enforcer5.Detection.Images
                 if (Waiting.TryGetValue(uniqueId, out waiting))
                 {
                     // Waiting behind a scan, and now a group needs it: it goes ahead too (the later copy is skipped).
-                    if (!bulk && InUrgent.Add(uniqueId)) Urgent.Enqueue(new Item(uniqueId, fileId, kind));
+                    if (!bulk && InUrgent.Add(uniqueId)) Urgent.Enqueue(new Item(uniqueId, fileId, kind, hint));
                     return waiting.Task;
                 }
                 if ((bulk ? Bulk : Urgent).Count >= MaxWaiting) return Task.FromResult<NsfwScore>(null);
                 waiting = new TaskCompletionSource<NsfwScore>(TaskCreationOptions.RunContinuationsAsynchronously);
                 Waiting[uniqueId] = waiting;
-                if (bulk) Bulk.Enqueue(new Item(uniqueId, fileId, kind));
+                if (bulk) Bulk.Enqueue(new Item(uniqueId, fileId, kind, hint));
                 else
                 {
                     InUrgent.Add(uniqueId);
-                    Urgent.Enqueue(new Item(uniqueId, fileId, kind));
+                    Urgent.Enqueue(new Item(uniqueId, fileId, kind, hint));
                 }
                 Status.Waiting(Waiting.Count);
                 start = !_draining;
@@ -176,7 +184,7 @@ namespace Enforcer5.Detection.Images
             {
                 try
                 {
-                    result.TrySetResult(await ScoreOneAsync(item.UniqueId, item.FileId, item.Kind, cancel.Token));
+                    result.TrySetResult(await ScoreOneAsync(item, cancel.Token));
                 }
                 catch (Exception e)
                 {
@@ -215,8 +223,9 @@ namespace Enforcer5.Detection.Images
             }
         }
 
-        private static async Task<NsfwScore> ScoreOneAsync(string uniqueId, string fileId, string kind, CancellationToken cancel)
+        private static async Task<NsfwScore> ScoreOneAsync(Item item, CancellationToken cancel)
         {
+            var (uniqueId, fileId, kind, hint) = item;
             var model = Model;
             if (model == null) return null;
             if (PostgresStorage.Ready)
@@ -240,10 +249,19 @@ namespace Enforcer5.Detection.Images
                 LogHelper.Info($"Image {kind} {uniqueId}: not downloaded ({(downloaded - started).TotalMilliseconds:0} ms), {WaitingCount()} waiting");
                 return null;
             }
-            var score = model.Score(image);
+            var frames = await Decoder.FramesAsync(image, hint, cancel);
+            cancel.ThrowIfCancellationRequested();
+            if (frames == null || frames.Count == 0)
+            {
+                LogHelper.Info($"Image {kind} {uniqueId}: {image.Length / 1024} KB, nothing to read in it ({MediaFiles.Sniff(image)}), {WaitingCount()} waiting");
+                return null;
+            }
+            var decoded = Clock.UtcNow;
+            var score = frames.Count == 1 ? model.Score(frames[0]) : NsfwScore.WorstFrame(frames.Select(model.Score).ToList());
             Interlocked.Increment(ref _scored);
             LogHelper.Info($"Image {kind} {uniqueId}: {image.Length / 1024} KB in {(downloaded - started).TotalMilliseconds:0} ms, " +
-                           $"scored in {(Clock.UtcNow - downloaded).TotalMilliseconds:0} ms ({score}), {WaitingCount()} waiting");
+                           (frames.Count > 1 ? $"{frames.Count} frames in {(decoded - downloaded).TotalMilliseconds:0} ms, " : "") +
+                           $"scored in {(Clock.UtcNow - decoded).TotalMilliseconds:0} ms ({score}), {WaitingCount()} waiting");
             if (PostgresStorage.Ready)
                 HistoryWriter.Enqueue(() => Repositories.MediaScores.SaveAsync(new MediaScoreRow(uniqueId, kind, model.Version, score,
                     new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero))), $"Saving the score of the image {uniqueId}");
@@ -288,6 +306,7 @@ namespace Enforcer5.Detection.Images
         internal static void ResetForTests()
         {
             Model = null;
+            Decoder = new MediaDecoder();
             lock (Lock)
             {
                 Known.Clear();

@@ -21,8 +21,10 @@ namespace Enforcer5.Detection
     /// NSFW images (Daniel, 2026-11-05), two signs a group turns on in its Detection menu (🔞 NSFW images); both off by default
     /// and only while the models are loaded (<see cref="ImageScans"/>):
     /// <list type="bullet">
-    /// <item><c>image_nsfw</c>: a photo, sticker, image file, or the preview of a GIF or video that anyone but an admin or
-    /// approved member posts or edits a post into. Deleted and reported; the report's Show button sends it to the admin who
+    /// <item><c>image_nsfw</c>: a photo, sticker, GIF, video, round video, or an image or video sent as a file, that anyone
+    /// but an admin or approved member posts or edits a post into. What moves is read as frames, the worst one counting
+    /// (Daniel, 2026-11-06: a clean preview let anything through); its preview is looked at first, and alone when the file
+    /// is over 20 MB or ffmpeg is missing (<see cref="ScorePickedAsync"/>). Deleted and reported; the report's Show button sends it to the admin who
     /// asks, privately and protected (<see cref="DeletedPost"/>).</item>
     /// <item><c>profile_nsfw</c>: a new member's profile photos (every one Telegram gives, up to <see cref="MaxProfilePhotos"/>)
     /// and the images in their personal channel's latest <see cref="ChannelPosts"/> posts, looked at when they join and on
@@ -39,15 +41,28 @@ namespace Enforcer5.Detection
         internal static readonly TimeSpan OncePer = TimeSpan.FromHours(24);
         private const int RememberedLimit = 100_000;
 
-        /// <summary>The image of a post the models look at.</summary>
-        internal sealed record Picked(string UniqueId, string FileId, string Kind);
+        /// <summary>
+        /// The file of a post the models look at, what it is expected to be (<see cref="MediaHint"/>), and its preview, looked
+        /// at first, when it has one and is not itself a still image.
+        /// </summary>
+        internal sealed record Picked(string UniqueId, string FileId, string Kind, MediaHint Hint = MediaHint.Image, Picked Preview = null)
+        {
+            /// <summary>The one still image of it a look at many posts takes (a personal channel's): the image itself, else its preview.</summary>
+            internal Picked Still => Hint == MediaHint.Image ? this with { Preview = null } : Preview;
+        }
 
         // ------------------------------------------------------------------ which image (pure)
 
         /// <summary>
-        /// The image to score in <paramref name="message"/>: a photo's size closest above 640 pixels (the largest if none is),
-        /// a static sticker itself and an animated or video sticker's preview, an image sent as a file, and the preview of a
-        /// GIF, video or round video. Null for anything else.
+        /// What to score in <paramref name="message"/> (Daniel, 2026-11-06):
+        /// <list type="bullet">
+        /// <item>a photo: its size closest above 640 pixels (the largest if none is);</item>
+        /// <item>a static sticker itself; a video sticker as a video; an animated (vector) sticker by its preview;</item>
+        /// <item>a GIF, video or round video as a video, with its preview;</item>
+        /// <item>a file whose name or type says image or video (<see cref="MediaFiles.Classify"/>), or that says nothing about
+        /// itself (read to find out), with its preview; any other file by its preview alone, as before.</item>
+        /// </list>
+        /// A file over <see cref="ImageScans.MaxBytes"/> is judged by its preview. Null when there is nothing to look at.
         /// </summary>
         internal static Picked Pick(Message message)
         {
@@ -61,13 +76,55 @@ namespace Enforcer5.Detection
             if (message.Sticker is { } sticker)
             {
                 if (!sticker.IsAnimated && !sticker.IsVideo) return new Picked(sticker.FileUniqueId, sticker.FileId, "sticker");
-                return sticker.Thumbnail is { } preview ? new Picked(preview.FileUniqueId, preview.FileId, "sticker") : null;
+                var preview = Preview(sticker.Thumbnail);
+                // Vector (TGS) stickers: a renderer of their own would be needed; their preview stands for them.
+                if (sticker.IsAnimated) return preview;
+                return Moving(sticker.FileUniqueId, sticker.FileId, sticker.FileSize, "sticker", MediaHint.Video, preview);
             }
-            if (message.Document is { } document && document.MimeType?.StartsWith("image/", StringComparison.OrdinalIgnoreCase) == true &&
-                document.FileSize is null or <= ImageScans.MaxBytes)
-                return new Picked(document.FileUniqueId, document.FileId, "photo");
-            var thumbnail = message.Animation?.Thumbnail ?? message.Video?.Thumbnail ?? message.VideoNote?.Thumbnail ?? message.Document?.Thumbnail;
-            return thumbnail != null ? new Picked(thumbnail.FileUniqueId, thumbnail.FileId, "thumbnail") : null;
+            if (message.Animation is { } animation)
+                return Moving(animation.FileUniqueId, animation.FileId, animation.FileSize, "animation", MediaHint.Video, Preview(animation.Thumbnail));
+            if (message.Video is { } video)
+                return Moving(video.FileUniqueId, video.FileId, video.FileSize, "video", MediaHint.Video, Preview(video.Thumbnail));
+            if (message.VideoNote is { } note)
+                return Moving(note.FileUniqueId, note.FileId, note.FileSize, "video_note", MediaHint.Video, Preview(note.Thumbnail));
+            if (message.Document is { } document)
+            {
+                var preview = Preview(document.Thumbnail);
+                if (MediaFiles.Classify(document.MimeType, document.FileName) is not { } hint) return preview;
+                // An image file is one image (its own preview adds nothing); a video or a file of unknown kind keeps its preview.
+                if (hint == MediaHint.Image && document.FileSize is null or <= ImageScans.MaxBytes)
+                    return new Picked(document.FileUniqueId, document.FileId, "file");
+                return Moving(document.FileUniqueId, document.FileId, document.FileSize, "file", hint, preview);
+            }
+            return null;
+        }
+
+        private static Picked Preview(PhotoSize thumbnail) =>
+            thumbnail == null ? null : new Picked(thumbnail.FileUniqueId, thumbnail.FileId, "thumbnail");
+
+        /// <summary>A file read as frames, with its preview; the preview alone when the file is too large to download.</summary>
+        private static Picked Moving(string uniqueId, string fileId, long? size, string kind, MediaHint hint, Picked preview) =>
+            size is > ImageScans.MaxBytes || string.IsNullOrEmpty(fileId) ? preview : new Picked(uniqueId, fileId, kind, hint, preview);
+
+        /// <summary>
+        /// Scores <paramref name="picked"/>: its preview first, enough when it flags; then the file itself, unless it is a video
+        /// and videos cannot be read (no ffmpeg). The answer is what was scored last that has a score: the file's when it
+        /// could be read, else the preview's. Null score when neither could be.
+        /// </summary>
+        internal static async Task<(Picked Scored, NsfwScore Score)> ScorePickedAsync(Picked picked, bool bulk = false)
+        {
+            NsfwScore preview = null;
+            if (picked.Preview is { } first)
+            {
+                preview = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(first.UniqueId, first.FileId, first.Kind, bulk, first.Hint));
+                if (preview != null && preview.Flagged(NsfwThresholds.Current)) return (first, preview);
+            }
+            if (picked.Hint != MediaHint.Video || ImageScans.Decoder.ReadsVideo)
+            {
+                var whole = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(picked.UniqueId, picked.FileId, picked.Kind, bulk, picked.Hint));
+                if (whole != null) return (picked, whole);
+            }
+            return preview != null ? (picked.Preview, preview) : (picked, null);
         }
 
         /// <summary>A profile photo's size to score: the smallest at least 640 pixels, else the largest.</summary>
@@ -100,6 +157,11 @@ namespace Enforcer5.Detection
                 ["parts"] = score.Parts.ToDictionary(p => p.Key, p => Math.Round(p.Value, 3)),
                 ["model"] = model
             };
+            if (score.Frames > 1)
+            {
+                evidence["frames"] = score.Frames;
+                evidence["frame"] = score.Frame;
+            }
             if (extra != null) evidence["scan"] = extra;
             return JsonSerializer.Serialize(evidence);
         }
@@ -133,12 +195,12 @@ namespace Enforcer5.Detection
         {
             try
             {
-                var score = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(picked.UniqueId, picked.FileId, picked.Kind));
+                var (scored, score) = await ScorePickedAsync(picked);
                 var thresholds = NsfwThresholds.Current;
                 if (score == null || !score.Flagged(thresholds)) return;
                 var lang = Methods.GetGroupLanguage(chatId).Doc;
                 await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.ImageNsfw.Name,
-                    Evidence(picked.Kind, score, ImageScans.Model?.Version)) { Detail = Describe(lang, score, thresholds) });
+                    Evidence(scored.Kind, score, ImageScans.Model?.Version)) { Detail = Describe(lang, score, thresholds) });
             }
             catch (Exception e)
             {
@@ -242,7 +304,8 @@ namespace Enforcer5.Detection
                 foreach (var post in channel.Value ?? Array.Empty<Message>())
                 {
                     posts++;
-                    if (Pick(post) is { } picked) images.Add(("channel_post", picked.UniqueId, picked.FileId));
+                    // One still a post (the image, or a video's preview): reading every video of a channel would cost too much here.
+                    if (Pick(post)?.Still is { } picked) images.Add(("channel_post", picked.UniqueId, picked.FileId));
                 }
             }
 

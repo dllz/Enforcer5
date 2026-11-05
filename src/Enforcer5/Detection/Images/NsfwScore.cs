@@ -24,6 +24,12 @@ namespace Enforcer5.Detection.Images
 
         internal IReadOnlyDictionary<string, double> Parts { get; init; } = Parts ?? NoParts;
 
+        /// <summary>Frames scored for an animation or video (the score is the worst one's); 0 for a still image or one read from the store.</summary>
+        internal int Frames { get; init; }
+
+        /// <summary>The worst frame, from 0 (the even frames in order, then the cuts); -1 for none.</summary>
+        internal int Frame { get; init; } = -1;
+
         /// <summary>The part NudeNet is surest of, or null for none.</summary>
         internal string Part => Parts.Count == 0 ? null : Parts.OrderByDescending(p => p.Value).First().Key;
 
@@ -47,7 +53,21 @@ namespace Enforcer5.Detection.Images
             return new NsfwScore(list.Max(s => s.Nsfw), parts);
         }
 
+        /// <summary>
+        /// A video's score from its frames' (<paramref name="frames"/>, in order): the worst frame's, whole, so the reasons are
+        /// what that frame shows. Null for none.
+        /// </summary>
+        internal static NsfwScore WorstFrame(IReadOnlyList<NsfwScore> frames)
+        {
+            if (frames == null || frames.Count == 0) return null;
+            var worst = 0;
+            for (var i = 1; i < frames.Count; i++)
+                if (frames[i].Nsfw > frames[worst].Nsfw) worst = i;
+            return frames[worst] with { Frames = frames.Count, Frame = worst };
+        }
+
         public override string ToString() =>
+            (Frames > 1 ? $"frame {Frame + 1} of {Frames}, " : "") +
             string.Create(CultureInfo.InvariantCulture, $"nsfw {Nsfw:0.000}, ") +
             (Parts.Count == 0 ? "-" : string.Join(", ", Parts.OrderByDescending(p => p.Value)
                 .Select(p => string.Create(CultureInfo.InvariantCulture, $"{p.Key} {p.Value:0.000}"))));
@@ -84,7 +104,7 @@ namespace Enforcer5.Detection.Images
         /// <summary>A version string kept with every score, so a model change is visible in the data.</summary>
         string Version { get; }
 
-        /// <summary>Scores an encoded image (JPEG, PNG, WebP, GIF's first frame). <see cref="NsfwScore.None"/> when it cannot be read.</summary>
+        /// <summary>Scores an encoded image (JPEG, PNG, WebP, GIF's first frame; frames of animations and videos come as PNG). <see cref="NsfwScore.None"/> when it cannot be read.</summary>
         NsfwScore Score(byte[] image);
     }
 

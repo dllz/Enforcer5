@@ -16,6 +16,15 @@ for config in $CONFIGS; do
     mkdir -p $BASE/$config/Logs
 done
 
+echo "=== Installing ffmpeg (the NSFW check reads GIFs and videos with it) ==="
+if command -v ffmpeg >/dev/null 2>&1; then
+    echo "  -> $(ffmpeg -hide_banner -version | head -1)"
+elif command -v apt-get >/dev/null 2>&1; then
+    apt-get install -y --no-install-recommends ffmpeg
+else
+    echo "  -> no apt-get: install ffmpeg by hand, or videos are judged by their preview only"
+fi
+
 echo "=== Installing systemd services ==="
 
 # Each config reads a different API token, chosen at compile time by DefineConstants.
@@ -49,6 +58,8 @@ Environment=RedisConnection=
 Environment=RedisPassword=
 # Optional. Empty keeps PostgreSQL features off; both editions share one database.
 Environment=PostgresConnection=
+# Optional. Empty finds ffmpeg on the PATH; without one, GIFs and videos are judged by their preview.
+Environment=FfmpegPath=
 Environment=PaymentProviderToken=
 Environment=ErrorChatId=
 Environment=DisplayTimeZone=Europe/Amsterdam

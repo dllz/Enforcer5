@@ -426,6 +426,115 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             AssertNoErrors(chat);
         }
 
+        /// <summary>
+        /// Reads a "video" as the harness writes it: "frames:a|b|c" are three frames, each scored by <see cref="FakeModel"/>;
+        /// anything else is not a video. Without <see cref="ReadsVideo"/> it stands for a server without ffmpeg.
+        /// </summary>
+        private sealed class FakeDecoder : IMediaDecoder
+        {
+            private readonly IMediaDecoder _real = new MediaDecoder();
+
+            public bool ReadsVideo { get; init; } = true;
+
+            public Task<System.Collections.Generic.IReadOnlyList<byte[]>> FramesAsync(byte[] file, MediaHint hint, System.Threading.CancellationToken cancel)
+            {
+                var text = Encoding.UTF8.GetString(file);
+                if (!text.StartsWith("frames:")) return _real.FramesAsync(file, hint, cancel);
+                if (!ReadsVideo) return Task.FromResult<System.Collections.Generic.IReadOnlyList<byte[]>>(null);
+                return Task.FromResult<System.Collections.Generic.IReadOnlyList<byte[]>>(
+                    text["frames:".Length..].Split('|').Select(Encoding.UTF8.GetBytes).ToList());
+            }
+        }
+
+        private static Message Video(HarnessChat chat, HarnessUser from, string name, string preview, string frames)
+        {
+            var message = chat.Text(from, "x");
+            message.Text = null;
+            message.Entities = null;
+            chat.Files.Add("f-" + name, Encoding.UTF8.GetBytes("frames:" + frames));
+            message.Video = new Video
+            {
+                FileId = "f-" + name, FileUniqueId = "u-" + name, Width = 640, Height = 360, Duration = 5, FileSize = 100_000,
+                Thumbnail = preview == null ? null : File(chat, name + "-preview", preview, 320)
+            };
+            return message;
+        }
+
+        private static Message Document(HarnessChat chat, HarnessUser from, string name, string fileName, string mime, byte[] content)
+        {
+            var message = chat.Text(from, "x");
+            message.Text = null;
+            message.Entities = null;
+            chat.Files.Add("f-" + name, content);
+            message.Document = new Document { FileId = "f-" + name, FileUniqueId = "u-" + name, FileName = fileName, MimeType = mime, FileSize = content.Length };
+            return message;
+        }
+
+        [TestMethod]
+        public async Task AVideoWithACleanPreview_IsReadAsFrames_AndItsWorstFrameFlagsIt()
+        {
+            // Daniel, 2026-11-06: what moves was let through by a clean preview.
+            await using var chat = await StartAsync(profile: false);
+            ImageScans.Decoder = new FakeDecoder();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+
+            var fine = await chat.PostAsync(Video(chat, member, "fine", "a cat", "a cat|a dog|a cat"));
+            var bad = await chat.PostAsync(Video(chat, member, "bad", "a cat", "a cat|a cat|genitals|a cat"));
+
+            Assert.IsFalse(Deleted(chat, member, fine));
+            Assert.IsTrue(Deleted(chat, member, bad), "the third frame");
+            StringAssert.Contains(Reports(chat, admin).Single().Text, "95% NSFW: exposed genitals 92%");
+            CollectionAssert.AreEqual(new[] { (member.Id, "image_nsfw", "live", "delete", true, true) }, await Detections(chat));
+            CollectionAssert.AreEqual(new[] { "f-fine-preview", "f-fine", "f-bad-preview", "f-bad" }, chat.Files.Downloaded.ToArray(), "the preview first, then the video");
+            await using var connection = await chat.Database.OpenConnectionAsync();
+            var kinds = (await connection.QueryAsync<(string, string)>("SELECT media_unique_id, kind FROM media_scores ORDER BY media_unique_id")).ToArray();
+            CollectionAssert.AreEqual(new[] { ("u-bad", "video"), ("u-bad-preview", "thumbnail"), ("u-fine", "video"), ("u-fine-preview", "thumbnail") }, kinds);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AVideoWhosePreviewFlags_IsNeverDownloaded_AndWithoutFfmpegTheVideoIsJudgedByItsPreview()
+        {
+            await using var chat = await StartAsync(profile: false);
+            ImageScans.Decoder = new FakeDecoder { ReadsVideo = false };
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+
+            var nudePreview = await chat.PostAsync(Video(chat, member, "a", "nude", "a cat"));
+            var cleanPreview = await chat.PostAsync(Video(chat, member, "b", "a cat", "genitals"));
+
+            Assert.IsTrue(Deleted(chat, member, nudePreview));
+            Assert.IsFalse(Deleted(chat, member, cleanPreview), "no ffmpeg: as before, only the preview is seen");
+            CollectionAssert.AreEqual(new[] { "f-a-preview", "f-b-preview" }, chat.Files.Downloaded.ToArray(), "no video downloaded");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AWebmSentAsAFile_AndAnImageRenamedBin_AreRead_AZipNeverIs()
+        {
+            await using var chat = await StartAsync(profile: false);
+            ImageScans.Decoder = new FakeDecoder();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var png = new System.Collections.Generic.List<byte>(Convert.FromBase64String(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=="));
+            png.AddRange(Encoding.UTF8.GetBytes("genitals")); // the fake model reads the bytes; Skia reads the image
+
+            var webm = await chat.PostAsync(Document(chat, member, "webm", "clip.webm", "video/webm", Encoding.UTF8.GetBytes("frames:a cat|nude")));
+            var bin = await chat.PostAsync(Document(chat, member, "bin", "photo.bin", "application/octet-stream", png.ToArray()));
+            var zip = await chat.PostAsync(Document(chat, member, "zip", "pics.zip", "application/zip", Encoding.UTF8.GetBytes("genitals")));
+            var text = await chat.PostAsync(Document(chat, member, "txt", "notes", "application/octet-stream", Encoding.UTF8.GetBytes("genitals, just a word")));
+
+            Assert.IsTrue(Deleted(chat, member, webm));
+            Assert.IsTrue(Deleted(chat, member, bin), "known by its first bytes");
+            Assert.IsFalse(Deleted(chat, member, zip));
+            Assert.IsFalse(Deleted(chat, member, text), "downloaded to find out, and not an image");
+            Assert.IsFalse(chat.Files.Downloaded.Contains("f-zip"), "a zip is never downloaded");
+            Assert.AreEqual(2, (await Detections(chat)).Length, "one report a member a day, both recorded");
+            AssertNoErrors(chat);
+        }
+
         /// <summary>Keeps the order images were scored in.</summary>
         private sealed class OrderModel : INsfwModel
         {

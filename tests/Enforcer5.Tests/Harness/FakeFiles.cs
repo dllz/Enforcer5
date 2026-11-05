@@ -16,6 +16,9 @@ namespace Enforcer5.Tests.Harness
 
         internal void Add(string fileId, byte[] content) => _files[fileId] = content;
 
+        /// <summary>Every file id the bot downloaded, in order.</summary>
+        internal readonly ConcurrentQueue<string> Downloaded = new();
+
         /// <summary>A download of <paramref name="fileId"/> never ends: it only stops when it is cancelled.</summary>
         internal void Hang(string fileId) => _hanging[fileId] = 0;
 
@@ -28,6 +31,7 @@ namespace Enforcer5.Tests.Harness
 
         public Task DownloadAsync(string fileId, Stream destination, CancellationToken cancellationToken = default)
         {
+            Downloaded.Enqueue(fileId);
             if (_hanging.ContainsKey(fileId)) return HangAsync(cancellationToken);
             if (!_files.TryGetValue(fileId, out var content))
                 throw new ApiRequestException("Bad Request: invalid file_id", 400);

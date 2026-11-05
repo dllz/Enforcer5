@@ -57,7 +57,7 @@ namespace Enforcer5
         }
     
         /// <summary>
-        /// /nsfwtest, devs only (Daniel, 2026-11-05): reply to a photo, sticker, GIF, video or image file and the bot scores it as
+        /// /nsfwtest, devs only (Daniel, 2026-11-05): reply to a photo, sticker, GIF, video or image or video file and the bot scores it as
         /// the NSFW check would (the same image of the post, the same models and thresholds) and answers with the scores and
         /// whether it would be flagged. Nothing is done: no delete, no report, no detection. Works in groups and in private.
         /// </summary>
@@ -77,8 +77,8 @@ namespace Enforcer5
             }
             Bot.Dispatch(async () =>
             {
-                var score = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(picked.UniqueId, picked.FileId, picked.Kind));
-                Bot.SendReply(NsfwTestText(picked, score, NsfwThresholds.Current), update);
+                var (scored, score) = await NsfwSigns.ScorePickedAsync(picked);
+                Bot.SendReply(NsfwTestText(scored, score, NsfwThresholds.Current), update);
             }, "NsfwTest");
         }
 
@@ -87,8 +87,8 @@ namespace Enforcer5
         {
             static string Percent(double v) => Math.Round(v * 100).ToString(System.Globalization.CultureInfo.InvariantCulture) + "%";
             if (score == null)
-                return $"Could not score this {picked.Kind}: Telegram would not give the file, it is over 10 MB, or it took over " +
-                       $"{ImageScans.ImageLimit.TotalSeconds:0} s.";
+                return $"Could not score this {picked.Kind}: Telegram would not give the file, it is over {ImageScans.MaxBytes / 1024 / 1024} MB, " +
+                       $"nothing could be read from it, or it took over {ImageScans.ImageLimit.TotalSeconds:0} s.";
             var parts = score.Parts.OrderByDescending(p => p.Value)
                 .Select(p => $"{p.Key.ToLowerInvariant().Replace('_', ' ')} {Percent(p.Value)}" + (p.Value >= thresholds.Part ? " (named)" : ""))
                 .ToList();
@@ -96,8 +96,9 @@ namespace Enforcer5
                    $"\nViT: {Percent(score.Nsfw)} NSFW (flags at {Percent(thresholds.Nsfw)})" +
                    $"\nNudeNet: {(parts.Count == 0 ? "no exposed body parts" : string.Join(", ", parts))}" +
                    $" (named in a report from {Percent(thresholds.Part)})" +
-                   $"\nScored: the {picked.Kind}{(picked.Kind == "thumbnail" ? " (the preview of a GIF or video)" : "")}, " +
-                   $"<code>{picked.UniqueId.FormatHTML()}</code>";
+                   $"\nScored: the {picked.Kind}{(picked.Kind == "thumbnail" ? " (the preview of a GIF, video or file)" : "")}" +
+                   (score.Frames > 1 ? $", {score.Frames} frames, the worst is frame {score.Frame + 1}" : "") +
+                   $", <code>{picked.UniqueId.FormatHTML()}</code>";
         }
 
         /// <summary>

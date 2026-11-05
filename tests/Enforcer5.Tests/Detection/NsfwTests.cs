@@ -98,25 +98,219 @@ namespace Enforcer5.Tests.Detection
         }
 
         [TestMethod]
-        public void AStaticSticker_IsScoredItself_AnAnimatedOneByItsPreview()
+        public void AStaticSticker_IsScoredItself_AVideoStickerAsAVideo_AVectorOneByItsPreview()
         {
             var still = new Message { Sticker = new Sticker { FileId = "fs", FileUniqueId = "us", Thumbnail = Size("t", 128, 128) } };
             Assert.AreEqual(new NsfwSigns.Picked("us", "fs", "sticker"), NsfwSigns.Pick(still));
+            var preview = new NsfwSigns.Picked("ut", "ft", "thumbnail");
             var video = new Message { Sticker = new Sticker { FileId = "fv", FileUniqueId = "uv", IsVideo = true, Thumbnail = Size("t", 128, 128) } };
-            Assert.AreEqual(new NsfwSigns.Picked("ut", "ft", "sticker"), NsfwSigns.Pick(video));
+            Assert.AreEqual(new NsfwSigns.Picked("uv", "fv", "sticker", MediaHint.Video, preview), NsfwSigns.Pick(video));
+            var vector = new Message { Sticker = new Sticker { FileId = "fa", FileUniqueId = "ua", IsAnimated = true, Thumbnail = Size("t", 128, 128) } };
+            Assert.AreEqual(preview, NsfwSigns.Pick(vector));
             Assert.IsNull(NsfwSigns.Pick(new Message { Sticker = new Sticker { FileId = "a", FileUniqueId = "a", IsAnimated = true } }));
         }
 
         [TestMethod]
-        public void GifsVideosAndImageFiles_AreScored_TextAndOtherFilesAreNot()
+        public void GifsAndVideos_AreReadAsVideos_WithTheirPreviewFirst_OrByThePreviewAloneWhenTooLarge()
         {
-            Assert.AreEqual("thumbnail", NsfwSigns.Pick(new Message { Animation = new Animation { FileId = "a", FileUniqueId = "a", Thumbnail = Size("g", 320, 180) } }).Kind);
-            Assert.AreEqual("ug", NsfwSigns.Pick(new Message { Video = new Video { FileId = "v", FileUniqueId = "v", Thumbnail = Size("g", 320, 180) } }).UniqueId);
-            Assert.AreEqual("photo", NsfwSigns.Pick(new Message { Document = new Document { FileId = "d", FileUniqueId = "d", MimeType = "image/png", FileSize = 1000 } }).Kind);
-            Assert.IsNull(NsfwSigns.Pick(new Message { Document = new Document { FileId = "d", FileUniqueId = "d", MimeType = "application/pdf" } }));
+            var preview = new NsfwSigns.Picked("ug", "fg", "thumbnail");
+            Assert.AreEqual(new NsfwSigns.Picked("a", "fa", "animation", MediaHint.Video, preview),
+                NsfwSigns.Pick(new Message { Animation = new Animation { FileId = "fa", FileUniqueId = "a", Thumbnail = Size("g", 320, 180) } }));
+            Assert.AreEqual(new NsfwSigns.Picked("v", "fv", "video", MediaHint.Video, preview),
+                NsfwSigns.Pick(new Message { Video = new Video { FileId = "fv", FileUniqueId = "v", FileSize = 5_000_000, Thumbnail = Size("g", 320, 180) } }));
+            Assert.AreEqual(new NsfwSigns.Picked("n", "fn", "video_note", MediaHint.Video),
+                NsfwSigns.Pick(new Message { VideoNote = new VideoNote { FileId = "fn", FileUniqueId = "n" } }), "no preview: the video alone");
+            Assert.AreEqual(preview, NsfwSigns.Pick(new Message { Video = new Video { FileId = "fv", FileUniqueId = "v", FileSize = 21 * 1024 * 1024, Thumbnail = Size("g", 320, 180) } }),
+                "over 20 MB: the Bot API would not give it");
+            Assert.IsNull(NsfwSigns.Pick(new Message { Video = new Video { FileId = "fv", FileUniqueId = "v", FileSize = 21 * 1024 * 1024 } }));
+            Assert.AreEqual(preview, new NsfwSigns.Picked("v", "fv", "video", MediaHint.Video, preview).Still, "a channel's video: its preview");
+            Assert.AreEqual(new NsfwSigns.Picked("p", "fp", "photo"), new NsfwSigns.Picked("p", "fp", "photo").Still);
+        }
+
+        private static Message DocumentOf(string name, string mime, long? size = 1000, PhotoSize thumbnail = null) =>
+            new() { Document = new Document { FileId = "fd", FileUniqueId = "d", FileName = name, MimeType = mime, FileSize = size, Thumbnail = thumbnail } };
+
+        [TestMethod]
+        public void Files_AreReadWhenTheyAreImagesOrVideos_OrSayNothingAboutThemselves_NeverWhenTheyAreSomethingElse()
+        {
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file"), NsfwSigns.Pick(DocumentOf("a.png", "image/png")));
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file"), NsfwSigns.Pick(DocumentOf(null, "image/heic")));
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file", MediaHint.Video), NsfwSigns.Pick(DocumentOf("clip.webm", "video/webm")));
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file", MediaHint.Video), NsfwSigns.Pick(DocumentOf("clip.mkv", "application/octet-stream")), "the name says video");
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file", MediaHint.Unknown), NsfwSigns.Pick(DocumentOf("photo.bin", "application/octet-stream")), "read to find out");
+            Assert.AreEqual(new NsfwSigns.Picked("d", "fd", "file", MediaHint.Unknown), NsfwSigns.Pick(DocumentOf("noname", null)));
+            Assert.IsNull(NsfwSigns.Pick(DocumentOf("x.zip", "application/zip")));
+            Assert.IsNull(NsfwSigns.Pick(DocumentOf("x.zip", "application/octet-stream")), "a zip is never downloaded");
+            Assert.IsNull(NsfwSigns.Pick(DocumentOf("doc.pdf", "application/pdf")));
+            Assert.IsNull(NsfwSigns.Pick(DocumentOf("song.mp3", "audio/mpeg")));
+            Assert.IsNull(NsfwSigns.Pick(DocumentOf("sticker.tgs", "application/x-tgsticker")));
+            Assert.AreEqual(new NsfwSigns.Picked("ut", "ft", "thumbnail"), NsfwSigns.Pick(DocumentOf("doc.pdf", "application/pdf", thumbnail: Size("t", 90, 90))),
+                "another file is still judged by its preview, as before");
+            Assert.AreEqual(new NsfwSigns.Picked("ut", "ft", "thumbnail"), NsfwSigns.Pick(DocumentOf("big.jpg", "image/jpeg", 30_000_000, Size("t", 90, 90))),
+                "too large: its preview");
             Assert.IsNull(NsfwSigns.Pick(new Message { Text = "hello" }));
             Assert.IsNull(NsfwSigns.Pick(null));
         }
+
+        [TestMethod]
+        public void AFile_IsKnownByItsFirstBytes()
+        {
+            static byte[] Bytes(params object[] parts)
+            {
+                var list = new System.Collections.Generic.List<byte>();
+                foreach (var part in parts)
+                    if (part is string text) list.AddRange(System.Text.Encoding.ASCII.GetBytes(text));
+                    else list.AddRange((byte[])part);
+                while (list.Count < 200) list.Add(0x20);
+                return list.ToArray();
+            }
+            Assert.AreEqual(MediaFormat.Image, MediaFiles.Sniff(Png(4, 4, SKColors.Red)));
+            Assert.AreEqual(MediaFormat.Image, MediaFiles.Sniff(Bytes(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 })));
+            Assert.AreEqual(MediaFormat.Image, MediaFiles.Sniff(Convert.FromBase64String(Gif)));
+            Assert.AreEqual(MediaFormat.Image, MediaFiles.Sniff(Convert.FromBase64String(WebP)));
+            Assert.AreEqual(MediaFormat.Video, MediaFiles.Sniff(Bytes(new byte[] { 0, 0, 0, 0x20 }, "ftypisom")));
+            Assert.AreEqual(MediaFormat.Video, MediaFiles.Sniff(Bytes(new byte[] { 0, 0, 0, 0x14 }, "ftypqt  ")));
+            Assert.AreEqual(MediaFormat.OtherImage, MediaFiles.Sniff(Bytes(new byte[] { 0, 0, 0, 0x18 }, "ftypheic")));
+            Assert.AreEqual(MediaFormat.OtherImage, MediaFiles.Sniff(Bytes(new byte[] { 0, 0, 0, 0x1C }, "ftypavif")));
+            Assert.AreEqual(MediaFormat.Video, MediaFiles.Sniff(Bytes(new byte[] { 0x1A, 0x45, 0xDF, 0xA3 })), "WebM, MKV");
+            Assert.AreEqual(MediaFormat.Video, MediaFiles.Sniff(Bytes("RIFF", new byte[4], "AVI LIST")));
+            Assert.AreEqual(MediaFormat.Unknown, MediaFiles.Sniff(Bytes("PK", new byte[] { 3, 4 })), "a zip");
+            Assert.AreEqual(MediaFormat.Unknown, MediaFiles.Sniff(Bytes("%PDF-1.7")));
+            Assert.AreEqual(MediaFormat.Unknown, MediaFiles.Sniff(System.Text.Encoding.UTF8.GetBytes("genitals")));
+            Assert.AreEqual(MediaFormat.Unknown, MediaFiles.Sniff(null));
+
+            // An animated PNG: acTL before the image data (right after the 8-byte signature and the 25-byte IHDR chunk).
+            var png = Png(4, 4, SKColors.Red).ToList();
+            png.InsertRange(33, new byte[] { 0, 0, 0, 8 }.Concat(System.Text.Encoding.ASCII.GetBytes("acTL")).Concat(new byte[] { 0, 0, 0, 2, 0, 0, 0, 0, 1, 2, 3, 4 }));
+            Assert.AreEqual(MediaFormat.AnimatedPng, MediaFiles.Sniff(png.ToArray()));
+        }
+
+        [TestMethod]
+        public void FramesAreSpreadOverTheWhole_FirstAndLastIncluded()
+        {
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, MediaFiles.Spread(3, 8).ToArray());
+            CollectionAssert.AreEqual(new[] { 0, 14, 28, 42, 57, 71, 85, 99 }, MediaFiles.Spread(100, 8).ToArray());
+            CollectionAssert.AreEqual(new[] { 0 }, MediaFiles.Spread(5, 1).ToArray());
+            Assert.AreEqual(0, MediaFiles.Spread(0, 8).Count);
+            Assert.AreEqual(1, MediaFiles.Step(null), "unknown length: one a second");
+            Assert.AreEqual((10 - 0.2) / 7, MediaFiles.Step(10), 1e-9, "eight frames reach the end of a 10 s video");
+            Assert.AreEqual((1 - 0.1) / 7, MediaFiles.Step(1), 1e-9);
+        }
+
+        [TestMethod]
+        public void FfmpegsOutput_GivesTheLength_AndItsVersionTheSyncOption()
+        {
+            Assert.AreEqual(62.5, MediaFiles.Duration("Input #0, mov,mp4\n  Duration: 00:01:02.50, start: 0.000000, bitrate: 35 kb/s"));
+            Assert.IsNull(MediaFiles.Duration("  Duration: N/A, bitrate: N/A"));
+            Assert.IsNull(MediaFiles.Duration(null));
+            Assert.IsTrue(MediaFiles.KnowsFpsMode("ffmpeg version 5.1.6-0+deb12u1 Copyright (c) 2000-2024"));
+            Assert.IsTrue(MediaFiles.KnowsFpsMode("ffmpeg version n9.0.2-17-g2a571b6068-20260930"));
+            Assert.IsTrue(MediaFiles.KnowsFpsMode("ffmpeg version N-112233-gabcdef"));
+            Assert.IsFalse(MediaFiles.KnowsFpsMode("ffmpeg version 4.4.2-0ubuntu0.22.04.1"));
+            Assert.IsFalse(MediaFiles.KnowsFpsMode("ffmpeg version 5.0.1"));
+            var args = string.Join(" ", MediaFiles.FrameArguments("in", "out", 0.7, fpsMode: false));
+            Assert.AreEqual(2, MediaFiles.FrameArguments("in", "out", 0.7, fpsMode: false).Count(a => a == "-vsync"));
+            StringAssert.Contains(args, "gte(t-prev_selected_t,0.7)");
+            StringAssert.Contains(args, "-frames:v 9 " + System.IO.Path.Combine("out", "e%02d.png"));
+            StringAssert.Contains(args, "-frames:v 4 " + System.IO.Path.Combine("out", "s%02d.png"));
+        }
+
+        [TestMethod]
+        public void AVideosScore_IsItsWorstFrame_WithThatFramesReasons()
+        {
+            var worst = NsfwScore.WorstFrame(new[] { Score(0.1, ("ANUS_EXPOSED", 0.9)), Score(0.96, ("MALE_GENITALIA_EXPOSED", 0.8)), Score(0.5) });
+            Assert.AreEqual(0.96, worst.Nsfw);
+            CollectionAssert.AreEqual(new[] { "MALE_GENITALIA_EXPOSED" }, worst.Parts.Keys.ToArray(), "the worst frame's parts, not the others'");
+            Assert.AreEqual(3, worst.Frames);
+            Assert.AreEqual(1, worst.Frame);
+            StringAssert.StartsWith(worst.ToString(), "frame 2 of 3, nsfw 0.960");
+            Assert.IsNull(NsfwScore.WorstFrame(Array.Empty<NsfwScore>()));
+        }
+
+        /// <summary>16×16, red; frames 1 to 8 change one pixel each (drawn over the one before), the last has a green square at the top left.</summary>
+        private const string Gif = "R0lGODlhEAAQAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACgAAACwAAAAAEAAQAAAIHgABCBxIsKDBgwgTKlzIsKHDhxAjSpxIsaJFgQECAgAh+QQBCgACACwPAA8AAQABAIH/AAAUABQAAAAAAAAIBAADBAQAIfkEAQoAAgAsDwAPAAEAAQCB/wAAKAAoAAAAAAAACAQAAwQEACH5BAEKAAIALA8ADwABAAEAgf8AADwAPAAAAAAAAAgEAAMEBAAh+QQBCgACACwPAA8AAQABAIH/AABQAFAAAAAAAAAIBAADBAQAIfkEAQoAAgAsDwAPAAEAAQCB/wAAZABkAAAAAAAACAQAAwQEACH5BAEKAAIALA8ADwABAAEAgf8AAHgAeAAAAAAAAAgEAAMEBAAh+QQBCgACACwPAA8AAQABAIH/AACMAIwAAAAAAAAIBAADBAQAIfkEAQoAAgAsDwAPAAEAAQCB/wAAoACgAAAAAAAACAQAAwQEACH5BAEKAAMALAAAAAAQABAAgQD/AP8AALQAtAAAAAgxAAEIHChwgMGDBgkSRIhQ4UCGBx0WhDhAIgCKFSVitLhRI8aPIEOKHEmypMmTHwUEBAA7";
+
+        /// <summary>The same as an animated WebP.</summary>
+        private const string WebP = "UklGRjACAABXRUJQVlA4WAoAAAASAAAADwAADwAAQU5JTQYAAAAAAAAAAABBTk1GLgAAAAAAAAAAAA8AAA8AAGQAAAJWUDhMFgAAAC8PwAMADxDzH/Mfhv/9R/Q//v///wBBTk1GKgAAAAcAAAcAAAEAAAEAAGQAAABWUDhMEgAAAC8BQAAQDxBDMRTzHzhGIKL/IUFOTUYqAAAABwAABwAAAQAAAQAAZAAAAFZQOEwSAAAALwFAABAPEIMyKPMfOEYgov8hQU5NRioAAAAHAAAHAAABAAABAABkAAAAVlA4TBIAAAAvAUAAEA8QwzM88x84RiCi/yFBTk1GKgAAAAcAAAcAAAEAAAEAAGQAAABWUDhMEgAAAC8BQAAQDxADNVDzHzhGIKL/IUFOTUYqAAAABwAABwAAAQAAAQAAZAAAAFZQOEwSAAAALwFAABAPEEM2ZPMfOEYgov8hQU5NRioAAAAHAAAHAAABAAABAABkAAAAVlA4TBIAAAAvAUAAEA8Qgzd48x84RiCi/yFBTk1GKgAAAAcAAAcAAAEAAAEAAGQAAABWUDhMEgAAAC8BQAAQDxDDOIzzHzhGIKL/IUFOTUYqAAAABwAABwAAAQAAAQAAZAAAAFZQOEwSAAAALwFAABAPEAM6oPMfOEYgov8hQU5NRj4AAAAAAAAAAAAPAAAPAABkAAAAVlA4TCYAAAAvD8ADEBcgEEjaH3qNoR3a+Q+YDQTZNpWcz/VvENH/KD4AAADAAA==";
+
+        [TestMethod]
+        [DataRow(Gif, DisplayName = "GIF")]
+        [DataRow(WebP, DisplayName = "WebP")]
+        public void AnAnimatedImage_GivesFramesSpreadOverIt_EachDrawnOverTheOnesBefore(string base64)
+        {
+            var frames = AnimatedImages.Frames(Convert.FromBase64String(base64), 4);
+            Assert.AreEqual(4, frames.Count, "frames 0, 3, 6 and 9 of 10");
+            using var first = SKBitmap.Decode(frames[0]);
+            using var middle = SKBitmap.Decode(frames[2]);
+            using var last = SKBitmap.Decode(frames[3]);
+            Assert.AreEqual(new SKColor(255, 0, 0), first.GetPixel(2, 2));
+            Assert.AreEqual(new SKColor(255, 0, 0), middle.GetPixel(2, 2), "a frame that changes one pixel still shows the rest");
+            Assert.AreEqual(new SKColor(0, 255, 0), last.GetPixel(2, 2), "the last frame");
+            Assert.AreEqual(new SKColor(255, 0, 0), last.GetPixel(12, 12));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task TheDecoder_PassesAStillImageAsItIs_AndReadsNothingFromAFileThatIsNeither()
+        {
+            var decoder = new MediaDecoder();
+            var png = Png(4, 4, SKColors.Red);
+            Assert.AreSame(png, (await decoder.FramesAsync(png, MediaHint.Unknown, default)).Single(), "one image: the file itself");
+            Assert.AreEqual(10, (await decoder.FramesAsync(Convert.FromBase64String(Gif), MediaHint.Image, default)).Count, "a GIF sent as a photo or file: all 10 frames");
+            var text = System.Text.Encoding.UTF8.GetBytes("PK not an image at all");
+            Assert.IsNull(await decoder.FramesAsync(text, MediaHint.Unknown, default), "a file of unknown kind that is no image");
+            Assert.AreSame(text, (await decoder.FramesAsync(text, MediaHint.Image, default)).Single(), "Telegram said photo: the models try");
+        }
+
+        /// <summary>ffmpeg itself, when it is there (<c>FfmpegPath</c> or the PATH): a video with a clean first second.</summary>
+        [TestMethod]
+        public async System.Threading.Tasks.Task Ffmpeg_ReadsFramesOverTheWholeVideo_AndTheCut()
+        {
+            Ffmpeg.ResetForTests();
+            try
+            {
+                if (!Ffmpeg.Available) Assert.Inconclusive("ffmpeg is not installed here");
+                var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "enforcer-ffmpeg-test-" + Guid.NewGuid().ToString("N"));
+                System.IO.Directory.CreateDirectory(folder);
+                try
+                {
+                    var clip = System.IO.Path.Combine(folder, "clip.mp4");
+                    var start = new System.Diagnostics.ProcessStartInfo(Ffmpeg.BinaryForTests) { RedirectStandardError = true };
+                    foreach (var arg in new[]
+                             {
+                                 "-hide_banner", "-v", "error", "-f", "lavfi", "-i", "color=c=blue:s=320x240:d=1,format=yuv420p", "-f", "lavfi", "-i",
+                                 "color=c=red:s=320x240:d=4,format=yuv420p", "-filter_complex", "[0:v][1:v]concat=n=2:v=1[v]", "-map", "[v]", "-r", "25", clip
+                             })
+                        start.ArgumentList.Add(arg);
+                    using var make = System.Diagnostics.Process.Start(start);
+                    var errors = await make.StandardError.ReadToEndAsync();
+                    await make.WaitForExitAsync();
+                    Assert.AreEqual(0, make.ExitCode, errors);
+
+                    var frames = await new MediaDecoder().FramesAsync(await System.IO.File.ReadAllBytesAsync(clip), MediaHint.Unknown, default);
+                    Assert.IsTrue(frames.Count is >= MediaFiles.EvenFrames and <= MediaFiles.EvenFrames + 1 + MediaFiles.SceneFrames, $"{frames.Count} frames");
+                    var colours = frames.Select(f =>
+                    {
+                        using var b = SKBitmap.Decode(f);
+                        return b.GetPixel(10, 10);
+                    }).ToList();
+                    Assert.IsTrue(colours[0].Blue > 200 && colours[0].Red < 50, "the first frame is the clean one");
+                    Assert.IsTrue(colours.Count(c => c.Red > 200) >= 6, "most frames are after it");
+                    Assert.IsTrue(SKBitmap.DecodeBounds(frames[0]).Width == 320, "kept at its size: under 640");
+
+                    Assert.IsNull(await new MediaDecoder().FramesAsync(new byte[] { 0x1A, 0x45, 0xDF, 0xA3, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, MediaHint.Video, default),
+                        "a broken video: nothing read, no error");
+                }
+                finally
+                {
+                    System.IO.Directory.Delete(folder, true);
+                }
+            }
+            finally
+            {
+                Ffmpeg.ResetForTests();
+            }
+        }
+
 
         private static byte[] Png(int width, int height, SKColor color)
         {
