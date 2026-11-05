@@ -84,11 +84,9 @@ keys into the other 10 files.
    - the bot sends asynchronously through a queue and never waits on it; if it is down, only the
      vectors are missing
    - embed only non-established members' messages, everything during a raid, and detected messages
-   - PostgreSQL `pgvector` 0.8.6 is installed on the server (checked 2026-10-27), but not yet
-     enabled in `enforcer` or `enforcer_subprod`: `pg_extension` there lists no `vector`. It is
-     not a trusted extension, so the bot's migrations cannot enable it; Daniel runs
-     `CREATE EXTENSION vector;` as superuser in both databases before the first migration that
-     uses it. pgvector has no int8 type: `halfvec` (see the design)
+   - PostgreSQL `pgvector` (0.8.7) is enabled in `enforcer` and `enforcer_subprod` (2026-11-05). It is
+     not a trusted extension, so the bot's migrations cannot enable it themselves. pgvector has no
+     int8 type: `halfvec` (see the design). Built in step 15 (design, section 13)
    - vectors are personal data (text can be roughly reconstructed from them): same retention,
      dropped on anonymisation
 

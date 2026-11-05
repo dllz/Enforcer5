@@ -325,6 +325,7 @@ namespace Enforcer5.Detection
             NsfwSigns.ResetForTests();
             Images.ImageScans.ResetForTests();
             Ml.Embeddings.ResetForTests();
+            SimilarToBanned.ResetForTests();
             QueueStatus.ResetForTests();
         }
     }

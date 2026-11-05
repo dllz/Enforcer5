@@ -14,7 +14,7 @@ namespace Enforcer5.Detection
     /// would have caught.
     /// <para>
     /// Two kinds so far, both without a model: texts (three-letter runs of the normalised text, Jaccard) and names
-    /// (edit distance of the normalised names). Embeddings and image hashes come with the AI step.
+    /// (edit distance of the normalised names). Text and image vectors (build step 15) compare by cosine: <see cref="EmbeddingText"/>, <see cref="EmbeddingImage"/>.
     /// </para>
     /// </summary>
     internal static class SimilarityTuning
@@ -36,6 +36,24 @@ namespace Enforcer5.Detection
 
         /// <summary>Names this alike (1 − edit distance / the longer name's letters) that did not match are recorded as near misses.</summary>
         internal static double NameNear = Read("SimilarityNameNear", 0.6);
+
+        // ------------------------------------------------------------------ embeddings (build step 15, SimilarToBanned)
+
+        /// <summary>
+        /// A text vector this close (cosine) to one that got someone removed is <c>similar_to_banned</c>. Harrier 270m flagged
+        /// 0.1% of 4,032 real chat messages at 0.834 and found 100% of English and 98% of translated variants of 20 spam
+        /// families (/workspace/scratch/infinity/eval/REPORT.md, 2026-11-04). Another model needs its own.
+        /// </summary>
+        internal static double EmbeddingText = Read("SimilarityEmbeddingText", 0.834);
+
+        /// <summary>Text vectors this close but under <see cref="EmbeddingText"/> are near misses (real chat's median was 0.71).</summary>
+        internal static double EmbeddingTextNear = Read("SimilarityEmbeddingTextNear", 0.78);
+
+        /// <summary>An image vector this close is a copy of one that got someone removed: CLIP ViT-B/32 put 15 edited re-posts of
+        /// a spam poster at 0.70-0.99 and 212 unrelated images at most 0.555.</summary>
+        internal static double EmbeddingImage = Read("SimilarityEmbeddingImage", 0.65);
+
+        internal static double EmbeddingImageNear = Read("SimilarityEmbeddingImageNear", 0.55);
 
         private static double Read(string key, double fallback)
         {
@@ -60,7 +78,11 @@ namespace Enforcer5.Detection
             ("SimilarityNameShort", NameShort.ToString(CultureInfo.InvariantCulture)),
             ("SimilarityNameShortDistance", NameShortDistance.ToString(CultureInfo.InvariantCulture)),
             ("SimilarityNameLongDistance", NameLongDistance.ToString(CultureInfo.InvariantCulture)),
-            ("SimilarityNameNear", NameNear.ToString("0.##", CultureInfo.InvariantCulture))
+            ("SimilarityNameNear", NameNear.ToString("0.##", CultureInfo.InvariantCulture)),
+            ("SimilarityEmbeddingText", EmbeddingText.ToString("0.###", CultureInfo.InvariantCulture)),
+            ("SimilarityEmbeddingTextNear", EmbeddingTextNear.ToString("0.###", CultureInfo.InvariantCulture)),
+            ("SimilarityEmbeddingImage", EmbeddingImage.ToString("0.###", CultureInfo.InvariantCulture)),
+            ("SimilarityEmbeddingImageNear", EmbeddingImageNear.ToString("0.###", CultureInfo.InvariantCulture))
         };
 
         // ------------------------------------------------------------------ texts

@@ -374,7 +374,7 @@ New PostgreSQL tables (approved). Every row links to `groups.group_id` and
   set for up to 2 years. Eval cases follow the group's setting. Runs in the existing 03:00 job.
 - Never stored: message text (except eval cases), bio text, images.
 - pgvector (`halfvec`; it has no int8 type) is enabled at deploy with `CREATE EXTENSION vector`
-  by a superuser; tests that need it skip without it.
+  by a superuser (done in both databases, 2026-11-05); without it the vector tables are not created and the AI signs stay off.
 - Labels: explicit (buttons) and implicit, nightly, for rows older than 30 days: bad = ban,
   kick or mute in `sanctions` within 30 days, or a global ban (automatic bans kept apart as
   source `auto`); fine = established with no sanction, or an action an admin undid.
@@ -530,7 +530,29 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
       older than the group's choice lose their account id; `account_profile_flags` not looked at for 90 days are deleted.
     - `Detection/DetectionData` runs it from 03:00 UTC, once a night for both editions (Redis `detect:data:{date}`).
     - /privacy says what `member_signals` and the pointers keep.
-15. ML service, `IMlClient`, queue, vector tables, PDQ, `similar_to_banned`, AI settings.
+15. ML service, `IMlClient`, queue, vector tables, PDQ, `similar_to_banned`, AI settings. **As built (2026-11-05, Daniel):**
+    - Service: Infinity on Apollo (GPU container), `MlServiceUrl`/`MlServiceKey`; text Harrier 270m
+      (`microsoft/harrier-oss-v1-270m`, 640 numbers, with its "Retrieve semantically similar text" prefix), images CLIP
+      ViT-B/32 (512). Chosen from the evals in `/workspace/scratch/infinity/eval/REPORT.md` (2026-11-04): Harrier beat e5-small;
+      CLIP's zero-shot labels for ads or NSFW did not work, so CLIP is only used to compare images. `Detection/Ml` (`IMlClient`,
+      `InfinityClient`, the `Embeddings` queue).
+    - Tables `message_embeddings` and `media_vectors`, `halfvec` without a fixed length (the model is stored with each
+      vector), no HNSW index: the references are compared in memory, so nothing searches the tables. Created only where pgvector
+      is enabled (both databases since 2026-11-05).
+    - **No message text is kept, not even for the references** (Daniel): a model change starts the references over.
+    - **No PDQ** (Daniel): CLIP caught crops, mirroring, blur and caption bars, which PDQ does not. `banned_media.pdq_hash`
+      stays empty.
+    - References: the vectors of what a ban, tempban, kick or delete was about (admins', and the bot's own about abuse), and
+      the groups' banned files; abuse counts in every group, other decisions only in their own group. Read every 10 minutes,
+      at most 10,000 of each kind.
+    - Embedded: in the pilot's groups, new members' texts of 20+ letters and their images, and what a decision was about.
+      Thresholds: text 0.834 (near from 0.78), images 0.65 (near from 0.55), in `SimilarityTuning`.
+    - Modes per group, for texts and images apart (/menu → Detection → 🧠 Like removed posts): off, watching (the default,
+      Daniel: so data builds up; recorded as mode `trial`, nothing done, score left alone) or live, offered only with
+      `MlLive=true` once the eval with Daniel passed. `tools/tuning/export.sql` counts the watched hits as `similar_to_banned:text`
+      and `:image`.
+    - Retention: the group's, then deleted; vectors behind a decision lose the account and stay 2 years; image vectors
+      nothing points at, 90 days.
 16. Evals.
 17. Image and text classification signs, shadow; live per model after the eval bar.
 18. v2 improvements to ported checks, one commit each: flood with the shared actions, newcomer

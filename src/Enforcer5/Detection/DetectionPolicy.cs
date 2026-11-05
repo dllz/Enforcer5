@@ -189,7 +189,7 @@ namespace Enforcer5.Detection
         IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays,
         string ReportTo = EngineSettings.ToAdmins, long? AdminChatId = null, bool Learn = true,
         int? TrustMessages = null, int? TrustDays = null, DateTimeOffset? TrustChangedAt = null,
-        DateTimeOffset? LearnedOn = null, int? ProposedReportAt = null)
+        DateTimeOffset? LearnedOn = null, int? ProposedReportAt = null, string AiText = null, string AiImage = null)
     {
         internal const int DefaultReportAt = 3;
         internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);
@@ -214,9 +214,45 @@ namespace Enforcer5.Detection
 
         internal bool Observing(DateTimeOffset now) => ObserveUntil == null || now < ObserveUntil;
 
+        /// <summary>
+        /// What the group does with texts like ones that got someone removed (build step 15; <see cref="SimilarToBanned"/>):
+        /// <see cref="AiModes.Watch"/> unless it chose otherwise (Daniel, 2026-11-05: watching from the start, so data builds up).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal string TextSimilarity => AiModes.Of(AiText);
+
+        /// <summary>The same for images (<see cref="SimilarToBanned"/>).</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        internal string ImageSimilarity => AiModes.Of(AiImage);
+
         /// <summary>What the group does with <paramref name="sign"/>: its own setting, else the catalog's.</summary>
         internal SignPolicy For(string sign) =>
             Signs.TryGetValue(sign, out var own) ? own : SignCatalog.Get(sign)?.Default ?? SignPolicy.Off;
+    }
+
+    /// <summary>
+    /// What a group does with a model's sign (design section 9): nothing (<see cref="Off"/>: nothing of it is even sent to the
+    /// model service), <see cref="Watch"/> (recorded as what it would have done, mode trial, nothing done and the score left
+    /// alone) or <see cref="Live"/> (a sign like any other), offered only once the model passed its eval
+    /// (<see cref="SimilarToBanned.LiveAllowed"/>).
+    /// </summary>
+    internal static class AiModes
+    {
+        internal const string Off = "off";
+        internal const string Watch = "watch";
+        internal const string Live = "live";
+        internal static readonly string[] All = { Off, Watch, Live };
+
+        /// <summary>The stored mode, <see cref="Watch"/> when none or not one of these.</summary>
+        internal static string Of(string stored) => stored is Off or Watch or Live ? stored : Watch;
+
+        /// <summary>The mode after <paramref name="mode"/> in the menu; live only when allowed.</summary>
+        internal static string Next(string mode, bool liveAllowed) => Of(mode) switch
+        {
+            Off => Watch,
+            Watch => liveAllowed ? Live : Off,
+            _ => Off
+        };
     }
 
     /// <param name="Enabled">The sign is looked for at all.</param>

@@ -96,6 +96,9 @@ namespace Enforcer5.Detection
                 if (label == "bad" && action is "ban" or "tempban" or "kick" && fingerprint?.MediaUniqueId != null &&
                     (actorId != null || source == "auto"))
                     BannedMedia.Add(chatId, fingerprint.MediaUniqueId, fingerprint.ContentType, actorId, actorId != null ? "ban" : "auto");
+                // What a removal was about is kept as vectors, so the next post like it is seen (step 15, similar_to_banned).
+                if (label == "bad" && action is "ban" or "tempban" or "kick" or "delete" && about != null)
+                    SimilarToBanned.Decided(chatId, userId, about);
                 HistoryWriter.Enqueue(async () =>
                     {
                         // Once per decision: the other edition may have recorded an app change first.

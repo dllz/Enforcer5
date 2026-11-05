@@ -166,7 +166,9 @@ WHERE detection_policies.enabled IS DISTINCT FROM EXCLUDED.enabled
                 TrustDays = policy.Engine.TrustDays,
                 TrustChangedAt = policy.Engine.TrustChangedAt?.UtcDateTime,
                 LearnedOn = policy.Engine.LearnedOn?.UtcDateTime,
-                ProposedReportAt = policy.Engine.ProposedReportAt
+                ProposedReportAt = policy.Engine.ProposedReportAt,
+                AiText = policy.Engine.AiText,
+                AiImage = policy.Engine.AiImage
             });
             foreach (var (name, sign) in policy.Engine.Signs)
             {
@@ -371,7 +373,7 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                 engine.RetentionDays is { } days && EngineSettings.RetentionChoices.Contains(days) ? days : EngineSettings.DefaultRetentionDays,
                 EngineSettings.ReportChoices.Contains(engine.ReportTo) ? engine.ReportTo : EngineSettings.ToAdmins,
                 engine.AdminChatId, engine.Learn ?? true, engine.TrustMessages, engine.TrustDays, Utc(engine.TrustChangedAt),
-                Utc(engine.LearnedOn), engine.ProposedReportAt);
+                Utc(engine.LearnedOn), engine.ProposedReportAt, engine.AiText, engine.AiImage);
         }
 
         private static DateTimeOffset? Utc(DateTime? at) =>
@@ -434,6 +436,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public DateTime? TrustChangedAt { get; set; }
             public DateTime? LearnedOn { get; set; }
             public int? ProposedReportAt { get; set; }
+            public string AiText { get; set; }
+            public string AiImage { get; set; }
         }
 
         private sealed class SignJson

@@ -147,6 +147,10 @@ namespace Enforcer5.Detection
             await Step("labelling established members fine", () => LabelEstablishedAsync(at));
             await Step("counting the channel and website reputation", () => Repositories.DetectionData.RecomputeReputationAsync(at));
             await Step("applying the groups' retention", () => Repositories.DetectionData.ApplyRetentionAsync(at, EngineSettings.DefaultRetentionDays, ProfileFlagDays));
+            // Vectors (build step 15): the group's retention; those behind a decision anonymous to 2 years, unused images 90 days.
+            if (await Ml.Embeddings.StorageAsync())
+                await Step("applying the retention of the vectors", () => Repositories.Embeddings.ApplyRetentionAsync(at,
+                    EngineSettings.DefaultRetentionDays, SimilarToBanned.ReferenceDays, SimilarToBanned.ImageDays));
             await Reputation.ReloadAsync();
         }
 

@@ -34,6 +34,8 @@ namespace Enforcer5
                 return;
             }
             var added = BannedMedia.Add(chatId, file, MessageFingerprint.ContentTypeOf(target), message.From.Id, "command");
+            // Its image as a vector too, so edited copies of it are seen (similar_to_banned).
+            SimilarToBanned.FileBanned(chatId, target);
             // The post itself goes too, unless an admin made it.
             if (target.From != null && !Methods.IsGroupAdmin(target.From.Id, chatId))
                 EnforcementQueue.SubmitAsync(EnforcementJob.Delete(chatId, target.MessageId)).GetAwaiter().GetResult();

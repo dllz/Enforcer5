@@ -1505,7 +1505,7 @@ Example:
     <value>2 年</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer 保存什么&lt;/b&gt;\n\n• 每个群的设置，以及它的警告、封禁、踢出和禁言：对谁、由谁、为什么。\n• 关于它所在群的成员：Telegram ID、随时间变化的名字和用户名、加入时间以及发送的消息数量。\n• 它的检查在一条消息中注意到了什么（消息类型、文本的指纹和文件 ID），以及管理员随后的决定。\n• 关于新成员：他们的公开资料是否有链接、提及或个人频道，以及他们指向的公开频道和群组的同样信息。个人简介和频道简介只读取，不保存。\n• 另外关于新成员：他们如何加入、第一条消息是什么以及何时发送，以及他们指向哪些公开频道和网站，用来了解垃圾信息发送者在推广哪些。\n\n它从不保存消息的文本、个人简介或图片。\n\n这些用于保护群组：阻止垃圾信息和突袭，并从管理员的决定中了解每个群允许什么。每个群的管理员可以选择检查注意到的内容与成员账号关联保存多久：90 天、1 年（默认）或 2 年。</value>
+    <value>&lt;b&gt;Enforcer 保存什么&lt;/b&gt;\n\n• 每个群的设置，以及它的警告、封禁、踢出和禁言：对谁、由谁、为什么。\n• 关于它所在群的成员：Telegram ID、随时间变化的名字和用户名、加入时间以及发送的消息数量。\n• 它的检查在一条消息中注意到了什么（消息类型、文本的指纹和文件 ID），以及管理员随后的决定。\n• 关于新成员：他们的公开资料是否有链接、提及或个人频道，以及他们指向的公开频道和群组的同样信息。个人简介和频道简介只读取，不保存。\n• 另外关于新成员：他们如何加入、第一条消息是什么以及何时发送，以及他们指向哪些公开频道和网站，用来了解垃圾信息发送者在推广哪些。\n• 当群组把新成员的帖子与被移除的帖子比较时：模型根据新成员的消息和图片以及导致有人被移除的帖子计算出的数字（不是文本或图片），用来识别被改写或编辑过的同一垃圾信息。被移除帖子的数字在不关联账号的情况下最多保存 2 年。\n\n它从不保存消息的文本、个人简介或图片。\n\n这些用于保护群组：阻止垃圾信息和突袭，并从管理员的决定中了解每个群允许什么。每个群的管理员可以选择检查注意到的内容与成员账号关联保存多久：90 天、1 年（默认）或 2 年。</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer 保存了你的哪些信息</value>
@@ -2407,5 +2407,41 @@ Example:
   </string>
   <string key="nsfwNoParts">
     <value>未发现暴露的身体部位</value>
+  </string>
+  <string key="detectionAiButton">
+    <value>🧠 类似被移除的帖子</value>
+  </string>
+  <string key="aiMenu">
+    <value>🧠 类似被移除的帖子\nEnforcer 会把新成员的消息和图片与导致有人被移除的内容进行比较：包括本群的，以及其他群中被移除的垃圾信息或诈骗。Enforcer 自己服务器上的文本模型和图片模型会把它们转换成数字；只保存这些数字，从不保存文本或图片。管理员和老成员从不检查。\n\n关：不向模型发送任何内容。\n观察中：发现的内容会被记录用于调整；不会处理或举报任何人。\n启用：像其他迹象一样计入成员的分数。</value>
+  </string>
+  <string key="aiTextButton">
+    <value>消息</value>
+  </string>
+  <string key="aiImageButton">
+    <value>图片</value>
+  </string>
+  <string key="aiMode_watch">
+    <value>👁 观察中</value>
+  </string>
+  <string key="aiMode_live">
+    <value>启用</value>
+  </string>
+  <string key="menuInfo_aiText">
+    <value>新成员 20 个字母（字）以上的消息会与导致有人被封禁、踢出或删除的消息进行比较，即使被改写或翻译过。</value>
+  </string>
+  <string key="menuInfo_aiImage">
+    <value>新成员的照片、贴纸和 GIF 预览会与导致有人被移除的文件以及本群禁止的文件进行比较，从而发现编辑过的副本。</value>
+  </string>
+  <string key="similarTextLine">
+    <value>消息与一条导致成员被移除的消息相似度 {0}，{1}</value>
+  </string>
+  <string key="similarImageLine">
+    <value>图片与一张导致成员被移除的图片相似度 {0}，{1}</value>
+  </string>
+  <string key="similarHere">
+    <value>在本群</value>
+  </string>
+  <string key="similarElsewhere">
+    <value>在其他群</value>
   </string>
 </strings>

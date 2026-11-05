@@ -1760,7 +1760,7 @@
     <value>2 anni</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n• Sempre dei nuovi membri: come sono entrati, qual è stato il loro primo messaggio e quando, e a quali canali pubblici e siti rimandano, per imparare quali pubblicizzano gli spammer.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
+    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n• Sempre dei nuovi membri: come sono entrati, qual è stato il loro primo messaggio e quando, e a quali canali pubblici e siti rimandano, per imparare quali pubblicizzano gli spammer.\n• Dove un gruppo confronta i post dei nuovi membri con quelli rimossi: numeri che un modello calcola dai messaggi e dalle immagini dei nuovi membri e dai post per cui qualcuno è stato rimosso (non il testo né l'immagine), per riconoscere lo stesso spam riformulato o modificato. Quelli dei post rimossi si conservano senza l'account fino a 2 anni.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
   </string>
   <string key="cmdprivacy">
     <value>Cosa conserva Enforcer su di te</value>
@@ -2696,5 +2696,41 @@
   </string>
   <string key="nsfwNoParts">
     <value>nessuna parte del corpo esposta rilevata</value>
+  </string>
+  <string key="detectionAiButton">
+    <value>🧠 Come post rimossi</value>
+  </string>
+  <string key="aiMenu">
+    <value>🧠 Come post rimossi\nEnforcer confronta i messaggi e le immagini dei nuovi membri con quelli per cui qualcuno è stato rimosso: qui, e spam o truffe rimossi in altri gruppi. Un modello di testo e uno di immagini sul server di Enforcer li trasformano in numeri; si conservano solo quei numeri, mai il testo o l'immagine. Gli admin e i membri affermati non vengono mai controllati.\n\nOff: nulla viene inviato ai modelli.\nIn osservazione: ciò che trova viene registrato per regolarlo; nessuno viene punito o segnalato.\nAttivo: conta nel punteggio del membro come gli altri segnali.</value>
+  </string>
+  <string key="aiTextButton">
+    <value>Messaggi</value>
+  </string>
+  <string key="aiImageButton">
+    <value>Immagini</value>
+  </string>
+  <string key="aiMode_watch">
+    <value>👁 In osservazione</value>
+  </string>
+  <string key="aiMode_live">
+    <value>Attivo</value>
+  </string>
+  <string key="menuInfo_aiText">
+    <value>I messaggi dei nuovi membri di almeno 20 lettere vengono confrontati con i messaggi per cui qualcuno è stato bannato, espulso o eliminato, anche se riformulati o tradotti.</value>
+  </string>
+  <string key="menuInfo_aiImage">
+    <value>Foto, sticker e anteprime GIF dei nuovi membri vengono confrontati con i file per cui qualcuno è stato rimosso e con i file vietati qui, così si vedono le copie modificate.</value>
+  </string>
+  <string key="similarTextLine">
+    <value>messaggio simile al {0} a uno per cui un membro è stato rimosso {1}</value>
+  </string>
+  <string key="similarImageLine">
+    <value>immagine simile al {0} a una per cui un membro è stato rimosso {1}</value>
+  </string>
+  <string key="similarHere">
+    <value>qui</value>
+  </string>
+  <string key="similarElsewhere">
+    <value>in un altro gruppo</value>
   </string>
 </strings>

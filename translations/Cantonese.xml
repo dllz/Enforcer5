@@ -1375,7 +1375,7 @@ UPDATE LOG
     <value>2 年</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer 會保存咩&lt;/b&gt;\n\n• 每個群嘅設定，同埋佢嘅警告、封鎖、踢走同禁言：對邊個、由邊個、點解。\n• 關於佢所在群組嘅成員：Telegram ID、隨住改變嘅名同用戶名、幾時加入同發咗幾多訊息。\n• 佢嘅檢查喺一條訊息入面留意到咩（類型、文字嘅指紋同檔案 ID），同埋管理員之後嘅決定。\n• 關於新成員：佢哋嘅公開資料有冇連結、提及或者個人頻道，同埋佢哋指向嘅公開頻道同群組嘅同樣資料。個人簡介同頻道簡介只會讀，唔會保存。\n• 另外關於新成員：佢哋點樣加入、第一個帖係咩同幾時發，同埋佢哋指向邊啲公開頻道同網站，用嚟知道垃圾訊息發送者宣傳邊啲。\n\n佢從來唔會保存訊息文字、個人簡介或者圖片。\n\n呢啲係用嚟保護群組：阻止垃圾訊息同突襲，同埋由管理員嘅決定入面學習每個群容許咩。每個群嘅管理員可以揀檢查留意到嘅嘢同成員帳戶連埋保存幾耐：90 日、1 年（預設）或者 2 年。</value>
+    <value>&lt;b&gt;Enforcer 會保存咩&lt;/b&gt;\n\n• 每個群嘅設定，同埋佢嘅警告、封鎖、踢走同禁言：對邊個、由邊個、點解。\n• 關於佢所在群組嘅成員：Telegram ID、隨住改變嘅名同用戶名、幾時加入同發咗幾多訊息。\n• 佢嘅檢查喺一條訊息入面留意到咩（類型、文字嘅指紋同檔案 ID），同埋管理員之後嘅決定。\n• 關於新成員：佢哋嘅公開資料有冇連結、提及或者個人頻道，同埋佢哋指向嘅公開頻道同群組嘅同樣資料。個人簡介同頻道簡介只會讀，唔會保存。\n• 另外關於新成員：佢哋點樣加入、第一個帖係咩同幾時發，同埋佢哋指向邊啲公開頻道同網站，用嚟知道垃圾訊息發送者宣傳邊啲。\n• 當一個群將新成員嘅帖同被移除嘅帖比較：模型由新成員嘅訊息同圖片，同令到有人被移除嘅帖計出嚟嘅數字（唔係文字或者圖片），用嚟認出改寫過或者改過嘅同一個垃圾訊息。被移除嘅帖嘅數字唔會連住帳戶，最多保存 2 年。\n\n佢從來唔會保存訊息文字、個人簡介或者圖片。\n\n呢啲係用嚟保護群組：阻止垃圾訊息同突襲，同埋由管理員嘅決定入面學習每個群容許咩。每個群嘅管理員可以揀檢查留意到嘅嘢同成員帳戶連埋保存幾耐：90 日、1 年（預設）或者 2 年。</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer 保存咗你啲咩</value>
@@ -2272,5 +2272,41 @@ UPDATE LOG
   </string>
   <string key="nsfwNoParts">
     <value>見唔到暴露嘅身體部位</value>
+  </string>
+  <string key="detectionAiButton">
+    <value>🧠 似被移除嘅帖</value>
+  </string>
+  <string key="aiMenu">
+    <value>🧠 似被移除嘅帖\nEnforcer 會將新成員嘅訊息同圖片，同令到有人被移除嘅內容比較：包括呢個群嘅，同埋其他群入面被移除嘅垃圾訊息或者詐騙。Enforcer 自己伺服器上面嘅文字模型同圖片模型會將佢哋變成數字；只會保存呢啲數字，從來唔會保存文字或者圖片。管理員同老成員從來唔會被檢查。\n\n閂：乜都唔會傳畀模型。\n觀察緊：搵到嘅嘢會記錄落嚟用嚟調整；唔會處理或者舉報任何人。\n開：好似其他跡象咁計入成員嘅分數。</value>
+  </string>
+  <string key="aiTextButton">
+    <value>訊息</value>
+  </string>
+  <string key="aiImageButton">
+    <value>圖片</value>
+  </string>
+  <string key="aiMode_watch">
+    <value>👁 觀察緊</value>
+  </string>
+  <string key="aiMode_live">
+    <value>開</value>
+  </string>
+  <string key="menuInfo_aiText">
+    <value>新成員 20 個字母（字）或以上嘅訊息，會同令到有人被封鎖、踢走或者刪除嘅訊息比較，就算改寫過或者翻譯過都得。</value>
+  </string>
+  <string key="menuInfo_aiImage">
+    <value>新成員嘅相、貼圖同 GIF 預覽，會同令到有人被移除嘅檔案同呢個群禁咗嘅檔案比較，咁就睇得出改過嘅複製品。</value>
+  </string>
+  <string key="similarTextLine">
+    <value>訊息同一條令成員被移除嘅訊息相似度 {0}，{1}</value>
+  </string>
+  <string key="similarImageLine">
+    <value>圖片同一張令成員被移除嘅圖片相似度 {0}，{1}</value>
+  </string>
+  <string key="similarHere">
+    <value>喺呢個群</value>
+  </string>
+  <string key="similarElsewhere">
+    <value>喺其他群</value>
   </string>
 </strings>

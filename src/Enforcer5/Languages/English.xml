@@ -2835,7 +2835,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>2 years</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n• Also about new members: how they joined, what their first post was and when, and which public channels and websites they point to, to learn which ones spammers advertise.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
+    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n• Also about new members: how they joined, what their first post was and when, and which public channels and websites they point to, to learn which ones spammers advertise.\n• Where a group compares new members' posts with removed ones: numbers a model computes from new members' messages and images, and from the posts that got someone removed (not the text or the image), to recognise the same spam reworded or edited. Those of removed posts are kept without the account for up to 2 years.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
   </string>
   <string key="cmdprivacy">
     <value>What Enforcer keeps about you</value>
@@ -3747,6 +3747,42 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="nsfwNoParts">
     <value>no exposed body parts seen</value>
+  </string>
+  <string key="detectionAiButton">
+    <value>🧠 Like removed posts</value>
+  </string>
+  <string key="aiMenu">
+    <value>🧠 Like removed posts\nEnforcer compares new members' messages and images with the ones that got someone removed: here, and spam or scams removed in other groups. A text model and an image model on Enforcer's own server turn each into numbers; only those numbers are kept, never the text or the image. Admins and established members are never checked.\n\nOff: nothing is sent to the models.\nWatching: what it finds is recorded to tune it; nobody is acted on or reported.\nLive: it counts towards the member's score like the other signs.</value>
+  </string>
+  <string key="aiTextButton">
+    <value>Messages</value>
+  </string>
+  <string key="aiImageButton">
+    <value>Images</value>
+  </string>
+  <string key="aiMode_watch">
+    <value>👁 Watching</value>
+  </string>
+  <string key="aiMode_live">
+    <value>Live</value>
+  </string>
+  <string key="menuInfo_aiText">
+    <value>New members' messages of 20 letters or more are compared with messages that got someone banned, kicked or deleted, also when reworded or translated.</value>
+  </string>
+  <string key="menuInfo_aiImage">
+    <value>New members' photos, stickers and GIF previews are compared with the files that got someone removed and the files banned here, so edited copies are seen.</value>
+  </string>
+  <string key="similarTextLine">
+    <value>message {0} like one that got a member removed {1}</value>
+  </string>
+  <string key="similarImageLine">
+    <value>image {0} like one that got a member removed {1}</value>
+  </string>
+  <string key="similarHere">
+    <value>here</value>
+  </string>
+  <string key="similarElsewhere">
+    <value>in another group</value>
   </string>
   <string key="hcommandqueues">
     <value>Devs only. Shows each background queue (images, profile lookups, mention lookups, history writes): how many items wait, what it is working on and since when, and when it last finished one. A queue stuck for 2 minutes is also reported to the error chat.</value>

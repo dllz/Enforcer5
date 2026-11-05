@@ -2828,7 +2828,7 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
     <value>2 años</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n• De los miembros nuevos: si su perfil público tiene un enlace, una mención o un canal personal, y lo mismo de los canales y grupos públicos a los que apuntan. La biografía y la descripción del canal se leen, no se guardan.\n• También de los miembros nuevos: cómo entraron, cuál fue su primer mensaje y cuándo, y a qué canales públicos y sitios web apuntan, para aprender cuáles anuncian los spammers.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
+    <value>&lt;b&gt;Qué guarda Enforcer&lt;/b&gt;\n\n• Los ajustes de cada grupo y sus advertencias, baneos, expulsiones y silencios: a quién, quién y por qué.\n• De los miembros de los grupos en los que está: su id de Telegram, nombre y nombre de usuario según cambian, cuándo entraron y cuántos mensajes enviaron.\n• Lo que sus comprobaciones notaron en un mensaje (su tipo, una huella del texto y el id del archivo) y lo que decidieron después los administradores.\n• De los miembros nuevos: si su perfil público tiene un enlace, una mención o un canal personal, y lo mismo de los canales y grupos públicos a los que apuntan. La biografía y la descripción del canal se leen, no se guardan.\n• También de los miembros nuevos: cómo entraron, cuál fue su primer mensaje y cuándo, y a qué canales públicos y sitios web apuntan, para aprender cuáles anuncian los spammers.\n• Donde un grupo compara las publicaciones de miembros nuevos con las eliminadas: números que un modelo calcula a partir de los mensajes e imágenes de los miembros nuevos y de las publicaciones por las que alguien fue eliminado (no el texto ni la imagen), para reconocer el mismo spam reescrito o editado. Los de publicaciones eliminadas se guardan sin la cuenta hasta 2 años.\n\nNunca guarda el texto de los mensajes, biografías ni imágenes.\n\nSe usa para proteger los grupos: para frenar el spam y los raids, y para aprender de las decisiones de los administradores qué permite cada grupo. Los administradores de cada grupo eligen cuánto tiempo se guarda con la cuenta de un miembro lo que notaron las comprobaciones: 90 días, 1 año (por defecto) o 2 años.</value>
   </string>
   <string key="cmdprivacy">
     <value>Qué guarda Enforcer sobre ti</value>
@@ -3713,5 +3713,41 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   </string>
   <string key="nsfwNoParts">
     <value>no se ven partes del cuerpo expuestas</value>
+  </string>
+  <string key="detectionAiButton">
+    <value>🧠 Como publicaciones eliminadas</value>
+  </string>
+  <string key="aiMenu">
+    <value>🧠 Como publicaciones eliminadas\nEnforcer compara los mensajes e imágenes de los miembros nuevos con los que hicieron que alguien fuera eliminado: aquí, y spam o estafas eliminados en otros grupos. Un modelo de texto y uno de imágenes en el propio servidor de Enforcer convierten cada uno en números; solo se guardan esos números, nunca el texto ni la imagen. Los admins y los miembros establecidos nunca se revisan.\n\nDesactivado: no se envía nada a los modelos.\nObservando: lo que encuentra se registra para ajustarlo; no se actúa contra nadie ni se reporta.\nActivo: cuenta para la puntuación del miembro como las demás señales.</value>
+  </string>
+  <string key="aiTextButton">
+    <value>Mensajes</value>
+  </string>
+  <string key="aiImageButton">
+    <value>Imágenes</value>
+  </string>
+  <string key="aiMode_watch">
+    <value>👁 Observando</value>
+  </string>
+  <string key="aiMode_live">
+    <value>Activo</value>
+  </string>
+  <string key="menuInfo_aiText">
+    <value>Los mensajes de 20 letras o más de los miembros nuevos se comparan con mensajes por los que alguien fue baneado, expulsado o borrado, también reescritos o traducidos.</value>
+  </string>
+  <string key="menuInfo_aiImage">
+    <value>Las fotos, stickers y vistas previas de GIF de los miembros nuevos se comparan con los archivos por los que alguien fue eliminado y con los archivos prohibidos aquí, para ver copias editadas.</value>
+  </string>
+  <string key="similarTextLine">
+    <value>mensaje {0} parecido a uno por el que se eliminó a un miembro {1}</value>
+  </string>
+  <string key="similarImageLine">
+    <value>imagen {0} parecida a una por la que se eliminó a un miembro {1}</value>
+  </string>
+  <string key="similarHere">
+    <value>aquí</value>
+  </string>
+  <string key="similarElsewhere">
+    <value>en otro grupo</value>
   </string>
 </strings>
