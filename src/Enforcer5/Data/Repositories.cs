@@ -78,6 +78,10 @@ namespace Enforcer5.Data
         internal static IImageScoreRepository MediaScores { get; set; } =
             new PostgresImageScoreRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL with pgvector. Text and image vectors for similar_to_banned (Detection/SimilarToBanned, Detection/Ml).
+        internal static IEmbeddingRepository Embeddings { get; set; } =
+            new PostgresEmbeddingRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL. New members' features, what they pointed at, reputation, retention (Detection/MemberData, Reputation).
         internal static IDetectionDataRepository DetectionData { get; set; } =
             new PostgresDetectionDataRepository(() => Storage.PostgresStorage.Database);

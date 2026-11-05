@@ -268,10 +268,13 @@ namespace Enforcer5.Detection.Images
             return score;
         }
 
-        /// <summary>The file's bytes; null when Telegram refuses it (gone, too large) or it is over <see cref="MaxBytes"/>.</summary>
-        private static async Task<byte[]> DownloadAsync(string fileId, CancellationToken cancel)
+        /// <summary>
+        /// The file's bytes; null when Telegram refuses it (gone, too large) or it is over <paramref name="maxBytes"/>
+        /// (<see cref="MaxBytes"/> when not given). Also used by the embeddings (<see cref="Ml.Embeddings"/>).
+        /// </summary>
+        internal static async Task<byte[]> DownloadAsync(string fileId, CancellationToken cancel, long maxBytes = MaxBytes)
         {
-            await using var content = new LimitedStream(MaxBytes);
+            await using var content = new LimitedStream(maxBytes);
             try
             {
                 await Bot.Files.DownloadAsync(fileId, content, cancel);

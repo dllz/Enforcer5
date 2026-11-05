@@ -125,6 +125,8 @@ namespace Enforcer5
             Detection.BotGuard.Start(Bot.ShutdownToken);
             // The NSFW models, when NsfwModelPath names them (Detection/Images).
             Detection.Images.ImageScans.Start(Bot.ShutdownToken);
+            // The model service for text and image vectors, when MlServiceUrl is set (Detection/Ml).
+            Detection.Ml.Embeddings.Start();
             // Says when a background queue stops moving (Helpers/QueueStatus).
             QueueStatus.Start(Bot.ShutdownToken);
             // Data recovered after a data loss: offered to each group's admins once a dev releases it.
