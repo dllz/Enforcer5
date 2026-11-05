@@ -2724,4 +2724,7 @@
   <string key="hcommandqueues">
     <value>Yalnızca geliştiriciler. Her arka plan kuyruğunu gösterir (görseller, profil sorguları, bahsetme sorguları, geçmiş kayıtları): kaç öğe beklediğini, neyle ve ne zamandan beri uğraştığını ve en son ne zaman bir öğeyi bitirdiğini. 2 dakika takılı kalan bir kuyruk hata sohbetine de bildirilir.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Yalnızca geliştiriciler. Bir fotoğrafa, çıkartmaya, GIF'e, videoya veya görsel dosyasına /{0} ile yanıt ver: bot onu NSFW kontrolü gibi puanlar ve puanları ile işaretlenip işaretlenmeyeceğini söyler. Hiçbir şey silinmez, bildirilmez veya kaydedilmez.</value>
+  </string>
 </strings>

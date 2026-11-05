@@ -398,6 +398,34 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             Assert.AreEqual(0.95, (await group).Nsfw);
         }
 
+        [TestMethod]
+        public async Task NsfwTest_ScoresTheRepliedImage_AndDoesNothingElse()
+        {
+            await using var chat = await StartAsync(images: false, profile: false);
+            var dev = chat.Add("Dev", id: Models.Constants.Devs[0]);
+            var member = chat.Add("Member");
+            var bad = await chat.PostAsync(Sticker(chat, member, "peach", "genitals"));
+            var fine = await chat.PostAsync(Photo(chat, member, "cat", "a cat"));
+
+            await chat.SendAsync(dev, "/nsfwtest", bad);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(10));
+            await chat.SendAsync(dev, "/nsfwtest", fine);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(10));
+            await chat.SendAsync(dev, "/nsfwtest");
+
+            var replies = chat.Replies.Where(r => r.Contains("Flagged") || r.Contains("Passes") || r.Contains("Reply to")).ToList();
+            Assert.AreEqual(3, replies.Count, string.Join("\n---\n", chat.Replies));
+            StringAssert.Contains(replies[0], "🔞 <b>Flagged</b>\nViT: 95% NSFW (flags at 90%)\nNudeNet: male genitalia exposed 92% (named)");
+            StringAssert.Contains(replies[0], "the sticker, <code>u-peach</code>");
+            StringAssert.Contains(replies[1], "✅ <b>Passes</b>\nViT: 1% NSFW");
+            StringAssert.Contains(replies[1], "<code>u-cat</code>", "the large size of the photo");
+            StringAssert.Contains(replies[2], "Reply to a photo");
+            Assert.IsFalse(Deleted(chat, member, bad), "nothing is done");
+            Assert.AreEqual(0, (await Detections(chat)).Length);
+            Assert.AreEqual(0, Reports(chat, dev).Length);
+            AssertNoErrors(chat);
+        }
+
         /// <summary>Keeps the order images were scored in.</summary>
         private sealed class OrderModel : INsfwModel
         {

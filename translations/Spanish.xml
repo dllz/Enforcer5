@@ -3770,4 +3770,7 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="hcommandqueues">
     <value>Solo desarrolladores. Muestra cada cola en segundo plano (imágenes, consultas de perfil, consultas de menciones, escrituras del historial): cuántos elementos esperan, en qué trabaja y desde cuándo, y cuándo terminó uno por última vez. Una cola atascada 2 minutos también se informa al chat de errores.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Solo desarrolladores. Responde con /{0} a una foto, sticker, GIF, vídeo o archivo de imagen: el bot lo puntúa como lo haría la detección NSFW y responde con las puntuaciones y si se marcaría. No se borra, reporta ni registra nada.</value>
+  </string>
 </strings>

@@ -2796,4 +2796,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="hcommandqueues">
     <value>Nur für Entwickler. Zeigt jede Hintergrund-Warteschlange (Bilder, Profilabfragen, Erwähnungsabfragen, Verlaufseinträge): wie viele Einträge warten, woran sie gerade arbeitet und seit wann, und wann sie zuletzt einen fertig hatte. Eine Warteschlange, die 2 Minuten hängt, wird auch an den Fehler-Chat gemeldet.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Nur für Entwickler. Antworte mit /{0} auf ein Foto, einen Sticker, ein GIF, ein Video oder eine Bilddatei: Der Bot bewertet es wie die NSFW-Prüfung und antwortet mit den Werten und ob es erkannt würde. Nichts wird gelöscht, gemeldet oder gespeichert.</value>
+  </string>
 </strings>

@@ -3751,4 +3751,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="hcommandqueues">
     <value>Devs only. Shows each background queue (images, profile lookups, mention lookups, history writes): how many items wait, what it is working on and since when, and when it last finished one. A queue stuck for 2 minutes is also reported to the error chat.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Devs only. Reply to a photo, sticker, GIF, video or image file with /{0}: the bot scores it as the NSFW check would and answers with the scores and whether it would be flagged. Nothing is deleted, reported or recorded.</value>
+  </string>
 </strings>

@@ -57,6 +57,50 @@ namespace Enforcer5
         }
     
         /// <summary>
+        /// /nsfwtest, devs only (Daniel, 2026-11-05): reply to a photo, sticker, GIF, video or image file and the bot scores it as
+        /// the NSFW check would (the same image of the post, the same models and thresholds) and answers with the scores and
+        /// whether it would be flagged. Nothing is done: no delete, no report, no detection. Works in groups and in private.
+        /// </summary>
+        [Command(Trigger = "nsfwtest", DevOnly = true, Description = "Reply to an image: its NSFW scores, and whether it would be flagged")]
+        public static void NsfwTest(Update update, string[] args)
+        {
+            if (!ImageScans.Enabled)
+            {
+                Bot.SendReply("The NSFW models are not loaded (NsfwModelPath).", update);
+                return;
+            }
+            var picked = NsfwSigns.Pick(update.Message.ReplyToMessage);
+            if (picked == null)
+            {
+                Bot.SendReply("Reply to a photo, sticker, GIF, video or image file.", update);
+                return;
+            }
+            Bot.Dispatch(async () =>
+            {
+                var score = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(picked.UniqueId, picked.FileId, picked.Kind));
+                Bot.SendReply(NsfwTestText(picked, score, NsfwThresholds.Current), update);
+            }, "NsfwTest");
+        }
+
+        /// <summary>The answer to /nsfwtest. Pure, for tests.</summary>
+        internal static string NsfwTestText(NsfwSigns.Picked picked, NsfwScore score, NsfwThresholds thresholds)
+        {
+            static string Percent(double v) => Math.Round(v * 100).ToString(System.Globalization.CultureInfo.InvariantCulture) + "%";
+            if (score == null)
+                return $"Could not score this {picked.Kind}: Telegram would not give the file, it is over 10 MB, or it took over " +
+                       $"{ImageScans.ImageLimit.TotalSeconds:0} s.";
+            var parts = score.Parts.OrderByDescending(p => p.Value)
+                .Select(p => $"{p.Key.ToLowerInvariant().Replace('_', ' ')} {Percent(p.Value)}" + (p.Value >= thresholds.Part ? " (named)" : ""))
+                .ToList();
+            return (score.Flagged(thresholds) ? "🔞 <b>Flagged</b>" : "✅ <b>Passes</b>") +
+                   $"\nViT: {Percent(score.Nsfw)} NSFW (flags at {Percent(thresholds.Nsfw)})" +
+                   $"\nNudeNet: {(parts.Count == 0 ? "no exposed body parts" : string.Join(", ", parts))}" +
+                   $" (named in a report from {Percent(thresholds.Part)})" +
+                   $"\nScored: the {picked.Kind}{(picked.Kind == "thumbnail" ? " (the preview of a GIF or video)" : "")}, " +
+                   $"<code>{picked.UniqueId.FormatHTML()}</code>";
+        }
+
+        /// <summary>
         /// /queues, devs only (2026-11-05): every queue (Helpers/QueueStatus): the background lookups and writes, the
         /// enforcement queue by why its jobs wait, the update queue, the dispatch gates, log channel posts and the buffers;
         /// how much waits, what moves and since when. ⚠️ marks one the watchdog calls stuck.

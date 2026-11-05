@@ -2741,4 +2741,7 @@
   <string key="hcommandqueues">
     <value>Solo sviluppatori. Mostra ogni coda in background (immagini, ricerche di profili, ricerche di menzioni, scritture dello storico): quanti elementi attendono, su cosa sta lavorando e da quando, e quando ne ha finito uno l'ultima volta. Una coda bloccata da 2 minuti viene segnalata anche alla chat degli errori.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Solo sviluppatori. Rispondi con /{0} a una foto, uno sticker, una GIF, un video o un file immagine: il bot lo valuta come farebbe il controllo NSFW e risponde con i punteggi e se verrebbe segnalato. Nulla viene eliminato, segnalato o registrato.</value>
+  </string>
 </strings>

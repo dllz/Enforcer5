@@ -2977,4 +2977,7 @@
   <string key="hcommandqueues">
     <value>Khusus pengembang. Menampilkan setiap antrean latar belakang (gambar, pencarian profil, pencarian mention, penulisan riwayat): berapa item menunggu, apa yang sedang dikerjakan dan sejak kapan, dan kapan terakhir menyelesaikan satu. Antrean yang macet 2 menit juga dilaporkan ke obrolan error.</value>
   </string>
+  <string key="hcommandnsfwtest">
+    <value>Khusus pengembang. Balas foto, stiker, GIF, video, atau file gambar dengan /{0}: bot menilainya seperti pemeriksaan NSFW dan menjawab dengan skornya dan apakah akan ditandai. Tidak ada yang dihapus, dilaporkan, atau dicatat.</value>
+  </string>
 </strings>
