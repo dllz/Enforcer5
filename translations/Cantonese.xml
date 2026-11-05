@@ -2320,4 +2320,7 @@ UPDATE LOG
   <string key="nsfwNoParts">
     <value>見唔到暴露嘅身體部位</value>
   </string>
+  <string key="hcommandqueues">
+    <value>只限開發者。顯示每個後台隊列（圖片、資料查詢、提及查詢、歷史寫入）：有幾多項喺度等、而家處理緊咩同埋由幾時開始、上次完成一項係幾時。卡住 2 分鐘嘅隊列都會報告去錯誤聊天。</value>
+  </string>
 </strings>

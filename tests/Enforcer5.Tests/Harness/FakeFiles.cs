@@ -12,10 +12,23 @@ namespace Enforcer5.Tests.Harness
     {
         private readonly ConcurrentDictionary<string, byte[]> _files = new();
 
+        private readonly ConcurrentDictionary<string, byte> _hanging = new();
+
         internal void Add(string fileId, byte[] content) => _files[fileId] = content;
+
+        /// <summary>A download of <paramref name="fileId"/> never ends: it only stops when it is cancelled.</summary>
+        internal void Hang(string fileId) => _hanging[fileId] = 0;
+
+        // Waits on the bot's clock (so the harness can move time on) until cancelled.
+        private static async Task HangAsync(CancellationToken cancel)
+        {
+            await Enforcer5.Helpers.Clock.WaitAsync(System.TimeSpan.FromDays(365), cancel);
+            throw new System.OperationCanceledException(cancel);
+        }
 
         public Task DownloadAsync(string fileId, Stream destination, CancellationToken cancellationToken = default)
         {
+            if (_hanging.ContainsKey(fileId)) return HangAsync(cancellationToken);
             if (!_files.TryGetValue(fileId, out var content))
                 throw new ApiRequestException("Bad Request: invalid file_id", 400);
             return destination.WriteAsync(content, 0, content.Length, cancellationToken);

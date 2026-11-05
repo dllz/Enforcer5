@@ -60,6 +60,9 @@ namespace Enforcer5.Raids
         private static bool _draining;
         private static int _lookups;
 
+        /// <summary>The queue's state for the watchdog and /queues.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Register("mention lookups");
+
         /// <summary>Telegram lookups made, for tests.</summary>
         internal static int TelegramLookups => _lookups;
 
@@ -124,10 +127,13 @@ namespace Enforcer5.Raids
                     if (Queue.Count == 0)
                     {
                         _draining = false;
+                        Status.Waiting(0);
                         return;
                     }
                     next = Queue.Dequeue();
+                    Status.Waiting(Queue.Count + 1);
                 }
+                Status.Started($"a mention in {next.Chat}");
                 MentionPlace place;
                 TimeSpan keep;
                 try
@@ -144,6 +150,7 @@ namespace Enforcer5.Raids
                 {
                     Cache[(next.Chat, next.Mention.Key)] = (place, Clock.UtcNow + keep);
                     Waiting.Remove((next.Chat, next.Mention.Key), out waiting);
+                    Status.Finished(Queue.Count);
                 }
                 waiting?.TrySetResult(place);
             }

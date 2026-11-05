@@ -2738,4 +2738,7 @@
   <string key="nsfwNoParts">
     <value>nessuna parte del corpo esposta rilevata</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Solo sviluppatori. Mostra ogni coda in background (immagini, ricerche di profili, ricerche di menzioni, scritture dello storico): quanti elementi attendono, su cosa sta lavorando e da quando, e quando ne ha finito uno l'ultima volta. Una coda bloccata da 2 minuti viene segnalata anche alla chat degli errori.</value>
+  </string>
 </strings>

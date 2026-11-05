@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Enforcer5.Data;
@@ -214,6 +215,7 @@ namespace Enforcer5.Detection
         /// <param name="chatId">The group it is for; null for none.</param>
         internal static async Task<ProfileScan> ScanAsync(long? chatId, long userId, string source)
         {
+            var bulk = source == "eval"; // a dev's scan waits behind the groups' images
             var model = ImageScans.Model;
             if (model == null) return null;
             var images = new List<(string Kind, string UniqueId, string FileId)>();
@@ -245,7 +247,7 @@ namespace Enforcer5.Detection
             }
 
             var unique = images.DistinctBy(i => i.UniqueId).ToList();
-            var scores = await ImageScans.AwaitAsync(Task.WhenAll(unique.Select(i => ImageScans.ScoreAsync(i.UniqueId, i.FileId, i.Kind))));
+            var scores = await ImageScans.AwaitAsync(Task.WhenAll(unique.Select(i => ImageScans.ScoreAsync(i.UniqueId, i.FileId, i.Kind, bulk))));
             var scored = unique.Zip(scores, (i, s) => s == null ? null : new ScoredImage(i.Kind, i.UniqueId, i.FileId, s))
                 .Where(s => s != null).ToList();
             var thresholds = NsfwThresholds.Current;
@@ -261,43 +263,143 @@ namespace Enforcer5.Detection
 
         // ------------------------------------------------------------------ evals
 
+        /// <summary>How long one member's look may take in a scan before it is skipped.</summary>
+        internal static TimeSpan MemberLimit = TimeSpan.FromMinutes(5);
+
+        /// <summary>A progress line to the dev every this many members.</summary>
+        internal const int ProgressEvery = 25;
+
+        private static int _scanning;
+
+        /// <summary>A /nsfwscan is running (one at a time).</summary>
+        internal static bool Scanning => Volatile.Read(ref _scanning) != 0;
+
         /// <summary>
         /// /nsfwscan: looks at the profiles of <paramref name="chatId"/>'s members labelled bad (up to <paramref name="bad"/>) and
         /// of up to <paramref name="others"/> members who posted and never were, one after another, and tells
         /// <paramref name="devId"/> how many each way were flagged. Nothing is done to anyone; every look is kept
-        /// (<c>profile_scans</c>, source eval) for the analysis.
+        /// (<c>profile_scans</c>, source eval) for the analysis. One at a time; a progress line every <see cref="ProgressEvery"/>
+        /// members; a member taking over <see cref="MemberLimit"/> is skipped; the dev always gets a last message, also when it
+        /// fails (2026-11-05: a scan stuck on one image never said anything again). Its images wait behind the groups'.
+        /// False when another scan is running.
         /// </summary>
-        internal static async Task EvalAsync(long chatId, long devId, int bad, int others)
+        internal static bool TryStartEval(long chatId, long devId, int bad, int others)
         {
+            if (Interlocked.CompareExchange(ref _scanning, 1, 0) != 0) return false;
+            Bot.Dispatch(async () =>
+            {
+                try
+                {
+                    await EvalAsync(chatId, devId, bad, others);
+                }
+                finally
+                {
+                    Volatile.Write(ref _scanning, 0);
+                }
+            }, "NsfwScan");
+            return true;
+        }
+
+        private sealed class EvalCount
+        {
+            internal int Total, Scanned, Flagged, WithImages, Skipped;
+
+            public override string ToString() =>
+                $"{Flagged} flagged of {Scanned} ({WithImages} with images" + (Skipped > 0 ? $", {Skipped} skipped" : "") + ")";
+        }
+
+        private static async Task EvalAsync(long chatId, long devId, int bad, int others)
+        {
+            var badCount = new EvalCount();
+            var otherCount = new EvalCount();
+            var thresholds = NsfwThresholds.Current;
+            string ending = null;
+            var started = Clock.UtcNow;
             try
             {
                 var (badIds, otherIds) = await Repositories.MediaScores.EvalMembersAsync(chatId, bad, others);
+                badCount.Total = badIds.Count;
+                otherCount.Total = otherIds.Count;
                 Bot.Send($"Scanning the profiles of {badIds.Count} members labelled bad and {otherIds.Count} others in <code>{chatId}</code>. " +
-                         "I will tell you when it is done.", devId);
-                var thresholds = NsfwThresholds.Current;
-                async Task<(int Scanned, int Flagged, int Photos)> Run(IReadOnlyList<long> ids)
+                         $"A line every {ProgressEvery} members; I will tell you when it is done.", devId);
+                LogHelper.Info($"NSFW scan of {chatId}: {badIds.Count} bad, {otherIds.Count} others");
+                var done = 0;
+                async Task Run(IReadOnlyList<long> ids, EvalCount count)
                 {
-                    int scanned = 0, flagged = 0, withPhotos = 0;
                     foreach (var id in ids)
                     {
-                        var scan = await ScanAsync(chatId, id, "eval");
-                        if (scan == null) continue;
-                        scanned++;
-                        if (scan.Photos + scan.ChannelPosts > 0) withPhotos++;
-                        if (scan.Flagged != null) flagged++;
+                        // Dispatched work of its own: waited for on the clock, so the harness must see it as running.
+                        var result = new TaskCompletionSource<ProfileScan>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var member = id;
+                        Bot.Dispatch(async () =>
+                        {
+                            try
+                            {
+                                result.TrySetResult(await ScanAsync(chatId, member, "eval"));
+                            }
+                            catch (Exception e)
+                            {
+                                result.TrySetException(e);
+                            }
+                        }, "NsfwScan.Member");
+                        var scanning = result.Task;
+                        if (!await Clock.WaitForAsync(scanning, MemberLimit))
+                        {
+                            count.Skipped++;
+                            LogHelper.Info($"NSFW scan of {chatId}: member {id} took over {MemberLimit.TotalMinutes:0} min, skipped");
+                            _ = scanning.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                        }
+                        else
+                        {
+                            ProfileScan scan = null;
+                            try
+                            {
+                                scan = await scanning;
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorReporter.Report(e, $"NSFW scan of {chatId}: member {id}");
+                            }
+                            if (scan == null) count.Skipped++;
+                            else
+                            {
+                                count.Scanned++;
+                                if (scan.Photos + scan.ChannelPosts > 0) count.WithImages++;
+                                if (scan.Flagged != null) count.Flagged++;
+                            }
+                        }
+                        if (++done % ProgressEvery == 0)
+                        {
+                            var progress = $"{done} of {badIds.Count + otherIds.Count} members: bad {badCount}; others {otherCount}";
+                            LogHelper.Info($"NSFW scan of {chatId}: {progress}");
+                            Bot.Send($"NSFW scan of <code>{chatId}</code>: {progress}", devId);
+                        }
                     }
-                    return (scanned, flagged, withPhotos);
                 }
-                var badResult = await Run(badIds);
-                var otherResult = await Run(otherIds);
-                Bot.Send($"<b>NSFW profile scan</b> of <code>{chatId}</code> (flagged at nsfw {thresholds.Nsfw:0.00})\n" +
-                         $"Labelled bad: {badResult.Flagged} flagged of {badResult.Scanned} ({badResult.Photos} with images)\n" +
-                         $"Never labelled: {otherResult.Flagged} flagged of {otherResult.Scanned} ({otherResult.Photos} with images)\n" +
-                         "Every score is in profile_scans (source eval).", devId);
+                await Run(badIds, badCount);
+                await Run(otherIds, otherCount);
             }
             catch (Exception e)
             {
+                ending = $"Stopped by an error: {e.GetBaseException().Message.FormatHTML()}";
                 ErrorReporter.Report(e, $"NSFW profile scan of {chatId}");
+            }
+            finally
+            {
+                var text = $"<b>NSFW profile scan</b> of <code>{chatId}</code> (flagged at nsfw {thresholds.Nsfw:0.00}), " +
+                           $"{(int)(Clock.UtcNow - started).TotalMinutes} min\n" +
+                           $"Labelled bad: {badCount} of {badCount.Total}\n" +
+                           $"Never labelled: {otherCount} of {otherCount.Total}\n" +
+                           (ending ?? "Every score is in profile_scans (source eval).");
+                LogHelper.Info($"NSFW scan of {chatId} ended: bad {badCount}; others {otherCount}{(ending != null ? "; " + ending : "")}");
+                try
+                {
+                    Bot.Send(text, devId);
+                }
+                catch (Exception e)
+                {
+                    ErrorReporter.Report(e, $"Sending the end of the NSFW scan of {chatId}");
+                }
             }
         }
 
@@ -319,6 +421,11 @@ namespace Enforcer5.Detection
             return claimed;
         }
 
-        internal static void ResetForTests() => Looked.Clear();
+        internal static void ResetForTests()
+        {
+            Looked.Clear();
+            Volatile.Write(ref _scanning, 0);
+            MemberLimit = TimeSpan.FromMinutes(5);
+        }
     }
 }

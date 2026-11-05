@@ -60,6 +60,9 @@ namespace Enforcer5.Detection
         private static bool _draining;
         private static int _lookups;
 
+        /// <summary>The queue's state for the watchdog and /queues.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Register("profile lookups");
+
         /// <summary>Telegram calls made, for tests.</summary>
         internal static int Lookups => _lookups;
 
@@ -121,10 +124,13 @@ namespace Enforcer5.Detection
                     if (Queue.Count == 0)
                     {
                         _draining = false;
+                        Status.Waiting(0);
                         return;
                     }
                     next = Queue.Dequeue();
+                    Status.Waiting(Queue.Count + 1);
                 }
+                Status.Started($"{next.Kind}{next.Value}");
                 object value = null;
                 var keep = FailedFor;
                 (object Value, DateTime Until) known = default;
@@ -157,6 +163,7 @@ namespace Enforcer5.Detection
                         if (channel.Username != null) Cache[Key.Name(channel.Username)] = (value, until);
                     }
                     Waiting.Remove(next, out waiting);
+                    Status.Finished(Queue.Count);
                 }
                 waiting?.TrySetResult(value);
             }

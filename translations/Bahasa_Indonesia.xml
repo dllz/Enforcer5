@@ -2974,4 +2974,7 @@
   <string key="nsfwNoParts">
     <value>tidak terlihat bagian tubuh yang terbuka</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Khusus pengembang. Menampilkan setiap antrean latar belakang (gambar, pencarian profil, pencarian mention, penulisan riwayat): berapa item menunggu, apa yang sedang dikerjakan dan sejak kapan, dan kapan terakhir menyelesaikan satu. Antrean yang macet 2 menit juga dilaporkan ke obrolan error.</value>
+  </string>
 </strings>

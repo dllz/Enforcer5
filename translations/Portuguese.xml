@@ -2727,4 +2727,7 @@
   <string key="nsfwNoParts">
     <value>nenhuma parte do corpo exposta detectada</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Só desenvolvedores. Mostra cada fila em segundo plano (imagens, consultas de perfil, consultas de menções, gravações do histórico): quantos itens esperam, em que está trabalhando e desde quando, e quando terminou um pela última vez. Uma fila travada por 2 minutos também é informada ao chat de erros.</value>
+  </string>
 </strings>

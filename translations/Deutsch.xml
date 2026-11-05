@@ -2793,4 +2793,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="nsfwNoParts">
     <value>keine entblößten Körperteile erkannt</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Nur für Entwickler. Zeigt jede Hintergrund-Warteschlange (Bilder, Profilabfragen, Erwähnungsabfragen, Verlaufseinträge): wie viele Einträge warten, woran sie gerade arbeitet und seit wann, und wann sie zuletzt einen fertig hatte. Eine Warteschlange, die 2 Minuten hängt, wird auch an den Fehler-Chat gemeldet.</value>
+  </string>
 </strings>

@@ -31,6 +31,9 @@ namespace Enforcer5.Helpers
 
         private static int _started;
 
+        /// <summary>The writer's state for the watchdog and /queues.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Register("history");
+
         /// <summary>True when a write would be made. Settable so tests can turn it on.</summary>
         internal static Func<bool> Enabled { get; set; } = () => PostgresStorage.Ready;
 
@@ -51,6 +54,7 @@ namespace Enforcer5.Helpers
                 EnsureWorker();
                 if (!_queue.Writer.TryWrite(() => RunWithRetry(write, what)))
                     ErrorReporter.Report($"History queue full ({QueueDepth}); dropped: {what}");
+                else Status.Waiting(_queue.Reader.Count);
             }
             catch (Exception e)
             {
@@ -90,6 +94,7 @@ namespace Enforcer5.Helpers
             {
                 await foreach (var write in _queue.Reader.ReadAllAsync())
                 {
+                    Status.Started("a history write");
                     try
                     {
                         await write();
@@ -98,6 +103,7 @@ namespace Enforcer5.Helpers
                     {
                         ErrorReporter.Report(e, "History worker");
                     }
+                    Status.Finished(_queue.Reader.Count);
                 }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap()
                 .ContinueWith(t => ErrorReporter.Report(t.Exception, "History worker stopped"),

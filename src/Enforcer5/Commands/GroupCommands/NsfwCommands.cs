@@ -52,8 +52,19 @@ namespace Enforcer5
             }
             var bad = (int)Math.Clamp(rest.ElementAtOrDefault(0) is var b && b > 0 ? b : 100, 1, 1000);
             var others = (int)Math.Clamp(rest.Count > 1 ? rest[1] : 200, 0, 1000);
-            var devId = update.Message.From.Id;
-            Bot.Dispatch(() => NsfwSigns.EvalAsync(chatId, devId, bad, others), "NsfwScan");
+            if (!NsfwSigns.TryStartEval(chatId, update.Message.From.Id, bad, others))
+                Bot.SendReply("A scan is already running; I will tell you when it is done. /queues shows where it is.", update);
+        }
+    
+        /// <summary>/queues, devs only (2026-11-05): each background queue, how much waits, what it works on and since when.</summary>
+        [Command(Trigger = "queues", DevOnly = true, Description = "The background queues: waiting, working on, last progress")]
+        public static void Queues(Update update, string[] args)
+        {
+            var lines = QueueStatus.Queues.Select(q => q.Read()).Select(q => (q.Stuck ? "⚠️ " : "• ") + q.ToString().FormatHTML());
+            var text = "<b>Background queues</b>\n" + string.Join("\n", lines);
+            if (NsfwSigns.Scanning) text += "\n\nAn NSFW scan is running.";
+            if (ImageScans.TimedOut > 0) text += $"\nImages given up since the start: {ImageScans.TimedOut}";
+            Bot.SendReply(text, update);
         }
     }
 }

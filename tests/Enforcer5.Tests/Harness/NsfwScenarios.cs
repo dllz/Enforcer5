@@ -284,5 +284,134 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             Assert.AreEqual(0, (await Detections(chat)).Length, "nothing done to anyone");
             AssertNoErrors(chat);
         }
+
+        [TestMethod]
+        public async Task ADownloadThatNeverEnds_IsGivenUp_AndTheQueueMovesOn()
+        {
+            // 2026-11-05: one download that never ended stopped the queue, and the check in every group, until a restart.
+            await using var chat = await StartAsync(profile: false);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var stuck = Sticker(chat, member, "stuck", "whatever");
+            chat.Files.Hang("f-stuck");
+
+            chat.Deliver(stuck);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(1));
+            var bad = Sticker(chat, member, "peach", "genitals");
+            chat.Deliver(bad);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(29));
+            Assert.IsFalse(Deleted(chat, member, bad), "still behind the stuck one");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(31));
+            await chat.CompleteAsync();
+
+            Assert.IsTrue(Deleted(chat, member, bad), "the queue moved on");
+            Assert.IsFalse(Deleted(chat, member, stuck));
+            Assert.AreEqual(1, ImageScans.TimedOut);
+            Assert.AreEqual(1, chat.Errors.Count(e => e.Contains("gave no answer in 60 s")), string.Join("\n", chat.Errors));
+            Assert.AreEqual(1, chat.Errors.Count);
+        }
+
+        [TestMethod]
+        public async Task AQueueThatStopsMoving_IsReportedOnce_AndAgainWhenItMoves()
+        {
+            await using var chat = await StartAsync(profile: false);
+            var member = chat.Add("Member");
+            ImageScans.ImageLimit = TimeSpan.FromMinutes(10);
+            chat.Files.Hang("f-stuck");
+            chat.Deliver(Sticker(chat, member, "stuck", "whatever"));
+            chat.Deliver(Sticker(chat, member, "next", "a cat"));
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(1));
+            QueueStatus.Report();
+            Assert.IsFalse(chat.Errors.Any(e => e.Contains("Queue stuck")), "not yet");
+
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(2));
+            QueueStatus.Report();
+            QueueStatus.Report();
+            var stuck = chat.Errors.Single(e => e.Contains("Queue stuck: images"));
+            StringAssert.Contains(stuck, "images: 2 waiting");
+            StringAssert.Contains(stuck, "on sticker u-stuck for 3 min");
+            var queues = QueueStatus.Queues.Single(q => q.Name == "images").Read();
+            Assert.IsTrue(queues.Stuck);
+
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(8)); // given up at 10 min
+            QueueStatus.Report();
+            Assert.IsTrue(chat.Errors.Any(e => e.Contains("Queue moving again: images")));
+        }
+
+        [TestMethod]
+        public async Task AScan_SkipsAMemberThatTakesTooLong_RefusesASecondScan_AndAlwaysEnds()
+        {
+            await using var chat = await StartAsync(images: false, profile: false);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var dev = chat.Add("Dev", id: Models.Constants.Devs[0]);
+            var slow = chat.Add("Slow");
+            chat.Telegram.SetProfilePhotos(slow.Id, new[] { File(chat, "h1", "x") });
+            chat.Files.Hang("f-h1");
+            var spammer = chat.Add("Spammer");
+            chat.Telegram.SetProfilePhotos(spammer.Id, new[] { File(chat, "s1", "nude") });
+            await chat.SendAsync(slow, "hi");
+            await chat.SendAsync(spammer, "buy now");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
+            await chat.SendAsync(admin, "/ban " + slow.Id);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
+            await chat.SendAsync(admin, "/ban " + spammer.Id);
+            await Enforcer5.Helpers.HistoryWriter.FlushAsync();
+            ImageScans.ImageLimit = TimeSpan.FromMinutes(10);
+            NsfwSigns.MemberLimit = TimeSpan.FromMinutes(2);
+
+            Assert.IsTrue(NsfwSigns.TryStartEval(chat.ChatId, dev.Id, 10, 0));
+            Assert.IsFalse(NsfwSigns.TryStartEval(chat.ChatId, dev.Id, 10, 0), "one at a time");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(15));
+            await chat.CompleteAsync();
+
+            var summary = chat.Telegram.SentMessages.Last(m => m.Chat.Id == dev.Id && m.Text?.Contains("NSFW profile scan") == true).Text;
+            StringAssert.Contains(summary, "Labelled bad: 1 flagged of 1 (1 with images, 1 skipped) of 2");
+            Assert.IsFalse(NsfwSigns.Scanning);
+            Assert.IsTrue(NsfwSigns.TryStartEval(chat.ChatId, dev.Id, 0, 0), "free again");
+            await chat.CompleteAsync();
+        }
+
+        [TestMethod]
+        public async Task AGroupsImage_GoesAheadOfAScan()
+        {
+            await using var chat = await StartAsync(profile: false);
+            var model = new OrderModel(new FakeModel());
+            ImageScans.Model = model;
+            ImageScans.ImageLimit = TimeSpan.FromSeconds(5);
+            chat.Files.Hang("f-h");
+            File(chat, "b1", "a cat");
+            File(chat, "b2", "a dog");
+            File(chat, "g", "genitals");
+
+            var first = ImageScans.ScoreAsync("u-h", "f-h", "profile_photo", bulk: true);
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(1)); // the queue is on the stuck one
+            var scan1 = ImageScans.ScoreAsync("u-b1", "f-b1", "profile_photo", bulk: true);
+            var scan2 = ImageScans.ScoreAsync("u-b2", "f-b2", "profile_photo", bulk: true);
+            var group = ImageScans.ScoreAsync("u-g", "f-g", "sticker");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(10));
+
+            CollectionAssert.AreEqual(new[] { "genitals", "a cat", "a dog" }, model.Order);
+            Assert.IsNull(await first);
+            Assert.IsNotNull(await scan1);
+            Assert.IsNotNull(await scan2);
+            Assert.AreEqual(0.95, (await group).Nsfw);
+        }
+
+        /// <summary>Keeps the order images were scored in.</summary>
+        private sealed class OrderModel : INsfwModel
+        {
+            private readonly INsfwModel _inner;
+            internal readonly System.Collections.Generic.List<string> Order = new();
+
+            internal OrderModel(INsfwModel inner) => _inner = inner;
+
+            public string Version => _inner.Version;
+
+            public NsfwScore Score(byte[] image)
+            {
+                lock (Order) Order.Add(Encoding.UTF8.GetString(image));
+                return _inner.Score(image);
+            }
+        }
     }
 }

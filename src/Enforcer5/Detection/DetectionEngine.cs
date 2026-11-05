@@ -324,6 +324,7 @@ namespace Enforcer5.Detection
             BotGuard.ResetForTests();
             NsfwSigns.ResetForTests();
             Images.ImageScans.ResetForTests();
+            QueueStatus.ResetForTests();
         }
     }
 }

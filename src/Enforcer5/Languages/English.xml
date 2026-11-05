@@ -3748,4 +3748,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="nsfwNoParts">
     <value>no exposed body parts seen</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Devs only. Shows each background queue (images, profile lookups, mention lookups, history writes): how many items wait, what it is working on and since when, and when it last finished one. A queue stuck for 2 minutes is also reported to the error chat.</value>
+  </string>
 </strings>

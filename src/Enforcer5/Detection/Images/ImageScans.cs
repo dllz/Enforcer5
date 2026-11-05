@@ -33,9 +33,25 @@ namespace Enforcer5.Detection.Images
         private static readonly Dictionary<string, NsfwScore> Known = new(StringComparer.Ordinal);
         private static readonly Queue<string> KnownOrder = new();
         private static readonly Dictionary<string, TaskCompletionSource<NsfwScore>> Waiting = new(StringComparer.Ordinal);
-        private static readonly Queue<(string UniqueId, string FileId, string Kind)> Queue = new();
+        private sealed record Item(string UniqueId, string FileId, string Kind);
+
+        // Two lanes: what groups are waiting on (posts, joins) always goes before the bulk of a dev's /nsfwscan.
+        private static readonly Queue<Item> Urgent = new();
+        private static readonly Queue<Item> Bulk = new();
+        private static readonly HashSet<string> InUrgent = new(StringComparer.Ordinal);
         private static bool _draining;
         private static int _scored;
+        private static int _timedOut;
+
+        /// <summary>How long one image may take, download and scoring together, before it is given up (2026-11-05: one
+        /// download that never ended stopped the queue, and with it the check in every group, until a restart).</summary>
+        internal static TimeSpan ImageLimit = TimeSpan.FromSeconds(60);
+
+        /// <summary>Images given up after <see cref="ImageLimit"/>.</summary>
+        internal static int TimedOut => _timedOut;
+
+        /// <summary>The queue's state for the watchdog and /queues.</summary>
+        internal static readonly QueueStatus Status = QueueStatus.Register("images");
 
         /// <summary>The models; null while they are off. Replaced in tests.</summary>
         internal static INsfwModel Model { get; set; }
@@ -74,10 +90,11 @@ namespace Enforcer5.Detection.Images
 
         /// <summary>
         /// The scores of the image <paramref name="uniqueId"/>, downloaded by <paramref name="fileId"/> if it was never
-        /// scored; null when it could not be (off, queue full, too large, Telegram refused).
+        /// scored; null when it could not be (off, queue full, too large, Telegram refused, over <see cref="ImageLimit"/>).
         /// </summary>
         /// <param name="kind">photo, sticker, thumbnail, profile_photo or channel_post: kept with the score.</param>
-        internal static Task<NsfwScore> ScoreAsync(string uniqueId, string fileId, string kind)
+        /// <param name="bulk">For a dev's scan: waits behind everything a group is waiting on.</param>
+        internal static Task<NsfwScore> ScoreAsync(string uniqueId, string fileId, string kind, bool bulk = false)
         {
             if (Model == null || string.IsNullOrEmpty(uniqueId) || string.IsNullOrEmpty(fileId)) return Task.FromResult<NsfwScore>(null);
             bool start;
@@ -85,11 +102,22 @@ namespace Enforcer5.Detection.Images
             lock (Lock)
             {
                 if (Known.TryGetValue(uniqueId, out var known)) return Task.FromResult(known);
-                if (Waiting.TryGetValue(uniqueId, out waiting)) return waiting.Task;
-                if (Queue.Count >= MaxWaiting) return Task.FromResult<NsfwScore>(null);
+                if (Waiting.TryGetValue(uniqueId, out waiting))
+                {
+                    // Waiting behind a scan, and now a group needs it: it goes ahead too (the later copy is skipped).
+                    if (!bulk && InUrgent.Add(uniqueId)) Urgent.Enqueue(new Item(uniqueId, fileId, kind));
+                    return waiting.Task;
+                }
+                if ((bulk ? Bulk : Urgent).Count >= MaxWaiting) return Task.FromResult<NsfwScore>(null);
                 waiting = new TaskCompletionSource<NsfwScore>(TaskCreationOptions.RunContinuationsAsynchronously);
                 Waiting[uniqueId] = waiting;
-                Queue.Enqueue((uniqueId, fileId, kind));
+                if (bulk) Bulk.Enqueue(new Item(uniqueId, fileId, kind));
+                else
+                {
+                    InUrgent.Add(uniqueId);
+                    Urgent.Enqueue(new Item(uniqueId, fileId, kind));
+                }
+                Status.Waiting(Waiting.Count);
                 start = !_draining;
                 _draining = true;
             }
@@ -104,36 +132,90 @@ namespace Enforcer5.Detection.Images
         {
             while (true)
             {
-                (string UniqueId, string FileId, string Kind) next;
+                Item next;
                 lock (Lock)
                 {
-                    if (Queue.Count == 0)
+                    next = null;
+                    while (next == null && (Urgent.Count > 0 || Bulk.Count > 0))
+                    {
+                        var item = Urgent.Count > 0 ? Urgent.Dequeue() : Bulk.Dequeue();
+                        InUrgent.Remove(item.UniqueId);
+                        // Done already (it was in both lanes).
+                        if (Waiting.ContainsKey(item.UniqueId)) next = item;
+                    }
+                    if (next == null)
                     {
                         _draining = false;
+                        Status.Waiting(0);
                         return;
                     }
-                    next = Queue.Dequeue();
                 }
-                NsfwScore score = null;
-                try
-                {
-                    score = await ScoreOneAsync(next.UniqueId, next.FileId, next.Kind);
-                }
-                catch (Exception e)
-                {
-                    ErrorReporter.Report(e, $"Scoring the image {next.UniqueId} ({next.Kind})");
-                }
+                Status.Started($"{next.Kind} {next.UniqueId}");
+                var score = await ScoreWithinLimitAsync(next);
                 TaskCompletionSource<NsfwScore> waiting;
                 lock (Lock)
                 {
                     if (score != null) Remember(next.UniqueId, score);
                     Waiting.Remove(next.UniqueId, out waiting);
+                    Status.Finished(Waiting.Count);
                 }
                 waiting?.TrySetResult(score);
             }
         }
 
-        private static async Task<NsfwScore> ScoreOneAsync(string uniqueId, string fileId, string kind)
+        /// <summary>
+        /// One image, given up after <see cref="ImageLimit"/> on the bot's clock: the download is cancelled (it honours the
+        /// token while reading the file too), and the queue moves on. Null when it failed or ran over.
+        /// </summary>
+        private static async Task<NsfwScore> ScoreWithinLimitAsync(Item item)
+        {
+            var cancel = new CancellationTokenSource();
+            // Dispatched work of its own, so the harness sees it running while the queue waits on the clock for it.
+            var result = new TaskCompletionSource<NsfwScore>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Bot.Dispatch(async () =>
+            {
+                try
+                {
+                    result.TrySetResult(await ScoreOneAsync(item.UniqueId, item.FileId, item.Kind, cancel.Token));
+                }
+                catch (Exception e)
+                {
+                    result.TrySetException(e);
+                }
+                finally
+                {
+                    cancel.Dispose();
+                }
+            }, "ImageScans.Image");
+            var work = result.Task;
+            if (!await Clock.WaitForAsync(work, ImageLimit))
+            {
+                try { cancel.Cancel(); } catch (ObjectDisposedException) { } // it ended just now
+                Interlocked.Increment(ref _timedOut);
+                var waiting = WaitingCount();
+                LogHelper.Info($"Image {item.Kind} {item.UniqueId}: given up after {ImageLimit.TotalSeconds:0} s, {waiting} waiting");
+                ErrorReporter.Report($"NSFW image queue: {item.Kind} {item.UniqueId} gave no answer in {ImageLimit.TotalSeconds:0} s; " +
+                                     $"skipped, {waiting} waiting");
+                // Whatever it still does, it ends quietly: its result is no longer wanted.
+                _ = work.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                return null;
+            }
+            try
+            {
+                return await work;
+            }
+            catch (Exception e) when (e is OperationCanceledException)
+            {
+                return null;
+            }
+            catch (Exception e)
+            {
+                ErrorReporter.Report(e, $"Scoring the image {item.UniqueId} ({item.Kind})");
+                return null;
+            }
+        }
+
+        private static async Task<NsfwScore> ScoreOneAsync(string uniqueId, string fileId, string kind, CancellationToken cancel)
         {
             var model = Model;
             if (model == null) return null;
@@ -150,7 +232,8 @@ namespace Enforcer5.Detection.Images
                 }
             }
             var started = Clock.UtcNow;
-            var image = await DownloadAsync(fileId);
+            var image = await DownloadAsync(fileId, cancel);
+            cancel.ThrowIfCancellationRequested();
             var downloaded = Clock.UtcNow;
             if (image == null)
             {
@@ -168,12 +251,12 @@ namespace Enforcer5.Detection.Images
         }
 
         /// <summary>The file's bytes; null when Telegram refuses it (gone, too large) or it is over <see cref="MaxBytes"/>.</summary>
-        private static async Task<byte[]> DownloadAsync(string fileId)
+        private static async Task<byte[]> DownloadAsync(string fileId, CancellationToken cancel)
         {
             await using var content = new LimitedStream(MaxBytes);
             try
             {
-                await Bot.Files.DownloadAsync(fileId, content);
+                await Bot.Files.DownloadAsync(fileId, content, cancel);
             }
             catch (LimitedStream.TooLargeException)
             {
@@ -211,9 +294,13 @@ namespace Enforcer5.Detection.Images
                 KnownOrder.Clear();
                 foreach (var w in Waiting.Values) w.TrySetResult(null);
                 Waiting.Clear();
-                Queue.Clear();
+                Urgent.Clear();
+                Bulk.Clear();
+                InUrgent.Clear();
                 _draining = false;
                 _scored = 0;
+                _timedOut = 0;
+                ImageLimit = TimeSpan.FromSeconds(60);
             }
         }
 

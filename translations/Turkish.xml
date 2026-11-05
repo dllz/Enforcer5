@@ -2721,4 +2721,7 @@
   <string key="nsfwNoParts">
     <value>açık vücut bölgesi görülmedi</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Yalnızca geliştiriciler. Her arka plan kuyruğunu gösterir (görseller, profil sorguları, bahsetme sorguları, geçmiş kayıtları): kaç öğe beklediğini, neyle ve ne zamandan beri uğraştığını ve en son ne zaman bir öğeyi bitirdiğini. 2 dakika takılı kalan bir kuyruk hata sohbetine de bildirilir.</value>
+  </string>
 </strings>

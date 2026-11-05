@@ -3767,4 +3767,7 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="nsfwNoParts">
     <value>no se ven partes del cuerpo expuestas</value>
   </string>
+  <string key="hcommandqueues">
+    <value>Solo desarrolladores. Muestra cada cola en segundo plano (imágenes, consultas de perfil, consultas de menciones, escrituras del historial): cuántos elementos esperan, en qué trabaja y desde cuándo, y cuándo terminó uno por última vez. Una cola atascada 2 minutos también se informa al chat de errores.</value>
+  </string>
 </strings>
