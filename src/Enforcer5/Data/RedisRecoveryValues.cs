@@ -10,7 +10,8 @@ namespace Enforcer5.Data
     /// The stored values a recovery item reads and sets (<see cref="RecoveryChange"/>): hash fields, set members
     /// ("true" or "false") and string keys in the bot's Redis, and the inline bot and sticker pack blocklists, which
     /// moved to the detection settings in PostgreSQL (types <c>inline</c> and <c>stickerset</c>, "true" or "false",
-    /// through their repositories). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
+    /// through their repositories), and the warn counts (<c>warns</c>, <c>prewarns</c>, <c>totalWarns</c>), which moved to
+    /// PostgreSQL with rollout step 12 (through <see cref="Repositories.Warns"/>). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
     /// ever get here.
     /// </summary>
     internal interface IRecoveryValues
@@ -18,8 +19,11 @@ namespace Enforcer5.Data
         /// <summary>The value now: null when there is none; "true" or "false" for a set member.</summary>
         Task<string> ReadAsync(RecoveryChange change);
 
-        /// <summary>Sets the value; null deletes it, "false" takes a set member out.</summary>
-        Task WriteAsync(RecoveryChange change, string value);
+        /// <summary>
+        /// Sets the value; null deletes it, "false" takes a set member out. <paramref name="actorId"/> is the admin who
+        /// applied it, for the warn history.
+        /// </summary>
+        Task WriteAsync(RecoveryChange change, string value, long? actorId = null);
     }
 
     internal sealed class RedisRecoveryValues : IRecoveryValues
@@ -39,8 +43,24 @@ namespace Enforcer5.Data
                 ? block
                 : throw new ArgumentException($"Not an inline bot block: {change.Field}");
 
+        /// <summary>The warn count a change is about, or null when it is not one.</summary>
+        private static WarnKind? WarnKindOf(RecoveryChange change) => Recovery.RecoveryFile.IsCount(change)
+            ? Recovery.RecoveryFile.Suffix(change.Key) switch { "warns" => WarnKind.Warn, "prewarns" => WarnKind.Prewarn, _ => null }
+            : null;
+
+        private static bool IsLifetime(RecoveryChange change) =>
+            Recovery.RecoveryFile.IsCount(change) && Recovery.RecoveryFile.Suffix(change.Key) == "totalWarns";
+
         public async Task<string> ReadAsync(RecoveryChange change)
         {
+            if (Recovery.RecoveryFile.IsCount(change))
+            {
+                var (chat, member) = (ChatOf(change), long.Parse(change.Field));
+                var count = WarnKindOf(change) is { } kind
+                    ? await Repositories.Warns.GetCountAsync(chat, kind, member)
+                    : (await Repositories.Warns.GetCountsAsync(chat, member)).Lifetime;
+                return count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
             var db = _db();
             switch (change.Type)
             {
@@ -62,8 +82,21 @@ namespace Enforcer5.Data
             }
         }
 
-        public async Task WriteAsync(RecoveryChange change, string value)
+        public async Task WriteAsync(RecoveryChange change, string value, long? actorId = null)
         {
+            if (Recovery.RecoveryFile.IsCount(change))
+            {
+                var (chat, member) = (ChatOf(change), long.Parse(change.Field));
+                var count = long.TryParse(value, out var n) ? Math.Max(0, n) : 0;
+                if (WarnKindOf(change) is { } kind)
+                {
+                    var op = Helpers.WarnHistory.Op(chat, member, kind, WarnOperation.Set, count, actorId, Recovery.RecoveryOffers.Reason);
+                    await Helpers.WarnHistory.ApplyAsync(Repositories.Warns, op);
+                }
+                else if (IsLifetime(change))
+                    await Repositories.Warns.SetLifetimeAsync(chat, member, count);
+                return;
+            }
             var db = _db();
             switch (change.Type)
             {

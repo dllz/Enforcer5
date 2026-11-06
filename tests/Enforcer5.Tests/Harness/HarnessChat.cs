@@ -182,6 +182,7 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Raids.RaidGuard.ResetForTests();
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             Enforcer5.Actions.Batches.ResetForTests();
+            (Enforcer5.Data.Repositories.Warns as WarnStore)?.ResetForTests();
             // Detection everywhere, as the scenarios were written; DetectionPilotScenarios turn the pilot on.
             Enforcer5.Detection.DetectionPilot.ResetForTests();
             await SettleAsync();
@@ -439,6 +440,14 @@ namespace Enforcer5.Tests.Harness
         /// Moves every tempban in the schedule into the past and runs the check the bot's timer
         /// runs, then waits for what it set off.
         /// </summary>
+        /// <summary>A member's warns of <paramref name="kind"/> here, as the bot reads them (PostgreSQL since step 12).</summary>
+        internal long WarnCount(HarnessUser user, Enforcer5.Models.WarnKind kind = Enforcer5.Models.WarnKind.Warn) =>
+            Enforcer5.Data.Repositories.Warns.GetCountAsync(ChatId, kind, user.Id).GetAwaiter().GetResult();
+
+        /// <summary>A member's lifetime count of warns here.</summary>
+        internal long LifetimeWarns(HarnessUser user) =>
+            Enforcer5.Data.Repositories.Warns.GetCountsAsync(ChatId, user.Id).GetAwaiter().GetResult().Lifetime;
+
         internal async Task ExpireTempbansAsync()
         {
             var due = 1;

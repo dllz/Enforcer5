@@ -87,7 +87,8 @@ namespace Enforcer5.Tests.Harness
             return user;
         }
 
-        private static string Warns(HarnessChat chat, HarnessUser member) => chat.Hashes[$"chat:{chat.ChatId}:warns", member.Id.ToString()];
+        // PostgreSQL since rollout step 12; a member's first change starts from the old hash, which the scenarios seed.
+        private static string Warns(HarnessChat chat, HarnessUser member) => chat.WarnCount(member).ToString();
 
         private static async Task<(string Operation, long Quantity, string Reason)[]> WarnEvents(HarnessChat chat, HarnessUser member)
         {
@@ -150,7 +151,7 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
             await Press(chat, admin, offer, "ok");
 
             Assert.AreEqual("3", Warns(chat, kept));
-            Assert.AreEqual("3", chat.Hashes[$"chat:{chat.ChatId}:totalWarns", kept.Id.ToString()]);
+            Assert.AreEqual(3L, chat.LifetimeWarns(kept));
             Assert.AreEqual("1", Warns(chat, unticked), "unticked: left alone");
             Assert.AreEqual("Be nice", chat.Hashes[$"chat:{chat.ChatId}:extra", "#rules"]);
             Assert.IsTrue((await Repositories.InlineBotBlocks.GetAsync(chat.ChatId)).Any(b => b.Value == "spambot"));
@@ -198,12 +199,12 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
 
             await Press(chat, admin, Offer(chat, admin), "no");
 
-            Assert.IsNull(Warns(chat, member));
+            Assert.AreEqual("0", Warns(chat, member));
             StringAssert.Contains(Offer(chat, admin).Text, "❌");
             // Every copy says it, and the other admin cannot apply it any more.
             StringAssert.Contains(Offer(chat, other).Text, "❌");
             await chat.PressDataAsync(other, Offer(chat, other), $"{RecoveryOffers.Trigger}:{chat.ChatId}:1:ok:0");
-            Assert.IsNull(Warns(chat, member));
+            Assert.AreEqual("0", Warns(chat, member));
             AssertNoErrors(chat);
         }
 
@@ -249,7 +250,7 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
             StringAssert.Contains(offer.Text, S(chat, "recoveryExpired"));
             Assert.AreEqual(0, Buttons(offer).Length);
             await chat.PressDataAsync(admin, offer, $"{RecoveryOffers.Trigger}:{chat.ChatId}:1:ok:0");
-            Assert.IsNull(Warns(chat, member));
+            Assert.AreEqual("0", Warns(chat, member));
             AssertNoErrors(chat);
         }
 
@@ -323,7 +324,7 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
 
             await chat.PressDataAsync(member, Offer(chat, admin), $"{RecoveryOffers.Trigger}:{chat.ChatId}:1:ok:0");
 
-            Assert.IsNull(Warns(chat, member));
+            Assert.AreEqual("0", Warns(chat, member));
             StringAssert.Contains(Offer(chat, admin).Text, "✅ 1.");
         }
     }

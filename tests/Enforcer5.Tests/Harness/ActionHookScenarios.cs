@@ -150,7 +150,7 @@ namespace Enforcer5.Tests.Harness
             await chat.SendAsync(admin, "/warn", replyTo: post);
 
             Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, member.Id));
-            Assert.AreEqual("1", chat.Hashes[$"chat:{chat.ChatId}:warns", member.Id.ToString()], "the warns stay");
+            Assert.AreEqual(1L, chat.WarnCount(member), "the warns stay");
             StringAssert.Contains(chat.Telegram.SentMessages.Last(m => m.Chat.Id == chat.ChatId).Text, "Mute them instead");
             Assert.AreEqual(ActionSource.Escalation, hook.Asked.Single().Source, "the warn itself was not asked about");
             AssertNoErrors(chat);

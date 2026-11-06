@@ -81,7 +81,7 @@ namespace Enforcer5.Tests.Harness
             // A group command: one line saying what the bot is for here, and nothing done.
             await adminChat.SendAsync(admin, "/warn", replyTo: post);
             Assert.AreEqual(S(group, "adminChatMode", group.Title), adminChat.Replies.Last());
-            Assert.IsNull(group.Hashes[$"chat:{AdminChatId}:warns", member.Id.ToString()]);
+            Assert.AreEqual(0L, await Enforcer5.Data.Repositories.Warns.GetCountAsync(AdminChatId, Enforcer5.Models.WarnKind.Warn, member.Id));
             AssertNoErrors(group);
         }
 

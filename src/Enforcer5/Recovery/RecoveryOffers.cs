@@ -285,7 +285,7 @@ namespace Enforcer5.Recovery
                     var was = Count(current);
                     // Unchanged since: the recovered count. Changed (warned or forgiven since): the difference on top.
                     var now = was == Count(change.Before) ? Count(change.After) : Math.Max(0, was + Count(change.After) - Count(change.Before));
-                    if (now != was) await Repositories.RecoveryValues.WriteAsync(change, now.ToString(CultureInfo.InvariantCulture));
+                    if (now != was) await Repositories.RecoveryValues.WriteAsync(change, now.ToString(CultureInfo.InvariantCulture), actor);
                     counts[RecoveryFile.Suffix(change.Key)] = (was, now);
                     applied++;
                 }
@@ -298,27 +298,14 @@ namespace Enforcer5.Recovery
                 else (result.Skipped ??= new List<string>()).Add(RecoveryFile.Suffix(change.Key));
             }
 
-            if (item.Kind == "warns" && item.MemberId is { } member)
+            // The counts and their history were written above (Repositories.Warns); what is left is what they mean.
+            if (item.Kind == "warns" && counts.TryGetValue("warns", out var w))
             {
-                long? total = counts.TryGetValue("totalWarns", out var t) ? t.Now : null;
-                if (counts.TryGetValue("warns", out var w))
-                {
-                    History(chatId, member, WarnKind.Warn, w, total, actor);
-                    result.Warns = w.Now;
-                    if (w.Now >= max) result.Max = max;
-                }
-                if (counts.TryGetValue("prewarns", out var p)) History(chatId, member, WarnKind.Prewarn, p, null, actor);
+                result.Warns = w.Now;
+                if (w.Now >= max) result.Max = max;
             }
             var outcome = applied == item.Changes.Count ? "applied" : applied > 0 ? "partly" : "skipped";
             return new RecoveryOutcome(item.Position, outcome, JsonConvert.SerializeObject(result));
-        }
-
-        private static void History(long chatId, long member, WarnKind kind, (long Was, long Now) count, long? total, long actor)
-        {
-            if (count.Now > count.Was)
-                WarnHistory.Added(chatId, member, kind, count.Now - count.Was, count.Now, total, actor, Reason);
-            else if (count.Now < count.Was)
-                WarnHistory.Removed(chatId, member, kind, count.Was - count.Now, count.Now, actor, Reason);
         }
 
         private static async Task BanAsync(CallbackQuery call, XDocument lang, RecoveryOffer offer, int position)

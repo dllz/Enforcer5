@@ -30,8 +30,15 @@ namespace Enforcer5.Tests.Harness
         private static void AssertNoErrors(HarnessChat chat) =>
             Assert.AreEqual(0, chat.Errors.Count, "Errors reported:\n" + string.Join("\n", chat.Errors));
 
-        private static long Count(HarnessChat chat, string hash, HarnessUser user) =>
-            long.TryParse(chat.Hashes[$"chat:{chat.ChatId}:{hash}", user.Id.ToString()], out var n) ? n : 0;
+        // The counts live in PostgreSQL since rollout step 12; named after the Redis hashes they were in.
+        private static long Count(HarnessChat chat, string hash, HarnessUser user) => hash switch
+        {
+            "warns" => chat.WarnCount(user),
+            "prewarns" => chat.WarnCount(user, Enforcer5.Models.WarnKind.Prewarn),
+            "mediawarn" => chat.WarnCount(user, Enforcer5.Models.WarnKind.Media),
+            "totalWarns" => chat.LifetimeWarns(user),
+            _ => throw new System.ArgumentException(hash)
+        };
 
         private static void WarnSettings(HarnessChat chat, int max, string action)
         {

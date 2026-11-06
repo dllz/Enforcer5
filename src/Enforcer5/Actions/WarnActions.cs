@@ -44,38 +44,31 @@ namespace Enforcer5.Actions
         private static ActionResult Refused(ActionRequest request) =>
             new(request, EnforcementResult.Refuse(Refusal.TargetIsAdmin));
 
+        private static WarningRef Ref(WarnChanged change) => new() { EventId = change.EventId };
+
         private static ActionResult Prewarn(ActionRequest request)
         {
             if (Unwarnable(request)) return Refused(request);
-            var count = Repositories.Warns.AddAsync(request.ChatId, WarnKind.Prewarn, request.TargetId, 1).GetAwaiter().GetResult();
-            var warning = WarnHistory.Added(request.ChatId, request.TargetId, WarnKind.Prewarn, 1, count, null, request.ActorId, request.Reason);
-            return Done(request) with { Count = count, Warning = warning };
+            var added = WarnHistory.Apply(WarnHistory.Op(request.ChatId, request.TargetId, WarnKind.Prewarn, WarnOperation.Add, 1,
+                request.ActorId, request.Reason));
+            return Done(request) with { Count = added.After, Warning = Ref(added) };
         }
 
         private static ActionResult Warn(ActionRequest request)
         {
             if (Unwarnable(request)) return Refused(request);
             var (chatId, userId) = (request.ChatId, request.TargetId);
-            var warns = Repositories.Warns;
 
             // Prewarns turn into warns at the next warn.
-            var converted = warns.GetCountAsync(chatId, WarnKind.Prewarn, userId).GetAwaiter().GetResult();
+            var converted = Repositories.Warns.GetCountAsync(chatId, WarnKind.Prewarn, userId).GetAwaiter().GetResult();
             if (converted > 0)
-            {
-                warns.ResetAsync(chatId, WarnKind.Prewarn, userId).GetAwaiter().GetResult();
-                WarnHistory.Removed(chatId, userId, WarnKind.Prewarn, converted, 0, request.ActorId, "Converted into warns");
-            }
-            var count = warns.AddAsync(chatId, WarnKind.Warn, userId, 1 + converted).GetAwaiter().GetResult();
-            var lifetime = warns.AddLifetimeAsync(chatId, userId, 1 + converted).GetAwaiter().GetResult();
-            var warning = WarnHistory.Added(chatId, userId, WarnKind.Warn, 1 + converted, count, lifetime, request.ActorId,
-                request.Reason, request.Report);
+                WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Prewarn, WarnOperation.Remove, converted,
+                    request.ActorId, "Converted into warns"));
+            var added = WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Warn, WarnOperation.Add, 1 + converted,
+                request.ActorId, request.Reason, request.Report), request.Report);
+            var count = added.After;
+            var warning = Ref(added);
             ReportHistory.Acted(request.Report, ReportAction.Warned, request.ActorId);
-            if (count < 0)
-            {
-                // A negative count left by old code would have cancelled warns out.
-                warns.ResetAsync(chatId, WarnKind.Warn, userId).GetAwaiter().GetResult();
-                count = 0;
-            }
 
             var max = Methods.MaxWarns(chatId);
             var result = Done(request) with { Count = count, Max = max, Converted = converted, Warning = warning };
@@ -96,19 +89,16 @@ namespace Enforcer5.Actions
                 Stat = kick ? null : "maxWarn"
             });
             if (escalation.Succeeded)
-            {
-                warns.ResetAsync(chatId, WarnKind.Warn, userId).GetAwaiter().GetResult();
-                WarnHistory.Reset(chatId, userId, WarnKind.Warn, count, null, "Max warns");
-            }
+                WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Warn, WarnOperation.Reset, 0, null, "Max warns"));
             return result with { Escalation = escalation };
         }
 
         private static ActionResult MediaStrike(ActionRequest request)
         {
             if (Unwarnable(request)) return Refused(request);
-            var count = Repositories.Warns.AddAsync(request.ChatId, WarnKind.Media, request.TargetId, 1).GetAwaiter().GetResult();
-            var warning = WarnHistory.Added(request.ChatId, request.TargetId, WarnKind.Media, 1, count, null, request.ActorId, request.Reason);
-            return Done(request) with { Count = count, Warning = warning };
+            var added = WarnHistory.Apply(WarnHistory.Op(request.ChatId, request.TargetId, WarnKind.Media, WarnOperation.Add, 1,
+                request.ActorId, request.Reason));
+            return Done(request) with { Count = added.After, Warning = Ref(added) };
         }
 
         private static ActionResult Remove(ActionRequest request)

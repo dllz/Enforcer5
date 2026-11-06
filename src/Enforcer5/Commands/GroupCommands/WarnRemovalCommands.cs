@@ -278,23 +278,15 @@ namespace Enforcer5
             long chatId, WarnChange change, string reason, long? actorId = null)
         {
             long left = 0;
-            var before = await warns.GetCountAsync(chatId, change.Kind, change.TargetId);
             if (change.Reset)
             {
-                await warns.ResetAsync(chatId, change.Kind, change.TargetId);
-                WarnHistory.Reset(chatId, change.TargetId, change.Kind, before, actorId, reason);
+                await WarnHistory.ApplyAsync(warns, WarnHistory.Op(chatId, change.TargetId, change.Kind, WarnOperation.Reset, 0, actorId, reason));
                 if (change.AlsoMediaWarns && change.Kind != WarnKind.Media)
-                {
-                    var media = await warns.GetCountAsync(chatId, WarnKind.Media, change.TargetId);
-                    await warns.ResetAsync(chatId, WarnKind.Media, change.TargetId);
-                    WarnHistory.Reset(chatId, change.TargetId, WarnKind.Media, media, actorId, reason);
-                }
+                    await WarnHistory.ApplyAsync(warns, WarnHistory.Op(chatId, change.TargetId, WarnKind.Media, WarnOperation.Reset, 0, actorId, reason));
             }
             else
-            {
-                left = await warns.RemoveOneAsync(chatId, change.Kind, change.TargetId);
-                WarnHistory.Removed(chatId, change.TargetId, change.Kind, before - left, left, actorId, reason);
-            }
+                left = (await WarnHistory.ApplyAsync(warns, WarnHistory.Op(chatId, change.TargetId, change.Kind, WarnOperation.Remove, 1,
+                    actorId, reason))).After;
 
             // An admin's reason is offered again next time; the bot's own ("Media limit") is not.
             if (reason != null && actorId != null) await reasons.AddRecentAsync(chatId, reason);

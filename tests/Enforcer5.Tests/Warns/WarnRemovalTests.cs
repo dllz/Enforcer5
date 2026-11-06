@@ -136,55 +136,54 @@ namespace Enforcer5.Tests.Warns
     }
 
     [TestClass]
-    public class RedisWarnRepositoryTests
+    public class LegacyWarnCountsTests
     {
         private const long ChatId = -1001234567890;
         private FakeRedis _redis;
-        private IWarnRepository _warns;
+        private LegacyWarnCounts _legacy;
 
         [TestInitialize]
         public void SetUp()
         {
             _redis = new FakeRedis();
-            _warns = new RedisWarnRepository(() => _redis.Database);
+            _legacy = new LegacyWarnCounts(() => _redis.Database);
         }
 
         [DataTestMethod]
         [DataRow((int)WarnKind.Warn, "chat:-1001234567890:warns")]
         [DataRow((int)WarnKind.Prewarn, "chat:-1001234567890:prewarns")]
         [DataRow((int)WarnKind.Media, "chat:-1001234567890:mediawarn")]
-        public async Task EachKind_UsesItsExistingHash(int kindValue, string key)
+        public async Task EachKind_ReadsItsOldHash(int kindValue, string key)
         {
             var kind = (WarnKind)kindValue;
             _redis.Hash(key)[42] = 3;
-            Assert.AreEqual(3L, await _warns.GetCountAsync(ChatId, kind, 42));
-            Assert.AreEqual(2L, await _warns.RemoveOneAsync(ChatId, kind, 42));
-            Assert.AreEqual((RedisValue)2, _redis.Hash(key)[42]);
-            await _warns.ResetAsync(ChatId, kind, 42);
-            Assert.IsFalse(_redis.Hash(key).ContainsKey(42));
+            Assert.AreEqual(3L, (await _legacy.ReadAsync(ChatId, kind, 42)).Active);
         }
 
         [TestMethod]
         public async Task MissingOrNegativeCount_ReadsAsZero()
         {
-            Assert.AreEqual(0L, await _warns.GetCountAsync(ChatId, WarnKind.Warn, 42));
+            Assert.AreEqual((0L, 0L), await _legacy.ReadAsync(ChatId, WarnKind.Warn, 42));
             _redis.Hash("chat:-1001234567890:warns")[42] = -2;
-            Assert.AreEqual(0L, await _warns.GetCountAsync(ChatId, WarnKind.Warn, 42));
+            Assert.AreEqual((0L, 0L), await _legacy.ReadAsync(ChatId, WarnKind.Warn, 42));
         }
 
         [TestMethod]
-        public async Task RemovingFromZero_StaysAtZero()
+        public async Task Lifetime_IsTotalWarns_AsItWas()
         {
-            // A negative count would silently cancel out the user's next warn.
-            Assert.AreEqual(0L, await _warns.RemoveOneAsync(ChatId, WarnKind.Warn, 42));
-            Assert.AreEqual((RedisValue)0, _redis.Hash("chat:-1001234567890:warns")[42]);
+            _redis.Hash("chat:-1001234567890:warns")[42] = 2;
+            Assert.AreEqual((2L, 0L), await _legacy.ReadAsync(ChatId, WarnKind.Warn, 42), "no totalWarns: none");
+            _redis.Hash("chat:-1001234567890:totalWarns")[42] = 7;
+            Assert.AreEqual((2L, 7L), await _legacy.ReadAsync(ChatId, WarnKind.Warn, 42));
+            _redis.Hash("chat:-1001234567890:mediawarn")[42] = 1;
+            Assert.AreEqual((1L, 1L), await _legacy.ReadAsync(ChatId, WarnKind.Media, 42), "Redis kept no lifetime for media");
         }
 
         [TestMethod]
-        public void Constructing_DoesNotTouchTheDatabase()
+        public void TheBot_RunsOnTheQueuedPostgresStore()
         {
-            _ = new RedisWarnRepository(() => throw new InvalidOperationException("not connected"));
-            Assert.IsInstanceOfType(Repositories.Warns, typeof(RedisWarnRepository));
+            Assert.IsInstanceOfType(Repositories.Warns, typeof(Enforcer5.Helpers.WarnStore));
+            Assert.IsInstanceOfType(Repositories.WarningHistory, typeof(PostgresWarnRepository));
         }
     }
 
@@ -317,11 +316,9 @@ namespace Enforcer5.Tests.Warns
     public class WarnRemovalFlowTests
     {
         private const long ChatId = -1001234567890;
-        private const string Warns = "chat:-1001234567890:warns";
-        private const string Media = "chat:-1001234567890:mediawarn";
         private static XDocument _english;
         private FakeRedis _redis;
-        private IWarnRepository _warns;
+        private MemoryWarns _warns;
         private IWarnReasonRepository _reasons;
 
         [ClassInitialize]
@@ -334,14 +331,14 @@ namespace Enforcer5.Tests.Warns
         public void SetUp()
         {
             _redis = new FakeRedis();
-            _warns = new RedisWarnRepository(() => _redis.Database);
+            _warns = new MemoryWarns();
             _reasons = new RedisWarnReasonRepository(() => _redis.Database);
         }
 
         [TestMethod]
         public async Task RemoveOne_LeavesTheRestAndRemembersTheReason()
         {
-            _redis.Hash(Warns)[42] = 2;
+            _warns.Seed(ChatId, WarnKind.Warn, 42, 2);
             var left = await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Warn, false, 42), "AFK", actorId: 7);
             Assert.AreEqual(1L, left);
             CollectionAssert.AreEqual(new[] { "AFK" }, (await _reasons.GetRecentAsync(ChatId)).ToArray());
@@ -351,7 +348,7 @@ namespace Enforcer5.Tests.Warns
         public async Task TheBotsOwnReason_IsNotRemembered()
         {
             // The media limit resets strikes with "Media limit", which is no reason to offer admins.
-            _redis.Hash(Media)[42] = 3;
+            _warns.Seed(ChatId, WarnKind.Media, 42, 3);
             await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Media, true, 42), "Media limit");
             Assert.AreEqual(0, (await _reasons.GetRecentAsync(ChatId)).Count);
         }
@@ -359,7 +356,7 @@ namespace Enforcer5.Tests.Warns
         [TestMethod]
         public async Task NoReason_IsNotRemembered()
         {
-            _redis.Hash(Warns)[42] = 2;
+            _warns.Seed(ChatId, WarnKind.Warn, 42, 2);
             await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, new WarnChange(WarnKind.Warn, false, 42), null);
             Assert.AreEqual(0, (await _reasons.GetRecentAsync(ChatId)).Count);
         }
@@ -367,26 +364,26 @@ namespace Enforcer5.Tests.Warns
         [TestMethod]
         public async Task ResetFromTheWarnMessage_AlsoClearsMediaWarns()
         {
-            _redis.Hash(Warns)[42] = 2;
-            _redis.Hash(Media)[42] = 1;
+            _warns.Seed(ChatId, WarnKind.Warn, 42, 2);
+            _warns.Seed(ChatId, WarnKind.Media, 42, 1);
             var change = new WarnChange(WarnKind.Warn, true, 42, AlsoMediaWarns: true);
 
             Assert.AreEqual(3L, await Enforcer5.WarnRemovals.CountAsync(_warns, ChatId, change));
             Assert.AreEqual(0L, await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, change, null));
-            Assert.IsFalse(_redis.Hash(Warns).ContainsKey(42));
-            Assert.IsFalse(_redis.Hash(Media).ContainsKey(42));
+            Assert.AreEqual(0L, _warns.Count(ChatId, WarnKind.Warn, 42));
+            Assert.AreEqual(0L, _warns.Count(ChatId, WarnKind.Media, 42));
         }
 
         [TestMethod]
         public async Task ResetFromTheUserMenu_LeavesMediaWarns()
         {
-            _redis.Hash(Warns)[42] = 2;
-            _redis.Hash(Media)[42] = 1;
+            _warns.Seed(ChatId, WarnKind.Warn, 42, 2);
+            _warns.Seed(ChatId, WarnKind.Media, 42, 1);
             var change = new WarnChange(WarnKind.Warn, true, 42);
 
             Assert.AreEqual(2L, await Enforcer5.WarnRemovals.CountAsync(_warns, ChatId, change));
             await Enforcer5.WarnRemovals.ApplyAsync(_warns, _reasons, ChatId, change, null);
-            Assert.AreEqual((RedisValue)1, _redis.Hash(Media)[42]);
+            Assert.AreEqual(1L, _warns.Count(ChatId, WarnKind.Media, 42));
         }
 
         [TestMethod]

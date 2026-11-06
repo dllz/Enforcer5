@@ -104,8 +104,8 @@ namespace Enforcer5.Tests.Storage
             var id = await Report(101);
             await new PostgresBanHistoryRepository(() => _database).RecordBanAsync(
                 new BanEvent(-1001, 5, SanctionKind.Kick, "Reported", 9, T0, null, "normal", ReportId: id));
-            await new PostgresWarningHistoryRepository(() => _database).RecordAsync(
-                new WarnEvent(-1001, 5, Enforcer5.Models.WarnKind.Warn, WarnOperation.Add, 1, 1, 1, null, 9, T0, id));
+            await new PostgresWarnRepository(() => _database, new LegacyWarnCounts(() => new Warns.FakeRedis().Database)).ApplyAsync(
+                new WarnOp(-1001, 5, Enforcer5.Models.WarnKind.Warn, WarnOperation.Add, 1) { ActorId = 9, At = T0, ReportId = id });
 
             await using var connection = await _database.OpenConnectionAsync();
             Assert.AreEqual(id, await Dapper.SqlMapper.ExecuteScalarAsync<long>(connection, "SELECT report_id FROM sanctions"));

@@ -443,7 +443,7 @@ ORDER BY s.sanction_id")).ToArray();
             await chat.PostAsync(chat.Photo(poster, "b", caption: "just a photo"));
 
             Assert.AreEqual(1, chat.Telegram.MessagesFrom(chat.ChatId, poster.Id).Count, "the captioned link went, the plain photo stayed");
-            Assert.AreEqual("1", chat.Hashes[$"chat:{chat.ChatId}:mediawarn", poster.Id.ToString()], "one strike");
+            Assert.AreEqual(1L, chat.WarnCount(poster, Enforcer5.Models.WarnKind.Media), "one strike");
             AssertNoErrors(chat);
         }
 
@@ -626,7 +626,7 @@ ORDER BY s.sanction_id")).ToArray();
             Assert.AreEqual(9, chat.Telegram.MessagesFrom(chat.ChatId, admin.Id).Count, "nothing deleted");
             Assert.AreEqual(0, chat.Telegram.Calls.Count(c => c.Method == "banChatMember"), "no kick tried");
             Assert.AreEqual(0, chat.Replies.Count, "no notices");
-            Assert.AreEqual(0, chat.Hashes.All($"chat:{chat.ChatId}:mediawarn").Count, "no media strike");
+            Assert.AreEqual(0L, chat.WarnCount(admin, Enforcer5.Models.WarnKind.Media), "no media strike");
             AssertNoErrors(chat);
         }
 

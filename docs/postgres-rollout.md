@@ -42,6 +42,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 9 | Raid telemetry: every raid and possible raid, with its timeline, for tuning and replay | `raid_incidents`, `raid_events` | Built |
 | 10 | Detection settings, **cut over** (Detection v2 step 2): flood, flood exceptions, media locks, Arabic and right-to-left, text and name length, Mute On Join, max warns and their action, tempban and tempmute lengths, blocked inline bots and sticker packs, channel posts. PostgreSQL is the store, Redis a cache; each group's old hashes are imported on its first use | `group_settings` (the columns the checks use), `detection_policies`, `group_filters` | Built |
 | 11 | Detection engine (Detection v2 steps 3 and 4): every sign that fires (the checks that existed before included), with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
+| 12 | Warn counts, **cut over**: PostgreSQL decides max warns and the media limit; changes queue in Redis while it is down; each member's first change starts from the old hashes | `warning_balances`, `warning_events` | Built |
 
 ### Step 2: ban history
 
@@ -171,7 +172,8 @@ and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose t
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else (raid state and the slow lane included), including tempban expiry (PostgreSQL is
-written, Redis decides), global bans, group settings other than the detection settings (step 10) and everything read back. Old Redis ban and warn data is not
+written, Redis decides), group settings other than the detection settings (step 10) and everything read back. (Global bans
+moved in this step; warn counts in step 12.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -281,6 +283,33 @@ and a bad member look like (Daniel, 2026-10-27). So the engine records both side
   with ten more presets and the admins' own regex rules (`kind = 'regex'`, `mode` live or trial,
   `trial_until`, `created_by_account_id`); the choices for all filters are the `filters` row of
   `detection_policies`. Each rule that matches is a detection, `filter:<preset>` or `filter:<id>`.
+
+### Step 12: warn counts (cut over)
+
+Warn, prewarn and media counts run on PostgreSQL alone (Daniel, 2026-11-06). `warning_balances` holds the count and the
+lifetime count, and every change writes its `warning_events` row in the same transaction (`Data/PostgresWarnRepository`),
+so the count a warn returns is what max warns and the media limit decide on, and a max-warns ban's
+`trigger_warning_event_id` is known at once. Nothing is written to the old hashes (`chat:{id}:warns`, `prewarns`,
+`mediawarn`, `totalWarns`) any more.
+
+- **Import, member by member.** A member with no balance row yet starts from the old hash (`Data/LegacyWarnCounts`,
+  read only; negative counts read as 0): the import happens on their first change, and reads fall back to the hash
+  until then. Members with a row already had Redis's count copied since step 4 (checked on prod before this step: all
+  88 rows matched Redis). A negative count needed no repair any more, so `Service.removeWarn0` and its
+  `dbUpdate:lenghtUpdat4` pass on every message are gone.
+- **Lifetime.** An add counts towards it; a removal or reset does not. A recovery sets the count exactly (`Set`, an `add`
+  or `remove` event) and the lifetime on its own, as `totalWarns` was its own hash. Redis kept no lifetime count for some
+  members; /user shows their count then, as before.
+- **While PostgreSQL is down** (Daniel: "queue in Redis"), or a change takes longer than 3 s, the change goes to
+  `warns:queue:{edition}` (a hash of change id to JSON) before the caller hears back, and `Helpers/WarnStore` writes it
+  once PostgreSQL is back, in order, every 5 s. The count it returns meanwhile is an estimate from `warns:cache:{chat}`
+  (the count after every change, 90 days) or the old hashes, so warns, the limit and the ban still work. While anything
+  is queued, new changes queue behind it. Each change carries an id, kept as the event's `legacy_key`, so one that timed
+  out and went through after all counts once. A restart reloads the queue.
+- **Readers.** `/user`, `/me`, `/getuser`, `/media`, the warn removals, `/batch` and the data recovery read PostgreSQL
+  (`Repositories.Warns`); recovery items of kind `warns` write through it, with the admin who applied them.
+- **Rollback.** A binary rollback finds the old hashes as they were at this deploy; warns given since are only in
+  PostgreSQL.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

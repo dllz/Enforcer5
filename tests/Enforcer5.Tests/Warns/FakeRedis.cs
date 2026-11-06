@@ -68,6 +68,10 @@ namespace Enforcer5.Tests.Warns
                 });
             Mock.Setup(d => d.HashDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
                 .Returns((RedisKey k, RedisValue f, CommandFlags _) => Task.FromResult(Hash(k).Remove(f)));
+            Mock.Setup(d => d.HashGetAllAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+                .Returns((RedisKey k, CommandFlags _) => Task.FromResult(Hash(k).Select(e => new HashEntry(e.Key, e.Value)).ToArray()));
+            Mock.Setup(d => d.KeyExpireAsync(It.IsAny<RedisKey>(), It.IsAny<TimeSpan?>(), It.IsAny<CommandFlags>()))
+                .Returns((RedisKey k, TimeSpan? ttl, CommandFlags _) => Task.FromResult(true));
 
             Mock.Setup(d => d.ListRangeAsync(It.IsAny<RedisKey>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CommandFlags>()))
                 .Returns((RedisKey k, long start, long stop, CommandFlags _) =>

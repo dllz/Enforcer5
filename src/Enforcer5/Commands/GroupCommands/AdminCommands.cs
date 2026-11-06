@@ -921,7 +921,7 @@ namespace Enforcer5
             var chatId = update.Message.Chat.Id;
             var userid = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message.Chat.Id).Doc;
-            var warns = Convert.ToInt32(Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
+            var warns = Data.Repositories.Warns.GetCountAsync(chatId, Models.WarnKind.Media, userid).GetAwaiter().GetResult();
             var text = Methods.GetLocaleString(lang, "getMediaWarn", warns);
             var userMenu = new Menu(2);
             userMenu.Buttons = new List<InlineButton>

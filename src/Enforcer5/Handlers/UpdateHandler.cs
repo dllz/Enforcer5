@@ -656,31 +656,24 @@ namespace Enforcer5.Handlers
         private static readonly ConcurrentDictionary<long, byte> _migratedSettings = new ConcurrentDictionary<long, byte>();
         private static readonly ConcurrentDictionary<long, byte> _migratedSettings2 = new ConcurrentDictionary<long, byte>();
         private static readonly ConcurrentDictionary<long, byte> _migratedSettings3 = new ConcurrentDictionary<long, byte>();
-        private static readonly ConcurrentDictionary<string, byte> _migratedWarn0 = new ConcurrentDictionary<string, byte>();
-
-        // dbUpdate:lenghtUpdat4 is keyed per chat *and* user, so its cache is the one that can
-        // grow without bound. Past the cap we simply keep asking Redis rather than leak. Tracked
-        // with a counter because ConcurrentDictionary.Count takes every bucket lock.
-        private const int MigratedWarnCacheLimit = 200000;
-        private static int _migratedWarnCount;
+        // The fourth, dbUpdate:lenghtUpdat4 (negative warn counts set back to 0), went with rollout step 12: the
+        // counts moved to PostgreSQL, which never goes below 0, and the old hashes are only read through
+        // LegacyWarnCounts, which reads a negative count as 0.
 
         private static async Task RunPendingMigrations(MessageContext ctx)
         {
             var chatId = ctx.ChatId;
-            var warnKey = $"{chatId}:{ctx.UserId}";
 
             var needSettings = !_migratedSettings.ContainsKey(chatId);
             var needSettings2 = !_migratedSettings2.ContainsKey(chatId);
             var needSettings3 = !_migratedSettings3.ContainsKey(chatId);
-            var needWarn0 = !_migratedWarn0.ContainsKey(warnKey);
-            if (!needSettings && !needSettings2 && !needSettings3 && !needWarn0) return;
+            if (!needSettings && !needSettings2 && !needSettings3) return;
 
             var db = Redis.db;
             var doneTask = needSettings ? db.SetContainsAsync("lenghtUpdate3", chatId) : Task.FromResult(true);
             var done2Task = needSettings2 ? db.SetContainsAsync("lenghtUpdate", chatId) : Task.FromResult(true);
             var done3Task = needSettings3 ? db.SetContainsAsync("dbUpdate:lenghtUpdate", chatId) : Task.FromResult(true);
-            var done4Task = needWarn0 ? db.SetContainsAsync("dbUpdate:lenghtUpdat4", warnKey) : Task.FromResult(true);
-            await Task.WhenAll(doneTask, done2Task, done3Task, done4Task);
+            await Task.WhenAll(doneTask, done2Task, done3Task);
 
             if (needSettings)
             {
@@ -708,26 +701,6 @@ namespace Enforcer5.Handlers
                     db.SetAddAsync("dbUpdate:lenghtUpdate", chatId);
                 }
                 _migratedSettings3[chatId] = 0;
-            }
-            if (needWarn0)
-            {
-                if (!done4Task.Result)
-                {
-                    // Two blocking reads inside, so it must not run on a consumer continuation.
-                    // The flag is set from within, after the work: marking it here would leave the
-                    // migration permanently "done" if the dispatched action never ran.
-                    var userId = ctx.UserId;
-                    Bot.DispatchAction(() =>
-                    {
-                        Service.removeWarn0(chatId, userId);
-                        db.SetAddAsync("dbUpdate:lenghtUpdat4", warnKey);
-                    }, "removeWarn0");
-                }
-                if (Volatile.Read(ref _migratedWarnCount) < MigratedWarnCacheLimit &&
-                    _migratedWarn0.TryAdd(warnKey, 0))
-                {
-                    Interlocked.Increment(ref _migratedWarnCount);
-                }
             }
         }
 

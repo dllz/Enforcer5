@@ -77,8 +77,14 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
 
         private static string[] Ops(Event[] events) => events.Select(e => e.ToString()).ToArray();
 
-        private static long RedisCount(HarnessChat chat, string hash, HarnessUser user) =>
-            long.TryParse(chat.Hashes[$"chat:{chat.ChatId}:{hash}", user.Id.ToString()], out var n) ? n : 0;
+        // What the bot reads (PostgreSQL since rollout step 12), named after the Redis hashes the counts were in.
+        private static long RedisCount(HarnessChat chat, string hash, HarnessUser user) => hash switch
+        {
+            "warns" => chat.WarnCount(user),
+            "mediawarn" => chat.WarnCount(user, Enforcer5.Models.WarnKind.Media),
+            "totalWarns" => chat.LifetimeWarns(user),
+            _ => throw new System.ArgumentException(hash)
+        };
 
         private static void AssertNoErrors(HarnessChat chat) =>
             Assert.AreEqual(0, chat.Errors.Count, "Errors reported:\n" + string.Join("\n", chat.Errors));
@@ -262,6 +268,41 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
             Assert.AreEqual((0L, 2L), (balance.Active, balance.Lifetime));
             Assert.AreEqual(0, RedisCount(chat, "mediawarn", member));
             AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task WhilePostgresIsDown_WarnsAreQueued_StillReachTheLimit_AndAreWrittenOnceItIsBack()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            WarnSettings(chat, 2, "ban");
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var message = await chat.SendAsync(member, "rude");
+            await chat.SendAsync(admin, "/warn", replyTo: message);
+            var store = (Enforcer5.Helpers.WarnStore)Enforcer5.Data.Repositories.Warns;
+
+            Enforcer5.Storage.PostgresStorage.UseForTests(null);
+            try
+            {
+                await chat.SendAsync(admin, "/warn", replyTo: message);
+
+                Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id), "the limit counts the queued warn");
+                Assert.AreEqual(2, store.Queued, "the warn and the reset after the ban");
+                Assert.AreEqual(0, RedisCount(chat, "warns", member), "the estimate");
+            }
+            finally
+            {
+                Enforcer5.Storage.PostgresStorage.UseForTests(chat.Database);
+            }
+            CollectionAssert.AreEqual(new[] { "standard add 1" }, Ops(await Events(chat)), "nothing written yet");
+
+            await store.DrainAsync();
+
+            Assert.AreEqual(0, store.Queued);
+            CollectionAssert.AreEqual(new[] { "standard add 1", "standard add 1", "standard reset 2" }, Ops(await Events(chat)));
+            var balance = await BalanceOf(chat, member, "standard");
+            Assert.AreEqual((0L, 2L), (balance.Active, balance.Lifetime));
+            Assert.AreEqual(0, chat.Hashes.All($"chat:{chat.ChatId}:warns").Count, "the old hash is never written");
         }
 
         [TestMethod]

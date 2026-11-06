@@ -133,6 +133,8 @@ namespace Enforcer5
             Recovery.RecoveryOffers.Start(Bot.ShutdownToken);
             // /batch: carries on with the batches that were running when the bot stopped.
             Actions.Batches.Start(Bot.ShutdownToken);
+            // Warn changes queued in Redis while PostgreSQL was down: written once it is back (Helpers/WarnStore).
+            (Data.Repositories.Warns as WarnStore)?.Start(Bot.ShutdownToken);
 
             _timer = new Timer(TimerOnTick, null, 5000, 1000);
             var wait = TimeSpan.FromSeconds(30);

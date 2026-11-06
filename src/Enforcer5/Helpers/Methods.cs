@@ -704,30 +704,12 @@ namespace Enforcer5.Helpers
             if (chatId != null)
             {
                 completedList.Add(GetLocaleString(lang, "userinfoGroup", chatTitle));
-                long warns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result.HasValue)
-                {
-                    warns = Convert.ToInt64( Redis.db.HashGetAsync($"chat:{chatId}:warns", userid).Result);
-                }
-                completedList.Add(GetLocaleString(lang, "getgroupwarn", warns));
-                long totalWarns = warns;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result.HasValue)
-                {
-                    totalWarns = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatId}:totalWarns", userid).Result);
-                }
-                completedList.Add(GetLocaleString(lang, "getgrouptotalwarn", totalWarns));
-                warns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result.HasValue)
-                {
-                    warns = Convert.ToInt64( Redis.db.HashGetAsync($"chat:{chatId}:mediawarn", userid).Result);
-                }
-                completedList.Add(GetLocaleString(lang, "getMediaWarn", warns));
-                long preWarns = 0;
-                if (Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result.HasValue)
-                {
-                    preWarns = Convert.ToInt64(Redis.db.HashGetAsync($"chat:{chatId}:prewarns", userid).Result);
-                }
-                completedList.Add(GetLocaleString(lang, "getPreWarn", preWarns));
+                var counts = Data.Repositories.Warns.GetCountsAsync(chatId.Value, userid).GetAwaiter().GetResult();
+                completedList.Add(GetLocaleString(lang, "getgroupwarn", counts.Warns));
+                // Redis kept no lifetime count for some members; /user showed their count then, as it does.
+                completedList.Add(GetLocaleString(lang, "getgrouptotalwarn", Math.Max(counts.Lifetime, counts.Warns)));
+                completedList.Add(GetLocaleString(lang, "getMediaWarn", counts.Media));
+                completedList.Add(GetLocaleString(lang, "getPreWarn", counts.Prewarns));
             }
             
             return string.Join("\n", completedList);

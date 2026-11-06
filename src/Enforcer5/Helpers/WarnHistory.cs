@@ -1,12 +1,12 @@
-using System;
+using System.Threading.Tasks;
 using Enforcer5.Data;
 using Enforcer5.Models;
 
 namespace Enforcer5.Helpers
 {
     /// <summary>
-    /// The id of a warn event once it is written, so a max-warns ban can point at the warn that
-    /// caused it. Set on the history worker, which writes the warn before the ban.
+    /// The id of a warn event, so a max-warns ban can point at the warn that caused it. Known as soon as the warn is
+    /// made; null when the warn changed nothing or was queued while PostgreSQL was down.
     /// </summary>
     internal sealed class WarningRef
     {
@@ -14,49 +14,44 @@ namespace Enforcer5.Helpers
     }
 
     /// <summary>
-    /// Records warn changes in the warn history, through <see cref="HistoryWriter"/>: in order with
-    /// the bans, in the background, never holding up the warn. Callers pass what Redis returned, so
-    /// the balance in PostgreSQL is a copy of Redis's (see <see cref="WarnEvent"/>).
+    /// Makes warn changes through <see cref="Repositories.Warns"/> (which writes the count and its history event
+    /// together, rollout step 12) and tells Detection about the ones that are decisions about a member.
     /// </summary>
     internal static class WarnHistory
     {
-        /// <summary>
-        /// Warns added. Returns a reference to pass to <see cref="BanHistory.Banned"/> when the
-        /// warn reached the maximum.
-        /// </summary>
-        internal static WarningRef Added(long chatId, long userId, WarnKind kind, long quantity, long activeAfter,
-            long? lifetimeAfter, long? actorId, string reason = null, ReportRef report = null) =>
-            Record(chatId, userId, kind, WarnOperation.Add, quantity, activeAfter, lifetimeAfter, reason, actorId, report);
-
-        /// <summary>Some warns taken off; <paramref name="quantity"/> is how many.</summary>
-        internal static void Removed(long chatId, long userId, WarnKind kind, long quantity, long activeAfter,
-            long? actorId, string reason) =>
-            Record(chatId, userId, kind, WarnOperation.Remove, quantity, activeAfter, null, reason, actorId);
-
-        /// <summary>The count set back to 0; <paramref name="quantity"/> is what it was.</summary>
-        internal static void Reset(long chatId, long userId, WarnKind kind, long quantity, long? actorId, string reason) =>
-            Record(chatId, userId, kind, WarnOperation.Reset, quantity, 0, null, reason, actorId);
-
-        private static WarningRef Record(long chatId, long userId, WarnKind kind, WarnOperation operation, long quantity,
-            long activeAfter, long? lifetimeAfter, string reason, long? actorId, ReportRef report = null)
-        {
-            var reference = new WarningRef();
-            // Nothing changed (a reset of no warns): the schema only holds real changes.
-            if (quantity <= 0) return reference;
-            var warn = new WarnEvent(chatId, userId, kind, operation, quantity, activeAfter, lifetimeAfter,
-                HistoryWriter.Trim(reason), actorId, DateTimeOffset.UtcNow);
-            HistoryWriter.Enqueue(async () => reference.EventId =
-                    await Repositories.WarningHistory.RecordAsync(warn with { ReportId = report?.ReportId }),
-                $"Recording a {operation} of {quantity} {kind} for {userId} in {chatId}");
-            // Warns are decisions Detection learns from; prewarns and media strikes are not decisions.
-            if (kind == WarnKind.Warn)
+        /// <summary>A change of <paramref name="kind"/>, as asked for by <paramref name="actorId"/> (null: the bot).</summary>
+        internal static WarnOp Op(long chatId, long userId, WarnKind kind, WarnOperation operation, long quantity,
+            long? actorId, string reason, ReportRef report = null) =>
+            new(chatId, userId, kind, operation, quantity)
             {
-                if (operation == WarnOperation.Add)
-                    Detection.Decisions.Sanction(chatId, userId, "warn", actorId, reason, report != null);
-                else if (actorId != null)
-                    Detection.Decisions.Undo(chatId, userId, "unwarn", actorId);
-            }
-            return reference;
+                ActorId = actorId,
+                Reason = HistoryWriter.Trim(reason),
+                ReportId = report?.ReportId
+            };
+
+        /// <summary>Makes the change, and labels it for Detection.</summary>
+        internal static async Task<WarnChanged> ApplyAsync(IWarnRepository warns, WarnOp op, bool fromReport = false)
+        {
+            var result = await warns.ApplyAsync(op);
+            Label(op, result.Before, result.After, fromReport);
+            return result;
+        }
+
+        /// <summary>Synchronous <see cref="ApplyAsync"/>, for the warn actions.</summary>
+        internal static WarnChanged Apply(WarnOp op, ReportRef report = null) =>
+            ApplyAsync(Repositories.Warns, op, report != null).GetAwaiter().GetResult();
+
+        /// <summary>
+        /// Warns are decisions Detection learns from; prewarns and media strikes are not. A warn added is a sanction,
+        /// one an admin takes off is an undo.
+        /// </summary>
+        internal static void Label(WarnOp op, long before, long after, bool fromReport = false)
+        {
+            if (op.Kind != WarnKind.Warn || after == before) return;
+            if (after > before)
+                Detection.Decisions.Sanction(op.ChatId, op.UserId, "warn", op.ActorId, op.Reason, fromReport);
+            else if (op.ActorId != null)
+                Detection.Decisions.Undo(op.ChatId, op.UserId, "unwarn", op.ActorId);
         }
     }
 }

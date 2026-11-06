@@ -20,8 +20,13 @@ namespace Enforcer5.Data
         internal static IStickerSetBlockRepository StickerSetBlocks { get; set; } =
             new PolicyStickerSetBlockRepository();
 
+        // PostgreSQL (rollout step 12), with changes queued in Redis while it is down (Helpers/WarnStore). A member's
+        // first change starts from the old Redis hashes (LegacyWarnCounts), which nothing writes any more.
+        private static readonly PostgresWarnRepository WarnTable =
+            new(() => Storage.PostgresStorage.Database, new LegacyWarnCounts(() => Redis.db));
+
         internal static IWarnRepository Warns { get; set; } =
-            new RedisWarnRepository(() => Redis.db);
+            new WarnStore(WarnTable, () => Redis.db, Enforcer5.Helpers.BanHistory.Edition, () => Storage.PostgresStorage.Ready);
 
         internal static IWarnReasonRepository WarnReasons { get; set; } =
             new RedisWarnReasonRepository(() => Redis.db);
@@ -36,8 +41,7 @@ namespace Enforcer5.Data
         internal static IBanHistoryRepository BanHistory { get; set; } =
             new PostgresBanHistoryRepository(() => Storage.PostgresStorage.Database);
 
-        internal static IWarningHistoryRepository WarningHistory { get; set; } =
-            new PostgresWarningHistoryRepository(() => Storage.PostgresStorage.Database);
+        internal static IWarningHistoryRepository WarningHistory { get; set; } = WarnTable;
 
         internal static IReportHistoryRepository ReportHistory { get; set; } =
             new PostgresReportHistoryRepository(() => Storage.PostgresStorage.Database);
