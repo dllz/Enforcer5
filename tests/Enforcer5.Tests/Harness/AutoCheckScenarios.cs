@@ -111,7 +111,7 @@ ORDER BY s.sanction_id")).ToArray();
 
             Assert.AreEqual(MemberState.Kicked, State(chat, first));
             Assert.AreEqual(MemberState.Kicked, State(chat, second));
-            Assert.AreEqual(2, chat.Hashes.All(HarnessChat.TempbanSchedule).Count, "one slot each");
+            Assert.AreEqual(2, (await chat.TempbansAsync()).Length, "one each");
             AssertNoErrors(chat);
         }
 

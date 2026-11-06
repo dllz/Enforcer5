@@ -183,6 +183,11 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             Enforcer5.Actions.Batches.ResetForTests();
             (Enforcer5.Data.Repositories.Warns as WarnStore)?.ResetForTests();
+            if (Enforcer5.Data.Repositories.Tempbans is TempbanStore tempbans)
+            {
+                tempbans.ResetForTests();
+                await tempbans.StartUpAsync(Clock.UtcNow);
+            }
             // Detection everywhere, as the scenarios were written; DetectionPilotScenarios turn the pilot on.
             Enforcer5.Detection.DetectionPilot.ResetForTests();
             await SettleAsync();
@@ -205,6 +210,11 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Detection.DetectionEngine.ResetForTests();
             await Enforcer5.Detection.TrustOverrides.ReloadAsync();
             await Enforcer5.Detection.BotGuard.ReloadAsync();
+            if (Enforcer5.Data.Repositories.Tempbans is TempbanStore tempbans)
+            {
+                tempbans.ResetForTests();
+                await tempbans.StartUpAsync(Clock.UtcNow);
+            }
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
             Enforcer5.Enforcement.EnforcementQueue.Start(_world.QueueStop.Token);
@@ -429,17 +439,22 @@ namespace Enforcer5.Tests.Harness
         /// <summary>The bot's last message to this chat, with its buttons.</summary>
         internal Message LastBotMessage => Telegram.SentMessages.Last(m => m.Chat.Id == ChatId);
 
-        /// <summary>The edition's tempban schedule in Redis: unban time (unix) to "chat:user".</summary>
-#if PREMIUM
-        internal const string TempbanSchedule = "tempbannedPremium";
-#else
-        internal const string TempbanSchedule = "tempbanned";
-#endif
+        /// <summary>This edition's tempban schedule (PostgreSQL since rollout step 13): member and end, soonest first.</summary>
+        internal async Task<(long UserId, DateTime Until)[]> TempbansAsync()
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return (await Dapper.SqlMapper.QueryAsync<(long, DateTime)>(connection, @"
+SELECT telegram_user_id, until_at FROM tempban_schedule WHERE edition = @Edition AND telegram_chat_id = @ChatId
+ORDER BY until_at", new { Edition = BanHistory.Edition, ChatId })).ToArray();
+        }
 
-        /// <summary>
-        /// Moves every tempban in the schedule into the past and runs the check the bot's timer
-        /// runs, then waits for what it set off.
-        /// </summary>
+        /// <summary>When the member's tempban here ends (Unix seconds), or null.</summary>
+        internal async Task<long?> TempbanEndAsync(HarnessUser user)
+        {
+            var row = (await TempbansAsync()).Where(t => t.UserId == user.Id).ToArray();
+            return row.Length == 0 ? null : new DateTimeOffset(DateTime.SpecifyKind(row[0].Until, DateTimeKind.Utc)).ToUnixTimeSeconds();
+        }
+
         /// <summary>A member's warns of <paramref name="kind"/> here, as the bot reads them (PostgreSQL since step 12).</summary>
         internal long WarnCount(HarnessUser user, Enforcer5.Models.WarnKind kind = Enforcer5.Models.WarnKind.Warn) =>
             Enforcer5.Data.Repositories.Warns.GetCountAsync(ChatId, kind, user.Id).GetAwaiter().GetResult();
@@ -448,14 +463,16 @@ namespace Enforcer5.Tests.Harness
         internal long LifetimeWarns(HarnessUser user) =>
             Enforcer5.Data.Repositories.Warns.GetCountsAsync(ChatId, user.Id).GetAwaiter().GetResult().Lifetime;
 
+        /// <summary>
+        /// Moves every tempban in the schedule into the past and runs the check the bot's timer
+        /// runs, then waits for what it set off.
+        /// </summary>
         internal async Task ExpireTempbansAsync()
         {
-            var due = 1;
-            foreach (var entry in Hashes.All(TempbanSchedule))
-            {
-                Hashes[TempbanSchedule, entry.Key] = null;
-                Hashes[TempbanSchedule, (due++).ToString()] = entry.Value;
-            }
+            await using (var connection = await Database.OpenConnectionAsync())
+                await Dapper.SqlMapper.ExecuteAsync(connection,
+                    "UPDATE tempban_schedule SET until_at = @Past WHERE edition = @Edition",
+                    new { Past = Enforcer5.Data.PostgresTempbanRepository.Second(Clock.UtcNow.AddMinutes(-1)), Edition = BanHistory.Edition });
             Bot.Dispatch(() => { Methods.CheckTempBans(null); return Task.CompletedTask; });
             await CompleteAsync();
         }

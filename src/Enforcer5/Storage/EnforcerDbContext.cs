@@ -30,7 +30,34 @@ namespace Enforcer5.Storage
             ConfigureRaidCapture(modelBuilder);
             ConfigureDetectionSettings(modelBuilder);
             ConfigureDetectionLog(modelBuilder);
+            ConfigureSchedules(modelBuilder);
             UseSnakeCaseColumns(modelBuilder);
+        }
+
+        private static void ConfigureSchedules(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<TempbanScheduleEntity>(entity =>
+            {
+                entity.ToTable("tempban_schedule", table =>
+                {
+                    table.HasCheckConstraint("tempban_schedule_edition_check", "edition IN ('normal', 'premium')");
+                    table.HasCheckConstraint("tempban_schedule_source_check", "source IN ('bot', 'redis')");
+                    table.HasCheckConstraint("tempban_schedule_claim_check", "(claimed_at IS NULL) = (claimed_by IS NULL)");
+                });
+                entity.HasKey(x => new { x.Edition, x.TelegramChatId, x.TelegramUserId });
+                entity.Property(x => x.Edition).IsRequired();
+                entity.Property(x => x.Source).IsRequired().HasDefaultValue("bot");
+                entity.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+                entity.HasIndex(x => new { x.Edition, x.UntilAt });
+                entity.HasIndex(x => new { x.TelegramUserId });
+            });
+
+            modelBuilder.Entity<StorageImportEntity>(entity =>
+            {
+                entity.ToTable("storage_imports");
+                entity.HasKey(x => x.Name);
+                entity.Property(x => x.DoneAt).HasDefaultValueSql("now()");
+            });
         }
 
         private const string LabelActions = "'ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine'";

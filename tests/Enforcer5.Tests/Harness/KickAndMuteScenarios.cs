@@ -155,15 +155,14 @@ ORDER BY s.sanction_id")).ToArray();
             await using var chat = await HarnessChat.StartAsync();
             var back = chat.Add("Back", MemberState.Left);
             var other = chat.Add("Other", MemberState.Kicked);
-            chat.Keys[$"chat:{chat.ChatId}:tempbanned:{back.Id}"] = "2000000000";
-            chat.Hashes[HarnessChat.TempbanSchedule, "2000000000"] = $"{chat.ChatId}:{back.Id}:Back:Group";
-            chat.Keys[$"chat:{chat.ChatId}:tempbanned:{other.Id}"] = "2000000100";
-            chat.Hashes[HarnessChat.TempbanSchedule, "2000000100"] = $"{chat.ChatId}:{other.Id}:Other:Group";
+            var tempbans = Enforcer5.Data.Repositories.Tempbans;
+            await tempbans.ScheduleAsync(chat.ChatId, back.Id, chat.Clock.UtcNow.AddDays(1), chat.Clock.UtcNow);
+            await tempbans.ScheduleAsync(chat.ChatId, other.Id, chat.Clock.UtcNow.AddDays(2), chat.Clock.UtcNow);
 
             await chat.JoinAsync(back);
 
-            Assert.IsNull(chat.Hashes[HarnessChat.TempbanSchedule, "2000000000"], "their entry is gone");
-            Assert.IsNotNull(chat.Hashes[HarnessChat.TempbanSchedule, "2000000100"], "someone else's stays");
+            CollectionAssert.AreEqual(new[] { other.Id }, (await chat.TempbansAsync()).Select(t => t.UserId).ToArray(),
+                "their entry is gone, someone else's stays");
             AssertNoErrors(chat);
         }
 

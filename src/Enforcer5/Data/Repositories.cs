@@ -115,25 +115,26 @@ namespace Enforcer5.Data
         // Redis. Why a member is banned, for /status.
         internal static IBanListRepository BanList { get; set; } = new RedisBanListRepository(() => Redis.db);
 
-        internal static ITempbanRepository Tempbans { get; set; } =
+        // PostgreSQL (rollout step 13), per edition, with changes queued in Redis while it is down (Helpers/TempbanStore).
+        // The old Redis schedule is read once, for the import.
+        internal static ITempbanRepository Tempbans { get; set; } = new TempbanStore(
+            new PostgresTempbanRepository(() => Storage.PostgresStorage.Database, Enforcer5.Helpers.BanHistory.Edition),
 #if PREMIUM
-            new RedisTempbanRepository(() => Redis.db, "tempbannedPremium");
+            new LegacyTempbans(() => Redis.db, "tempbannedPremium"),
 #else
-            new RedisTempbanRepository(() => Redis.db, "tempbanned");
+            new LegacyTempbans(() => Redis.db, "tempbanned"),
 #endif
+            () => Redis.db, () => Storage.PostgresStorage.Ready);
 
         /// <summary>
         /// Both editions' tempbans, this one's first: the inline <c>tempban</c> query shows a user theirs from
-        /// either bot.
+        /// either bot. Only read.
         /// </summary>
         internal static ITempbanRepository[] TempbansOfBothEditions { get; set; } =
         {
             Tempbans,
-#if PREMIUM
-            new RedisTempbanRepository(() => Redis.db, "tempbanned")
-#else
-            new RedisTempbanRepository(() => Redis.db, "tempbannedPremium")
-#endif
+            new PostgresTempbanRepository(() => Storage.PostgresStorage.Database,
+                Enforcer5.Helpers.BanHistory.Edition == "premium" ? "normal" : "premium")
         };
 
         /// <summary>Posts Detection deleted, for their reports (a cache, 24 hours).</summary>

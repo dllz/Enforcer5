@@ -313,13 +313,13 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
             var member = chat.Add("Member");
             var message = await chat.SendAsync(member, "spam");
             await chat.SendAsync(admin, "/tempban 2 h", replyTo: message);
-            Assert.AreEqual(1, chat.Hashes.All(HarnessChat.TempbanSchedule).Count);
+            Assert.AreEqual(1, (await chat.TempbansAsync()).Length);
 
             await chat.ExpireTempbansAsync();
 
             Assert.AreEqual(("tempban", "completed"), ((await Sanctions(chat)).Single().Kind, (await Sanctions(chat)).Single().Status));
             Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
-            Assert.AreEqual(0, chat.Hashes.All(HarnessChat.TempbanSchedule).Count);
+            Assert.AreEqual(0, (await chat.TempbansAsync()).Length);
             AssertNoErrors(chat);
         }
 
@@ -337,7 +337,7 @@ FROM sanctions ORDER BY sanction_id")).ToArray();
             await chat.ExpireTempbansAsync();
 
             Assert.AreEqual("completed", (await Sanctions(chat)).Single().Status);
-            Assert.AreEqual(0, chat.Hashes.All(HarnessChat.TempbanSchedule).Count);
+            Assert.AreEqual(0, (await chat.TempbansAsync()).Length);
             Assert.IsTrue(chat.Errors.All(e => e.Contains("Unbanning")), "Errors reported:\n" + string.Join("\n", chat.Errors));
         }
     }

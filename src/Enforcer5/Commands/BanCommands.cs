@@ -617,7 +617,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             try
             {
-                var now = DateTime.UtcNow;
+                var now = Clock.UtcNow;
                 var tempbans = Repositories.Tempbans.GetActiveAsync(update.Message.Chat.Id, now).GetAwaiter().GetResult();
                 if (tempbans.Count == 0)
                 {

@@ -1,6 +1,6 @@
 # Enforcer — Telegram group management bot
 
-Single .NET 10 console app. Redis is the main datastore; PostgreSQL is being rolled in one domain at a time, and global bans, the automatic checks' settings and warn counts already live only there (`docs/postgres-rollout.md`). New data goes to PostgreSQL; Redis is a cache and a communication system, not a store (Daniel, 2026-10-27). Deployed on Linux under systemd,
+Single .NET 10 console app. Redis is the main datastore; PostgreSQL is being rolled in one domain at a time, and global bans, the automatic checks' settings, warn counts and the tempban schedule already live only there (`docs/postgres-rollout.md`). New data goes to PostgreSQL; Redis is a cache and a communication system, not a store (Daniel, 2026-10-27). Deployed on Linux under systemd,
 alongside blackwolf, and managed by **blackwolf's DeployBot** (see below).
 
 ## Build

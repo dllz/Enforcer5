@@ -31,10 +31,9 @@ namespace Enforcer5.Actions
                                 .GetAwaiter().GetResult();
                         break;
                     case ActionKind.TempBan:
-                        // The latest tempban is the one that counts.
-                        Repositories.Tempbans.CancelAsync(request.ChatId, request.TargetId).GetAwaiter().GetResult();
-                        Repositories.Tempbans.ScheduleAsync(request.ChatId, request.TargetId, request.UntilUtc!.Value, Clock.UtcNow,
-                            ScheduleLabel(request.ChatId, request.TargetId)).GetAwaiter().GetResult();
+                        // The latest tempban is the one that counts: it replaces the member's earlier one.
+                        Repositories.Tempbans.ScheduleAsync(request.ChatId, request.TargetId, request.UntilUtc!.Value, Clock.UtcNow)
+                            .GetAwaiter().GetResult();
                         break;
                     case ActionKind.Unban:
                         Repositories.Tempbans.CancelAsync(request.ChatId, request.TargetId).GetAwaiter().GetResult();
@@ -56,14 +55,6 @@ namespace Enforcer5.Actions
             {
                 ErrorReporter.Report(e, $"Recording the {request.Kind} of {request.TargetId} in {request.ChatId}");
             }
-        }
-
-        /// <summary><c>{name}:{group}</c> for the schedule entry, as Commands.Tempban wrote it.</summary>
-        private static string ScheduleLabel(long chatId, long userId)
-        {
-            var name = Redis.db.HashGetAsync($"user:{userId}", "name").GetAwaiter().GetResult();
-            var group = Redis.db.HashGetAsync($"chat:{chatId}:details", "name").GetAwaiter().GetResult();
-            return $"{name}:{group}";
         }
     }
 }

@@ -19,13 +19,7 @@ namespace Enforcer5.Tests.Harness
         private static void AssertNoErrors(HarnessChat chat) =>
             Assert.AreEqual(0, chat.Errors.Count, "Errors reported:\n" + string.Join("\n", chat.Errors));
 
-        private static int Scheduled(HarnessChat chat) => chat.Hashes.All(HarnessChat.TempbanSchedule).Count;
-
-#if PREMIUM
-        private const string ChatList = "tempbannedPremium";
-#else
-        private const string ChatList = "tempbanned";
-#endif
+        private static int Scheduled(HarnessChat chat) => chat.TempbansAsync().GetAwaiter().GetResult().Length;
 
         private static async Task<(HarnessUser Admin, HarnessUser Member, Message Post)> TempbannedAsync(HarnessChat chat)
         {
@@ -33,8 +27,7 @@ namespace Enforcer5.Tests.Harness
             var member = chat.Add("Member");
             var post = await chat.SendAsync(member, "buy now");
             await chat.SendAsync(admin, "/tempban 2 h", replyTo: post);
-            Assert.AreEqual(1, Scheduled(chat));
-            Assert.IsTrue(chat.Keys.Members($"chat:{chat.ChatId}:{ChatList}").Contains(member.Id.ToString()));
+            Assert.AreEqual(member.Id, (await chat.TempbansAsync()).Single().UserId);
             return (admin, member, post);
         }
 
@@ -42,8 +35,6 @@ namespace Enforcer5.Tests.Harness
         private static async Task AssertStaysBannedAsync(HarnessChat chat, HarnessUser member)
         {
             Assert.AreEqual(0, Scheduled(chat), "the tempban is out of the schedule");
-            Assert.IsFalse(chat.Keys.Members($"chat:{chat.ChatId}:{ChatList}").Contains(member.Id.ToString()));
-            Assert.IsNull(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{member.Id}"]);
             await chat.ExpireTempbansAsync();
             Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id));
         }
@@ -109,9 +100,9 @@ namespace Enforcer5.Tests.Harness
 
             await chat.SendAsync(admin, "/tempban 3 d", replyTo: post);
 
-            var entry = chat.Hashes.All(HarnessChat.TempbanSchedule).Single();
-            StringAssert.StartsWith(entry.Value, $"{chat.ChatId}:{member.Id}:");
-            Assert.AreEqual(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{member.Id}"], entry.Key);
+            var entry = (await chat.TempbansAsync()).Single();
+            Assert.AreEqual(member.Id, entry.UserId);
+            Assert.IsTrue(Math.Abs((chat.Clock.UtcNow.AddDays(3) - entry.Until).TotalSeconds) < 5, "the second one's end");
             AssertNoErrors(chat);
         }
 
@@ -142,7 +133,6 @@ namespace Enforcer5.Tests.Harness
             await chat.SendAsync(admin, $"/unban {member.Id}");
 
             Assert.AreEqual(0, Scheduled(chat));
-            Assert.IsFalse(chat.Keys.Members($"chat:{chat.ChatId}:{ChatList}").Contains(member.Id.ToString()));
             AssertNoErrors(chat);
         }
 
@@ -155,8 +145,7 @@ namespace Enforcer5.Tests.Harness
 
             await chat.JoinAsync(member);
 
-            Assert.AreEqual(0, Scheduled(chat));
-            Assert.IsFalse(chat.Keys.Members($"chat:{chat.ChatId}:{ChatList}").Contains(member.Id.ToString()), "/tempbans no longer lists them");
+            Assert.AreEqual(0, Scheduled(chat), "/tempbans no longer lists them");
             AssertNoErrors(chat);
         }
 
@@ -188,12 +177,43 @@ namespace Enforcer5.Tests.Harness
             Assert.AreEqual("Cats & Dogs", result.Description, "plain text, escaped nowhere");
             var text = ((Telegram.Bot.Types.InlineQueryResults.InputTextMessageContent)result.InputMessageContent).MessageText;
             StringAssert.Contains(text, "<b>Cats &amp; Dogs</b>");
-            var ends = DateTimeOffset.FromUnixTimeSeconds(long.Parse(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{member.Id}"])).UtcDateTime;
+            var ends = DateTimeOffset.FromUnixTimeSeconds((await chat.TempbanEndAsync(member)).Value).UtcDateTime;
             StringAssert.Contains(text, $"{ends:HH:mm:ss dd-MM-yyyy} UTC", "when it really ends, no two hours off");
 
             var nothing = await chat.InlineAsync(other, "tempban");
             Assert.AreEqual("Nothing Found", ((Telegram.Bot.Types.InlineQueryResults.InlineQueryResultArticle)nothing.Results.Single()).Title);
             Assert.AreEqual(0, chat.Errors.Count, string.Join("\n", chat.Errors));
+        }
+
+        [TestMethod]
+        public async Task ATempbanWhilePostgresIsDown_IsQueued_AndLiftedOnceItIsBack()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var post = await chat.SendAsync(member, "buy now");
+            var store = (Helpers.TempbanStore)Data.Repositories.Tempbans;
+
+            Enforcer5.Storage.PostgresStorage.UseForTests(null);
+            try
+            {
+                await chat.SendAsync(admin, "/tempban 2 h", replyTo: post);
+                Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id), "the tempban itself does not wait");
+                Assert.AreEqual(1, store.Queued);
+            }
+            finally
+            {
+                Enforcer5.Storage.PostgresStorage.UseForTests(chat.Database);
+            }
+            Assert.AreEqual(0, Scheduled(chat), "not written yet");
+
+            await store.DrainAsync();
+            Assert.AreEqual(1, Scheduled(chat));
+            await chat.ExpireTempbansAsync();
+
+            Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual(0, Scheduled(chat));
+            AssertNoErrors(chat);
         }
 
         [TestMethod]
@@ -207,7 +227,7 @@ namespace Enforcer5.Tests.Harness
             await chat.SendAsync(admin, "/tempban 2 h", replyTo: await chat.SendAsync(a, "x"));
             await chat.SendAsync(admin, "/tempban 3d", replyTo: await chat.SendAsync(b, "y"));
 
-            long Ends(HarnessUser u) => long.Parse(chat.Keys[$"chat:{chat.ChatId}:tempbanned:{u.Id}"]);
+            long Ends(HarnessUser u) => chat.TempbanEndAsync(u).GetAwaiter().GetResult().Value;
             var now = new DateTimeOffset(chat.Clock.UtcNow).ToUnixTimeSeconds();
             Assert.AreEqual(2 * 3600, Ends(a) - now, 5, "two hours, not two minutes");
             Assert.AreEqual(3 * 86400, Ends(b) - now, 5, "three days");

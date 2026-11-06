@@ -28,8 +28,8 @@ namespace Enforcer5.Tests.Storage
                 "account_profile_flags", "banned_media", "batch_items", "batches", "bot_events", "channel_profiles", "channel_reputation", "detection_adjustments", "detection_near_misses", "detection_policies", "detections", "domain_reputation", "global_bots", "global_sanctions", "group_bots", "group_filters", "group_joins", "group_members", "group_settings",
                 "group_stats", "groups", "media_scores", "member_labels", "member_pointers", "member_signals", "member_trust_overrides", "message_fingerprints",
                 "profile_scans", "raid_events", "raid_incidents", "recovery_items", "recovery_offers", "report_actions", "report_admin_optouts", "report_copies", "reports", "sanctions",
-                "telegram_account_profiles", "telegram_accounts",
-                "telegram_chat_profiles", "telegram_chats", "user_identity_links", "users",
+                "storage_imports", "telegram_account_profiles", "telegram_accounts",
+                "telegram_chat_profiles", "telegram_chats", "tempban_schedule", "user_identity_links", "users",
                 "warning_balances", "warning_events"
             }, tables);
         }

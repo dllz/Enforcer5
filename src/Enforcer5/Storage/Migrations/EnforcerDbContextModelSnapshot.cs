@@ -2483,6 +2483,27 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.StorageImportEntity", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text")
+                        .HasColumnName("details");
+
+                    b.Property<DateTimeOffset>("DoneAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("done_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("storage_imports", (string)null);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.TelegramAccountEntity", b =>
                 {
                     b.Property<long>("AccountId")
@@ -2645,6 +2666,61 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("telegram_chat_profiles", null, t =>
                         {
                             t.HasCheckConstraint("telegram_chat_profiles_validity_check", "valid_to IS NULL OR valid_to > valid_from");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.TempbanScheduleEntity", b =>
+                {
+                    b.Property<string>("Edition")
+                        .HasColumnType("text")
+                        .HasColumnName("edition");
+
+                    b.Property<long>("TelegramChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_chat_id");
+
+                    b.Property<long>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("claimed_at");
+
+                    b.Property<string>("ClaimedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("claimed_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("bot")
+                        .HasColumnName("source");
+
+                    b.Property<DateTimeOffset>("UntilAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("until_at");
+
+                    b.HasKey("Edition", "TelegramChatId", "TelegramUserId");
+
+                    b.HasIndex("TelegramUserId");
+
+                    b.HasIndex("Edition", "UntilAt");
+
+                    b.ToTable("tempban_schedule", null, t =>
+                        {
+                            t.HasCheckConstraint("tempban_schedule_claim_check", "(claimed_at IS NULL) = (claimed_by IS NULL)");
+
+                            t.HasCheckConstraint("tempban_schedule_edition_check", "edition IN ('normal', 'premium')");
+
+                            t.HasCheckConstraint("tempban_schedule_source_check", "source IN ('bot', 'redis')");
                         });
                 });
 

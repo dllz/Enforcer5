@@ -433,6 +433,31 @@ namespace Enforcer5.Storage
     /// is left alone everywhere, as the game's bots are; <c>blocked</c> is removed from every group, whoever
     /// added or summoned it.
     /// </summary>
+    /// <summary>
+    /// The tempbans each edition still has to lift (rollout step 13): one row per member per group per edition, the
+    /// latest tempban, by Telegram ids so it never waits for the principal rows. The expiry worker claims due rows
+    /// (<see cref="ClaimedAt"/>, <see cref="ClaimedBy"/>) and deletes them once the unban went out.
+    /// </summary>
+    internal sealed class TempbanScheduleEntity
+    {
+        public string Edition { get; set; }
+        public long TelegramChatId { get; set; }
+        public long TelegramUserId { get; set; }
+        public DateTimeOffset UntilAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public string Source { get; set; }
+        public DateTimeOffset? ClaimedAt { get; set; }
+        public string ClaimedBy { get; set; }
+    }
+
+    /// <summary>One-time imports from Redis that have run, so a restart never runs one again.</summary>
+    internal sealed class StorageImportEntity
+    {
+        public string Name { get; set; }
+        public DateTimeOffset DoneAt { get; set; }
+        public string Details { get; set; }
+    }
+
     internal sealed class GlobalBotEntity
     {
         public long AccountId { get; set; }

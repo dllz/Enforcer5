@@ -43,6 +43,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 10 | Detection settings, **cut over** (Detection v2 step 2): flood, flood exceptions, media locks, Arabic and right-to-left, text and name length, Mute On Join, max warns and their action, tempban and tempmute lengths, blocked inline bots and sticker packs, channel posts. PostgreSQL is the store, Redis a cache; each group's old hashes are imported on its first use | `group_settings` (the columns the checks use), `detection_policies`, `group_filters` | Built |
 | 11 | Detection engine (Detection v2 steps 3 and 4): every sign that fires (the checks that existed before included), with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
 | 12 | Warn counts, **cut over**: PostgreSQL decides max warns and the media limit; changes queue in Redis while it is down; each member's first change starts from the old hashes | `warning_balances`, `warning_events` | Built |
+| 13 | Tempban expiry, **cut over**: each edition's schedule in PostgreSQL, claimed by the expiry check; the old Redis schedule imported once; changes queue in Redis while it is down | `tempban_schedule`, `storage_imports` | Built |
 
 ### Step 2: ban history
 
@@ -94,8 +95,7 @@ that reached the limit.
 Tempbans have been written since step 2. Step 4 closes one gap: when the unban at expiry fails (the
 bot lost its rights, the group is gone), Redis still forgets the tempban and Telegram lifts it at
 its until date anyway, so the row is closed as `completed` instead of staying `active`. Tempbans
-from before step 2 are not imported; before expiry moves to PostgreSQL, check that the Redis
-schedule only holds tempbans from after step 2 shipped.
+from before step 2 have no history row; their schedule entries were imported with step 13.
 
 ### Step 5: kicks and mutes
 
@@ -171,9 +171,8 @@ had, so the script parses the shapes the old migration branch found (month-, day
 and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose time could not be
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
-Not migrated yet, still Redis only: everything else (raid state and the slow lane included), including tempban expiry (PostgreSQL is
-written, Redis decides), group settings other than the detection settings (step 10) and everything read back. (Global bans
-moved in this step; warn counts in step 12.) Old Redis ban and warn data is not
+Not migrated yet, still Redis only: everything else (raid state and the slow lane included), group settings other than the detection settings (step 10) and everything read back. (Global bans
+moved in this step; warn counts in step 12, tempban expiry in step 13.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -310,6 +309,34 @@ so the count a warn returns is what max warns and the media limit decide on, and
   (`Repositories.Warns`); recovery items of kind `warns` write through it, with the admin who applied them.
 - **Rollback.** A binary rollback finds the old hashes as they were at this deploy; warns given since are only in
   PostgreSQL.
+
+### Step 13: tempban expiry (cut over)
+
+The schedule of tempbans each edition still has to lift is in PostgreSQL (Daniel, 2026-11-06), behind the same
+`ITempbanRepository` (`Data/PostgresTempbanRepository`, `Helpers/TempbanStore`). Nothing is written to the old Redis
+schedule (`tempbanned`, `tempbannedPremium`, `chat:{id}:tempbanned*`) any more.
+
+- **`tempban_schedule`** (not in the approved design): one row per edition, group and member, by Telegram ids so it
+  never waits for the principal rows; a new tempban replaces the member's earlier one, so two ending in the same second
+  no longer collide. A ban, an unban and a rejoin delete it. `sanctions` stays the history: the schedule is what is
+  left to do, which is why it is its own table instead of `sanctions`' unused `due`/`claimed_*` columns (those need
+  the principal rows and are written in the background after Telegram carried the job out).
+- **Expiry.** `Methods.CheckTempBans` (every 30 s) claims due rows (`claimed_at`, `claimed_by`, `FOR UPDATE SKIP
+  LOCKED`, 200 at a time), lifts them through the seam as before and deletes them, unless the member was tempbanned
+  again meanwhile. A claim older than 10 minutes (a process stopped mid-way) is taken again.
+- **Import.** At startup, once PostgreSQL is ready, each edition imports its old hash once (`storage_imports` says
+  it ran): the latest end per member per group, as it is, including ends after the year 2100 (Daniel: an end that has
+  not come is a ban in force). Checked on prod before this step: 109 normal entries (76 members), 32 premium; no
+  per-group end keys left, and 4 members in 2 groups listed without one, which the old code did not count either.
+  Until the import ran, changes queue, so it cannot bring back a tempban a ban or rejoin ended.
+- **While PostgreSQL is down** a schedule or cancel goes to `tempbans:queue:{edition}` and is written in order once it
+  is back (both are idempotent). While anything waits, new changes queue behind it and the expiry check lifts nothing;
+  Telegram lifts a tempban under 366 days at its until date by itself, so an outage only delays the bot's own unban.
+  `/tempbanlist` and the inline `tempban` query say they failed meanwhile.
+- **Joins.** Every join cancels the joiner's tempban; the members scheduled are kept in memory, so a join of someone
+  with none costs nothing.
+- **Rollback.** The old hash is left as it was at the deploy; a binary rollback would lift its entries at their old
+  ends, including ones ended since.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

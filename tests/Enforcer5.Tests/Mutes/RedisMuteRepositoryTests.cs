@@ -197,7 +197,7 @@ namespace Enforcer5.Tests.Mutes
         public void CompositionRoot_UsesRedis()
         {
             Assert.IsInstanceOfType(Repositories.Mutes, typeof(RedisMuteRepository));
-            Assert.IsInstanceOfType(Repositories.Tempbans, typeof(RedisTempbanRepository));
+            Assert.IsInstanceOfType(Repositories.Tempbans, typeof(Enforcer5.Helpers.TempbanStore));
         }
     }
 }
