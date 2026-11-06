@@ -1226,7 +1226,7 @@ namespace Enforcer5.Raids
                 LinkReported[(chatId, user)] = Clock.UtcNow;
             }
             var message = ctx.Message;
-            var reportsOff = ctx.Setting("Flagged").Equals("yes"); // the group turned reports off
+            var reportsOff = ctx.Config?.Flag(ConfigFlag.Reports) == false; // the group turned reports off
             Detection.DetectionEngine.Checked(chatId, user, message, Detection.SignCatalog.RaidLink, reportsOff ? "none" : "report",
                 reported: !reportsOff);
             if (reportsOff) return;
@@ -1367,7 +1367,6 @@ namespace Enforcer5.Raids
             AdminDirectory.ResetForTests();
             ChatDetails.ResetForTests();
             LogDigest.ResetForTests();
-            GroupSettings.ResetForTests();
         }
 
         /// <summary>Reloads the incidents from Redis, as a restart does. For tests.</summary>

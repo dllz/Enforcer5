@@ -274,9 +274,8 @@ namespace Enforcer5.Helpers
             {
                 try
                 {
-                    var settings = $"chat:{group}:settings";
-                    if (Redis.db.HashGetAsync(settings, "logchat").Result.ToString() != logChat.ToString()) continue;
-                    Redis.db.HashDeleteAsync(settings, "logchat").Wait();
+                    if (GroupConfigs.For(group).LogChat != logChat) continue;
+                    GroupConfigs.Change(group, Data.ConfigChange.SetLogChat(null));
                     Bot.Send(Methods.GetLocaleString(Methods.GetGroupLanguage(group).Doc, "logchannelAutoRemoved"), group);
                 }
                 catch (Exception e)

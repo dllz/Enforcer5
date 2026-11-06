@@ -32,8 +32,8 @@ namespace Enforcer5
             var blocked = Roles.Contains(update.Message.Chat.Id, Data.RoleList.ReportBlocked, update.Message.From.Id);
             if (blocked)
                 return;
-            var ReportOn = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Flagged").Result;
-            if (ReportOn.Equals("yes"))
+            // Reports off (the menu's toggle; it never worked before rollout step 15).
+            if (!GroupConfigs.For(update.Message.Chat.Id).Flag(ConfigFlag.Reports))
                 return;
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (update.Message.ReplyToMessage != null)
@@ -292,7 +292,7 @@ namespace Enforcer5
             var sendMessageIds = new List<int>();
             var modsSentTo = new List<long>();
             var count = 0;
-            var groupLink = Redis.db.HashGetAsync($"chat:{chatId}links", "link");
+            var groupLink = GroupConfigs.For(chatId).Text(ContentKind.Link);
             foreach (var user in mods)
             {
                 if (user != null)
@@ -413,10 +413,10 @@ namespace Enforcer5
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
                                         new InlineButton(Methods.GetLocaleString(lang, "delete"),$"delflag:{updateMessage.Chat.Id}:{currentMsgId}:{repId}:{updateMessage.ReplyToMessage.From.Id}"),
-                                        groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
+                                        !string.IsNullOrEmpty(groupLink) && !groupLink.ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink.Result.ToString())
+                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink)
                                             }
                                             : null
                                     }
@@ -434,10 +434,10 @@ namespace Enforcer5
                                     {
                                         new InlineButton(Methods.GetLocaleString(lang, "markSolved"),
                                             $"solveflag:{updateMessage.Chat.Id}:{repId}"),
-                                        groupLink.Result.HasValue && !groupLink.Result.ToString().ToLower().Equals("no")
+                                        !string.IsNullOrEmpty(groupLink) && !groupLink.ToLower().Equals("no")
                                             ? new InlineButton(Methods.GetLocaleString(lang, "goToChat"))
                                             {
-                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink.Result.ToString())
+                                                Url = Methods.GetChatMessageLink(updateMessage.Chat.Id, repId.ToString(), chatLink: groupLink)
                                             }
                                             : null
                                     }

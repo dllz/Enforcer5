@@ -49,7 +49,8 @@ namespace Enforcer5.Models
 
         public XDocument Lang;
 
-        public HashEntry[] Settings;        // chat:{id}:settings
+        /// <summary>The group's config (settings, welcome, texts, extras; Helpers/GroupConfigs).</summary>
+        public GroupConfig Config;
 
         /// <summary>
         /// The settings of the automatic checks (flood, media, scripts, lengths, blocklists, channel
@@ -89,8 +90,6 @@ namespace Enforcer5.Models
             return RedisValue.Null;
         }
 
-        public RedisValue Setting(string name) => Field(Settings, name);
-
         /// <summary>
         /// Issues every read the hot path needs at once. SE.Redis pipelines them onto the single
         /// connection, so the batch costs roughly one round-trip of latency rather than one each,
@@ -129,14 +128,13 @@ namespace Enforcer5.Models
 
             var db = Redis.db;
             var watch = Roles.ContainsAsync(context.ChatId, RoleList.Exempt, context.UserId);
-            // A busy group's settings come from a snapshot at most SettingsFor old (see GroupSettings).
-            var cached = GroupSettings.Get(context.ChatId);
-            var settings = cached != null
-                ? Task.FromResult(cached.Settings)
-                : db.HashGetAllAsync($"chat:{context.ChatId}:settings");
             // In memory nearly always; see DetectionSettings for when it reads Redis.
             var policy = DetectionSettings.GetAsync(context.ChatId);
-            var language = Methods.GetGroupLanguageAsync(context.ChatId);
+            // In memory nearly always; see GroupConfigs for when it waits. After the detection settings, which a cold
+            // group's config import needs first: one wait at a time.
+            var settings = AfterAsync(policy, () => GroupConfigs.GetAsync(context.ChatId));
+            // After the config, which holds the group's language: one wait for a cold group, not two side by side.
+            var language = AfterAsync(settings, () => Methods.GetGroupLanguageAsync(context.ChatId));
             var channelPosts = message.SenderChat != null && message.SenderChat.Id != context.ChatId
                 ? Repositories.ChannelPosts.GetPolicyAsync(context.ChatId, message.SenderChat.Id)
                 : Task.FromResult<ChannelPostPolicy>(null);
@@ -156,7 +154,7 @@ namespace Enforcer5.Models
                 ErrorReporter.Report(e, $"Partial context for {context.ChatId}; skipping moderation for this message");
             }
 
-            context.Settings = Value(settings);
+            context.Config = Value(settings);
             context.Policy = Value(policy);
             context.GlobalBan = GlobalBans.Get(globalBanId);
             context.Lang = Value(language)?.Doc;
@@ -171,9 +169,6 @@ namespace Enforcer5.Models
 
             context.Complete = Ok(watch) && Ok(settings) && context.Policy != null && Ok(language) && Ok(channelPosts);
 
-            if (cached == null && Ok(settings))
-                GroupSettings.Store(context.ChatId, new GroupSettings.Snapshot(context.Settings));
-
             // Fail closed: if we could not read the watch list, treat the user as exempt rather
             // than as fair game.
             context.Watched = Ok(watch) ? watch.Result : true;
@@ -182,6 +177,19 @@ namespace Enforcer5.Models
         }
 
         private static bool Ok(Task task) => task.Status == TaskStatus.RanToCompletion;
+
+        private static async Task<T> AfterAsync<T>(Task first, Func<Task<T>> then)
+        {
+            try
+            {
+                await first;
+            }
+            catch
+            {
+                // Reported where it is awaited below; the next read goes ahead anyway.
+            }
+            return await then();
+        }
 
         /// <summary>Result of a completed read, or default if it faulted or was cancelled.</summary>
         private static T Value<T>(Task<T> task)

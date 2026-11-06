@@ -120,7 +120,9 @@ namespace Enforcer5.Helpers
             var db = Redis.db;
             var reads = groups.ToDictionary(g => g.TelegramChatId, g => (
                 Count: db.HashLengthAsync($"chat:{g.TelegramChatId}:userlast"),
-                Link: db.HashGetAsync($"chat:{g.TelegramChatId}links", "link")));
+                // The link set with /setlink is in the group's config since rollout step 15 (in memory: the group sent
+                // something this minute).
+                Link: LinkAsync(g.TelegramChatId)));
             try
             {
                 await Task.WhenAll(reads.Values.SelectMany(r => new Task[] { r.Count, r.Link }));
@@ -148,12 +150,15 @@ namespace Enforcer5.Helpers
             };
         }
 
+        private static async Task<string> LinkAsync(long chatId) =>
+            (await GroupConfigs.GetAsync(chatId)).Text(Data.ContentKind.Link);
+
         /// <summary>A public group's t.me link, else the invite link an admin set ("no" means removed).</summary>
-        internal static string PublicLink(string username, RedisValue stored)
+        internal static string PublicLink(string username, string stored)
         {
             if (!string.IsNullOrEmpty(username)) return $"https://t.me/{username}";
-            if (stored.IsNullOrEmpty || stored == "no") return null;
-            return stored.ToString();
+            if (string.IsNullOrEmpty(stored) || stored == "no") return null;
+            return stored;
         }
     }
 }

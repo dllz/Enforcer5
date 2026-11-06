@@ -33,7 +33,7 @@ namespace Enforcer5
                 try
                 {
                     var result = Bot.SendReply(input, update);
-                    Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", input);
+                    GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.Rules, input));
                     var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                          Methods.GetLocaleString(lang, "RulesSet"));
                     Service.LogCommand(update, update.Message.Text);
@@ -59,9 +59,9 @@ namespace Enforcer5
                 var input = args[1];
                 try
                 {
-                    var rules = Redis.db.StringGetAsync($"chat:{update.Message.Chat.Id}:rules").Result;
+                    var rules = GroupConfigs.For(update.Message.Chat.Id).Text(ContentKind.Rules);
                     var result = Bot.SendReply(input, update);
-                    Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:rules", $"{rules}\n{input}");
+                    GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.Rules, $"{rules}\n{input}"));
                     var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "RulesSet"));
                     Service.LogCommand(update, update.Message.Text);
@@ -88,7 +88,7 @@ namespace Enforcer5
                 try
                 {
                     var result = Bot.SendReply(input, update);
-                    Redis.db.StringSetAsync($"chat:{update.Message.Chat.Id}:about", input);
+                    GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.About, input));
                     var res = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "AboutSet"));
                     Service.LogCommand(update, update.Message.Text);
@@ -236,9 +236,7 @@ namespace Enforcer5
                     {
                         var res = Bot.SendReply(text, update);
                         var result = res;
-                        var hash = $"chat:{update.Message.Chat.Id}:extra";
-                        Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
-                        Redis.db.HashSetAsync(hash, words[0], text);
+                        GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetExtra(words[0], ExtraConfig.OfText(text)));
                         var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                             Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                         Service.LogCommand(update, update.Message.Text);
@@ -270,8 +268,7 @@ namespace Enforcer5
                     var type = Methods.GetMediaType(update.Message.ReplyToMessage);
                     if (!string.IsNullOrEmpty(type))
                     {
-                        var toSave = $"###file_id!{type}###:{fileId}";
-                        Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
+                        GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetExtra(words[0], ExtraConfig.OfFile(type, fileId, Helpers.BanHistory.Edition)));
                         Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                         Service.LogCommand(update, update.Message.Text);
                         return;
@@ -293,9 +290,7 @@ namespace Enforcer5
                         {
                             var res = Bot.SendReply(text, update);
                             var result = res;
-                            var hash = $"chat:{update.Message.Chat.Id}:extra";
-                            Redis.db.HashSetAsync($"{hash}:{words[0]}", "mediaid", toSave);
-                            Redis.db.HashSetAsync(hash, words[0], text);
+                            GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetExtra(words[0], ExtraConfig.OfText(text, toSave, Helpers.BanHistory.Edition)));
                             var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                                 Methods.GetLocaleString(lang, "extraMediaSaved", words[0]));
                             Service.LogCommand(update, update.Message.Text);
@@ -328,10 +323,8 @@ namespace Enforcer5
                         try
                         {
                             var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
-                            var toSave = $"###file_id!{type}###:{fileId}";
-                            Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:extra", words[0], toSave);
-                            var hash = $"chat:{update.Message.Chat.Id}:extra";
-                            Redis.db.HashSetAsync($"{hash}:{words[0]}", "caption", words[1]);
+                            GroupConfigs.Change(update.Message.Chat.Id,
+                                ConfigChange.SetExtra(words[0], ExtraConfig.OfFile(type, fileId, Helpers.BanHistory.Edition, words[1])));
                             Bot.Send(Methods.GetLocaleString(lang, "extraMediaSaved", words[0]), update);
                             Service.LogCommand(update, update.Message.Text);
                         }
@@ -366,9 +359,7 @@ namespace Enforcer5
                 {
                     var res = Bot.SendReply(text, update);
                     var result = res;
-                    var hash = $"chat:{update.Message.Chat.Id}:extra";
-                    Redis.db.HashDeleteAsync($"{hash}:{words[0]}", "mediaid");
-                    Redis.db.HashSetAsync(hash, words[0], text);
+                    GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetExtra(words[0], ExtraConfig.OfText(text)));
                     var resulted = Bot.Api.EditMessageText(update.Message.Chat.Id, result.MessageId,
                         Methods.GetLocaleString(lang, "extraSaved", words[0]));
                     Service.LogCommand(update, update.Message.Text);
@@ -402,8 +393,7 @@ namespace Enforcer5
         public static void ExtraList(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:extra";
-            var commands = Redis.db.HashKeysAsync(hash).Result;
+            var commands = GroupConfigs.For(update.Message.Chat.Id).Extras.Keys.ToArray();
             var text = string.Join("\n", commands.ToList());
             // In a group's admin chat: its own extras, then each group's, in sections.
             var groups = Detection.AdminChats.GroupsOf(update.Message.Chat.Id);
@@ -414,7 +404,7 @@ namespace Enforcer5
                     sections.Add(Methods.GetLocaleString(lang, "extraListAdminChat") + "\n" + text);
                 foreach (var group in groups)
                 {
-                    var theirs = Redis.db.HashKeysAsync($"chat:{group}:extra").Result;
+                    var theirs = GroupConfigs.For(group).Extras.Keys.ToArray();
                     if (theirs.Length == 0) continue;
                     var title = ChatDetails.GetAsync(group).GetAwaiter().GetResult()?.Title ?? group.ToString();
                     sections.Add(Methods.GetLocaleString(lang, "extraListGroup", title) + "\n" + string.Join("\n", theirs.ToList()));
@@ -448,9 +438,10 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             if (args[1] != null)
             {
-                var hash = $"chat:{update.Message.Chat.Id}:extra";
-                var res = Redis.db.HashDeleteAsync(hash, args[1]);
-                if (res.Result)
+                // The extra and what went with it (a GIF, a caption): the old side hash outlived it.
+                var had = GroupConfigs.For(update.Message.Chat.Id).Extra(args[1]) != null;
+                if (had) GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetExtra(args[1], null));
+                if (had)
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "extraDeleted"), update);
                     Service.LogCommand(update, update.Message.Text);
@@ -470,7 +461,7 @@ namespace Enforcer5
             if (update.Message.Chat.Username != null)
             {
                 link = $"https://t.me/{update.Message.Chat.Username}";
-                Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
+                GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.Link, link));
                 Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
                 Service.LogCommand(update, update.Message.Text);
             }
@@ -480,14 +471,14 @@ namespace Enforcer5
                 {
                     if (args[1].ToLower().Equals("no"))
                     {
-                        Redis.db.HashDeleteAsync($"chat:{update.Message.Chat.Id}links", "link");
+                        GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.Link, null));
                         Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
                         Service.LogCommand(update, update.Message.Text);
                     }
                     else
                     {
                         link = args[1];
-                        Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}links", "link", link);
+                        GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetContent(ContentKind.Link, link));
                         Bot.SendReply(Methods.GetLocaleString(lang, "linkSet"), update);
                         Service.LogCommand(update, update.Message.Text);
                     }
@@ -569,10 +560,12 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var chatId = update.Message.Chat.Id;
-            var settings = Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome");
-            if (!settings.HasValue)
+            // Each /welcome sets the whole welcome (rollout step 15: the group's config, no longer chat:{id}:welcome).
+            void Save(WelcomeConfig welcome) => GroupConfigs.Change(chatId, ConfigChange.SetWelcome(welcome));
+            void Saved()
             {
-                tempAddDeleteLastWelcomeSetting(update, chatId);
+                Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
+                Service.LogCommand(update, update.Message.Text);
             }
 
             if (args.Length == 2)
@@ -582,111 +575,56 @@ namespace Enforcer5
                 var toggle = args[1]?.Trim().ToLowerInvariant();
                 if (toggle is "on" or "off")
                 {
-                    // The setting is inverted: "yes" turns the welcome off.
-                    Redis.db.HashSetAsync($"chat:{chatId}:settings", "Welcome", toggle == "on" ? "no" : "yes");
+                    GroupConfigs.Change(chatId, ConfigChange.SetFlag(ConfigFlag.Welcome, toggle == "on"));
                     Bot.SendReply(Methods.GetLocaleString(lang, toggle == "on" ? "welcomeTurnedOn" : "welcomeTurnedOff"), update);
                     Service.LogCommand(update, update.Message.Text);
                     return;
                 }
                 if (!string.IsNullOrEmpty(args[1]))
                 {
-                    Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "false");
-                    if (update.Message.ReplyToMessage != null)
+                    // A GIF replied to goes with a custom welcome.
+                    string gif = null;
+                    if (update.Message.ReplyToMessage != null && Methods.GetMediaType(update.Message.ReplyToMessage) == "gif")
+                        gif = Methods.GetMediaId(update.Message.ReplyToMessage);
+                    var composed = args[1] switch
                     {
-                        var repliedTo = Methods.GetMediaType(update.Message.ReplyToMessage);
-                        if (repliedTo.Equals("gif"))
-                        {
-                            var fileId = Methods.GetMediaId(update.Message.ReplyToMessage);
-                            Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", "true");
-                            Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileId);
-                            Service.LogCommand(update, update.Message.Text);
-                        }
+                        "a" => "a",
+                        "r" => "r",
+                        "m" => "m",
+                        "ar" or "ra" => "ra",
+                        "mr" or "rm" => "rm",
+                        "am" or "ma" => "am",
+                        "ram" or "rma" or "arm" or "amr" or "mra" or "mar" => "ram",
+                        "no" => "no",
+                        _ => null
+                    };
+                    if (composed != null)
+                    {
+                        Save(new WelcomeConfig("composed", composed, null, null));
+                        Saved();
+                        return;
                     }
-                    if (args[1].Equals("a"))
+                    try
                     {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "a");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
+                        // Shown first: a text Telegram refuses is not saved.
+                        var res = Bot.SendReply(args[1], update);
+                        Save(new WelcomeConfig("custom", args[1], gif, gif != null ? Helpers.BanHistory.Edition : null));
+                        Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet",
+                            Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), ParseMode.Html);
                         Service.LogCommand(update, update.Message.Text);
                     }
-                    else if (args[1].Equals("r"))
+                    catch (AggregateException e)
                     {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "r");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("m"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "m");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("ar") || args[1].Equals("ra"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ra");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("mr") || args[1].Equals("rm"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "rm");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("am") || args[1].Equals("ma"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "am");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("ram") || args[1].Equals("rma") || args[1].Equals("arm") || args[1].Equals("amr") || args[1].Equals("mra") || args[1].Equals("mar"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "ram");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else if (args[1].Equals("no"))
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
-                        Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update.Message);
-                        Service.LogCommand(update, update.Message.Text);
-                    }
-                    else
-                    {
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "custom");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
-                        try
-                        {
-                            var res = Bot.SendReply(args[1], update);
-                            var result = Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), ParseMode.Html);
-                            Service.LogCommand(update, update.Message.Text);
-                        }
-                        catch (AggregateException e)
-                        {
-                            ErrorReporter.Report(e, "Setting custom welcome");
-                            Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "composed");
-                            Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", "no");
-                            Bot.SendReply(e.Message, update);
-                        }
+                        ErrorReporter.Report(e, "Setting custom welcome");
+                        Save(new WelcomeConfig("composed", "no", null, null));
+                        Bot.SendReply(e.Message, update);
                     }
                 }
                 else if (update.Message.ReplyToMessage != null)
                 {
-                    var repliedTo = Methods.GetMediaType(update.Message.ReplyToMessage);
-                    if (repliedTo.Equals("gif"))
+                    if (Methods.GetMediaType(update.Message.ReplyToMessage) == "gif")
                     {
-                        var fileID = Methods.GetMediaId(update.Message.ReplyToMessage);
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "type", "media");
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "content", args[1]);
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "media", fileID);
-                        Redis.db.HashSetAsync($"chat:{chatId}:welcome", "hasmedia", true);
+                        Save(new WelcomeConfig("media", null, Methods.GetMediaId(update.Message.ReplyToMessage), Helpers.BanHistory.Edition));
                         Bot.SendReply(Methods.GetLocaleString(lang, "welcomeSet", Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), update);
                         Service.LogCommand(update, update.Message.Text);
                     }
@@ -696,13 +634,6 @@ namespace Enforcer5
                     Bot.SendReply(Methods.GetLocaleString(lang, "incorrectArgument"), update);
                 }
             }
-        }
-
-        public static void tempAddDeleteLastWelcomeSetting(Update update, long chatId)
-        {
-            Redis.db.HashSetAsync($"chat:{chatId}:settings", "DeleteLastWelcome", "no");
-            var text = "We have set DeleteWelcomeLastMessage to 'no'. You can change this in the group settings menu.";
-            Bot.SendReply(text, update.Message);
         }
 
         [Command(Trigger = "disablewatch", InGroupOnly = true, GroupAdminOnly = true)]
@@ -813,8 +744,7 @@ namespace Enforcer5
                 {
                     if (channelId == chat)
                         return;
-                    Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
-                    Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
+                    GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetLogChat(channelId));
                     Service.LogCommand(update, update.Message.Text);
 
                     Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);
@@ -826,8 +756,7 @@ namespace Enforcer5
                         channelId = update.Message.ReplyToMessage.ForwardFromChat.Id;
                         if (channelId == chat)
                             return;
-                        Redis.db.HashSetAsync($"chat:{update.Message.Chat.Id}:settings", "logchat", channelId);
-                        Redis.db.SetAddAsync("logChatGroups", update.Message.Chat.Id);
+                        GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetLogChat(channelId));
                         Service.LogCommand(update, update.Message.Text);
 
                         Bot.SendReply(Methods.GetLocaleString(lang, "channelAdded"), update);
@@ -850,7 +779,7 @@ namespace Enforcer5
             {
                 var lang = Methods.GetGroupLanguage(chat).Doc;
                 Service.LogCommand(update, update.Message.Text);
-                Redis.db.SetRemoveAsync("logChatGroups", update.Message.Chat.Id);
+                GroupConfigs.Change(update.Message.Chat.Id, ConfigChange.SetLogChat(null));
                 Bot.Send(Methods.GetLocaleString(lang, "logchannelRemoved"), update);
             }
         }

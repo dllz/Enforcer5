@@ -153,7 +153,7 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
             Assert.AreEqual("3", Warns(chat, kept));
             Assert.AreEqual(3L, chat.LifetimeWarns(kept));
             Assert.AreEqual("1", Warns(chat, unticked), "unticked: left alone");
-            Assert.AreEqual("Be nice", chat.Hashes[$"chat:{chat.ChatId}:extra", "#rules"]);
+            Assert.AreEqual("Be nice", Enforcer5.Helpers.GroupConfigs.For(chat.ChatId).Extra("#rules")?.Text);
             Assert.IsTrue((await Repositories.InlineBotBlocks.GetAsync(chat.ChatId)).Any(b => b.Value == "spambot"));
             CollectionAssert.AreEqual(new[] { ("add", 2L, RecoveryOffers.Reason) }, await WarnEvents(chat, kept));
             Assert.AreEqual(0, (await WarnEvents(chat, unticked)).Length);
@@ -175,14 +175,14 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
             await OfferAsync(chat, File(chat, WarnsItem(chat, member, "1", "3"), ExtraItem(chat, "#rules", "Old", "Older")));
             // Since the offer was worked out: warned twice more, and the extra was rewritten.
             chat.Hashes[$"chat:{chat.ChatId}:warns", member.Id.ToString()] = "2";
-            chat.Hashes[$"chat:{chat.ChatId}:extra", "#rules"] = "New";
+            Enforcer5.Helpers.GroupConfigs.Change(chat.ChatId, Enforcer5.Data.ConfigChange.SetExtra("#rules", Enforcer5.Data.ExtraConfig.OfText("New")));
 
             var offer = Offer(chat, admin);
             await Press(chat, admin, offer, "ap");
             await Press(chat, admin, offer, "ok");
 
             Assert.AreEqual("4", Warns(chat, member), "2 now, plus the 2 recovered");
-            Assert.AreEqual("New", chat.Hashes[$"chat:{chat.ChatId}:extra", "#rules"], "changed since: kept");
+            Assert.AreEqual("New", Enforcer5.Helpers.GroupConfigs.For(chat.ChatId).Extra("#rules")?.Text, "changed since: kept");
             StringAssert.Contains(offer.Text, S(chat, "recoverySkipped"));
             StringAssert.Contains(offer.Text, "#rules");
             AssertNoErrors(chat);

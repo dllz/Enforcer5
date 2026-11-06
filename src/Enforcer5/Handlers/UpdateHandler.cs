@@ -648,60 +648,9 @@ namespace Enforcer5.Handlers
         private static void ForgetTempban(long chatId, long userId) =>
             Data.Repositories.Tempbans.CancelAsync(chatId, userId).GetAwaiter().GetResult();
 
-        // One-time schema migrations. These were re-checked against Redis on every group message
-        // forever - four blocking round-trips per message. Once a chat has been seen in this
-        // process the check is skipped entirely.
-        private static readonly ConcurrentDictionary<long, byte> _migratedSettings = new ConcurrentDictionary<long, byte>();
-        private static readonly ConcurrentDictionary<long, byte> _migratedSettings2 = new ConcurrentDictionary<long, byte>();
-        private static readonly ConcurrentDictionary<long, byte> _migratedSettings3 = new ConcurrentDictionary<long, byte>();
-        // The fourth, dbUpdate:lenghtUpdat4 (negative warn counts set back to 0), went with rollout step 12: the
-        // counts moved to PostgreSQL, which never goes below 0, and the old hashes are only read through
-        // LegacyWarnCounts, which reads a negative count as 0.
-
-        private static async Task RunPendingMigrations(MessageContext ctx)
-        {
-            var chatId = ctx.ChatId;
-
-            var needSettings = !_migratedSettings.ContainsKey(chatId);
-            var needSettings2 = !_migratedSettings2.ContainsKey(chatId);
-            var needSettings3 = !_migratedSettings3.ContainsKey(chatId);
-            if (!needSettings && !needSettings2 && !needSettings3) return;
-
-            var db = Redis.db;
-            var doneTask = needSettings ? db.SetContainsAsync("lenghtUpdate3", chatId) : Task.FromResult(true);
-            var done2Task = needSettings2 ? db.SetContainsAsync("lenghtUpdate", chatId) : Task.FromResult(true);
-            var done3Task = needSettings3 ? db.SetContainsAsync("dbUpdate:lenghtUpdate", chatId) : Task.FromResult(true);
-            await Task.WhenAll(doneTask, done2Task, done3Task);
-
-            if (needSettings)
-            {
-                if (!doneTask.Result)
-                {
-                    Service.NewSettings(chatId);
-                    db.SetAddAsync("lenghtUpdate3", chatId);
-                }
-                _migratedSettings[chatId] = 0;
-            }
-            if (needSettings2)
-            {
-                if (!done2Task.Result)
-                {
-                    Service.NewSetting2(chatId);
-                    db.SetAddAsync("lenghtUpdate", chatId);
-                }
-                _migratedSettings2[chatId] = 0;
-            }
-            if (needSettings3)
-            {
-                if (!done3Task.Result)
-                {
-                    Service.NewSetting3(chatId);
-                    db.SetAddAsync("dbUpdate:lenghtUpdate", chatId);
-                }
-                _migratedSettings3[chatId] = 0;
-            }
-        }
-
+        // The one-time Redis settings migrations (lenghtUpdate3, lenghtUpdate, dbUpdate:lenghtUpdate, dbUpdate:lenghtUpdat4)
+        // went with rollout steps 12 and 15: the settings and warn counts are in PostgreSQL, and the import reads the old
+        // keys as those migrations left them (a missing Help is "yes", as the last of them would have set it).
         private static async Task CollectStats(MessageContext ctx)
         {
             var updateMessage = ctx.Message;
@@ -753,7 +702,6 @@ namespace Enforcer5.Handlers
                         Redis.db.HashSetAsync($"chat:{updateMessage.Chat.Id}:userlast", updateMessage.From.Id, System.DateTime.Now.Ticks);
                         Redis.db.StringSetAsync($"chat:{updateMessage.Chat.Id}:chatlast", DateTime.Now.Ticks);
                     }
-                    await RunPendingMigrations(ctx);
                 }
             }
             catch (Exception e)

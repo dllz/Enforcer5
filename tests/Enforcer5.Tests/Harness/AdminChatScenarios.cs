@@ -90,10 +90,12 @@ namespace Enforcer5.Tests.Harness
         {
             var (group, adminChat, admin, member) = await SetUpAsync();
             await using var _ = group;
-            group.Hashes[$"chat:{group.ChatId}:extra", "#rules"] = "Be nice";
-            group.Hashes[$"chat:{group.ChatId}:extra", "#shared"] = "From the group";
-            group.Hashes[$"chat:{AdminChatId}:extra", "#shift"] = "Rota";
-            group.Hashes[$"chat:{AdminChatId}:extra", "#shared"] = "From the admin chat";
+            void Extra(long chat, string trigger, string text) =>
+                Enforcer5.Helpers.GroupConfigs.Change(chat, Enforcer5.Data.ConfigChange.SetExtra(trigger, Enforcer5.Data.ExtraConfig.OfText(text)));
+            Extra(group.ChatId, "#rules", "Be nice");
+            Extra(group.ChatId, "#shared", "From the group");
+            Extra(AdminChatId, "#shift", "Rota");
+            Extra(AdminChatId, "#shared", "From the admin chat");
 
             await adminChat.SendAsync(member, "#rules");
             Assert.AreEqual("Be nice", adminChat.Replies.Last());
@@ -112,9 +114,9 @@ namespace Enforcer5.Tests.Harness
             // Adding and deleting in the admin chat touches its own extras only.
             await adminChat.SendAsync(admin, "/extra #new Hello");
             await adminChat.SendAsync(admin, "/extradel #rules");
-            Assert.IsNotNull(group.Hashes[$"chat:{AdminChatId}:extra", "#new"]);
-            Assert.IsNull(group.Hashes[$"chat:{group.ChatId}:extra", "#new"]);
-            Assert.AreEqual("Be nice", group.Hashes[$"chat:{group.ChatId}:extra", "#rules"]);
+            Assert.IsNotNull(Enforcer5.Helpers.GroupConfigs.For(AdminChatId).Extra("#new"));
+            Assert.IsNull(Enforcer5.Helpers.GroupConfigs.For(group.ChatId).Extra("#new"));
+            Assert.AreEqual("Be nice", Enforcer5.Helpers.GroupConfigs.For(group.ChatId).Extra("#rules")?.Text);
             AssertNoErrors(group);
         }
 

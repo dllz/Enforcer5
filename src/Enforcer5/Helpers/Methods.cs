@@ -241,12 +241,16 @@ namespace Enforcer5.Helpers
 
         private static string ReadChatLanguage(long chatId)
         {
+            // A group's language is in its config (PostgreSQL since rollout step 15, in memory); a private chat's stays
+            // in Redis for now.
+            if (chatId < 0) return GroupConfigs.For(chatId).Text(ContentKind.Language);
             if (TryGetCachedLanguage(chatId, out var cached)) return cached;
             return CacheLanguage(chatId, Redis.db.StringGetAsync($"chat:{chatId}:language").Result);
         }
 
         internal static async Task<string> ReadChatLanguageAsync(long chatId)
         {
+            if (chatId < 0) return (await GroupConfigs.GetAsync(chatId)).Text(ContentKind.Language);
             if (TryGetCachedLanguage(chatId, out var cached)) return cached;
             return CacheLanguage(chatId, await Redis.db.StringGetAsync($"chat:{chatId}:language"));
         }
@@ -652,8 +656,8 @@ namespace Enforcer5.Helpers
 
         public static string GetAbout(long chatId, XDocument lang)
         {
-            var about = Redis.db.StringGetAsync($"chat:{chatId}:about").Result;
-            if (about.HasValue)
+            var about = GroupConfigs.For(chatId).Text(ContentKind.About);
+            if (about != null)
             {
                 return GetLocaleStringNoFormat(lang, "about", about);
             }
@@ -665,8 +669,8 @@ namespace Enforcer5.Helpers
 
         public static string  GetRules(long chatId, XDocument lang)
         {
-            var rules = Redis.db.StringGetAsync($"chat:{chatId}:rules").Result;
-            if (rules.HasValue)
+            var rules = GroupConfigs.For(chatId).Text(ContentKind.Rules);
+            if (rules != null)
             {
                 return GetLocaleStringNoFormat(lang, "rules", rules);
             }
@@ -678,8 +682,16 @@ namespace Enforcer5.Helpers
 
         public static bool SendInPm(Message updateMessage, string rules)
         {
-            var enabled = Redis.db.HashGetAsync($"chat:{updateMessage.Chat.Id}:settings", rules).Result;
-            return enabled.Equals("yes");
+            var config = GroupConfigs.For(updateMessage.Chat.Id);
+            return rules switch
+            {
+                "Rules" => config.Flag(ConfigFlag.RulesPrivate),
+                "About" => config.Flag(ConfigFlag.AboutPrivate),
+                "Modlist" => config.Flag(ConfigFlag.ModlistPrivate),
+                "Extra" => config.Flag(ConfigFlag.ExtraPrivate),
+                "Help" => config.Flag(ConfigFlag.HelpPrivate),
+                _ => throw new ArgumentOutOfRangeException(nameof(rules), rules, null)
+            };
         }
 
         public static T[] RemoveAt<T>(T[] source, int index)
@@ -1223,6 +1235,11 @@ namespace Enforcer5.Helpers
 
         public static void SetGroupLang(string newLang, long chatId)
         {
+            if (chatId < 0)
+            {
+                GroupConfigs.Change(chatId, ConfigChange.SetContent(ContentKind.Language, newLang));
+                return;
+            }
             Redis.db.StringSetAsync($"chat:{chatId}:language", newLang);
             _chatLanguage[chatId] = (newLang, DateTime.UtcNow.Add(LanguageCacheTtl));
         }

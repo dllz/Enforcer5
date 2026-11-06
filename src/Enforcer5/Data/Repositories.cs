@@ -112,6 +112,10 @@ namespace Enforcer5.Data
         internal static IBatchRepository Batches { get; set; } =
             new PostgresBatchRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Each group's settings, welcome, texts and extras (rollout step 15), through Helpers/GroupConfigs.
+        internal static PostgresGroupConfigRepository GroupConfigTable { get; set; } =
+            new(() => Storage.PostgresStorage.Database, Enforcer5.Helpers.BanHistory.Edition);
+
         // Redis. Why a member is banned, for /status.
         internal static IBanListRepository BanList { get; set; } = new RedisBanListRepository(() => Redis.db);
 

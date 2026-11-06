@@ -184,6 +184,7 @@ namespace Enforcer5.Tests.Harness
             // The role lists from PostgreSQL (empty); each group's old Redis sets are imported on its first use.
             Roles.ResetForTests();
             await Roles.LoadAsync();
+            GroupConfigs.ResetForTests();
 #if PREMIUM
             // The premium edition only serves groups on its list: every harness group is on it.
             await Roles.SetAsync(0, Enforcer5.Data.RoleList.Premium, ChatId, true);
@@ -217,6 +218,8 @@ namespace Enforcer5.Tests.Harness
             await Enforcer5.Detection.BotGuard.ReloadAsync();
             Roles.ResetForTests();
             await Roles.LoadAsync();
+            GroupConfigs.ResetForTests();
+            await GroupConfigs.LoadQueueAsync();
             if (Enforcer5.Data.Repositories.Tempbans is TempbanStore tempbans)
             {
                 tempbans.ResetForTests();
@@ -545,6 +548,7 @@ ORDER BY until_at", new { Edition = BanHistory.Edition, ChatId })).ToArray();
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
             Roles.ResetForTests();
+            GroupConfigs.ResetForTests();
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
             Enforcer5.Detection.AdminChats.ResetForTests();

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Enforcer5.Actions;
 using Enforcer5.Attributes;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot.Exceptions;
@@ -262,8 +263,8 @@ namespace Enforcer5
             }
             else
             {
-                var link = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}links", "link").Result;
-                if (link.Equals("no") || link.IsNullOrEmpty)
+                var link = GroupConfigs.For(update.Message.Chat.Id).Text(ContentKind.Link);
+                if (string.IsNullOrEmpty(link) || link == "no")
                 {
                     Bot.SendReply(Methods.GetLocaleString(lang, "linkMissing"), update);
                 }
@@ -277,29 +278,22 @@ namespace Enforcer5
         public static void SendExtra(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:extra";
-            var text = Redis.db.HashGetAsync(hash, args[0]).Result;
-            // In a group's admin chat, the group's extras work too; the admin chat's own come first.
+            // The group's extras (its config since rollout step 15); in a group's admin chat, the group's work too, the
+            // admin chat's own first.
+            var extra = GroupConfigs.For(update.Message.Chat.Id).Extra(args[0]);
             foreach (var group in Detection.AdminChats.GroupsOf(update.Message.Chat.Id))
             {
-                if (text.HasValue) break;
-                hash = $"chat:{group}:extra";
-                text = Redis.db.HashGetAsync(hash, args[0]).Result;
+                if (extra != null) break;
+                extra = GroupConfigs.For(group).Extra(args[0]);
             }
-            if (!text.HasValue)
+            if (extra == null)
                 return;
-            var fileId = "";
-            var specialMethod = "";
-            if (text.ToString().Contains("###file_id!"))
-            {
-                var split = text.ToString()
-                    .Replace("###file_id!", "")
-                    .Split(new[] { "###:" }, StringSplitOptions.RemoveEmptyEntries);
-                fileId = split[1];
-                specialMethod = split[0];
-
-            }
-            var hasMedia = Redis.db.HashGetAsync($"{hash}:{args[0]}", "mediaid").Result;
+            // As the old hash held it: the text, or "###file_id!{type}###:{id}" for a file.
+            var text = extra.Raw;
+            var fileId = extra.IsFile ? extra.FileId : "";
+            var specialMethod = extra.IsFile ? extra.MediaType : "";
+            // A text's GIF.
+            var hasMedia = extra.IsFile ? null : extra.FileId;
             var repId = update.Message.MessageId;
             if (update.Message.ReplyToMessage != null)
             {
@@ -334,7 +328,7 @@ namespace Enforcer5
                 {
                     if (!string.IsNullOrEmpty(specialMethod))
                     {
-                        var caption = Redis.db.HashGetAsync($"{hash}:{args[0]}", "caption").Result;
+                        var caption = extra.Caption;
                         switch (specialMethod)
                         {
                             case "voice":
@@ -371,28 +365,14 @@ namespace Enforcer5
                                         replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                             case "gif":
-                                if (!string.IsNullOrEmpty(hasMedia) && !hasMedia.ToString().Contains("###file_id") && hasMedia.ToString().Contains("null"))
-                                {
-                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
-                                        replyParameters: new ReplyParameters { MessageId = repId });
-                                }
-                                else
-                                {
-                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId),
-                                        replyParameters: new ReplyParameters { MessageId = repId });
-                                }
+                                // Its caption, if one was saved with it (the old check for one never matched).
+                                Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
+                                    replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                             default:
-                                if (!string.IsNullOrEmpty(hasMedia))
-                                {
-                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), text,
-                                        replyParameters: new ReplyParameters { MessageId = repId });
-                                }
-                                else
-                                {
-                                    Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId),
-                                        replyParameters: new ReplyParameters { MessageId = repId });
-                                }
+                                // A file's caption, if one was saved (it was kept but never sent); a sticker takes none.
+                                Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), specialMethod == "sticker" ? null : caption,
+                                    replyParameters: new ReplyParameters { MessageId = repId });
                                 break;
                         }
                     }

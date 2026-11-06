@@ -11,7 +11,8 @@ namespace Enforcer5.Data
     /// ("true" or "false") and string keys in the bot's Redis, and the inline bot and sticker pack blocklists, which
     /// moved to the detection settings in PostgreSQL (types <c>inline</c> and <c>stickerset</c>, "true" or "false",
     /// through their repositories), and the warn counts (<c>warns</c>, <c>prewarns</c>, <c>totalWarns</c>), which moved to
-    /// PostgreSQL with rollout step 12 (through <see cref="Repositories.Warns"/>). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
+    /// PostgreSQL with rollout step 12 (through <see cref="Repositories.Warns"/>), the report blocks (step 14, Helpers/Roles)
+    /// and the extras (step 15, Helpers/GroupConfigs). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
     /// ever get here.
     /// </summary>
     internal interface IRecoveryValues
@@ -69,6 +70,9 @@ namespace Enforcer5.Data
                     return (await Repositories.InlineBotBlocks.GetAsync(ChatOf(change))).Contains(block) ? "true" : "false";
                 case "stickerset":
                     return await Repositories.StickerSetBlocks.ContainsAsync(ChatOf(change), change.Field) ? "true" : "false";
+                case "hash" when Recovery.RecoveryFile.Suffix(change.Key) == "extra":
+                    // The group's config since rollout step 15, in the old form (a file as ###file_id!...).
+                    return (await Helpers.GroupConfigs.GetAsync(ChatOf(change))).Extra(change.Field)?.Raw;
                 case "hash":
                     var field = await db.HashGetAsync(change.Key, change.Field);
                     return field.IsNull ? null : field.ToString();
@@ -110,6 +114,10 @@ namespace Enforcer5.Data
                 case "stickerset":
                     if (value == "true") await Repositories.StickerSetBlocks.AddAsync(ChatOf(change), change.Field);
                     else await Repositories.StickerSetBlocks.RemoveAsync(ChatOf(change), change.Field);
+                    break;
+                case "hash" when Recovery.RecoveryFile.Suffix(change.Key) == "extra":
+                    await Helpers.GroupConfigs.ChangeAsync(ChatOf(change),
+                        ConfigChange.SetExtra(change.Field, value == null ? null : ExtraConfig.FromLegacy(value, null, null)));
                     break;
                 case "hash":
                     if (value == null) await db.HashDeleteAsync(change.Key, change.Field);

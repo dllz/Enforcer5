@@ -319,12 +319,55 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("group_settings_version_check", "version > 0");
                     table.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
                     table.HasCheckConstraint("group_settings_actions_check", "warning_action IN ('none', 'kick', 'ban', 'mute', 'tempban', 'tempmute')");
+                    // The design's welcome_format (text/markdown/html) replaced by the welcome types the bot has
+                    // (Daniel, 2026-11-06).
+                    table.HasCheckConstraint("group_settings_welcome_type_check", "welcome_type IN ('composed', 'custom', 'media')");
+                    table.HasCheckConstraint("group_settings_welcome_media_check",
+                        "(welcome_media_file_id IS NULL) = (welcome_media_file_owner_edition IS NULL) AND (welcome_media_file_owner_edition IS NULL OR welcome_media_file_owner_edition IN ('normal', 'premium', 'legacy_unknown'))");
+                    table.HasCheckConstraint("group_settings_config_version_check", "config_version > 0");
                 });
                 entity.HasKey(x => x.GroupId);
+                entity.Property(x => x.WelcomeEnabled).HasDefaultValue(false);
+                entity.Property(x => x.DeleteLastWelcome).HasDefaultValue(true);
+                entity.Property(x => x.ReportsEnabled).HasDefaultValue(true);
+                entity.Property(x => x.RulesPrivateOnly).HasDefaultValue(true);
+                entity.Property(x => x.AboutPrivateOnly).HasDefaultValue(true);
+                entity.Property(x => x.ModlistPrivateOnly).HasDefaultValue(true);
+                entity.Property(x => x.ExtraPrivateOnly).HasDefaultValue(true);
+                entity.Property(x => x.HelpPrivateOnly).HasDefaultValue(true);
+                entity.Property(x => x.WelcomeType).IsRequired().HasDefaultValue("composed");
+                entity.Property(x => x.WelcomeContent).HasDefaultValue("no");
+                entity.Property(x => x.ConfigVersion).HasDefaultValue(1L);
+                entity.HasOne<TelegramChatEntity>().WithMany().HasForeignKey(x => x.LogChatId).OnDelete(DeleteBehavior.SetNull);
                 entity.Property(x => x.WarningAction).IsRequired();
                 entity.Property(x => x.Version).HasDefaultValue(1L).IsConcurrencyToken();
                 entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
                 entity.HasOne<GroupEntity>().WithOne().HasForeignKey<GroupSettingsEntity>(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<GroupContentItemEntity>(entity =>
+            {
+                entity.ToTable("group_content_items", table =>
+                    table.HasCheckConstraint("group_content_items_type_check", "content_type IN ('rules', 'about', 'language', 'link')"));
+                entity.HasKey(x => new { x.GroupId, x.ContentType });
+                entity.Property(x => x.Content).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<CustomCommandEntity>(entity =>
+            {
+                entity.ToTable("custom_commands", table =>
+                {
+                    table.HasCheckConstraint("custom_commands_media_type_check",
+                        "media_type IS NULL OR media_type IN ('animation', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice')");
+                    table.HasCheckConstraint("custom_commands_file_check",
+                        "(file_id IS NULL) = (file_owner_edition IS NULL) AND (file_id IS NULL) = (media_type IS NULL)");
+                    table.HasCheckConstraint("custom_commands_edition_check",
+                        "file_owner_edition IS NULL OR file_owner_edition IN ('normal', 'premium', 'legacy_unknown')");
+                    table.HasCheckConstraint("custom_commands_body_check", "content IS NOT NULL OR file_id IS NOT NULL");
+                });
+                entity.HasKey(x => new { x.GroupId, x.Trigger });
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<DetectionPolicyEntity>(entity =>

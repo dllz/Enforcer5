@@ -48,8 +48,6 @@ namespace Enforcer5
                 Bot.SendReply(Methods.GetLocaleString(lang, "userNotAdmin"), update);
                 return;
             }
-            if (!Redis.db.HashGet($"chat:{chatId}:settings", "DeleteLastWelcome").HasValue)
-                tempAddDeleteLastWelcomeSetting(update, chatId);
             Service.LogCommand(update, message.Text);
             if (SendMainMenu(message.From.Id, chatId, message.Chat.Title) != null)
             {
@@ -152,10 +150,8 @@ namespace Enforcer5
 
         public static InlineKeyboardMarkup genMenu(long chatId, XDocument lang)
         {
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
-            // A group whose settings were never generated. Flood and Mute On Join left this hash
-            // for PostgreSQL (Detection step 2), so a generated one has 8 fields now, not 9.
-            if (settings.Length < 8) Service.GenerateSettings(chatId);
+            // A group's settings are always complete since rollout step 15 (its config, imported on first use). This
+            // used to regenerate every setting, the detection ones too, when the old hash had fewer than 8 fields.
 
             InlineButton Button(string key, string trigger) =>
                 new InlineButton(Methods.GetLocaleString(lang, key), $"{trigger}:{chatId}");

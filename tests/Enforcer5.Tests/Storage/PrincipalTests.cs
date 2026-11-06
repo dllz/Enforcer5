@@ -121,7 +121,7 @@ namespace Enforcer5.Tests.Storage
         [DataRow(null, null, null)]
         public void PublicLink_PrefersTheUsername(string username, string stored, string expected)
         {
-            Assert.AreEqual(expected, PrincipalObserver.PublicLink(username, stored == null ? RedisValue.Null : stored));
+            Assert.AreEqual(expected, PrincipalObserver.PublicLink(username, stored));
         }
     }
 

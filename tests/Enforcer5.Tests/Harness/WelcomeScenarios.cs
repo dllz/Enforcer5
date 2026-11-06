@@ -122,13 +122,13 @@ namespace Enforcer5.Tests.Harness
             CustomWelcome(chat, "Welcome $name");
 
             await chat.SendAsync(admin, "/welcome off");
-            Assert.AreEqual("yes", chat.Hashes[$"chat:{chat.ChatId}:settings", "Welcome"]);
-            Assert.AreEqual("Welcome $name", chat.Hashes[$"chat:{chat.ChatId}:welcome", "content"]);
+            Assert.IsFalse(Enforcer5.Helpers.GroupConfigs.For(chat.ChatId).Flag(Enforcer5.Data.ConfigFlag.Welcome));
+            Assert.AreEqual("Welcome $name", Enforcer5.Helpers.GroupConfigs.For(chat.ChatId).Welcome.Content);
             await chat.JoinAsync(chat.Add("Quiet", MemberState.Left));
             Assert.IsFalse(chat.Replies.Any(r => r.Contains("Quiet")));
 
             await chat.SendAsync(admin, "/welcome on");
-            Assert.AreEqual("no", chat.Hashes[$"chat:{chat.ChatId}:settings", "Welcome"]);
+            Assert.IsTrue(Enforcer5.Helpers.GroupConfigs.For(chat.ChatId).Flag(Enforcer5.Data.ConfigFlag.Welcome));
             var loud = chat.Add("Loud", MemberState.Left);
             await chat.JoinAsync(loud);
             Assert.IsTrue(chat.Replies.Any(r => r.Contains($"Welcome {Link(loud)}")), string.Join("\n", chat.Replies));

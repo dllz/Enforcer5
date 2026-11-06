@@ -116,7 +116,7 @@ namespace Enforcer5.Detection
             if (!PostgresStorage.Ready) throw new DetectionSettingsUnavailableException();
             for (var attempt = 0; attempt < SaveAttempts; attempt++)
             {
-                var current = await LoadOrImportAsync(chatId);
+                var current = await CurrentAsync(chatId);
                 var next = change(current) with { Version = current.Version };
                 if (next.SameSettingsAs(current))
                 {
@@ -150,6 +150,26 @@ namespace Enforcer5.Detection
                 ErrorReporter.Report(e, $"Changing the detection settings of {chatId}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// The group's settings in PostgreSQL, imported first if they never were. The import goes through
+        /// <see cref="StartLoad"/>, so it runs once however many ask at once: two imports of one group side by side
+        /// deadlocked on the principal lock.
+        /// </summary>
+        private static async Task<DetectionPolicy> CurrentAsync(long chatId)
+        {
+            var stored = await Repository.LoadAsync(chatId);
+            if (stored != null) return stored;
+            var load = StartLoad(chatId) ?? throw new DetectionSettingsUnavailableException();
+            return await load ?? throw new InvalidOperationException($"The detection settings of {chatId} could not be imported");
+        }
+
+        /// <summary>Makes sure the group's settings are in PostgreSQL (its <c>group_settings</c> row). Throws when they cannot be.</summary>
+        internal static async Task EnsureImportedAsync(long chatId)
+        {
+            if (!PostgresStorage.Ready) throw new DetectionSettingsUnavailableException();
+            await CurrentAsync(chatId);
         }
 
         private static async Task<DetectionPolicy> LoadOrImportAsync(long chatId)

@@ -15,9 +15,15 @@ namespace Enforcer5
 {
     public static partial class Commands
     {
+        /// <summary>The settings that answer in private (👤) or in the group (👥), by their menu name.</summary>
+        internal static readonly (string Name, ConfigFlag Flag)[] PrivateFlags =
+        {
+            ("Rules", ConfigFlag.RulesPrivate), ("About", ConfigFlag.AboutPrivate), ("Modlist", ConfigFlag.ModlistPrivate),
+            ("Extra", ConfigFlag.ExtraPrivate), ("Help", ConfigFlag.HelpPrivate)
+        };
+
         public static InlineKeyboardMarkup genGroupSettingsMenu(long chatId, XDocument lang)
         {
-            var settings = Redis.db.HashGetAllAsync($"chat:{chatId}:settings").Result;
             var policy = Detection.DetectionSettings.For(chatId);
             var mainMenu = new Menu();
             mainMenu.Columns = 2;
@@ -29,33 +35,15 @@ namespace Enforcer5
                 mainMenu.Buttons.Add(new InlineButton(on ? "✅" : "🚫", $"menu{name}:{chatId}") { Style = on ? Telegram.Bot.Types.ReplyMarkups.KeyboardButtonStyle.Success : null });
             }
             OnOff("Flood", policy.Flood.Enabled);
-            foreach (var mem in settings)
+            // The group's config (rollout step 15): every setting, always; the old hash showed only the fields it had.
+            var config = GroupConfigs.For(chatId);
+            OnOff("Report", config.Flag(ConfigFlag.Reports));
+            OnOff("Welcome", config.Flag(ConfigFlag.Welcome));
+            OnOff("DeleteLastWelcome", config.Flag(ConfigFlag.DeleteLastWelcome));
+            foreach (var (name, flag) in PrivateFlags)
             {
-                if (mem.Name.Equals("Report") | mem.Name.Equals("Welcome") | mem.Name.Equals("DeleteLastWelcome"))
-                {
-                    mainMenu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"{mem.Name}Button"), chatId, mem.Name.ToString()));
-                    if (mem.Value.Equals("yes"))
-                    {
-                        mainMenu.Buttons.Add(new InlineButton("🚫", $"menu{mem.Name}:{chatId}"));
-                    }
-                    else if (mem.Value.Equals("no"))
-                    {
-                        mainMenu.Buttons.Add(new InlineButton("✅", $"menu{mem.Name}:{chatId}"));
-                    }
-                }
-                else if (mem.Name.Equals("Modlist") | mem.Name.Equals("About") | mem.Name.Equals("Rules") |
-                         mem.Name.Equals("Extra") | mem.Name.Equals("Help"))
-                {
-                    mainMenu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"{mem.Name}Button"), chatId, "sendIn", mem.Name.ToString()));
-                    if (mem.Value.Equals("yes"))
-                    {
-                        mainMenu.Buttons.Add(new InlineButton("👤", $"menu{mem.Name}:{chatId}"));
-                    }
-                    else if (mem.Value.Equals("no"))
-                    {
-                        mainMenu.Buttons.Add(new InlineButton("👥", $"menu{mem.Name}:{chatId}"));
-                    }
-                }
+                mainMenu.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, $"{name}Button"), chatId, "sendIn", name));
+                mainMenu.Buttons.Add(new InlineButton(config.Flag(flag) ? "👤" : "👥", $"menu{name}:{chatId}"));
             }
             OnOff("MuteOnJoin", policy.MuteOnJoin);
             var channelPostsBlocked = policy.ChannelPosts.Enabled;
@@ -134,21 +122,24 @@ namespace Enforcer5
             RedrawSettingsMenu(call, chatId, lang);
         }
 
-        /// <summary>
-        /// Flips a yes/no setting in chat:{id}:settings and redraws the settings menu.
-        /// </summary>
+        /// <summary>Flips one of the group's on/off settings (its config) and redraws the settings menu.</summary>
         private static void ToggleSetting(CallbackQuery call, string[] args, string option)
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            var current = Redis.db.HashGetAsync($"chat:{chatId}:settings", option).Result;
-
-            string next;
-            if (current.Equals("yes")) next = "no";
-            else if (current.Equals("no")) next = "yes";
-            else return;
-
-            Redis.db.HashSetAsync($"chat:{chatId}:settings", option, next);
+            var flag = option switch
+            {
+                "Report" => ConfigFlag.Reports,
+                "Welcome" => ConfigFlag.Welcome,
+                "DeleteLastWelcome" => ConfigFlag.DeleteLastWelcome,
+                _ => Commands.PrivateFlags.Single(p => p.Name == option).Flag
+            };
+            var on = GroupConfigs.For(chatId).Flag(flag);
+            if (!GroupConfigs.TryChange(chatId, ConfigChange.SetFlag(flag, !on)))
+            {
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                return;
+            }
             RedrawSettingsMenu(call, chatId, lang);
         }
 

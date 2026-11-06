@@ -195,7 +195,10 @@ namespace Enforcer5.Tests.Harness
             Assert.IsNotNull(stored.Engine.ObserveUntil, "its observe weeks start");
             Assert.IsTrue((stored with { Engine = EngineSettings.Default }).SameSettingsAs(DetectionPolicy.Empty.WithNewGroupDefaults()));
             Assert.IsNull(chat.Hashes[$"chat:{chat.ChatId}:settings", "Flood"], "no longer written to Redis");
-            Assert.AreEqual("yes", chat.Hashes[$"chat:{chat.ChatId}:settings", "Rules"], "the rest still is");
+            // The rest is the group's config since rollout step 15, no longer written to Redis either.
+            Assert.IsNull(chat.Hashes[$"chat:{chat.ChatId}:settings", "Rules"]);
+            var config = await Enforcer5.Data.Repositories.GroupConfigTable.LoadAsync(chat.ChatId);
+            Assert.IsTrue(config.Flag(Enforcer5.Data.ConfigFlag.RulesPrivate) && !config.Flag(Enforcer5.Data.ConfigFlag.Welcome));
             AssertNoErrors(chat);
         }
     }

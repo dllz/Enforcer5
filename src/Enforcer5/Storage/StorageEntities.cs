@@ -353,6 +353,44 @@ namespace Enforcer5.Storage
         public int TempmuteMinutes { get; set; }
         public long Version { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        // The rest of the group's settings and its welcome (rollout step 15), with their own version and import
+        // marker: the row itself says the detection settings were imported (step 10).
+        public bool WelcomeEnabled { get; set; }
+        public bool DeleteLastWelcome { get; set; }
+        public bool ReportsEnabled { get; set; }
+        public bool RulesPrivateOnly { get; set; }
+        public bool AboutPrivateOnly { get; set; }
+        public bool ModlistPrivateOnly { get; set; }
+        public bool ExtraPrivateOnly { get; set; }
+        public bool HelpPrivateOnly { get; set; }
+        public long? LogChatId { get; set; }
+        public string WelcomeType { get; set; }
+        public string WelcomeContent { get; set; }
+        public string WelcomeMediaFileId { get; set; }
+        public string WelcomeMediaFileOwnerEdition { get; set; }
+        public long ConfigVersion { get; set; }
+        public DateTimeOffset? ConfigImportedAt { get; set; }
+    }
+
+    /// <summary>A group's rules, about text, language or link (the approved design).</summary>
+    internal sealed class GroupContentItemEntity
+    {
+        public long GroupId { get; set; }
+        public string ContentType { get; set; }
+        public string Content { get; set; }
+    }
+
+    /// <summary>A group's extra (#trigger): text, a file, or text with a GIF (the approved design).</summary>
+    internal sealed class CustomCommandEntity
+    {
+        public long GroupId { get; set; }
+        public string Trigger { get; set; }
+        public string Content { get; set; }
+        public string MediaType { get; set; }
+        public string FileId { get; set; }
+        public string FileOwnerEdition { get; set; }
+        public string Caption { get; set; }
     }
 
     /// <summary>

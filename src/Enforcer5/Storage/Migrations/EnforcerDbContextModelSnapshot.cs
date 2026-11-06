@@ -403,6 +403,50 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("channel_reputation", (string)null);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.CustomCommandEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Trigger")
+                        .HasColumnType("text")
+                        .HasColumnName("trigger");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text")
+                        .HasColumnName("caption");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("FileId")
+                        .HasColumnType("text")
+                        .HasColumnName("file_id");
+
+                    b.Property<string>("FileOwnerEdition")
+                        .HasColumnType("text")
+                        .HasColumnName("file_owner_edition");
+
+                    b.Property<string>("MediaType")
+                        .HasColumnType("text")
+                        .HasColumnName("media_type");
+
+                    b.HasKey("GroupId", "Trigger");
+
+                    b.ToTable("custom_commands", null, t =>
+                        {
+                            t.HasCheckConstraint("custom_commands_body_check", "content IS NOT NULL OR file_id IS NOT NULL");
+
+                            t.HasCheckConstraint("custom_commands_edition_check", "file_owner_edition IS NULL OR file_owner_edition IN ('normal', 'premium', 'legacy_unknown')");
+
+                            t.HasCheckConstraint("custom_commands_file_check", "(file_id IS NULL) = (file_owner_edition IS NULL) AND (file_id IS NULL) = (media_type IS NULL)");
+
+                            t.HasCheckConstraint("custom_commands_media_type_check", "media_type IS NULL OR media_type IN ('animation', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.Property<long>("AdjustmentId")
@@ -985,6 +1029,29 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupContentItemEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("text")
+                        .HasColumnName("content_type");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.HasKey("GroupId", "ContentType");
+
+                    b.ToTable("group_content_items", null, t =>
+                        {
+                            t.HasCheckConstraint("group_content_items_type_check", "content_type IN ('rules', 'about', 'language', 'link')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupElevationBlockEntity", b =>
                 {
                     b.Property<long>("BlockId")
@@ -1409,9 +1476,65 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("group_id");
 
+                    b.Property<bool>("AboutPrivateOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("about_private_only");
+
+                    b.Property<DateTimeOffset?>("ConfigImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("config_imported_at");
+
+                    b.Property<long>("ConfigVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("config_version");
+
+                    b.Property<bool>("DeleteLastWelcome")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("delete_last_welcome");
+
+                    b.Property<bool>("ExtraPrivateOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("extra_private_only");
+
+                    b.Property<bool>("HelpPrivateOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("help_private_only");
+
+                    b.Property<long?>("LogChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("log_chat_id");
+
                     b.Property<short>("MaximumWarnings")
                         .HasColumnType("smallint")
                         .HasColumnName("maximum_warnings");
+
+                    b.Property<bool>("ModlistPrivateOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("modlist_private_only");
+
+                    b.Property<bool>("ReportsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("reports_enabled");
+
+                    b.Property<bool>("RulesPrivateOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("rules_private_only");
 
                     b.Property<int>("TempbanMinutes")
                         .HasColumnType("integer")
@@ -1439,15 +1562,50 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("text")
                         .HasColumnName("warning_action");
 
+                    b.Property<string>("WelcomeContent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("no")
+                        .HasColumnName("welcome_content");
+
+                    b.Property<bool>("WelcomeEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("welcome_enabled");
+
+                    b.Property<string>("WelcomeMediaFileId")
+                        .HasColumnType("text")
+                        .HasColumnName("welcome_media_file_id");
+
+                    b.Property<string>("WelcomeMediaFileOwnerEdition")
+                        .HasColumnType("text")
+                        .HasColumnName("welcome_media_file_owner_edition");
+
+                    b.Property<string>("WelcomeType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("composed")
+                        .HasColumnName("welcome_type");
+
                     b.HasKey("GroupId");
+
+                    b.HasIndex("LogChatId");
 
                     b.ToTable("group_settings", null, t =>
                         {
                             t.HasCheckConstraint("group_settings_actions_check", "warning_action IN ('none', 'kick', 'ban', 'mute', 'tempban', 'tempmute')");
 
+                            t.HasCheckConstraint("group_settings_config_version_check", "config_version > 0");
+
                             t.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
 
                             t.HasCheckConstraint("group_settings_version_check", "version > 0");
+
+                            t.HasCheckConstraint("group_settings_welcome_media_check", "(welcome_media_file_id IS NULL) = (welcome_media_file_owner_edition IS NULL) AND (welcome_media_file_owner_edition IS NULL OR welcome_media_file_owner_edition IN ('normal', 'premium', 'legacy_unknown'))");
+
+                            t.HasCheckConstraint("group_settings_welcome_type_check", "welcome_type IN ('composed', 'custom', 'media')");
                         });
                 });
 
@@ -3223,6 +3381,15 @@ namespace Enforcer5.Storage.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.CustomCommandEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -3356,6 +3523,15 @@ namespace Enforcer5.Storage.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupContentItemEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupElevationBlockEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
@@ -3465,6 +3641,11 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("Enforcer5.Storage.GroupSettingsEntity", "GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.TelegramChatEntity", null)
+                        .WithMany()
+                        .HasForeignKey("LogChatId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GroupStatsEntity", b =>

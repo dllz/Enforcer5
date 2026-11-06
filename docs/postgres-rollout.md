@@ -45,6 +45,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 12 | Warn counts, **cut over**: PostgreSQL decides max warns and the media limit; changes queue in Redis while it is down; each member's first change starts from the old hashes | `warning_balances`, `warning_events` | Built |
 | 13 | Tempban expiry, **cut over**: each edition's schedule in PostgreSQL, claimed by the expiry check; the old Redis schedule imported once; changes queue in Redis while it is down | `tempban_schedule`, `storage_imports` | Built |
 | 14 | Roles and lists, **cut over**: authorized, moderators, elevation blocks, exempt members, @admin opt-outs, report blocks and /pingme per group; language admins, premium groups and ignored chats; kept in memory, each group's old sets imported on first use | `group_role_assignments`, `group_elevation_blocks`, `group_user_preferences`, `global_role_assignments`, `group_entitlements`, `bot_bans` | Built |
+| 15 | Group config, **cut over**: the remaining settings, the welcome, rules, about, language, link, log channel and extras; in memory, each group's old keys imported on its first use; changes queue in Redis while PostgreSQL is down | `group_settings` (the rest of its columns), `group_content_items`, `custom_commands` | Built |
 
 ### Step 2: ban history
 
@@ -172,8 +173,8 @@ had, so the script parses the shapes the old migration branch found (month-, day
 and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose time could not be
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
-Not migrated yet, still Redis only: everything else (raid state and the slow lane included), group settings other than the detection settings (step 10) and everything read back. (Global bans
-moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14.) Old Redis ban and warn data is not
+Not migrated yet, still Redis only: everything else (raid state and the slow lane included) and everything read back. (Global bans
+moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14, the group config in step 15.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -373,6 +374,42 @@ The Redis sets that held who may do what moved to PostgreSQL (Daniel, 2026-11-06
 - `Constants.Devs` and `GlobalAdmins` stay in code (Daniel). `groupBan:{id}`, which nothing writes, is still read when
   the bot is added.
 - **Rollback.** The old sets are left as they were at the deploy.
+
+### Step 15: group config (cut over)
+
+The rest of each group's settings, its welcome and its texts moved to PostgreSQL (Daniel, 2026-11-06), behind
+`Helpers/GroupConfigs` (`Data/GroupConfig`, `Data/PostgresGroupConfigRepository`). Nothing writes the old keys any more.
+
+- **Tables.** `group_settings` gets the approved design's remaining columns: `welcome_enabled`, `delete_last_welcome`,
+  `reports_enabled`, the five `*_private_only`, `log_chat_id` and the welcome. The design's `welcome_format`
+  (text/markdown/html) is replaced by `welcome_type` (`composed`, `custom`, `media`; Daniel: yes), with
+  `welcome_content` and the GIF's `welcome_media_file_id`/`_owner_edition`. Its own `config_version` and
+  `config_imported_at`, since the row itself is the detection settings' import marker. `group_content_items` holds
+  rules, about, language and link; `custom_commands` the extras (a text, a text with a GIF as `animation`, or a file
+  with its caption; the bot's media names mapped to the design's).
+- **Reading.** Every group in use is in memory. A cold group waits up to 2 s for PostgreSQL (after its detection
+  settings, which a cold group's import needs first), else is served the old keys until the load ends. The version in
+  `config:version:{chat}` is compared every 10 s (how the other edition's change arrives) and the group reloaded every
+  5 minutes. The per-message settings read (and the busy-group snapshot `Helpers/GroupSettings`, now gone) and the two
+  Redis reads per log line are memory reads now.
+- **Import.** On the group's first use, once ever (`config_imported_at`), from the old keys (`Data/LegacyGroupConfig`,
+  the only code that knows their encodings): `Welcome` "yes" is off, `DeleteLastWelcome` "no" is on, the private
+  toggles "yes", a missing field is what the old code did (a missing `Help` is private: the last one-time migration set
+  it). Reports are on (Daniel: the menu's toggle wrote `Report`, which nothing read; reports read `Flagged`, which
+  nothing wrote; the toggle works now). The log channel only while the group was in `logChatGroups`. A custom
+  welcome's GIF only with `hasmedia` "true"; an extra's leftover `mediaid` or `caption` from an earlier version of it is
+  dropped. File ids from Redis are `legacy_unknown`.
+- **Writing.** A change counts in memory at once and is written to PostgreSQL, or queued in `config:queue:{edition}`
+  while it is down, slower than 3 s or the group not imported, and written in order once it can be. Changes are
+  idempotent sets.
+- **Gone with it.** `/menu` regenerated every setting, detection ones included, when the old hash had fewer than 8
+  fields; once nothing wrote the hash that would have wiped every group's settings, so the check went. The one-time
+  Redis migrations on the message path (`lenghtUpdate3`, `lenghtUpdate`, `dbUpdate:lenghtUpdate`) went too, and
+  `/welcome`, `/menu` no longer add `DeleteLastWelcome` with a notice.
+- **Stays in Redis** (caches, cooldowns, expiring state): the last welcome's message id, `chat:{id}:details`, the
+  /pingall cooldown, elevation cooldowns and `/elevatelog`, the warn reasons, and a private chat's language
+  (`chat:{user}:language`; the design has no place for it yet).
+- **Rollback.** The old keys are left as they were at the deploy.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

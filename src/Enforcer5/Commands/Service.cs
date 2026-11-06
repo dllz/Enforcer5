@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Enforcer5.Data;
 using Enforcer5.Helpers;
 using StackExchange.Redis;
 using Telegram.Bot.Types;
@@ -21,8 +22,8 @@ namespace Enforcer5
             var chatId = message.Chat.Id;
             // Nobody is welcomed into a raid: the joiners are its raiders, or muted until it is over.
             if (Raids.RaidGuard.Quiet(chatId)) return;
-            var welcomeOn = Redis.db.HashGetAsync($"chat:{chatId}:settings", "Welcome").Result;
-            if (welcomeOn.Equals("yes"))
+            var config = GroupConfigs.For(chatId);
+            if (!config.Flag(ConfigFlag.Welcome))
                 return;
             // Once per join: the service message and the member update both tell of it.
             if (message.NewChatMember is { } joiner && !ClaimWelcome(chatId, joiner.Id)) return;
@@ -124,29 +125,25 @@ defSpamValue = 3;
                     Bot.Send("Let the players play, let the haters hate. And I, Karma, will handle their fate.\nRemember: Karma's gonna come collect your debt.", chatId);
                     break;
                 default:
-                    var type = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "type").Result;
-                    var content = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "content").Result;
-                    if (!string.IsNullOrEmpty(type) && type.Equals("media"))
+                    // The group's welcome (its config since rollout step 15; LegacyGroupConfig read the old hash).
+                    var welcome = config.Welcome;
+                    var type = welcome.Type;
+                    var content = welcome.Content;
+                    if (type == "media")
                     {
-                        // /welcome saves the GIF in "media" (since January 2017; this read
-                        // "content", which holds the command's empty argument, so the GIF was
-                        // never sent). Welcomes saved before then kept it in "content".
-                        var media = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
-                        var fileId = !media.IsNullOrEmpty ? media.ToString() : content.IsNullOrEmpty ? null : content.ToString();
+                        var fileId = welcome.MediaFileId;
                         // No GIF was ever saved: nothing to welcome with, and nothing for anyone to fix.
                         if (fileId == null) return;
                         Message response = Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId(fileId)).Result;
 
                         Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                     }
-                    else if (!string.IsNullOrEmpty(type) && type.Equals("custom"))
+                    else if (type == "custom")
                     {
-                        var hasMedia = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "hasmedia").Result;
-                        var file = Redis.db.HashGetAsync($"chat:{message.Chat.Id}:welcome", "media").Result;
-                        var html = WelcomeText.Html(content, message.NewChatMember, message.Chat.Title);
-                        var plain = WelcomeText.Plain(content, message.NewChatMember, message.Chat.Title);
-                        // "true" with no GIF saved sends the text alone rather than failing.
-                        if (!string.IsNullOrEmpty(hasMedia) && hasMedia.Equals("true") && !file.IsNullOrEmpty)
+                        var file = welcome.MediaFileId;
+                        var html = WelcomeText.Html(content ?? "", message.NewChatMember, message.Chat.Title);
+                        var plain = WelcomeText.Plain(content ?? "", message.NewChatMember, message.Chat.Title);
+                        if (file != null)
                         {
                             Message response = SendWelcomeGif(message.Chat.Id, file, html, plain);
 
@@ -160,7 +157,8 @@ defSpamValue = 3;
                             if (response != null) Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                     }
-                    else if (!string.IsNullOrEmpty(type) && type.Equals("composed"))
+                    // A composed welcome without content: never set up, and never sent (as before).
+                    else if (type == "composed" && content != null)
                     {
                         XDocument lang;
                         try
@@ -345,68 +343,17 @@ defSpamValue = 3;
             Methods.UnbanUser(message.Chat.Id, message.NewChatMember.Id, lang);
         }   
 
-        public static void NewSettings(long chatid)
-        {
-            
-        }
-
         /// <summary>
-        /// An old one-off migration (marked done in the <c>lenghtUpdate</c> set) that set every media
-        /// type to allowed in Redis. Emptied with Detection step 2, as <see cref="NewSettings"/> was
-        /// before it: the media settings live in PostgreSQL, the groups it still reached are new ones
-        /// (which GenerateSettings gives the same defaults), and for any other group it would have
-        /// thrown away settings an admin chose.
+        /// A new group's settings (the bot added, /resetSettings): the group's config (rollout step 15: its settings and
+        /// welcome; texts and extras stay) and its detection settings.
         /// </summary>
-        public static void NewSetting2(long chatid)
-        {
-        }
-
         public static void GenerateSettings(long chatId)
         {
-            object[,,] defaultSettings =
-            {
-                {
-                    {"settings", "Rules", "yes"},
-                    {"settings", "About", "yes"},
-                    {"settings", "Modlist", "yes"},
-                    {"settings", "Report", "yes"},
-                    {"settings", "Welcome", "yes"},
-                    {"settings", "DeleteLastWelcome", "no"},
-                    {"settings", "Extra", "yes"},
-                    {"settings", "Admin_mode", "no"},
-                    {"welcome", "type", "composed"},
-                    {"welcome", "content", "no" },
-                }
-            };
-
-            SetSettings(defaultSettings, chatId);
-            // Flood, media, scripts, lengths and warns live in PostgreSQL (Detection step 2):
-            // the same defaults, for the same settings, as this used to write to Redis.
+            GroupConfigs.TryChange(chatId, ConfigChange.Reset());
+            // Flood, media, scripts, lengths and warns live in PostgreSQL (Detection step 2).
             Detection.DetectionSettings.TryUpdate(chatId, p => p.WithNewGroupDefaults());
-
         }
 
-        public static void SetSettings(object[,,] defaultSettings, long chatId)
-        {
-            var num = 0;
-            for (int i = 0; i < defaultSettings.GetLength(0); i++)
-            {
-                for (int j = 0; j < defaultSettings.GetLength(1); j++)
-                {
-                    var hash = $"chat:{chatId}:{defaultSettings[i, j, 0]}";
-                    var value = defaultSettings[i, j, 1];
-                    var setting = defaultSettings[i, j, 2];
-                    if (int.TryParse(setting.ToString(), out num))
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
-                    }
-                    else if (setting is string)
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Logs what the bot did on its own. <paramref name="line"/> is the HTML the bot told the group (a language
@@ -689,9 +636,8 @@ defSpamValue = 3;
         /// <summary>The group's log channel; null when it has none.</summary>
         internal static long? LogChannelOf(long chatId)
         {
-            if (!Redis.db.SetContainsAsync("logChatGroups", chatId).Result) return null;
-            var logChat = Redis.db.HashGetAsync($"chat:{chatId}:settings", "logchat").Result.ToString();
-            return long.TryParse(logChat, out var id) ? id : null;
+            // In the group's config (in memory) since rollout step 15; it was two Redis reads per log line.
+            return GroupConfigs.For(chatId).LogChat;
         }
 
         public static void LogDevCommand(long chatId, long adminId, string adminName, string groupname, string command, string replyto = "")
@@ -725,34 +671,6 @@ defSpamValue = 3;
             }
 
 
-        public static void NewSetting3(ChatId chatid)
-        {
-            object[,,] defaultSettings =
-            {
-                {
-                    { "settings", "Help", "yes"},                   
-                }
-            };
 
-
-            var num = 0;
-            for (int i = 0; i < defaultSettings.GetLength(0); i++)
-            {
-                for (int j = 0; j < defaultSettings.GetLength(1); j++)
-                {
-                    var hash = $"chat:{chatid}:{defaultSettings[i, j, 0]}";
-                    var value = defaultSettings[i, j, 1];
-                    var setting = defaultSettings[i, j, 2];
-                    if (int.TryParse(setting.ToString(), out num))
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), num);
-                    }
-                    else if (setting is string)
-                    {
-                        Redis.db.HashSetAsync(hash, defaultSettings[i, j, 1].ToString(), defaultSettings[i, j, 2].ToString());
-                    }
-                }
-            }
-        }
     }
 }
