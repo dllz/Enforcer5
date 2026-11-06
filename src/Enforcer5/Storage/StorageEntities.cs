@@ -450,6 +450,69 @@ namespace Enforcer5.Storage
         public string ClaimedBy { get; set; }
     }
 
+    /// <summary>An entitlement of a group: <c>premium</c> (the premium edition serves it), from the approved design.</summary>
+    internal sealed class GroupEntitlementEntity
+    {
+        public long GroupId { get; set; }
+        public string Entitlement { get; set; }
+        public bool Enabled { get; set; }
+        public DateTimeOffset? ExpiresAt { get; set; }
+    }
+
+    /// <summary>A member authorized (/auth) or a moderator (/elevate by the creator) in a group, as a period.</summary>
+    internal sealed class GroupRoleAssignmentEntity
+    {
+        public long AssignmentId { get; set; }
+        public long GroupId { get; set; }
+        public long UserId { get; set; }
+        public string Role { get; set; }
+        public DateTimeOffset AssignedAt { get; set; }
+        public DateTimeOffset? RevokedAt { get; set; }
+    }
+
+    /// <summary>A member kept from elevating others (/blockelevate), as a period.</summary>
+    internal sealed class GroupElevationBlockEntity
+    {
+        public long BlockId { get; set; }
+        public long GroupId { get; set; }
+        public long UserId { get; set; }
+        public DateTimeOffset BlockedAt { get; set; }
+        public DateTimeOffset? RevokedAt { get; set; }
+    }
+
+    /// <summary>
+    /// A member's choices in a group: no @admin reports (/adminoff), may not report (/reportblock), exempt from the
+    /// checks (/disablewatch), on /pingall's list (/pingme).
+    /// </summary>
+    internal sealed class GroupUserPreferenceEntity
+    {
+        public long GroupId { get; set; }
+        public long UserId { get; set; }
+        public bool AdminNotificationsDisabled { get; set; }
+        public bool ReportsBlocked { get; set; }
+        public bool WatchDisabled { get; set; }
+        public bool TagAllSubscribed { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+    }
+
+    /// <summary>A role everywhere, as a period: <c>language_admin</c> for now (developers and global admins are in code).</summary>
+    internal sealed class GlobalRoleAssignmentEntity
+    {
+        public long AssignmentId { get; set; }
+        public long UserId { get; set; }
+        public string Role { get; set; }
+        public DateTimeOffset AssignedAt { get; set; }
+        public DateTimeOffset? RevokedAt { get; set; }
+    }
+
+    /// <summary>A group or a user the bot ignores and leaves (/bangroup), by Telegram id. Not in the approved design.</summary>
+    internal sealed class BotBanEntity
+    {
+        public long TelegramId { get; set; }
+        public DateTimeOffset BannedAt { get; set; }
+        public long? BannedByAccountId { get; set; }
+    }
+
     /// <summary>One-time imports from Redis that have run, so a restart never runs one again.</summary>
     internal sealed class StorageImportEntity
     {

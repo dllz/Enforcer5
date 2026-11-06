@@ -237,6 +237,29 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BotBanEntity", b =>
+                {
+                    b.Property<long>("TelegramId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_id");
+
+                    b.Property<DateTimeOffset>("BannedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("banned_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("BannedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("banned_by_account_id");
+
+                    b.HasKey("TelegramId");
+
+                    b.HasIndex("BannedByAccountId");
+
+                    b.ToTable("bot_bans", (string)null);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.BotEventEntity", b =>
                 {
                     b.Property<long>("EventId")
@@ -797,6 +820,46 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GlobalRoleAssignmentEntity", b =>
+                {
+                    b.Property<long>("AssignmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("assignment_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("AssignmentId"));
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("AssignmentId");
+
+                    b.HasIndex(new[] { "UserId", "Role" }, "global_role_assignments_active_idx")
+                        .IsUnique()
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.ToTable("global_role_assignments", null, t =>
+                        {
+                            t.HasCheckConstraint("global_role_assignments_period_check", "revoked_at IS NULL OR revoked_at >= assigned_at");
+
+                            t.HasCheckConstraint("global_role_assignments_role_check", "role IN ('developer', 'global_admin', 'global_ban_admin', 'language_admin')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
                 {
                     b.Property<long>("GlobalSanctionId")
@@ -919,6 +982,71 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("group_bots_source_check", "source IN ('admin_added', 'command', 'present', 'member_added', 'summoned', 'global', 'report')");
 
                             t.HasCheckConstraint("group_bots_status_check", "status IN ('allowed', 'blocked')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupElevationBlockEntity", b =>
+                {
+                    b.Property<long>("BlockId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("block_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("BlockId"));
+
+                    b.Property<DateTimeOffset>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("BlockId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex(new[] { "GroupId", "UserId" }, "group_elevation_blocks_active_idx")
+                        .IsUnique()
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.ToTable("group_elevation_blocks", null, t =>
+                        {
+                            t.HasCheckConstraint("group_elevation_blocks_period_check", "revoked_at IS NULL OR revoked_at >= blocked_at");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupEntitlementEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<string>("Entitlement")
+                        .HasColumnType("text")
+                        .HasColumnName("entitlement");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("enabled");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.HasKey("GroupId", "Entitlement");
+
+                    b.ToTable("group_entitlements", null, t =>
+                        {
+                            t.HasCheckConstraint("group_entitlements_entitlement_check", "entitlement IN ('premium')");
                         });
                 });
 
@@ -1229,6 +1357,52 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupRoleAssignmentEntity", b =>
+                {
+                    b.Property<long>("AssignmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("assignment_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("AssignmentId"));
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("AssignmentId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex(new[] { "GroupId", "UserId", "Role" }, "group_role_assignments_active_idx")
+                        .IsUnique()
+                        .HasFilter("revoked_at IS NULL");
+
+                    b.ToTable("group_role_assignments", null, t =>
+                        {
+                            t.HasCheckConstraint("group_role_assignments_period_check", "revoked_at IS NULL OR revoked_at >= assigned_at");
+
+                            t.HasCheckConstraint("group_role_assignments_role_check", "role IN ('authorized', 'moderator')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupSettingsEntity", b =>
                 {
                     b.Property<long>("GroupId")
@@ -1314,6 +1488,53 @@ namespace Enforcer5.Storage.Migrations
                     b.HasKey("GroupId");
 
                     b.ToTable("group_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupUserPreferenceEntity", b =>
+                {
+                    b.Property<long>("GroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("group_id");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("AdminNotificationsDisabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("admin_notifications_disabled");
+
+                    b.Property<bool>("ReportsBlocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("reports_blocked");
+
+                    b.Property<bool>("TagAllSubscribed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("tag_all_subscribed");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<bool>("WatchDisabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("watch_disabled");
+
+                    b.HasKey("GroupId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("group_user_preferences", (string)null);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.MediaScoreEntity", b =>
@@ -2974,6 +3195,14 @@ namespace Enforcer5.Storage.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.BotBanEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("BannedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.BotEventEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -3079,6 +3308,15 @@ namespace Enforcer5.Storage.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GlobalRoleAssignmentEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GlobalSanctionEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
@@ -3116,6 +3354,30 @@ namespace Enforcer5.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("SetByAccountId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupElevationBlockEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupEntitlementEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.GroupEntity", b =>
@@ -3181,6 +3443,21 @@ namespace Enforcer5.Storage.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupRoleAssignmentEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupSettingsEntity", b =>
                 {
                     b.HasOne("Enforcer5.Storage.GroupEntity", null)
@@ -3196,6 +3473,21 @@ namespace Enforcer5.Storage.Migrations
                         .WithOne()
                         .HasForeignKey("Enforcer5.Storage.GroupStatsEntity", "GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.GroupUserPreferenceEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.GroupEntity", null)
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Enforcer5.Storage.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

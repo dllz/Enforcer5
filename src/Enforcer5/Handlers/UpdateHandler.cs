@@ -154,11 +154,9 @@ namespace Enforcer5.Handlers
                 }
 
                 // Both ban checks in one pipelined batch, before we spend anything else on this chat.
-                var bannedGroupTask = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.Chat.Id);
-                var bannedUserTask = Redis.db.SetContainsAsync("bot:bannedGroups", update.Message.From.Id);
-                await Task.WhenAll(bannedGroupTask, bannedUserTask);
-                var bannedGroup = bannedGroupTask.Result;
-                if (bannedGroup || bannedUserTask.Result)
+                // In memory once the lists are loaded (Helpers/Roles).
+                var bannedGroup = await Roles.ContainsAsync(0, Data.RoleList.BotBanned, update.Message.Chat.Id);
+                if (bannedGroup || await Roles.ContainsAsync(0, Data.RoleList.BotBanned, update.Message.From.Id))
                 {
                     if (update.Message.Chat.Type != ChatType.Private && bannedGroup)
                     {
@@ -521,9 +519,9 @@ namespace Enforcer5.Handlers
         internal static async Task<bool> ServesAsync(long chatId)
         {
 #if PREMIUM
-            if (await Redis.db.SetContainsAsync("premiumBot", chatId)) return true;
+            if (await Roles.ContainsAsync(0, Data.RoleList.Premium, chatId)) return true;
             foreach (var group in Detection.AdminChats.GroupsOf(chatId))
-                if (await Redis.db.SetContainsAsync("premiumBot", group)) return true;
+                if (await Roles.ContainsAsync(0, Data.RoleList.Premium, group)) return true;
             return false;
 #else
             await Task.CompletedTask;
@@ -545,9 +543,9 @@ namespace Enforcer5.Handlers
         private static async Task<bool> PremiumServesAsync(Message message)
         {
             var chatId = message.Chat.Id;
-            if (await Redis.db.SetContainsAsync("premiumBot", chatId)) return true;
+            if (await Roles.ContainsAsync(0, Data.RoleList.Premium, chatId)) return true;
             foreach (var group in Detection.AdminChats.GroupsOf(chatId))
-                if (await Redis.db.SetContainsAsync("premiumBot", group)) return true;
+                if (await Roles.ContainsAsync(0, Data.RoleList.Premium, group)) return true;
 
             // Added just now: wait for the link's /start rather than leaving at once.
             if (message.NewChatMembers?.Any(m => m.Id == Bot.Me.Id) == true) return false;

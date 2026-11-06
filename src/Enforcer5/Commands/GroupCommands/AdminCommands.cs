@@ -725,7 +725,7 @@ namespace Enforcer5
                 Methods.SendError(e.Message, update.Message, lang);
                 return;
             }
-            Redis.db.SetAddAsync($"chat:{chatId}:watch", userId);
+            Roles.Set(chatId, Data.RoleList.Exempt, userId, true, update.Message.From.Id);
             Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
             Service.LogCommand(update, update.Message.Text);
         }
@@ -750,7 +750,7 @@ namespace Enforcer5
                 Methods.SendError(e.Message, update.Message, lang);
                 return;
             }
-            Redis.db.SetRemoveAsync($"chat:{chatId}:watch", userId);
+            Roles.Set(chatId, Data.RoleList.Exempt, userId, false, update.Message.From.Id);
             Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
             Service.LogCommand(update, update.Message.Text);
         }
@@ -785,8 +785,8 @@ namespace Enforcer5
         public static string Check(long userid, long chatid)
         {
             var status = Bot.Api.GetChatMember(chatid, userid).Result.Status;
-            var priv = Redis.db.SetContainsAsync($"chat:{chatid}:auth", userid).Result;
-            var elevated = Redis.db.SetContainsAsync($"chat:{chatid}:mod", userid).Result;
+            var priv = Roles.Contains(chatid, Data.RoleList.Authorized, userid);
+            var elevated = Roles.Contains(chatid, Data.RoleList.Moderator, userid);
 
             if (status == ChatMemberStatus.Creator) return "creator";
             if (priv) return "auth";
@@ -803,7 +803,7 @@ namespace Enforcer5
         {
             var chat = update.Message.Chat.Id;
             var role = Bot.Api.GetChatMember(chat, Convert.ToInt32((long)update.Message.From.Id));
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = Roles.Contains(chat, Data.RoleList.Authorized, update.Message.From.Id);
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
                 long channelId;
@@ -845,7 +845,7 @@ namespace Enforcer5
         {
             var chat = update.Message.Chat.Id;
             var role = Bot.Api.GetChatMember(chat, update.Message.From.Id);
-            var priv = Redis.db.SetContainsAsync($"chat:{chat}:auth", update.Message.From.Id).Result;
+            var priv = Roles.Contains(chat, Data.RoleList.Authorized, update.Message.From.Id);
             if (role.Result.Status == ChatMemberStatus.Creator || priv)
             {
                 var lang = Methods.GetGroupLanguage(chat).Doc;

@@ -242,7 +242,7 @@ ORDER BY gs.global_sanction_id")).ToArray();
             var admin = GlobalAdmin(chat);
             var vouched = chat.Add("Vouched");
             await chat.SendAsync(admin, $"/getrekt {vouched.Id}:spam");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", vouched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, vouched.Id);
 
             await chat.SendAsync(vouched, "hello");
 
@@ -256,7 +256,7 @@ ORDER BY gs.global_sanction_id")).ToArray();
             await using var chat = await HarnessChat.StartAsync();
             var admin = GlobalAdmin(chat);
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
             var spammer = new HarnessUser(5550005, "Spammer");
             await chat.SendAsync(admin, $"/getrekt {spammer.Id}:scam");
 
@@ -275,7 +275,7 @@ ORDER BY gs.global_sanction_id")).ToArray();
             var member = chat.Add("Member");
             var vouched = new HarnessUser(5550006, "Vouched");
             await chat.SendAsync(admin, $"/getrekt {vouched.Id}:old ban");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", vouched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, vouched.Id);
 
             await chat.PostAsync(chat.Join(vouched, addedBy: member));
 
@@ -327,11 +327,11 @@ ORDER BY gs.global_sanction_id")).ToArray();
 
             Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, byId.Id));
             Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, byName.Id));
-            CollectionAssert.AreEquivalent(new[] { byId.Id.ToString(), byName.Id.ToString() },
-                chat.Keys.Members($"chat:{chat.ChatId}:watch").ToArray(), "not the admin, and nothing for an unknown name");
+            CollectionAssert.AreEquivalent(new[] { byId.Id, byName.Id },
+                chat.RoleMembers(Enforcer5.Data.RoleList.Exempt), "not the admin, and nothing for an unknown name");
 
             await chat.SendAsync(admin, $"/enablewatch {byId.Id}");
-            CollectionAssert.AreEqual(new[] { byName.Id.ToString() }, chat.Keys.Members($"chat:{chat.ChatId}:watch").ToArray());
+            CollectionAssert.AreEqual(new[] { byName.Id }, chat.RoleMembers(Enforcer5.Data.RoleList.Exempt));
             AssertNoErrors(chat);
         }
     }

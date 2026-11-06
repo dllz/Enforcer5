@@ -64,8 +64,8 @@ namespace Enforcer5
 #if PREMIUM
             try
             {
-                if (Redis.db.SetContainsAsync("premiumBot", chat).GetAwaiter().GetResult()) return;
-                if (AdminChats.GroupsOf(chat).Any(g => Redis.db.SetContainsAsync("premiumBot", g).GetAwaiter().GetResult())) return;
+                if (Roles.Contains(0, Data.RoleList.Premium, chat)) return;
+                if (AdminChats.GroupsOf(chat).Any(g => Roles.Contains(0, Data.RoleList.Premium, g))) return;
                 Bot.Api.LeaveChat(chat).GetAwaiter().GetResult();
             }
             catch (Exception e)

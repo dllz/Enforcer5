@@ -186,7 +186,7 @@ namespace Enforcer5.Tests.Harness
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var approved = chat.Add("Approved");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", approved.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, approved.Id);
             var adminPhoto = await chat.PostAsync(chat.Photo(admin, "a"));
             var approvedPhoto = await chat.PostAsync(chat.Photo(approved, "b"));
 
@@ -381,7 +381,7 @@ namespace Enforcer5.Tests.Harness
         {
             await using var chat = await HarnessChat.StartAsync();
             chat.Telegram.ParsesHtml = true;
-            chat.Keys.AddToSet("premiumBot", chat.ChatId.ToString()); // even in a premium group: this group only
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Premium, chat.ChatId); // even in a premium group: this group only
             await BotGuard.ReloadAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = Established(chat, "Member");

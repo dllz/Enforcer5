@@ -167,8 +167,7 @@ namespace Enforcer5.Detection
             }
             try
             {
-                var premium = await Redis.db.SetMembersAsync("premiumBot");
-                _premiumChats = premium.Select(v => long.TryParse(v.ToString(), out var id) ? id : 0).Where(id => id != 0).ToHashSet();
+                _premiumChats = (await Roles.MembersAsync(0, Data.RoleList.Premium)).ToHashSet();
             }
             catch (Exception e)
             {

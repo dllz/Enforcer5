@@ -605,6 +605,8 @@ namespace Enforcer5.Helpers
             // /deelevate wrote a permanent "false" that hid a real admin promoted later.
             var elevated = await Redis.db.StringGetAsync($"chat:{group}:adminses:{user}");
             if (elevated.Equals("true")) return true;
+            // Elevated for good (a moderator, PostgreSQL since rollout step 14): adminses is only its cache.
+            if (await Roles.ContainsAsync(group, RoleList.Moderator, user)) return true;
             try
             {
                 if (await AdminDirectory.IsAdminAsync(group, user) is { } known) return known;
@@ -744,7 +746,7 @@ namespace Enforcer5.Helpers
                         var ban = GlobalBans.Get(joiner.Id);
                         if (ban == null) continue;
                         // The joiner's own watch entry, not the adder's (which is what ctx.Watched is).
-                        if (await Redis.db.SetContainsAsync($"chat:{ctx.ChatId}:watch", joiner.Id)) continue;
+                        if (await Roles.ContainsAsync(ctx.ChatId, RoleList.Exempt, joiner.Id)) continue;
                         EnforceGlobalBan(ctx, joiner.Id, joiner.FirstName, ban);
                     }
                     return;
@@ -1211,8 +1213,7 @@ namespace Enforcer5.Helpers
 
         public static bool IsLangAdmin(long id)
         {
-            var res = Redis.db.SetContainsAsync($"langAdmins", id).Result;
-            return res;
+            return Roles.Contains(0, RoleList.LanguageAdmin, id);
         }
 
         public static bool IsGroupAdmin(CallbackQuery update)

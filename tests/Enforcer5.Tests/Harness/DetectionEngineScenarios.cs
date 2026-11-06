@@ -180,7 +180,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
             var regular = chat.Add("Regular");
             chat.Hashes[$"{chat.ChatId}:users:{regular.Id}", "msgs"] = "5000";
 

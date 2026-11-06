@@ -73,7 +73,7 @@ namespace Enforcer5
                             group = args[1].Split('_')[1];
                             if (long.TryParse(group, out longGroup))
                             {
-                                Redis.db.SetAddAsync($"chat:{longGroup}:tagall2", update.Message.From.Id);
+                                Roles.Set(longGroup, Data.RoleList.PingMe, update.Message.From.Id, true, update.Message.From.Id);
                                 Bot.SendReply(Methods.GetLocaleString(lang, "registerfortagall"), update);
                             }
                             else Bot.SendReply("Error: Wrong syntax!", update);
@@ -273,7 +273,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = Methods.GetUserId(update, args);
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
+            Roles.Set(chatId, Data.RoleList.PingMe, userId, false, update.Message.From.Id);
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }      
 
@@ -306,7 +306,7 @@ namespace Enforcer5
             var spamcheck = Redis.db.StringGetAsync($"chat:{ chatId}:spamList").Result;
             if(spamcheck.HasValue)
                 return;
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
+            var set = Roles.Members(chatId, Data.RoleList.PingMe);
             
             List<String> list = new List<string>();
             string templist = "";
@@ -314,7 +314,7 @@ namespace Enforcer5
             long num = 0;
             foreach (var mem in set)
             {
-                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
+                num = mem;
                 {
                     templist += $"<a href=\"tg://user?id={num}\">{Methods.GetName(num)}</a>, ";
                     count++;
@@ -350,7 +350,7 @@ namespace Enforcer5
             long chatId = update.Message.Chat.Id;
             long userId = update.Message.From.Id;
             var lang = Methods.GetGroupLanguage(update.Message, false).Doc;
-            Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", userId);
+            Roles.Set(chatId, Data.RoleList.PingMe, userId, false, userId);
             Bot.SendReply(Methods.GetLocaleString(lang, "unregisterfortagall"), update);
         }
 
@@ -359,15 +359,8 @@ namespace Enforcer5
         {
             long chatId = update.Message.Chat.Id;                    
             long userId = update.Message.From.Id;        
-            var set = Redis.db.SetScan($"chat:{chatId}:tagall2").ToList();
-            long num = 0;
-            foreach (var mem in set)
-            {
-                if (mem.HasValue && long.TryParse(mem.ToString(), out num))
-                {
-                    Redis.db.SetRemoveAsync($"chat:{chatId}:tagall2", num);              
-                }            
-            }              
+            foreach (var member in Roles.Members(chatId, Data.RoleList.PingMe))
+                Roles.Set(chatId, Data.RoleList.PingMe, member, false, userId);
         }
 
     }

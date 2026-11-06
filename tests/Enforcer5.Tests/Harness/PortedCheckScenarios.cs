@@ -265,7 +265,7 @@ ORDER BY d.detection_id")).ToArray();
             chat.Hashes[$"chat:{chat.ChatId}:char", "Rtl"] = "kick";
             var admin = chat.Add("Admin", MemberState.Administrator);
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
 
             foreach (var who in new[] { admin, watched })
             {

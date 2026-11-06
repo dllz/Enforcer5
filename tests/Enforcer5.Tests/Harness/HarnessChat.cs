@@ -131,6 +131,9 @@ namespace Enforcer5.Tests.Harness
         {
             var chat = new HarnessChat(_world, chatId, title, owner: false) { Username = username };
             Telegram.SetMember(chatId, BotUser.Id, MemberState.Administrator);
+#if PREMIUM
+            Roles.Set(0, Enforcer5.Data.RoleList.Premium, chatId, true);
+#endif
             return chat;
         }
 
@@ -153,11 +156,6 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Detection.AdminChats.ResetForTests();
             Hashes.Install(Redis);
             Keys.Install(Redis);
-#if PREMIUM
-            // The premium edition only serves groups on its list.
-            Redis.Setup(r => r.SetContainsAsync(It.Is<RedisKey>(k => k == "premiumBot"), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
-                .ReturnsAsync(true);
-#endif
             Enforcer5.Helpers.Redis.UseForTests(Redis.Object);
             Bot.UseClient(Telegram);
             _world.PreviousFiles = Bot.Files;
@@ -183,6 +181,13 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Raids.RaidGuard.Start(_world.QueueStop.Token);
             Enforcer5.Actions.Batches.ResetForTests();
             (Enforcer5.Data.Repositories.Warns as WarnStore)?.ResetForTests();
+            // The role lists from PostgreSQL (empty); each group's old Redis sets are imported on its first use.
+            Roles.ResetForTests();
+            await Roles.LoadAsync();
+#if PREMIUM
+            // The premium edition only serves groups on its list: every harness group is on it.
+            await Roles.SetAsync(0, Enforcer5.Data.RoleList.Premium, ChatId, true);
+#endif
             if (Enforcer5.Data.Repositories.Tempbans is TempbanStore tempbans)
             {
                 tempbans.ResetForTests();
@@ -210,6 +215,8 @@ namespace Enforcer5.Tests.Harness
             Enforcer5.Detection.DetectionEngine.ResetForTests();
             await Enforcer5.Detection.TrustOverrides.ReloadAsync();
             await Enforcer5.Detection.BotGuard.ReloadAsync();
+            Roles.ResetForTests();
+            await Roles.LoadAsync();
             if (Enforcer5.Data.Repositories.Tempbans is TempbanStore tempbans)
             {
                 tempbans.ResetForTests();
@@ -467,6 +474,12 @@ ORDER BY until_at", new { Edition = BanHistory.Edition, ChatId })).ToArray();
         /// Moves every tempban in the schedule into the past and runs the check the bot's timer
         /// runs, then waits for what it set off.
         /// </summary>
+        /// <summary>Puts <paramref name="id"/> on a list of this group (or a global one), as its command would.</summary>
+        internal Task RoleAsync(Enforcer5.Data.RoleList list, long id, bool on = true) => Roles.SetAsync(ChatId, list, id, on);
+
+        /// <summary>Everyone on a list of this group.</summary>
+        internal long[] RoleMembers(Enforcer5.Data.RoleList list) => Roles.Members(ChatId, list).OrderBy(i => i).ToArray();
+
         internal async Task ExpireTempbansAsync()
         {
             await using (var connection = await Database.OpenConnectionAsync())
@@ -531,6 +544,7 @@ ORDER BY until_at", new { Edition = BanHistory.Edition, ChatId })).ToArray();
             Enforcer5.Helpers.Clock.UseForTests(null);
             PostgresStorage.UseForTests(null);
             GlobalBans.ResetForTests();
+            Roles.ResetForTests();
             Enforcer5.Detection.DetectionSettings.ResetForTests();
             Enforcer5.Detection.DetectionEngine.ResetForTests();
             Enforcer5.Detection.AdminChats.ResetForTests();

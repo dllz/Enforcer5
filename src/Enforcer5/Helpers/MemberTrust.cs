@@ -84,8 +84,8 @@ namespace Enforcer5.Helpers
         {
             var db = Redis.db;
             var member = db.HashGetAsync($"{chatId}:users:{userId}", new RedisValue[] { "msgs", "first", "joined" });
-            var auth = db.SetContainsAsync($"chat:{chatId}:auth", userId);
-            var watch = db.SetContainsAsync($"chat:{chatId}:watch", userId);
+            var auth = Roles.ContainsAsync(chatId, Data.RoleList.Authorized, userId);
+            var watch = Roles.ContainsAsync(chatId, Data.RoleList.Exempt, userId);
             await Task.WhenAll(member, auth, watch);
             if (auth.Result || watch.Result) return TrustLevel.Approved;
             var values = member.Result ?? Array.Empty<RedisValue>();

@@ -160,8 +160,7 @@ namespace Enforcer5.Tests.Harness
 #if PREMIUM
         /// <summary>The admin chat is no premium group; the harness answers every premium check yes.</summary>
         private static void NotPremium(HarnessChat chat, long chatId) =>
-            chat.Redis.Setup(r => r.SetContainsAsync(It.Is<RedisKey>(k => k == "premiumBot"), It.Is<RedisValue>(v => v == chatId),
-                It.IsAny<CommandFlags>())).ReturnsAsync(false);
+            Enforcer5.Helpers.Roles.Set(0, Enforcer5.Data.RoleList.Premium, chatId, false);
 
         private static HarnessUser Me => new(HarnessChat.BotUser.Id, HarnessChat.BotUser.FirstName, HarnessChat.BotUser.Username, IsBot: true);
 

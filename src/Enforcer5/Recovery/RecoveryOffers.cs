@@ -291,7 +291,7 @@ namespace Enforcer5.Recovery
                 }
                 else if (current == change.Before)
                 {
-                    await Repositories.RecoveryValues.WriteAsync(change, change.After);
+                    await Repositories.RecoveryValues.WriteAsync(change, change.After, actor);
                     applied++;
                 }
                 else if (current == change.After) applied++; // already so

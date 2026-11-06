@@ -128,7 +128,7 @@ namespace Enforcer5.Models
             var globalBanId = message.NewChatMember?.Id ?? context.UserId;
 
             var db = Redis.db;
-            var watch = db.SetContainsAsync($"chat:{context.ChatId}:watch", context.UserId);
+            var watch = Roles.ContainsAsync(context.ChatId, RoleList.Exempt, context.UserId);
             // A busy group's settings come from a snapshot at most SettingsFor old (see GroupSettings).
             var cached = GroupSettings.Get(context.ChatId);
             var settings = cached != null

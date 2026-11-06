@@ -44,6 +44,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 11 | Detection engine (Detection v2 steps 3 and 4): every sign that fires (the checks that existed before included), with the member's state and what was or would have been done; every decision about a member (the bot's and every admin's: command, button, report, Telegram app) as a label linked to the signs before it; bans, kicks and mutes made in the Telegram app also in `sanctions` | `detections`, `member_labels` | Built |
 | 12 | Warn counts, **cut over**: PostgreSQL decides max warns and the media limit; changes queue in Redis while it is down; each member's first change starts from the old hashes | `warning_balances`, `warning_events` | Built |
 | 13 | Tempban expiry, **cut over**: each edition's schedule in PostgreSQL, claimed by the expiry check; the old Redis schedule imported once; changes queue in Redis while it is down | `tempban_schedule`, `storage_imports` | Built |
+| 14 | Roles and lists, **cut over**: authorized, moderators, elevation blocks, exempt members, @admin opt-outs, report blocks and /pingme per group; language admins, premium groups and ignored chats; kept in memory, each group's old sets imported on first use | `group_role_assignments`, `group_elevation_blocks`, `group_user_preferences`, `global_role_assignments`, `group_entitlements`, `bot_bans` | Built |
 
 ### Step 2: ban history
 
@@ -172,7 +173,7 @@ and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose t
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else (raid state and the slow lane included), group settings other than the detection settings (step 10) and everything read back. (Global bans
-moved in this step; warn counts in step 12, tempban expiry in step 13.) Old Redis ban and warn data is not
+moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -337,6 +338,41 @@ schedule (`tempbanned`, `tempbannedPremium`, `chat:{id}:tempbanned*`) any more.
   with none costs nothing.
 - **Rollback.** The old hash is left as it was at the deploy; a binary rollback would lift its entries at their old
   ends, including ones ended since.
+
+### Step 14: roles and lists (cut over)
+
+The Redis sets that held who may do what moved to PostgreSQL (Daniel, 2026-11-06), behind `Helpers/Roles`
+(`Data/PostgresRoleRepository`, `Data.RoleList`). Nothing writes the old sets any more.
+
+| Redis set | List | Table |
+|---|---|---|
+| `chat:{id}:auth` | `Authorized` | `group_role_assignments`, role `authorized` (a period) |
+| `chat:{id}:mod` | `Moderator` | `group_role_assignments`, role `moderator` |
+| `chat:{id}:deauth` | `ElevationBlocked` | `group_elevation_blocks` (a period) |
+| `chat:{id}:watch` | `Exempt` | `group_user_preferences.watch_disabled` |
+| `chat:{id}:adminOff` | `AdminReportsOff` | `group_user_preferences.admin_notifications_disabled` |
+| `chat:{id}:reportblocked` | `ReportBlocked` | `group_user_preferences.reports_blocked` |
+| `chat:{id}:tagall2` | `PingMe` | `group_user_preferences.tag_all_subscribed` |
+| `langAdmins` | `LanguageAdmin` | `global_role_assignments`, role `language_admin` (added to the design's roles: the old branch filed language admins under `global_admin`, a different group; Daniel, 2026-11-06) |
+| `premiumBot` | `Premium` | `group_entitlements`, `premium` |
+| `bot:bannedGroups` | `BotBanned` | `bot_bans` (new, Daniel: OK), by Telegram id, groups and users alike |
+
+- **In memory.** All of it is small (prod 2026-11-06: about 90 members in 30 groups' sets, 5 language admins, 30
+  premium groups, 44 ignored chats), and the exempt list and the ignored chats are read on every message, so every
+  entry is kept in memory: loaded once PostgreSQL is ready, reloaded every minute and when the other edition changed
+  something (`roles:version` in Redis, checked every 5 s). A change here counts at once.
+- **Import.** Each group's seven old sets are imported on the group's first use, in the background, once ever
+  (`storage_imports`, `roles:{chat}`); until then that group's lists are read from the old sets, as before. The
+  global sets are imported once the lists are loaded (`roles:0`).
+- **While PostgreSQL is down** a change goes to `roles:queue:{edition}` and is written in order once it is back; it
+  counts in memory at once. Until the first load, everything is read from the old sets.
+- **Elevation.** `/elevate` by the creator or an authorized member makes a moderator row; `chat:{id}:adminses:{user}`
+  stays as its cache, and `Methods.IsGroupAdminAsync` now also counts moderators, so losing Redis no longer loses
+  them. The half-hour elevation by a plain admin, its cooldown (`blockList`) and `/elevatelog` (`modlog`) stay in Redis
+  as they expire anyway.
+- `Constants.Devs` and `GlobalAdmins` stay in code (Daniel). `groupBan:{id}`, which nothing writes, is still read when
+  the bot is added.
+- **Rollback.** The old sets are left as they were at the deploy.
 
 ## Not built yet: sharing 429s and enforcement across bot processes
 

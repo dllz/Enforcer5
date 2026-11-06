@@ -417,7 +417,7 @@ LEFT JOIN telegram_accounts b ON b.account_id = x.set_by_account_id")).ToArray()
         {
             await using var premium = await StartAsync();
             var other = premium.Group(-100777);
-            premium.Keys.AddToSet("premiumBot", premium.ChatId.ToString());
+            await premium.RoleAsync(Enforcer5.Data.RoleList.Premium, premium.ChatId);
             var admin = premium.Add("Admin", MemberState.Administrator);
             var member = other.Add("Member");
             var bot = premium.Add("Helper", MemberState.Left, username: "helperbot", isBot: true);
@@ -443,7 +443,7 @@ LEFT JOIN telegram_accounts b ON b.account_id = x.set_by_account_id")).ToArray()
             await BotGuard.ReloadAsync();
             Assert.IsFalse(BotGuard.IsTrustedEverywhere(present.Id));
 
-            premium.Keys.RemoveFromSet("premiumBot", premium.ChatId.ToString());
+            await premium.RoleAsync(Enforcer5.Data.RoleList.Premium, premium.ChatId, false);
             await BotGuard.ReloadAsync();
             Assert.IsFalse(BotGuard.IsTrustedEverywhere(bot.Id), "no longer premium");
             var later = await other.PostAsync(GuestReply(other, bot, member, await other.SendAsync(member, "@helperbot hi"), "Hello"));

@@ -50,7 +50,7 @@ namespace Enforcer5.Tests.Harness
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Boss", MemberState.Administrator);
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:mod", "4242");
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Moderator, 4242);
             chat.Hashes["user:4242", "name"] = "<b>Mod</b>";
 
             await chat.SendAsync(admin, "/adminlist");

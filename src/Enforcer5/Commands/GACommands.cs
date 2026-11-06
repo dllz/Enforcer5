@@ -165,7 +165,7 @@ namespace Enforcer5
        public static void MakeLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            var res =  Redis.db.SetAddAsync("langAdmins", id).Result;
+            Roles.Set(0, Data.RoleList.LanguageAdmin, id, true, update.Message.From.Id);
              Bot.SendReply("Done", update);
         }
 
@@ -173,7 +173,7 @@ namespace Enforcer5
         public static void RemoveLangAdmin(Update update, string[] args)
         {
             var id = update.Message.ReplyToMessage.From.Id;
-            var res =  Redis.db.SetRemoveAsync("langAdmins", id).Result;
+            Roles.Set(0, Data.RoleList.LanguageAdmin, id, false, update.Message.From.Id);
              Bot.SendReply("Done", update);
         }
         [Command(Trigger = "reloadLang", UploadAdmin = true)]
@@ -199,7 +199,7 @@ namespace Enforcer5
                     groupd = long.Parse(spilt[1]);
                 }
             }
-            Redis.db.SetAddAsync($"chat:{groupd}:watch", userId);
+            Roles.Set(groupd, Data.RoleList.Exempt, userId, true, update.Message.From.Id);
             Bot.Send(Methods.GetLocaleString(lang, "off"), update.Message.From.Id);
             //Service.LogCommand(update, update.Message.Text);
         }
@@ -293,7 +293,7 @@ namespace Enforcer5
                 var groupId = args[1];
                 // A bad id throws; the dispatcher reports it.
                 var id = long.Parse(groupId);
-                Redis.db.SetAddAsync("bot:bannedGroups", id);
+                Roles.Set(0, Data.RoleList.BotBanned, id, true, update.Message.From.Id);
                 Bot.SendReply("Group banned", update);
             }
         }
@@ -306,7 +306,7 @@ namespace Enforcer5
                 var groupId = args[1];
                 // A bad id throws; the dispatcher reports it.
                 var id = long.Parse(groupId);
-                Redis.db.SetRemoveAsync("bot:bannedGroups", id);
+                Roles.Set(0, Data.RoleList.BotBanned, id, false, update.Message.From.Id);
                 Bot.SendReply("Group unbanned", update);
             }
         }
@@ -348,14 +348,14 @@ namespace Enforcer5
         [Command(Trigger = "allowp", GlobalAdminOnly = true, InGroupOnly = true, Description = "Allow this group to use the premium bot")]
         public static void AllowPremiumBot(Update update, string[] args)
         {
-             Redis.db.SetAddAsync("premiumBot", update.Message.Chat.Id);
+             Roles.Set(0, Data.RoleList.Premium, update.Message.Chat.Id, true, update.Message.From.Id);
              Bot.SendReply("Activated", update);
         }
 
         [Command(Trigger = "blockp", GlobalAdminOnly = true, InGroupOnly = true, Description = "Stop this group using the premium bot")]
         public static void BlockPremiumBot(Update update, string[] args)
         {
-             Redis.db.SetRemoveAsync("premiumBot", update.Message.Chat.Id);
+             Roles.Set(0, Data.RoleList.Premium, update.Message.Chat.Id, false, update.Message.From.Id);
              Bot.SendReply("Deactivated", update);
         }
 

@@ -55,9 +55,8 @@ namespace Enforcer5
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var text = Methods.GetAdminList(update.Message, lang);
-            var mods = Redis.db.SetMembersAsync($"chat:{update.Message.Chat.Id}:mod").Result.Select(e => long.TryParse(e.ToString(), out var mod)
-                    ? Ids.NamedHtml(mod, Redis.db.HashGetAsync($"user:{mod}", "name").Result)
-                    : e.ToString().FormatHTML()).ToList();
+            var mods = Roles.Members(update.Message.Chat.Id, Data.RoleList.Moderator)
+                .Select(mod => Ids.NamedHtml(mod, Redis.db.HashGetAsync($"user:{mod}", "name").Result)).ToList();
             if (mods.Count > 0)
             {
                 text = $"{text}\n{Methods.GetLocaleString(lang, "currentMods")}{string.Join("\n", mods)}";

@@ -138,7 +138,7 @@ ORDER BY s.sanction_id")).ToArray();
             await using var chat = await HarnessChat.StartAsync();
             FloodOn(chat, "kick");
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
 
             for (var i = 0; i < 8; i++) chat.Deliver(chat.Text(watched, $"spam {i}"));
             await chat.AdvanceAsync(TimeSpan.FromSeconds(30));
@@ -172,7 +172,7 @@ ORDER BY s.sanction_id")).ToArray();
             chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "maxlength"] = "5";
             chat.Hashes[$"chat:{chat.ChatId}:antinamelengthsettings", "action"] = "kick";
             var watched = chat.Add("A long enough name");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
 
             await chat.SendAsync(watched, new string('a', 150));
 
@@ -454,7 +454,7 @@ ORDER BY s.sanction_id")).ToArray();
             chat.Hashes[$"chat:{chat.ChatId}:media", "image"] = "blocked";
             chat.Hashes[$"chat:{chat.ChatId}:media", "action"] = "kick";
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
             var poster = chat.Add("Poster");
 
             await chat.SendPhotoAsync(watched, "w");
@@ -517,7 +517,7 @@ ORDER BY s.sanction_id")).ToArray();
             var latin = chat.Add("Latin", MemberState.Left);
             var arabic = chat.Add("بدر", MemberState.Left);
             var watched = chat.Add("سلام", MemberState.Left);
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
             var join = chat.Join(latin, addedBy: adder);
             foreach (var u in new[] { arabic, watched }) chat.Telegram.SetMember(chat.ChatId, u.Id, MemberState.Member);
             join.NewChatMembers = new[] { latin.ToUser(), arabic.ToUser(), watched.ToUser() };
@@ -542,7 +542,7 @@ ORDER BY s.sanction_id")).ToArray();
             chat.Hashes[$"chat:{chat.ChatId}:char", "Arab"] = "kick";
             var writer = chat.Add("Writer");
             var watched = chat.Add("Watched");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", watched.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, watched.Id);
 
             await chat.SendAsync(writer, "ع");
             await chat.SendAsync(watched, "سلام");

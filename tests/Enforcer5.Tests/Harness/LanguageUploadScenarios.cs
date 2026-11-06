@@ -54,7 +54,7 @@ namespace Enforcer5.Tests.Harness
             var esme = chat.Add("Esme the helper", username: "esmehelbot", id: BotSenderFilter.EsmeBotId, isBot: true);
             var admin = chat.Add("Lang admin");
             var member = chat.Add("Someone");
-            chat.Keys.AddToSet("langAdmins", admin.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.LanguageAdmin, admin.Id);
 
             var zip = LanguageUploadTests.Zip(
                 ("German.xml", LanguageUploadTests.German()),
@@ -100,7 +100,7 @@ namespace Enforcer5.Tests.Harness
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Lang admin");
-            chat.Keys.AddToSet("langAdmins", admin.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.LanguageAdmin, admin.Id);
 
             var xml = System.Text.Encoding.UTF8.GetBytes(LanguageUploadTests.German("Español", "Spanish", withName: "Hola"));
             var doc = await chat.PostAsync(chat.Document(admin, "Spanish.xml", xml));
@@ -133,7 +133,7 @@ namespace Enforcer5.Tests.Harness
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Lang admin");
-            chat.Keys.AddToSet("langAdmins", admin.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.LanguageAdmin, admin.Id);
 
             var doc = await chat.PostAsync(chat.Document(admin, "notes.txt", new byte[] { 1 }));
             await chat.SendAsync(admin, "/uploadlanguage", doc);

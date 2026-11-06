@@ -29,8 +29,7 @@ namespace Enforcer5
             {
                 return;
             }
-            var blocked =
-                Redis.db.SetContainsAsync($"chat:{update.Message.Chat.Id}:reportblocked", update.Message.From.Id).Result;
+            var blocked = Roles.Contains(update.Message.Chat.Id, Data.RoleList.ReportBlocked, update.Message.From.Id);
             if (blocked)
                 return;
             var ReportOn = Redis.db.HashGetAsync($"chat:{update.Message.Chat.Id}:settings", "Flagged").Result;
@@ -87,7 +86,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-             Redis.db.SetAddAsync($"chat:{chatId}:adminOff", userId);
+             Roles.Set(chatId, Data.RoleList.AdminReportsOff, userId, true, update.Message.From.Id);
              Bot.SendReply(Methods.GetLocaleString(lang, "off"), update);
         }
         [Command(Trigger = "adminon", InGroupOnly = true, GroupAdminOnly = true)]
@@ -96,7 +95,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
             var userId = Methods.GetUserId(update, args);
             var chatId = update.Message.Chat.Id;
-             Redis.db.SetRemoveAsync($"chat:{chatId}:adminOff", userId);
+             Roles.Set(chatId, Data.RoleList.AdminReportsOff, userId, false, update.Message.From.Id);
              Bot.SendReply(Methods.GetLocaleString(lang, "on"), update);
         }
 
@@ -260,9 +259,8 @@ namespace Enforcer5
         public static void ReportOn(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message, true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
-             Redis.db.SetRemoveAsync(hash, userId);
+            Roles.Set(update.Message.Chat.Id, Data.RoleList.ReportBlocked, userId, false, update.Message.From.Id);
              Bot.SendReply(Methods.GetLocaleString(lang, "userUnblocked"), update);
             Service.LogCommand(update, update.Message.Text);
         }
@@ -270,9 +268,8 @@ namespace Enforcer5
         public static void ReportOff(Update update, string[] args)
         {
             var lang = Methods.GetGroupLanguage(update.Message,true).Doc;
-            var hash = $"chat:{update.Message.Chat.Id}:reportblocked";
             var userId = Methods.GetUserId(update, args);
-             Redis.db.SetAddAsync(hash, userId);
+            Roles.Set(update.Message.Chat.Id, Data.RoleList.ReportBlocked, userId, true, update.Message.From.Id);
              Bot.SendReply(Methods.GetLocaleString(lang, "userBlocked"), update);
             Service.LogCommand(update, update.Message.Text);
         }
@@ -308,8 +305,7 @@ namespace Enforcer5
                     }
                     var lang = Methods.GetGroupLanguage(user.User).Doc;
                     var mod = user.User.Id;
-                    var allowed = Redis.db.SetContainsAsync($"chat:{chatId}:adminOff", mod);
-                    if (allowed.Result)
+                    if (Roles.Contains(chatId, Data.RoleList.AdminReportsOff, mod))
                     {
                         continue;
                     }

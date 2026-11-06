@@ -154,7 +154,7 @@ SELECT a.telegram_user_id, f.sample_reason, f.bare_link, f.script FROM message_f
             await chat.JoinAsync(newcomer);
             await chat.SendAsync(newcomer, "hi");
             var approved = chat.Add("Approved");
-            chat.Keys.AddToSet($"chat:{chat.ChatId}:watch", approved.Id.ToString());
+            await chat.RoleAsync(Enforcer5.Data.RoleList.Exempt, approved.Id);
 
             await chat.SendAsync(admin, $"/user {regular.Id}");
             StringAssert.Contains(chat.Replies.Last(), "Trust here: established. 500 messages, here since before this was recorded. Established here: 20 messages and 7 days.");

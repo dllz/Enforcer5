@@ -158,6 +158,33 @@ SELECT g.group_id FROM groups g JOIN telegram_chats c ON c.chat_id = g.chat_id
 WHERE c.telegram_chat_id = @TelegramChatId", new { TelegramChatId = telegramChatId }, transaction,
                 cancellationToken: cancellationToken));
 
+        /// <summary>
+        /// The user's ids, created if missing. Usually they exist and are only looked up; the shared principal lock (as
+        /// the ban history and the observation batch take it) is only taken to create them, so a command never waits for
+        /// the minute's observation batch.
+        /// </summary>
+        internal static async Task<UserIds> FindOrEnsureUserAsync(DbConnection connection, DbTransaction transaction,
+            long telegramUserId, Func<Task> takePrincipalLock)
+        {
+            var row = await connection.QuerySingleOrDefaultAsync<(long AccountId, long UserId)?>(new CommandDefinition(@"
+SELECT a.account_id, l.user_id
+FROM telegram_accounts a JOIN user_identity_links l ON l.account_id = a.account_id AND l.unlinked_at IS NULL
+WHERE a.telegram_user_id = @Id", new { Id = telegramUserId }, transaction));
+            if (row is { } found) return new UserIds(found.AccountId, found.UserId);
+            await takePrincipalLock();
+            return await EnsureUserAsync(connection, transaction, telegramUserId);
+        }
+
+        /// <summary>The group's id, created if missing; see <see cref="FindOrEnsureUserAsync"/>.</summary>
+        internal static async Task<long> FindOrEnsureGroupAsync(DbConnection connection, DbTransaction transaction,
+            long telegramChatId, string chatType, Func<Task> takePrincipalLock)
+        {
+            var found = await ResolveGroupIdAsync(connection, telegramChatId, transaction);
+            if (found.HasValue) return found.Value;
+            await takePrincipalLock();
+            return (await EnsureGroupAsync(connection, transaction, telegramChatId, chatType: chatType)).GroupId;
+        }
+
         private static Task LockAsync(DbConnection connection, DbTransaction transaction, string kind,
             long externalId, CancellationToken cancellationToken) => connection.ExecuteAsync(new CommandDefinition(
                 "SELECT pg_advisory_xact_lock(hashtext(@Kind), hashtext(@ExternalId))",

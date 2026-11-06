@@ -72,6 +72,9 @@ namespace Enforcer5.Data
                 case "hash":
                     var field = await db.HashGetAsync(change.Key, change.Field);
                     return field.IsNull ? null : field.ToString();
+                case "set" when Recovery.RecoveryFile.Suffix(change.Key) == "reportblocked":
+                    // PostgreSQL since rollout step 14 (Helpers/Roles).
+                    return await Helpers.Roles.ContainsAsync(ChatOf(change), RoleList.ReportBlocked, long.Parse(change.Field)) ? "true" : "false";
                 case "set":
                     return await db.SetContainsAsync(change.Key, change.Field) ? "true" : "false";
                 case "str":
@@ -111,6 +114,9 @@ namespace Enforcer5.Data
                 case "hash":
                     if (value == null) await db.HashDeleteAsync(change.Key, change.Field);
                     else await db.HashSetAsync(change.Key, change.Field, value);
+                    break;
+                case "set" when Recovery.RecoveryFile.Suffix(change.Key) == "reportblocked":
+                    await Helpers.Roles.SetAsync(ChatOf(change), RoleList.ReportBlocked, long.Parse(change.Field), value == "true", actorId);
                     break;
                 case "set":
                     if (value == "true") await db.SetAddAsync(change.Key, change.Field);

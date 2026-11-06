@@ -52,6 +52,75 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.TelegramUserId });
             });
 
+            modelBuilder.Entity<GroupEntitlementEntity>(entity =>
+            {
+                entity.ToTable("group_entitlements", table => table.HasCheckConstraint("group_entitlements_entitlement_check", "entitlement IN ('premium')"));
+                entity.HasKey(x => new { x.GroupId, x.Entitlement });
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<GroupRoleAssignmentEntity>(entity =>
+            {
+                entity.ToTable("group_role_assignments", table =>
+                {
+                    table.HasCheckConstraint("group_role_assignments_role_check", "role IN ('authorized', 'moderator')");
+                    table.HasCheckConstraint("group_role_assignments_period_check", "revoked_at IS NULL OR revoked_at >= assigned_at");
+                });
+                entity.HasKey(x => x.AssignmentId);
+                entity.Property(x => x.AssignmentId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Role).IsRequired();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.GroupId, x.UserId, x.Role }, "group_role_assignments_active_idx").IsUnique().HasFilter("revoked_at IS NULL");
+            });
+
+            modelBuilder.Entity<GroupElevationBlockEntity>(entity =>
+            {
+                entity.ToTable("group_elevation_blocks", table => table.HasCheckConstraint("group_elevation_blocks_period_check", "revoked_at IS NULL OR revoked_at >= blocked_at"));
+                entity.HasKey(x => x.BlockId);
+                entity.Property(x => x.BlockId).UseIdentityAlwaysColumn();
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.GroupId, x.UserId }, "group_elevation_blocks_active_idx").IsUnique().HasFilter("revoked_at IS NULL");
+            });
+
+            modelBuilder.Entity<GroupUserPreferenceEntity>(entity =>
+            {
+                entity.ToTable("group_user_preferences");
+                entity.HasKey(x => new { x.GroupId, x.UserId });
+                entity.Property(x => x.AdminNotificationsDisabled).HasDefaultValue(false);
+                entity.Property(x => x.ReportsBlocked).HasDefaultValue(false);
+                entity.Property(x => x.WatchDisabled).HasDefaultValue(false);
+                entity.Property(x => x.TagAllSubscribed).HasDefaultValue(false);
+                entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
+                entity.HasOne<GroupEntity>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<GlobalRoleAssignmentEntity>(entity =>
+            {
+                entity.ToTable("global_role_assignments", table =>
+                {
+                    // language_admin added (Daniel, 2026-11-06): the old branch filed langAdmins under global_admin.
+                    table.HasCheckConstraint("global_role_assignments_role_check", "role IN ('developer', 'global_admin', 'global_ban_admin', 'language_admin')");
+                    table.HasCheckConstraint("global_role_assignments_period_check", "revoked_at IS NULL OR revoked_at >= assigned_at");
+                });
+                entity.HasKey(x => x.AssignmentId);
+                entity.Property(x => x.AssignmentId).UseIdentityAlwaysColumn();
+                entity.Property(x => x.Role).IsRequired();
+                entity.HasOne<UserEntity>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(x => new { x.UserId, x.Role }, "global_role_assignments_active_idx").IsUnique().HasFilter("revoked_at IS NULL");
+            });
+
+            modelBuilder.Entity<BotBanEntity>(entity =>
+            {
+                entity.ToTable("bot_bans");
+                entity.HasKey(x => x.TelegramId);
+                entity.Property(x => x.TelegramId).ValueGeneratedNever();
+                entity.Property(x => x.BannedAt).HasDefaultValueSql("now()");
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.BannedByAccountId).OnDelete(DeleteBehavior.SetNull);
+            });
+
             modelBuilder.Entity<StorageImportEntity>(entity =>
             {
                 entity.ToTable("storage_imports");
