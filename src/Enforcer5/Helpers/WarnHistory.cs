@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Enforcer5.Data;
 using Enforcer5.Models;
@@ -30,8 +31,26 @@ namespace Enforcer5.Helpers
             };
 
         /// <summary>Makes the change, and labels it for Detection.</summary>
-        internal static async Task<WarnChanged> ApplyAsync(IWarnRepository warns, WarnOp op, bool fromReport = false)
+        internal static async Task<WarnChanged> ApplyAsync(IWarnRepository warns, WarnOp op, bool fromReport = false,
+            ReportRef report = null)
         {
+            if (report != null && op.ReportId == null)
+            {
+                // The report's row is written in the background (ReportHistory); the warn, at once since rollout step 12,
+                // so it waits for the report's id. Without it within a few seconds the warn is not linked to it.
+                if (report.ReportId == null)
+                {
+                    try
+                    {
+                        await HistoryWriter.FlushAsync().WaitAsync(TimeSpan.FromSeconds(3));
+                    }
+                    catch (Exception e) when (e is TimeoutException or InvalidOperationException)
+                    {
+                        // A full or slow history queue: the warn goes ahead without the link.
+                    }
+                }
+                op = op with { ReportId = report.ReportId };
+            }
             var result = await warns.ApplyAsync(op);
             Label(op, result.Before, result.After, fromReport);
             return result;
@@ -39,7 +58,7 @@ namespace Enforcer5.Helpers
 
         /// <summary>Synchronous <see cref="ApplyAsync"/>, for the warn actions.</summary>
         internal static WarnChanged Apply(WarnOp op, ReportRef report = null) =>
-            ApplyAsync(Repositories.Warns, op, report != null).GetAwaiter().GetResult();
+            ApplyAsync(Repositories.Warns, op, report != null, report).GetAwaiter().GetResult();
 
         /// <summary>
         /// Warns are decisions Detection learns from; prewarns and media strikes are not. A warn added is a sanction,
