@@ -110,7 +110,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             Assert.IsFalse(report.Text.Contains("hello"), "never the message's text");
             var buttons = Buttons(report);
             var data = buttons.Where(b => b.CallbackData != null).Select(b => b.CallbackData.Split(':')).ToArray();
-            CollectionAssert.AreEqual(new[] { "ban", "mute", "fine" }, data.Select(d => d[4]).ToArray());
+            CollectionAssert.AreEqual(new[] { "ban", "mute", "fine", "texts" }, data.Select(d => d[4]).ToArray());
             Assert.IsTrue(data.All(d => d[0] == DetectionReports.Trigger && d[1] == chat.ChatId.ToString() && d[2] == member.Id.ToString()));
             Assert.AreEqual(KeyboardButtonStyle.Danger, buttons[0].Style);
             Assert.AreEqual(Methods.GetChatMessageLink(chat.ChatId, message.MessageId.ToString()), buttons.Single(b => b.Url != null).Url);
@@ -212,7 +212,8 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
                 var edit = Edits(chat, to).Last();
                 StringAssert.Contains(edit.Text, "Banned by");
                 StringAssert.Contains(edit.Text, admin.Id.ToString());
-                Assert.IsFalse(Buttons(edit).Any(b => b.CallbackData != null), "decided: no more buttons");
+                Assert.IsFalse(Buttons(edit).Any(b => b.CallbackData != null && !b.CallbackData.EndsWith(":texts")),
+                    "decided: no more decisions; what they posted can still be seen");
             }
             Assert.IsTrue((await Copies(chat)).All(c => c.Decision == "ban"));
 

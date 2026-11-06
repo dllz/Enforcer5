@@ -2835,7 +2835,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>2 years</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n• Also about new members: how they joined, what their first post was and when, and which public channels and websites they point to, to learn which ones spammers advertise.\n• Where a group compares new members' posts with removed ones: numbers a model computes from new members' messages and images, and from the posts that got someone removed (not the text or the image), to recognise the same spam reworded or edited. Those of removed posts are kept without the account for up to 2 years.\n\nIt never keeps the text of messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
+    <value>&lt;b&gt;What Enforcer keeps&lt;/b&gt;\n\n• Each group's settings, and its warns, bans, kicks and mutes: who, by whom and why.\n• About the members of the groups it is in: their Telegram id, name and username as they change, when they joined and how many messages they sent.\n• What its checks noticed about a message (its type, a fingerprint of the text and the file id) and what the admins then decided.\n• The text of a message a check flagged, so the admins can read what a report asks them to judge. Deleted after two days unless it was in a report.\n• About new members: whether their public profile has a link, a mention or a personal channel, and the same about the public channels and groups they point to. The bio and the channel's description are read, not kept.\n• Also about new members: how they joined, what their first post was and when, and which public channels and websites they point to, to learn which ones spammers advertise.\n• Where a group compares new members' posts with removed ones: numbers a model computes from new members' messages and images, and from the posts that got someone removed (not the text or the image), to recognise the same spam reworded or edited. Those of removed posts are kept without the account for up to 2 years.\n\nIt never keeps the text of other messages, bios or pictures.\n\nThis is used to protect groups: to stop spam and raids, and to learn from the admins' decisions what each group allows. Each group's admins choose how long what the checks noticed is kept with a member's account: 90 days, 1 year (the default) or 2 years.</value>
   </string>
   <string key="cmdprivacy">
     <value>What Enforcer keeps about you</value>
@@ -2939,6 +2939,18 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="reportShowGone">
     <value>That post is no longer available.</value>
   </string>
+  <string key="reportShowMessages">
+    <value>📝 Show messages</value>
+  </string>
+  <string key="reportMessagesTitle">
+    <value>📝 What {0} posted in {1} that Detection noticed:</value>
+  </string>
+  <string key="reportMessagesNone">
+    <value>No messages are kept for this report.</value>
+  </string>
+  <string key="reportUnknownNames">
+    <value>not found, not counted: {0}</value>
+  </string>
   <string key="reportViaBot">
     <value>🤖 Sent through the inline bot {0}. If the group uses this bot, trust it: posts sent through it are then no longer checked here.</value>
   </string>
@@ -3006,7 +3018,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>link to another chat or website</value>
   </string>
   <string key="sign_mention_outside">
-    <value>mention of a chat outside the group</value>
+    <value>mention of a chat or person outside the group</value>
   </string>
   <string key="sign_forward_channel">
     <value>forward from a channel or hidden sender</value>

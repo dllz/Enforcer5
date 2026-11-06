@@ -49,7 +49,11 @@ namespace Enforcer5.Data
 
     /// <summary>What the nightly retention made anonymous, by table.</summary>
     internal sealed record RetentionResult(int Detections, int Labels, int NearMisses, int Signals, int Pointers, int ProfileFlags,
-        int ProfileScans = 0);
+        int ProfileScans = 0)
+    {
+        /// <summary>Flagged messages' texts cleared because no report was about them.</summary>
+        internal int Texts { get; init; }
+    }
 
     /// <summary>Detection's data (build step 14): member features, what members pointed at, reputation, implicit labels, retention.</summary>
     internal interface IDetectionDataRepository
@@ -292,7 +296,22 @@ FROM groups g LEFT JOIN detection_policies p ON p.group_id = g.group_id AND p.ch
             async Task<int> Anonymise(string table, string at) => await connection.ExecuteAsync(new CommandDefinition(
                 $"UPDATE {table} x SET account_id = NULL FROM kept k WHERE x.group_id = k.group_id AND x.account_id IS NOT NULL AND x.{at} < k.cut",
                 transaction: transaction));
+            // A flagged message's text and the report's detail go with the account: no report can show them after.
+            await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE detections x SET message_text = NULL, detail = NULL FROM kept k
+WHERE x.group_id = k.group_id AND x.account_id IS NOT NULL AND x.detected_at < k.cut
+  AND (x.message_text IS NOT NULL OR x.detail IS NOT NULL)", transaction: transaction));
             var detections = await Anonymise("detections", "detected_at");
+            // Nor the text of a message no report was about: once no report can open over it any more (a report shows
+            // the day before it opened and the day after, DetectionReports.ShowMessagesAsync), it is cleared.
+            var texts = await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE detections d SET message_text = NULL
+WHERE d.message_text IS NOT NULL AND d.detected_at < @Settled
+  AND NOT EXISTS (SELECT 1 FROM report_copies r
+                  WHERE r.group_id = d.group_id AND r.account_id = d.account_id AND r.kind = 'member'
+                    AND r.opened_at > d.detected_at - @Window AND r.opened_at < d.detected_at + @Window)",
+                new { Settled = (now - 2 * Detection.DetectionReports.Window).UtcDateTime, Window = Detection.DetectionReports.Window },
+                transaction));
             var labels = await Anonymise("member_labels", "decided_at");
             var near = await Anonymise("detection_near_misses", "detected_at");
             var signals = await Anonymise("member_signals", "updated_at");
@@ -307,7 +326,7 @@ DELETE FROM profile_scans x USING kept k WHERE x.group_id = k.group_id AND x.sca
 DELETE FROM profile_scans WHERE group_id IS NULL AND scanned_at < @Cut;",
                 new { Cut = (now - TimeSpan.FromDays(profileFlagDays)).UtcDateTime }, transaction));
             await transaction.CommitAsync();
-            return new RetentionResult(detections, labels, near, signals, pointers, flags, scans);
+            return new RetentionResult(detections, labels, near, signals, pointers, flags, scans) { Texts = texts };
         }
     }
 }

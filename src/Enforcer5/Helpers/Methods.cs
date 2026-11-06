@@ -35,7 +35,10 @@ namespace Enforcer5.Helpers
         /// Current time in the configured display timezone (DisplayTimeZone, default Europe/Amsterdam).
         /// For display only - all scheduling and expiry logic uses UTC.
         /// </summary>
-        public static DateTime DisplayNow()
+        public static DateTime DisplayNow() => ToDisplay(DateTime.UtcNow);
+
+        /// <summary><paramref name="utc"/> in the display timezone (DisplayTimeZone). For display only.</summary>
+        public static DateTime ToDisplay(DateTime utc)
         {
             if (_displayZone == null)
             {
@@ -50,7 +53,7 @@ namespace Enforcer5.Helpers
                     _displayZone = TimeZoneInfo.Utc;
                 }
             }
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _displayZone);
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), _displayZone);
         }
 
         public static string GetChatMessageLink(long chatId, string messageId, string chatLink = null, string username = null)

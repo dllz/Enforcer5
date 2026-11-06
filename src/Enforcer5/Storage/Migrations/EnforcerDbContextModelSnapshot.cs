@@ -571,6 +571,10 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("deleted");
 
+                    b.Property<string>("Detail")
+                        .HasColumnType("text")
+                        .HasColumnName("detail");
+
                     b.Property<DateTimeOffset>("DetectedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("detected_at");
@@ -607,6 +611,10 @@ namespace Enforcer5.Storage.Migrations
                     b.Property<long?>("MessageId")
                         .HasColumnType("bigint")
                         .HasColumnName("message_id");
+
+                    b.Property<string>("MessageText")
+                        .HasColumnType("text")
+                        .HasColumnName("message_text");
 
                     b.Property<string>("MessageType")
                         .HasColumnType("text")

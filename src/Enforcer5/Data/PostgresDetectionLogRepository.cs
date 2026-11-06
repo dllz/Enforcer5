@@ -41,17 +41,17 @@ namespace Enforcer5.Data
 WITH input AS (
     SELECT * FROM unnest(@Chats, @Users, @Signs, @Phases, @Weights, @Before, @After, @Actions, @Deleted, @Reported,
         @Modes, @MessageIds, @MessageTypes, @TextHashes, @MediaIds, @Trust, @Messages, @Since, @Evidence, @Editions, @At, @Categories,
-        @Similarities)
+        @Similarities, @Texts, @Details)
     AS i(chat, usr, sign, phase, weight, score_before, score_after, action, deleted, reported, mode, message_id,
         message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence, edition, at, category,
-        similarity)
+        similarity, message_text, detail)
 )
 INSERT INTO detections (group_id, account_id, sign, phase, weight, score_before, score_after, action, deleted, reported,
     mode, message_id, message_type, text_hash, media_unique_id, trust_level, member_messages, member_since, evidence,
-    edition, detected_at, category, similarity, label_id)
+    edition, detected_at, category, similarity, message_text, detail, label_id)
 SELECT g.group_id, a.account_id, i.sign, i.phase, i.weight, i.score_before, i.score_after, i.action, i.deleted, i.reported,
     i.mode, i.message_id, i.message_type, i.text_hash, i.media_unique_id, i.trust_level, i.member_messages, i.member_since,
-    CAST(i.evidence AS jsonb), i.edition, i.at, i.category, i.similarity,
+    CAST(i.evidence AS jsonb), i.edition, i.at, i.category, i.similarity, i.message_text, i.detail,
     -- A decision made before this was written (detections are written once a minute).
     (SELECT l.label_id FROM member_labels l
      WHERE l.group_id = g.group_id AND l.account_id = a.account_id AND l.label = 'bad'
@@ -88,6 +88,8 @@ RETURNING detection_id",
                     At = detections.Select(d => Utc(d.At)).ToArray(),
                     Categories = detections.Select(d => d.Category).ToArray(),
                     Similarities = detections.Select(d => (float?)d.Similarity).ToArray(),
+                    Texts = detections.Select(d => d.Text).ToArray(),
+                    Details = detections.Select(d => d.Detail).ToArray(),
                     LooksBack = DecisionLooksBack
                 }, transaction))).ToArray();
 
@@ -231,8 +233,8 @@ FROM compared GROUP BY 1, 2, 3 ORDER BY 1, 3, 2", new { Since = Utc(since) });
         public async Task<IReadOnlyList<MemberScores.Hit>> RecentHitsAsync(long chatId, long userId, DateTimeOffset since)
         {
             await using var connection = await Database.OpenConnectionAsync();
-            var rows = await connection.QueryAsync<(string Sign, int Weight, DateTime At, long? MessageId, bool Deleted)>(new CommandDefinition(@"
-SELECT d.sign, d.weight, d.detected_at, d.message_id, d.deleted
+            var rows = await connection.QueryAsync<(string Sign, int Weight, DateTime At, long? MessageId, bool Deleted, string Detail)>(new CommandDefinition(@"
+SELECT d.sign, d.weight, d.detected_at, d.message_id, d.deleted, d.detail
 FROM detections d
 JOIN groups g ON g.group_id = d.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
@@ -242,7 +244,7 @@ WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detect
 ORDER BY d.detected_at",
                 new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
             return rows.Select(r => new MemberScores.Hit(r.Sign, r.Weight, DateTime.SpecifyKind(r.At, DateTimeKind.Utc), r.MessageId,
-                Deleted: r.Deleted)).ToList();
+                r.Detail, r.Deleted)).ToList();
         }
 
         public async Task<IReadOnlyList<(string Name, string Username)>> RecentMemberNamesAsync(long chatId, DateTimeOffset since, int limit)
@@ -385,13 +387,14 @@ ORDER BY l.decided_at", new { ChatId = chatId, UserId = userId, Since = Utc(sinc
             return rows.Select(r => (r.Signs, new DateTimeOffset(DateTime.SpecifyKind(r.At, DateTimeKind.Utc)))).ToList();
         }
 
-        public async Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted)>> SignsSinceAsync(long chatId, long userId,
-            DateTimeOffset since)
+        public async Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted, string Detail)>> SignsSinceAsync(long chatId,
+            long userId, DateTimeOffset since)
         {
             await using var connection = await Database.OpenConnectionAsync();
-            var rows = await connection.QueryAsync<(string Sign, long Count, long? MessageId, bool? Deleted)>(new CommandDefinition(@"
+            var rows = await connection.QueryAsync<(string Sign, long Count, long? MessageId, bool? Deleted, string Detail)>(new CommandDefinition(@"
 SELECT d.sign, count(*), (array_agg(d.message_id ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1],
-       (array_agg(d.deleted ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1]
+       (array_agg(d.deleted ORDER BY d.detected_at DESC) FILTER (WHERE d.message_id IS NOT NULL))[1],
+       (array_agg(d.detail ORDER BY d.detected_at DESC) FILTER (WHERE d.detail IS NOT NULL))[1]
 FROM detections d
 JOIN groups g ON g.group_id = d.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
@@ -399,8 +402,28 @@ JOIN telegram_accounts a ON a.account_id = d.account_id
 WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @Since AND d.mode = 'live'
   AND (d.score_after > d.score_before OR d.reported)
 GROUP BY d.sign ORDER BY min(d.detected_at)", new { ChatId = chatId, UserId = userId, Since = Utc(since) }));
-            return rows.Select(r => (r.Sign, (int)r.Count, r.MessageId, r.Deleted == true)).ToList();
+            return rows.Select(r => (r.Sign, (int)r.Count, r.MessageId, r.Deleted == true, r.Detail)).ToList();
         }
+
+        public async Task<IReadOnlyList<FlaggedMessage>> FlaggedAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            var rows = await connection.QueryAsync<(string Sign, DateTime At, long? MessageId, string Text, string Detail)>(new CommandDefinition(@"
+SELECT d.sign, d.detected_at, d.message_id, d.message_text, d.detail
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = d.account_id
+WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @From AND d.detected_at < @To
+  AND d.message_text IS NOT NULL
+ORDER BY d.detected_at
+LIMIT @Limit", new { ChatId = chatId, UserId = userId, From = Utc(from), To = Utc(to), Limit = FlaggedLimit }));
+            return rows.Select(r => new FlaggedMessage(r.Sign, new DateTimeOffset(DateTime.SpecifyKind(r.At, DateTimeKind.Utc)), r.MessageId,
+                r.Text, r.Detail)).ToList();
+        }
+
+        /// <summary>The most flagged messages one Show messages reads.</summary>
+        internal const int FlaggedLimit = 200;
 
         public async Task<(long BotId, string Username)?> ViaBotSinceAsync(long chatId, long userId, DateTimeOffset since)
         {

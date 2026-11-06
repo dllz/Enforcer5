@@ -248,6 +248,9 @@ namespace Enforcer5.Raids
                 if (!active && ModeOf(chatId) == RaidMode.Off) return;
                 var now = at ?? Clock.UtcNow;
                 Func<MessageEntity, bool?> mentionOutside = null;
+                // The same, with names nobody can place (most often a member whose username changed since they last posted)
+                // as plain words: such a name alone is no reason to tell the admins (Daniel, 2026-11-06). Raids still count it.
+                Func<MessageEntity, bool?> mentionAdvertised = null;
                 var mentions = MentionResolver.MentionsIn(message);
                 if (mentions.Count > 0 && await TrustOfAsync(chatId, user) == TrustLevel.New)
                 {
@@ -276,6 +279,17 @@ namespace Enforcer5.Raids
                                 : null;
                         // Still not known (the queue was full): outside, as advertising is.
                         return mention == null || MentionResolver.Known(chatId, mention, chatUsername) != MentionPlace.Inside;
+                    };
+                    mentionAdvertised = e =>
+                    {
+                        var mention = e.Type == MessageEntityType.TextMention && e.User != null
+                            ? null
+                            : e.Offset >= 0 && e.Offset + e.Length <= text.Length && e.Length > 1
+                                ? new Mention(text.Substring(e.Offset + 1, e.Length - 1).ToLowerInvariant(), null)
+                                : null;
+                        return mention == null
+                            ? mentionOutside(e)
+                            : MentionResolver.Known(chatId, mention, chatUsername) is not (MentionPlace.Inside or MentionPlace.Unknown);
                     };
                 }
                 var print = MessageFingerprint.Of(message, mentionOutside);
@@ -355,7 +369,10 @@ namespace Enforcer5.Raids
                 }
                 if (newSuspects.Count > 0) Suspected(chatId, newSuspects);
                 if (echoers.Count > 0) Suspected(chatId, echoers, weak: true);
-                if (bareLink && senderUntrusted && user > 0) ReportLink(ctx);
+                if (bareLink && senderUntrusted && user > 0 && (mentionAdvertised == null || MessageFingerprint.LinksIn(
+                        message.Text ?? message.Caption ?? "", message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>(),
+                        mentionAdvertised).Bare))
+                    ReportLink(ctx);
                 Evaluate(chatId);
             }
             catch (Exception e)

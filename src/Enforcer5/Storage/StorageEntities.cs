@@ -651,8 +651,9 @@ namespace Enforcer5.Storage
 
     /// <summary>
     /// One sign that fired for a member (Detection v2, design section 12), with the member's state at
-    /// that moment and what was done, or would have been done in observe mode. Never message text: the
-    /// message's type, a hash of its text and the file's unique id. <c>outcome</c> is what an admin (or
+    /// that moment and what was done, or would have been done in observe mode. The message's type, a hash of
+    /// its text and the file's unique id; its text (<c>message_text</c>) only for as long as a report can show
+    /// it (Daniel, 2026-11-06). <c>outcome</c> is what an admin (or
     /// the bot) then decided about the member, from <c>member_labels</c> (<c>label_id</c>): the
     /// training data.
     /// </summary>
@@ -690,6 +691,15 @@ namespace Enforcer5.Storage
 
         /// <summary>For a sign that compares (alike texts, alike names; step 13): how alike, 0 to 1.</summary>
         public float? Similarity { get; set; }
+
+        /// <summary>
+        /// The text of the message it fired on, hidden links written out (<c>Detection.FlaggedText</c>): what a report's Show
+        /// messages sends. Cleared by the nightly retention once no report can show it.
+        /// </summary>
+        public string MessageText { get; set; }
+
+        /// <summary>What the report said about it (the chats mentioned, the links): shown again after a restart. Cleared with the text.</summary>
+        public string Detail { get; set; }
     }
 
     /// <summary>

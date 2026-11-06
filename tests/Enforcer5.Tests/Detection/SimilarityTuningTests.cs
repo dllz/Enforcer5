@@ -111,7 +111,8 @@ namespace Enforcer5.Tests.Detection
             Assert.AreEqual(0, others.Count);
             Assert.IsTrue(near >= SimilarityTuning.TextNear && near < SimilarityTuning.Text, $"near {near}");
             var (same, similarity, _) = MessageSigns.Remember(chat, 3, 3, C("Join the best crypto signals channel today, profit guaranteed for everyone!!"));
-            CollectionAssert.AreEqual(new[] { 1L }, same.ToArray());
+            CollectionAssert.AreEqual(new[] { 1L }, same.Select(m => m.UserId).ToArray());
+            Assert.AreEqual(1, same[0].MessageId);
             Assert.AreEqual(1, similarity);
             MessageSigns.ResetForTests();
         }

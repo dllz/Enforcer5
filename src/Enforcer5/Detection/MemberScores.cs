@@ -16,10 +16,15 @@ namespace Enforcer5.Detection
         internal static readonly TimeSpan Window = TimeSpan.FromHours(24);
         private const int MaxMembers = 200_000;
 
+        /// <summary>The most hits kept per member: past it, repeats of a sign that counted already are only in <c>detections</c>.</summary>
+        internal const int MaxHits = 50;
+
         /// <param name="MessageId">The message it was seen on, if any: the report links each sign to it.</param>
-        /// <param name="Detail">What the report says about it (<see cref="SignHit.Detail"/>); in memory only.</param>
+        /// <param name="Detail">What the report says about it (<see cref="SignHit.Detail"/>); loaded back from <c>detections</c>.</param>
         /// <param name="Deleted">The message was deleted: the report does not link to it.</param>
-        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null, string Detail = null, bool Deleted = false);
+        /// <param name="Text">The message's text (<see cref="FlaggedText"/>), for Show messages before it is written.</param>
+        internal sealed record Hit(string Sign, int Weight, DateTime At, long? MessageId = null, string Detail = null, bool Deleted = false,
+            string Text = null);
 
         private sealed class Entry
         {
@@ -52,7 +57,8 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>Adds <paramref name="sign"/> unless it already counted for them today.</summary>
-        internal static Change Add(long chatId, long userId, string sign, int weight, long? messageId = null, string detail = null)
+        internal static Change Add(long chatId, long userId, string sign, int weight, long? messageId = null, string detail = null,
+            string text = null)
         {
             var now = Clock.UtcNow;
             if (Entries.Count > MaxMembers) Prune(now);
@@ -62,8 +68,12 @@ namespace Enforcer5.Detection
                 entry.Hits.RemoveAll(h => now - h.At >= Window);
                 var before = entry.Hits.Sum(h => h.Weight);
                 if (entry.Hits.Any(h => h.Sign == sign && h.At.Date == now.Date))
+                {
+                    // Counted already today; its message is still one the report can show.
+                    if (text != null && entry.Hits.Count < MaxHits) entry.Hits.Add(new Hit(sign, 0, now, messageId, detail, Text: text));
                     return new Change(before, before, false);
-                entry.Hits.Add(new Hit(sign, weight, now, messageId, detail));
+                }
+                entry.Hits.Add(new Hit(sign, weight, now, messageId, detail, Text: text));
                 return new Change(before, before + weight, true);
             }
         }
@@ -102,6 +112,14 @@ namespace Enforcer5.Detection
                         return (g.Key, seenOn?.MessageId, seenOn?.Deleted == true, g.LastOrDefault(h => h.Detail != null)?.Detail);
                     })
                     .ToList();
+        }
+
+        /// <summary>The hits of the last <see cref="Window"/> with a message text, oldest first: Show messages before they are written.</summary>
+        internal static IReadOnlyList<Hit> WithText(long chatId, long userId)
+        {
+            if (!Entries.TryGetValue((chatId, userId), out var entry)) return Array.Empty<Hit>();
+            var now = Clock.UtcNow;
+            lock (entry) return entry.Hits.Where(h => now - h.At < Window && h.Text != null).ToList();
         }
 
         internal static int Of(long chatId, long userId)

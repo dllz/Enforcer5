@@ -247,9 +247,10 @@ namespace Enforcer5.Detection
                 Key = key, Name = StoredName(key.UserId.Value), Decision = stored.Decision, DecidedBy = stored.DecidedBy
             };
             report.Copies.AddRange(stored.Copies);
-            foreach (var (sign, count, messageId, deleted) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
+            foreach (var (sign, count, messageId, deleted, detail) in await Repositories.DetectionLog.SignsSinceAsync(key.ChatId, key.UserId.Value, key.OpenedAt))
             {
                 report.Signs.Add((sign, count));
+                if (detail != null) report.Details[sign] = detail;
                 if (messageId is not { } id) continue;
                 report.Messages[sign] = id;
                 if (deleted) report.Gone.Add(id);
@@ -560,6 +561,120 @@ namespace Enforcer5.Detection
             await Answer(call, Methods.GetLocaleString(lang, "reportShowSent"));
         }
 
+        /// <summary>
+        /// Show messages under a report: <c>dreport:{chat}:{user}:{opened}:texts</c> (Daniel, 2026-11-06: no report about
+        /// something a member did without a way to see it). The text of every message a sign fired on in the report's day
+        /// (from a day before it opened to a day after), hidden links written out (<see cref="FlaggedText"/>), goes to the
+        /// admin who pressed it, in private, protected from forwarding and saving. Only the group's admins get here, and the
+        /// log channel's line for the press says who looked.
+        /// </summary>
+        internal static async Task ShowMessagesAsync(CallbackQuery call, long chatId, long userId, long opened)
+        {
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            var openedAt = DateTimeOffset.FromUnixTimeSeconds(opened);
+            var flagged = await FlaggedAsync(chatId, userId, openedAt - Window, openedAt + Window);
+            if (flagged.Count == 0)
+            {
+                await Answer(call, Methods.GetLocaleString(lang, "reportMessagesNone"));
+                return;
+            }
+            var heading = Methods.GetLocaleStringNoFormat(lang, "reportMessagesTitle", Mention(userId, StoredName(userId)),
+                (await TitleAsync(chatId)).FormatHTML());
+            try
+            {
+                foreach (var part in MessagesText(lang, heading, flagged))
+                    await PacedAsync(() => Bot.Api.SendMessage(call.From.Id, part, ParseMode.Html, protectContent: true,
+                        linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true }));
+            }
+            catch (Exception e)
+            {
+                var api = Bot.AsApiError(e);
+                // 403: they never started the bot in private, which they are told.
+                if (api?.ErrorCode == 403)
+                {
+                    await Answer(call, Methods.GetLocaleString(lang, "reportShowStart"));
+                    return;
+                }
+                ErrorReporter.Report(e, $"Showing the flagged messages of {userId} in {chatId} to {call.From.Id}");
+                await Answer(call, Methods.GetLocaleString(lang, "reportMessagesNone"));
+                return;
+            }
+            await Answer(call, Methods.GetLocaleString(lang, "reportShowSent"));
+        }
+
+        /// <summary>
+        /// The member's flagged messages between <paramref name="from"/> and <paramref name="to"/>, oldest first: those written
+        /// to <c>detections</c>, and those still in memory (detections are written once a minute). One entry per message,
+        /// with every sign it set off.
+        /// </summary>
+        internal static async Task<IReadOnlyList<FlaggedMessage>> FlaggedAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to)
+        {
+            var all = new List<FlaggedMessage>();
+            if (PostgresStorage.Ready)
+            {
+                try
+                {
+                    all.AddRange(await Repositories.DetectionLog.FlaggedAsync(chatId, userId, from, to));
+                }
+                catch (Exception e)
+                {
+                    // What is in memory is still shown.
+                    ErrorReporter.Report(e, $"Reading the flagged messages of {userId} in {chatId}");
+                }
+            }
+            all.AddRange(MemberScores.WithText(chatId, userId)
+                .Select(h => new FlaggedMessage(h.Sign, new DateTimeOffset(DateTime.SpecifyKind(h.At, DateTimeKind.Utc)), h.MessageId, h.Text, h.Detail))
+                .Where(h => h.At >= from && h.At < to));
+            return Merge(all);
+        }
+
+        /// <summary>One entry per message (or per sign and moment, for a hit without a message id), its signs joined, oldest first. Pure, for tests.</summary>
+        internal static IReadOnlyList<FlaggedMessage> Merge(IEnumerable<FlaggedMessage> flagged) =>
+            flagged.Where(f => !string.IsNullOrWhiteSpace(f.Text))
+                .GroupBy(f => f.MessageId is { } id ? $"m{id}" : $"s{f.Sign}:{f.At.ToUnixTimeSeconds()}")
+                .Select(g =>
+                {
+                    var first = g.OrderBy(f => f.At).First();
+                    var signs = string.Join(",", g.Select(f => f.Sign).Distinct());
+                    var details = g.Select(f => f.Detail).Where(d => d != null).Distinct().ToList();
+                    return first with { Sign = signs, Detail = details.Count == 0 ? null : string.Join("; ", details) };
+                })
+                .OrderBy(f => f.At)
+                .ToList();
+
+        /// <summary>Longest a part of Show messages may be: a Telegram message holds 4096 characters, entities included.</summary>
+        internal const int MessagesPartLength = 3800;
+
+        /// <summary>
+        /// Show messages' text: the heading, then each message with its signs, time and details, its text quoted (collapsed);
+        /// split into parts that each fit a Telegram message. HTML, every part escaped. Pure, for tests.
+        /// </summary>
+        internal static IReadOnlyList<string> MessagesText(XDocument lang, string heading, IReadOnlyList<FlaggedMessage> flagged)
+        {
+            var parts = new List<string>();
+            var current = new System.Text.StringBuilder(heading);
+            foreach (var f in flagged)
+            {
+                var labels = string.Join(", ", f.Sign.Split(',').Select(sign => SignLabel(lang, sign).FormatHTML()));
+                var line = $"• <b>{labels}</b> · {Methods.ToDisplay(f.At.UtcDateTime):d MMM HH:mm}";
+                if (f.Detail != null) line += $" ({f.Detail.FormatHTML()})";
+                var text = f.Text;
+                // Room for the line and the quote's tags; a text longer than that is cut, as it would not fit one message.
+                var room = MessagesPartLength - line.Length - 64;
+                if (text.Length > room) text = text[..Math.Max(1, room - 1)] + "…";
+                var block = $"\n\n{line}\n<blockquote expandable>{text.FormatHTML()}</blockquote>";
+                if (current.Length + block.Length > MessagesPartLength && current.Length > 0)
+                {
+                    parts.Add(current.ToString());
+                    current.Clear();
+                    block = block.TrimStart('\n');
+                }
+                current.Append(block);
+            }
+            if (current.Length > 0) parts.Add(current.ToString());
+            return parts;
+        }
+
         // ------------------------------------------------------------------ raids
 
         private static void Hold(long chatId, long userId, string name, string sign)
@@ -667,6 +782,9 @@ namespace Enforcer5.Detection
             if (report.Post?.FileId != null)
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, report.Post.Flagged ? "reportShowImage" : "reportShowPost"),
                     $"{data}:show"));
+            // Whatever was decided: what they posted stays there to see (Daniel, 2026-11-06).
+            if (report.Messages.Count > 0)
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportShowMessages"), $"{data}:texts"));
             // Whatever was decided: an admin who banned the member may still want the bot.
             if (report.Via is { } via && !BotGuard.IsKnown(via.AsUser()) && !BotGuard.IsChosenHere(key.ChatId, via.Id) &&
                 !BotGuard.IsBlockedHere(key.ChatId, via.Id))

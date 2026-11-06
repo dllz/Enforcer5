@@ -70,7 +70,14 @@ namespace Enforcer5.Detection
                 if (await MemberTrust.OfAsync(chatId, userId) != TrustLevel.New) return;
 
                 if (pilot) MemberData.Posted(chatId, message, link ? LinkTargets(message).Count() : 0, mentions.Count, forward);
-                if (link) await Hit(chatId, userId, message, SignCatalog.LinkOutside, new { links = 1 });
+                if (link)
+                {
+                    // Which ones, so the admins can see them at once, hidden links too (Daniel, 2026-11-06).
+                    var urls = OutsideLinkTargets(message, message.Chat.Username, chatId).Distinct().ToList();
+                    await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.LinkOutside.Name,
+                        System.Text.Json.JsonSerializer.Serialize(new { links = urls.Count, urls = urls.Take(DetectionReports.MaxNamed).ToArray() }))
+                    { Detail = DetectionReports.Named(urls) });
+                }
                 // The websites they pointed at, for their reputation (step 14).
                 if (link && pilot)
                     foreach (var domain in LinkTargets(message).Select(Reputation.DomainOf).Where(d => d != null).Distinct())
@@ -78,19 +85,22 @@ namespace Enforcer5.Detection
                 if (forward && !await FromOwnChannelAsync(chatId, message.ForwardOrigin))
                     await Hit(chatId, userId, message, SignCatalog.ForwardChannel,
                         new { origin = message.ForwardOrigin is MessageOriginChannel c ? c.Chat.Id : (long?)null });
+                // A game's command to a bot the group trusts is what every player sends (Daniel, 2026-11-06).
+                if (content != null && await CommandToTrustedBotAsync(chatId, message)) content = null;
                 if (content != null)
                 {
-                    var (others, similarity, near) = Remember(chatId, userId, message.MessageId, content);
+                    var (others, similarity, near) = Remember(chatId, userId, message.MessageId, content, FlaggedText.Of(message));
                     if (others.Count == 0 && near >= SimilarityTuning.TextNear)
                         NearMisses.Add(chatId, userId, SignCatalog.SameAsNewcomers.Name, near, SimilarityTuning.Text);
                     if (others.Count > 0)
                     {
                         await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.SameAsNewcomers.Name,
                             System.Text.Json.JsonSerializer.Serialize(new { others = others.Count })) { Similarity = similarity });
-                        // They posted it too: the same sign for them, about their own message (not here any more).
+                        // They posted it too: the same sign for them, about their own message (not here any more), whose text
+                        // their report shows.
                         foreach (var other in others)
-                            await DetectionEngine.HitAsync(chatId, other, null, new SignHit(SignCatalog.SameAsNewcomers.Name,
-                                System.Text.Json.JsonSerializer.Serialize(new { others = others.Count })));
+                            await DetectionEngine.HitAsync(chatId, other.UserId, null, new SignHit(SignCatalog.SameAsNewcomers.Name,
+                                System.Text.Json.JsonSerializer.Serialize(new { others = others.Count })) { MessageId = other.MessageId, Text = other.Text });
                     }
                 }
                 var pointedAt = new List<string>();
@@ -105,17 +115,24 @@ namespace Enforcer5.Detection
                     if (outside > 0)
                     {
                         // Which ones, so the admins can judge it at once (#27): @name, or for a mention by id what the
-                        // message shows for it.
+                        // message shows for it. Names nobody can place (a member whose username changed since they last
+                        // posted) count for nothing, but are named after them (Daniel, 2026-11-06).
                         var named = mentions.Where((m, i) => places[i] == MentionPlace.Outside).ToList();
+                        var unknown = mentions.Where((m, i) => places[i] == MentionPlace.Unknown).Select(m => "@" + m.Username).ToList();
                         var shown = named.Select(m => m.Username != null ? "@" + m.Username : MentionText(message, m.UserId)).ToList();
+                        var detail = DetectionReports.Named(shown);
+                        if (unknown.Count > 0)
+                            detail += "; " + Methods.GetLocaleStringNoFormat(Methods.GetGroupLanguage(chatId).Doc, "reportUnknownNames",
+                                DetectionReports.Named(unknown));
                         await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.MentionOutside.Name,
                             System.Text.Json.JsonSerializer.Serialize(new
                             {
                                 mentions = outside,
                                 chats = named.Where(m => m.Username != null).Select(m => "@" + m.Username).Take(DetectionReports.MaxNamed).ToArray(),
-                                users = named.Where(m => m.Username == null && m.UserId != null).Select(m => m.UserId.Value).Take(DetectionReports.MaxNamed).ToArray()
+                                users = named.Where(m => m.Username == null && m.UserId != null).Select(m => m.UserId.Value).Take(DetectionReports.MaxNamed).ToArray(),
+                                unknown = unknown.Take(DetectionReports.MaxNamed).ToArray()
                             }))
-                        { Detail = DetectionReports.Named(shown) });
+                        { Detail = detail });
                     }
                     pointedAt.AddRange(mentions.Where((m, i) => places[i] == MentionPlace.Outside && m.Username != null).Select(m => m.Username));
                 }
@@ -202,23 +219,12 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ links and forwards
 
         /// <summary>Links in the message to another chat or a website; links to this group are not counted. Pure, for tests.</summary>
-        internal static int OutsideLinks(Message message, string chatUsername, long chatId)
-        {
-            var text = message.Text ?? message.Caption ?? "";
-            var entities = message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>();
-            var count = 0;
-            foreach (var e in entities)
-            {
-                string url = e.Type switch
-                {
-                    MessageEntityType.TextLink => e.Url,
-                    MessageEntityType.Url when e.Offset >= 0 && e.Offset + e.Length <= text.Length => text.Substring(e.Offset, e.Length),
-                    _ => null
-                };
-                if (url != null && !IsThisGroup(url, chatUsername, chatId)) count++;
-            }
-            return count;
-        }
+        internal static int OutsideLinks(Message message, string chatUsername, long chatId) =>
+            OutsideLinkTargets(message, chatUsername, chatId).Count();
+
+        /// <summary>The addresses of those links, hidden ones included, in the order they appear. Pure, for tests.</summary>
+        internal static IEnumerable<string> OutsideLinkTargets(Message message, string chatUsername, long chatId) =>
+            LinkTargets(message).Where(url => !IsThisGroup(url, chatUsername, chatId));
 
         /// <summary>The addresses of the message's links (URL and hidden-link entities).</summary>
         internal static IEnumerable<string> LinkTargets(Message message)
@@ -249,6 +255,35 @@ namespace Enforcer5.Detection
             return false;
         }
 
+        /// <summary>
+        /// The bot a message is a command to (<c>/startgame@somebot</c>, with or without arguments): its username without the
+        /// @, lower case; null when the message does not start with a command to a named bot. Pure, for tests.
+        /// </summary>
+        internal static string CommandBot(Message message)
+        {
+            var text = message.Text;
+            var command = message.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand && e.Offset == 0);
+            if (text == null || command == null || command.Length > text.Length) return null;
+            var at = text.IndexOf('@', 0, command.Length);
+            return at > 0 && at < command.Length - 1 ? text.Substring(at + 1, command.Length - at - 1).ToLowerInvariant() : null;
+        }
+
+        /// <summary>
+        /// A command to a bot the group trusts (<see cref="BotGuard.IsTrustedHereAsync"/>: the game's bots, bots trusted
+        /// everywhere, chosen by the group's admins, or admins of the group): what every player of a game sends, so not the
+        /// same message as other new members. A bot the bot has never seen post is trusted only if it is one of the game's.
+        /// </summary>
+        private static async Task<bool> CommandToTrustedBotAsync(long chatId, Message message)
+        {
+            var username = CommandBot(message);
+            if (username == null) return false;
+            var bot = new User { IsBot = true, Username = username, FirstName = username };
+            var known = await Redis.db.HashGetAsync("bot:usernames", "@" + username);
+            if (known.HasValue && long.TryParse(known.ToString(), out var id)) bot.Id = id;
+            else if (!BotGuard.IsKnown(bot)) return false;
+            return await BotGuard.IsTrustedHereAsync(chatId, bot);
+        }
+
         private static async Task<bool> FromOwnChannelAsync(long chatId, MessageOrigin origin) =>
             origin is MessageOriginChannel channel && channel.Chat.Id == await ChatDetails.LinkedChannelAsync(chatId);
 
@@ -256,7 +291,10 @@ namespace Enforcer5.Detection
 
         internal sealed record Content(string Media, string TextHash, HashSet<int> Sketch);
 
-        private sealed record Posted(long UserId, int MessageId, Content Content, DateTime At);
+        private sealed record Posted(long UserId, int MessageId, Content Content, DateTime At, string Text);
+
+        /// <summary>Another new member's earlier post that matched: who, which message, and its text for their report.</summary>
+        internal sealed record Match(long UserId, int MessageId, string Text);
 
         private static readonly ConcurrentDictionary<long, List<Posted>> Recent = new();
 
@@ -273,30 +311,34 @@ namespace Enforcer5.Detection
         }
 
         /// <summary>
-        /// Remembers what a new member posted. The other new members who posted the same in the last day, how alike the
+        /// Remembers what a new member posted (with its text, for the others' reports). The other new members who posted the
+        /// same in the last day (each with their latest such post), how alike the
         /// closest of those was (1 for the same file or text), and how alike the closest text was that did not count
         /// (for the near misses, step 13).
         /// </summary>
-        internal static (IReadOnlyList<long> Others, double Similarity, double Near) Remember(long chatId, long userId, int messageId, Content content)
+        internal static (IReadOnlyList<Match> Others, double Similarity, double Near) Remember(long chatId, long userId, int messageId,
+            Content content, string text = null)
         {
             var now = Clock.UtcNow;
             var list = Recent.GetOrAdd(chatId, _ => new List<Posted>());
             lock (list)
             {
                 list.RemoveAll(p => now - p.At >= SameWithin);
-                var others = new List<long>();
+                var others = new List<Match>();
                 double best = 0, near = 0;
                 foreach (var p in list.Where(p => p.UserId != userId))
                 {
                     var alike = Alike(p.Content, content);
                     if (alike >= SimilarityTuning.Text)
                     {
-                        if (!others.Contains(p.UserId)) others.Add(p.UserId);
+                        // Their latest such post: the one their report shows.
+                        others.RemoveAll(o => o.UserId == p.UserId);
+                        others.Add(new Match(p.UserId, p.MessageId, p.Text));
                         best = Math.Max(best, alike);
                     }
                     else near = Math.Max(near, alike);
                 }
-                list.Add(new Posted(userId, messageId, content, now));
+                list.Add(new Posted(userId, messageId, content, now, text));
                 if (list.Count > PerChat) list.RemoveRange(0, list.Count - PerChat);
                 return (others, best, near);
             }

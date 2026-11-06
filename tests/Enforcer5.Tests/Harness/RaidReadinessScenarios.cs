@@ -478,7 +478,8 @@ namespace Enforcer5.Tests.Harness
             var fourth = chat.Add("Fourth", MemberState.Left);
             await chat.JoinAsync(fourth);
             await chat.PostAsync(WithMentions(chat, fourth, "@nobodyknowsthisname"));
-            StringAssert.Contains(LinkReport(chat).Text, "Fourth", "and a name nobody knows");
+            Assert.IsFalse(LinkReport(chat).Text.Contains("Fourth"),
+                "a name nobody can place is most often a member whose username changed (Daniel, 2026-11-06)");
             AssertOnly429s(chat);
         }
 

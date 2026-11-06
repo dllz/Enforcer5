@@ -15,8 +15,14 @@ namespace Enforcer5.Raids
     {
         /// <summary>Someone or something of this group: a member, the group itself, its linked channel, @admin.</summary>
         Inside,
-        /// <summary>A channel, group or bot elsewhere, someone who is not a member, or a name nobody knows: advertising.</summary>
-        Outside
+        /// <summary>A channel, group or bot elsewhere, or someone who is not a member: advertising.</summary>
+        Outside,
+        /// <summary>
+        /// A name neither the bot nor Telegram can place: most often a member whose username changed since they last
+        /// posted (Telegram never tells a bot who has a private user's username), or a scammer's own account ("DM @x").
+        /// Not advertising for Detection's signs; the raid checks still count it as outside (Daniel, 2026-11-06).
+        /// </summary>
+        Unknown
     }
 
     /// <summary>
@@ -177,15 +183,22 @@ namespace Enforcer5.Raids
                     _ => (MentionPlace.Outside, OutsideFor)
                 };
             }
-            // Nobody the bot has seen: a public channel or group, or a name that is no chat at all.
+            // Nobody the bot has seen: a public channel or group, or a person Telegram does not show bots.
             var chat = await TelegramAsync(() => Bot.Api.GetChat("@" + mention.Username));
-            if (chat.NotFound) return (MentionPlace.Outside, OutsideFor);
+            if (chat.NotFound) return (NotFound(mention.Username), OutsideFor);
             if (chat.Failed) return (MentionPlace.Outside, FailedFor);
             // The profile lookups need not ask again (Detection step 11).
             Detection.Profiles.Seen(chat.Value);
             if (chat.Value.Id == chatId || chat.Value.Id == await LinkedChannelAsync(chatId)) return (MentionPlace.Inside, InsideFor);
             return (MentionPlace.Outside, OutsideFor);
         }
+
+        /// <summary>
+        /// A name Telegram could not find: only a person's username can end without a chat behind it, and only bots'
+        /// usernames end in "bot", so a bot elsewhere is outside and the rest unknown. Pure, for tests.
+        /// </summary>
+        internal static MentionPlace NotFound(string username) =>
+            username != null && username.EndsWith("bot", StringComparison.OrdinalIgnoreCase) ? MentionPlace.Outside : MentionPlace.Unknown;
 
         private sealed record Answer<T>(T Value, bool Failed, bool NotFound);
 

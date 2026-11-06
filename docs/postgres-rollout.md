@@ -256,9 +256,14 @@ and a bad member look like (Daniel, 2026-10-27). So the engine records both side
 - **`detections`** (`Detection/DetectionEngine`, `DetectionRecorder`): every sign a check reports,
   with its weight, the member's score before and after, the action the group's settings give it,
   whether it was done (`live`) or only recorded (`observe`, a group's first 14 days; `trial` for a
-  rule on trial), the message's type, text hash and file id (never text), and the member's trust
+  rule on trial), the message's type, text hash and file id, and the member's trust
   level, message count and since when. Buffered, written with the principal flush once a minute,
-  dropped while PostgreSQL is down.
+  dropped while PostgreSQL is down. Since 2026-11-06 (Daniel: no report about something a member did
+  without a way to see it) also the message's text (`message_text`, hidden links written out,
+  `Detection/FlaggedText`) and what the report said about the sign (`detail`: the links and chats it
+  named), for a report's Show messages and for its lines after a restart. The nightly retention
+  clears the text of messages no report was about two days on, and both with the account at the
+  group's retention.
 - **`member_labels`** (`Detection/Decisions`): every decision about a member. Sources: `command`,
   `button`, `report`, `app` (bans, kicks, mutes and their undoing made in the Telegram app, seen in
   member updates, which the history never had before) and `auto` (the bot's own checks; its fixed

@@ -33,6 +33,15 @@ namespace Enforcer5.Detection
 
         /// <summary>An image the report offers to show when there is no deleted post (a flagged profile photo); null for none.</summary>
         internal DeletedPost Shown { get; init; }
+
+        /// <summary>
+        /// For a hit about a message that is not passed with it (the earlier post of another new member that a newcomer's
+        /// matched): which message it was. Ignored when the message is passed.
+        /// </summary>
+        internal long? MessageId { get; init; }
+
+        /// <summary>That message's text (<see cref="FlaggedText"/>), for the report's Show messages. Ignored when the message is passed.</summary>
+        internal string Text { get; init; }
     }
 
     /// <summary>What a ported check did about a sign (<see cref="SignDefinition.Ported"/>).</summary>
@@ -115,7 +124,7 @@ namespace Enforcer5.Detection
                     var current = MemberScores.Of(chatId, userId);
                     change = new MemberScores.Change(current, current, false);
                 }
-                else change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId, hit.Detail);
+                else change = MemberScores.Add(chatId, userId, sign.Name, weight, MessageIdOf(message, hit), hit.Detail, TextOf(message, hit));
                 if (change.Counted && member.Trust == TrustLevel.New) MemberData.Scored(chatId, userId, change.After);
 
                 var action = settings.Action;
@@ -133,7 +142,7 @@ namespace Enforcer5.Detection
                 if (deleted && mode == "live") MemberScores.MarkDeleted(chatId, userId, message.MessageId);
 
                 if (outcome.Acted)
-                    Actions.Execute(new DetectionAction(chatId, userId, message?.MessageId, sign.Name, action, deleted, reported)
+                    Actions.Execute(new DetectionAction(chatId, userId, MessageIdOf(message, hit), sign.Name, action, deleted, reported)
                     {
                         Member = message?.From?.Id == userId ? message.From : null,
                         Message = message,
@@ -196,7 +205,7 @@ namespace Enforcer5.Detection
             if (weight > 0 && userId != 0 && !hit.Trial)
             {
                 if (MemberScores.NeedsLoad(chatId, userId)) await LoadScoreAsync(chatId, userId);
-                change = MemberScores.Add(chatId, userId, sign.Name, weight, message?.MessageId, hit.Detail);
+                change = MemberScores.Add(chatId, userId, sign.Name, weight, MessageIdOf(message, hit), hit.Detail, TextOf(message, hit));
             }
             else
             {
@@ -216,10 +225,18 @@ namespace Enforcer5.Detection
             var fingerprint = message != null ? MessageFingerprint.Of(message) : null;
             DetectionRecorder.Add(new DetectionRecord(chatId, userId, sign.Name, sign.Phase == SignPhase.Inline ? "inline" : "enriched",
                 weight, outcome.ScoreBefore, outcome.ScoreAfter, outcome.Action, outcome.Deleted, outcome.Reported, outcome.Mode,
-                message?.MessageId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
+                MessageIdOf(message, hit), fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
                 member?.Trust.ToString().ToLowerInvariant(), member?.Messages, member?.Since, WithViaBot(hit.Evidence, message?.ViaBot),
-                BanHistory.Edition, now) { Category = SignCatalog.CategoryOf(sign.Name, policy.Filters), Similarity = hit.Similarity });
+                BanHistory.Edition, now)
+            {
+                Category = SignCatalog.CategoryOf(sign.Name, policy.Filters), Similarity = hit.Similarity, Text = TextOf(message, hit),
+                Detail = hit.Detail
+            });
         }
+
+        private static long? MessageIdOf(Message message, SignHit hit) => message?.MessageId ?? hit.MessageId;
+
+        private static string TextOf(Message message, SignHit hit) => message != null ? FlaggedText.Of(message) : FlaggedText.Cut(hit.Text);
 
         /// <summary>
         /// <paramref name="evidence"/> with the inline bot the post was sent through (<c>via_bot</c>, and its public

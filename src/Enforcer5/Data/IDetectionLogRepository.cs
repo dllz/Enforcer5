@@ -5,7 +5,10 @@ using Enforcer5.Detection;
 
 namespace Enforcer5.Data
 {
-    /// <summary>One sign that fired, as recorded in <c>detections</c>. Never message text: a hash of it at most.</summary>
+    /// <summary>
+    /// One sign that fired, as recorded in <c>detections</c>. The message's text only as <see cref="Text"/>, kept for as long as
+    /// a report can show it (<see cref="Detection.FlaggedText"/>); the hash for comparing.
+    /// </summary>
     /// <param name="UserId">0 when no member can be seen (a post made as a channel; the channel is in the evidence).</param>
     internal sealed record DetectionRecord(
         long ChatId,
@@ -35,7 +38,16 @@ namespace Enforcer5.Data
 
         /// <summary>For a sign that compares: how alike (0 to 1); null for the rest.</summary>
         internal double? Similarity { get; init; }
+
+        /// <summary>The text of the message it fired on (<see cref="Detection.FlaggedText"/>); null for none.</summary>
+        internal string Text { get; init; }
+
+        /// <summary>What the report says about it (<see cref="Detection.SignHit.Detail"/>): shown again after a restart.</summary>
+        internal string Detail { get; init; }
     }
+
+    /// <summary>A message a sign fired on, with its text, for a report's Show messages.</summary>
+    internal sealed record FlaggedMessage(string Sign, DateTimeOffset At, long? MessageId, string Text, string Detail);
 
     /// <summary>
     /// How a sign did over a time (/detectstats, /detectreview): how often it fired, for how many members (in how many
@@ -137,10 +149,18 @@ namespace Enforcer5.Data
         Task<IReadOnlyList<(string Signs, DateTimeOffset At)>> FinesAsync(long chatId, long userId, DateTimeOffset since);
 
         /// <summary>
-        /// The live signs that counted or reported for a member since <paramref name="since"/>, with how often and the last
-        /// message each was seen on (null when none) and whether Detection deleted it: a report's contents after a restart.
+        /// The live signs that counted or reported for a member since <paramref name="since"/>, with how often, the last
+        /// message each was seen on (null when none), whether Detection deleted it, and its last detail: a report's contents
+        /// after a restart.
         /// </summary>
-        Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted)>> SignsSinceAsync(long chatId, long userId, DateTimeOffset since);
+        Task<IReadOnlyList<(string Sign, int Count, long? MessageId, bool Deleted, string Detail)>> SignsSinceAsync(long chatId, long userId,
+            DateTimeOffset since);
+
+        /// <summary>
+        /// The member's detections between <paramref name="from"/> and <paramref name="to"/> that kept their message's text,
+        /// oldest first: what a report's Show messages sends.
+        /// </summary>
+        Task<IReadOnlyList<FlaggedMessage>> FlaggedAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to);
 
         /// <summary>
         /// The inline bot of the latest of those signs seen on a post sent through one (evidence <c>via_bot</c>), or null:

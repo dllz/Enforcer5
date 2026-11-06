@@ -1772,7 +1772,7 @@
     <value>2 anos</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;O que o Enforcer guarda&lt;/b&gt;\n\n• As configurações de cada grupo e suas advertências, banimentos, expulsões e silenciamentos: quem, por quem e por quê.\n• Sobre os membros dos grupos em que está: o id do Telegram, nome e nome de usuário conforme mudam, quando entraram e quantas mensagens enviaram.\n• O que as verificações notaram numa mensagem (o tipo, uma impressão digital do texto e o id do arquivo) e o que os admins decidiram depois.\n• Sobre membros novos: se o perfil público tem um link, uma menção ou um canal pessoal, e o mesmo sobre os canais e grupos públicos para onde apontam. A bio e a descrição do canal são lidas, não guardadas.\n• Também sobre membros novos: como entraram, qual foi a primeira mensagem e quando, e para quais canais públicos e sites apontam, para aprender quais os spammers divulgam.\n• Onde um grupo compara posts de membros novos com os removidos: números que um modelo calcula a partir das mensagens e imagens de membros novos e dos posts que fizeram alguém ser removido (não o texto nem a imagem), para reconhecer o mesmo spam reescrito ou editado. Os de posts removidos são guardados sem a conta por até 2 anos.\n\nNunca guarda o texto das mensagens, bios ou imagens.\n\nIsso serve para proteger os grupos: para parar spam e raids e aprender com as decisões dos admins o que cada grupo permite. Os admins de cada grupo escolhem por quanto tempo o que as verificações notaram fica ligado à conta de um membro: 90 dias, 1 ano (padrão) ou 2 anos.</value>
+    <value>&lt;b&gt;O que o Enforcer guarda&lt;/b&gt;\n\n• As configurações de cada grupo e suas advertências, banimentos, expulsões e silenciamentos: quem, por quem e por quê.\n• Sobre os membros dos grupos em que está: o id do Telegram, nome e nome de usuário conforme mudam, quando entraram e quantas mensagens enviaram.\n• O que as verificações notaram numa mensagem (o tipo, uma impressão digital do texto e o id do arquivo) e o que os admins decidiram depois.\n• O texto de uma mensagem que uma verificação marcou, para que os admins possam ler o que um relatório lhes pede para julgar. Apagado após dois dias, a não ser que estivesse num relatório.\n• Sobre membros novos: se o perfil público tem um link, uma menção ou um canal pessoal, e o mesmo sobre os canais e grupos públicos para onde apontam. A bio e a descrição do canal são lidas, não guardadas.\n• Também sobre membros novos: como entraram, qual foi a primeira mensagem e quando, e para quais canais públicos e sites apontam, para aprender quais os spammers divulgam.\n• Onde um grupo compara posts de membros novos com os removidos: números que um modelo calcula a partir das mensagens e imagens de membros novos e dos posts que fizeram alguém ser removido (não o texto nem a imagem), para reconhecer o mesmo spam reescrito ou editado. Os de posts removidos são guardados sem a conta por até 2 anos.\n\nNunca guarda o texto de outras mensagens, bios ou imagens.\n\nIsso serve para proteger os grupos: para parar spam e raids e aprender com as decisões dos admins o que cada grupo permite. Os admins de cada grupo escolhem por quanto tempo o que as verificações notaram fica ligado à conta de um membro: 90 dias, 1 ano (padrão) ou 2 anos.</value>
   </string>
   <string key="cmdprivacy">
     <value>O que o Enforcer guarda sobre você</value>
@@ -1876,6 +1876,18 @@
   <string key="reportShowGone">
     <value>Essa mensagem não está mais disponível.</value>
   </string>
+  <string key="reportShowMessages">
+    <value>📝 Mostrar mensagens</value>
+  </string>
+  <string key="reportMessagesTitle">
+    <value>📝 O que {0} enviou em {1} e a Detecção notou:</value>
+  </string>
+  <string key="reportMessagesNone">
+    <value>Nenhuma mensagem foi guardada para este relatório.</value>
+  </string>
+  <string key="reportUnknownNames">
+    <value>não encontrado, não contado: {0}</value>
+  </string>
   <string key="reportViaBot">
     <value>🤖 Enviado pelo bot inline {0}. Se o grupo usa este bot, marque-o como de confiança: as mensagens enviadas por ele deixam de ser verificadas aqui.</value>
   </string>
@@ -1949,7 +1961,7 @@
     <value>link para outro chat ou site</value>
   </string>
   <string key="sign_mention_outside">
-    <value>menção a um chat fora do grupo</value>
+    <value>menção a um chat ou pessoa fora do grupo</value>
   </string>
   <string key="sign_forward_channel">
     <value>encaminhamento de um canal ou remetente oculto</value>

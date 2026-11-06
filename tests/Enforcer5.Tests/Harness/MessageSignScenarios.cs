@@ -133,7 +133,7 @@ WHERE d.sign = ANY(@Signs) ORDER BY d.detection_id", new { Signs = MessageSignNa
             await chat.PostAsync(Marked(chat, newcomer, "join @cryptogems and @harnessgroup"));
 
             var report = chat.Telegram.SentMessages.Single(m => m.Chat.Id == admin.Id && m.Text?.StartsWith("🛡") == true);
-            StringAssert.Contains(report.Text, "mention of a chat outside the group</a> (@cryptogems)");
+            StringAssert.Contains(report.Text, "mention of a chat or person outside the group</a> (@cryptogems)");
             await using var connection = await chat.Database.OpenConnectionAsync();
             var evidence = await connection.QuerySingleAsync<string>("SELECT evidence::text FROM detections WHERE sign = 'mention_outside'");
             var json = System.Text.Json.JsonDocument.Parse(evidence).RootElement;

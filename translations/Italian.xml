@@ -1760,7 +1760,7 @@
     <value>2 anni</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n• Sempre dei nuovi membri: come sono entrati, qual è stato il loro primo messaggio e quando, e a quali canali pubblici e siti rimandano, per imparare quali pubblicizzano gli spammer.\n• Dove un gruppo confronta i post dei nuovi membri con quelli rimossi: numeri che un modello calcola dai messaggi e dalle immagini dei nuovi membri e dai post per cui qualcuno è stato rimosso (non il testo né l'immagine), per riconoscere lo stesso spam riformulato o modificato. Quelli dei post rimossi si conservano senza l'account fino a 2 anni.\n\nNon conserva mai il testo dei messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
+    <value>&lt;b&gt;Cosa conserva Enforcer&lt;/b&gt;\n\n• Le impostazioni di ogni gruppo e i suoi avvertimenti, ban, espulsioni e silenziamenti: chi, da chi e perché.\n• Dei membri dei gruppi in cui si trova: id Telegram, nome e username man mano che cambiano, quando sono entrati e quanti messaggi hanno inviato.\n• Cosa i suoi controlli hanno notato in un messaggio (il tipo, un'impronta del testo e l'id del file) e cosa hanno deciso poi gli admin.\n• Il testo di un messaggio segnalato da un controllo, perché gli admin possano leggere ciò che una segnalazione chiede loro di giudicare. Cancellato dopo due giorni, se non era in una segnalazione.\n• Dei nuovi membri: se il loro profilo pubblico ha un link, una menzione o un canale personale, e lo stesso dei canali e gruppi pubblici a cui rimandano. La bio e la descrizione del canale vengono lette, non conservate.\n• Sempre dei nuovi membri: come sono entrati, qual è stato il loro primo messaggio e quando, e a quali canali pubblici e siti rimandano, per imparare quali pubblicizzano gli spammer.\n• Dove un gruppo confronta i post dei nuovi membri con quelli rimossi: numeri che un modello calcola dai messaggi e dalle immagini dei nuovi membri e dai post per cui qualcuno è stato rimosso (non il testo né l'immagine), per riconoscere lo stesso spam riformulato o modificato. Quelli dei post rimossi si conservano senza l'account fino a 2 anni.\n\nNon conserva mai il testo degli altri messaggi, le bio o le immagini.\n\nServe a proteggere i gruppi: a fermare spam e raid e a imparare dalle decisioni degli admin cosa permette ogni gruppo. Gli admin di ogni gruppo scelgono per quanto tempo ciò che i controlli hanno notato resta legato all'account di un membro: 90 giorni, 1 anno (predefinito) o 2 anni.</value>
   </string>
   <string key="cmdprivacy">
     <value>Cosa conserva Enforcer su di te</value>
@@ -1864,6 +1864,18 @@
   <string key="reportShowGone">
     <value>Quel messaggio non è più disponibile.</value>
   </string>
+  <string key="reportShowMessages">
+    <value>📝 Mostra i messaggi</value>
+  </string>
+  <string key="reportMessagesTitle">
+    <value>📝 Cosa ha scritto {0} in {1} che il Rilevamento ha notato:</value>
+  </string>
+  <string key="reportMessagesNone">
+    <value>Per questa segnalazione non è conservato nessun messaggio.</value>
+  </string>
+  <string key="reportUnknownNames">
+    <value>non trovato, non conteggiato: {0}</value>
+  </string>
   <string key="reportViaBot">
     <value>🤖 Inviato tramite il bot inline {0}. Se il gruppo usa questo bot, rendilo fidato: i messaggi inviati tramite lui non verranno più controllati qui.</value>
   </string>
@@ -1937,7 +1949,7 @@
     <value>link a un'altra chat o a un sito</value>
   </string>
   <string key="sign_mention_outside">
-    <value>menzione di una chat esterna al gruppo</value>
+    <value>menzione di una chat o di una persona esterna al gruppo</value>
   </string>
   <string key="sign_forward_channel">
     <value>inoltro da un canale o da un mittente nascosto</value>

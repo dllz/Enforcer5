@@ -1988,7 +1988,7 @@
     <value>2 tahun</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n• Tentang anggota baru: apakah profil publik mereka punya tautan, mention, atau channel pribadi, dan hal yang sama tentang channel dan grup publik yang mereka tunjuk. Bio dan deskripsi channel dibaca, tidak disimpan.\n• Juga tentang anggota baru: bagaimana mereka bergabung, apa dan kapan postingan pertama mereka, dan channel publik serta situs web yang mereka tunjuk, untuk mengetahui mana yang diiklankan spammer.\n• Jika grup membandingkan postingan anggota baru dengan yang dihapus: angka yang dihitung model dari pesan dan gambar anggota baru, dan dari postingan yang membuat seseorang dikeluarkan (bukan teks atau gambarnya), untuk mengenali spam yang sama yang ditulis ulang atau diedit. Angka dari postingan yang dihapus disimpan tanpa akun hingga 2 tahun.\n\nIa tidak pernah menyimpan teks pesan, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
+    <value>&lt;b&gt;Apa yang disimpan Enforcer&lt;/b&gt;\n\n• Pengaturan setiap grup, serta peringatan, ban, kick, dan bisu: siapa, oleh siapa, dan kenapa.\n• Tentang anggota grup tempat ia berada: id Telegram, nama, dan username saat berubah, kapan mereka bergabung, dan berapa banyak pesan yang mereka kirim.\n• Apa yang dilihat pemeriksaannya pada sebuah pesan (jenisnya, sidik jari teks, dan id file) dan apa yang kemudian diputuskan admin.\n• Teks pesan yang ditandai oleh pemeriksaan, agar admin bisa membaca apa yang diminta laporan untuk mereka nilai. Dihapus setelah dua hari kecuali pesan itu masuk dalam laporan.\n• Tentang anggota baru: apakah profil publik mereka punya tautan, mention, atau channel pribadi, dan hal yang sama tentang channel dan grup publik yang mereka tunjuk. Bio dan deskripsi channel dibaca, tidak disimpan.\n• Juga tentang anggota baru: bagaimana mereka bergabung, apa dan kapan postingan pertama mereka, dan channel publik serta situs web yang mereka tunjuk, untuk mengetahui mana yang diiklankan spammer.\n• Jika grup membandingkan postingan anggota baru dengan yang dihapus: angka yang dihitung model dari pesan dan gambar anggota baru, dan dari postingan yang membuat seseorang dikeluarkan (bukan teks atau gambarnya), untuk mengenali spam yang sama yang ditulis ulang atau diedit. Angka dari postingan yang dihapus disimpan tanpa akun hingga 2 tahun.\n\nIa tidak pernah menyimpan teks pesan lain, bio, atau gambar.\n\nIni dipakai untuk melindungi grup: menghentikan spam dan raid, dan belajar dari keputusan admin apa yang diizinkan setiap grup. Admin setiap grup memilih berapa lama hal yang dilihat pemeriksaan disimpan bersama akun anggota: 90 hari, 1 tahun (bawaan), atau 2 tahun.</value>
   </string>
   <string key="cmdprivacy">
     <value>Apa yang disimpan Enforcer tentangmu</value>
@@ -2092,6 +2092,18 @@
   <string key="reportShowGone">
     <value>Pesan itu sudah tidak tersedia.</value>
   </string>
+  <string key="reportShowMessages">
+    <value>📝 Tampilkan pesan</value>
+  </string>
+  <string key="reportMessagesTitle">
+    <value>📝 Yang diposting {0} di {1} dan dilihat oleh Deteksi:</value>
+  </string>
+  <string key="reportMessagesNone">
+    <value>Tidak ada pesan yang disimpan untuk laporan ini.</value>
+  </string>
+  <string key="reportUnknownNames">
+    <value>tidak ditemukan, tidak dihitung: {0}</value>
+  </string>
   <string key="reportViaBot">
     <value>🤖 Dikirim lewat bot inline {0}. Jika grup ini memakai bot tersebut, percayai bot itu: pesan yang dikirim lewat bot itu tidak lagi diperiksa di sini.</value>
   </string>
@@ -2165,7 +2177,7 @@
     <value>tautan ke chat atau situs lain</value>
   </string>
   <string key="sign_mention_outside">
-    <value>menyebut chat di luar grup</value>
+    <value>menyebut chat atau orang di luar grup</value>
   </string>
   <string key="sign_forward_channel">
     <value>terusan dari channel atau pengirim tersembunyi</value>

@@ -1776,7 +1776,7 @@
     <value>2 yıl</value>
   </string>
   <string key="privacyText">
-    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n• Yeni üyeler hakkında: herkese açık profillerinde bağlantı, bahsetme veya kişisel kanal olup olmadığı, ve işaret ettikleri herkese açık kanal ve gruplar hakkında aynısı. Biyografi ve kanal açıklaması okunur, saklanmaz.\n• Yeni üyeler hakkında ayrıca: nasıl katıldıkları, ilk mesajlarının ne olduğu ve ne zaman, ve hangi herkese açık kanal ve web sitelerine işaret ettikleri; spamcıların hangilerinin reklamını yaptığını öğrenmek için.\n• Bir grup yeni üyelerin gönderilerini kaldırılanlarla karşılaştırdığında: bir modelin yeni üyelerin mesaj ve görsellerinden ve birinin kaldırılmasına yol açan gönderilerden hesapladığı sayılar (metin veya görsel değil), aynı spamı yeniden yazılmış veya düzenlenmiş hâlde tanımak için. Kaldırılan gönderilerinkiler hesap olmadan 2 yıla kadar saklanır.\n\nMesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
+    <value>&lt;b&gt;Enforcer neleri saklar&lt;/b&gt;\n\n• Her grubun ayarları ve uyarıları, yasakları, atmaları ve susturmaları: kime, kim tarafından ve neden.\n• Bulunduğu grupların üyeleri hakkında: Telegram kimliği, değiştikçe adı ve kullanıcı adı, ne zaman katıldıkları ve kaç mesaj gönderdikleri.\n• Kontrollerinin bir mesajda fark ettikleri (türü, metnin bir parmak izi ve dosya kimliği) ve yöneticilerin sonra verdiği karar.\n• Bir kontrolün işaretlediği mesajın metni; yöneticiler bir raporun değerlendirmelerini istediği şeyi okuyabilsin diye. Bir raporda yer almadıysa iki gün sonra silinir.\n• Yeni üyeler hakkında: herkese açık profillerinde bağlantı, bahsetme veya kişisel kanal olup olmadığı, ve işaret ettikleri herkese açık kanal ve gruplar hakkında aynısı. Biyografi ve kanal açıklaması okunur, saklanmaz.\n• Yeni üyeler hakkında ayrıca: nasıl katıldıkları, ilk mesajlarının ne olduğu ve ne zaman, ve hangi herkese açık kanal ve web sitelerine işaret ettikleri; spamcıların hangilerinin reklamını yaptığını öğrenmek için.\n• Bir grup yeni üyelerin gönderilerini kaldırılanlarla karşılaştırdığında: bir modelin yeni üyelerin mesaj ve görsellerinden ve birinin kaldırılmasına yol açan gönderilerden hesapladığı sayılar (metin veya görsel değil), aynı spamı yeniden yazılmış veya düzenlenmiş hâlde tanımak için. Kaldırılan gönderilerinkiler hesap olmadan 2 yıla kadar saklanır.\n\nDiğer mesajların metnini, biyografileri veya resimleri asla saklamaz.\n\nBunlar grupları korumak için kullanılır: spam ve baskınları durdurmak ve yöneticilerin kararlarından her grubun neye izin verdiğini öğrenmek için. Her grubun yöneticileri, kontrollerin fark ettiklerinin bir üyenin hesabıyla ne kadar süre saklanacağını seçer: 90 gün, 1 yıl (varsayılan) veya 2 yıl.</value>
   </string>
   <string key="cmdprivacy">
     <value>Enforcer senin hakkında neleri saklar</value>
@@ -1880,6 +1880,18 @@
   <string key="reportShowGone">
     <value>Bu mesaj artık mevcut değil.</value>
   </string>
+  <string key="reportShowMessages">
+    <value>📝 Mesajları göster</value>
+  </string>
+  <string key="reportMessagesTitle">
+    <value>📝 {0} kişisinin {1} grubunda gönderdiği ve Tespit'in fark ettiği mesajlar:</value>
+  </string>
+  <string key="reportMessagesNone">
+    <value>Bu rapor için saklanan mesaj yok.</value>
+  </string>
+  <string key="reportUnknownNames">
+    <value>bulunamadı, sayılmadı: {0}</value>
+  </string>
   <string key="reportViaBot">
     <value>🤖 {0} satır içi botu üzerinden gönderildi. Grup bu botu kullanıyorsa ona güvenin: onun üzerinden gönderilen mesajlar artık burada kontrol edilmez.</value>
   </string>
@@ -1953,7 +1965,7 @@
     <value>başka bir sohbete veya web sitesine bağlantı</value>
   </string>
   <string key="sign_mention_outside">
-    <value>grup dışındaki bir sohbetten bahsetme</value>
+    <value>grup dışındaki bir sohbetten veya kişiden bahsetme</value>
   </string>
   <string key="sign_forward_channel">
     <value>bir kanaldan veya gizli göndericiden iletme</value>
