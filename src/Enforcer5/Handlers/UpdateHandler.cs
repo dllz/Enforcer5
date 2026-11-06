@@ -76,6 +76,8 @@ namespace Enforcer5.Handlers
                     // waiting for the rights are tried now rather than at the next probe.
                     if (update.MyChatMember?.Chat is { } changed)
                     {
+                        // Removed, muted, or let post again (Helpers/BotRights).
+                        BotRights.OnMyChatMember(update.MyChatMember);
                         AdminDirectory.Forget(changed.Id);
                         if (update.MyChatMember.NewChatMember is ChatMemberAdministrator { CanRestrictMembers: true })
                             Enforcement.EnforcementQueue.RightsChanged(changed.Id);
@@ -89,6 +91,9 @@ namespace Enforcer5.Handlers
                     break;
                 default:
                     if (update.Message == null) return;
+                    // A basic group upgraded to a supergroup: its data moves to the new id (Helpers/GroupMigration).
+                    if (update.Message.MigrateToChatId != null || update.Message.MigrateFromChatId != null)
+                        GroupMigration.OnMessage(update.Message);
                     if ((update.Message?.Date.ToUniversalTime() ?? DateTime.MinValue) < Bot.StartTime.AddMinutes(-2))
                         return; //toss it
                     // Other bots' messages (Bot-to-Bot Communication Mode, guest bots) never run commands; in a group
@@ -160,7 +165,7 @@ namespace Enforcer5.Handlers
                 {
                     if (update.Message.Chat.Type != ChatType.Private && bannedGroup)
                     {
-                        Bot.Api.LeaveChat(update.Message.Chat.Id);
+                        Bot.Api.LeaveChat(update.Message.Chat.Id).Forget();
                     }
                     return;
                 }
@@ -566,7 +571,7 @@ namespace Enforcer5.Handlers
             Bot.DispatchAction(() =>
             {
                 Bot.Send(NoLongerActive, chatId);
-                Bot.Api.LeaveChat(chatId);
+                Bot.Api.LeaveChat(chatId).Forget();
             }, "PremiumNotice");
             return false;
         }
@@ -594,7 +599,16 @@ namespace Enforcer5.Handlers
                 }
                 else
                 {
-                    Service.Welcome(update.Message);
+                    try
+                    {
+                        Service.Welcome(update.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        // A welcome that could not go out (no media rights, the last welcome not deletable) must not
+                        // keep Mute On Join from the newcomers below, as it did before 2026-11-06.
+                        if (!TelegramErrors.IsExpected(e)) ErrorReporter.Report(e, "Welcome");
+                    }
                     // Everyone added in one go, not just the first: a mass add is how a raid gets
                     // round Mute On Join.
                     var muteOnJoin = (ctx.Policy ?? Detection.DetectionSettings.For(chatId)).MuteOnJoin;

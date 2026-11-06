@@ -108,6 +108,10 @@ namespace Enforcer5.Data
         // Redis. The stored values a recovery offer sets once admins apply it.
         internal static IRecoveryValues RecoveryValues { get; set; } = new RedisRecoveryValues(() => Redis.db);
 
+        // PostgreSQL. The groups this edition may not post in, and whether Daniel was asked about leaving (Helpers/MutedGroups).
+        internal static IBotMuteRepository BotMutes { get; set; } =
+            new PostgresBotMuteRepository(() => Storage.PostgresStorage.Database, Enforcer5.Helpers.BanHistory.Edition);
+
         // PostgreSQL. The /batch runs (Actions/Batches).
         internal static IBatchRepository Batches { get; set; } =
             new PostgresBatchRepository(() => Storage.PostgresStorage.Database);

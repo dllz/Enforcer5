@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -48,16 +50,43 @@ namespace Enforcer5.Helpers
             // request went out.
             Ids.Apply(request); // marked ids: <code> in HTML, nothing elsewhere
             MenuCapture.Saw(request);
+            AllowWithoutReply(request);
+            var chatId = request is IChatTargetable { ChatId.Identifier: { } id } ? id : 0;
+            // A group that removed or muted the bot: answered here, as Telegram would, without the call (BotRights).
+            if (BotRights.RefusalFor(request, chatId) is { } known)
+            {
+                MutedGroups.Refused(chatId, request.MethodName, known);
+                throw known;
+            }
             var unit = Bot.CurrentWork;
             unit?.WaitStarted();
             try
             {
-                return await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+                var result = await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+                if (chatId < 0) BotRights.Succeeded(chatId, request.MethodName);
+                return result;
+            }
+            catch (Exception e) when (chatId < 0 && e is ApiRequestException { ErrorCode: not 429 })
+            {
+                BotRights.Failed(chatId, request.MethodName, e);
+                MutedGroups.Refused(chatId, request.MethodName, e);
+                throw;
             }
             finally
             {
                 unit?.WaitEnded();
             }
+        }
+
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> ReplyProperties = new();
+
+        // A reply whose message was deleted meanwhile goes out on its own, rather than failing ("message to be
+        // replied not found"): for every request that replies, in one place.
+        private static void AllowWithoutReply<TResponse>(IRequest<TResponse> request)
+        {
+            var property = ReplyProperties.GetOrAdd(request.GetType(),
+                type => type.GetProperty("ReplyParameters") is { } p && p.PropertyType == typeof(ReplyParameters) && p.CanRead ? p : null);
+            if (property?.GetValue(request) is ReplyParameters reply) reply.AllowSendingWithoutReply = true;
         }
 
         private async Task<TResponse> SendPacedAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)

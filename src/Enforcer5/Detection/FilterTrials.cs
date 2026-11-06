@@ -47,7 +47,7 @@ namespace Enforcer5.Detection
             try
             {
                 var now = new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero);
-                foreach (var due in await Repositories.DetectionReports.DueTrialsAsync(now, now - GiveUpAfter, 50))
+                foreach (var due in await Repositories.DetectionReports.DueTrialsAsync(now, now - GiveUpAfter, 500))
                 {
                     // A group of the other edition only: it tells them.
                     if (await ChatDetails.GetAsync(due.ChatId) == null) continue;

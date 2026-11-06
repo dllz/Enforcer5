@@ -66,7 +66,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "floodMenu");
             var keys = Commands.genFlood(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys).Forget();
         }
 
         [Callback(Trigger = "floodstatus", GroupAdminOnly = true)]
@@ -82,7 +82,7 @@ namespace Enforcer5
         {
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "doNothing"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "doNothing")).Forget();
         }
 
         /// <summary>The lowest flood limit the menu goes down to.</summary>
@@ -96,7 +96,7 @@ namespace Enforcer5
             var max = Detection.DetectionSettings.For(chatId).Flood.MaxMessages ?? Detection.FloodSettings.DefaultMaxMessages;
             if (max - 1 < MinimumFlood)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow")).Forget();
                 return;
             }
             ChangeDetection(call, chatId, lang, p => p with

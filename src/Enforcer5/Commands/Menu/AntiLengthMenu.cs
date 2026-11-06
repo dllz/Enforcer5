@@ -66,7 +66,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "lengthMenu", lang.Base);
             var keys = Commands.genAntiLengthMenu(chatId, lang.Doc);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup:keys);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup:keys).Forget();
         }
 
         private static readonly string[] LengthActions = { "kick", "warn", "tempban", "ban" };

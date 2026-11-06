@@ -47,7 +47,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Html);
+             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode:ParseMode.Html).Forget();
         }
 
         [Callback(Trigger = "changeLang", GroupAdminOnly = true)]
@@ -59,7 +59,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId);
             var text = Methods.GetLocaleString(lang.Doc, "langMenu", lang.Base);
             var keys = Commands.genLangMenu(chatId, lang.Doc);
-             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
+             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html).Forget();
         }       
 
     }

@@ -67,12 +67,12 @@ namespace Enforcer5.Handlers
                 result += "\n";
 
             }
-            Bot.Api.SendMessage(id, result, parseMode: ParseMode.Markdown);
+            Bot.Api.SendMessage(id, result, parseMode: ParseMode.Markdown).Forget();
             var sortedfiles = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x)).Where(x => x.Base == (choice ?? x.Base)).OrderBy(x => x.LatestUpdate);
             result = $"*Validation complete*\nErrors: {errors.Count(x => IsProblem(x))}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
             result += $"\nMost recently updated file: {sortedfiles.Last().FileName}.xml ({sortedfiles.Last().LatestUpdate.ToString("MMM dd")})\nLeast recently updated file: {sortedfiles.First().FileName}.xml ({sortedfiles.First().LatestUpdate.ToString("MMM dd")})";
 
-            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
+            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown).Forget();
         }
 
         public static void ValidateLanguageFile(long id, string filePath, int msgId)
@@ -106,7 +106,7 @@ namespace Enforcer5.Handlers
             //Program.Send(result, id);
             Thread.Sleep(500);
             result += $"*Validation complete*.\nErrors: {errors.Count(x => IsProblem(x))}\nMissing strings: {errors.Count(x => x.Level == ErrorLevel.MissingString)}";
-            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown);
+            Bot.Api.EditMessageText(id, msgId, result, parseMode: ParseMode.Markdown).Forget();
 
         }
 
@@ -122,7 +122,7 @@ namespace Enforcer5.Handlers
             ZipFile.CreateFromDirectory(Bot.LanguageDirectory, path);
             //now send the file
             var fs = new FileStream(path, FileMode.Open);
-            Bot.Api.SendDocument(id, InputFile.FromStream(fs, "languages.zip"));
+            Bot.Api.SendDocument(id, InputFile.FromStream(fs, "languages.zip")).Forget();
         }
 
         public static void SendFile(long id, string choice)
@@ -130,7 +130,7 @@ namespace Enforcer5.Handlers
             var langOptions = Directory.GetFiles(Bot.LanguageDirectory, "*.xml").Select(x => new Language(x));
             var option = langOptions.First(x => x.Name == choice);
             var fs = new FileStream(option.FilePath, FileMode.Open);
-            Bot.Api.SendDocument(id, InputFile.FromStream(fs, option.FileName + ".xml"));
+            Bot.Api.SendDocument(id, InputFile.FromStream(fs, option.FileName + ".xml")).Forget();
         }
 
         internal static void SendBase(string choice, long id)
@@ -152,7 +152,7 @@ namespace Enforcer5.Handlers
                 }
                 //now send the zip file
                 var fs = new FileStream(path, FileMode.Open);
-                Bot.Api.SendDocument(id, InputFile.FromStream(fs, $"{zipname}.zip"));
+                Bot.Api.SendDocument(id, InputFile.FromStream(fs, $"{zipname}.zip")).Forget();
 
                 //uncomment following line if you don't want to store those zipfiles
                 //File.Delete(path);
@@ -160,7 +160,7 @@ namespace Enforcer5.Handlers
             catch (Exception e)
             {
                 ErrorReporter.Report(e, $"Sending language base {choice}");
-                Bot.Api.SendMessage(id, e.Message);
+                Bot.Api.SendMessage(id, e.Message).Forget();
             }
         }
 

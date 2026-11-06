@@ -158,10 +158,10 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (DetectionSettings.TryUpdate(chatId, p => p with { Engine = p.Engine with { Learn = !p.Engine.Learn } }) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowLearnMenu(call, chatId, lang);
         }
 
@@ -171,7 +171,7 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var done = TrustLearning.ResetAsync(chatId).GetAwaiter().GetResult();
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, done ? "learnUndoAllDone" : "failed"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, done ? "learnUndoAllDone" : "failed")).Forget();
             if (done) ShowLearnMenu(call, chatId, lang);
         }
 
@@ -187,7 +187,7 @@ namespace Enforcer5
             if (args.Length < 3 || !long.TryParse(args[2], out var userId)) return;
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
-            Bot.Api.AnswerCallbackQuery(call.Id, Commands.ChangeTrust(chatId, userId, call.From.Id, untrust, lang), showAlert: true);
+            Bot.Api.AnswerCallbackQuery(call.Id, Commands.ChangeTrust(chatId, userId, call.From.Id, untrust, lang), showAlert: true).Forget();
         }
 
         /// <summary>Undo or Keep under a change Detection made: dlearn:{chat}:{adjustment}:{sent}:{undo|keep}.</summary>

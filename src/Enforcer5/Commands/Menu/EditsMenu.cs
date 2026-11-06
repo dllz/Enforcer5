@@ -48,7 +48,7 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, Commands.EditsMenuText(lang), ParseMode.Html,
-                replyMarkup: Commands.GenEditsMenu(chatId, lang));
+                replyMarkup: Commands.GenEditsMenu(chatId, lang)).Forget();
         }
 
         [Callback(Trigger = "editstoggle", GroupAdminOnly = true)]

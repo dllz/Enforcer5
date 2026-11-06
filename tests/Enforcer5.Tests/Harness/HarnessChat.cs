@@ -167,6 +167,10 @@ namespace Enforcer5.Tests.Harness
             Service.ResetWelcomesForTests();
             MemberTrust.SetNormsForTests(null);
             Enforcer5.Raids.RaidTelemetry.ResetForTests();
+            BotRights.ResetForTests();
+            MutedGroups.ResetForTests();
+            MutedGroups.Start();
+            GroupMigration.ResetForTests();
             Bot.Me = BotUser;
             Bot.StartTime = Clock.UtcNow.AddMinutes(-1);
             Bot.BindHandlers();
@@ -207,6 +211,7 @@ namespace Enforcer5.Tests.Harness
         {
             _world.QueueStop.Cancel();
             Enforcer5.Enforcement.EnforcementQueue.CrashForTests();
+            BotRights.ResetForTests();
             Enforcer5.Actions.Batches.ResetForTests();
             LogQueue.ResetForTests();
             Enforcer5.Raids.RaidGuard.ResetForTests();

@@ -60,7 +60,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var own = DetectionSettings.For(chatId).Filters.OwnRules.Count();
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, Methods.GetLocaleString(lang, "filtersMenu", own),
-                replyMarkup: Commands.GenFiltersMenu(chatId, lang));
+                replyMarkup: Commands.GenFiltersMenu(chatId, lang)).Forget();
         }
 
         [Callback(Trigger = "filterpreset", GroupAdminOnly = true)]

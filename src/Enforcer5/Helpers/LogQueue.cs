@@ -229,8 +229,19 @@ namespace Enforcer5.Helpers
                         parseMode = ParseMode.None; // unformatted rather than lost
                         continue;
                     }
-                    if (Bot.IsUnreachable(api))
+                    var kind = TelegramErrors.Classify(e);
+                    if (kind == TelegramErrorKind.Migrated && TelegramErrors.MigratedTo(e) is { } to)
                     {
+                        // A log group that became a supergroup: its groups log to the new id, and so does what waits.
+                        Moved(logChat, to);
+                        continue;
+                    }
+                    if (kind is TelegramErrorKind.ChatGone or TelegramErrorKind.NoSendRights or TelegramErrorKind.NoAdminRights
+                        or TelegramErrorKind.NoMediaRights or TelegramErrorKind.TopicClosed)
+                    {
+                        // Removed, or there but may not post (no admin in a channel, muted in a group): the same
+                        // setup problem. Before 2026-11-06 the second kind was tried five times per post, reported
+                        // and told to the group each time, without end.
                         LostAccess(logChat);
                         continue;
                     }
@@ -257,6 +268,36 @@ namespace Enforcer5.Helpers
                     list.RemoveAll(e => batch.Contains(e));
             }
             Journal.Remove(batch.Select(e => e.Id));
+        }
+
+        // The log group became the supergroup <paramref name="to"/>: the groups logging there now log to it, and what
+        // waits goes there.
+        private static void Moved(long logChat, long to)
+        {
+            List<LogEntry> waiting;
+            lock (Lock)
+            {
+                waiting = ByChannel.TryGetValue(logChat, out var list) ? list.ToList() : new List<LogEntry>();
+                list?.Clear();
+            }
+            foreach (var group in waiting.Select(e => e.GroupId).Where(g => g != 0).Distinct())
+            {
+                try
+                {
+                    if (GroupConfigs.For(group).LogChat == logChat) GroupConfigs.Change(group, Data.ConfigChange.SetLogChat(to));
+                }
+                catch (Exception e)
+                {
+                    ErrorReporter.Report(e, $"Moving the log channel of {group} to {to}");
+                }
+            }
+            Journal.Remove(waiting.Select(e => e.Id));
+            foreach (var entry in waiting)
+            {
+                var moved = entry with { LogChat = to };
+                Journal.Save(moved);
+                Add(moved);
+            }
         }
 
         // The bot was removed from the channel, or it is gone: every group logging there loses the setting and is

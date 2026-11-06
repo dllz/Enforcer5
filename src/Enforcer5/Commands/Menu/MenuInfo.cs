@@ -63,7 +63,7 @@ namespace Enforcer5
             if (args.Length < 3 || !long.TryParse(args[1], out var chatId)) return;
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = MenuInfo.Text(lang, args[2], MenuInfo.LabelOf(call.Message?.ReplyMarkup, call.Data));
-            Bot.Api.AnswerCallbackQuery(call.Id, text ?? Methods.GetLocaleString(lang, "doNothing"), showAlert: text != null);
+            Bot.Api.AnswerCallbackQuery(call.Id, text ?? Methods.GetLocaleString(lang, "doNothing"), showAlert: text != null).Forget();
         }
     }
 }

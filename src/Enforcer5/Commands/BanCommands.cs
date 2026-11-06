@@ -178,7 +178,7 @@ namespace Enforcer5
                 }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
-                    Bot.Api.AnswerCallbackQuery(callbackid, preText + limitText, true);
+                    Bot.Api.AnswerCallbackQuery(callbackid, preText + limitText, true).Forget();
                     Bot.Send(limitText, chatId);
                 }
                 else
@@ -198,13 +198,13 @@ namespace Enforcer5
                 {
                     var nick = Redis.db.HashGetAsync($"user:{callbackfromid}", "name").Result;
                     text = Methods.GetLocaleString(lang.Doc, "warnFlag", targetnick, Ids.Named(callbackfromid, nick), result.Count, result.Max);
-                    Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
+                    Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true).Forget();
                     Bot.Send(text, chatId);
                 }
                 else if (!string.IsNullOrEmpty(callbackid))
                 {
                     text = Methods.GetLocaleString(lang.Doc, "warnFlag", Ids.Mark(warnedId), Ids.Mark(callbackfromid), result.Count, result.Max);
-                    Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true);
+                    Bot.Api.AnswerCallbackQuery(callbackid, preText + text, true).Forget();
                     Bot.Send(text, chatId);
                 }
                 else
@@ -303,7 +303,7 @@ namespace Enforcer5
                             if (update.Message.ReplyToMessage != null && !update.Message.ReplyToMessage.IsServiceMessage)
                             {
                                 Bot.Api.ForwardMessage(update.Message.From.Id, update.Message.Chat.Id,
-                                    update.Message.ReplyToMessage.MessageId, disableNotification: true);
+                                    update.Message.ReplyToMessage.MessageId, disableNotification: true).Forget();
                             }
                         }
                         catch (Exception e)

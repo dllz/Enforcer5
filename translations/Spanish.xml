@@ -3762,4 +3762,13 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
   <string key="similarElsewhere">
     <value>en otro grupo</value>
   </string>
+  <string key="botMutedMember">
+    <value>🔇 No puedo enviar mensajes en {0}, así que no pude responderte allí. Pide a un admin del grupo que me deje enviar mensajes de nuevo.</value>
+  </string>
+  <string key="botMutedAdmin">
+    <value>🔇 No puedo enviar mensajes en {0}, así que allí no puedo responder a comandos ni avisar a nadie de lo que hago. Para arreglarlo, hazme admin del grupo o devuélveme el permiso de enviar mensajes.</value>
+  </string>
+  <string key="botLeavingMuted">
+    <value>👋 He salido de {0}: llevaba {1} días sin poder enviar mensajes allí. Si quieres que vuelva, añádeme de nuevo y hazme admin.</value>
+  </string>
 </strings>

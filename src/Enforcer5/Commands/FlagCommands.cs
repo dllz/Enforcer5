@@ -150,12 +150,12 @@ namespace Enforcer5
                         if (!string.IsNullOrEmpty(link))
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                            $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                         }
                         else
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
+                             $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                         }
                        
                     }
@@ -222,12 +222,12 @@ namespace Enforcer5
                                     if (!string.IsNullOrEmpty(link))
                                     {
                                         Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                                        $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                                     }
                                     else
                                     {
                                         Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
+                                         $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                                     }                                    
                                 }
                                 catch (Exception e)
@@ -529,7 +529,7 @@ namespace Enforcer5
                 var nick = Ids.Named(userId, Redis.db.HashGetAsync($"user:{userId}", "name").Result);
                 var admin = Ids.Named(call.From.Id, call.From.FirstName);
                 Bot.Send(Methods.GetLocaleString(grouplang, "SuccesfulBan", nick, admin), chatId);
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userLang, "userBanned"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(userLang, "userBanned")).Forget();
             }
         }
 
@@ -578,7 +578,7 @@ namespace Enforcer5
             var isReported = Redis.db.HashGetAsync(hash, "Solved").Result;
             if (!isReported.HasValue)
             {
-                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true);
+                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "reportNotFound"), true).Forget();
                 return;
             }
             int isReport;
@@ -620,12 +620,12 @@ namespace Enforcer5
                         if (!string.IsNullOrEmpty(link))
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html);
+                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}\n<a href=\"{link}\">View Report</a>", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                         }
                         else
                         {
                             Bot.Api.EditMessageText(noti.adminChatId, noti.adminMsgId,
-                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html);
+                       $"{text}\n{Methods.GetLocaleString(lang, "reportID", noti.reportId)}", Telegram.Bot.Types.Enums.ParseMode.Html).Forget();
                         }
                     }
                     catch (Exception e)
@@ -634,14 +634,14 @@ namespace Enforcer5
                     }
                 }
                  Bot.Api.AnswerCallbackQuery(call.Id,
-                    Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, repID));
+                    Methods.GetLocaleString(lang, "markedAsSolved", call.From.FirstName, repID)).Forget();
                  Bot.Send(Methods.GetLocaleString(lang, "markedAsSolved", Ids.Mention(call.From.Id, call.From.FirstName), repID), chatid);
             }
             else if (isReported.TryParse(out isReport) && isReport == 1)
             {
                 var solvedTime = Redis.db.HashGetAsync(hash, "SolvedAt").Result;
                 var solvedBy = Redis.db.HashGetAsync(hash, "solvedBy").Result;
-                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, Commands.ShownSolvedBy(hash, solvedBy)), true);
+                 Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "alreadySolved", solvedTime, Commands.ShownSolvedBy(hash, solvedBy)), true).Forget();
             }
         }
 
@@ -665,12 +665,12 @@ namespace Enforcer5
                 Bot.Api.AnswerCallbackQuery(call.Id, result.Outcome == ActionOutcome.Blocked && !string.IsNullOrEmpty(result.BlockMessage)
                     ? result.BlockMessage
                     : Methods.GetLocaleString(Methods.GetGroupLanguage(chatid).Doc,
-                        result.Refusal == Enforcement.Refusal.BotNotAdmin ? "botNotAdmin" : "Error", result.Refusal.ToString()), true);
+                        result.Refusal == Enforcement.Refusal.BotNotAdmin ? "botNotAdmin" : "Error", result.Refusal.ToString()), true).Forget();
                 return;
             }
             ReportHistory.Acted(report, ReportAction.Deleted, call.From.Id);
             var lang = Methods.GetGroupLanguage(chatid).Doc;
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "messageDeleted")).Forget();
         }
     }
 }

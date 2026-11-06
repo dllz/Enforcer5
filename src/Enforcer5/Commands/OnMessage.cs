@@ -176,7 +176,7 @@ namespace Enforcer5
             {
                 if (Methods.IsGroupAdmin(userid, groupId)) return;
                 Detection.DetectionEngine.Checked(groupId, userid, update.Message, Detection.SignCatalog.TextLength, action,
-                    deleted: true, evidence: new { length = text.Length, lines = LineCount(text), maxLength = intml, maxLines = intmline });
+                    deleted: BotRights.MayDelete(groupId) != false, evidence: new { length = text.Length, lines = LineCount(text), maxLength = intml, maxLines = intmline });
                 try
                 {
                     Bot.DeleteMessage(groupId, update.Message.MessageId);
@@ -363,7 +363,7 @@ namespace Enforcer5
                 var overLimit = current >= max;
                 var action = overLimit ? configuredAction : null;
                 Detection.DetectionEngine.Checked(chatId, message.From.Id, message, Detection.SignCatalog.MediaLock,
-                    action is "kick" or "ban" or "tempban" ? action : "delete", deleted: true,
+                    action is "kick" or "ban" or "tempban" ? action : "delete", deleted: BotRights.MayDelete(chatId) != false,
                     evidence: new { type = media, strike = current, limit = max });
                 if (overLimit)
                     ActionSeam.Run(new ActionRequest
@@ -473,10 +473,10 @@ namespace Enforcer5
                 if (checkAdmin && Methods.IsGroupAdmin(userId, chatId)) return;
                 // Posted as a channel: the member behind it cannot be seen, so the channel is the evidence.
                 if (senderChat != null)
-                    Detection.DetectionEngine.Checked(chatId, null, message, sign, "delete", deleted: true,
+                    Detection.DetectionEngine.Checked(chatId, null, message, sign, "delete", deleted: BotRights.MayDelete(chatId) != false,
                         evidence: new { channel = senderChat.Id, of = evidence });
                 else
-                    Detection.DetectionEngine.Checked(chatId, userId, message, sign, "delete", deleted: true, evidence: evidence);
+                    Detection.DetectionEngine.Checked(chatId, userId, message, sign, "delete", deleted: BotRights.MayDelete(chatId) != false, evidence: evidence);
                 // Throws without the delete right; DispatchAction logs it. Nothing is sent to the
                 // chat: one notice per blocked message would double the noise during a raid.
                 Bot.DeleteMessage(chatId, messageId);

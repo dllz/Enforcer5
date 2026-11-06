@@ -372,6 +372,14 @@ namespace Enforcer5.Actions
                     var (outcome, detail) = Outcome(result);
                     await Repositories.Batches.SetOutcomeAsync(batchId, item.Position, outcome, detail, Now);
                     done++;
+                    if (detail == "norights")
+                    {
+                        // The bot lost its rights (or was removed): every member after would be refused the same way,
+                        // each adding a job that waits ten minutes for them. Stopped; the summary says why.
+                        Stopping[batchId] = 0;
+                        await Repositories.Batches.FinishAsync(batchId, "stopped", Now);
+                        break;
+                    }
                     Interlocked.Increment(ref _members);
                     if (Clock.UtcNow - lastEdit >= ProgressEvery && batch.ProgressMessageId is { } progress)
                     {

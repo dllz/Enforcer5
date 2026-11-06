@@ -2730,4 +2730,13 @@
   <string key="similarElsewhere">
     <value>em outro grupo</value>
   </string>
+  <string key="botMutedMember">
+    <value>🔇 Não consigo enviar mensagens em {0}, então não pude te responder lá. Peça a um admin do grupo para me deixar enviar mensagens de novo.</value>
+  </string>
+  <string key="botMutedAdmin">
+    <value>🔇 Não consigo enviar mensagens em {0}, então não posso responder a comandos nem avisar ninguém do que faço lá. Para resolver, me torne admin do grupo ou devolva minha permissão de enviar mensagens.</value>
+  </string>
+  <string key="botLeavingMuted">
+    <value>👋 Saí de {0}: há {1} dias eu não conseguia enviar mensagens lá. Se quiser que eu volte, me adicione de novo e me torne admin.</value>
+  </string>
 </strings>

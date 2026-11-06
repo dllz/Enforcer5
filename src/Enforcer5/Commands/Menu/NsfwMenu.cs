@@ -50,7 +50,7 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, Commands.NsfwMenuText(lang), ParseMode.Html,
-                replyMarkup: Commands.GenNsfwMenu(chatId, lang));
+                replyMarkup: Commands.GenNsfwMenu(chatId, lang)).Forget();
         }
 
         [Callback(Trigger = "nsfwtoggle", GroupAdminOnly = true)]

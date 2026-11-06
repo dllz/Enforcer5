@@ -78,7 +78,7 @@ namespace Enforcer5
         public static void ClearKeyboard(Update update, string[] args)
         {
             Bot.Api.SendMessage(update.Message.Chat.Id, "Clearing keyboards",
-                replyMarkup: new ReplyKeyboardRemove());
+                replyMarkup: new ReplyKeyboardRemove()).Forget();
         }
 
         [Command(Trigger = "s", InGroupOnly = true, RequiresReply = true, Menu = Attributes.CommandMenu.Hidden)]
@@ -333,58 +333,58 @@ namespace Enforcer5
                         {
                             case "voice":
                                 Bot.Api.SendVoice(chatId, InputFile.FromFileId(fileId),
-                                    replyParameters: new ReplyParameters { MessageId = repId });
+                                    replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 break;
                             case "video":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
                                     Bot.Api.SendVideo(chatId, InputFile.FromFileId(fileId), caption: caption,
-                                        replyParameters: new ReplyParameters { MessageId = repId });
+                                        replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 }
                                 else
                                 {
                                     Bot.Api.SendVideo(chatId, InputFile.FromFileId(fileId),
-                                        replyParameters: new ReplyParameters { MessageId = repId });
+                                        replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 }
                                 break;
                             case "photo":
                                 if (!string.IsNullOrEmpty(caption))
                                 {
                                     Bot.Api.SendPhoto(chatId, InputFile.FromFileId(fileId), caption,
-                                        replyParameters: new ReplyParameters { MessageId = repId });
+                                        replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 }
                                 else
                                 {
                                     Bot.Api.SendPhoto(chatId, InputFile.FromFileId(fileId),
-                                        replyParameters: new ReplyParameters { MessageId = repId });
+                                        replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 }
                                 break;
 
                             case "videoNote":
                                     Bot.Api.SendVideoNote(chatId, InputFile.FromFileId(fileId),
-                                        replyParameters: new ReplyParameters { MessageId = repId });
+                                        replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 break;
                             case "gif":
                                 // Its caption, if one was saved with it (the old check for one never matched).
                                 Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), caption,
-                                    replyParameters: new ReplyParameters { MessageId = repId });
+                                    replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 break;
                             default:
                                 // A file's caption, if one was saved (it was kept but never sent); a sticker takes none.
                                 Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), specialMethod == "sticker" ? null : caption,
-                                    replyParameters: new ReplyParameters { MessageId = repId });
+                                    replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                                 break;
                         }
                     }
                     else if (!string.IsNullOrEmpty(hasMedia))
                     {
                         Bot.Api.SendDocument(chatId, InputFile.FromFileId(hasMedia), text,
-                            replyParameters: new ReplyParameters { MessageId = repId });
+                            replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                     }
                     else
                     {
                         Bot.Api.SendDocument(chatId, InputFile.FromFileId(hasMedia),
-                            replyParameters: new ReplyParameters { MessageId = repId });
+                            replyParameters: new ReplyParameters { MessageId = repId }).Forget();
                     }
                 }
                 catch (ApiRequestException e)

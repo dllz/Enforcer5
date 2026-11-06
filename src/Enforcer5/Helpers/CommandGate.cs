@@ -172,7 +172,7 @@ namespace Enforcer5.Helpers
             if (query != null && decision.Scope != ThrottleScope.Group)
             {
                 // A button: the answer pops up for them alone, nothing in the group.
-                Bot.Api.AnswerCallbackQuery(query.Id, HtmlFree(text), showAlert: decision.Scope == ThrottleScope.SlowLane);
+                Bot.Api.AnswerCallbackQuery(query.Id, HtmlFree(text), showAlert: decision.Scope == ThrottleScope.SlowLane).Forget();
                 return;
             }
             var sent = message != null && decision.Scope != ThrottleScope.Group

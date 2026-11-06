@@ -174,30 +174,27 @@ namespace Enforcer5.Enforcement
             if (api.ErrorCode >= 500)
                 return Attempt.Transient(e);
 
-            var text = api.Message?.ToLowerInvariant() ?? "";
-            if (job.Kind == EnforcementKind.Delete)
+            switch (TelegramErrors.Classify(api))
             {
-                // Already gone, or too old for bots to delete: nothing left to do either way.
-                if (text.Contains("message to delete not found") || text.Contains("message can't be deleted") &&
-                    !text.Contains("rights"))
-                    return Attempt.Success;
-            }
-            if (api.ErrorCode == 403 || text.Contains("chat not found") || text.Contains("bot was kicked") ||
-                text.Contains("bot is not a member"))
-                return Attempt.Refused(Refusal.BotNotAdmin, e);
-            switch (RestrictFailures.Classify(api.Message))
-            {
-                case RestrictFailure.BotNotAdmin:
+                case TelegramErrorKind.MessageGone when job.Kind == EnforcementKind.Delete:
+                    // Already gone, or too old for bots to delete: nothing left to do either way. Telegram says
+                    // "message can't be deleted" also when the bot lacks the right: BotRights knows which.
+                    return BotRights.MayDelete(job.ChatId) == false
+                        ? Attempt.Refused(Refusal.BotNotAdmin, e)
+                        : Attempt.Success;
+                case TelegramErrorKind.ChatGone:
+                case TelegramErrorKind.NoAdminRights:
+                case TelegramErrorKind.NoSendRights:
+                case TelegramErrorKind.Migrated:
+                case TelegramErrorKind.NotSupergroup:
+                    // Removed, not an admin, or a basic group (no restricting there): nothing a retry changes
+                    // until the rights do.
                     return Attempt.Refused(Refusal.BotNotAdmin, e);
-                case RestrictFailure.TargetIsAdmin:
+                case TelegramErrorKind.TargetIsAdmin:
                     return Attempt.Refused(Refusal.TargetIsAdmin, e);
+                case TelegramErrorKind.MemberGone:
+                    return Attempt.Refused(Refusal.NotFound, e);
             }
-            if (text.Contains("can't remove chat owner") || text.Contains("user is an administrator") ||
-                text.Contains("can't restrict self"))
-                return Attempt.Refused(Refusal.TargetIsAdmin, e);
-            if (text.Contains("user not found") || text.Contains("member not found") || text.Contains("participant_id_invalid") ||
-                text.Contains("user_id_invalid") || text.Contains("user_not_participant"))
-                return Attempt.Refused(Refusal.NotFound, e);
             return Attempt.Refused(Refusal.Other, e);
         }
 

@@ -196,7 +196,7 @@ namespace Enforcer5
             var chatId = long.Parse(args[1]);
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, Commands.MainMenuText(chatId, lang),
-                ParseMode.Html, replyMarkup: Commands.genMenu(chatId, lang));
+                ParseMode.Html, replyMarkup: Commands.genMenu(chatId, lang)).Forget();
         }
     }
 }

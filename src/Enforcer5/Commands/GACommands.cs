@@ -77,7 +77,7 @@ namespace Enforcer5
             try
             {
                  Bot.Api.SendMessage(update.Message.Chat.Id, "Validate which language?",
-                    replyParameters: new ReplyParameters { MessageId = update.Message.MessageId }, replyMarkup: menu);
+                    replyParameters: new ReplyParameters { MessageId = update.Message.MessageId }, replyMarkup: menu).Forget();
             }
             catch (AggregateException e)
             {
@@ -424,7 +424,7 @@ namespace Enforcer5
             try
             {
                 var chatId = args[1];
-                 Bot.Api.LeaveChat(chatId);
+                 Bot.Api.LeaveChat(chatId).Forget();
                  Bot.SendReply("The chat has been left", update);
             }
             catch (Exception e)

@@ -83,6 +83,9 @@ namespace Enforcer5.Helpers
         /// </summary>
         internal static Action<string> Observer { get; set; }
 
+        /// <summary>Called with each expected Telegram failure kept out of the error chat, for the test harness. Null in the bot.</summary>
+        internal static Action<TelegramErrorKind> Expected { get; set; }
+
         /// <summary>Reports an exception. <paramref name="what"/> says what was being attempted.</summary>
         internal static void Report(Exception e, string what = null,
             [CallerMemberName] string member = "", [CallerFilePath] string file = "")
@@ -90,6 +93,25 @@ namespace Enforcer5.Helpers
             try
             {
                 var where = Where(member, file);
+                // An expected Telegram outcome (no rights, removed, message gone, ...: TelegramErrors) is handled
+                // where it happens; it goes to app.log only, never to the error chat. On 2026-11-06 most of the
+                // error chat was these.
+                var kind = TelegramErrors.Classify(e);
+                if (kind != TelegramErrorKind.Other && kind != TelegramErrorKind.RateLimited)
+                {
+                    Expected?.Invoke(kind);
+                    LogHelper.Info($"{where}{(what != null ? $" ({what})" : "")}: {kind}: {Unwrap(e)?.Message}");
+                    return;
+                }
+                // Handling a command or a tap in a group the bot may not post in (or was removed from): the failure is
+                // what came of its refused reply (a reply that is null, ...). The person is told (MutedGroups); the
+                // error chat hears nothing, as blackwolf does since 2026-11-04.
+                if (Current is { Kind: "message" or "callback", ChatId: { } chat } && chat < 0 && BotRights.CannotPost(chat))
+                {
+                    Expected?.Invoke(TelegramErrorKind.NoSendRights);
+                    LogHelper.Info($"{where}{(what != null ? $" ({what})" : "")}: in {chat}, where the bot may not post: {e}");
+                    return;
+                }
                 LogHelper.Error($"{where}{(what != null ? $" ({what})" : "")}: {e}");
                 Observer?.Invoke($"{where}{(what != null ? $" ({what})" : "")}: {Unwrap(e)?.GetType().Name}: {Unwrap(e)?.Message}");
                 var root = Unwrap(e);

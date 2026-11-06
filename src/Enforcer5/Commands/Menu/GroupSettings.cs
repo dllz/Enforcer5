@@ -71,7 +71,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "groupMenu");
             var keys = Commands.genGroupSettingsMenu(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys).Forget();
         }
         [Callback(Trigger = "menuFlood", GroupAdminOnly = true)]
         public static void MenuFlood(CallbackQuery call, string[] args) =>
@@ -116,7 +116,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (Detection.DetectionSettings.TryUpdate(chatId, change) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
             RedrawSettingsMenu(call, chatId, lang);
@@ -137,7 +137,7 @@ namespace Enforcer5
             var on = GroupConfigs.For(chatId).Flag(flag);
             if (!GroupConfigs.TryChange(chatId, ConfigChange.SetFlag(flag, !on)))
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
             RedrawSettingsMenu(call, chatId, lang);
@@ -150,7 +150,7 @@ namespace Enforcer5
             {
                 Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text,
                     replyMarkup: keys).Wait();
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             }
             catch (Exception e)
             {

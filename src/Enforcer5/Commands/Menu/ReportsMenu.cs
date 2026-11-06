@@ -159,10 +159,10 @@ namespace Enforcer5
                     Engine = p.Engine with { ReportTo = Next(p.Engine.ReportTo, EngineSettings.ReportChoices) }
                 }) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowReportsMenu(call, chatId, lang);
         }
 
@@ -175,10 +175,10 @@ namespace Enforcer5
             var optedOut = DetectionReports.OptedOutAsync(chatId).GetAwaiter().GetResult().Contains(call.From.Id);
             if (!DetectionReports.SetOptedOut(chatId, call.From.Id, !optedOut))
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowReportsMenu(call, chatId, lang);
         }
 
@@ -211,12 +211,12 @@ namespace Enforcer5
             var adminChat = DetectionSettings.For(chatId).Engine.AdminChatId;
             if (DetectionSettings.TryUpdate(chatId, p => p with { Engine = p.Engine with { AdminChatId = null } }) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
             AdminChats.Unlinked(chatId);
             if (adminChat is { } left) Commands.LeaveUnlinkedAdminChat(left);
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowReportsMenu(call, chatId, lang);
         }
 

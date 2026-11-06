@@ -60,7 +60,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             var text = Methods.GetLocaleString(lang, "mediaMenu");
             var keys = Commands.genMediaMenu(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html);
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, text, replyMarkup: keys, parseMode: ParseMode.Html).Forget();
         }
 
         [Callback(Trigger = "mediaaction", GroupAdminOnly = true)]
@@ -80,7 +80,7 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             if (Detection.DetectionSettings.For(chatId).Media.EffectiveWarnLimit <= 1)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnToLow")).Forget();
                 return;
             }
             ChangeDetection(call, chatId, lang,

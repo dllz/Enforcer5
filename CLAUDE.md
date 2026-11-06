@@ -49,6 +49,8 @@ you are already working; don't start a global rewrite.
 | `src/Enforcer5/Helpers/MessageExtensions.cs` | Bridges 13.x shapes 22.x dropped (`NewChatMember`, `IsServiceMessage`) |
 | `src/Enforcer5/Handlers/UpdateHandler.cs` | Update routing, command dispatch |
 | `src/Enforcer5/Helpers/TelegramGateway.cs`, `FloodControl.cs` | Every Telegram call: pacing under Telegram's limits and 429 handling, per lane (see Rate limits) |
+| `src/Enforcer5/Helpers/TelegramErrors.cs` | What a failed Telegram call means (no send rights, no media rights, no admin rights, chat gone, migrated, message gone, topic closed, query too old, not a supergroup, target is an admin, member gone, or Other): the one place Telegram's error texts are matched |
+| `src/Enforcer5/Helpers/BotRights.cs`, `MutedGroups.cs`, `GroupMigration.cs` | The bot's own standing per group (Daniel, 2026-11-06, as blackwolf since 2026-11-04). `BotRights`: removed, muted (2 min, then tried again), may delete, moved; from my_chat_member and every refusal the gateway sees, and the gateway then answers posts to such a group itself (`KnownRefusalException`) without a call. `MutedGroups`: whoever used a command or button there is told in private once a day (admins how to fix it, `botMutedAdmin`; members `botMutedMember`; admins instead when the person never started the bot); a group muted 7 days that is still used gets Daniel a Leave/Keep question (`bot_mutes`, per edition; Keep asks again after 30 days; Leave looks again, tells the admins `botLeavingMuted`, leaves). Removed from a linked admin chat: unlinked. `GroupMigration`: a basic group upgraded to a supergroup moves to its new id (PostgreSQL group row, tempbans, log channel and admin chat references, Redis `chat:{id}:…` keys) |
 | `src/Enforcer5/Helpers/Clock.cs` | Time for the new code; simulated in the harness |
 | `src/Enforcer5/Enforcement/` | The enforcement queue: every ban, kick, mute, unban, delete and permission change |
 | `src/Enforcer5/Actions/` | The action seam (`docs/action-seam.md`): `ActionSeam.Run(ActionRequest)` is the one way to act on a member, with where it came from (`ActionSource`). Steps A to G done: bans, tempbans, unbans, kicks, mutes, tempmutes and unmutes from `Methods.*` and `Commands.Tempban`, `ActionEffects` owns the tempban schedule, the ban list and the ban record, `WarnActions` every warn, prewarn, media strike and warn removal (a warn at the limit asks for its own ban or kick), channel bans, deletes an admin asks for (/delmsg, /d, a report's Delete; a decision about the author), and raid mode's actions on members (`ActionSeam.SubmitAsync`, queued without waiting); `ActionLog` writes each action's log channel line once it went through (an admin's command as typed, once per command; the bot's own line from `ActionRequest.Log`), so callers no longer log actions themselves; `ActionHooks` runs registered `IActionHook`s before (block or change, only on admins' commands, buttons, reports and escalations, never the creator's or devs') and after (everything but the defences), within budgets, a failing hook counting as allow (none registered yet); `/batch` (`BatchPlan`, `Batches`) runs one command on a list of up to 5000 members after a preview any admin confirms, one member at a time through the seam, from PostgreSQL `batches`/`batch_items` (one running per group, resumed after a restart), with Stop, a summary and one log line; its decisions are labelled `batch`. Nothing outside `Actions/` and `Enforcement/` builds a job that acts on a member (`ActionSeamTests` checks); routine deletes and raid mode's lock stay direct; scripting (`docs/scripting-design.md`) builds on it |
@@ -139,9 +141,11 @@ Migrated from a private 13.x fork (`Telegram.Bot.Enforcer`). Things that bite:
 - `replyToMessageId:` → `replyParameters:`, `disableWebPagePreview:` → `linkPreviewOptions:`.
 - `Message.NewChatMember` (singular) and `MessageType.ServiceMessage` are gone —
   `MessageExtensions` provides both back as C# 14 extension members.
-- Error handling uses typed `ApiRequestException` (`ErrorCode`, `Parameters.RetryAfter`),
-  not message-string matching. Blocking calls wrap it in `AggregateException`, so use
-  `Bot.AsApiError(e)` to unwrap.
+- Error handling uses typed `ApiRequestException` (`ErrorCode`, `Parameters.RetryAfter`).
+  Blocking calls wrap it in `AggregateException`, so use `Bot.AsApiError(e)` to unwrap. What an
+  error means is `TelegramErrors.Classify(e)`: never match Telegram's error text anywhere else.
+- A Telegram call nobody awaits ends in `.Forget()` (`Helpers/TaskExtensions`), so its failure is
+  reported with the update's chat instead of as an "Unobserved task exception".
 - A post made as a channel has `SenderChat` = the channel and `From` = Telegram's shared
   placeholder `136817688`; the member behind it is never visible to bots. Act on the channel
   (`BanChatSenderChat`), never on `From`. Anonymous admins have `SenderChat` = the group itself.
@@ -321,6 +325,10 @@ update consumer sets and which flows into everything that update dispatches.
   `LogHelper.Error` or empty catches for errors. A catch for an expected outcome (an admin
   typing an unknown @username, "message to delete not found", a 403 from a user who blocked
   the bot) does not report, and says why in a comment.
+- Expected Telegram outcomes (`TelegramErrors`, anything but Other and 429) go to `app.log`
+  only, never to the error chat, wherever they are reported from; so do failures while handling
+  a command or button in a group the bot may not post in (`BotRights.CannotPost`). A send helper
+  (`Bot.Send`, `SendReply`, `SendAsync`) drops them without reporting.
 - It never throws and never blocks. It sends through `Bot.Api` directly, not `Bot.Send`, so a
   failing send cannot loop back into it. It is safe on the per-message path.
 - `ErrorThrottle` limits the chat to one report per distinct error per 10 minutes (numbers

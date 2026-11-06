@@ -99,6 +99,8 @@ namespace Enforcer5
             // Global bans live only in PostgreSQL: loaded once it is ready, then kept in memory.
             GlobalBans.Start(Bot.ShutdownToken);
 
+            // Groups that muted the bot: people told in private, Daniel asked about leaving (Helpers/MutedGroups).
+            MutedGroups.Start();
             // Bans, kicks, mutes and deletes: reloads what the journal holds from before a restart.
             Enforcement.EnforcementQueue.Start(Bot.ShutdownToken);
             // Log channel posts waiting from before a restart.

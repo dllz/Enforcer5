@@ -783,7 +783,7 @@ namespace Enforcer5.Helpers
         internal static void ReplyToCallback(CallbackQuery query, string text = null, bool edit = true, bool showAlert = false, InlineKeyboardMarkup replyMarkup = null)
         {
             //first answer the callback
-            Bot.Api.AnswerCallbackQuery(query.Id, edit ? null : text, showAlert);
+            Bot.Api.AnswerCallbackQuery(query.Id, edit ? null : text, showAlert).Forget();
             //edit the original message
             if (edit)
                 Edit(query, text, replyMarkup);
@@ -815,13 +815,17 @@ namespace Enforcer5.Helpers
         }
 
         /// <summary>True when Telegram rejected the send because the bot cannot reach that user or chat.</summary>
-        internal static bool IsUnreachable(ApiRequestException api)
+        internal static bool IsUnreachable(ApiRequestException api) =>
+            api != null && TelegramErrors.Classify(api) == TelegramErrorKind.ChatGone;
+
+        /// <summary>
+        /// True for a failure that is an expected outcome rather than an error (TelegramErrors): no rights, removed,
+        /// message gone. A send helper drops the message without reporting it; BotRights has already taken note.
+        /// </summary>
+        internal static bool IsExpected(Exception e)
         {
-            if (api == null) return false;
-            // 403: bot blocked, kicked, or user deactivated. 400 + these descriptions: chat gone.
-            if (api.ErrorCode == 403) return true;
-            return api.ErrorCode == 400 &&
-                   (api.Message.Contains("chat not found") || api.Message.Contains("user is deactivated"));
+            var kind = TelegramErrors.Classify(e);
+            return kind != TelegramErrorKind.Other && kind != TelegramErrorKind.RateLimited;
         }
 
         /// <summary>True for a 429, Telegram's or one the gateway answered itself.</summary>
@@ -847,6 +851,10 @@ namespace Enforcer5.Helpers
             catch (Exception e) when (IsRateLimited(AsApiError(e)))
             {
                 // Rate limited: logged by the gateway, nothing more to do for a fallback send.
+            }
+            catch (Exception e) when (IsExpected(e))
+            {
+                // No rights, removed, blocked: an expected outcome, BotRights took note in the gateway.
             }
             catch (Exception e)
             {
@@ -883,7 +891,7 @@ namespace Enforcer5.Helpers
             }
             catch (Exception e)
             {
-                ErrorReporter.Report(e, $"SendToPm to {pmId} failed, sending in the group instead");
+                if (!IsExpected(e)) ErrorReporter.Report(e, $"SendToPm to {pmId} failed, sending in the group instead");
                 result = CatchSend(message, chatId, menu, parseMode, messageId);
             }
             return result;
@@ -938,8 +946,9 @@ namespace Enforcer5.Helpers
                     if (parentMethod.Equals("SendToPm")) throw;
                     result = null;
                 }
-                else if (api != null && api.Message.Contains("bot can't send messages to bots"))
+                else if (IsExpected(e))
                 {
+                    // Muted, no media rights, topic closed, message gone: dropped. BotRights took note in the gateway.
                     result = null;
                 }
                 else
@@ -1011,11 +1020,6 @@ namespace Enforcer5.Helpers
                 {
                     result = CatchSend(message, chatid, keyboard, ParseMode.None, msgid);
                 }
-                else if (api != null && api.Message.Contains("reply message not found"))
-                {
-                    // The message being replied to was deleted - send it standalone.
-                    result = Send(message, chatid);
-                }
                 else if (api != null && api.Message.Contains("message is too long"))
                 {
                     result = SendInChunks(message, chatid, msgid);
@@ -1023,6 +1027,12 @@ namespace Enforcer5.Helpers
                 else if (IsUnreachable(api))
                 {
                     if (parentMethod.Equals("SendToPm")) throw;
+                    result = null;
+                }
+                else if (IsExpected(e))
+                {
+                    // Muted, topic closed, ...: dropped. A deleted message being replied to no longer fails: the
+                    // gateway sends every reply with allow_sending_without_reply.
                     result = null;
                 }
                 else
@@ -1064,6 +1074,11 @@ namespace Enforcer5.Helpers
                 // Rate limited: logged by the gateway, nothing more to do for a fallback send.
                 return null;
             }
+            catch (Exception e) when (IsExpected(e))
+            {
+                // No rights, removed, blocked: an expected outcome, BotRights took note in the gateway.
+                return null;
+            }
             catch (Exception e)
             {
                 // ErrorReporter talks to the API directly, so this cannot recurse.
@@ -1096,8 +1111,9 @@ namespace Enforcer5.Helpers
                     // Send it unformatted rather than losing the message entirely.
                     return await CatchSendAsync(message, id, customMenu, ParseMode.None);
                 }
-                if (IsUnreachable(api) || (api != null && api.Message.Contains("bot can't send messages to bots")))
+                if (IsExpected(e))
                 {
+                    // Removed, muted, blocked: dropped. BotRights took note in the gateway.
                     return null;
                 }
 
@@ -1122,7 +1138,11 @@ namespace Enforcer5.Helpers
         {
             var result = Enforcement.EnforcementQueue.Run(Enforcement.EnforcementJob.Delete(chatId, msgid));
             if (result.Succeeded) return true;
-            throw result.Error ?? new InvalidOperationException($"Deleting {msgid} in {chatId}: {result.Refusal}");
+            // Refused without asking Telegram (the bot lacks its rights there): said the way Telegram would, so callers
+            // and the error reporter treat it as the expected outcome it is.
+            throw result.Error ?? (result.Refusal == Enforcement.Refusal.BotNotAdmin
+                ? new KnownRefusalException("Bad Request: not enough rights to delete messages (known to the bot)", 400)
+                : new InvalidOperationException($"Deleting {msgid} in {chatId}: {result.Refusal}"));
         }
 
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)

@@ -67,6 +67,15 @@
   <string key="botNotAdmin">
     <value>I am not admin of this chat, I need to be an admin to run that command</value>
   </string>
+  <string key="botMutedMember">
+    <value>🔇 I can't send messages in {0}, so I couldn't answer you there. Ask a group admin to let me send messages again.</value>
+  </string>
+  <string key="botMutedAdmin">
+    <value>🔇 I can't send messages in {0}, so I can't answer commands or tell anyone what I do there. To fix it, make me an admin of the group, or give me back the right to send messages.</value>
+  </string>
+  <string key="botLeavingMuted">
+    <value>👋 I've left {0}: I haven't been able to send messages there for {1} days. If you want me back, add me again and make me an admin.</value>
+  </string>
   <string key="noReply">
     <value>Please reply to someone to use this command</value>
   </string>

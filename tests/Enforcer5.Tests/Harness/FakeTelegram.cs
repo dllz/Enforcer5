@@ -153,6 +153,48 @@ namespace Enforcer5.Tests.Harness
 
         internal void SetBotCanRestrict(long chatId, bool can) => _botCanRestrict[chatId] = can;
 
+        private readonly ConcurrentDictionary<long, byte> _botMuted = new();
+        private readonly ConcurrentDictionary<long, byte> _botRemoved = new();
+        private readonly ConcurrentDictionary<long, byte> _noMedia = new();
+
+        /// <summary>
+        /// The bot is a plain member that may not post in the group (muted, or the whole group is): its posts are refused
+        /// as Telegram does, and it is no admin, so it may not restrict or delete either. False undoes it.
+        /// </summary>
+        internal void SetBotMuted(long chatId, bool muted = true)
+        {
+            if (muted) { _botMuted[chatId] = 0; _botCanRestrict[chatId] = false; }
+            else { _botMuted.TryRemove(chatId, out _); _botCanRestrict[chatId] = true; }
+        }
+
+        /// <summary>The bot was removed from the group: every call there is refused with 403.</summary>
+        internal void SetBotRemoved(long chatId, bool removed = true)
+        {
+            if (removed) _botRemoved[chatId] = 0;
+            else _botRemoved.TryRemove(chatId, out _);
+        }
+
+        /// <summary>The group lets nobody but admins post media (the bot included, as a plain member).</summary>
+        internal void SetNoMedia(long chatId, bool noMedia = true)
+        {
+            if (noMedia) _noMedia[chatId] = 0;
+            else _noMedia.TryRemove(chatId, out _);
+        }
+
+        // Telegram's refusal for the bot's own standing in the chat, if any.
+        private void CheckStanding(string method, long chatId)
+        {
+            if (chatId >= 0) return;
+            if (_botRemoved.ContainsKey(chatId))
+                throw new ApiRequestException("Forbidden: bot was kicked from the supergroup chat", 403);
+            var post = method.StartsWith("send", StringComparison.Ordinal) || method.StartsWith("forward", StringComparison.Ordinal) ||
+                       method.StartsWith("copy", StringComparison.Ordinal);
+            if (post && _botMuted.ContainsKey(chatId))
+                throw new ApiRequestException("Bad Request: not enough rights to send text messages to the chat", 400);
+            if (post && method != "sendMessage" && _noMedia.ContainsKey(chatId))
+                throw new ApiRequestException("Bad Request: not enough rights to send animations to the chat", 400);
+        }
+
         internal int NextMessageId() => Interlocked.Increment(ref _nextMessageId);
 
         /// <summary>Every call answered after this many simulated seconds; zero by default.</summary>
@@ -321,6 +363,7 @@ namespace Enforcer5.Tests.Harness
             }
             try
             {
+                CheckStanding(method, call.ChatId ?? 0);
                 var result = answer();
                 _calls.Enqueue(call);
                 return result;
@@ -495,8 +538,10 @@ namespace Enforcer5.Tests.Harness
             var user = userId == Me.Id ? Me
                 : _users.TryGetValue(userId, out var known) ? known
                 : new User { Id = userId, FirstName = $"User{userId}" };
+            if (userId == Me.Id && _botMuted.ContainsKey(chatId))
+                return new ChatMemberRestricted { User = user, IsMember = true, CanSendMessages = false };
             if (userId == Me.Id)
-                return new ChatMemberAdministrator { User = user, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = true };
+                return new ChatMemberAdministrator { User = user, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = BotCanRestrict(chatId) };
             return GetMember(chatId, userId) switch
             {
                 MemberState.Creator => new ChatMemberOwner { User = user },
@@ -510,7 +555,8 @@ namespace Enforcer5.Tests.Harness
         }
 
         private ChatMember[] Administrators(long chatId) =>
-            new ChatMember[] { new ChatMemberAdministrator { User = Me, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = true } }
+            (_botMuted.ContainsKey(chatId) ? Array.Empty<ChatMember>()
+                : new ChatMember[] { new ChatMemberAdministrator { User = Me, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = BotCanRestrict(chatId) } })
                 .Concat(_members.Where(m => m.Key.Chat == chatId && m.Key.User != Me.Id
                         && m.Value is MemberState.Creator or MemberState.Administrator)
                     .Select(m => ChatMember(chatId, m.Key.User)))

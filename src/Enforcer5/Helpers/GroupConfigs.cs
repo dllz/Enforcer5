@@ -315,6 +315,13 @@ namespace Enforcer5.Helpers
             throw new TimeoutException($"{what} took longer than {Timeout.TotalSeconds:0.#} s");
         }
 
+        /// <summary>Drops what is in memory for the group, so the next read loads it again (Helpers/GroupMigration).</summary>
+        internal static void Forget(long chatId)
+        {
+            Entries.TryRemove(chatId, out _);
+            Loading.TryRemove(chatId, out _);
+        }
+
         internal static void ResetForTests()
         {
             Entries.Clear();

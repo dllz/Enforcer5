@@ -2456,4 +2456,13 @@ Example:
   <string key="similarElsewhere">
     <value>在其他群</value>
   </string>
+  <string key="botMutedMember">
+    <value>🔇 我无法在 {0} 发送消息，所以没能在那里回复你。请让群管理员重新允许我发送消息。</value>
+  </string>
+  <string key="botMutedAdmin">
+    <value>🔇 我无法在 {0} 发送消息，所以无法在那里回复命令，也无法告诉大家我做了什么。要解决这个问题，请把我设为群管理员，或恢复我发送消息的权限。</value>
+  </string>
+  <string key="botLeavingMuted">
+    <value>👋 我已离开 {0}：我已经 {1} 天无法在那里发送消息。如果想让我回来，请重新添加我并设为管理员。</value>
+  </string>
 </strings>

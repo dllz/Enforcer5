@@ -83,7 +83,7 @@ namespace Enforcer5
             var pending = repository.GetPendingAsync(chatId, promptId).GetAwaiter().GetResult();
             if (pending == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonExpired"), true);
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonExpired"), true).Forget();
                 TryDelete(chatId, promptId);
                 return;
             }
@@ -91,7 +91,7 @@ namespace Enforcer5
             // AllowedIfAdmin needs no check here: GroupAdminOnly callbacks only reach admins.
             if (WarnReasons.WhoMayAnswer(pending.AdminId, call.From.Id, false) == Answerer.Refused)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonNotYours", pending.AdminName), true);
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonNotYours", pending.AdminName), true).Forget();
                 return;
             }
 
@@ -106,17 +106,17 @@ namespace Enforcer5
             if (!repository.ClaimPendingAsync(chatId, promptId).GetAwaiter().GetResult())
             {
                 // Someone else answered in the meantime.
-                Bot.Api.AnswerCallbackQuery(call.Id);
+                Bot.Api.AnswerCallbackQuery(call.Id).Forget();
                 return;
             }
             TryDelete(chatId, promptId);
 
             if (reason == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonCancelled"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "warnReasonCancelled")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id);
+            Bot.Api.AnswerCallbackQuery(call.Id).Forget();
             Complete(chatId, lang, pending.Change, call.From.Id, call.From.FirstName,
                 Service.ShownUserLabel(pending.Change.TargetId), reason, pending.SourceMessageId, pending.SourceIsBotMessage);
         }

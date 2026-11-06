@@ -119,6 +119,14 @@ namespace Enforcer5.Helpers
             switch (result.Refusal)
             {
                 case Refusal.BotNotAdmin:
+                    // Removed from the group: nobody there to tell.
+                    if (BotRights.IsGone(chatId)) break;
+                    // May not even post there: the admins hear it in private, once a day (Helpers/MutedGroups).
+                    if (BotRights.CannotPost(chatId))
+                    {
+                        Bot.Dispatch(() => MutedGroups.TellAdminsAsync(chatId), "MutedGroups");
+                        break;
+                    }
                     // Once per chat in a while: during a raid every ban would otherwise say it.
                     if (ToldNoRights.TryGetValue(chatId, out var told) && Clock.UtcNow - told < TimeSpan.FromMinutes(10)) break;
                     ToldNoRights[chatId] = Clock.UtcNow;
@@ -157,15 +165,17 @@ namespace Enforcer5.Helpers
 
         public static void SendError(Exception exceptionInnerException, long chatid, XDocument doc)
         {
-            // A 429 means the chat is rate limited: posting about it would only add to that.
-            if (Bot.IsRateLimited(Bot.AsApiError(exceptionInnerException))) return;
+            // A 429 means the chat is rate limited: posting about it would only add to that. An expected refusal (no
+            // rights, removed, message gone: TelegramErrors) is said where it is handled, in the group's language, or
+            // needs no words; Telegram's English text for it was posted into groups until 2026-11-06.
+            if (TelegramErrors.Classify(exceptionInnerException) != TelegramErrorKind.Other) return;
             object[] arguments =
                 {
                     exceptionInnerException.Message
                 };
             try
             {
-                 Bot.Api.SendMessage(chatid, GetLocaleString(doc, "Error", arguments));
+                 Bot.Send(GetLocaleString(doc, "Error", arguments), chatid);
             }
             catch (Exception e)
             {

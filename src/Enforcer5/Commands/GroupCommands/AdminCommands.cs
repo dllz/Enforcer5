@@ -610,7 +610,7 @@ namespace Enforcer5
                         var res = Bot.SendReply(args[1], update);
                         Save(new WelcomeConfig("custom", args[1], gif, gif != null ? Helpers.BanHistory.Edition : null));
                         Bot.Api.EditMessageText(chatId, res.MessageId, Methods.GetLocaleString(lang, "welcomeSet",
-                            Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), ParseMode.Html);
+                            Ids.Mention(update.Message.From.Id, update.Message.From.FirstName)), ParseMode.Html).Forget();
                         Service.LogCommand(update, update.Message.Text);
                     }
                     catch (AggregateException e)
@@ -953,7 +953,7 @@ namespace Enforcer5
                         $"{long.Parse(userId)}:\n{call.Message.Chat.Id} {call.Message.Chat.Title} {call.Message.From.Id} {call.Message.From.FirstName}");
                 }
                 Bot.Api.EditMessageText(call.Message.Chat.Id, call.Message.MessageId,
-                    Methods.GetLocaleString(lang, "userBanned"));
+                    Methods.GetLocaleString(lang, "userBanned")).Forget();
             }
              
         }
@@ -977,12 +977,12 @@ namespace Enforcer5
             if (result.Escalation != null)
             {
                 Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + Commands.WarnLimitText(lang, result, Ids.Mark(userId)),
-                    parseMode: ParseMode.Html);
+                    parseMode: ParseMode.Html).Forget();
                 return;
             }
             var text = Methods.GetLocaleString(lang, "warn", Ids.Mark(userId), result.Count, result.Max);
             Bot.Api.EditMessageText(chatId, call.Message.MessageId, preText + text,
-                replyMarkup: Key.CreateMarkupFromMenu(Commands.WarnButtons(lang, chatId, userId)), parseMode: ParseMode.Html);
+                replyMarkup: Key.CreateMarkupFromMenu(Commands.WarnButtons(lang, chatId, userId)), parseMode: ParseMode.Html).Forget();
         }
 
         // The /media menu.

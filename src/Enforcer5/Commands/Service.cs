@@ -115,10 +115,10 @@ defSpamValue = 3;
             {
                 case 125311351://Daniel
 #if PREMIUM
-                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfDe5MFy-IHCAI"));
+                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfDe5MFy-IHCAI")).Forget();
 #endif
 #if NORMAL
-                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfmRkSuLkIV9AI"));
+                    Bot.Api.SendDocument(message.Chat.Id, InputFile.FromFileId("CgADBAADZCgAApwaZAfmRkSuLkIV9AI")).Forget();
 #endif
                     break;
                 case 36702373://Karma (Prize Winner)
@@ -147,7 +147,7 @@ defSpamValue = 3;
                         {
                             Message response = SendWelcomeGif(message.Chat.Id, file, html, plain);
 
-                            Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
+                            if (response != null) Bot.DeleteLastWelcomeMessage(message.Chat.Id, response.MessageId);
                         }
                         else
                         {
@@ -301,6 +301,11 @@ defSpamValue = 3;
             {
                 return Bot.Api.SendDocument(chatId, InputFile.FromFileId(fileId), plain).Result;
             }
+            catch (Exception e) when (TelegramErrors.Classify(e) == TelegramErrorKind.NoMediaRights)
+            {
+                // The group lets the bot post text but not GIFs: the welcome's text on its own.
+                return Bot.Send(html, chatId, plainText: plain);
+            }
         }
 
         public static void BotAdded(Message updateMessage)
@@ -311,7 +316,7 @@ defSpamValue = 3;
             {
                
                 Bot.Send(Methods.GetLocaleString(lang, "groupBanned"), updateMessage.Chat.Id);
-                Bot.Api.LeaveChat(updateMessage.Chat.Id);
+                Bot.Api.LeaveChat(updateMessage.Chat.Id).Forget();
                 return;
             }
             var alreadyExists = Redis.db.SetContainsAsync($"bot:groupsid", updateMessage.Chat.Id).Result;

@@ -52,6 +52,14 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.TelegramUserId });
             });
 
+            modelBuilder.Entity<BotMuteEntity>(entity =>
+            {
+                entity.ToTable("bot_mutes", table =>
+                    table.HasCheckConstraint("bot_mutes_edition_check", "edition IN ('normal', 'premium')"));
+                entity.HasKey(x => new { x.Edition, x.TelegramChatId });
+                entity.Property(x => x.Edition).IsRequired();
+            });
+
             modelBuilder.Entity<GroupEntitlementEntity>(entity =>
             {
                 entity.ToTable("group_entitlements", table => table.HasCheckConstraint("group_entitlements_entitlement_check", "entitlement IN ('premium')"));

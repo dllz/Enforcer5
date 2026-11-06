@@ -221,6 +221,9 @@ namespace Enforcer5.Enforcement
                     if (adminUntil > now) return Task.FromResult(EnforcementResult.Refuse(Refusal.TargetIsAdmin));
                     KnownAdmins.Remove((job.ChatId, job.TargetId));
                 }
+                // The bot was removed from the chat: nothing to queue (BotRights, from my_chat_member or Telegram's answer).
+                if (BotRights.IsGone(job.ChatId))
+                    return Task.FromResult(EnforcementResult.Refuse(Refusal.BotNotAdmin));
                 // The bot lacks its rights there: queued all the same, to be carried out once an
                 // admin fixes them, but the caller hears it at once.
                 refusedForNow = NoRightsSince.ContainsKey(job.ChatId);
@@ -583,6 +586,12 @@ namespace Enforcer5.Enforcement
                         ErrorReporter.Report(attempt.Error, $"{job} kept failing, given up");
                         result = EnforcementResult.Refuse(Refusal.Other, attempt.Error);
                     }
+                    break;
+                case AttemptKind.Refused when attempt.Refusal == Refusal.BotNotAdmin && job.Kind == EnforcementKind.Delete:
+                    // Only the right to delete is missing (BotRights): bans and mutes there are not held back for it,
+                    // and a message deleted ten minutes late helps nobody.
+                    LogHelper.Info($"{job}: the bot may not delete there ({attempt.Error?.Message})");
+                    result = EnforcementResult.Refuse(Refusal.BotNotAdmin, attempt.Error);
                     break;
                 case AttemptKind.Refused when attempt.Refusal == Refusal.BotNotAdmin:
                     // Admins often fix the bot's rights within minutes of being told; keep the job

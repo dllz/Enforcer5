@@ -28,12 +28,12 @@ namespace Enforcer5
         {
             if (DetectionSettings.TryUpdate(chatId, change) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
             var keys = menu(chatId, lang);
-            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys);
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.EditMessageText(call.From.Id, call.Message.MessageId, call.Message.Text, replyMarkup: keys).Forget();
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
         }
 
         /// <summary>The next action of a menu's cycle; one not in it starts the cycle.</summary>
@@ -78,10 +78,10 @@ namespace Enforcer5
             if (change == null) return;
             if (DetectionSettings.TryUpdate(chatId, change) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowDetectionMenu(call, chatId, lang);
         }
 
@@ -95,10 +95,10 @@ namespace Enforcer5
                     Engine = p.Engine with { RetentionDays = NextRetention(p.Engine.RetentionDays) }
                 }) == null)
             {
-                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed"));
+                Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "failed")).Forget();
                 return;
             }
-            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged"));
+            Bot.Api.AnswerCallbackQuery(call.Id, Methods.GetLocaleString(lang, "settingChanged")).Forget();
             ShowDetectionMenu(call, chatId, lang);
         }
 
