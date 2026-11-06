@@ -349,6 +349,8 @@ namespace Enforcer5.Storage
         public long GroupId { get; set; }
         public short MaximumWarnings { get; set; }
         public string WarningAction { get; set; }
+        /// <summary>convert (prewarns become warns at the next warn) or half (two prewarns are a warn).</summary>
+        public string PrewarnMode { get; set; }
         public int TempbanMinutes { get; set; }
         public int TempmuteMinutes { get; set; }
         public long Version { get; set; }

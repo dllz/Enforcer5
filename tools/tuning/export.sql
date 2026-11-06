@@ -1,5 +1,5 @@
 -- Every comparing sign's hits and near misses with how alike they were, and what the admins decided about the member
--- afterwards (bad: removed or muted within 30 days; fine: found fine or an action undone). No ids, names or text.
+-- afterwards (bad: removed, muted or the bot's action confirmed (handled) within 30 days; fine: found fine or an action undone). No ids, names or text.
 -- Run read-only on the quasi box:  enf-sql prod --csv -f tools/tuning/export.sql > /workspace/scratch/similarity.csv
 -- (Detection step 13; tools/tuning/tune.py reads the result.)
 -- similar_to_banned (step 15) is split by what was compared (similar_to_banned:text, :image), and counts while groups only
@@ -7,7 +7,7 @@
 WITH compared AS (
     SELECT CASE WHEN d.sign = 'similar_to_banned' THEN d.sign || ':' || coalesce(d.evidence ->> 'kind', 'text') ELSE d.sign END,
            'hit' AS kind, d.similarity, d.group_id, d.account_id, d.detected_at,
-           d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete') AS bad,
+           d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete', 'handled') AS bad,
            d.outcome IN ('fine', 'undone') AS fine
     FROM detections d
     WHERE d.similarity IS NOT NULL AND (d.mode IN ('live', 'observe') OR d.sign = 'similar_to_banned' AND d.mode = 'trial') AND d.detected_at >= now() - interval '180 days'
@@ -15,7 +15,7 @@ WITH compared AS (
     SELECT CASE WHEN n.sign = 'similar_to_banned' THEN n.sign || ':' || coalesce(n.evidence ->> 'kind', 'text') ELSE n.sign END,
            'near', n.similarity, n.group_id, n.account_id, n.detected_at,
            EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id AND l.label = 'bad'
-                     AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete')
+                     AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete', 'handled')
                      AND l.decided_at >= n.detected_at AND l.decided_at < n.detected_at + interval '30 days'),
            EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id
                      AND (l.action = 'fine' OR l.undone_at IS NOT NULL)

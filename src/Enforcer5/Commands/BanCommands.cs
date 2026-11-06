@@ -150,9 +150,23 @@ namespace Enforcer5
             }
             if (!result.Succeeded) return result; // an admin, or the bot: never warned, nothing said
             var lang = Methods.GetGroupLanguage(chatId);
+            if (preWarn && result.BecameWarn)
+            {
+                // Half a warn: this prewarn and the one before are a warn now, which may have reached the limit.
+                var made = Methods.GetLocaleString(lang.Doc, "prewarnsMadeWarn", targetnick) + "\n";
+                var warnText = result.Escalation != null
+                    ? WarnLimitText(lang.Doc, result, targetnick)
+                    : Methods.GetLocaleString(lang.Doc, "warn", targetnick, result.Count, result.Max);
+                var markup = result.Escalation != null ? null : Key.CreateMarkupFromMenu(WarnButtons(lang.Doc, chatId, warnedId));
+                if (update != null) Bot.SendReply(made + warnText, update, markup);
+                else Bot.Send(made + warnText, chatId, customMenu: markup);
+                return result;
+            }
             if (preWarn)
             {
                 var text = Methods.GetLocaleString(lang.Doc, "prewarn", targetnick, result.Count);
+                if (Methods.PrewarnIsHalf(chatId))
+                    text += "\n" + Methods.GetLocaleString(lang.Doc, "prewarnHalfNote");
                 var solvedMenu = new Menu(2)
                 {
                     Buttons = new List<InlineButton>
@@ -163,7 +177,8 @@ namespace Enforcer5
                             $"removePrewarn:{chatId}:{warnedId}"),
                     }
                 };
-                Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
+                if (update != null) Bot.SendReply(text, update, Key.CreateMarkupFromMenu(solvedMenu));
+                else Bot.Send(text, chatId, customMenu: Key.CreateMarkupFromMenu(solvedMenu));
                 return result;
             }
             var preText = result.Converted > 0

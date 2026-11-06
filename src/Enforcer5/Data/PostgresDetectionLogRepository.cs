@@ -210,14 +210,14 @@ WHERE x.label = 'bad' AND x.decided_at >= @Since AND x.missed IS NOT NULL
             var rows = await connection.QueryAsync<BucketRow>(@"
 WITH compared AS (
     SELECT d.sign, 'hit' AS kind, d.similarity,
-           d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete') AS bad,
+           d.outcome IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete', 'handled') AS bad,
            d.outcome IN ('fine', 'undone') AS fine
     FROM detections d
     WHERE d.similarity IS NOT NULL AND d.detected_at >= @Since AND d.mode IN ('live', 'observe')
     UNION ALL
     SELECT n.sign, 'near', n.similarity,
            EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id AND l.label = 'bad'
-                     AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete')
+                     AND l.undone_at IS NULL AND l.action IN ('ban', 'kick', 'tempban', 'mute', 'tempmute', 'delete', 'handled')
                      AND l.decided_at >= n.detected_at AND l.decided_at < n.detected_at + interval '30 days'),
            EXISTS (SELECT 1 FROM member_labels l WHERE l.group_id = n.group_id AND l.account_id = n.account_id
                      AND (l.action = 'fine' OR l.undone_at IS NOT NULL)
@@ -317,7 +317,7 @@ END
 FROM (SELECT category FROM detections
       WHERE group_id = @GroupId AND account_id = @AccountId AND detected_at > @At - @LooksBack AND detected_at <= @At
       UNION ALL SELECT NULL) d",
-                new { group.GroupId, target.AccountId, At = at, LooksBack = DecisionLooksBack, Warn = label.Action == "warn" },
+                new { group.GroupId, target.AccountId, At = at, LooksBack = DecisionLooksBack, Warn = label.Action is "warn" or "prewarn" },
                 transaction));
 
             var labelId = await connection.ExecuteScalarAsync<long>(new CommandDefinition(@"

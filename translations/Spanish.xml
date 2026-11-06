@@ -1996,7 +1996,7 @@
   </string>
   <string key="hcommandprewarn">
     <value>
-      Da una preadvertencia a un usuario. Las preadvertencias no cuentan por sí solas para el límite de advertencias: la próxima vez que el usuario reciba una advertencia normal, se le suman todas sus preadvertencias.
+      Da una preadvertencia a un usuario. Lo que vale una preadvertencia se elige en /menu, Advertencias: por defecto las preadvertencias no cuentan por sí solas para el límite de advertencias, y la próxima vez que el usuario reciba una advertencia normal, se le suman todas. O cada preadvertencia vale media advertencia, y cada segunda preadvertencia se convierte enseguida en una advertencia.
 
       Ejemplo:
       /{0} respondiendo a un usuario
@@ -2840,7 +2840,7 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
     <value>📣 Avisos</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Avisos&lt;/b&gt;\nLa Detección avisa a los admins de miembros sospechosos: un aviso por miembro al día, que se edita a medida que se ve más, con los botones Banear, Silenciar y Está bien. No se envía nada mientras el grupo solo está observando, y durante un raid los avisos esperan y llegan juntos cuando termina.\n\nSe envían a: {0}\nChat de admins: {1}\nTú: {2}</value>
+    <value>📣 &lt;b&gt;Avisos&lt;/b&gt;\nLa Detección avisa a los admins de miembros sospechosos: un aviso por miembro al día, que se edita a medida que se ve más, con los botones Banear, Silenciar, Advertir, Preadvertir, Falso aviso y Ya lo resolvió el bot. No se envía nada mientras el grupo solo está observando, y durante un raid los avisos esperan y llegan juntos cuando termina.\n\nSe envían a: {0}\nChat de admins: {1}\nTú: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>los admins, por privado</value>
@@ -2909,7 +2909,7 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
     <value>🔇 Silenciar</value>
   </string>
   <string key="reportFine">
-    <value>✅ Está bien</value>
+    <value>❌ Falso aviso</value>
   </string>
   <string key="reportDone">
     <value>Hecho.</value>
@@ -2966,7 +2966,37 @@ Unidos: {0} · silenciados: {1} · baneados: {2}</value>
     <value>🔇 Silenciado por {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Marcado como correcto por {0}. Estas señales no volverán a avisar de él durante 30 días.</value>
+    <value>❌ Marcado como falso aviso por {0}. Estas señales no volverán a avisar de él durante 30 días.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Advertir</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Preadvertir</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Ya lo resolvió el bot</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Advertido/a por {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Preadvertido/a por {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Confirmado por {0}: lo que hizo el bot fue suficiente, sin más medidas.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Dos preadvertencias equivalen a una advertencia.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} ha recibido una segunda preadvertencia: dos preadvertencias equivalen a una advertencia.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Preadvertencias: se convierten en advertencias con la siguiente advertencia</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Preadvertencias: cada una vale media advertencia</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Activada por {0}</value>

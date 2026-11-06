@@ -692,7 +692,7 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("detections_mode_check", "mode IN ('live', 'observe', 'trial')");
 
-                            t.HasCheckConstraint("detections_outcome_check", "outcome IS NULL OR outcome IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine', 'undone')");
+                            t.HasCheckConstraint("detections_outcome_check", "outcome IS NULL OR outcome IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine', 'prewarn', 'handled', 'undone')");
 
                             t.HasCheckConstraint("detections_phase_check", "phase IN ('inline', 'enriched')");
 
@@ -1532,6 +1532,13 @@ namespace Enforcer5.Storage.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("modlist_private_only");
 
+                    b.Property<string>("PrewarnMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("convert")
+                        .HasColumnName("prewarn_mode");
+
                     b.Property<bool>("ReportsEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1608,6 +1615,8 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("group_settings_config_version_check", "config_version > 0");
 
                             t.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
+
+                            t.HasCheckConstraint("group_settings_prewarn_mode_check", "prewarn_mode IN ('convert', 'half')");
 
                             t.HasCheckConstraint("group_settings_version_check", "version > 0");
 
@@ -1850,7 +1859,7 @@ namespace Enforcer5.Storage.Migrations
 
                     b.ToTable("member_labels", null, t =>
                         {
-                            t.HasCheckConstraint("member_labels_action_check", "action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine')");
+                            t.HasCheckConstraint("member_labels_action_check", "action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine', 'prewarn', 'handled')");
 
                             t.HasCheckConstraint("member_labels_category_check", "category IS NULL OR category IN ('abuse', 'group')");
 
@@ -2650,7 +2659,7 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
 
-                            t.HasCheckConstraint("report_copies_decision_check", "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew')");
+                            t.HasCheckConstraint("report_copies_decision_check", "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew', 'warn', 'prewarn', 'handled')");
 
                             t.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
 

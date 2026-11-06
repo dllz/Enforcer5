@@ -141,10 +141,23 @@ namespace Enforcer5.Detection
 
     /// <param name="MaxWarns">Warns that trigger <paramref name="Action"/>; always positive.</param>
     /// <param name="Action">kick or ban.</param>
-    internal sealed record WarnSettings(int MaxWarns, string Action)
+    /// <param name="PrewarnMode">
+    /// What a prewarn is (Daniel, 2026-11-06): <see cref="Convert"/>, prewarns turn into warns at the next warn (as
+    /// before); <see cref="Half"/>, half a warn: every second prewarn is a warn at once, and a warn leaves them alone.
+    /// Missing (a cache entry from before) or unknown is <see cref="Convert"/>.
+    /// </param>
+    internal sealed record WarnSettings(int MaxWarns, string Action, string PrewarnMode = WarnSettings.Convert)
     {
         internal const string Kick = "kick";
         internal const string Ban = "ban";
+        internal const string Convert = "convert";
+        internal const string Half = "half";
+
+        /// <summary>Prewarns are half a warn here.</summary>
+        internal bool PrewarnIsHalf => PrewarnMode == Half;
+
+        /// <summary>A stored value as a mode: <see cref="Half"/> or else <see cref="Convert"/>.</summary>
+        internal static string Mode(string stored) => stored == Half ? Half : Convert;
     }
 
     /// <param name="Enabled">Posts made as a channel are removed.</param>

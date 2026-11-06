@@ -2000,7 +2000,7 @@
     <value>📣 Laporan</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Laporan&lt;/b&gt;\nDeteksi memberi tahu admin tentang anggota yang mencurigakan: satu laporan per anggota per hari, diperbarui jika ada temuan baru, dengan tombol Blokir, Bisukan, dan Aman. Tidak ada yang dikirim selama grup hanya diamati, dan saat raid laporan ditahan lalu dikirim sekaligus setelah raid selesai.\n\nDikirim ke: {0}\nChat admin: {1}\nAnda: {2}</value>
+    <value>📣 &lt;b&gt;Laporan&lt;/b&gt;\nDeteksi memberi tahu admin tentang anggota yang mencurigakan: satu laporan per anggota per hari, diperbarui jika ada temuan baru, dengan tombol Blokir, Bisukan, Peringatkan, Pra-peringatan, Laporan keliru, dan Sudah ditangani bot. Tidak ada yang dikirim selama grup hanya diamati, dan saat raid laporan ditahan lalu dikirim sekaligus setelah raid selesai.\n\nDikirim ke: {0}\nChat admin: {1}\nAnda: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>admin, lewat chat pribadi</value>
@@ -2069,7 +2069,7 @@
     <value>🔇 Bisukan</value>
   </string>
   <string key="reportFine">
-    <value>✅ Aman</value>
+    <value>❌ Laporan keliru</value>
   </string>
   <string key="reportDone">
     <value>Selesai.</value>
@@ -2126,7 +2126,37 @@
     <value>🔇 Dibisukan oleh {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Ditandai aman oleh {0}. Tanda-tanda ini tidak akan melaporkannya lagi selama 30 hari.</value>
+    <value>❌ Ditandai sebagai laporan keliru oleh {0}. Tanda-tanda ini tidak akan melaporkannya lagi selama 30 hari.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Peringatkan</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Pra-peringatan</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Sudah ditangani bot</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Diperingatkan oleh {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Diberi pra-peringatan oleh {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Dikonfirmasi oleh {0}: tindakan bot sudah cukup, tidak ada tindakan lain.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Dua pra-peringatan sama dengan satu peringatan.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} mendapat pra-peringatan kedua: dua pra-peringatan menjadi satu peringatan.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Pra-peringatan: menjadi peringatan saat peringatan berikutnya</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Pra-peringatan: masing-masing setengah peringatan</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Diaktifkan oleh {0}</value>

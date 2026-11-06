@@ -2006,7 +2006,7 @@
   </string>
   <string key="hcommandprewarn">
     <value>
-      Gives a user a pre-warning. Pre-warns do not count towards the warn limit on their own: the next time the user gets a normal warning, all their pre-warns are added to it.
+      Gives a user a pre-warning. What a pre-warn counts as is set in /menu, Warns: by default pre-warns do not count towards the warn limit on their own, and the next time the user gets a normal warning, all their pre-warns are added to it. Or each pre-warn is half a warning, and every second pre-warn becomes a warning at once.
 
       Example:
       /{0} while replying to a user
@@ -2850,7 +2850,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>📣 Reports</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Reports&lt;/b&gt;\nDetection tells admins about suspicious members: one report per member a day, edited as more is seen, with Ban, Mute and Fine buttons. Nothing is sent while the group is only watching, and during a raid the reports wait and come as one when it is over.\n\nSent to: {0}\nAdmin chat: {1}\nYou: {2}</value>
+    <value>📣 &lt;b&gt;Reports&lt;/b&gt;\nDetection tells admins about suspicious members: one report per member a day, edited as more is seen, with Ban, Mute, Warn, Pre-warn, False report and Handled by bot buttons. Nothing is sent while the group is only watching, and during a raid the reports wait and come as one when it is over.\n\nSent to: {0}\nAdmin chat: {1}\nYou: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>admins, in private</value>
@@ -2919,7 +2919,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>🔇 Mute</value>
   </string>
   <string key="reportFine">
-    <value>✅ Fine</value>
+    <value>❌ False report</value>
   </string>
   <string key="reportDone">
     <value>Done.</value>
@@ -2976,7 +2976,37 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>🔇 Muted by {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Marked fine by {0}. These signs will not report them again for 30 days.</value>
+    <value>❌ Marked as a false report by {0}. These signs will not report them again for 30 days.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Warn</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Pre-warn</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Handled by bot</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Warned by {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Pre-warned by {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Confirmed by {0}: what the bot did was enough, no further action.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Two pre-warns make one warning.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} was pre-warned a second time: two pre-warns make one warning.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Pre-warns: become warnings at the next warning</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Pre-warns: half a warning each</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Made live by {0}</value>

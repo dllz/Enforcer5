@@ -23,10 +23,11 @@ namespace Enforcer5.Detection
     /// menu; or to the group's admin chat, or both (<see cref="EngineSettings.ReportTo"/>).</item>
     /// <item>One report per member per <see cref="Window"/>: a sign that comes later edits every copy, at
     /// most once per <see cref="EditAfter"/>.</item>
-    /// <item>Buttons Ban, Mute, Fine and Go to message; only the group's admins can press them, the first
-    /// decision is written on every copy (<c>report_copies</c>) and every copy is edited to say it. Every
-    /// press is a label (<see cref="Decisions"/>, source <c>report</c>). Fine clears the member's score
-    /// and exempts them from the signs they were reported for (<see cref="Fines"/>).</item>
+    /// <item>Buttons Ban, Mute, Warn, Prewarn, False report, Handled by bot and Go to message; only the group's admins
+    /// can press them, the first decision is written on every copy (<c>report_copies</c>) and every copy is edited to
+    /// say it. Every press is a label (<see cref="Decisions"/>, source <c>report</c>). False report (<c>fine</c>) clears
+    /// the member's score and exempts them from the signs they were reported for (<see cref="Fines"/>); Handled by bot
+    /// is a bad label with nothing done: what the bot did was enough.</item>
     /// <item>During a raid (<see cref="Raids.RaidGuard.Quiet"/>) nothing is sent: the members are held and
     /// summed up in one report when it ends.</item>
     /// </list>
@@ -423,7 +424,8 @@ namespace Enforcer5.Detection
         // ------------------------------------------------------------------ decisions
 
         /// <summary>
-        /// A button under a report: <c>dreport:{chat}:{user}:{opened}:{ban|mute|fine|trustbot}</c>. Only the group's
+        /// A button under a report: <c>dreport:{chat}:{user}:{opened}:{ban|mute|warn|prewarn|fine|handled|trustbot}</c>.
+        /// <c>fine</c> is the False report button, <c>handled</c> Handled by bot (Daniel, 2026-11-06). Only the group's
         /// admins get here (the callback is GroupAdminOnly on the chat id).
         /// <para>
         /// <c>trustbot</c>: the inline bot the post went through is trusted in this group (<see cref="BotGuard.TrustAsync"/>,
@@ -490,6 +492,7 @@ namespace Enforcer5.Detection
         private static void Act(long chatId, long userId, long actor, string decision, OpenReport report, XDocument lang)
         {
             const string Reason = "Detection report";
+            var signs = report.Signs.Select(s => s.Sign).ToList();
             switch (decision)
             {
                 case "ban":
@@ -501,8 +504,23 @@ namespace Enforcer5.Detection
                 case "mute":
                     Methods.MuteUser(chatId, userId, lang, reason: Reason, actorId: actor);
                     break;
+                // Warn and Prewarn are said in the group as /warn and /prewarn are (Daniel, 2026-11-06); a warn is
+                // labelled by the warn history, a prewarn here (other prewarns are not decisions).
+                case "warn":
+                    Commands.Warn(userId, chatId, targetnick: Ids.Named(userId, report.Name), actorId: actor, reason: Reason);
+                    break;
+                case "prewarn":
+                    var prewarn = Commands.Warn(userId, chatId, targetnick: Ids.Named(userId, report.Name), preWarn: true,
+                        actorId: actor, reason: Reason);
+                    // Half a warn and it was the second: the two are a warn, labelled as one.
+                    if (prewarn.Succeeded && !prewarn.BecameWarn) Decisions.Prewarned(chatId, userId, actor);
+                    break;
+                // Bad, and what the bot did was enough: nothing changes for the member (Daniel, 2026-11-06).
+                case "handled":
+                    Decisions.Handled(chatId, userId, actor, signs);
+                    break;
+                // False report: what they did is acceptable here.
                 case "fine":
-                    var signs = report.Signs.Select(s => s.Sign).ToList();
                     Decisions.Fine(chatId, userId, actor, signs);
                     Fines.Add(chatId, userId, signs);
                     MemberScores.Forgive(chatId, userId);
@@ -775,7 +793,10 @@ namespace Enforcer5.Detection
             {
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportBan"), $"{data}:ban") { Style = KeyboardButtonStyle.Danger });
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportMute"), $"{data}:mute"));
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportWarn"), $"{data}:warn"));
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportPrewarn"), $"{data}:prewarn"));
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportFine"), $"{data}:fine") { Style = KeyboardButtonStyle.Success });
+                menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "reportHandled"), $"{data}:handled"));
             }
             if (!string.IsNullOrEmpty(link))
                 menu.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "goToMessage")) { Url = link });

@@ -1517,7 +1517,7 @@ Example:
     <value>📣 报告</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;报告&lt;/b&gt;\n检测会把可疑成员告诉管理员：每名成员每天一份报告，发现更多时会更新，并附有封禁、禁言和没问题按钮。群组仅观察期间不会发送任何内容；突袭期间报告会暂缓，结束后合并为一条发送。\n\n发送到：{0}\n管理员群：{1}\n你：{2}</value>
+    <value>📣 &lt;b&gt;报告&lt;/b&gt;\n检测会把可疑成员告诉管理员：每名成员每天一份报告，发现更多时会更新，并附有封禁、禁言、警告、预警告、误报和机器人已处理按钮。群组仅观察期间不会发送任何内容；突袭期间报告会暂缓，结束后合并为一条发送。\n\n发送到：{0}\n管理员群：{1}\n你：{2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>管理员（私聊）</value>
@@ -1586,7 +1586,7 @@ Example:
     <value>🔇 禁言</value>
   </string>
   <string key="reportFine">
-    <value>✅ 没问题</value>
+    <value>❌ 误报</value>
   </string>
   <string key="reportDone">
     <value>完成。</value>
@@ -1643,7 +1643,37 @@ Example:
     <value>🔇 已被 {0} 禁言</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ {0} 已标记为没问题。30 天内这些迹象不会再报告此成员。</value>
+    <value>❌ {0} 已标记为误报。30 天内这些迹象不会再报告此成员。</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ 警告</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ 预警告</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 机器人已处理</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ 已被 {0} 警告</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ 已被 {0} 预警告</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 {0} 已确认：机器人的处理已经足够，无需进一步操作。</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;两次预警告算作一次警告。&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} 收到第二次预警告：两次预警告算作一次警告。</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ 预警告：下次警告时转为警告</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ 预警告：每次算半次警告</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ {0} 已启用</value>

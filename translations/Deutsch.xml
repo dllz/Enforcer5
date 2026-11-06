@@ -1818,7 +1818,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>📣 Meldungen</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Meldungen&lt;/b&gt;\nDie Erkennung informiert Admins über verdächtige Mitglieder: eine Meldung pro Mitglied und Tag, die ergänzt wird, wenn mehr auffällt, mit den Knöpfen Bannen, Stummschalten und In Ordnung. Solange die Gruppe nur beobachtet, wird nichts gesendet, und während eines Raids warten die Meldungen und kommen gesammelt, wenn er vorbei ist.\n\nGeht an: {0}\nAdmin-Chat: {1}\nDu: {2}</value>
+    <value>📣 &lt;b&gt;Meldungen&lt;/b&gt;\nDie Erkennung informiert Admins über verdächtige Mitglieder: eine Meldung pro Mitglied und Tag, die ergänzt wird, wenn mehr auffällt, mit den Knöpfen Bannen, Stummschalten, Verwarnen, Vorwarnen, Fehlmeldung und Vom Bot erledigt. Solange die Gruppe nur beobachtet, wird nichts gesendet, und während eines Raids warten die Meldungen und kommen gesammelt, wenn er vorbei ist.\n\nGeht an: {0}\nAdmin-Chat: {1}\nDu: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>Admins, privat</value>
@@ -1887,7 +1887,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>🔇 Stumm</value>
   </string>
   <string key="reportFine">
-    <value>✅ In Ordnung</value>
+    <value>❌ Fehlmeldung</value>
   </string>
   <string key="reportDone">
     <value>Erledigt.</value>
@@ -1944,7 +1944,37 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
     <value>🔇 Stummgeschaltet von {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Von {0} als in Ordnung markiert. Diese Anzeichen melden das Mitglied 30 Tage lang nicht erneut.</value>
+    <value>❌ Von {0} als Fehlmeldung markiert. Diese Anzeichen melden das Mitglied 30 Tage lang nicht erneut.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Verwarnen</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Vorwarnen</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Vom Bot erledigt</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Verwarnt von {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Vorgewarnt von {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Von {0} bestätigt: Was der Bot getan hat, reicht aus, keine weiteren Schritte.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Zwei Vorwarnungen ergeben eine Verwarnung.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} wurde zum zweiten Mal vorgewarnt: Zwei Vorwarnungen ergeben eine Verwarnung.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Vorwarnungen: werden bei der nächsten Verwarnung zu Verwarnungen</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Vorwarnungen: jede zählt als halbe Verwarnung</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Aktiviert von {0}</value>

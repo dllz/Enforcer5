@@ -215,7 +215,7 @@ namespace Enforcer5.Tests.Detection
             },
             Media = new MediaSettings(new Dictionary<string, bool> { ["image"] = true, ["text"] = false }, "kick", null),
             NameLength = new LengthSettings(true, 30, null, null),
-            Warns = new WarnSettings(3, WarnSettings.Ban),
+            Warns = new WarnSettings(3, WarnSettings.Ban, WarnSettings.Half),
             TempbanMinutes = 90,
             TempmuteMinutes = 15,
             InlineBots = new[] { new InlineBotBlock(InlineBotBlockKind.Username, "gif"), new InlineBotBlock(InlineBotBlockKind.Pattern, "^spam.*bot$") },
@@ -239,6 +239,20 @@ namespace Enforcer5.Tests.Detection
             Assert.IsTrue(back.SameSettingsAs(policy));
             Assert.IsTrue(back.Media.IsBlocked("image"));
             Assert.AreEqual(InlineBotBlockKind.Pattern, back.InlineBots[1].Kind);
+            Assert.IsTrue(back.Warns.PrewarnIsHalf);
+        }
+
+        [TestMethod]
+        public void ACacheEntryFromBeforeThePrewarnMode_ConvertsPrewarns()
+        {
+            var json = DetectionPolicyJson.Serialize(Everything()).Replace(",\"PrewarnMode\":\"half\"", "");
+            Assert.IsFalse(json.Contains("PrewarnMode"), json);
+            var back = DetectionPolicyJson.Deserialize(json);
+            Assert.IsNotNull(back);
+            Assert.AreEqual(WarnSettings.Convert, back.Warns.PrewarnMode);
+            Assert.IsFalse(back.Warns.PrewarnIsHalf);
+            Assert.AreEqual(WarnSettings.Convert, WarnSettings.Mode(null));
+            Assert.AreEqual(WarnSettings.Convert, WarnSettings.Mode("something"));
         }
 
         [TestMethod]

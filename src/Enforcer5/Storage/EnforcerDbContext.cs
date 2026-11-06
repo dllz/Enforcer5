@@ -129,7 +129,7 @@ namespace Enforcer5.Storage
             });
         }
 
-        private const string LabelActions = "'ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine'";
+        private const string LabelActions = "'ban', 'tempban', 'kick', 'mute', 'tempmute', 'warn', 'delete', 'unban', 'unmute', 'unwarn', 'fine', 'prewarn', 'handled'";
 
         private static void ConfigureDetectionLog(ModelBuilder modelBuilder)
         {
@@ -207,7 +207,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("report_copies_filter_check", "(kind = 'trial') = (filter_id IS NOT NULL)");
                     table.HasCheckConstraint("report_copies_adjustment_check", "(kind = 'learn') = (adjustment_id IS NOT NULL)");
                     table.HasCheckConstraint("report_copies_decision_check",
-                        "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew')");
+                        "decision IS NULL OR decision IN ('ban', 'mute', 'fine', 'live', 'extend', 'delete', 'undo', 'keep', 'restore', 'keepnew', 'warn', 'prewarn', 'handled')");
                     table.HasCheckConstraint("report_copies_decided_check", "(decision IS NULL) = (decided_at IS NULL)");
                     table.HasCheckConstraint("report_copies_edition_check", "edition IN ('normal', 'premium')");
                 });
@@ -319,6 +319,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("group_settings_version_check", "version > 0");
                     table.HasCheckConstraint("group_settings_limits_check", "maximum_warnings >= 0 AND tempban_minutes >= 0 AND tempmute_minutes >= 0");
                     table.HasCheckConstraint("group_settings_actions_check", "warning_action IN ('none', 'kick', 'ban', 'mute', 'tempban', 'tempmute')");
+                    table.HasCheckConstraint("group_settings_prewarn_mode_check", "prewarn_mode IN ('convert', 'half')");
                     // The design's welcome_format (text/markdown/html) replaced by the welcome types the bot has
                     // (Daniel, 2026-11-06).
                     table.HasCheckConstraint("group_settings_welcome_type_check", "welcome_type IN ('composed', 'custom', 'media')");
@@ -340,6 +341,7 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.ConfigVersion).HasDefaultValue(1L);
                 entity.HasOne<TelegramChatEntity>().WithMany().HasForeignKey(x => x.LogChatId).OnDelete(DeleteBehavior.SetNull);
                 entity.Property(x => x.WarningAction).IsRequired();
+                entity.Property(x => x.PrewarnMode).IsRequired().HasDefaultValue("convert");
                 entity.Property(x => x.Version).HasDefaultValue(1L).IsConcurrencyToken();
                 entity.Property(x => x.UpdatedAt).HasDefaultValueSql("now()");
                 entity.HasOne<GroupEntity>().WithOne().HasForeignKey<GroupSettingsEntity>(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);

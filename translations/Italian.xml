@@ -1772,7 +1772,7 @@
     <value>📣 Segnalazioni</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Segnalazioni&lt;/b&gt;\nIl Rilevamento avvisa gli admin dei membri sospetti: una segnalazione per membro al giorno, aggiornata man mano che emerge altro, con i pulsanti Banna, Silenzia e Va bene. Non viene inviato nulla finché il gruppo è solo in osservazione, e durante un raid le segnalazioni aspettano e arrivano tutte insieme quando è finito.\n\nInviate a: {0}\nChat admin: {1}\nTu: {2}</value>
+    <value>📣 &lt;b&gt;Segnalazioni&lt;/b&gt;\nIl Rilevamento avvisa gli admin dei membri sospetti: una segnalazione per membro al giorno, aggiornata man mano che emerge altro, con i pulsanti Banna, Silenzia, Warna, Pre-warn, Falsa segnalazione e Gestito dal bot. Non viene inviato nulla finché il gruppo è solo in osservazione, e durante un raid le segnalazioni aspettano e arrivano tutte insieme quando è finito.\n\nInviate a: {0}\nChat admin: {1}\nTu: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>admin, in privato</value>
@@ -1841,7 +1841,7 @@
     <value>🔇 Silenzia</value>
   </string>
   <string key="reportFine">
-    <value>✅ Va bene</value>
+    <value>❌ Falsa segnalazione</value>
   </string>
   <string key="reportDone">
     <value>Fatto.</value>
@@ -1898,7 +1898,37 @@
     <value>🔇 Silenziato da {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Segnato come a posto da {0}. Questi segnali non lo segnaleranno di nuovo per 30 giorni.</value>
+    <value>❌ Segnato come falsa segnalazione da {0}. Questi segnali non lo segnaleranno di nuovo per 30 giorni.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Warna</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Pre-warn</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Gestito dal bot</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Warnato da {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Pre-warn da {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Confermato da {0}: quello che ha fatto il bot è bastato, nessun'altra azione.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Due pre-warn valgono un warn.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} ha ricevuto il secondo pre-warn: due pre-warn valgono un warn.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Pre-warn: diventano warn al prossimo warn</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Pre-warn: ognuno vale mezzo warn</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Attivata da {0}</value>

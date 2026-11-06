@@ -173,6 +173,11 @@ namespace Enforcer5.Actions
         public WarningRef Warning { get; init; }
         /// <summary>A warn that reached the limit: the ban or kick that followed, done or not. Null below the limit.</summary>
         public ActionResult Escalation { get; init; }
+        /// <summary>
+        /// A prewarn where prewarns are half a warn: it was the second, and the two became a warn. Count, Max, Warning and
+        /// Escalation are then the warn's.
+        /// </summary>
+        public bool BecameWarn { get; init; }
 
         internal ActionOutcome Outcome => Nothing ? ActionOutcome.NothingToDo : Enforcement.Outcome switch
         {

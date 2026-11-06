@@ -1788,7 +1788,7 @@
     <value>📣 Raporlar</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Raporlar&lt;/b&gt;\nTespit, şüpheli üyeleri yöneticilere bildirir: üye başına günde bir rapor, daha fazlası görüldükçe düzenlenir, Yasakla, Sustur ve Sorun yok düğmeleriyle. Grup sadece izlemedeyken hiçbir şey gönderilmez; baskın sırasında raporlar bekler ve baskın bitince tek mesajda gelir.\n\nGönderim: {0}\nYönetici sohbeti: {1}\nSiz: {2}</value>
+    <value>📣 &lt;b&gt;Raporlar&lt;/b&gt;\nTespit, şüpheli üyeleri yöneticilere bildirir: üye başına günde bir rapor, daha fazlası görüldükçe düzenlenir, Yasakla, Sustur, Uyar, Ön uyarı, Yanlış rapor ve Bot halletti düğmeleriyle. Grup sadece izlemedeyken hiçbir şey gönderilmez; baskın sırasında raporlar bekler ve baskın bitince tek mesajda gelir.\n\nGönderim: {0}\nYönetici sohbeti: {1}\nSiz: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>yöneticilere, özelden</value>
@@ -1857,7 +1857,7 @@
     <value>🔇 Sustur</value>
   </string>
   <string key="reportFine">
-    <value>✅ Sorun yok</value>
+    <value>❌ Yanlış rapor</value>
   </string>
   <string key="reportDone">
     <value>Yapıldı.</value>
@@ -1914,7 +1914,37 @@
     <value>🔇 {0} tarafından susturuldu</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ {0} tarafından sorunsuz olarak işaretlendi. Bu belirtiler 30 gün boyunca onu tekrar bildirmeyecek.</value>
+    <value>❌ {0} tarafından yanlış rapor olarak işaretlendi. Bu belirtiler 30 gün boyunca onu tekrar bildirmeyecek.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Uyar</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Ön uyarı</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Bot halletti</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ {0} tarafından uyarıldı</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ {0} tarafından ön uyarı verildi</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 {0} tarafından onaylandı: botun yaptığı yeterliydi, başka işlem yok.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;İki ön uyarı bir uyarı eder.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} ikinci ön uyarıyı aldı: iki ön uyarı bir uyarı eder.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Ön uyarılar: bir sonraki uyarıda uyarıya dönüşür</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Ön uyarılar: her biri yarım uyarı</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ {0} tarafından etkinleştirildi</value>

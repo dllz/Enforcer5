@@ -28,9 +28,14 @@ namespace Enforcer5
             editWarn.Buttons.Add(new InlineButton("➖", $"menuDimWarn:{chatId}"));
             editWarn.Buttons.Add(new InlineButton($"📍 {max} 🔨 {action}", $"menuActionWarn:{chatId}"));
             editWarn.Buttons.Add(new InlineButton("➕", $"menuRaiseWarn:{chatId}"));
+            // What a prewarn is here (Daniel, 2026-11-06): turned into a warn at the next warn, or half a warn.
+            var prewarns = new Models.Menu(1);
+            prewarns.Buttons.Add(new InlineButton(
+                Methods.GetLocaleString(lang, warns.PrewarnIsHalf ? "prewarnModeHalf" : "prewarnModeConvert"),
+                $"menuPrewarnMode:{chatId}"));
             var close = new Models.Menu(1);
             close.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"back:{chatId}"));
-            return Key.CreateMarkupFromMenus(editWarn, close);
+            return Key.CreateMarkupFromMenus(editWarn, prewarns, close);
         }
     }
 
@@ -76,6 +81,19 @@ namespace Enforcer5
             var lang = Methods.GetGroupLanguage(chatId).Doc;
             ChangeDetection(call, chatId, lang,
                 p => p with { Warns = p.Warns with { Action = Next(p.Warns.Action, Detection.WarnSettings.Kick, Detection.WarnSettings.Ban) } },
+                Commands.genWarnMenu);
+        }
+
+        [Callback(Trigger = "menuPrewarnMode", GroupAdminOnly = true)]
+        public static void menuPrewarnMode(CallbackQuery call, string[] args)
+        {
+            var chatId = long.Parse(args[1]);
+            var lang = Methods.GetGroupLanguage(chatId).Doc;
+            ChangeDetection(call, chatId, lang,
+                p => p with { Warns = p.Warns with
+                {
+                    PrewarnMode = p.Warns.PrewarnIsHalf ? Detection.WarnSettings.Convert : Detection.WarnSettings.Half
+                } },
                 Commands.genWarnMenu);
         }
     }

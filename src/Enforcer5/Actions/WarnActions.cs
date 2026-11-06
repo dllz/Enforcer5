@@ -49,18 +49,30 @@ namespace Enforcer5.Actions
         private static ActionResult Prewarn(ActionRequest request)
         {
             if (Unwarnable(request)) return Refused(request);
-            var added = WarnHistory.Apply(WarnHistory.Op(request.ChatId, request.TargetId, WarnKind.Prewarn, WarnOperation.Add, 1,
+            var (chatId, userId) = (request.ChatId, request.TargetId);
+            var added = WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Prewarn, WarnOperation.Add, 1,
                 request.ActorId, request.Reason));
-            return Done(request) with { Count = added.After, Warning = Ref(added) };
+            var result = Done(request) with { Count = added.After, Warning = Ref(added) };
+            // Half a warn (Daniel, 2026-11-06): the second prewarn makes the two a warn at once, which may reach the limit.
+            if (!Methods.PrewarnIsHalf(chatId) || added.After < 2) return result;
+            WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Prewarn, WarnOperation.Remove, 2,
+                request.ActorId, "Two pre-warns make a warning"));
+            return AddWarn(request, convertPrewarns: false) with { BecameWarn = true };
         }
 
         private static ActionResult Warn(ActionRequest request)
         {
             if (Unwarnable(request)) return Refused(request);
-            var (chatId, userId) = (request.ChatId, request.TargetId);
+            // Where prewarns are half a warn they stay what they are; otherwise they turn into warns at the next warn.
+            return AddWarn(request, convertPrewarns: !Methods.PrewarnIsHalf(request.ChatId));
+        }
 
-            // Prewarns turn into warns at the next warn.
-            var converted = Repositories.Warns.GetCountAsync(chatId, WarnKind.Prewarn, userId).GetAwaiter().GetResult();
+        private static ActionResult AddWarn(ActionRequest request, bool convertPrewarns)
+        {
+            var (chatId, userId) = (request.ChatId, request.TargetId);
+            var converted = convertPrewarns
+                ? Repositories.Warns.GetCountAsync(chatId, WarnKind.Prewarn, userId).GetAwaiter().GetResult()
+                : 0;
             if (converted > 0)
                 WarnHistory.Apply(WarnHistory.Op(chatId, userId, WarnKind.Prewarn, WarnOperation.Remove, converted,
                     request.ActorId, "Converted into warns"));

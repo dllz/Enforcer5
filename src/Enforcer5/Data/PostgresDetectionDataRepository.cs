@@ -181,7 +181,7 @@ DO UPDATE SET last_seen_at = GREATEST(p.last_seen_at, excluded.last_seen_at)",
         {
             await using var connection = await Database.OpenConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
-            // Bad: removed or muted for something other than a group's own rules (a game's rules say nothing about a
+            // Bad: removed or muted (or the bot's own action confirmed from a report, handled) for something other than a group's own rules (a game's rules say nothing about a
             // channel), from the day before they pointed at it on, or globally banned. Fine: an admin found them fine, or
             // took an action back, or they became established (an implicit label).
             await connection.ExecuteAsync(new CommandDefinition(@"
@@ -189,7 +189,7 @@ CREATE TEMP TABLE judged ON COMMIT DROP AS
 SELECT p.kind, p.value, p.group_id, p.account_id, p.last_seen_at,
     (EXISTS (SELECT 1 FROM member_labels l
              WHERE l.group_id = p.group_id AND l.account_id = p.account_id AND l.label = 'bad' AND l.undone_at IS NULL
-               AND l.action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute') AND l.category IS DISTINCT FROM 'group'
+               AND l.action IN ('ban', 'tempban', 'kick', 'mute', 'tempmute', 'handled') AND l.category IS DISTINCT FROM 'group'
                AND l.decided_at >= p.first_seen_at - interval '1 day')
      OR EXISTS (SELECT 1 FROM global_sanctions s WHERE s.account_id = p.account_id AND s.status = 'active')) AS bad,
     EXISTS (SELECT 1 FROM member_labels l

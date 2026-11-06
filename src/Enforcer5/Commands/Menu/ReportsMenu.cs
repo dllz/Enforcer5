@@ -220,7 +220,7 @@ namespace Enforcer5
             ShowReportsMenu(call, chatId, lang);
         }
 
-        /// <summary>Ban, Mute, Fine, Trust @bot, Show deleted post or Show messages under a Detection report: dreport:{chat}:{user}:{opened}:{decision|trustbot|show|texts}.</summary>
+        /// <summary>Ban, Mute, Warn, Prewarn, False report (fine), Handled by bot, Trust @bot, Show deleted post or Show messages under a Detection report: dreport:{chat}:{user}:{opened}:{decision|trustbot|show|texts}.</summary>
         [Callback(Trigger = DetectionReports.Trigger, GroupAdminOnly = true)]
         public static void DetectionReportButton(CallbackQuery call, string[] args)
         {
@@ -229,7 +229,7 @@ namespace Enforcer5
                 DetectionReports.ShowAsync(call, long.Parse(args[1]), userId, opened).GetAwaiter().GetResult();
             else if (args[4] == "texts")
                 DetectionReports.ShowMessagesAsync(call, long.Parse(args[1]), userId, opened).GetAwaiter().GetResult();
-            else if (args[4] is "ban" or "mute" or "fine" or "trustbot")
+            else if (args[4] is "ban" or "mute" or "warn" or "prewarn" or "fine" or "handled" or "trustbot")
                 DetectionReports.PressAsync(call, long.Parse(args[1]), userId, opened, args[4]).GetAwaiter().GetResult();
         }
 

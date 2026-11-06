@@ -75,8 +75,8 @@ namespace Enforcer5.Data
                 groupId = (await PrincipalResolver.EnsureGroupAsync(connection, transaction, chatId, chatType: "unknown")).GroupId;
             }
             var version = await connection.QuerySingleOrDefaultAsync<long?>(new CommandDefinition(@"
-INSERT INTO group_settings (group_id, maximum_warnings, warning_action, tempban_minutes, tempmute_minutes, version, updated_at)
-VALUES (@GroupId, @MaximumWarnings, @WarningAction, @TempbanMinutes, @TempmuteMinutes, 1, now())
+INSERT INTO group_settings (group_id, maximum_warnings, warning_action, prewarn_mode, tempban_minutes, tempmute_minutes, version, updated_at)
+VALUES (@GroupId, @MaximumWarnings, @WarningAction, @PrewarnMode, @TempbanMinutes, @TempmuteMinutes, 1, now())
 ON CONFLICT (group_id) DO NOTHING
 RETURNING version", GroupSettingsParameters(groupId.Value, policy), transaction));
             if (version == null)
@@ -103,7 +103,7 @@ RETURNING version", GroupSettingsParameters(groupId.Value, policy), transaction)
             var parameters = GroupSettingsParameters(groupId.Value, policy);
             parameters.Add("Expected", expectedVersion);
             var version = await connection.QuerySingleOrDefaultAsync<long?>(new CommandDefinition(@"
-UPDATE group_settings SET maximum_warnings = @MaximumWarnings, warning_action = @WarningAction,
+UPDATE group_settings SET maximum_warnings = @MaximumWarnings, warning_action = @WarningAction, prewarn_mode = @PrewarnMode,
     tempban_minutes = @TempbanMinutes, tempmute_minutes = @TempmuteMinutes,
     version = version + 1, updated_at = now()
 WHERE group_id = @GroupId AND version = @Expected
@@ -122,6 +122,7 @@ RETURNING version", parameters, transaction));
             parameters.Add("GroupId", groupId);
             parameters.Add("MaximumWarnings", (short)Math.Clamp(policy.Warns.MaxWarns, 1, short.MaxValue));
             parameters.Add("WarningAction", policy.Warns.Action == WarnSettings.Ban ? WarnSettings.Ban : WarnSettings.Kick);
+            parameters.Add("PrewarnMode", WarnSettings.Mode(policy.Warns.PrewarnMode));
             parameters.Add("TempbanMinutes", Math.Max(1, policy.TempbanMinutes));
             parameters.Add("TempmuteMinutes", Math.Max(1, policy.TempmuteMinutes));
             return parameters;
@@ -288,7 +289,7 @@ ON CONFLICT (group_id, target, kind, pattern) WHERE pattern IS NOT NULL DO NOTHI
         {
             var group = await connection.QuerySingleOrDefaultAsync<GroupRow>(new CommandDefinition(@"
 SELECT gs.group_id AS GroupId, gs.version AS Version, gs.maximum_warnings AS MaximumWarnings,
-       gs.warning_action AS WarningAction, gs.tempban_minutes AS TempbanMinutes, gs.tempmute_minutes AS TempmuteMinutes
+       gs.warning_action AS WarningAction, gs.prewarn_mode AS PrewarnMode, gs.tempban_minutes AS TempbanMinutes, gs.tempmute_minutes AS TempmuteMinutes
 FROM group_settings gs
 JOIN groups g ON g.group_id = gs.group_id
 JOIN telegram_chats c ON c.chat_id = g.chat_id
@@ -342,7 +343,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                 TextLength: Length("text", empty.TextLength),
                 NameLength: Length("name", empty.NameLength),
                 Warns: new WarnSettings(group.MaximumWarnings,
-                    group.WarningAction == WarnSettings.Ban ? WarnSettings.Ban : WarnSettings.Kick),
+                    group.WarningAction == WarnSettings.Ban ? WarnSettings.Ban : WarnSettings.Kick,
+                    WarnSettings.Mode(group.PrewarnMode)),
                 TempbanMinutes: group.TempbanMinutes,
                 TempmuteMinutes: group.TempmuteMinutes,
                 InlineBots: filters.Where(f => f.Target == "inline_bot" && f.Enabled && f.Pattern != null && f.Mode == FilterRule.Live)
@@ -408,6 +410,7 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
             public long Version { get; set; }
             public short MaximumWarnings { get; set; }
             public string WarningAction { get; set; }
+            public string PrewarnMode { get; set; }
             public int TempbanMinutes { get; set; }
             public int TempmuteMinutes { get; set; }
         }

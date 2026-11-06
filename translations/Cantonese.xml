@@ -1387,7 +1387,7 @@ UPDATE LOG
     <value>📣 報告</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;報告&lt;/b&gt;\n偵測會通知管理員有可疑嘅成員：每個成員每日一份報告，見到更多就會更新，附有封鎖、禁言同冇問題三個掣。群組仲係只係觀察緊嘅時候唔會發任何嘢；突襲期間啲報告會等住，完咗之後合埋一份發出。\n\n發送到：{0}\n管理員群組：{1}\n你：{2}</value>
+    <value>📣 &lt;b&gt;報告&lt;/b&gt;\n偵測會通知管理員有可疑嘅成員：每個成員每日一份報告，見到更多就會更新，附有封鎖、禁言、警告、預警、誤報同 Bot 已處理六個掣。群組仲係只係觀察緊嘅時候唔會發任何嘢；突襲期間啲報告會等住，完咗之後合埋一份發出。\n\n發送到：{0}\n管理員群組：{1}\n你：{2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>管理員（私訊）</value>
@@ -1456,7 +1456,7 @@ UPDATE LOG
     <value>🔇 禁言</value>
   </string>
   <string key="reportFine">
-    <value>✅ 冇問題</value>
+    <value>❌ 誤報</value>
   </string>
   <string key="reportDone">
     <value>搞掂。</value>
@@ -1513,7 +1513,37 @@ UPDATE LOG
     <value>🔇 已被 {0} 禁言</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ {0} 標記咗冇問題。30 日內呢啲跡象唔會再報告佢。</value>
+    <value>❌ {0} 標記咗係誤報。30 日內呢啲跡象唔會再報告佢。</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ 警告</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ 預警</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 Bot 已處理</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ 已被 {0} 警告</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ 已被 {0} 預警</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 {0} 確認咗：Bot 做咗嘅已經夠，唔使再做其他嘢。</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;兩次預警等於一次警告。&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>【{0}】收到第二次預警︰兩次預警變成一次警告。</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ 預警︰下次警告時變成警告</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ 預警︰每次算半次警告</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ {0} 已啟用</value>

@@ -406,7 +406,7 @@ namespace Enforcer5.Tests.Harness
             Assert.IsFalse(BotGuard.IsTrustedEverywhere(MusicBot.Id), "one tap on a report never trusts a bot in every group");
             var edit = chat.Telegram.Accepted.Last(c => c.Method == "editMessageText" && c.ChatId == admin.Id);
             StringAssert.Contains(edit.Text, "which this group trusts now");
-            StringAssert.Contains(edit.Text, "Marked fine by");
+            StringAssert.Contains(edit.Text, "Marked as a false report by");
             var buttons = ((Telegram.Bot.Requests.EditMessageTextRequest)edit.Request).ReplyMarkup?.InlineKeyboard.SelectMany(r => r).ToArray()
                           ?? Array.Empty<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>();
             Assert.IsFalse(buttons.Any(b => b.CallbackData?.EndsWith(":trustbot") == true), "nothing left to trust");

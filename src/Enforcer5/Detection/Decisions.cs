@@ -49,6 +49,21 @@ namespace Enforcer5.Detection
             Record(chatId, userId, "fine", "fine", actorId, string.Join(",", signs ?? System.Array.Empty<string>()), false, null);
 
         /// <summary>
+        /// An admin confirmed a report but took no action of their own: what the bot already did (deleting the post,
+        /// its own mute) was enough (Handled by bot on a report; Daniel, 2026-11-06). A bad label like any sanction,
+        /// with <paramref name="signs"/> as its reason; it changes nothing for the member.
+        /// </summary>
+        internal static void Handled(long chatId, long userId, long actorId, System.Collections.Generic.IEnumerable<string> signs) =>
+            Record(chatId, userId, "bad", "handled", actorId, string.Join(",", signs ?? System.Array.Empty<string>()), false, null);
+
+        /// <summary>
+        /// A prewarn from a report: a bad label (Daniel, 2026-11-06). Other prewarns (/prewarn) are not decisions
+        /// Detection learns from, as before (<see cref="WarnHistory.Label"/>).
+        /// </summary>
+        internal static void Prewarned(long chatId, long userId, long actorId) =>
+            Record(chatId, userId, "bad", "prewarn", actorId, null, false, null);
+
+        /// <summary>
         /// The buttons whose decisions are labelled with their own source: Detection reports, and the raid
         /// alert's and the link report's buttons. Every other button is <c>button</c>.
         /// </summary>
@@ -84,8 +99,8 @@ namespace Enforcer5.Detection
                 var labelEvent = new LabelEvent(chatId, userId, label, action, source, actorId,
                     about?.MessageId ?? aboutId, fingerprint?.ContentType, fingerprint?.TextHash, fingerprint?.MediaUniqueId,
                     // Only the bot's own reasons, which are fixed words (Flood, Media, ...), and the signs a
-                    // Fine was about; an admin's reason may be anything.
-                    source == "auto" || action == "fine" ? HistoryWriter.Trim(reason) : null,
+                    // Fine or Handled was about; an admin's reason may be anything.
+                    source == "auto" || action is "fine" or "handled" ? HistoryWriter.Trim(reason) : null,
                     key, BanHistory.Edition, new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero))
                 {
                     // Read, never kept: only whether it names spam, ads, scams and the like.

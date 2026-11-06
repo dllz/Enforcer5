@@ -82,7 +82,7 @@ namespace Enforcer5.Tests.Detection
         public void EveryAction_AndEveryDecision_HasItsString()
         {
             var keys = DetectionPolicy.Actions.Select(a => $"filterAction_{a}")
-                .Concat(new[] { "ban", "mute", "fine", "trial_live", "trial_extend", "trial_delete" }.Select(d => $"reportDecided_{d}"))
+                .Concat(new[] { "ban", "mute", "warn", "prewarn", "fine", "handled", "trial_live", "trial_extend", "trial_delete" }.Select(d => $"reportDecided_{d}"))
                 .Concat(EngineSettings.ReportChoices.Select(c => $"reportsTo_{c}"));
             var missing = keys.Where(k => !Has(k)).ToList();
             Assert.AreEqual(0, missing.Count, string.Join(", ", missing));

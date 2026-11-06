@@ -1784,7 +1784,7 @@
     <value>📣 Alertas</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;Alertas&lt;/b&gt;\nA Detecção avisa os admins sobre membros suspeitos: um alerta por membro por dia, editado conforme aparece mais, com os botões Banir, Silenciar e Tudo bem. Nada é enviado enquanto o grupo está só observando, e durante um raid os alertas esperam e chegam juntos quando ele termina.\n\nEnviados para: {0}\nChat dos admins: {1}\nVocê: {2}</value>
+    <value>📣 &lt;b&gt;Alertas&lt;/b&gt;\nA Detecção avisa os admins sobre membros suspeitos: um alerta por membro por dia, editado conforme aparece mais, com os botões Banir, Silenciar, Advertir, Pré-advertir, Alerta falso e O bot já resolveu. Nada é enviado enquanto o grupo está só observando, e durante um raid os alertas esperam e chegam juntos quando ele termina.\n\nEnviados para: {0}\nChat dos admins: {1}\nVocê: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>admins, no privado</value>
@@ -1853,7 +1853,7 @@
     <value>🔇 Silenciar</value>
   </string>
   <string key="reportFine">
-    <value>✅ Tudo bem</value>
+    <value>❌ Alerta falso</value>
   </string>
   <string key="reportDone">
     <value>Feito.</value>
@@ -1910,7 +1910,37 @@
     <value>🔇 Silenciado por {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ Marcado como ok por {0}. Estes sinais não vão gerar alerta sobre ele de novo por 30 dias.</value>
+    <value>❌ Marcado como alerta falso por {0}. Estes sinais não vão gerar alerta sobre ele de novo por 30 dias.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ Advertir</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ Pré-advertir</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 O bot já resolveu</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ Advertido por {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ Pré-advertido por {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 Confirmado por {0}: o que o bot fez foi suficiente, nenhuma outra ação.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;Duas pré-advertências valem uma advertência.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} recebeu a segunda pré-advertência: duas pré-advertências valem uma advertência.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ Pré-advertências: viram advertências na próxima advertência</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ Pré-advertências: cada uma vale meia advertência</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ Ativada por {0}</value>

@@ -207,7 +207,7 @@ extend / delete" with its hits and how many of those members were later banned.
 - The log channel gets a one-line entry for every action taken.
 - **One report per member per 24h**; every copy is edited as signs add up (debounced 30s);
   copy ids kept as `FlagCommands` does for `@admin`.
-- Buttons: **Ban, Mute, Fine, Go to message** (AI signs also **Correct / Wrong**, section 10).
+- Buttons: **Ban, Mute, Warn, Prewarn, False report, Handled by bot, Go to message** (AI signs also **Correct / Wrong**, section 10). False report is the old Fine (label `fine`). Warn and Prewarn post in the group as the commands do; a prewarn from a report is a bad label (`prewarn`), other prewarns are not. Handled by bot is a bad label (`handled`) with nothing done: the bot's own action was enough (Daniel, 2026-11-06).
   Callback data carries the source group; only its admins (`AdminDirectory`) can press. The
   first decision updates every copy. Every press is a label.
 - Fine clears the member's score and exempts them from the same signs for 30 days.

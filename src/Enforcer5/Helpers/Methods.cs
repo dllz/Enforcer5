@@ -1266,6 +1266,9 @@ namespace Enforcer5.Helpers
         /// <summary>What reaching the group's maximum of warns does: "kick" or "ban".</summary>
         internal static string WarnAction(long chatId) => Detection.DetectionSettings.For(chatId).Warns.Action;
 
+        /// <summary>Prewarns are half a warn in this group (two make a warn) rather than turning into warns at the next warn.</summary>
+        internal static bool PrewarnIsHalf(long chatId) => Detection.DetectionSettings.For(chatId).Warns.PrewarnIsHalf;
+
         public static int GetGroupTempbanTime(long chatId) => Detection.DetectionSettings.For(chatId).TempbanMinutes;
 
         /// <summary>Capped when stored: past Telegram's limit the mute would silently become permanent.</summary>

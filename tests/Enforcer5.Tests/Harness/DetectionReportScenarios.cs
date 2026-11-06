@@ -14,7 +14,7 @@ namespace Enforcer5.Tests.Harness
 {
     /// <summary>
     /// Detection step 7: reports to the admins (in private, in a linked admin chat, or both), one per
-    /// member a day and edited as signs add up, their buttons (Ban, Mute, Fine) and the labels they write,
+    /// member a day and edited as signs add up, their buttons (Ban, Mute, Warn, Prewarn, False report, Handled by bot) and the labels they write,
     /// reports held during a raid, a restart in between, and the notice when a filter rule's trial ends.
     /// Needs the test database.
     /// </summary>
@@ -110,7 +110,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             Assert.IsFalse(report.Text.Contains("hello"), "never the message's text");
             var buttons = Buttons(report);
             var data = buttons.Where(b => b.CallbackData != null).Select(b => b.CallbackData.Split(':')).ToArray();
-            CollectionAssert.AreEqual(new[] { "ban", "mute", "fine", "texts" }, data.Select(d => d[4]).ToArray());
+            CollectionAssert.AreEqual(new[] { "ban", "mute", "warn", "prewarn", "fine", "handled", "texts" }, data.Select(d => d[4]).ToArray());
             Assert.IsTrue(data.All(d => d[0] == DetectionReports.Trigger && d[1] == chat.ChatId.ToString() && d[2] == member.Id.ToString()));
             Assert.AreEqual(KeyboardButtonStyle.Danger, buttons[0].Style);
             Assert.AreEqual(Methods.GetChatMessageLink(chat.ChatId, message.MessageId.ToString()), buttons.Single(b => b.Url != null).Url);
@@ -226,7 +226,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
         }
 
         [TestMethod]
-        public async Task Fine_ClearsTheScore_AndTheSameSignsLeaveThemAlone_AlsoAfterARestart()
+        public async Task FalseReport_ClearsTheScore_AndTheSameSignsLeaveThemAlone_AlsoAfterARestart()
         {
             await using var chat = await HarnessChat.StartAsync();
             await GoLive(chat);
@@ -245,7 +245,7 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             StringAssert.Contains(fine.Reason, Reported.Name);
             StringAssert.Contains(fine.Reason, Scored.Name);
             Assert.AreEqual(0, MemberScores.Of(chat.ChatId, member.Id));
-            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "Marked fine by");
+            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "Marked as a false report by");
 
             await chat.CrashAndRestartAsync();
             await chat.AdvanceAsync(TimeSpan.FromDays(2));
@@ -255,6 +255,108 @@ WHERE a.telegram_user_id = @UserId ORDER BY l.label_id", new { UserId = userId }
             await chat.SettleAsync();
             Assert.AreEqual(1, MemberScores.Of(chat.ChatId, member.Id), "the score starts after the Fine");
             Assert.AreEqual(2, ReportsTo(chat, admin.Id).Length, "a new sign is a new report");
+            AssertNoErrors(chat);
+        }
+
+        private static async Task<(HarnessUser Admin, HarnessUser Member, Message Report)> Reported_(HarnessChat chat)
+        {
+            await GoLive(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var message = await chat.SendAsync(member, "hello");
+            await Hit(chat, member, message, Scored);
+            await Hit(chat, member, message, Reported);
+            return (admin, member, ReportsTo(chat, admin.Id).Single());
+        }
+
+        private static Task Press(HarnessChat chat, HarnessUser admin, Message report, string decision) =>
+            chat.PressDataAsync(admin, report, Buttons(report).Single(b => b.CallbackData?.EndsWith($":{decision}") == true).CallbackData);
+
+        [TestMethod]
+        public async Task Warn_FromAReport_WarnsInTheGroup_AndLabelsIt()
+        {
+            // Daniel, 2026-11-06: a report's decisions include a warn, said in the group as /warn is.
+            await using var chat = await HarnessChat.StartAsync();
+            var (admin, member, report) = await Reported_(chat);
+
+            await Press(chat, admin, report, "warn");
+            await chat.SettleAsync();
+
+            Assert.AreEqual(1, chat.WarnCount(member));
+            StringAssert.Contains(chat.Replies.Last(), "has been warned");
+            StringAssert.Contains(chat.Replies.Last(), member.Id.ToString());
+            var label = (await Labels(chat, member.Id)).Single();
+            Assert.AreEqual(("bad", "warn", "report", (long?)admin.Id), (label.Label, label.Action, label.Source, label.DecidedBy));
+            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "Warned by");
+            Assert.IsTrue((await Copies(chat)).All(c => c.Decision == "warn"));
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task Prewarn_FromAReport_PostsInTheGroup_AndIsABadLabel()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var (admin, member, report) = await Reported_(chat);
+
+            await Press(chat, admin, report, "prewarn");
+            await chat.SettleAsync();
+
+            Assert.AreEqual((1L, 0L), (chat.WarnCount(member, Enforcer5.Models.WarnKind.Prewarn), chat.WarnCount(member)));
+            StringAssert.Contains(chat.Replies.Last(), "has been pre-warned");
+            var label = (await Labels(chat, member.Id)).Single();
+            Assert.AreEqual(("bad", "prewarn", "report", (long?)admin.Id), (label.Label, label.Action, label.Source, label.DecidedBy));
+            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "Pre-warned by");
+            Assert.IsTrue((await Copies(chat)).All(c => c.Decision == "prewarn"));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task Prewarn_FromAReport_WhereItIsTheSecondHalf_IsAWarn_LabelledOnce()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            await chat.ChangeSettingsAsync(p => p with { Warns = p.Warns with { PrewarnMode = WarnSettings.Half } });
+            var (admin, member, report) = await Reported_(chat);
+            await chat.SendAsync(admin, $"/prewarn {member.Id}");
+
+            await Press(chat, admin, report, "prewarn");
+            await chat.SettleAsync();
+
+            Assert.AreEqual((0L, 1L), (chat.WarnCount(member, Enforcer5.Models.WarnKind.Prewarn), chat.WarnCount(member)));
+            StringAssert.Contains(chat.Replies.Last(), "two pre-warns make one warning");
+            StringAssert.Contains(chat.Replies.Last(), "has been warned");
+            var label = (await Labels(chat, member.Id)).Single();
+            Assert.AreEqual(("bad", "warn", "report"), (label.Label, label.Action, label.Source));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task HandledByBot_IsABadLabel_AndChangesNothingForTheMember()
+        {
+            // Daniel, 2026-11-06: bad, but what the bot did was enough.
+            await using var chat = await HarnessChat.StartAsync();
+            var (admin, member, report) = await Reported_(chat);
+            var score = MemberScores.Of(chat.ChatId, member.Id);
+            var sent = chat.Replies.Count;
+
+            await Press(chat, admin, report, "handled");
+            await chat.SettleAsync();
+
+            var label = (await Labels(chat, member.Id)).Single();
+            Assert.AreEqual(("bad", "handled", "report", (long?)admin.Id), (label.Label, label.Action, label.Source, label.DecidedBy));
+            StringAssert.Contains(label.Reason, Reported.Name);
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual((0L, 0L), (chat.WarnCount(member), chat.WarnCount(member, Enforcer5.Models.WarnKind.Prewarn)));
+            Assert.AreEqual(score, MemberScores.Of(chat.ChatId, member.Id), "not forgiven");
+            Assert.AreEqual(sent, chat.Replies.Count, "nothing said in the group");
+            StringAssert.Contains(Edits(chat, admin.Id).Last().Text, "what the bot did was enough");
+            Assert.IsTrue((await Copies(chat)).All(c => c.Decision == "handled"));
+
+            // Not exempt, unlike a false report: the same sign the next day is a new report.
+            await chat.AdvanceAsync(TimeSpan.FromDays(2));
+            var again = await chat.SendAsync(member, "again");
+            await Hit(chat, member, again, Reported);
+            Assert.AreEqual(2, ReportsTo(chat, admin.Id).Length);
             AssertNoErrors(chat);
         }
 

@@ -1765,7 +1765,7 @@ exaple: /{0}
     <value>📣 گزارش‌ها</value>
   </string>
   <string key="reportsMenu">
-    <value>📣 &lt;b&gt;گزارش‌ها&lt;/b&gt;\nتشخیص درباره اعضای مشکوک به مدیران خبر می‌دهد: برای هر عضو روزی یک گزارش، که با دیدن موارد بیشتر ویرایش می‌شود، با دکمه‌های مسدود، بی‌صدا و مشکلی نیست. تا وقتی گروه فقط در حال مشاهده است چیزی فرستاده نمی‌شود، و هنگام حمله گزارش‌ها صبر می‌کنند و پس از پایان آن یکجا می‌آیند.\n\nارسال به: {0}\nگروه مدیران: {1}\nشما: {2}</value>
+    <value>📣 &lt;b&gt;گزارش‌ها&lt;/b&gt;\nتشخیص درباره اعضای مشکوک به مدیران خبر می‌دهد: برای هر عضو روزی یک گزارش، که با دیدن موارد بیشتر ویرایش می‌شود، با دکمه‌های مسدود، بی‌صدا، هشدار، پیش‌هشدار، گزارش نادرست و ربات رسیدگی کرد. تا وقتی گروه فقط در حال مشاهده است چیزی فرستاده نمی‌شود، و هنگام حمله گزارش‌ها صبر می‌کنند و پس از پایان آن یکجا می‌آیند.\n\nارسال به: {0}\nگروه مدیران: {1}\nشما: {2}</value>
   </string>
   <string key="reportsTo_admins">
     <value>مدیران، در پیوی</value>
@@ -1834,7 +1834,7 @@ exaple: /{0}
     <value>🔇 بی‌صدا</value>
   </string>
   <string key="reportFine">
-    <value>✅ مشکلی نیست</value>
+    <value>❌ گزارش نادرست</value>
   </string>
   <string key="reportDone">
     <value>انجام شد.</value>
@@ -1891,7 +1891,37 @@ exaple: /{0}
     <value>🔇 بی‌صدا شد توسط {0}</value>
   </string>
   <string key="reportDecided_fine">
-    <value>✅ {0} آن را بی‌مشکل علامت زد. این نشانه‌ها تا ۳۰ روز دوباره او را گزارش نمی‌کنند.</value>
+    <value>❌ {0} آن را گزارش نادرست علامت زد. این نشانه‌ها تا ۳۰ روز دوباره او را گزارش نمی‌کنند.</value>
+  </string>
+  <string key="reportWarn">
+    <value>⚠️ هشدار</value>
+  </string>
+  <string key="reportPrewarn">
+    <value>☝️ پیش‌هشدار</value>
+  </string>
+  <string key="reportHandled">
+    <value>🤖 ربات رسیدگی کرد</value>
+  </string>
+  <string key="reportDecided_warn">
+    <value>⚠️ هشدار داده شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_prewarn">
+    <value>☝️ پیش‌هشدار داده شد توسط {0}</value>
+  </string>
+  <string key="reportDecided_handled">
+    <value>🤖 {0} تأیید کرد: کاری که ربات کرد کافی بود، اقدام دیگری لازم نیست.</value>
+  </string>
+  <string key="prewarnHalfNote">
+    <value>&lt;i&gt;دو پیش‌هشدار برابر یک هشدار است.&lt;/i&gt;</value>
+  </string>
+  <string key="prewarnsMadeWarn">
+    <value>{0} دومین پیش‌هشدار را گرفت: دو پیش‌هشدار برابر یک هشدار است.</value>
+  </string>
+  <string key="prewarnModeConvert">
+    <value>☝️ پیش‌هشدارها: با هشدار بعدی به هشدار تبدیل می‌شوند</value>
+  </string>
+  <string key="prewarnModeHalf">
+    <value>☝️ پیش‌هشدارها: هر کدام نصف یک هشدار</value>
   </string>
   <string key="reportDecided_trial_live">
     <value>✅ فعال شد توسط {0}</value>

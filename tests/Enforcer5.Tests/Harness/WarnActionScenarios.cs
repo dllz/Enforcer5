@@ -78,6 +78,88 @@ namespace Enforcer5.Tests.Harness
             AssertNoErrors(chat);
         }
 
+        private static Task HalfPrewarns(HarnessChat chat) =>
+            chat.ChangeSettingsAsync(p => p with { Warns = p.Warns with { PrewarnMode = Enforcer5.Detection.WarnSettings.Half } });
+
+        [TestMethod]
+        public async Task WherePrewarnsAreHalfAWarn_TheSecondMakesAWarn_AndAWarnLeavesThemAlone()
+        {
+            // Daniel, 2026-11-06: a group chooses whether prewarns turn into warns at the next warn or are half a warn.
+            await using var chat = await HarnessChat.StartAsync();
+            WarnSettings(chat, 5, "ban");
+            await HalfPrewarns(chat);
+            using var seam = new Recorder();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var post = await chat.SendAsync(member, "rude");
+
+            await chat.SendAsync(admin, "/prewarn", replyTo: post);
+            Assert.AreEqual((0L, 1L), (Count(chat, "warns", member), Count(chat, "prewarns", member)));
+            StringAssert.Contains(chat.Replies.Last(), "Two pre-warns make one warning");
+
+            await chat.SendAsync(admin, "/prewarn", replyTo: post);
+            Assert.AreEqual((1L, 0L), (Count(chat, "warns", member), Count(chat, "prewarns", member)));
+            StringAssert.Contains(chat.Replies.Last(), "two pre-warns make one warning");
+            StringAssert.Contains(chat.Replies.Last(), "1</b>");
+            Assert.IsTrue(seam.Results.Last(r => r.Applied.Kind == ActionKind.Prewarn).BecameWarn);
+
+            await chat.SendAsync(admin, "/prewarn", replyTo: post);
+            await chat.SendAsync(admin, "/warn", replyTo: post);
+            Assert.AreEqual((2L, 1L), (Count(chat, "warns", member), Count(chat, "prewarns", member)), "the half stays a half");
+            Assert.AreEqual(0, seam.Results.Last(r => r.Applied.Kind == ActionKind.Warn).Converted);
+            CollectionAssert.AreEqual(new[]
+            {
+                "prewarning add 1", "prewarning add 1", "prewarning remove 2", "standard add 1", "prewarning add 1", "standard add 1"
+            }, await WarnOps(chat));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task WherePrewarnsAreHalfAWarn_TwoCanReachTheLimit()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            WarnSettings(chat, 1, "ban");
+            await HalfPrewarns(chat);
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            var post = await chat.SendAsync(member, "rude");
+
+            await chat.SendAsync(admin, "/prewarn", replyTo: post);
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            await chat.SendAsync(admin, "/prewarn", replyTo: post);
+
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual((0L, 0L), (Count(chat, "warns", member), Count(chat, "prewarns", member)));
+            StringAssert.Contains(chat.Replies.Last(), "banned");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task ThePrewarnMode_IsSetInTheWarnMenu_AndKept()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            Assert.IsFalse(Enforcer5.Detection.DetectionSettings.For(chat.ChatId).Warns.PrewarnIsHalf, "convert by default");
+            await chat.SendAsync(admin, "/menu");
+            var menu = chat.Telegram.SentMessages.Last(m => m.Chat.Id == admin.Id);
+            await chat.PressDataAsync(admin, menu, $"openWarnMenu:{chat.ChatId}");
+            await chat.AdvanceAsync(System.TimeSpan.FromSeconds(15));
+
+            await chat.PressDataAsync(admin, menu, $"menuPrewarnMode:{chat.ChatId}");
+
+            var stored = await new Enforcer5.Data.PostgresDetectionSettingsRepository(() => chat.Database).LoadAsync(chat.ChatId);
+            Assert.AreEqual(Enforcer5.Detection.WarnSettings.Half, stored.Warns.PrewarnMode);
+            Assert.IsTrue(Enforcer5.Detection.DetectionSettings.For(chat.ChatId).Warns.PrewarnIsHalf);
+            var keyboard = Enforcer5.Commands.genWarnMenu(chat.ChatId, Enforcer5.Helpers.Methods.GetGroupLanguage(chat.ChatId).Doc);
+            Assert.IsTrue(keyboard.InlineKeyboard.SelectMany(r => r).Any(b => b.Text.Contains("half a warning each")));
+
+            await chat.AdvanceAsync(System.TimeSpan.FromSeconds(15));
+            await chat.PressDataAsync(admin, menu, $"menuPrewarnMode:{chat.ChatId}");
+            stored = await new Enforcer5.Data.PostgresDetectionSettingsRepository(() => chat.Database).LoadAsync(chat.ChatId);
+            Assert.AreEqual(Enforcer5.Detection.WarnSettings.Convert, stored.Warns.PrewarnMode);
+            AssertNoErrors(chat);
+        }
+
         [TestMethod]
         public async Task ABanAtTheLimit_ThatTelegramRefuses_KeepsTheWarns_AndSaysWhy()
         {
