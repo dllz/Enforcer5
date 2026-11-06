@@ -488,19 +488,6 @@ namespace Enforcer5.Storage
         public string ClaimedBy { get; set; }
     }
 
-    /// <summary>
-    /// A group where an edition of the bot may not post (Helpers/MutedGroups): since when, and when Daniel was last
-    /// asked whether it should leave. By Telegram id, per edition (each edition is its own member of the group); the
-    /// row goes once the bot may post there again, leaves, or is removed.
-    /// </summary>
-    internal sealed class BotMuteEntity
-    {
-        public string Edition { get; set; }
-        public long TelegramChatId { get; set; }
-        public DateTimeOffset MutedSince { get; set; }
-        public DateTimeOffset? LeaveAskedAt { get; set; }
-    }
-
     /// <summary>An entitlement of a group: <c>premium</c> (the premium edition serves it), from the approved design.</summary>
     internal sealed class GroupEntitlementEntity
     {

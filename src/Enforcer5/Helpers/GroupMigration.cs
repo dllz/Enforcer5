@@ -130,8 +130,7 @@ WHERE settings->>'admin_chat_id' = @FromText",
             await connection.ExecuteAsync(@"
 DELETE FROM tempban_schedule o WHERE o.telegram_chat_id = @From AND EXISTS (
     SELECT 1 FROM tempban_schedule n WHERE n.edition = o.edition AND n.telegram_chat_id = @To AND n.telegram_user_id = o.telegram_user_id);
-UPDATE tempban_schedule SET telegram_chat_id = @To WHERE telegram_chat_id = @From;
-DELETE FROM bot_mutes WHERE telegram_chat_id = @From",
+UPDATE tempban_schedule SET telegram_chat_id = @To WHERE telegram_chat_id = @From",
                 new { From = from, To = to }, transaction);
             await transaction.CommitAsync();
         }

@@ -71,7 +71,7 @@ UPDATE LOG
 		<value>我未見過呢個人。</value>
 	</string>
 	<string key="botNotAdmin">
-		<value>我唔係群組管理員，冇足夠權限做呢件事。</value>
+		<value>我喺呢度唔係管理員。請將我設為管理員先可以用我。</value>
 	</string>
 	<string key="noReply">
 		<value>呢個指令要回覆其他人先用到。</value>
@@ -2321,13 +2321,7 @@ UPDATE LOG
   <string key="similarElsewhere">
     <value>喺其他群</value>
   </string>
-  <string key="botMutedMember">
-    <value>🔇 我喺 {0} 唔可以發訊息，所以冇辦法喺嗰度回覆你。請群組管理員俾返我發訊息嘅權限。</value>
-  </string>
-  <string key="botMutedAdmin">
-    <value>🔇 我喺 {0} 唔可以發訊息，所以冇辦法喺嗰度回應指令，亦冇辦法話俾人知我做咗咩。要解決呢個問題，請將我設為群組管理員，或者俾返我發訊息嘅權限。</value>
-  </string>
   <string key="botLeavingMuted">
-    <value>👋 我已經離開咗 {0}：我已經有 {1} 日冇辦法喺嗰度發訊息。如果想我返嚟，請再加我入群並將我設為管理員。</value>
+    <value>👋 我已經離開咗 {0}：我喺嗰度發唔到訊息，又唔係管理員，所以咩都幫唔到個群組。如果想我返嚟，請再加我入群並將我設為管理員。</value>
   </string>
 </strings>

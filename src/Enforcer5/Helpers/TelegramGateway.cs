@@ -53,23 +53,28 @@ namespace Enforcer5.Helpers
             AllowWithoutReply(request);
             var chatId = request is IChatTargetable { ChatId.Identifier: { } id } ? id : 0;
             // A group that removed or muted the bot: answered here, as Telegram would, without the call (BotRights).
-            if (BotRights.RefusalFor(request, chatId) is { } known)
-            {
-                MutedGroups.Refused(chatId, request.MethodName, known);
-                throw known;
-            }
+            if (BotRights.RefusalFor(request, chatId) is { } known) throw known;
             var unit = Bot.CurrentWork;
             unit?.WaitStarted();
             try
             {
-                var result = await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+                TResponse result;
+                try
+                {
+                    result = await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+                }
+                catch (ApiRequestException e) when (IsReplyGone(e) && DropReply(request))
+                {
+                    // allow_sending_without_reply did not help (the message replied to is in another topic, or
+                    // Telegram ignored it): the same message once more, without the reply.
+                    result = await SendPacedAsync(request, cancellationToken).ConfigureAwait(false);
+                }
                 if (chatId < 0) BotRights.Succeeded(chatId, request.MethodName);
                 return result;
             }
             catch (Exception e) when (chatId < 0 && e is ApiRequestException { ErrorCode: not 429 })
             {
                 BotRights.Failed(chatId, request.MethodName, e);
-                MutedGroups.Refused(chatId, request.MethodName, e);
                 throw;
             }
             finally
@@ -87,6 +92,21 @@ namespace Enforcer5.Helpers
             var property = ReplyProperties.GetOrAdd(request.GetType(),
                 type => type.GetProperty("ReplyParameters") is { } p && p.PropertyType == typeof(ReplyParameters) && p.CanRead ? p : null);
             if (property?.GetValue(request) is ReplyParameters reply) reply.AllowSendingWithoutReply = true;
+        }
+
+        // "message to be replied not found", "reply message not found", "replied message not found".
+        private static bool IsReplyGone(ApiRequestException e) =>
+            e.Message?.IndexOf("repl", StringComparison.OrdinalIgnoreCase) >= 0 &&
+            TelegramErrors.Classify(e) == TelegramErrorKind.MessageGone;
+
+        // Takes the reply off a request that had one: true when there was one to take.
+        private static bool DropReply<TResponse>(IRequest<TResponse> request)
+        {
+            var property = ReplyProperties.GetOrAdd(request.GetType(),
+                type => type.GetProperty("ReplyParameters") is { } p && p.PropertyType == typeof(ReplyParameters) && p.CanRead ? p : null);
+            if (property == null || !property.CanWrite || property.GetValue(request) == null) return false;
+            property.SetValue(request, null);
+            return true;
         }
 
         private async Task<TResponse> SendPacedAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)

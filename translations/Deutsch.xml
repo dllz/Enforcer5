@@ -65,7 +65,7 @@
     <value>Ich kenne diesen Benutzer nicht.</value>
   </string>
   <string key="botNotAdmin">
-    <value>Ich bin kein Administrator in diesem Chat, ich muss aber Administrator sein, um diesen Befehl auszufuehren!</value>
+    <value>Ich bin hier kein Admin. Bitte mach mich zum Admin, um mich zu benutzen.</value>
   </string>
   <string key="noReply">
     <value>Du musst auf eine Nachricht antworten um diesen Befehl nutzen zu k&#246;nnen!</value>
@@ -2791,13 +2791,7 @@ Einige Befehle (/rules, /about, /adminlist, Extra-Befehle) k&#246;nnen im Gruppe
   <string key="similarElsewhere">
     <value>in einer anderen Gruppe</value>
   </string>
-  <string key="botMutedMember">
-    <value>🔇 Ich kann in {0} keine Nachrichten senden, deshalb konnte ich dir dort nicht antworten. Bitte einen Gruppenadmin, mir das Senden von Nachrichten wieder zu erlauben.</value>
-  </string>
-  <string key="botMutedAdmin">
-    <value>🔇 Ich kann in {0} keine Nachrichten senden, deshalb kann ich dort weder auf Befehle antworten noch sagen, was ich tue. Mach mich zum Admin der Gruppe oder gib mir das Recht zurück, Nachrichten zu senden.</value>
-  </string>
   <string key="botLeavingMuted">
-    <value>👋 Ich habe {0} verlassen: Ich konnte dort seit {1} Tagen keine Nachrichten senden. Wenn du mich zurück willst, füge mich wieder hinzu und mach mich zum Admin.</value>
+    <value>👋 Ich habe {0} verlassen: Ich kann dort keine Nachrichten senden und bin kein Admin, also kann ich nichts für die Gruppe tun. Wenn du mich zurück willst, füge mich wieder hinzu und mach mich zum Admin.</value>
   </string>
 </strings>

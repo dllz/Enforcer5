@@ -34,6 +34,7 @@ namespace Enforcer5.Helpers
             internal DateTime? GoneUntil;    // DateTime.MaxValue: from a member update, until added again
             internal DateTime? MutedUntil;
             internal bool? CanDelete;        // from the bot's own member update
+            internal bool? IsAdmin;          // from the bot's own member update
             internal long? MovedTo;          // the supergroup a basic group became
         }
 
@@ -92,6 +93,23 @@ namespace Enforcer5.Helpers
             };
         }
 
+        /// <summary>
+        /// Whether the bot is an admin of the group: from its own member update, else the admin list at hand (asked for
+        /// in the background when there is none). Null when it does not know: callers then act as if it were.
+        /// </summary>
+        internal static bool? IsAdmin(long chatId)
+        {
+            if (chatId >= 0) return null;
+            if (States.TryGetValue(chatId, out var s) && s.IsAdmin is { } known) return known;
+            var admins = AdminDirectory.Known(chatId);
+            if (admins == null)
+            {
+                _ = AdminDirectory.GetAsync(chatId);
+                return null;
+            }
+            return admins.Any(a => a.User.Id == Bot.Me?.Id);
+        }
+
         /// <summary>The bot's own member update in <paramref name="update"/>'s chat.</summary>
         internal static void OnMyChatMember(ChatMemberUpdated update)
         {
@@ -106,22 +124,32 @@ namespace Enforcer5.Helpers
                 case ChatMemberBanned:
                     s.GoneUntil = DateTime.MaxValue;
                     s.CanDelete = false;
+                    s.IsAdmin = false;
                     break;
                 case ChatMemberRestricted restricted:
                     s.GoneUntil = restricted.IsMember ? null : DateTime.MaxValue;
                     s.CanDelete = false;
+                    s.IsAdmin = false;
                     s.MutedUntil = restricted.CanSendMessages ? null : Clock.UtcNow + MutedFor;
                     break;
                 case ChatMemberAdministrator admin:
                     s.GoneUntil = null;
                     s.MutedUntil = null;
                     s.CanDelete = admin.CanDeleteMessages;
+                    s.IsAdmin = true;
+                    break;
+                case ChatMemberOwner:
+                    s.GoneUntil = null;
+                    s.MutedUntil = null;
+                    s.CanDelete = true;
+                    s.IsAdmin = true;
                     break;
                 default:
                     // A plain member: posts unless the whole group is muted, which only a post finds out.
                     s.GoneUntil = null;
                     s.MutedUntil = null;
                     s.CanDelete = false;
+                    s.IsAdmin = false;
                     break;
             }
             var mutedNow = IsMuted(chatId);

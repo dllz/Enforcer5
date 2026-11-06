@@ -105,8 +105,6 @@ namespace Enforcer5.Helpers
         private static ActionSource SourceOf(long? actorId, ReportRef report) =>
             ActionSources.Derive(ErrorReporter.Current?.Update, actorId, report != null);
 
-        private static readonly ConcurrentDictionary<long, DateTime> ToldNoRights = new ConcurrentDictionary<long, DateTime>();
-
         /// <summary>
         /// Tells the chat why a job was refused, as the code calling Telegram directly used to, and
         /// says whether it went through (or certainly will). <paramref name="targetIsAdminKey"/> is
@@ -119,17 +117,9 @@ namespace Enforcer5.Helpers
             switch (result.Refusal)
             {
                 case Refusal.BotNotAdmin:
-                    // Removed from the group: nobody there to tell.
-                    if (BotRights.IsGone(chatId)) break;
-                    // May not even post there: the admins hear it in private, once a day (Helpers/MutedGroups).
-                    if (BotRights.CannotPost(chatId))
-                    {
-                        Bot.Dispatch(() => MutedGroups.TellAdminsAsync(chatId), "MutedGroups");
-                        break;
-                    }
-                    // Once per chat in a while: during a raid every ban would otherwise say it.
-                    if (ToldNoRights.TryGetValue(chatId, out var told) && Clock.UtcNow - told < TimeSpan.FromMinutes(10)) break;
-                    ToldNoRights[chatId] = Clock.UtcNow;
+                    // Removed, or muted (it then leaves unless it is an admin): nothing to say there. Otherwise at most
+                    // every 3 hours, for every way it comes up (Daniel, 2026-11-06; it was every 10 minutes).
+                    if (BotRights.CannotPost(chatId) || !MutedGroups.MayTellNotAdmin(chatId)) break;
                     Bot.Send(GetLocaleString(doc, "botNotAdmin"), chatId);
                     break;
                 case Refusal.TargetIsAdmin:

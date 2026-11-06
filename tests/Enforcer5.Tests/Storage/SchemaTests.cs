@@ -25,7 +25,7 @@ namespace Enforcer5.Tests.Storage
             var tables = context.Model.GetEntityTypes().Select(e => e.GetTableName()).OrderBy(t => t).ToArray();
             CollectionAssert.AreEqual(new[]
             {
-                "account_profile_flags", "banned_media", "batch_items", "batches", "bot_bans", "bot_events", "bot_mutes", "channel_profiles", "channel_reputation", "custom_commands", "detection_adjustments", "detection_near_misses", "detection_policies", "detections", "domain_reputation", "global_bots", "global_role_assignments", "global_sanctions", "group_bots", "group_content_items", "group_elevation_blocks", "group_entitlements", "group_filters", "group_joins", "group_members", "group_role_assignments", "group_settings",
+                "account_profile_flags", "banned_media", "batch_items", "batches", "bot_bans", "bot_events", "channel_profiles", "channel_reputation", "custom_commands", "detection_adjustments", "detection_near_misses", "detection_policies", "detections", "domain_reputation", "global_bots", "global_role_assignments", "global_sanctions", "group_bots", "group_content_items", "group_elevation_blocks", "group_entitlements", "group_filters", "group_joins", "group_members", "group_role_assignments", "group_settings",
                 "group_stats", "group_user_preferences", "groups", "media_scores", "member_labels", "member_pointers", "member_signals", "member_trust_overrides", "message_fingerprints",
                 "profile_scans", "raid_events", "raid_incidents", "recovery_items", "recovery_offers", "report_actions", "report_admin_optouts", "report_copies", "reports", "sanctions",
                 "storage_imports", "telegram_account_profiles", "telegram_accounts",

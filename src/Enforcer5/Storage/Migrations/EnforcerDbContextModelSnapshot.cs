@@ -324,32 +324,6 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Enforcer5.Storage.BotMuteEntity", b =>
-                {
-                    b.Property<string>("Edition")
-                        .HasColumnType("text")
-                        .HasColumnName("edition");
-
-                    b.Property<long>("TelegramChatId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("telegram_chat_id");
-
-                    b.Property<DateTimeOffset?>("LeaveAskedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("leave_asked_at");
-
-                    b.Property<DateTimeOffset>("MutedSince")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("muted_since");
-
-                    b.HasKey("Edition", "TelegramChatId");
-
-                    b.ToTable("bot_mutes", null, t =>
-                        {
-                            t.HasCheckConstraint("bot_mutes_edition_check", "edition IN ('normal', 'premium')");
-                        });
-                });
-
             modelBuilder.Entity("Enforcer5.Storage.ChannelProfileEntity", b =>
                 {
                     b.Property<long>("TelegramChatId")

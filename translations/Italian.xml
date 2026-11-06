@@ -65,7 +65,7 @@
     <value>Non so chi sia questo utente.</value>
   </string>
   <string key="botNotAdmin">
-    <value>Non sono admin in questa chat, ho bisogno di essere admin per poter eseguire questo comando.</value>
+    <value>Non sono admin qui. Rendimi admin per usarmi.</value>
   </string>
   <string key="noReply">
     <value>Per favore, rispondi a qualcuno per usare questo comando.</value>
@@ -2745,13 +2745,7 @@
   <string key="similarElsewhere">
     <value>in un altro gruppo</value>
   </string>
-  <string key="botMutedMember">
-    <value>🔇 Non posso inviare messaggi in {0}, quindi non ho potuto risponderti lì. Chiedi a un admin del gruppo di permettermi di nuovo di inviare messaggi.</value>
-  </string>
-  <string key="botMutedAdmin">
-    <value>🔇 Non posso inviare messaggi in {0}, quindi lì non posso rispondere ai comandi né dire a nessuno cosa faccio. Per risolvere, rendimi admin del gruppo oppure ridammi il permesso di inviare messaggi.</value>
-  </string>
   <string key="botLeavingMuted">
-    <value>👋 Ho lasciato {0}: da {1} giorni non potevo inviare messaggi lì. Se mi rivuoi, aggiungimi di nuovo e rendimi admin.</value>
+    <value>👋 Ho lasciato {0}: non posso inviare messaggi lì e non sono admin, quindi non posso fare nulla per il gruppo. Se mi rivuoi, aggiungimi di nuovo e rendimi admin.</value>
   </string>
 </strings>

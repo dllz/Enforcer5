@@ -167,6 +167,34 @@ namespace Enforcer5.Tests.Harness
             else { _botMuted.TryRemove(chatId, out _); _botCanRestrict[chatId] = true; }
         }
 
+        private readonly ConcurrentDictionary<long, byte> _botMember = new();
+
+        /// <summary>The bot is a plain member of the group: it may post, but is no admin (no restricting, no deleting).</summary>
+        internal void SetBotMember(long chatId, bool member = true)
+        {
+            if (member) { _botMember[chatId] = 0; _botCanRestrict[chatId] = false; }
+            else { _botMember.TryRemove(chatId, out _); _botCanRestrict[chatId] = true; }
+        }
+
+        private readonly ConcurrentDictionary<(long Chat, int Id), byte> _deleted = new();
+
+        /// <summary>
+        /// Telegram refuses a reply to a deleted message even with allow_sending_without_reply (as it does for one in
+        /// another topic): for the gateway's second try without the reply.
+        /// </summary>
+        internal bool IgnoresAllowWithoutReply { get; set; }
+
+        // A reply to a message that was deleted: refused unless the request allows sending without it.
+        private void CheckReply(ChatId chat, ReplyParameters reply)
+        {
+            if (reply == null || !_deleted.ContainsKey((Id(chat), reply.MessageId ?? 0))) return;
+            if (reply.AllowSendingWithoutReply == true && !IgnoresAllowWithoutReply) return;
+            throw new ApiRequestException("Bad Request: message to be replied not found", 400);
+        }
+
+        /// <summary>Someone deleted the message (it was not the bot): replies to it are refused as Telegram does.</summary>
+        internal void MessageDeleted(long chatId, int messageId) => _deleted[(chatId, messageId)] = 0;
+
         /// <summary>The bot was removed from the group: every call there is refused with 403.</summary>
         internal void SetBotRemoved(long chatId, bool removed = true)
         {
@@ -426,6 +454,7 @@ namespace Enforcer5.Tests.Harness
 
         private Message Sent(SendMessageRequest r)
         {
+            CheckReply(r.ChatId, r.ReplyParameters);
             if (r.ChatId.Identifier is long to && to > 0 && _notStarted.ContainsKey(to))
                 throw new ApiRequestException("Forbidden: bot can't initiate conversation with a user", 403);
             if (r.EphemeralMessageParameters is { } ephemeral)
@@ -538,6 +567,8 @@ namespace Enforcer5.Tests.Harness
             var user = userId == Me.Id ? Me
                 : _users.TryGetValue(userId, out var known) ? known
                 : new User { Id = userId, FirstName = $"User{userId}" };
+            if (userId == Me.Id && _botMember.ContainsKey(chatId))
+                return new ChatMemberMember { User = user };
             if (userId == Me.Id && _botMuted.ContainsKey(chatId))
                 return new ChatMemberRestricted { User = user, IsMember = true, CanSendMessages = false };
             if (userId == Me.Id)
@@ -555,7 +586,7 @@ namespace Enforcer5.Tests.Harness
         }
 
         private ChatMember[] Administrators(long chatId) =>
-            (_botMuted.ContainsKey(chatId) ? Array.Empty<ChatMember>()
+            (_botMuted.ContainsKey(chatId) || _botMember.ContainsKey(chatId) ? Array.Empty<ChatMember>()
                 : new ChatMember[] { new ChatMemberAdministrator { User = Me, CanRestrictMembers = BotCanRestrict(chatId), CanDeleteMessages = BotCanRestrict(chatId) } })
                 .Concat(_members.Where(m => m.Key.Chat == chatId && m.Key.User != Me.Id
                         && m.Value is MemberState.Creator or MemberState.Administrator)
@@ -679,7 +710,7 @@ namespace Enforcer5.Tests.Harness
                 throw new ApiRequestException("Bad Request: message can't be deleted", 400);
             lock (_lock)
             {
-                foreach (var id in messageIds) _posted.Remove((chatId, id));
+                foreach (var id in messageIds) { _posted.Remove((chatId, id)); _deleted[(chatId, id)] = 0; }
             }
             return true;
         }

@@ -46,58 +46,98 @@ namespace Enforcer5.Tests.Harness
         };
 
         [TestMethod]
-        public async Task AMutedBot_TellsWhoUsedIt_InPrivate_AndDoesNotAskTelegramAgain()
-        {
-            await using var chat = await HarnessChat.StartAsync();
-            var member = chat.Add("Member");
-            var admin = chat.Add("Admin", MemberState.Administrator);
-            chat.Telegram.SetBotMuted(chat.ChatId);
-
-            await chat.SendAsync(member, "/ping");
-            await chat.SendAsync(member, "/ping");
-            await chat.SendAsync(admin, "/ping");
-
-            Assert.AreEqual(1, PostsTo(chat, chat.ChatId).Length, "refused once by Telegram, then known");
-            var told = PrivateTo(chat, member);
-            Assert.AreEqual(1, told.Length, "once a day");
-            StringAssert.Contains(told[0].Text, "Ask a group admin");
-            StringAssert.Contains(PrivateTo(chat, admin).Single().Text, "make me an admin");
-            AssertNoErrors(chat);
-        }
-
-        [TestMethod]
-        public async Task SomeoneWhoNeverStartedTheBot_TheAdminsAreToldInstead()
+        public async Task MutedAndNotAnAdmin_TheBotLeaves_AndTellsWhoCouldHaveFixedIt()
         {
             await using var chat = await HarnessChat.StartAsync();
             var member = chat.Add("Member");
             var owner = chat.Add("Owner", MemberState.Creator);
             var admin = chat.Add("Admin", MemberState.Administrator);
-            chat.Telegram.SetNotStarted(member.Id);
             chat.Telegram.SetBotMuted(chat.ChatId);
 
+            var muted = chat.Clock.UtcNow;
             await chat.SendAsync(member, "/ping");
+            await chat.SendAsync(member, "/ping");
+            await chat.AdvanceAsync(MutedGroups.LeaveAfter + TimeSpan.FromSeconds(5));
+            var left = chat.Telegram.Accepted.Single(c => c.Method == "leaveChat" && c.ChatId == chat.ChatId);
+            Assert.IsTrue(left.At.UtcDateTime >= muted + MutedGroups.LeaveAfter, "it looks again first");
 
-            StringAssert.Contains(PrivateTo(chat, owner).Single().Text, "make me an admin");
-            Assert.AreEqual(0, PrivateTo(chat, admin).Length, "only those who can fix it, when there are any");
+            Assert.AreEqual(1, PostsTo(chat, chat.ChatId).Length, "refused once by Telegram, then known: no reply tried again");
+            Assert.AreEqual(0, PrivateTo(chat, member).Length, "members are not written to");
+            StringAssert.Contains(PrivateTo(chat, owner).Single().Text, "I've left");
+            Assert.AreEqual(0, PrivateTo(chat, admin).Length, "only those who could have fixed it, when there are any");
             AssertNoErrors(chat);
         }
 
         [TestMethod]
-        public async Task LetPostAgain_TheBotAnswersAtOnce()
+        public async Task MutedForAMomentOnly_TheBotStays()
         {
             await using var chat = await HarnessChat.StartAsync();
             var member = chat.Add("Member");
             var owner = chat.Add("Owner", MemberState.Creator);
             chat.Telegram.SetBotMuted(chat.ChatId);
-            await chat.SendAsync(member, "/ping");
+            chat.Deliver(chat.Text(member, "/ping"));
+            await chat.SettleAsync(flush: false);
 
             chat.Telegram.SetBotMuted(chat.ChatId, false);
             chat.Deliver(BotMemberUpdate(chat, owner, new ChatMemberAdministrator
                 { User = HarnessChat.BotUser, CanRestrictMembers = true, CanDeleteMessages = true }));
-            await chat.SettleAsync();
+            await chat.AdvanceAsync(MutedGroups.LeaveAfter + TimeSpan.FromSeconds(5));
             await chat.SendAsync(member, "/ping");
 
-            Assert.IsTrue(chat.Telegram.Accepted.Any(c => c.ChatId == chat.ChatId && c.Method == "sendMessage"));
+            Assert.IsFalse(chat.Telegram.Calls.Any(c => c.Method == "leaveChat"));
+            Assert.IsTrue(chat.Telegram.Accepted.Any(c => c.ChatId == chat.ChatId && c.Method == "sendMessage"), "it answers at once");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task NotAnAdmin_ExtraOnly_MembersAreAnswered_AdminCommandsSayItEveryThreeHours()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var owner = chat.Add("Owner", MemberState.Creator);
+            var member = chat.Add("Member");
+            var spammer = chat.Add("Spammer");
+            chat.Hashes[$"chat:{chat.ChatId}:settings", "MuteOnJoin"] = "no"; // "no" switches it on
+            await GroupConfigs.ChangeAsync(chat.ChatId, Data.ConfigChange.SetContent(Data.ContentKind.Rules, "Be nice"));
+            chat.Telegram.SetBotMember(chat.ChatId);
+            chat.Deliver(BotMemberUpdate(chat, owner, new ChatMemberMember { User = HarnessChat.BotUser }));
+            await chat.SettleAsync();
+            var notAdmin = Methods.GetLocaleString(Methods.GetGroupLanguage(chat.ChatId).Doc, "botNotAdmin");
+
+            var spam = await chat.SendAsync(spammer, "spam");
+            await chat.SendAsync(owner, "/ban", replyTo: spam);
+            await chat.SendAsync(owner, "/ban", replyTo: spam);
+            await chat.SendAsync(member, "/rules");
+            var joiner = chat.Add("Joiner", MemberState.Left);
+            await chat.JoinAsync(joiner);
+
+            Assert.AreEqual(1, chat.Telegram.SentMessages.Count(m => m.Chat.Id == chat.ChatId && m.Text == notAdmin), "once");
+            Assert.IsFalse(chat.Telegram.Calls.Any(c => c.Method is "banChatMember" or "restrictChatMember" or "deleteMessage"),
+                "nothing is tried that needs an admin");
+            Assert.IsTrue(chat.Telegram.SentMessages.Any(m => m.Chat.Id == chat.ChatId && m.Text?.Contains("Be nice") == true),
+                "members' commands are answered");
+
+            await chat.AdvanceAsync(MutedGroups.NotAdminEvery);
+            await chat.SendAsync(owner, "/ban", replyTo: spam);
+            Assert.AreEqual(2, chat.Telegram.SentMessages.Count(m => m.Chat.Id == chat.ChatId && m.Text == notAdmin), "again after 3 hours");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task AReplyToADeletedMessage_GoesOutWithoutTheReply()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var member = chat.Add("Member");
+            var gone = await chat.SendAsync(member, "hello");
+            chat.Telegram.MessageDeleted(chat.ChatId, gone.MessageId);
+
+            Bot.SendReply("first", chat.ChatId, gone.MessageId);
+            chat.Telegram.IgnoresAllowWithoutReply = true;
+            Bot.SendReply("second", chat.ChatId, gone.MessageId);
+            await chat.SettleAsync();
+
+            Assert.IsTrue(chat.Telegram.SentMessages.Any(m => m.Chat.Id == chat.ChatId && m.Text == "first"));
+            Assert.IsTrue(chat.Telegram.SentMessages.Any(m => m.Chat.Id == chat.ChatId && m.Text == "second"),
+                "sent once more without the reply when Telegram still refuses it");
             AssertNoErrors(chat);
         }
 
@@ -211,51 +251,6 @@ WHERE c.telegram_chat_id = @Old AND s.log_chat_id IS NOT NULL", new { Old = chat
             GroupMigration.ResetForTests();
             await GroupMigration.MoveAsync(chat.ChatId, newId);
             Assert.AreEqual(LogChannel, (await GroupConfigs.GetAsync(newId)).LogChat);
-            AssertNoErrors(chat);
-        }
-
-        [TestMethod]
-        public async Task ALongMutedGroup_DanielIsAsked_AndLeaveLeaves()
-        {
-            await using var chat = await HarnessChat.StartAsync();
-            var member = chat.Add("Member");
-            var owner = chat.Add("Owner", MemberState.Creator);
-            var daniel = chat.Add("Daniel", id: Constants.Devs[0]);
-            chat.Telegram.SetBotMuted(chat.ChatId);
-            await chat.SendAsync(member, "/ping");
-            Assert.AreEqual(0, PrivateTo(chat, daniel).Length, "not asked at once");
-
-            await chat.AdvanceAsync(MutedGroups.AskAfter + TimeSpan.FromHours(1));
-            await chat.SendAsync(member, "/ping");
-
-            var question = PrivateTo(chat, daniel).Single(m => m.ReplyMarkup != null);
-            StringAssert.Contains(question.Text, "Leave the group?");
-            await chat.PressAsync(daniel, question, $"{MutedGroups.Trigger}:{chat.ChatId}:leave");
-
-            Assert.IsTrue(chat.Telegram.Accepted.Any(c => c.Method == "leaveChat" && c.ChatId == chat.ChatId));
-            Assert.IsTrue(PrivateTo(chat, owner).Any(m => m.Text.Contains("I've left")));
-            await using var connection = await chat.Database.OpenConnectionAsync();
-            Assert.AreEqual(0, await connection.QuerySingleAsync<int>("SELECT count(*) FROM bot_mutes"));
-            AssertNoErrors(chat);
-        }
-
-        [TestMethod]
-        public async Task Keep_AsksAgainOnlyAfterAMonth()
-        {
-            await using var chat = await HarnessChat.StartAsync();
-            var member = chat.Add("Member");
-            var daniel = chat.Add("Daniel", id: Constants.Devs[0]);
-            chat.Telegram.SetBotMuted(chat.ChatId);
-            await chat.SendAsync(member, "/ping");
-            await chat.AdvanceAsync(MutedGroups.AskAfter + TimeSpan.FromHours(1));
-            await chat.SendAsync(member, "/ping");
-            await chat.PressAsync(daniel, PrivateTo(chat, daniel).Single(m => m.ReplyMarkup != null), $"{MutedGroups.Trigger}:{chat.ChatId}:keep");
-
-            await chat.AdvanceAsync(TimeSpan.FromDays(2));
-            await chat.SendAsync(member, "/ping");
-
-            Assert.AreEqual(1, PrivateTo(chat, daniel).Count(m => m.Text.Contains("Leave the group?")), "asked once");
-            Assert.IsFalse(chat.Telegram.Calls.Any(c => c.Method == "leaveChat"));
             AssertNoErrors(chat);
         }
     }

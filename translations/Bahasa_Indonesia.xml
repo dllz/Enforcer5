@@ -86,7 +86,7 @@
   </string>
   
   <string key="botNotAdmin">
-    <value>Saya bukan admin, Saya harus jadi admin untuk menjalankan perintah</value>
+    <value>Saya bukan admin di sini. Jadikan saya admin agar bisa menggunakan saya.</value>
   </string>
   <string key="noReply">
     <value>Tolong replay / balas chat seseorang untuk menggunakan perintah ini</value>
@@ -2971,13 +2971,7 @@
   <string key="similarElsewhere">
     <value>di grup lain</value>
   </string>
-  <string key="botMutedMember">
-    <value>🔇 Saya tidak bisa mengirim pesan di {0}, jadi saya tidak bisa menjawab Anda di sana. Minta admin grup untuk mengizinkan saya mengirim pesan lagi.</value>
-  </string>
-  <string key="botMutedAdmin">
-    <value>🔇 Saya tidak bisa mengirim pesan di {0}, jadi saya tidak bisa menjawab perintah atau memberi tahu siapa pun apa yang saya lakukan di sana. Untuk memperbaikinya, jadikan saya admin grup, atau kembalikan izin saya untuk mengirim pesan.</value>
-  </string>
   <string key="botLeavingMuted">
-    <value>👋 Saya telah keluar dari {0}: sudah {1} hari saya tidak bisa mengirim pesan di sana. Jika Anda ingin saya kembali, tambahkan saya lagi dan jadikan saya admin.</value>
+    <value>👋 Saya telah keluar dari {0}: saya tidak bisa mengirim pesan di sana dan saya bukan admin, jadi saya tidak bisa melakukan apa pun untuk grup itu. Jika Anda ingin saya kembali, tambahkan saya lagi dan jadikan saya admin.</value>
   </string>
 </strings>

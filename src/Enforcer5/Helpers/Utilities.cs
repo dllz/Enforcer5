@@ -1148,7 +1148,8 @@ namespace Enforcer5.Helpers
         public static void DeleteLastWelcomeMessage(long ChatId, int msgid)
         {
             int lastWelcomeMessageId = (int)Redis.db.StringGetAsync($"chat:{ChatId}:lastwelcome").Result;
-            if (GroupConfigs.For(ChatId).Flag(Data.ConfigFlag.DeleteLastWelcome))
+            // The bot may not delete there (extra-only): the old welcome stays, and nothing fails.
+            if (GroupConfigs.For(ChatId).Flag(Data.ConfigFlag.DeleteLastWelcome) && BotRights.MayDelete(ChatId) != false)
             {
                 
                 Redis.db.StringSetAsync($"chat:{ChatId}:lastwelcome", $"{msgid}");

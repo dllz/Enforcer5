@@ -45,6 +45,7 @@ namespace Enforcer5.Handlers
                     var edited = update.EditedMessage;
                     if (edited?.From == null || edited.Chat.Type is not (ChatType.Group or ChatType.Supergroup)) return;
                     if (Detection.AdminChats.IsAdminChat(edited.Chat.Id)) return; // nothing is checked in an admin chat
+                    if (BotRights.IsAdmin(edited.Chat.Id) == false) return; // extra-only: nothing is moderated
                     if (!BotSenderFilter.Accept(edited))
                     {
                         // Another bot's post edited: checked like a member's when its posts are (Detection/BotGuard).
@@ -199,6 +200,12 @@ namespace Enforcer5.Handlers
                         return;
                     }
 
+                    // Not an admin here, but may post: extra-only mode (Daniel, 2026-11-06). Nothing is moderated or
+                    // detected (it could not act on it); members' commands, extras and welcomes still work; an admin
+                    // command is answered botNotAdmin at most every 3 hours (ExecuteTextCommands). Muted as well, it
+                    // leaves (Helpers/MutedGroups).
+                    var extraOnly = ctx.IsGroup && BotRights.IsAdmin(update.Message.Chat.Id) == false;
+
                     // Joins and leaves first, so raid detection counts this join before anything acts on it.
                     if (ctx.IsGroup && (update.Message.NewChatMembers?.Length > 0 || update.Message.LeftChatMember != null))
                         MemberEvents.FromServiceMessage(update.Message);
@@ -207,7 +214,7 @@ namespace Enforcer5.Handlers
                     // A bot's posts make no member of it: no counts, so no trust from them.
                     if (!fromBot) background.Add(CollectStats(ctx));
 
-                    var moderate = ctx.IsGroup && ctx.Complete;
+                    var moderate = ctx.IsGroup && ctx.Complete && !extraOnly;
                     if (moderate)
                     {
                         // First, because a post made as a channel carries Telegram's shared
@@ -290,7 +297,7 @@ namespace Enforcer5.Handlers
                             if (text.StartsWith("/") || text.StartsWith("#") ||
                                 text.StartsWith("@admin") || text.StartsWith("@pingall"))
                             {
-                                Bot.DispatchInteractive(() => ExecuteTextCommands(update), "ExecuteTextCommands");
+                                Bot.DispatchInteractive(() => ExecuteTextCommands(update, extraOnly: extraOnly), "ExecuteTextCommands");
                             }
                             break;
                         case MessageType.Photo:
@@ -344,7 +351,7 @@ namespace Enforcer5.Handlers
         /// The blocking command-dispatch path, unchanged apart from logging inline instead of
         /// spawning a task per log line. Runs on the pool via Task.Run.
         /// </summary>
-        private static void ExecuteTextCommands(Update update, bool adminChat = false)
+        private static void ExecuteTextCommands(Update update, bool adminChat = false, bool extraOnly = false)
         {
             if (update.Message.Text.StartsWith("/"))
             {
@@ -371,6 +378,14 @@ namespace Enforcer5.Handlers
                     }
                     if (command.DevOnly && !Constants.Devs.Contains(update.Message.From.Id))
                     {
+                        return;
+                    }
+                    if (extraOnly && command.GroupAdminOnly)
+                    {
+                        // Not an admin here: admin commands do nothing, and say so at most every 3 hours.
+                        if (MutedGroups.MayTellNotAdmin(update.Message.Chat.Id))
+                            Bot.SendReply(Methods.GetLocaleString(Methods.GetGroupLanguage(update.Message, true).Doc, "botNotAdmin"),
+                                update.Message);
                         return;
                     }
                     if (command.GroupAdminOnly && !Methods.IsGroupAdmin(update) &
@@ -450,6 +465,7 @@ namespace Enforcer5.Handlers
                     {
                         return;
                     }
+                    if (extraOnly && command.GroupAdminOnly) return;
                     if (command.GroupAdminOnly & !Methods.IsGroupAdmin(update) &
                         !Methods.IsGlobalAdmin(update.Message.From.Id))
                     {
@@ -588,11 +604,16 @@ namespace Enforcer5.Handlers
                 Log(update, "chatMember");
                 var chatId = update.Message.Chat.Id;
                 var joiners = update.Message.NewChatMembers ?? Array.Empty<User>();
+                // Extra-only (not an admin here): the welcome, nothing that would act on the newcomers.
+                var extraOnly = BotRights.IsAdmin(chatId) == false;
                 foreach (var joiner in joiners) ForgetTempban(chatId, joiner.Id);
-                Detection.FilterCheck.OnJoin(ctx);
-                Detection.MessageSigns.OnJoin(ctx);
-                Detection.ProfileSigns.OnJoin(ctx);
-                Detection.NsfwSigns.OnJoin(ctx);
+                if (!extraOnly)
+                {
+                    Detection.FilterCheck.OnJoin(ctx);
+                    Detection.MessageSigns.OnJoin(ctx);
+                    Detection.ProfileSigns.OnJoin(ctx);
+                    Detection.NsfwSigns.OnJoin(ctx);
+                }
                 if (joiners.Any(j => j.Id == Bot.Me.Id))
                 {
                     Service.BotAdded(update.Message);
@@ -613,14 +634,14 @@ namespace Enforcer5.Handlers
                     // round Mute On Join.
                     var muteOnJoin = (ctx.Policy ?? Detection.DetectionSettings.For(chatId)).MuteOnJoin;
                     var lang = ctx.Lang ?? Methods.GetGroupLanguage(chatId).Doc;
-                    if (muteOnJoin)
+                    if (muteOnJoin && !extraOnly)
                     {
                         foreach (var joiner in joiners)
                             Methods.MuteUser(chatId, joiner.Id, lang, source: ActionSource.MuteOnJoin);
                     }
                 }
 #if PREMIUM
-                if ((update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id == -1001030085238) && update.Message.NewChatMembers.Length > 1)
+                if (!extraOnly && (update.Message.Chat.Id == -1001060486754 | update.Message.Chat.Id == -1001030085238) && update.Message.NewChatMembers.Length > 1)
                 {
                     for (int i = 0; i < update.Message.NewChatMembers.Length; i++)
                     {
