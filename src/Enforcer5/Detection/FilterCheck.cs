@@ -87,7 +87,7 @@ namespace Enforcer5.Detection
             {
                 if (!rule.Enabled || rule.Kind == FilterRule.PresetKind && rule.Action == null) continue;
                 if (text != null && rule.Matches(FilterTarget.Text, text)) hits.Add(new Hit(rule, FilterTarget.Text));
-                else if (rule.Matches(FilterTarget.Name, name)) hits.Add(new Hit(rule, FilterTarget.Name));
+                else if (rule.Checks(filters, FilterTarget.Name) && rule.Matches(FilterTarget.Name, name)) hits.Add(new Hit(rule, FilterTarget.Name));
                 else if (rule.Matches(FilterTarget.Username, person.Username)) hits.Add(new Hit(rule, FilterTarget.Username));
             }
             return hits;
@@ -111,7 +111,7 @@ namespace Enforcer5.Detection
             var hits = new List<Hit>();
             if (filters == null || string.IsNullOrEmpty(value)) return hits;
             foreach (var rule in filters.Rules)
-                if (rule.Enabled && !(rule.Kind == FilterRule.PresetKind && rule.Action == null) && rule.Matches(target, value))
+                if (rule.Enabled && !(rule.Kind == FilterRule.PresetKind && rule.Action == null) && rule.Checks(filters, target) && rule.Matches(target, value))
                     hits.Add(new Hit(rule, target));
             return hits;
         }

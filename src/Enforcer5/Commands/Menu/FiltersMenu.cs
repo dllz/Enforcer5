@@ -39,6 +39,9 @@ namespace Enforcer5
             presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "filterEstablishedButton"), chatId, "filterEstablished"));
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.IncludeEstablished ? "on" : "off"), $"filtertoggle:{chatId}:established")
                 { Style = filters.IncludeEstablished ? KeyboardButtonStyle.Success : null });
+            presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "filterNamesButton"), chatId, "filterNames"));
+            presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.CheckNames ? "on" : "off"), $"filtertoggle:{chatId}:names")
+                { Style = filters.CheckNames ? KeyboardButtonStyle.Success : null });
             presets.Buttons.Add(MenuInfo.Label(Methods.GetLocaleString(lang, "filterGroupBotsButton"), chatId, "filterGroupBots"));
             presets.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, filters.ExemptGroupBots ? "on" : "off"), $"filtertoggle:{chatId}:bots")
                 { Style = filters.ExemptGroupBots ? KeyboardButtonStyle.Success : null });
@@ -83,6 +86,7 @@ namespace Enforcer5
             {
                 "established" => p => p with { Filters = p.Filters with { IncludeEstablished = !p.Filters.IncludeEstablished } },
                 "bots" => p => p with { Filters = p.Filters with { ExemptGroupBots = !p.Filters.ExemptGroupBots } },
+                "names" => p => p with { Filters = p.Filters with { CheckNames = !p.Filters.CheckNames } },
                 _ => null
             };
             if (change == null) return;

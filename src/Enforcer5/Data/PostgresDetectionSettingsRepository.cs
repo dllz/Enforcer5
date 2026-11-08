@@ -198,7 +198,8 @@ DELETE FROM detection_policies WHERE group_id = @GroupId AND check_key LIKE 'sig
             await Check(Filters, true, null, new FiltersJson
             {
                 IncludeEstablished = policy.Filters.IncludeEstablished,
-                ExemptGroupBots = policy.Filters.ExemptGroupBots
+                ExemptGroupBots = policy.Filters.ExemptGroupBots,
+                CheckNames = policy.Filters.CheckNames
             });
             foreach (var preset in policy.Filters.Rules.Where(r => r.Kind == FilterRule.PresetKind))
                 await connection.ExecuteAsync(new CommandDefinition(@"
@@ -339,7 +340,8 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                             f.CreatedBy, f.Category == SignCategory.Abuse))
                         .ToList(),
                     checks.ContainsKey(Filters) ? filterChoices.IncludeEstablished : true,
-                    filterChoices.ExemptGroupBots),
+                    filterChoices.ExemptGroupBots,
+                    filterChoices.CheckNames),
                 TextLength: Length("text", empty.TextLength),
                 NameLength: Length("name", empty.NameLength),
                 Warns: new WarnSettings(group.MaximumWarnings,
@@ -455,6 +457,9 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
         {
             public bool IncludeEstablished { get; set; } = true;
             public bool ExemptGroupBots { get; set; }
+
+            /// <summary>Rows written before 2026-11-08 have no value: names were always checked.</summary>
+            public bool CheckNames { get; set; } = true;
         }
 
         private sealed class FilterRow

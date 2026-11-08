@@ -137,6 +137,35 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task Names_AreLeftAlone_WhenTheGroupTurnsCheckNamesOff_MessagesAreNot()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            await SetPreset(chat, admin, "arabic", "kick");
+            Assert.IsTrue((await Stored(chat)).Filters.CheckNames, "on by default");
+
+            await chat.PressDataAsync(admin, PrivateMenu(chat, admin), $"filtertoggle:{chat.ChatId}:names");
+            Assert.IsFalse((await Stored(chat)).Filters.CheckNames);
+            var named = chat.Add("بدر");
+            var joiner = chat.Add("سلام", MemberState.Left);
+            var writer = chat.Add("Writer");
+
+            await chat.SendAsync(named, "hello everyone");
+            await chat.JoinAsync(joiner);
+            await chat.SendAsync(writer, "سلام");
+
+            Assert.AreEqual(MemberState.Member, State(chat, named), "the name is not checked");
+            Assert.AreEqual(MemberState.Member, State(chat, joiner), "nor a joiner's");
+            Assert.AreEqual(MemberState.Left, State(chat, writer), "the message is");
+
+            await chat.PressDataAsync(admin, PrivateMenu(chat, admin), $"filtertoggle:{chat.ChatId}:names");
+            Assert.IsTrue((await Stored(chat)).Filters.CheckNames);
+            await chat.SendAsync(named, "hello again");
+            Assert.AreEqual(MemberState.Left, State(chat, named), "checked again");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task EstablishedMembers_AreCheckedUnlessTheGroupSaysNot()
         {
             await using var chat = await HarnessChat.StartAsync();

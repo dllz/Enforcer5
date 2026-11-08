@@ -111,6 +111,7 @@ namespace Enforcer5.Tests.Detection
             Assert.IsNull(filters.PresetAction(FilterPresets.Rtl));
             Assert.IsTrue(filters.IncludeEstablished, "established members were always checked");
             Assert.IsFalse(filters.ExemptGroupBots);
+            Assert.IsTrue(filters.CheckNames, "names were always checked");
         }
 
         [TestMethod]
@@ -211,7 +212,8 @@ namespace Enforcer5.Tests.Detection
                     .Append(new FilterRule(0, FilterRule.RegexKind, null, "text", "free +crypto", "ban", true, FilterRule.Trial,
                         DateTimeOffset.FromUnixTimeSeconds(1_900_000_000), null)).ToList(),
                 IncludeEstablished = false,
-                ExemptGroupBots = true
+                ExemptGroupBots = true,
+                CheckNames = false
             },
             Media = new MediaSettings(new Dictionary<string, bool> { ["image"] = true, ["text"] = false }, "kick", null),
             NameLength = new LengthSettings(true, 30, null, null),
@@ -240,6 +242,17 @@ namespace Enforcer5.Tests.Detection
             Assert.IsTrue(back.Media.IsBlocked("image"));
             Assert.AreEqual(InlineBotBlockKind.Pattern, back.InlineBots[1].Kind);
             Assert.IsTrue(back.Warns.PrewarnIsHalf);
+            Assert.IsFalse(back.Filters.CheckNames);
+        }
+
+        [TestMethod]
+        public void ACacheEntryFromBeforeCheckNames_ChecksNames()
+        {
+            var json = DetectionPolicyJson.Serialize(Everything()).Replace(",\"CheckNames\":false", "");
+            Assert.IsFalse(json.Contains("CheckNames"), json);
+            var back = DetectionPolicyJson.Deserialize(json);
+            Assert.IsNotNull(back);
+            Assert.IsTrue(back.Filters.CheckNames);
         }
 
         [TestMethod]

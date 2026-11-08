@@ -182,6 +182,30 @@ namespace Enforcer5.Tests.Detection
         }
 
         [TestMethod]
+        public void Find_LeavesNamesToTheNamePresetsAndOwnRules_WhenCheckNamesIsOff()
+        {
+            var on = FilterSettings.Empty.WithPreset("arabic", "kick").WithPreset("staff_words", "ban");
+            var filters = on with
+            {
+                Rules = on.Rules.Append(new FilterRule(9, FilterRule.RegexKind, null, "name", "^بدر", "ban", true, FilterRule.Live, null, null)).ToList(),
+                CheckNames = false
+            };
+
+            Assert.AreEqual(0, FilterCheck.Find(filters with { Rules = on.Rules }, new User { Id = 1, FirstName = "سلام" }, "hello").Count,
+                "the script preset leaves the name alone");
+            Assert.AreEqual(1, FilterCheck.Find(on, new User { Id = 1, FirstName = "سلام" }, "hello").Count, "on by default");
+            Assert.AreEqual(("arabic", FilterTarget.Text),
+                FilterCheck.Find(filters, new User { Id = 1, FirstName = "Ann" }, "سلام").Select(h => (h.Rule.Preset, h.Target)).Single(),
+                "messages are still checked");
+            Assert.AreEqual(("staff_words", FilterTarget.Name),
+                FilterCheck.Find(filters, new User { Id = 1, FirstName = "Telegram Support" }, "hello").Select(h => (h.Rule.Preset, h.Target)).Single(),
+                "a preset about names only still checks names");
+            Assert.AreEqual((9L, FilterTarget.Name),
+                FilterCheck.Find(filters, new User { Id = 1, FirstName = "بدر" }, "hello").Select(h => (h.Rule.Id, h.Target)).Single(),
+                "the group's own name rule still runs, the Arabic preset does not");
+        }
+
+        [TestMethod]
         public void Settings_AreTheSame_WhateverTheIdsAndAPresetThatIsOff()
         {
             var a = DetectionPolicy.Empty with { Filters = FilterSettings.Empty.WithPreset("phone", "delete") };
@@ -190,6 +214,7 @@ namespace Enforcer5.Tests.Detection
             Assert.IsTrue(DetectionPolicy.Empty.SameSettingsAs(DetectionPolicy.Empty with { Filters = FilterSettings.Empty.WithPreset("phone", null) }));
             Assert.IsFalse(a.SameSettingsAs(a with { Filters = a.Filters.WithPreset("phone", null) }));
             Assert.IsFalse(a.SameSettingsAs(a with { Filters = a.Filters with { ExemptGroupBots = true } }));
+            Assert.IsFalse(a.SameSettingsAs(a with { Filters = a.Filters with { CheckNames = false } }));
         }
     }
 }

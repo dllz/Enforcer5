@@ -2565,6 +2565,9 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="filterGroupBotsButton">
     <value>Skip messages via group's bots</value>
   </string>
+  <string key="filterNamesButton">
+    <value>Check names</value>
+  </string>
   <string key="menuInfo_Flood">
     <value>Members who send too many messages in a short time get the flood action. The limit, the action and which messages count are under Flood in /menu.</value>
   </string>
@@ -2651,6 +2654,9 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="menuInfo_filterGroupBots">
     <value>On does not filter the text of messages sent through an inline bot that is in this group. Their names are still checked.</value>
+  </string>
+  <string key="menuInfo_filterNames">
+    <value>On checks names as well as messages for the script and character filters. Off checks only messages. Admin or support names and your own name rules (/filter) still check names.</value>
   </string>
   <string key="mutedByFilter">
     <value>{0} was muted: {1}</value>

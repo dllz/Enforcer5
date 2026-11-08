@@ -20,7 +20,13 @@ namespace Enforcer5.Detection
     /// bots answer in the member's own language, and the script presets used to kick them for it. Names
     /// are still checked. A bot outside the group is never exempt.
     /// </param>
-    internal sealed record FilterSettings(IReadOnlyList<FilterRule> Rules, bool IncludeEstablished, bool ExemptGroupBots)
+    /// <param name="CheckNames">
+    /// The presets that look at messages and names also check names (on by default, as they always did). Off, they
+    /// check only messages; presets that look at nothing but names, and the group's own name rules, still run
+    /// (Daniel, 2026-11-08).
+    /// </param>
+    internal sealed record FilterSettings(IReadOnlyList<FilterRule> Rules, bool IncludeEstablished, bool ExemptGroupBots,
+        bool CheckNames = true)
     {
         internal static FilterSettings Empty { get; } = new FilterSettings(Array.Empty<FilterRule>(), true, false);
 
@@ -90,6 +96,14 @@ namespace Enforcer5.Detection
                     "channel" => target == FilterTarget.Channel,
                     _ => false
                 };
+
+        /// <summary>
+        /// Whether it checks <paramref name="target"/> under <paramref name="filters"/>: a preset that looks at messages
+        /// and names leaves names alone while the group has <see cref="FilterSettings.CheckNames"/> off.
+        /// </summary>
+        internal bool Checks(FilterSettings filters, FilterTarget target) =>
+            target != FilterTarget.Name || filters.CheckNames || Kind != PresetKind ||
+            !(FilterPresets.Get(Preset) is { } preset && preset.Targets.HasFlag(FilterTarget.Text));
 
         /// <summary>Whether it matches <paramref name="value"/> on <paramref name="target"/>; false for a rule that cannot run.</summary>
         internal bool Matches(FilterTarget target, string value)
