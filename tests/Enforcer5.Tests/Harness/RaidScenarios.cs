@@ -232,6 +232,26 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
+        public async Task ANewMembersLinkToAMessageInTheGroup_IsNotABareLink()
+        {
+            // #32: players point at what someone said with a link to the message; that was reported as a bare link.
+            await using var chat = await HarnessChat.StartAsync();
+            chat.Add("Admin", MemberState.Administrator);
+            var newcomer = chat.Add("Newcomer", MemberState.Left);
+            await chat.JoinAsync(newcomer);
+            var internalId = chat.ChatId.ToString()[4..];
+
+            await chat.SendAsync(newcomer, $"https://t.me/c/{internalId}/42");
+            await chat.SendAsync(newcomer, $"t.me/c/{internalId}/43");
+            Assert.IsFalse(chat.Telegram.SentMessages.Any(m => m.Text?.Contains("posted nothing but a link") == true));
+
+            await chat.SendAsync(newcomer, $"https://t.me/c/{internalId}/44 https://t.me/+cheapfollowers");
+            Assert.AreEqual(1, chat.Telegram.SentMessages.Count(m => m.Text?.Contains("posted nothing but a link") == true),
+                "an outside link beside it still is");
+            AssertOnly429s(chat);
+        }
+
+        [TestMethod]
         public async Task SlashRaid_LocksAtOnce_AndSlashRaidOff_PutsThePermissionsBack()
         {
             await using var chat = await HarnessChat.StartAsync();

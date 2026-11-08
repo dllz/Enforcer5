@@ -38,6 +38,46 @@ namespace Enforcer5.Tests.Raids
         public void BareLinks(string text, bool bare) =>
             Assert.AreEqual(bare, MessageFingerprint.Of(Text(text)).BareLink);
 
+        private static Message InGroup(string text, params MessageEntity[] entities)
+        {
+            var message = Text(text, entities);
+            message.Chat = new Chat { Id = -1001234567890, Username = "OurGroup", Type = ChatType.Supergroup };
+            return message;
+        }
+
+        [DataTestMethod]
+        [DataRow("https://t.me/c/1234567890/42")]
+        [DataRow("t.me/c/1234567890/42")]
+        [DataRow("https://t.me/ourgroup/42")]
+        [DataRow("see https://t.me/OurGroup/42.")]
+        [DataRow("https://t.me/c/1234567890/42 https://t.me/c/1234567890/43")]
+        public void ALinkToTheGroupItself_IsNoLink(string text)
+        {
+            var print = MessageFingerprint.Of(InGroup(text));
+            Assert.AreEqual((0, false), (print.LinkCount, print.BareLink));
+        }
+
+        [TestMethod]
+        public void ALinkToTheGroupItself_AsAnEntityOrTextLink_IsNoLinkEither()
+        {
+            const string url = "https://t.me/c/1234567890/42";
+            var asUrl = MessageFingerprint.Of(InGroup(url, new MessageEntity { Type = MessageEntityType.Url, Offset = 0, Length = url.Length }));
+            Assert.AreEqual((0, false), (asUrl.LinkCount, asUrl.BareLink));
+            var asTextLink = MessageFingerprint.Of(InGroup("here", new MessageEntity { Type = MessageEntityType.TextLink, Offset = 0, Length = 4, Url = url }));
+            Assert.AreEqual((0, false), (asTextLink.LinkCount, asTextLink.BareLink));
+        }
+
+        [TestMethod]
+        public void AnOwnLinkBesideAnOutsideOne_StillCountsTheOutsideOne()
+        {
+            var print = MessageFingerprint.Of(InGroup("https://t.me/c/1234567890/42 https://t.me/spamgroup"));
+            Assert.AreEqual((1, true), (print.LinkCount, print.BareLink));
+            var otherGroup = MessageFingerprint.Of(InGroup("https://t.me/c/999999/42"));
+            Assert.AreEqual((1, true), (otherGroup.LinkCount, otherGroup.BareLink), "another group's message");
+            var lookalike = MessageFingerprint.Of(InGroup("https://t.me/ourgroupfree"));
+            Assert.IsTrue(lookalike.BareLink, "a name that only starts like ours");
+        }
+
         [TestMethod]
         public void AMentionAlone_IsABareLinkToo()
         {

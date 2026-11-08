@@ -371,7 +371,7 @@ namespace Enforcer5.Raids
                 if (echoers.Count > 0) Suspected(chatId, echoers, weak: true);
                 if (bareLink && senderUntrusted && user > 0 && (mentionAdvertised == null || MessageFingerprint.LinksIn(
                         message.Text ?? message.Caption ?? "", message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>(),
-                        mentionAdvertised).Bare))
+                        mentionAdvertised, MessageFingerprint.OwnLinks(message.Chat)).Bare))
                     ReportLink(ctx);
                 Evaluate(chatId);
             }

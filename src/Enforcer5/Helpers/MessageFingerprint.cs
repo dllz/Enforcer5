@@ -32,7 +32,7 @@ namespace Enforcer5.Helpers
         {
             var text = message.Text ?? message.Caption ?? "";
             var entities = message.Entities ?? message.CaptionEntities ?? Array.Empty<MessageEntity>();
-            var (links, bare) = LinksIn(text, entities, mentionOutside);
+            var (links, bare) = LinksIn(text, entities, mentionOutside, OwnLinks(message.Chat));
             return new MessageFingerprint(
                 ContentTypeOf(message),
                 Hash(text),
@@ -41,6 +41,14 @@ namespace Enforcer5.Helpers
                 links,
                 bare);
         }
+
+        /// <summary>
+        /// Links to <paramref name="chat"/> itself (its username or its <c>t.me/c/</c> id), which are neither links nor
+        /// words: players point at earlier messages that way (#32). The same test Detection's link signs use; null without a chat.
+        /// </summary>
+        internal static Func<string, bool> OwnLinks(Chat chat) => chat == null
+            ? null
+            : url => Detection.MessageSigns.IsThisGroup(url.TrimEnd('.', ',', '!', '?', ')', ']', '}', '>', '"', '\'', ';', ':'), chat.Username, chat.Id);
 
         /// <summary>"@admin" and the like: how members report, not a mention of anyone.</summary>
         internal static bool IsReportMention(string text, MessageEntity e)
@@ -141,17 +149,22 @@ namespace Enforcer5.Helpers
 
         /// <summary>
         /// How many links the text has, and whether it is nothing but links give or take two words.
-        /// Mentions count by <paramref name="mentionOutside"/>, as in <see cref="Of(Message, Func{MessageEntity, bool?})"/>.
+        /// Mentions count by <paramref name="mentionOutside"/>, as in <see cref="Of(Message, Func{MessageEntity, bool?})"/>;
+        /// links <paramref name="ownLink"/> says point at the group itself (<see cref="OwnLinks"/>) are taken out, neither link nor word.
         /// </summary>
-        internal static (int Links, bool Bare) LinksIn(string text, MessageEntity[] entities, Func<MessageEntity, bool?> mentionOutside)
+        internal static (int Links, bool Bare) LinksIn(string text, MessageEntity[] entities, Func<MessageEntity, bool?> mentionOutside,
+            Func<string, bool> ownLink = null)
         {
             if (string.IsNullOrWhiteSpace(text)) return (0, false);
             bool? Place(MessageEntity e) => mentionOutside?.Invoke(e);
             var mentions = entities.Where(e => IsMention(e) && !IsReportMention(text, e)).ToList();
             var outside = mentions.Where(e => Place(e) == true).ToList();
             var unknown = mentions.Where(e => Place(e) == null && e.Type == MessageEntityType.Mention).ToList();
-            var urlEntities = entities.Count(e => e.Type is MessageEntityType.Url or MessageEntityType.TextLink);
-            var urls = Math.Max(urlEntities, LinkPattern.Matches(text).Count);
+            bool Own(string url) => ownLink != null && !string.IsNullOrEmpty(url) && ownLink(url);
+            string UrlOf(MessageEntity e) => e.Type == MessageEntityType.TextLink ? e.Url
+                : e.Offset >= 0 && e.Offset + e.Length <= text.Length ? text.Substring(e.Offset, e.Length) : null;
+            var urlEntities = entities.Count(e => (e.Type is MessageEntityType.Url or MessageEntityType.TextLink) && !Own(UrlOf(e)));
+            var urls = Math.Max(urlEntities, LinkPattern.Matches(text).Count(m => !Own(m.Value)));
             var links = urls + outside.Count + unknown.Count;
             if (links == 0) return (0, false);
 
