@@ -70,9 +70,15 @@ namespace Enforcer5
                 return;
             }
             var picked = NsfwSigns.Pick(update.Message.ReplyToMessage);
+            var emojiIds = CustomEmojis.IdsOf(update.Message.ReplyToMessage);
+            if (picked == null && emojiIds.Count > 0)
+            {
+                Bot.Dispatch(async () => Bot.SendReply(await NsfwEmojiTestAsync(emojiIds), update), "NsfwTest.Emoji");
+                return;
+            }
             if (picked == null)
             {
-                Bot.SendReply("Reply to a photo, sticker, GIF, video or image file.", update);
+                Bot.SendReply("Reply to a photo, sticker, GIF, video, image file or a message with custom emoji.", update);
                 return;
             }
             Bot.Dispatch(async () =>
@@ -80,6 +86,78 @@ namespace Enforcer5
                 var (scored, score) = await NsfwSigns.ScorePickedAsync(picked);
                 Bot.SendReply(NsfwTestText(scored, score, NsfwThresholds.Current), update);
             }, "NsfwTest");
+        }
+
+        /// <summary>
+        /// /nsfwtest on custom emoji (Daniel, 2026-11-09): the first <see cref="EmojiCheck.ScoredPerMessage"/> distinct emoji
+        /// are scored as the check scores them, and the answer is the worst, with each pack and whether it is known NSFW.
+        /// </summary>
+        private static async System.Threading.Tasks.Task<string> NsfwEmojiTestAsync(System.Collections.Generic.IReadOnlyList<string> ids)
+        {
+            var emoji = await CustomEmojis.ResolveAsync(ids.Take(EmojiCheck.ScoredPerMessage).ToList(), withFiles: true);
+            if (emoji.Count == 0) return "Telegram said nothing about these custom emoji.";
+            var thresholds = NsfwThresholds.Current;
+            (NsfwSigns.Picked Picked, NsfwScore Score)? worst = null;
+            var scored = 0;
+            foreach (var e in emoji.Values.DistinctBy(e => e.UniqueId))
+            {
+                if (e.Sticker == null || NsfwSigns.Pick(new Message { Sticker = e.Sticker }) is not { } picked) continue;
+                var (at, score) = await NsfwSigns.ScorePickedAsync(picked with { Kind = "custom_emoji" });
+                if (score == null) continue;
+                scored++;
+                if (worst == null || score.Nsfw > worst.Value.Score.Nsfw) worst = (at, score);
+            }
+            var packs = new System.Collections.Generic.List<string>();
+            foreach (var set in emoji.Values.Select(e => e.SetName).Where(n => n != null).Distinct())
+            {
+                var known = await NsfwEmojiSets.GetAsync(set);
+                packs.Add($"<code>{set.FormatHTML()}</code>" + (known == null ? "" : known.Cleared ? " (cleared by a dev)" : " (known NSFW)"));
+            }
+            var head = $"{emoji.Count} custom emoji, {scored} scored; packs: {(packs.Count == 0 ? "none" : string.Join(", ", packs))}\nThe worst:\n";
+            return worst == null ? head + "none could be scored." : head + NsfwTestText(worst.Value.Picked, worst.Value.Score, thresholds);
+        }
+
+        /// <summary>
+        /// /nsfwemoji &lt;pack&gt; [mark|clear], devs only (Daniel, 2026-11-09): whether a custom emoji pack is known NSFW in every
+        /// group, and marks it or clears it. A cleared pack is not banned anywhere for being NSFW again (bans already made in
+        /// groups stay; their admins lift them with /unblock).
+        /// </summary>
+        [Command(Trigger = "nsfwemoji", DevOnly = true, Description = "An emoji pack's NSFW mark: <pack> [mark|clear]")]
+        public static void NsfwEmoji(Update update, string[] args)
+        {
+            var words = (args.Length > 1 ? args[1] ?? "" : "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var name = words.Length > 0 ? Models.StickerSetName.Parse(words[0]) : null;
+            if (name == null)
+            {
+                Bot.SendReply("Usage: /nsfwemoji &lt;pack name or addemoji link&gt; [mark|clear]", update);
+                return;
+            }
+            var action = words.Length > 1 ? words[1].ToLowerInvariant() : null;
+            var dev = update.Message.From.Id;
+            Bot.Dispatch(async () =>
+            {
+                string text;
+                switch (action)
+                {
+                    case "mark":
+                        text = await NsfwEmojiSets.MarkAsync(name, null, null, null, "dev")
+                            ? $"<code>{name}</code> is marked NSFW: groups with the NSFW check on delete its emoji and ban it."
+                            : $"<code>{name}</code> was marked NSFW already.";
+                        break;
+                    case "clear":
+                        text = await NsfwEmojiSets.ClearAsync(name, dev)
+                            ? $"<code>{name}</code> is cleared: no group bans it for being NSFW any more. Bans already made stay."
+                            : $"<code>{name}</code> was not marked NSFW.";
+                        break;
+                    default:
+                        var set = await NsfwEmojiSets.GetAsync(name);
+                        text = set == null ? $"<code>{name}</code> is not marked NSFW."
+                            : $"<code>{name}</code>: {(set.Cleared ? "cleared by a dev" : "NSFW")}, marked by {set.Source} on {set.FlaggedAt:yyyy-MM-dd HH:mm} UTC" +
+                              (set.Nsfw is { } n ? $", {Math.Round(n * 100)}% by emoji <code>{set.CustomEmojiId}</code>" : "") + ".";
+                        break;
+                }
+                Bot.SendReply(text, update);
+            }, "NsfwEmoji");
         }
 
         /// <summary>The answer to /nsfwtest. Pure, for tests.</summary>

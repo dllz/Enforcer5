@@ -340,6 +340,8 @@ namespace Enforcer5.Detection
             GroupBots.ResetForTests();
             BotGuard.ResetForTests();
             NsfwSigns.ResetForTests();
+            CustomEmojis.ResetForTests();
+            NsfwEmojiSets.ResetForTests();
             Images.ImageScans.ResetForTests();
             Ml.Embeddings.ResetForTests();
             SimilarToBanned.ResetForTests();

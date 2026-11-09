@@ -68,6 +68,7 @@ namespace Enforcer5.Handlers
                     Detection.NameSigns.OnMessage(editCtx);
                     Detection.BannedMedia.OnMessage(editCtx);
                     Detection.NsfwSigns.OnMessage(editCtx);
+                    Detection.EmojiCheck.OnMessage(editCtx);
                     Detection.SimilarToBanned.OnMessage(editCtx);
                     if (edited.Date.ToUniversalTime() < Bot.StartTime.AddDays(-2)) return; // too old for raid detection
                     await Raids.RaidGuard.OnMessageAsync(editCtx, edited: true);
@@ -257,6 +258,8 @@ namespace Enforcer5.Handlers
                         Detection.BannedMedia.OnMessage(ctx);
                         // Nudity in a photo or sticker, where the group turned the check on (Detection/NsfwSigns).
                         Detection.NsfwSigns.OnMessage(ctx);
+                        // Custom emoji: from a pack banned here, or NSFW (Detection/EmojiCheck).
+                        Detection.EmojiCheck.OnMessage(ctx);
                         // Like a message or file that got someone removed, by the model service's vectors (step 15).
                         Detection.SimilarToBanned.OnMessage(ctx);
                     }

@@ -12,7 +12,7 @@ namespace Enforcer5.Detection
     /// of: there the signs score, record, act and report, and the trust learning runs. Elsewhere the new signs do
     /// nothing and are not even looked for, and nothing is recorded. What groups already relied on before Detection
     /// stays everywhere: the old checks (flood, length, media, channel posts), the filters (admins' own rules and
-    /// the presets that replaced the Arabic and RTL checks, with their trials and reports), /banmedia, and BotGuard.
+    /// the presets that replaced the Arabic and RTL checks, with their trials and reports), /block, and BotGuard.
     /// <para>
     /// Membership is asked of Telegram (getChatMember) and believed for <see cref="FreshFor"/>, and changed at once
     /// when a member update says Daniel joined or left. <c>DetectionEverywhere=true</c> (env or appsettings) ends

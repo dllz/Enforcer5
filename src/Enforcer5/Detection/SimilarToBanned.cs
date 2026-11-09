@@ -277,7 +277,7 @@ namespace Enforcer5.Detection
             }
         }
 
-        /// <summary>An admin banned the file in <paramref name="message"/> with /banmedia: its image is embedded and kept.</summary>
+        /// <summary>An admin banned the file in <paramref name="message"/> with /block: its image is embedded and kept.</summary>
         internal static void FileBanned(long chatId, Message message)
         {
             try

@@ -26,7 +26,7 @@ namespace Enforcer5.Tests.StickerSets
         [DataRow("https://telegram.me/addstickers/Animals", "animals")]
         [DataRow("HTTPS://T.ME/AddStickers/Animals", "animals")]
         [DataRow("tg://addstickers?set=Animals", "animals")]
-        [DataRow("https://t.me/addemoji/Hearts", "hearts")] // accepted so /blocksticker can explain
+        [DataRow("https://t.me/addemoji/Hearts", "hearts")] // emoji packs are blocked too
         [DataRow("123", "123")]
         public void NamesAndLinks_AreNormalised(string input, string expected)
         {
@@ -249,23 +249,22 @@ namespace Enforcer5.Tests.StickerSets
             StringAssert.Contains(reply, "<code>Animals</code>");
             StringAssert.Contains(reply, "https://t.me/addstickers/Animals");
             StringAssert.Contains(reply, "3");
-            StringAssert.Contains(reply, "<code>/blocksticker animals</code>");
+            StringAssert.Contains(reply, "<code>/block animals</code>");
         }
 
         [TestMethod]
         public void Group_SaysWhetherThePackIsBlocked()
         {
-            StringAssert.Contains(StickerInfo(Pack(), true), "<code>/unblocksticker animals</code>");
-            StringAssert.Contains(StickerInfo(Pack(), false), "<code>/blocksticker animals</code>");
+            StringAssert.Contains(StickerInfo(Pack(), true), "<code>/unblock animals</code>");
+            StringAssert.Contains(StickerInfo(Pack(), false), "<code>/block animals</code>");
         }
 
         [TestMethod]
-        public void EmojiPack_IsExplainedInsteadOfOfferedForBlocking()
+        public void EmojiPack_IsOfferedForBlockingWithItsEmojiLink()
         {
             var reply = StickerInfo(Pack(StickerType.CustomEmoji), false);
             StringAssert.Contains(reply, "https://t.me/addemoji/Animals");
-            StringAssert.Contains(reply, Methods.GetLocaleString(_english, "stickerInfoEmojiPack"));
-            Assert.IsFalse(reply.Contains("/blocksticker"), reply);
+            StringAssert.Contains(reply, "<code>/block animals</code>");
         }
 
         [TestMethod]
@@ -273,7 +272,7 @@ namespace Enforcer5.Tests.StickerSets
         {
             var reply = StickerInfo(null, null);
             StringAssert.Contains(reply, "<code>animals</code>");
-            StringAssert.Contains(reply, "<code>/blocksticker animals</code>");
+            StringAssert.Contains(reply, "<code>/block animals</code>");
         }
 
         [TestMethod]

@@ -1549,9 +1549,6 @@
   <string key ="getPreWarn">
     <value>Pre-Warns: {0}</value>
   </string>
-  <string key="inlineBlockUsage">
-    <value>Give the inline bot's username, like @gif, or a regular expression between slashes, like /spam/. You can also reply to a message that was sent via the bot.</value>
-  </string>
   <string key="inlineBlockInvalidUsername">
     <value>{0} is not a valid bot username.</value>
   </string>
@@ -1560,9 +1557,6 @@
   </string>
   <string key="inlineBlockPatternTooLong">
     <value>A regular expression can be at most {0} characters long.</value>
-  </string>
-  <string key="inlineBlockLimit">
-    <value>This group already has {0} entries on its inline bot blocklist, which is the maximum. Remove one with /unblockinline first.</value>
   </string>
   <string key="inlineBlockAdded">
     <value>Messages sent via {0} will now be deleted.</value>
@@ -1573,54 +1567,14 @@
   <string key="inlineBlockRemoved">
     <value>{0} has been removed from the inline bot blocklist.</value>
   </string>
-  <string key="inlineBlockNotFound">
-    <value>{0} is not on the inline bot blocklist. Use /blockedinline to see the entries.</value>
-  </string>
-  <string key="inlineBlockList">
-    <value><![CDATA[<b>Blocked inline bots</b>:\n{0}]]></value>
-  </string>
   <string key="inlineBlockListEmpty">
     <value>No inline bots are blocked in this group.</value>
-  </string>
-  <string key="hcommandblockinline">
-    <value>
-      Deletes every message sent via an inline bot, for example GIFs sent with @gif. Admins and users excluded with /disablewatch are not affected. Enforcer needs the right to delete messages.
-
-      Give the bot's username to block that bot, or a regular expression between slashes to block every bot whose username matches it. Expressions ignore case, are matched against the username without the @, and match anywhere in it unless you anchor them with ^ and $.
-
-      Example:
-      /{0} @gif
-      /{0} while replying to a message sent via the bot
-      /{0} /^spam/ blocks every bot whose username starts with spam
-      /{0} /.*/ blocks all inline bots
-    </value>
-  </string>
-  <string key="hcommandunblockinline">
-    <value>
-      Removes an entry from the inline bot blocklist. Write it exactly as /blockedinline shows it.
-
-      Example:
-      /{0} @gif
-      /{0} /^spam/
-      /{0} while replying to a message sent via the bot
-    </value>
-  </string>
-  <string key="hcommandblockedinline">
-    <value>
-      Lists the inline bots blocked in this group.
-
-      Example:
-      /{0}
-    </value>
   </string>
   <string key="inlineTestUsage">
     <value>Give a bot's username, like @gif, to see which entries on this group's inline bot blocklist block it. To try a regular expression without adding it, put it first, between slashes, followed by up to {0} usernames, like /^spam/ @spambot @gif. You can also reply to a message that was sent via the bot.</value>
   </string>
   <string key="inlineTestTooMany">
     <value>You can test at most {0} usernames at once.</value>
-  </string>
-  <string key="inlineTestPatternHeader">
-    <value>Testing {0}. It has not been added to the blocklist; use /blockinline for that.</value>
   </string>
   <string key="inlineTestMatch">
     <value>{0}: matches, would be blocked</value>
@@ -1636,9 +1590,9 @@
   </string>
   <string key="hcommandtestinline">
     <value>
-      Shows whether inline bots would be blocked, without changing anything. Use it to check a regular expression before you add it with /blockinline.
+      Shows whether inline bots would be blocked, without changing anything. Use it to check a regular expression before you block it with /block.
 
-      Give one or more bot usernames to see which entries on this group's blocklist block them. Put a regular expression between slashes first to test that expression instead of the blocklist; it is checked the same way /blockinline checks it, but not saved.
+      Give one or more bot usernames to see which entries on this group's blocklist block them. Put a regular expression between slashes first to test that expression instead of the blocklist; it is checked the same way /block checks it, but not saved.
 
       Example:
       /{0} @gif
@@ -1658,12 +1612,6 @@
   <string key="stickerSetNotFound">
     <value>Telegram has no sticker pack called {0}.</value>
   </string>
-  <string key="stickerSetIsEmoji">
-    <value>{0} is a custom emoji pack. Only sticker packs can be blocked.</value>
-  </string>
-  <string key="stickerBlockLimit">
-    <value>This group already has {0} sticker packs blocked, which is the maximum. Remove one with /unblocksticker first.</value>
-  </string>
   <string key="stickerBlockAdded">
     <value>Stickers from {0} will now be deleted.</value>
   </string>
@@ -1672,15 +1620,6 @@
   </string>
   <string key="stickerBlockRemoved">
     <value>{0} has been removed from the sticker pack blocklist.</value>
-  </string>
-  <string key="stickerBlockNotFound">
-    <value>{0} is not on the sticker pack blocklist. Use /blockedstickers to see the entries.</value>
-  </string>
-  <string key="stickerBlockList">
-    <value><![CDATA[<b>Blocked sticker packs</b>:\n{0}]]></value>
-  </string>
-  <string key="stickerBlockListEmpty">
-    <value>No sticker packs are blocked in this group.</value>
   </string>
   <string key="stickerInfoTitle">
     <value><![CDATA[<b>{0}</b>]]></value>
@@ -1694,53 +1633,12 @@
   <string key="stickerInfoCount">
     <value>Stickers: {0}</value>
   </string>
-  <string key="stickerInfoEmojiPack">
-    <value>This is a custom emoji pack. Only sticker packs can be blocked.</value>
-  </string>
-  <string key="stickerInfoBlocked">
-    <value><![CDATA[Blocked in this group. To unblock it: <code>/unblocksticker {0}</code>]]></value>
-  </string>
-  <string key="stickerInfoNotBlocked">
-    <value><![CDATA[Not blocked in this group. To block it: <code>/blocksticker {0}</code>]]></value>
-  </string>
-  <string key="stickerInfoHowToBlock">
-    <value><![CDATA[To block it, send this in your group: <code>/blocksticker {0}</code>]]></value>
-  </string>
-  <string key="hcommandblocksticker">
-    <value>
-      Deletes every sticker from a sticker pack. Admins and users excluded with /disablewatch are not affected. Enforcer needs the right to delete messages. Custom emoji inside messages are not covered.
-
-      Give the pack's name or its t.me/addstickers link, or reply to a sticker from the pack. Use /stickerinfo in a private chat with me to find a pack's name.
-
-      Example:
-      /{0} https://t.me/addstickers/Animals
-      /{0} Animals
-      /{0} while replying to a sticker
-    </value>
-  </string>
-  <string key="hcommandunblocksticker">
-    <value>
-      Removes a pack from the sticker pack blocklist.
-
-      Example:
-      /{0} Animals
-      /{0} while replying to a sticker
-    </value>
-  </string>
-  <string key="hcommandblockedstickers">
-    <value>
-      Lists the sticker packs blocked in this group.
-
-      Example:
-      /{0}
-    </value>
-  </string>
   <string key="hcommandstickerinfo">
     <value>
-      Shows a sticker pack's name and link, and how to block it. In a private chat with me anyone can use it; in a group only admins can, and it also says whether the pack is blocked there.
+      Shows a sticker or custom emoji pack's name and link, and how to block it. In a private chat with me anyone can use it; in a group only admins can, and it also says whether the pack is blocked there.
 
       Example:
-      /{0} while replying to a sticker
+      /{0} while replying to a sticker or a message with custom emoji
       /{0} https://t.me/addstickers/Animals
     </value>
   </string>
@@ -2254,7 +2152,7 @@ Joined: {0} · muted: {1} · banned: {2}</value>
     <value>This chat's ID, or the ID of the user you reply to</value>
   </string>
   <string key="cmdstickerinfo">
-    <value>A sticker pack's name and how to block it</value>
+    <value>A sticker or emoji pack's name and how to block it</value>
   </string>
   <string key="cmdsupport">
     <value>Link to the support group</value>
@@ -2343,20 +2241,8 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="cmdauth">
     <value>Make a user an owner for the bot</value>
   </string>
-  <string key="cmdblockedinline">
-    <value>Blocked inline bots</value>
-  </string>
-  <string key="cmdblockedstickers">
-    <value>Blocked sticker packs</value>
-  </string>
   <string key="cmdblockelevate">
     <value>Stop an admin elevating others</value>
-  </string>
-  <string key="cmdblockinline">
-    <value>Block an inline bot</value>
-  </string>
-  <string key="cmdblocksticker">
-    <value>Block a sticker pack</value>
   </string>
   <string key="cmdcheck">
     <value>How many messages a user has sent here</value>
@@ -2471,12 +2357,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="cmdunblockelevate">
     <value>Let an admin elevate others again</value>
-  </string>
-  <string key="cmdunblockinline">
-    <value>Unblock an inline bot</value>
-  </string>
-  <string key="cmdunblocksticker">
-    <value>Unblock a sticker pack</value>
   </string>
   <string key="cmdunmute">
     <value>Unmute a user</value>
@@ -3248,24 +3128,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="hcommandtrust">
     <value>Restores a member set back to new with /untrust: they count by their messages and days again. Reply to them, or give their id or @username.</value>
   </string>
-  <string key="hcommandbanmedia">
-    <value>Bans a file in this group: reply to a photo, video, GIF, sticker or file with /banmedia, and whoever posts it again (anyone but admins and approved members) has it deleted. The post you reply to is deleted too. Banning or kicking someone with a reply to their file, or Ban on a report about it, bans the file as well. /banmedia alone says how many files are banned; /unbanmedia lifts a ban.</value>
-  </string>
-  <string key="hcommandunbanmedia">
-    <value>Lifts the ban on a file: reply to a message with that file with /unbanmedia. /unbanmedia all lifts every ban on files in this group.</value>
-  </string>
-  <string key="cmdbanmedia">
-    <value>Ban a file in this group</value>
-  </string>
-  <string key="cmdunbanmedia">
-    <value>Lift the ban on a file</value>
-  </string>
-  <string key="banMediaCount">
-    <value>Files banned in this group: {0}.</value>
-  </string>
-  <string key="banMediaNoFile">
-    <value>That message has no photo, video, GIF, sticker or file to ban. Reply to one with /banmedia.</value>
-  </string>
   <string key="banMediaAdded">
     <value>Banned: whoever posts this file here again has it deleted.</value>
   </string>
@@ -3274,9 +3136,6 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="banMediaRemoved">
     <value>The ban on this file is lifted.</value>
-  </string>
-  <string key="banMediaNotBanned">
-    <value>This file is not banned here.</value>
   </string>
   <string key="banMediaCleared">
     <value>Lifted the ban on {0} files.</value>
@@ -3840,5 +3699,151 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   </string>
   <string key="hcommandnsfwtest">
     <value>Devs only. Reply to a photo, sticker, GIF, video or image file with /{0}: the bot scores it as the NSFW check would and answers with the scores and whether it would be flagged. Nothing is deleted, reported or recorded.</value>
+  </string>
+  <string key="blockUsage">
+    <value>Reply to a message with /block to block what it has: its sticker pack, its custom emoji packs, the inline bot it was sent via, or its file. Or give a pack's name or link, an inline bot like @gif, or a regular expression between slashes like /spam/ for inline bots.</value>
+  </string>
+  <string key="blockNothing">
+    <value>That message has nothing to block: no sticker, custom emoji, inline bot or file.</value>
+  </string>
+  <string key="blockChoose">
+    <value>What should be blocked?</value>
+  </string>
+  <string key="blockChoiceFile">
+    <value>This file</value>
+  </string>
+  <string key="blockChoiceSticker">
+    <value>Only this sticker</value>
+  </string>
+  <string key="blockChoiceStickerSet">
+    <value>Sticker pack {0}</value>
+  </string>
+  <string key="blockChoiceEmojiSet">
+    <value>Emoji pack {0}</value>
+  </string>
+  <string key="blockChoiceInlineBot">
+    <value>Inline bot {0}</value>
+  </string>
+  <string key="blockChoiceAll">
+    <value>All of them</value>
+  </string>
+  <string key="blockExpired">
+    <value>These buttons have expired. Use /block again.</value>
+  </string>
+  <string key="blockInvalid">
+    <value>{0} is not a pack name, a pack link or an inline bot.</value>
+  </string>
+  <string key="packNotFound">
+    <value>Telegram has no sticker or emoji pack called {0}.</value>
+  </string>
+  <string key="packLookupFailed">
+    <value>Telegram could not tell me what {0} is right now. Try again, or give its t.me/addstickers or t.me/addemoji link.</value>
+  </string>
+  <string key="blockLimitStickerSets">
+    <value>This group already has {0} sticker packs blocked, which is the maximum. Remove one with /unblock first.</value>
+  </string>
+  <string key="blockLimitEmojiSets">
+    <value>This group already has {0} emoji packs blocked, which is the maximum. Remove one with /unblock first.</value>
+  </string>
+  <string key="blockLimitInlineBots">
+    <value>This group already has {0} inline bots blocked, which is the maximum. Remove one with /unblock first.</value>
+  </string>
+  <string key="emojiBlockAdded">
+    <value>Custom emoji from {0} will now be deleted.</value>
+  </string>
+  <string key="emojiBlockExists">
+    <value>{0} is already on the emoji pack blocklist.</value>
+  </string>
+  <string key="emojiBlockRemoved">
+    <value>{0} has been removed from the emoji pack blocklist.</value>
+  </string>
+  <string key="blockNotFound">
+    <value>{0} is not blocked here. Use /blocked to see what is.</value>
+  </string>
+  <string key="unblockNothing">
+    <value>Nothing in that message is blocked here.</value>
+  </string>
+  <string key="blockedTitle">
+    <value><![CDATA[<b>Blocked in this group</b>]]></value>
+  </string>
+  <string key="blockedStickerSets">
+    <value><![CDATA[<b>Sticker packs</b>:]]></value>
+  </string>
+  <string key="blockedEmojiSets">
+    <value><![CDATA[<b>Emoji packs</b>:]]></value>
+  </string>
+  <string key="blockedInlineBots">
+    <value><![CDATA[<b>Inline bots</b>:]]></value>
+  </string>
+  <string key="blockedFiles">
+    <value><![CDATA[<b>Files</b>: {0}]]></value>
+  </string>
+  <string key="blockedAuto">
+    <value>(🔞 found NSFW)</value>
+  </string>
+  <string key="blockedNothing">
+    <value>Nothing is blocked in this group.</value>
+  </string>
+  <string key="packInfoBlocked">
+    <value><![CDATA[Blocked in this group. To unblock it: <code>/unblock {0}</code>]]></value>
+  </string>
+  <string key="packInfoNotBlocked">
+    <value><![CDATA[Not blocked in this group. To block it: <code>/block {0}</code>]]></value>
+  </string>
+  <string key="packInfoHowToBlock">
+    <value><![CDATA[To block it, send this in your group: <code>/block {0}</code>]]></value>
+  </string>
+  <string key="inlineTestPatternNote">
+    <value>Testing {0}. It has not been added to the blocklist; use /block for that.</value>
+  </string>
+  <string key="nsfwEmojiPack">
+    <value>NSFW emoji pack {0}</value>
+  </string>
+  <string key="cmdblock">
+    <value>Block a sticker or emoji pack, inline bot or file</value>
+  </string>
+  <string key="cmdunblock">
+    <value>Lift a block</value>
+  </string>
+  <string key="cmdblocked">
+    <value>What is blocked in this group</value>
+  </string>
+  <string key="hcommandblock">
+    <value>
+      Blocks something in this group: whoever posts it again (anyone but admins and users excluded with /disablewatch) has it deleted. Enforcer needs the right to delete messages.
+
+      Reply to a message to block what it has: its sticker pack, the packs of its custom emoji, the inline bot it was sent via, or its file (a photo, video, GIF, sticker or file). When it has more than one, you choose with buttons. The message you reply to is deleted too, unless an admin sent it.
+
+      Or name it: a sticker or emoji pack by its name or t.me/addstickers or t.me/addemoji link, an inline bot by its username, or every inline bot whose username matches a regular expression between slashes (it ignores case and matches anywhere unless you anchor it with ^ and $).
+
+      Example:
+      /{0} while replying to a message
+      /{0} https://t.me/addemoji/SomePack
+      /{0} Animals
+      /{0} @gif
+      /{0} /^spam/
+    </value>
+  </string>
+  <string key="hcommandunblock">
+    <value>
+      Lifts a block: reply to a message to unblock everything in it that is blocked, or name the pack or inline bot as /blocked shows it. /{0} files lifts the ban on every file.
+
+      Example:
+      /{0} while replying to a message
+      /{0} Animals
+      /{0} @gif
+      /{0} files
+    </value>
+  </string>
+  <string key="hcommandblocked">
+    <value>
+      Lists what is blocked in this group: sticker packs, emoji packs (those Detection found NSFW are marked), inline bots, and how many files.
+
+      Example:
+      /{0}
+    </value>
+  </string>
+  <string key="hcommandnsfwemoji">
+    <value>Devs only. /{0} pack: whether a custom emoji pack is known NSFW in every group. /{0} pack mark marks it; /{0} pack clear clears it, so no group bans it for being NSFW again.</value>
   </string>
 </strings>

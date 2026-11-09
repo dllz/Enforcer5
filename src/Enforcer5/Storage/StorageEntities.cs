@@ -773,7 +773,7 @@ namespace Enforcer5.Storage
 
     /// <summary>
     /// A file banned in a group (design section 3, build step 12): an admin's, by banning or kicking someone with a reply to
-    /// it, with Ban on a Detection report about it, or with /banmedia; or the bot's (<c>source</c> auto), by banning or
+    /// it, with Ban on a Detection report about it, or with /block; or the bot's (<c>source</c> auto), by banning or
     /// kicking someone on its own over a message that had it, lifted again by an admin's unban of that member. Posting it again (the same <c>file_unique_id</c>)
     /// is the <c>banned_media</c> sign, which deletes it. Never the file itself. <c>pdq_hash</c> is for the near-copy
     /// check that comes with the ML step.
@@ -995,6 +995,43 @@ namespace Enforcer5.Storage
         /// <summary>Every exposed part NudeNet scored, as JSON {part: score}; <c>part</c> is the surest of them.</summary>
         public string Parts { get; set; }
         public DateTimeOffset ScoredAt { get; set; }
+    }
+
+    /// <summary>
+    /// A custom emoji the bot looked up (getCustomEmojiStickers), shared by every group and both editions: a message only
+    /// carries the emoji's id, so this is how its pack is known (blocked emoji packs) and whether it was scored. The
+    /// file id is not kept: it is different for each bot.
+    /// </summary>
+    internal sealed class CustomEmojiEntity
+    {
+        public string CustomEmojiId { get; set; }
+        /// <summary>Lowercase, as packs are compared; null for an emoji in no pack.</summary>
+        public string SetName { get; set; }
+        public string FileUniqueId { get; set; }
+        /// <summary>static, video or animated.</summary>
+        public string Format { get; set; }
+        /// <summary>Its NSFW score by <see cref="Model"/>; null while not scored.</summary>
+        public float? Nsfw { get; set; }
+        public string Model { get; set; }
+        public DateTimeOffset SeenAt { get; set; }
+    }
+
+    /// <summary>
+    /// A custom emoji pack found NSFW, in every group (Daniel, 2026-11-09): one of its emoji scored NSFW, or a dev marked it.
+    /// A group with the NSFW check on bans it as soon as it is posted there, without scoring. A dev's clear keeps the row.
+    /// </summary>
+    internal sealed class NsfwEmojiSetEntity
+    {
+        public string SetName { get; set; }
+        /// <summary>The emoji that flagged it; null when a dev marked it.</summary>
+        public string CustomEmojiId { get; set; }
+        public float? Nsfw { get; set; }
+        public string Model { get; set; }
+        /// <summary>auto or dev.</summary>
+        public string Source { get; set; }
+        public DateTimeOffset FlaggedAt { get; set; }
+        public DateTimeOffset? ClearedAt { get; set; }
+        public long? ClearedByAccountId { get; set; }
     }
 
     /// <summary>

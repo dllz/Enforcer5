@@ -33,8 +33,17 @@ namespace Enforcer5.Detection
         IReadOnlyList<InlineBotBlock> InlineBots,
         IReadOnlyList<string> StickerSets,
         ChannelPostSettings ChannelPosts,
-        EngineSettings Engine)
+        EngineSettings Engine,
+        IReadOnlyList<EmojiSetEntry> EmojiSets)
     {
+        /// <summary>Whether custom emoji from the pack <paramref name="setName"/> (lowercase) are deleted here.</summary>
+        internal bool EmojiSetBlocked(string setName) =>
+            setName != null && EmojiSets.Any(e => e.Blocks && e.Name == setName);
+
+        /// <summary>The admins found the pack fine after Detection banned it as NSFW: it is not banned again here.</summary>
+        internal bool EmojiSetAllowed(string setName) =>
+            setName != null && EmojiSets.Any(e => e.Kind == EmojiSetEntry.Allowed && e.Name == setName);
+
         /// <summary>The actions an automatic check can take (design section 1).</summary>
         internal static readonly string[] Actions =
             { "none", "score", "report", "delete", "warn", "mute", "tempmute", "kick", "tempban", "ban" };
@@ -54,7 +63,8 @@ namespace Enforcer5.Detection
             InlineBots: Array.Empty<InlineBotBlock>(),
             StickerSets: Array.Empty<string>(),
             ChannelPosts: new ChannelPostSettings(false, Array.Empty<AllowedChannel>()),
-            Engine: EngineSettings.Default);
+            Engine: EngineSettings.Default,
+            EmojiSets: Array.Empty<EmojiSetEntry>());
 
         /// <summary>
         /// What <c>Service.GenerateSettings</c> gives a new group (or one reset with /menu): it sets
@@ -85,6 +95,7 @@ namespace Enforcer5.Detection
         private static DetectionPolicy Canonical(DetectionPolicy policy) => policy with
         {
             Version = 0,
+            EmojiSets = policy.EmojiSets.OrderBy(e => e.Name, StringComparer.Ordinal).ThenBy(e => e.Kind, StringComparer.Ordinal).ToList(),
             Flood = policy.Flood with { Counted = new SortedDictionary<string, bool>(policy.Flood.Counted.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
             Media = policy.Media with { Blocked = new SortedDictionary<string, bool>(policy.Media.Blocked.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
             Engine = policy.Engine with { Signs = new SortedDictionary<string, SignPolicy>(policy.Engine.Signs.ToDictionary(e => e.Key, e => e.Value), StringComparer.Ordinal) },
@@ -99,6 +110,21 @@ namespace Enforcer5.Detection
                     .ToList()
             }
         };
+    }
+
+    /// <summary>
+    /// A custom emoji pack on a group's list (Daniel, 2026-11-09; PostgreSQL <c>group_filters</c>, target <c>emoji_set</c>):
+    /// banned by an admin (<see cref="Admin"/>, /block), banned by Detection as NSFW (<see cref="Auto"/>), or found fine by
+    /// the admins after that (<see cref="Allowed"/>), so Detection does not ban it here again.
+    /// </summary>
+    /// <param name="Name">The pack's name, lowercase.</param>
+    internal sealed record EmojiSetEntry(string Name, string Kind)
+    {
+        internal const string Admin = "exact";
+        internal const string Auto = "auto";
+        internal const string Allowed = "allowed";
+
+        internal bool Blocks => Kind is Admin or Auto;
     }
 
     /// <param name="Enabled">Flood checking is on (the old <c>Flood = "no"</c>).</param>

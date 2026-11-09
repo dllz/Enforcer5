@@ -111,6 +111,7 @@ namespace Enforcer5.Detection
         internal static readonly SignDefinition NameLength = Register(Ported("name_length"));
         internal static readonly SignDefinition InlineBot = Register(Ported("inline_bot"));
         internal static readonly SignDefinition StickerSet = Register(Ported("sticker_set"));
+        internal static readonly SignDefinition EmojiSet = Register(Ported("emoji_set"));
         internal static readonly SignDefinition ChannelPost = Register(Ported("channel_post"));
         internal static readonly SignDefinition RaidLink = Register(Ported("raid_link", SignCategory.Abuse));
         internal static readonly SignDefinition MassAdd = Register(Ported("mass_add", SignCategory.Abuse));

@@ -120,7 +120,7 @@ set blocks, plus everything new.
   edit distance ≤ 1 for short names, or an admin's name plus a keyword. On join and on an
   observed name change.
 - **Banned media.** When an admin bans or kicks by replying to a media message, through report
-  buttons, or with `/banmedia` as a reply, its `file_unique_id` (and PDQ hash once the ML step
+  buttons, or with `/block` as a reply, its `file_unique_id` (and PDQ hash once the ML step
   exists) is stored for the group.
 - During a raid (`RaidGuard.Quiet`) detection records but sends no reports, and profile lookups
   pause for that group.
@@ -483,8 +483,8 @@ keys are not translated), local commit. Chaos run (500 seeds) before the push.
     `pdq_hash` for the ML step, added by, source `ban`/`report`/`command`/`auto`; at most 2000 a group, the oldest dropped). A
     file is banned when an admin bans, tempbans or kicks someone with a command replying to it (`Decisions`), presses Ban
     on a Detection report about a post that had one (its record from step 8, looked for over the last 3 days), or
-    replies to it with `/banmedia` (which deletes that post unless an admin made it). `/banmedia` alone gives the count,
-    `/unbanmedia` as a reply lifts one ban, `/unbanmedia all` every one. Posting it again, or editing a post into it, is
+    replies to it with `/block` (which deletes that post unless an admin made it; `/banmedia` until 2026-11-09). `/blocked`
+    gives the count, `/unblock` as a reply lifts one ban, `/unblock files` every one. Posting it again, or editing a post into it, is
     `banned_media`: deleted for everyone but admins and approved members, **live from day one** (an admin chose it,
     so it acts while the group still watches too). Each group's list is kept in memory, read from PostgreSQL on first
     use and every 10 minutes (when the other edition's additions show), so a media message costs a set lookup only.

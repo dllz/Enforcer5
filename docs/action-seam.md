@@ -338,7 +338,7 @@ moved onto the request (raid quarantine). Labels are still worked out by `Decisi
 gives raid mode's own actions `auto` and a raid button's `raid`, as before; taking them from the request is
 left for step E, when the record step moves into the actions. A guard test (`ActionSeamTests`) fails when
 code outside `Actions/` and `Enforcement/` builds a ban, kick, mute, unban, unmute or channel ban job.
-Routine deletes (flood, locks, channel posts, the bot's own messages, `/banmedia`'s file) and raid mode's
+Routine deletes (flood, locks, channel posts, the bot's own messages, `/block`'s post) and raid mode's
 lock stay direct jobs.
 
 Step E notes: `Actions/ActionLog` posts an action's line once it went through (done or queued), in the

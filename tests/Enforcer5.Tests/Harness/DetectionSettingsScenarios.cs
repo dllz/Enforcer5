@@ -177,7 +177,7 @@ namespace Enforcer5.Tests.Harness
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
 
-            await chat.SendAsync(admin, "/blockinline @spambot");
+            await chat.SendAsync(admin, "/block @spambot");
 
             var stored = await Stored(chat);
             Assert.AreEqual("spambot", stored.InlineBots.Single().Value);

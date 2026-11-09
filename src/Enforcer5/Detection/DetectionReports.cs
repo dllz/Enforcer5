@@ -524,6 +524,12 @@ namespace Enforcer5.Detection
                     Decisions.Fine(chatId, userId, actor, signs);
                     Fines.Add(chatId, userId, signs);
                     MemberScores.Forgive(chatId, userId);
+                    // Emoji packs Detection banned here for being NSFW are allowed again here (Daniel, 2026-11-09).
+                    if (signs.Contains(SignCatalog.ImageNsfw.Name))
+                    {
+                        var since = report.Key.OpenedAt - Window;
+                        Bot.Dispatch(() => EmojiCheck.FalseReportAsync(chatId, userId, since), "EmojiCheck.FalseReport");
+                    }
                     break;
             }
         }

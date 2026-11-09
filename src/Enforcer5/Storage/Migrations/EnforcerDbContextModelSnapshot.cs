@@ -447,6 +447,50 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.CustomEmojiEntity", b =>
+                {
+                    b.Property<string>("CustomEmojiId")
+                        .HasColumnType("text")
+                        .HasColumnName("custom_emoji_id");
+
+                    b.Property<string>("FileUniqueId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("file_unique_id");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("format");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<float?>("Nsfw")
+                        .HasColumnType("real")
+                        .HasColumnName("nsfw");
+
+                    b.Property<DateTimeOffset>("SeenAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("seen_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("SetName")
+                        .HasColumnType("text")
+                        .HasColumnName("set_name");
+
+                    b.HasKey("CustomEmojiId");
+
+                    b.HasIndex(new[] { "SetName" }, "custom_emoji_set_idx");
+
+                    b.ToTable("custom_emoji", null, t =>
+                        {
+                            t.HasCheckConstraint("custom_emoji_format_check", "format IN ('static', 'video', 'animated')");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.DetectionAdjustmentEntity", b =>
                 {
                     b.Property<long>("AdjustmentId")
@@ -1292,9 +1336,11 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("group_filters_category_check", "category IS NULL OR category IN ('abuse', 'group')");
 
+                            t.HasCheckConstraint("group_filters_emoji_kind_check", "kind NOT IN ('auto', 'allowed') OR target = 'emoji_set'");
+
                             t.HasCheckConstraint("group_filters_hits_check", "hits >= 0");
 
-                            t.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact')");
+                            t.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact', 'auto', 'allowed')");
 
                             t.HasCheckConstraint("group_filters_length_check", "kind <> 'length' OR target IN ('text', 'name')");
 
@@ -1302,11 +1348,11 @@ namespace Enforcer5.Storage.Migrations
 
                             t.HasCheckConstraint("group_filters_mode_check", "mode IN ('live', 'trial')");
 
-                            t.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact')) = (pattern IS NOT NULL)");
+                            t.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact', 'auto', 'allowed')) = (pattern IS NOT NULL)");
 
                             t.HasCheckConstraint("group_filters_preset_check", "(kind = 'preset') = (preset IS NOT NULL)");
 
-                            t.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set')");
+                            t.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set', 'emoji_set')");
 
                             t.HasCheckConstraint("group_filters_trial_check", "mode <> 'trial' OR trial_until IS NOT NULL");
                         });
@@ -2169,6 +2215,53 @@ namespace Enforcer5.Storage.Migrations
                     b.ToTable("message_fingerprints", null, t =>
                         {
                             t.HasCheckConstraint("message_fingerprints_reason_check", "sample_reason IN ('first', 'sample', 'raid')");
+                        });
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.NsfwEmojiSetEntity", b =>
+                {
+                    b.Property<string>("SetName")
+                        .HasColumnType("text")
+                        .HasColumnName("set_name");
+
+                    b.Property<DateTimeOffset?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cleared_at");
+
+                    b.Property<long?>("ClearedByAccountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("cleared_by_account_id");
+
+                    b.Property<string>("CustomEmojiId")
+                        .HasColumnType("text")
+                        .HasColumnName("custom_emoji_id");
+
+                    b.Property<DateTimeOffset>("FlaggedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("flagged_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<float?>("Nsfw")
+                        .HasColumnType("real")
+                        .HasColumnName("nsfw");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.HasKey("SetName");
+
+                    b.HasIndex("ClearedByAccountId");
+
+                    b.ToTable("nsfw_emoji_sets", null, t =>
+                        {
+                            t.HasCheckConstraint("nsfw_emoji_sets_source_check", "source IN ('auto', 'dev')");
                         });
                 });
 
@@ -3774,6 +3867,14 @@ namespace Enforcer5.Storage.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Enforcer5.Storage.NsfwEmojiSetEntity", b =>
+                {
+                    b.HasOne("Enforcer5.Storage.TelegramAccountEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ClearedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Enforcer5.Storage.ProfileScanEntity", b =>

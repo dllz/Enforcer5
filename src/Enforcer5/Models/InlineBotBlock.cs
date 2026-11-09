@@ -28,7 +28,7 @@ namespace Enforcer5.Models
     ///
     /// Admins write an entry as <c>@username</c> (or bare <c>username</c>) for an exact match, or
     /// as <c>/regex/</c> for a pattern. <see cref="ToString"/> renders that same form, so whatever
-    /// /blockedinline lists can be pasted straight into /unblockinline.
+    /// /blocked lists can be pasted straight into /unblock.
     ///
     /// Usernames rather than ids, because that is what admins know and the Bot API cannot resolve
     /// a bot's username to its id. A bot that changes its username drops off the list.

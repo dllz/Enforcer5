@@ -190,7 +190,7 @@ FROM message_embeddings e JOIN telegram_accounts a ON a.account_id = e.account_i
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = chat.Add("Member");
             var poster = await chat.PostAsync(Photo(chat, member, "ad", "poster"));
-            await chat.SendAsync(admin, "/banmedia", replyTo: poster);
+            await chat.SendAsync(admin, "/block", replyTo: poster);
             await chat.AdvanceAsync(SimilarToBanned.RefreshEvery + TimeSpan.FromMinutes(1));
 
             var newcomer = chat.Add("Newcomer");

@@ -117,7 +117,7 @@ namespace Enforcer5.Tests.InlineBots
         [DataRow("/gif/")]
         public void DisplayForm_ParsesBackToTheSameEntry(string input)
         {
-            // /blockedinline output must be pasteable into /unblockinline.
+            // /blocked output must be pasteable into /unblock.
             var block = Parse(input);
             Assert.AreEqual(input, block.ToString());
             Assert.AreEqual(block, Parse(block.ToString()));

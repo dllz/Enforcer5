@@ -312,6 +312,8 @@ namespace Enforcer5.Tests.Harness
                 case GetChatRequest r: return Limited("getChat", r.ChatId, null, null, r, () => ChatInfo(r.ChatId));
                 case GetUserProfilePhotosRequest r: return Limited("getUserProfilePhotos", null, r.UserId, null, r, () => ProfilePhotos(r.UserId, r.Offset ?? 0, r.Limit ?? 100));
                 case GetUserPersonalChatMessagesRequest r: return Limited("getUserPersonalChatMessages", null, r.UserId, null, r, () => PersonalPosts(r.UserId, r.Limit));
+                case GetCustomEmojiStickersRequest r: return Limited("getCustomEmojiStickers", null, null, null, r, () => EmojiStickers(r.CustomEmojiIds));
+                case GetStickerSetRequest r: return Limited("getStickerSet", null, null, null, r, () => StickerSetNamed(r.Name));
                 case GetChatMemberCountRequest r: return Limited("getChatMemberCount", r.ChatId, null, null, r, () => MemberCount(Id(r.ChatId)));
                 case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages));
                 case UnbanChatMemberRequest r: return Limited("unbanChatMember", r.ChatId, r.UserId, null, r, () => Unban(Id(r.ChatId), r.UserId, r.OnlyIfBanned == true));
@@ -620,6 +622,21 @@ namespace Enforcer5.Tests.Harness
         }
 
         private readonly ConcurrentDictionary<long, int> _memberCounts = new();
+
+        private readonly ConcurrentDictionary<string, Sticker> _customEmoji = new();
+        private readonly ConcurrentDictionary<string, StickerSet> _stickerSets = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>The custom emoji getCustomEmojiStickers knows; unknown ids are left out of its answer, as Telegram does.</summary>
+        internal void AddCustomEmoji(Sticker sticker) => _customEmoji[sticker.CustomEmojiId] = sticker;
+
+        /// <summary>A sticker or emoji pack getStickerSet knows; others are 400 STICKERSET_INVALID.</summary>
+        internal void AddStickerSet(StickerSet set) => _stickerSets[set.Name] = set;
+
+        private Sticker[] EmojiStickers(IEnumerable<string> ids) =>
+            ids.Select(id => _customEmoji.TryGetValue(id, out var sticker) ? sticker : null).Where(s => s != null).ToArray();
+
+        private StickerSet StickerSetNamed(string name) =>
+            _stickerSets.TryGetValue(name, out var set) ? set : throw new ApiRequestException("Bad Request: STICKERSET_INVALID", 400);
 
         private readonly ConcurrentDictionary<long, PhotoSize[][]> _profilePhotos = new();
         private readonly ConcurrentDictionary<long, Message[]> _personalPosts = new();

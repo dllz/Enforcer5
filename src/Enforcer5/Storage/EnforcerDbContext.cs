@@ -389,12 +389,14 @@ namespace Enforcer5.Storage
             {
                 entity.ToTable("group_filters", table =>
                 {
-                    table.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact')");
-                    table.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set')");
+                    table.HasCheckConstraint("group_filters_kind_check", "kind IN ('preset', 'length', 'regex', 'username', 'exact', 'auto', 'allowed')");
+                    table.HasCheckConstraint("group_filters_target_check", "target IS NULL OR target IN ('name', 'username', 'bio', 'text', 'channel', 'inline_bot', 'sticker_set', 'emoji_set')");
                     table.HasCheckConstraint("group_filters_mode_check", "mode IN ('live', 'trial')");
                     table.HasCheckConstraint("group_filters_action_check", $"action IS NULL OR action IN ({DetectionActions})");
                     table.HasCheckConstraint("group_filters_preset_check", "(kind = 'preset') = (preset IS NOT NULL)");
-                    table.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact')) = (pattern IS NOT NULL)");
+                    table.HasCheckConstraint("group_filters_pattern_check", "(kind IN ('regex', 'username', 'exact', 'auto', 'allowed')) = (pattern IS NOT NULL)");
+                    // An emoji pack Detection banned as NSFW (auto), or one the admins found fine after that (allowed).
+                    table.HasCheckConstraint("group_filters_emoji_kind_check", "kind NOT IN ('auto', 'allowed') OR target = 'emoji_set'");
                     table.HasCheckConstraint("group_filters_length_check", "kind <> 'length' OR target IN ('text', 'name')");
                     table.HasCheckConstraint("group_filters_limits_check", "(max_characters IS NULL OR max_characters > 0) AND (max_lines IS NULL OR max_lines > 0)");
                     table.HasCheckConstraint("group_filters_trial_check", "mode <> 'trial' OR trial_until IS NOT NULL");
@@ -860,6 +862,29 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.Parts).HasColumnType("jsonb");
                 entity.Property(x => x.ScoredAt).HasDefaultValueSql("now()");
                 entity.HasIndex(x => x.ScoredAt, "media_scores_scored_idx");
+            });
+
+            modelBuilder.Entity<CustomEmojiEntity>(entity =>
+            {
+                entity.ToTable("custom_emoji", table =>
+                    table.HasCheckConstraint("custom_emoji_format_check", "format IN ('static', 'video', 'animated')"));
+                entity.HasKey(x => x.CustomEmojiId);
+                entity.Property(x => x.CustomEmojiId).ValueGeneratedNever();
+                entity.Property(x => x.FileUniqueId).IsRequired();
+                entity.Property(x => x.Format).IsRequired();
+                entity.Property(x => x.SeenAt).HasDefaultValueSql("now()");
+                entity.HasIndex(x => x.SetName, "custom_emoji_set_idx");
+            });
+
+            modelBuilder.Entity<NsfwEmojiSetEntity>(entity =>
+            {
+                entity.ToTable("nsfw_emoji_sets", table =>
+                    table.HasCheckConstraint("nsfw_emoji_sets_source_check", "source IN ('auto', 'dev')"));
+                entity.HasKey(x => x.SetName);
+                entity.Property(x => x.SetName).ValueGeneratedNever();
+                entity.Property(x => x.Source).IsRequired();
+                entity.Property(x => x.FlaggedAt).HasDefaultValueSql("now()");
+                entity.HasOne<TelegramAccountEntity>().WithMany().HasForeignKey(x => x.ClearedByAccountId).OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<ProfileScanEntity>(entity =>

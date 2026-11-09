@@ -42,11 +42,22 @@ namespace Enforcer5.Detection
     /// </summary>
     internal sealed class EnforcerDetectionActions : IDetectionActions
     {
+        /// <summary>
+        /// The deleted post as the report shows it. A text post's file to Show is the one the sign named (a flagged custom
+        /// emoji, <see cref="EmojiCheck"/>); its text is still quoted.
+        /// </summary>
+        private static DeletedPost Post(DetectionAction action)
+        {
+            var post = DeletedPost.From(action.Message);
+            if (post == null) return action.Shown;
+            return post.FileId == null && action.Shown?.FileId != null ? post with { Kind = action.Shown.Kind, FileId = action.Shown.FileId } : post;
+        }
+
         public void Execute(DetectionAction action)
         {
             if (action.Report)
                 DetectionReports.Report(action.ChatId, action.UserId, action.MessageId, action.Sign, action.Member, action.Score, action.Detail,
-                    action.Delete ? DeletedPost.From(action.Message) ?? action.Shown : action.Shown, action.Message?.ViaBot);
+                    action.Delete ? Post(action) : action.Shown, action.Message?.ViaBot);
             var deleteOnly = action.Action is "none" or "score" or "report";
             if (deleteOnly && !action.Delete) return;
             // A delete alone is logged here; an action logs its own line once it went through.

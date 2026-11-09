@@ -284,6 +284,7 @@ ON CONFLICT (group_id, target, kind, pattern) WHERE pattern IS NOT NULL DO NOTHI
                 policy.InlineBots.Select(b => b.Kind == InlineBotBlockKind.Pattern ? "regex" : "username").ToArray(),
                 policy.InlineBots.Select(b => b.Value).ToArray());
             await List("sticker_set", policy.StickerSets.Select(_ => "exact").ToArray(), policy.StickerSets.ToArray());
+            await List("emoji_set", policy.EmojiSets.Select(e => e.Kind).ToArray(), policy.EmojiSets.Select(e => e.Name).ToArray());
         }
 
         private static async Task<DetectionPolicy> LoadAsync(DbConnection connection, DbTransaction transaction, long chatId)
@@ -357,7 +358,9 @@ ORDER BY f.filter_id", new { group.GroupId }, transaction))).ToList();
                 ChannelPosts: new ChannelPostSettings(
                     checks.TryGetValue(ChannelPosts, out var channelRow) && channelRow.Enabled,
                     (channels.Allowed ?? new List<ChannelJson>()).Select(c => new AllowedChannel(c.Id, c.Title)).ToList()),
-                Engine: EngineFrom(checks, Settings<EngineJson>(Engine)));
+                Engine: EngineFrom(checks, Settings<EngineJson>(Engine)),
+                EmojiSets: filters.Where(f => f.Target == "emoji_set" && f.Enabled && f.Pattern != null && f.Mode == FilterRule.Live)
+                    .Select(f => new EmojiSetEntry(f.Pattern, f.Kind)).ToList());
         }
 
         private static EngineSettings EngineFrom(Dictionary<string, CheckRow> checks, EngineJson engine)

@@ -19,7 +19,7 @@ namespace Enforcer5.Detection
     /// <list type="bullet">
     /// <item>bans or kicks someone with a command replying to it (<see cref="Decisions"/>),</item>
     /// <item>presses Ban on a Detection report about a post that had it (the post's record from <see cref="EditCheck"/>),</item>
-    /// <item>or replies to it with /banmedia;</item>
+    /// <item>or replies to it with /block;</item>
     /// </list>
     /// and when the bot bans or kicks someone on its own over a message that had it (source <c>auto</c>; an admin's unban
     /// of that member lifts it again, <see cref="Forget"/>).
@@ -171,7 +171,7 @@ namespace Enforcer5.Detection
 
         /// <summary>Bans a file in the group, at once in memory and then in PostgreSQL. False when it was banned already.</summary>
         /// <param name="source">ban (an admin's ban or kick replying to it), auto (the bot's own ban or kick over it), report (Ban on
-        /// a report) or command (/banmedia).</param>
+        /// a report) or command (/block).</param>
         internal static bool Add(long chatId, string file, string type, long? by, string source)
         {
             if (string.IsNullOrEmpty(file)) return false;

@@ -422,6 +422,21 @@ LIMIT @Limit", new { ChatId = chatId, UserId = userId, From = Utc(from), To = Ut
                 r.Text, r.Detail)).ToList();
         }
 
+        public async Task<IReadOnlyList<string>> NsfwEmojiSetsAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to)
+        {
+            await using var connection = await Database.OpenConnectionAsync();
+            return (await connection.QueryAsync<string>(new CommandDefinition(@"
+SELECT DISTINCT s.name
+FROM detections d
+JOIN groups g ON g.group_id = d.group_id
+JOIN telegram_chats c ON c.chat_id = g.chat_id
+JOIN telegram_accounts a ON a.account_id = d.account_id
+CROSS JOIN LATERAL jsonb_array_elements_text(d.evidence->'sets') AS s(name)
+WHERE c.telegram_chat_id = @ChatId AND a.telegram_user_id = @UserId AND d.detected_at >= @From AND d.detected_at < @To
+  AND d.sign = 'image_nsfw' AND d.evidence->>'kind' = 'custom_emoji' AND jsonb_typeof(d.evidence->'sets') = 'array'",
+                new { ChatId = chatId, UserId = userId, From = Utc(from), To = Utc(to) }))).ToList();
+        }
+
         /// <summary>The most flagged messages one Show messages reads.</summary>
         internal const int FlaggedLimit = 200;
 

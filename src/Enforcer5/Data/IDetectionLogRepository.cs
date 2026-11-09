@@ -162,6 +162,9 @@ namespace Enforcer5.Data
         /// </summary>
         Task<IReadOnlyList<FlaggedMessage>> FlaggedAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to);
 
+        /// <summary>The custom emoji packs the member's NSFW detections between <paramref name="from"/> and <paramref name="to"/> named (<see cref="Enforcer5.Detection.EmojiCheck"/>).</summary>
+        Task<IReadOnlyList<string>> NsfwEmojiSetsAsync(long chatId, long userId, DateTimeOffset from, DateTimeOffset to);
+
         /// <summary>
         /// The inline bot of the latest of those signs seen on a post sent through one (evidence <c>via_bot</c>), or null:
         /// a report's Trust button after a restart.

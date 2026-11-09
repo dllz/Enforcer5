@@ -17,7 +17,7 @@ namespace Enforcer5.Helpers
     {
         /// <summary>
         /// Usernames are at most 32 characters, so longer patterns buy nothing. The cap also keeps
-        /// a full blocklist inside a single Telegram message when /blockedinline lists it.
+        /// a full blocklist inside a single Telegram message when /blocked lists it.
         /// </summary>
         internal const int MaxLength = 64;
 

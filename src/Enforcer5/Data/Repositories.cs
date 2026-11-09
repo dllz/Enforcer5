@@ -82,6 +82,10 @@ namespace Enforcer5.Data
         internal static IImageScoreRepository MediaScores { get; set; } =
             new PostgresImageScoreRepository(() => Storage.PostgresStorage.Database);
 
+        // PostgreSQL. Custom emoji looked up from Telegram and the emoji packs found NSFW, shared by every group (Detection/CustomEmojis).
+        internal static ICustomEmojiRepository CustomEmoji { get; set; } =
+            new PostgresCustomEmojiRepository(() => Storage.PostgresStorage.Database);
+
         // PostgreSQL with pgvector. Text and image vectors for similar_to_banned (Detection/SimilarToBanned, Detection/Ml).
         internal static IEmbeddingRepository Embeddings { get; set; } =
             new PostgresEmbeddingRepository(() => Storage.PostgresStorage.Database);

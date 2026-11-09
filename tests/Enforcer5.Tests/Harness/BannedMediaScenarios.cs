@@ -67,14 +67,14 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
-        public async Task BanMedia_BansTheRepliedFile_AndUnbanMediaLiftsIt()
+        public async Task Block_BansTheRepliedFile_AndUnblockLiftsIt()
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = chat.Add("Member");
             var first = await chat.PostAsync(chat.Photo(member, uniqueId: "meme"));
 
-            await chat.SendAsync(admin, "/banmedia", replyTo: first);
+            await chat.SendAsync(admin, "/block", replyTo: first);
             Assert.IsFalse(Present(chat, first), "the post replied to goes");
             Assert.AreEqual(Reply(chat, "banMediaAdded"), chat.Replies.Last());
 
@@ -83,10 +83,10 @@ namespace Enforcer5.Tests.Harness
 
             var adminsCopy = await chat.PostAsync(chat.Photo(admin, uniqueId: "meme"));
             await chat.AdvanceAsync(TimeSpan.FromSeconds(20)); // the command limiter
-            await chat.SendAsync(admin, "/banmedia");
-            StringAssert.StartsWith(chat.Replies.Last(), Reply(chat, "banMediaCount", 1));
+            await chat.SendAsync(admin, "/blocked");
+            StringAssert.Contains(chat.Replies.Last(), Reply(chat, "blockedFiles", 1));
             await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
-            await chat.SendAsync(admin, "/unbanmedia", replyTo: adminsCopy);
+            await chat.SendAsync(admin, "/unblock", replyTo: adminsCopy);
             Assert.AreEqual(Reply(chat, "banMediaRemoved"), chat.Replies.Last());
             Assert.AreEqual(0, (await Stored(chat)).Length);
 
@@ -96,23 +96,23 @@ namespace Enforcer5.Tests.Harness
         }
 
         [TestMethod]
-        public async Task UnbanMediaAll_LiftsEveryBan_AndATextReplyIsRefused()
+        public async Task UnblockFiles_LiftsEveryBan_AndATextReplyIsRefused()
         {
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = chat.Add("Member");
             var text = await chat.SendAsync(member, "just text");
-            await chat.SendAsync(admin, "/banmedia", replyTo: text);
-            Assert.AreEqual(Reply(chat, "banMediaNoFile"), chat.Replies.Last());
+            await chat.SendAsync(admin, "/block", replyTo: text);
+            Assert.AreEqual(Reply(chat, "blockNothing"), chat.Replies.Last());
             Assert.IsTrue(Present(chat, text));
 
             foreach (var id in new[] { "a", "b" })
             {
                 await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
-                await chat.SendAsync(admin, "/banmedia", replyTo: await chat.PostAsync(chat.Photo(member, uniqueId: id)));
+                await chat.SendAsync(admin, "/block", replyTo: await chat.PostAsync(chat.Photo(member, uniqueId: id)));
             }
             await chat.AdvanceAsync(TimeSpan.FromSeconds(20));
-            await chat.SendAsync(admin, "/unbanmedia all");
+            await chat.SendAsync(admin, "/unblock files");
             Assert.AreEqual(Reply(chat, "banMediaCleared", 2), chat.Replies.Last());
             Assert.AreEqual(0, (await Stored(chat)).Length);
             AssertNoErrors(chat);
@@ -124,7 +124,7 @@ namespace Enforcer5.Tests.Harness
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = chat.Add("Member");
-            await chat.SendAsync(admin, "/banmedia", replyTo: await chat.PostAsync(chat.Photo(member, uniqueId: "gore")));
+            await chat.SendAsync(admin, "/block", replyTo: await chat.PostAsync(chat.Photo(member, uniqueId: "gore")));
             await Stored(chat);
 
             await chat.CrashAndRestartAsync();
@@ -141,7 +141,7 @@ namespace Enforcer5.Tests.Harness
             await using var chat = await HarnessChat.StartAsync();
             var admin = chat.Add("Admin", MemberState.Administrator);
             var member = Established(chat, "Member");
-            await chat.SendAsync(admin, "/banmedia", replyTo: await chat.PostAsync(chat.Photo(chat.Add("Spammer"), uniqueId: "nsfw")));
+            await chat.SendAsync(admin, "/block", replyTo: await chat.PostAsync(chat.Photo(chat.Add("Spammer"), uniqueId: "nsfw")));
             var post = await chat.PostAsync(chat.Photo(member, uniqueId: "cat"));
             await chat.AdvanceAsync(TimeSpan.FromMinutes(2));
 

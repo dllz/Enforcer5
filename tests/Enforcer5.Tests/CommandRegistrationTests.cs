@@ -75,9 +75,9 @@ namespace Enforcer5.Tests
         }
 
         [TestMethod]
-        public void InlineBlockCommands_AreAdminOnlyAndGroupOnly()
+        public void BlockCommands_AreAdminOnlyAndGroupOnly()
         {
-            foreach (var trigger in new[] { "blockinline", "unblockinline", "blockedinline" })
+            foreach (var trigger in new[] { "block", "unblock", "blocked", "testinline" })
             {
                 var command = typeof(Commands).GetMethods()
                     .SelectMany(m => m.GetCustomAttributes<Attributes.Command>())
