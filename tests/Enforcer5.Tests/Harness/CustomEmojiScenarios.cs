@@ -29,9 +29,12 @@ namespace Enforcer5.Tests.Harness
         {
             public string Version => "fake-1";
 
-            public NsfwScore Score(byte[] image) => Encoding.UTF8.GetString(image).Contains("nude")
-                ? new NsfwScore(0.97, new Dictionary<string, double> { ["BUTTOCKS_EXPOSED"] = 0.9 })
-                : new NsfwScore(0.01, new Dictionary<string, double>());
+            public NsfwScore Score(byte[] image) => Encoding.UTF8.GetString(image) switch
+            {
+                var t when t.Contains("nude") => new NsfwScore(0.97, new Dictionary<string, double> { ["BUTTOCKS_EXPOSED"] = 0.9 }),
+                var t when t.Contains("bikini") => new NsfwScore(0.98, new Dictionary<string, double> { ["BUTTOCKS_EXPOSED"] = 0.1 }),
+                _ => new NsfwScore(0.01, new Dictionary<string, double>())
+            };
         }
 
         private static void AssertNoErrors(HarnessChat chat) =>
@@ -155,6 +158,34 @@ namespace Enforcer5.Tests.Harness
             var kept = await off.PostAsync(EmojiMessage(off, someone, "e1"));
             Assert.IsFalse(Deleted(off, someone, kept), "the check is off there");
             Assert.AreEqual(0, (await Packs(off)).Count);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task APackMarkedForSwimwear_IsNotBannedWhereOnlyNudityCounts_UntilOneOfItsEmojiShowsNudity()
+        {
+            await using var chat = await StartAsync();
+            var member = chat.Add("Member");
+            Emoji(chat, "b1", "Beach", "bikini");
+            Emoji(chat, "b2", "Beach", "bikini too");
+            Emoji(chat, "n1", "Beach", "nude");
+            await chat.PostAsync(EmojiMessage(chat, member, "b1"));
+            Assert.IsTrue(await NsfwEmojiSets.IsNsfwAsync("beach"), "a strict group marks it");
+
+            var relaxed = chat.Group(-100779);
+            await NsfwOnAsync(relaxed);
+            await relaxed.ChangeSettingsAsync(p => p with { Engine = p.Engine with { NsfwLevel = NsfwLevels.Nudity } });
+            var admin = relaxed.Add("Admin", MemberState.Administrator);
+            var someone = relaxed.Add("Someone");
+            var kept = await relaxed.PostAsync(EmojiMessage(relaxed, someone, "b1", "b2"));
+            Assert.IsFalse(Deleted(relaxed, someone, kept), "swimwear, whatever the mark");
+            Assert.AreEqual(0, (await Packs(relaxed)).Count);
+            Assert.AreEqual(0, Reports(relaxed, admin).Length);
+
+            await relaxed.AdvanceAsync(TimeSpan.FromMinutes(1));
+            var nude = await relaxed.PostAsync(EmojiMessage(relaxed, someone, "n1"));
+            Assert.IsTrue(Deleted(relaxed, someone, nude));
+            CollectionAssert.AreEqual(new[] { new EmojiSetEntry("beach", EmojiSetEntry.Auto) }, (await Packs(relaxed)).ToArray());
             AssertNoErrors(chat);
         }
 

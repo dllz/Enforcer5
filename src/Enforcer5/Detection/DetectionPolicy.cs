@@ -224,11 +224,13 @@ namespace Enforcer5.Detection
     /// <param name="TrustChangedAt">When the learned established level last went up; it eases back after a week without.</param>
     /// <param name="LearnedOn">The day (UTC) the nightly learning last ran for the group, so both editions run it once.</param>
     /// <param name="ProposedReportAt">The report level last proposed while watching, so it is not proposed every night.</param>
+    /// <param name="NsfwLevel">What the NSFW checks flag (<see cref="Images.NsfwLevels"/>); null is strict.</param>
     internal sealed record EngineSettings(DateTimeOffset? ObserveUntil, int ReportAt, int MuteAt, bool MuteEnabled,
         IReadOnlyDictionary<string, SignPolicy> Signs, int RetentionDays = EngineSettings.DefaultRetentionDays,
         string ReportTo = EngineSettings.ToAdmins, long? AdminChatId = null, bool Learn = true,
         int? TrustMessages = null, int? TrustDays = null, DateTimeOffset? TrustChangedAt = null,
-        DateTimeOffset? LearnedOn = null, int? ProposedReportAt = null, string AiText = null, string AiImage = null)
+        DateTimeOffset? LearnedOn = null, int? ProposedReportAt = null, string AiText = null, string AiImage = null,
+        string NsfwLevel = null)
     {
         internal const int DefaultReportAt = 3;
         internal static readonly TimeSpan ObserveFor = TimeSpan.FromDays(14);

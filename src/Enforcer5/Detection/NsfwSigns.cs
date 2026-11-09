@@ -111,13 +111,14 @@ namespace Enforcer5.Detection
         /// and videos cannot be read (no ffmpeg). The answer is what was scored last that has a score: the file's when it
         /// could be read, else the preview's. Null score when neither could be.
         /// </summary>
-        internal static async Task<(Picked Scored, NsfwScore Score)> ScorePickedAsync(Picked picked, bool bulk = false)
+        internal static async Task<(Picked Scored, NsfwScore Score)> ScorePickedAsync(Picked picked, bool bulk = false,
+            NsfwThresholds thresholds = null)
         {
             NsfwScore preview = null;
             if (picked.Preview is { } first)
             {
                 preview = await ImageScans.AwaitAsync(ImageScans.ScoreAsync(first.UniqueId, first.FileId, first.Kind, bulk, first.Hint));
-                if (preview != null && preview.Flagged(NsfwThresholds.Current)) return (first, preview);
+                if (preview != null && preview.Flagged(thresholds ?? NsfwThresholds.Current)) return (first, preview);
             }
             if (picked.Hint != MediaHint.Video || ImageScans.Decoder.ReadsVideo)
             {
@@ -195,8 +196,8 @@ namespace Enforcer5.Detection
         {
             try
             {
-                var (scored, score) = await ScorePickedAsync(picked);
-                var thresholds = NsfwThresholds.Current;
+                var thresholds = NsfwThresholds.For(await DetectionSettings.GetAsync(chatId));
+                var (scored, score) = await ScorePickedAsync(picked, thresholds: thresholds);
                 if (score == null || !score.Flagged(thresholds)) return;
                 var lang = Methods.GetGroupLanguage(chatId).Doc;
                 await DetectionEngine.HitAsync(chatId, userId, message, new SignHit(SignCatalog.ImageNsfw.Name,
@@ -245,7 +246,7 @@ namespace Enforcer5.Detection
                 if (!Claim(chatId, person.Id)) return;
                 var scan = await ScanAsync(chatId, person.Id, source);
                 if (scan?.Flagged == null) return;
-                var thresholds = NsfwThresholds.Current;
+                var thresholds = scan.Thresholds;
                 var lang = Methods.GetGroupLanguage(chatId).Doc;
                 var flagged = scan.Flagged;
                 var whereKey = flagged.Kind == "channel_post" ? "nsfwWhere_channel" : "nsfwWhere_profile";
@@ -268,7 +269,11 @@ namespace Enforcer5.Detection
         internal sealed record ScoredImage(string Kind, string UniqueId, string FileId, NsfwScore Score);
 
         /// <summary>One look at a profile: how many images, the highest scores, and the image that flagged it (null when none did).</summary>
-        internal sealed record ProfileScan(int Photos, int ChannelPosts, int Scored, NsfwScore Max, ScoredImage Flagged, string Model);
+        internal sealed record ProfileScan(int Photos, int ChannelPosts, int Scored, NsfwScore Max, ScoredImage Flagged, string Model)
+        {
+            /// <summary>What it was flagged at: the group's level, strict without a group.</summary>
+            internal NsfwThresholds Thresholds { get; init; } = NsfwThresholds.Current;
+        }
 
         /// <summary>
         /// Looks at <paramref name="userId"/>'s profile photos and personal channel and keeps the result (<c>profile_scans</c>).
@@ -313,10 +318,10 @@ namespace Enforcer5.Detection
             var scores = await ImageScans.AwaitAsync(Task.WhenAll(unique.Select(i => ImageScans.ScoreAsync(i.UniqueId, i.FileId, i.Kind, bulk))));
             var scored = unique.Zip(scores, (i, s) => s == null ? null : new ScoredImage(i.Kind, i.UniqueId, i.FileId, s))
                 .Where(s => s != null).ToList();
-            var thresholds = NsfwThresholds.Current;
+            var thresholds = chatId is { } group ? NsfwThresholds.For(await DetectionSettings.GetAsync(group)) : NsfwThresholds.Current;
             var max = NsfwScore.Max(scored.Select(s => s.Score));
             var flagged = scored.Where(s => s.Score.Flagged(thresholds)).OrderByDescending(s => s.Score.Nsfw).FirstOrDefault();
-            var scan = new ProfileScan(photos, posts, scored.Count, max, flagged, model.Version);
+            var scan = new ProfileScan(photos, posts, scored.Count, max, flagged, model.Version) { Thresholds = thresholds };
             if (PostgresStorage.Ready)
                 HistoryWriter.Enqueue(() => Repositories.MediaScores.AddScanAsync(new ProfileScanRow(chatId, userId, source, model.Version, photos,
                     posts, scored.Count, max, flagged != null, flagged?.UniqueId, new DateTimeOffset(Clock.UtcNow, TimeSpan.Zero))),
@@ -375,7 +380,7 @@ namespace Enforcer5.Detection
         {
             var badCount = new EvalCount();
             var otherCount = new EvalCount();
-            var thresholds = NsfwThresholds.Current;
+            var thresholds = NsfwThresholds.For(await DetectionSettings.GetAsync(chatId));
             string ending = null;
             var started = Clock.UtcNow;
             try
@@ -449,7 +454,8 @@ namespace Enforcer5.Detection
             }
             finally
             {
-                var text = $"<b>NSFW profile scan</b> of <code>{chatId}</code> (flagged at nsfw {thresholds.Nsfw:0.00}), " +
+                var text = $"<b>NSFW profile scan</b> of <code>{chatId}</code> (flagged at nsfw {thresholds.Nsfw:0.00}" +
+                           (thresholds.NudityOnly ? $", nudity only: a part at {NsfwThresholds.NudityPart:0.0} or nsfw {NsfwThresholds.Sure:0.000}" : "") + "), " +
                            $"{(int)(Clock.UtcNow - started).TotalMinutes} min\n" +
                            $"Labelled bad: {badCount} of {badCount.Total}\n" +
                            $"Never labelled: {otherCount} of {otherCount.Total}\n" +

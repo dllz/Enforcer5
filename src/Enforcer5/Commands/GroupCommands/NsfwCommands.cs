@@ -170,10 +170,13 @@ namespace Enforcer5
             var parts = score.Parts.OrderByDescending(p => p.Value)
                 .Select(p => $"{p.Key.ToLowerInvariant().Replace('_', ' ')} {Percent(p.Value)}" + (p.Value >= thresholds.Part ? " (named)" : ""))
                 .ToList();
+            // The answer is at the strict level; the nudity-only line says what groups that chose it do.
             return (score.Flagged(thresholds) ? "🔞 <b>Flagged</b>" : "✅ <b>Passes</b>") +
                    $"\nViT: {Percent(score.Nsfw)} NSFW (flags at {Percent(thresholds.Nsfw)})" +
                    $"\nNudeNet: {(parts.Count == 0 ? "no exposed body parts" : string.Join(", ", parts))}" +
                    $" (named in a report from {Percent(thresholds.Part)})" +
+                   $"\nNudity only: {(score.Flagged(thresholds with { NudityOnly = true }) ? "🔞 flagged" : "✅ passes")}" +
+                   $" (an exposed part at {Percent(NsfwThresholds.NudityPart)} or ViT at {Math.Round(NsfwThresholds.Sure * 100, 1).ToString(System.Globalization.CultureInfo.InvariantCulture)}%)" +
                    $"\nScored: the {picked.Kind}{(picked.Kind == "thumbnail" ? " (the preview of a GIF, video or file)" : "")}" +
                    (score.Frames > 1 ? $", {score.Frames} frames, the worst is frame {score.Frame + 1}" : "") +
                    $", <code>{picked.UniqueId.FormatHTML()}</code>";

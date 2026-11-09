@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Enforcer5.Data;
 using Enforcer5.Detection;
 using Enforcer5.Detection.Images;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -64,6 +65,46 @@ namespace Enforcer5.Tests.Detection
             Assert.AreEqual(0.8, both.PartScore);
             Assert.AreEqual(0, Score(0.97).Reasons(Thresholds).Count);
             Assert.IsNull(NsfwScore.None.Part);
+        }
+
+        [TestMethod]
+        public void NudityOnly_LetsSwimwearThrough_ButNotExposedPartsOrSureScores()
+        {
+            var nudity = NsfwThresholds.At(NsfwLevels.Nudity);
+            Assert.IsTrue(nudity.NudityOnly);
+            Assert.IsFalse(NsfwThresholds.At(NsfwLevels.Strict).NudityOnly);
+            Assert.IsFalse(NsfwThresholds.At(null).NudityOnly, "strict unless chosen");
+            Assert.IsFalse(NsfwThresholds.At("whatever").NudityOnly);
+
+            // The Origin's three undone profile bans (2026-11-06/07): high ViT scores, no part over 0.35.
+            foreach (var swimwear in new[] { Score(0.996, ("FEMALE_BREAST_EXPOSED", 0.348)), Score(0.961, ("BUTTOCKS_EXPOSED", 0.1)), Score(0.976) })
+            {
+                Assert.IsTrue(swimwear.Flagged(Thresholds), "strict flags it");
+                Assert.IsFalse(swimwear.Flagged(nudity), swimwear.ToString());
+            }
+            Assert.IsTrue(Score(0.999).Flagged(nudity), "sure without a part (Support's kept ban)");
+            Assert.IsTrue(Score(0.91, ("MALE_GENITALIA_EXPOSED", 0.4)).Flagged(nudity), "an exposed part");
+            Assert.IsFalse(Score(0.89, ("MALE_GENITALIA_EXPOSED", 0.99)).Flagged(nudity), "NudeNet still never flags on its own");
+
+            // The part it flagged on is named, also under the strict naming threshold.
+            CollectionAssert.AreEqual(new[] { ("ANUS_EXPOSED", 0.45) }, Score(0.95, ("ANUS_EXPOSED", 0.45)).Reasons(nudity).ToArray());
+            Assert.AreEqual(0, Score(0.95, ("ANUS_EXPOSED", 0.45)).Reasons(Thresholds).Count);
+            Assert.AreEqual(NsfwLevels.Nudity, NsfwLevels.Next(null));
+            Assert.AreEqual(NsfwLevels.Strict, NsfwLevels.Next(NsfwLevels.Nudity));
+        }
+
+        [TestMethod]
+        public void AKnownNsfwPack_IsTrustedAtNudityOnly_OnlyWhenSureOrMarkedByADev()
+        {
+            var nudity = NsfwThresholds.At(NsfwLevels.Nudity);
+            NsfwEmojiSet Set(float? nsfw, string source, bool cleared = false) =>
+                new("pack", "e", nsfw, source, DateTimeOffset.UnixEpoch, cleared);
+            Assert.IsTrue(EmojiCheck.Trusted(Set(0.95f, "auto"), Thresholds));
+            Assert.IsFalse(EmojiCheck.Trusted(Set(0.95f, "auto"), nudity), "maybe swimwear: scored here");
+            Assert.IsTrue(EmojiCheck.Trusted(Set(0.9995f, "auto"), nudity));
+            Assert.IsTrue(EmojiCheck.Trusted(Set(null, "dev"), nudity));
+            Assert.IsFalse(EmojiCheck.Trusted(Set(1f, "auto", cleared: true), Thresholds));
+            Assert.IsFalse(EmojiCheck.Trusted(null, Thresholds));
         }
 
         [TestMethod]

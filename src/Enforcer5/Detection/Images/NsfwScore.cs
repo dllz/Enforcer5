@@ -36,11 +36,16 @@ namespace Enforcer5.Detection.Images
         /// <summary>Its score; 0 for none.</summary>
         internal double PartScore => Parts.Count == 0 ? 0 : Parts.Values.Max();
 
-        internal bool Flagged(NsfwThresholds thresholds) => Nsfw >= thresholds.Nsfw;
+        /// <summary>
+        /// Flagged at the group's level: over the ViT threshold, and for <see cref="NsfwLevels.Nudity"/> also either an exposed
+        /// part at <see cref="NsfwThresholds.NudityPart"/> or a ViT score at <see cref="NsfwThresholds.Sure"/>.
+        /// </summary>
+        internal bool Flagged(NsfwThresholds thresholds) =>
+            Nsfw >= thresholds.Nsfw && (!thresholds.NudityOnly || Nsfw >= NsfwThresholds.Sure || PartScore >= NsfwThresholds.NudityPart);
 
         /// <summary>The exposed parts a report names: at or over the threshold, the surest first.</summary>
         internal IReadOnlyList<(string Part, double Score)> Reasons(NsfwThresholds thresholds) =>
-            Parts.Where(p => p.Value >= thresholds.Part).OrderByDescending(p => p.Value).Select(p => (p.Key, p.Value)).ToList();
+            Parts.Where(p => p.Value >= thresholds.NamedPart).OrderByDescending(p => p.Value).Select(p => (p.Key, p.Value)).ToList();
 
         /// <summary>The highest score of each kind over several images (a profile's).</summary>
         internal static NsfwScore Max(IEnumerable<NsfwScore> scores)
@@ -75,7 +80,12 @@ namespace Enforcer5.Detection.Images
 
     /// <param name="Nsfw">The ViT model's score at which an image is flagged.</param>
     /// <param name="Part">NudeNet's score at which an exposed part is named as a reason (it never flags on its own).</param>
-    internal sealed record NsfwThresholds(double Nsfw, double Part)
+    /// <param name="NudityOnly">
+    /// The group's level is <see cref="NsfwLevels.Nudity"/> (Daniel, 2026-11-09): swimwear and lingerie, which the ViT model
+    /// scores like porn, are let through. Flagged only with an exposed part at <see cref="NudityPart"/> or a ViT score at
+    /// <see cref="Sure"/>.
+    /// </param>
+    internal sealed record NsfwThresholds(double Nsfw, double Part, bool NudityOnly = false)
     {
         /// <summary>
         /// From the eval (Daniel, 2026-11-05; /workspace/scratch/nsfw/eval on the quasi box): ViT 0.9 (0.95 halves the false
@@ -86,8 +96,27 @@ namespace Enforcer5.Detection.Images
         internal const double DefaultNsfw = 0.9;
         internal const double DefaultPart = 0.5;
 
+        /// <summary>
+        /// Nudity only (same eval, 2026-11-09): ViT at 0.999, or at 0.9 with an exposed part at 0.4, flags 83% of porn, 51% of
+        /// hentai and 39% of swimwear and lingerie (strict: 99.5%, 79%, 98.5%). Raising the ViT threshold alone does not help:
+        /// at 0.99 it still flags 81% of swimwear. On the first live reports it would have let through the three profiles
+        /// The Origin's admins undid (0.96 to 1.00, no part over 0.35) and kept Support's ban (0.999).
+        /// </summary>
+        internal const double Sure = 0.999;
+        internal const double NudityPart = 0.4;
+
+        /// <summary>The parts a report names: at <see cref="Part"/>, or lower when nudity only flags on less.</summary>
+        internal double NamedPart => NudityOnly ? Math.Min(Part, NudityPart) : Part;
+
+        /// <summary>The strict level, from the configuration.</summary>
         internal static NsfwThresholds Current =>
             new NsfwThresholds(Read("NsfwThreshold", DefaultNsfw), Read("NsfwPartThreshold", DefaultPart));
+
+        /// <summary>The thresholds at <paramref name="level"/> (<see cref="NsfwLevels"/>).</summary>
+        internal static NsfwThresholds At(string level) => Current with { NudityOnly = NsfwLevels.Of(level) == NsfwLevels.Nudity };
+
+        /// <summary>The group's.</summary>
+        internal static NsfwThresholds For(DetectionPolicy policy) => At(policy?.Engine.NsfwLevel);
 
         private static double Read(string key, double fallback)
         {
@@ -96,6 +125,20 @@ namespace Enforcer5.Detection.Images
                 ? parsed
                 : fallback;
         }
+    }
+
+    /// <summary>How much a group tolerates (Daniel, 2026-11-09; /menu → Detection → NSFW → Tolerance).</summary>
+    internal static class NsfwLevels
+    {
+        /// <summary>Anything the ViT model flags, swimwear and lingerie included. The default.</summary>
+        internal const string Strict = "strict";
+
+        /// <summary>Nudity only (<see cref="NsfwThresholds.NudityOnly"/>).</summary>
+        internal const string Nudity = "nudity";
+
+        internal static string Of(string stored) => stored == Nudity ? Nudity : Strict;
+
+        internal static string Next(string level) => Of(level) == Strict ? Nudity : Strict;
     }
 
     /// <summary>Scores an image. The ONNX models in production (<see cref="NsfwModels"/>), a stand-in in the harness.</summary>

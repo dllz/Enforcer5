@@ -237,6 +237,36 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
         }
 
         [TestMethod]
+        public async Task AtNudityOnly_SwimwearStays_NudityGoes_AndAProfileWithSwimwearIsLeftAlone()
+        {
+            await using var chat = await StartAsync();
+            await chat.ChangeSettingsAsync(p => p with { Engine = p.Engine with { NsfwLevel = NsfwLevels.Nudity } });
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            chat.Hashes[$"{chat.ChatId}:users:{member.Id}", "msgs"] = "5000";
+
+            var swimwear = await chat.PostAsync(Photo(chat, member, "a", "nude")); // 97%, buttocks 20%: what bikinis score
+            var nude = await chat.PostAsync(Photo(chat, member, "b", "genitals"));
+            Assert.IsFalse(Deleted(chat, member, swimwear));
+            Assert.IsTrue(Deleted(chat, member, nude));
+
+            var joiner = chat.Add("Joiner");
+            chat.Telegram.SetProfilePhotos(joiner.Id, new[] { File(chat, "p1", "nude") });
+            await chat.JoinAsync(joiner);
+            Assert.AreEqual(MemberState.Member, chat.Telegram.GetMember(chat.ChatId, joiner.Id));
+            StringAssert.Contains(Reports(chat, admin).Single().Text, "95% NSFW: exposed genitals 92%");
+            CollectionAssert.AreEqual(new[] { (member.Id, "image_nsfw", "live", "delete", true, true) }, await Detections(chat));
+
+            // Back to strict: the same swimwear is flagged (its score is kept, so not scored again).
+            var scored = ImageScans.Scored;
+            await chat.ChangeSettingsAsync(p => p with { Engine = p.Engine with { NsfwLevel = NsfwLevels.Strict } });
+            var again = await chat.PostAsync(Photo(chat, member, "a", "nude"));
+            Assert.IsTrue(Deleted(chat, member, again));
+            Assert.AreEqual(scored, ImageScans.Scored);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task TheMenu_TurnsEachCheckOnAndOff_AndCyclesTheProfileAction()
         {
             await using var chat = await StartAsync(images: false, profile: false);
@@ -254,6 +284,14 @@ JOIN telegram_accounts a ON a.account_id = s.account_id ORDER BY s.scan_id")).To
             Assert.IsTrue(engine.For(SignCatalog.ImageNsfw.Name).Enabled);
             Assert.IsTrue(engine.For(SignCatalog.ProfileNsfw.Name).Enabled);
             Assert.AreEqual("ban", engine.For(SignCatalog.ProfileNsfw.Name).Action, "mute, then ban");
+            Assert.IsNull(engine.NsfwLevel, "strict by default");
+            menu = Commands.GenNsfwMenu(chat.ChatId, lang).InlineKeyboard.SelectMany(r => r).ToArray();
+            Assert.AreEqual("Strict", menu.Single(b => b.CallbackData == $"nsfwtoggle:{chat.ChatId}:tolerance").Text);
+            await chat.PressDataAsync(admin, message, $"nsfwtoggle:{chat.ChatId}:tolerance");
+            DetectionSettings.ResetForTests(); // read back from PostgreSQL
+            Assert.AreEqual(NsfwLevels.Nudity, (await DetectionSettings.GetAsync(chat.ChatId)).Engine.NsfwLevel);
+            menu = Commands.GenNsfwMenu(chat.ChatId, lang).InlineKeyboard.SelectMany(r => r).ToArray();
+            Assert.AreEqual("Nudity only", menu.Single(b => b.CallbackData == $"nsfwtoggle:{chat.ChatId}:tolerance").Text);
             var detection = Commands.GenDetectionMenu(chat.ChatId, lang).InlineKeyboard.SelectMany(r => r);
             Assert.IsTrue(detection.Any(b => b.CallbackData == $"nsfwmenu:{chat.ChatId}"));
         }

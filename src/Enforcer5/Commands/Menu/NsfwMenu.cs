@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Enforcer5.Attributes;
 using Enforcer5.Detection;
+using Enforcer5.Detection.Images;
 using Enforcer5.Helpers;
 using Enforcer5.Models;
 using Telegram.Bot;
@@ -17,7 +18,10 @@ namespace Enforcer5
         /// <summary>What a member whose profile shows nudity can get, in the menu's order.</summary>
         internal static readonly string[] NsfwProfileActions = { "mute", "ban", "report" };
 
-        /// <summary>The NSFW screen (Daniel, 2026-11-05; <see cref="NsfwSigns"/>): images and stickers, and new members' profiles.</summary>
+        /// <summary>
+        /// The NSFW screen (Daniel, 2026-11-05; <see cref="NsfwSigns"/>): images and stickers, new members' profiles, and how
+        /// much the group tolerates (<see cref="NsfwLevels"/>, 2026-11-09).
+        /// </summary>
         internal static string NsfwMenuText(XDocument lang) => Methods.GetLocaleString(lang, "nsfwImagesMenu");
 
         internal static InlineKeyboardMarkup GenNsfwMenu(long chatId, XDocument lang)
@@ -36,6 +40,8 @@ namespace Enforcer5
             Row("nsfwProfileButton", OnOff(profile.Enabled), profile.Enabled, "profile");
             if (profile.Enabled)
                 Row("nsfwProfileActionButton", Methods.GetLocaleString(lang, $"filterAction_{profile.Action}"), null, "action");
+            if (images.Enabled || profile.Enabled)
+                Row("nsfwToleranceButton", Methods.GetLocaleString(lang, $"nsfwLevel_{NsfwLevels.Of(engine.NsfwLevel)}"), null, "tolerance");
             var back = new Menu(1);
             back.Buttons.Add(new InlineButton(Methods.GetLocaleString(lang, "backButton"), $"detectionmenu:{chatId}"));
             return Key.CreateMarkupFromMenus(menu, back);
@@ -58,6 +64,12 @@ namespace Enforcer5
         {
             if (args.Length < 3) return;
             var chatId = long.Parse(args[1]);
+            if (args[2] == "tolerance")
+            {
+                ChangeDetection(call, chatId, Methods.GetGroupLanguage(chatId).Doc,
+                    p => p with { Engine = p.Engine with { NsfwLevel = NsfwLevels.Next(p.Engine.NsfwLevel) } }, Commands.GenNsfwMenu);
+                return;
+            }
             var (sign, change) = args[2] switch
             {
                 "images" => (SignCatalog.ImageNsfw.Name, (Func<SignPolicy, SignPolicy>)(s => s with { Enabled = !s.Enabled })),

@@ -79,9 +79,10 @@ namespace Enforcer5.Detection
                 // The engine exempts admins too, but an admin's emoji must not get their pack marked NSFW everywhere.
                 if (await Methods.IsGroupAdminAsync(userId, chatId)) return;
 
+                var thresholds = NsfwThresholds.For(policy);
                 var known = new List<string>();
                 foreach (var set in sets.Where(s => !policy.EmojiSetAllowed(s)))
-                    if (await NsfwEmojiSets.IsNsfwAsync(set)) known.Add(set);
+                    if (Trusted(await NsfwEmojiSets.GetAsync(set), thresholds)) known.Add(set);
                 if (known.Count > 0)
                 {
                     foreach (var set in known) await EmojiSetBlocks.BlockNsfwAsync(chatId, set);
@@ -97,7 +98,7 @@ namespace Enforcer5.Detection
                     return;
                 }
 
-                var flagged = await ScoreAsync(ids, emoji, policy);
+                var flagged = await ScoreAsync(ids, emoji, thresholds);
                 if (flagged == null) return;
                 var (found, score) = flagged.Value;
                 var packBanned = false;
@@ -111,7 +112,6 @@ namespace Enforcer5.Detection
                         packBanned = true;
                     }
                 }
-                var thresholds = NsfwThresholds.Current;
                 var language = Methods.GetGroupLanguage(chatId).Doc;
                 var detail = NsfwSigns.Describe(language, score, thresholds);
                 if (packBanned) detail = Methods.GetLocaleString(language, "nsfwEmojiPack", found.SetName) + " · " + detail;
@@ -137,6 +137,14 @@ namespace Enforcer5.Detection
             }
         }
 
+        /// <summary>
+        /// A pack known NSFW is banned here without scoring: at the strict level always; at nudity only (Daniel, 2026-11-09)
+        /// only when a dev marked it or the emoji that marked it was sure (<see cref="NsfwThresholds.Sure"/>), since a pack
+        /// marked by a strict group may be swimwear. Otherwise its emoji are scored at this group's level.
+        /// </summary>
+        internal static bool Trusted(NsfwEmojiSet set, NsfwThresholds thresholds) =>
+            set is { Cleared: false } && (!thresholds.NudityOnly || set.Source == "dev" || set.Nsfw >= NsfwThresholds.Sure);
+
         /// <summary>A post with an emoji from a pack banned here: deleted, unless an admin posted it.</summary>
         private static async Task DeleteBlockedAsync(long chatId, long userId, Message message, IReadOnlyList<string> sets)
         {
@@ -158,18 +166,20 @@ namespace Enforcer5.Detection
         /// counts by its kept score. Null when none is flagged.
         /// </summary>
         private static async Task<(CustomEmojis.Emoji Emoji, NsfwScore Score)?> ScoreAsync(IReadOnlyList<string> ids,
-            IReadOnlyDictionary<string, CustomEmojis.Emoji> emoji, DetectionPolicy policy)
+            IReadOnlyDictionary<string, CustomEmojis.Emoji> emoji, NsfwThresholds thresholds)
         {
             var model = ImageScans.Model?.Version;
             if (model == null) return null;
-            var thresholds = NsfwThresholds.Current;
             var inMessage = ids.Where(emoji.ContainsKey).Select(id => emoji[id]).DistinctBy(e => e.UniqueId).ToList();
 
-            // Scored before: by its kept score (the parts are not kept with it; the report says so).
-            var before = inMessage.FirstOrDefault(e => e.Model == model && e.Nsfw is { } n && n >= thresholds.Nsfw);
+            // Scored before: by its kept score (the parts are not kept with it; the report says so). At nudity only, a kept
+            // score short of sure needs the parts, so it is scored again (media_scores answers that without the model).
+            var keptFlags = thresholds.NudityOnly ? NsfwThresholds.Sure : thresholds.Nsfw;
+            var before = inMessage.FirstOrDefault(e => e.Model == model && e.Nsfw is { } n && n >= keptFlags);
             if (before != null) return (before, new NsfwScore(before.Nsfw.Value, new Dictionary<string, double>()));
 
-            var toScore = RoundRobin(inMessage.Where(e => e.Model != model || e.Nsfw == null)).Take(ScoredPerMessage).ToList();
+            var toScore = RoundRobin(inMessage.Where(e => e.Model != model || e.Nsfw == null || e.Nsfw >= thresholds.Nsfw))
+                .Take(ScoredPerMessage).ToList();
             if (toScore.Count == 0) return null;
             var files = await CustomEmojis.ResolveAsync(toScore.Select(e => e.Id).ToList(), withFiles: true);
             foreach (var batch in toScore.Chunk(ScoredAtOnce))
@@ -178,7 +188,7 @@ namespace Enforcer5.Detection
                 {
                     var sticker = files.GetValueOrDefault(e.Id)?.Sticker;
                     if (sticker == null || NsfwSigns.Pick(new Message { Sticker = sticker }) is not { } picked) return (e, (NsfwScore)null);
-                    var (_, score) = await NsfwSigns.ScorePickedAsync(picked with { Kind = "custom_emoji" });
+                    var (_, score) = await NsfwSigns.ScorePickedAsync(picked with { Kind = "custom_emoji" }, thresholds: thresholds);
                     if (score != null) await CustomEmojis.ScoredAsync(files[e.Id], (float)score.Nsfw, model);
                     return (e, score);
                 }).ToList();

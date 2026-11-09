@@ -3619,6 +3619,18 @@ Joined: {0} · muted: {1} · banned: {2}</value>
   <string key="menuInfo_nsfwProfileAction">
     <value>What happens to a new member whose profile shows nudity: muted, banned, or only reported to the admins.</value>
   </string>
+  <string key="nsfwToleranceButton">
+    <value>Tolerance</value>
+  </string>
+  <string key="nsfwLevel_strict">
+    <value>Strict</value>
+  </string>
+  <string key="nsfwLevel_nudity">
+    <value>Nudity only</value>
+  </string>
+  <string key="menuInfo_nsfwTolerance">
+    <value>Strict: anything that looks sexual, swimwear and lingerie included. Nudity only: swimwear and lingerie are mostly let through, but some nudity is missed too, drawn nudity most of all.</value>
+  </string>
   <string key="sign_image_nsfw">
     <value>NSFW image</value>
   </string>
