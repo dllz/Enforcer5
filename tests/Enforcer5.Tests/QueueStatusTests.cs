@@ -128,6 +128,9 @@ namespace Enforcer5.Tests
             await WatchAsync(bot, TimeSpan.FromMinutes(9));
 
             Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Group, 1));
+            // Unbanned at 510 s, then checked at 30 s and 5 minutes after: waiting for those is not stuck either.
+            StringAssert.Contains(Read("enforcement").ToString(), "1 kicks to check again");
+            await WatchAsync(bot, TimeSpan.FromMinutes(5));
             Assert.AreEqual(0, EnforcementQueue.Count);
         }
 

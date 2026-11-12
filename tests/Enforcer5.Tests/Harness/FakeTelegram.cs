@@ -315,7 +315,7 @@ namespace Enforcer5.Tests.Harness
                 case GetCustomEmojiStickersRequest r: return Limited("getCustomEmojiStickers", null, null, null, r, () => EmojiStickers(r.CustomEmojiIds));
                 case GetStickerSetRequest r: return Limited("getStickerSet", null, null, null, r, () => StickerSetNamed(r.Name));
                 case GetChatMemberCountRequest r: return Limited("getChatMemberCount", r.ChatId, null, null, r, () => MemberCount(Id(r.ChatId)));
-                case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages));
+                case BanChatMemberRequest r: return Limited("banChatMember", r.ChatId, r.UserId, null, r, () => Ban(Id(r.ChatId), r.UserId, r.RevokeMessages, r.UntilDate));
                 case UnbanChatMemberRequest r: return Limited("unbanChatMember", r.ChatId, r.UserId, null, r, () => Unban(Id(r.ChatId), r.UserId, r.OnlyIfBanned == true));
                 case RestrictChatMemberRequest r: return Limited("restrictChatMember", r.ChatId, r.UserId, null, r, () => Restrict(Id(r.ChatId), r.UserId, r.Permissions));
                 case SetChatPermissionsRequest r: return Limited("setChatPermissions", r.ChatId, null, null, r, () => SetPermissions(Id(r.ChatId), r.Permissions));
@@ -582,7 +582,7 @@ namespace Enforcer5.Tests.Harness
                 MemberState.Member => new ChatMemberMember { User = user },
                 MemberState.Restricted => new ChatMemberRestricted { User = user, IsMember = true },
                 MemberState.Left => new ChatMemberLeft { User = user },
-                MemberState.Kicked => new ChatMemberBanned { User = user },
+                MemberState.Kicked => new ChatMemberBanned { User = user, UntilDate = _banUntil.TryGetValue((chatId, userId), out var until) ? until : null },
                 _ => throw new ApiRequestException("Bad Request: member not found", 400)
             };
         }
@@ -732,13 +732,20 @@ namespace Enforcer5.Tests.Harness
             return true;
         }
 
-        private bool Ban(long chatId, long userId, bool revokeMessages)
+        private bool Ban(long chatId, long userId, bool revokeMessages, DateTime? untilDate = null)
         {
             RequireRights(chatId);
             var state = GetMember(chatId, userId);
             if (state is MemberState.Creator or MemberState.Administrator)
                 throw new ApiRequestException("Bad Request: user is an administrator of the chat", 400);
-            SetMember(chatId, userId, MemberState.Kicked);
+            lock (_lock)
+                if (_holdBans.Contains(chatId))
+                {
+                    // Telegram answered OK but applies it later (ApplyHeldBans).
+                    _heldBans.Add((chatId, userId, untilDate));
+                    return true;
+                }
+            SetBanned(chatId, userId, untilDate);
             if (revokeMessages)
             {
                 lock (_lock)
@@ -782,6 +789,39 @@ namespace Enforcer5.Tests.Harness
         }
 
         private readonly Dictionary<long, int> _ignoredUnbans = new();
+        private readonly HashSet<long> _holdBans = new();
+        private readonly List<(long Chat, long User, DateTime? Until)> _heldBans = new();
+        private readonly ConcurrentDictionary<(long Chat, long User), DateTime> _banUntil = new();
+
+        /// <summary>
+        /// Bans in <paramref name="chatId"/> answer OK and are applied only by <see cref="ApplyHeldBans"/>: Telegram applying a
+        /// ban after the unban that followed it (/kickme left banned, 2026-11-08).
+        /// </summary>
+        internal void HoldBans(long chatId)
+        {
+            lock (_lock) _holdBans.Add(chatId);
+        }
+
+        /// <summary>The bans <see cref="HoldBans"/> held back take effect now, and bans are applied at once again.</summary>
+        internal void ApplyHeldBans(long chatId)
+        {
+            List<(long Chat, long User, DateTime? Until)> held;
+            lock (_lock)
+            {
+                _holdBans.Remove(chatId);
+                held = _heldBans.Where(b => b.Chat == chatId).ToList();
+                _heldBans.RemoveAll(b => b.Chat == chatId);
+            }
+            foreach (var ban in held) SetBanned(ban.Chat, ban.User, ban.Until);
+        }
+
+        /// <summary>Banned, until <paramref name="untilUtc"/> for a tempban (an admin in the app, another bot).</summary>
+        internal void SetBanned(long chatId, long userId, DateTime? untilUtc = null)
+        {
+            SetMember(chatId, userId, MemberState.Kicked);
+            if (untilUtc is { } until) _banUntil[(chatId, userId)] = until;
+            else _banUntil.TryRemove((chatId, userId), out _);
+        }
 
         /// <summary>
         /// The next <paramref name="count"/> unbans in <paramref name="chatId"/> answer OK and change nothing, as

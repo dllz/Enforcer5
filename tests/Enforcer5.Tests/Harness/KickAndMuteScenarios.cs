@@ -97,6 +97,80 @@ ORDER BY s.sanction_id")).ToArray();
             Assert.IsTrue(chat.Errors.Single().Contains("given up"));
         }
 
+        // A member update in the group, as Telegram sends it for a ban (by an admin in the app, or by the bot).
+        private static Telegram.Bot.Types.Update Banned(HarnessChat chat, Telegram.Bot.Types.User by, HarnessUser member) =>
+            new Telegram.Bot.Types.Update
+            {
+                Id = 900000 + chat.Telegram.NextMessageId(),
+                ChatMember = new Telegram.Bot.Types.ChatMemberUpdated
+                {
+                    Chat = new Telegram.Bot.Types.Chat { Id = chat.ChatId, Type = Telegram.Bot.Types.Enums.ChatType.Supergroup, Title = chat.Title },
+                    From = by,
+                    Date = chat.Clock.UtcNow,
+                    OldChatMember = new Telegram.Bot.Types.ChatMemberLeft { User = member.ToUser() },
+                    NewChatMember = new Telegram.Bot.Types.ChatMemberBanned { User = member.ToUser() }
+                }
+            };
+
+        [TestMethod]
+        public async Task KickMe_WhoseBanTelegramAppliesAfterTheUnban_IsFreedByItsCheck()
+        {
+            // Off Topic, 2026-11-08: "unbanned and can rejoin", yet banned for days.
+            await using var chat = await HarnessChat.StartAsync();
+            var member = chat.Add("Member");
+            chat.Telegram.HoldBans(chat.ChatId);
+
+            await chat.SendAsync(member, "/kickme");
+            chat.Telegram.ApplyHeldBans(chat.ChatId);
+            chat.Deliver(Banned(chat, HarnessChat.BotUser, member)); // the late ban's update, from the bot
+            await chat.SettleAsync();
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(15));
+
+            Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id), "free to come back");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(6));
+            Assert.AreEqual(MemberState.Left, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual($"<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>) was removed from the group (banned).\n<a href=\"tg://user?id={member.Id}\">Member</a> (<code>{member.Id}</code>) has been unbanned and can rejoin.",
+                chat.Telegram.LastMessageTo(chat.ChatId).Text);
+            Assert.AreEqual(0, (await Sanctions(chat)).Length);
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task KickMe_ThenABanInTheTelegramApp_TheBanStands()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            await chat.SendAsync(member, "/kickme");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            chat.Telegram.SetBanned(chat.ChatId, member.Id);
+            chat.Deliver(Banned(chat, admin.ToUser(), member));
+            await chat.SettleAsync();
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id), "the admin's ban is not lifted");
+            Assert.AreEqual(1, chat.Telegram.Calls.Count(c => c.Method == "unbanChatMember"));
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
+        public async Task KickMe_ThenBan_TheBanStands()
+        {
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var member = chat.Add("Member");
+            await chat.SendAsync(member, "/kickme");
+            await chat.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            await chat.SendAsync(admin, $"/ban {member.Id} spam");
+            await chat.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, chat.Telegram.GetMember(chat.ChatId, member.Id));
+            Assert.AreEqual(1, chat.Telegram.Calls.Count(c => c.Method == "unbanChatMember"));
+            AssertNoErrors(chat);
+        }
+
         [TestMethod]
         public async Task Mute_Tempmute_Unmute()
         {

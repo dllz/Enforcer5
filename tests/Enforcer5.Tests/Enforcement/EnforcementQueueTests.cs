@@ -144,7 +144,224 @@ namespace Enforcer5.Tests.Enforcement
             Assert.AreEqual(4, bot.Telegram.Calls.Count(c => c.Method == "unbanChatMember"));
             CollectionAssert.AreEqual(new[] { "<a href=\"tg://user?id=1\">Member</a> (<code>1</code>) was removed from the group (banned).\n<a href=\"tg://user?id=1\">Member</a> (<code>1</code>) has been unbanned and can rejoin." },
                 Texts(bot, Raided), "the same message, edited");
+            Assert.AreEqual(1, bot.Hashes.All(Journal(bot)).Count, "kept to check the ban does not come back");
+
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(5));
             Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            Assert.AreEqual(4, bot.Telegram.Calls.Count(c => c.Method == "unbanChatMember"), "still out: nothing lifted again");
+            AssertNoErrors(bot);
+        }
+
+        private const string Unbanned = "<a href=\"tg://user?id=1\">Member</a> (<code>1</code>) was removed from the group (banned).\n<a href=\"tg://user?id=1\">Member</a> (<code>1</code>) has been unbanned and can rejoin.";
+
+        private static int Unbans(SimulatedBot bot) => bot.Telegram.Calls.Count(c => c.Method == "unbanChatMember");
+
+        // Telegram answers the kick's ban, then its unban (they are out), and only then applies the ban:
+        // the check right after the unban saw them out (/kickme in Off Topic, 2026-11-08).
+        private static async Task KickWhoseBanLandsLate(SimulatedBot bot)
+        {
+            bot.Telegram.HoldBans(Raided);
+            var result = await bot.RunAsync(KickWithNotice(Raided, 1));
+            Assert.AreEqual(EnforcementOutcome.Done, result.Outcome);
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1), "out, and looking free");
+            bot.Telegram.ApplyHeldBans(Raided);
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1), "the ban lands after the unban");
+        }
+
+        [TestMethod]
+        public async Task AKickWhoseBanTelegramAppliesAfterTheUnban_IsLiftedAgainByItsCheck()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await KickWhoseBanLandsLate(bot);
+
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(31));
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1), "seen banned once: not lifted yet");
+            Assert.AreEqual(1, Unbans(bot));
+
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(10));
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1), "still banned 10 s later, and nobody else banned them: lifted");
+            Assert.AreEqual(2, Unbans(bot));
+            Assert.IsTrue(bot.Telegram.Calls.Where(c => c.Method == "unbanChatMember").Last().Request is UnbanChatMemberRequest { OnlyIfBanned: true },
+                "lifting it again never removes someone who came back");
+
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(6));
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(2, Unbans(bot));
+            Assert.AreEqual(1, bot.Telegram.Calls.Count(c => c.Method == "banChatMember"));
+            CollectionAssert.AreEqual(new[] { Unbanned }, Texts(bot, Raided), "one message, said once");
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count, "checked at 30 s and 5 minutes, then done");
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task OurOwnBansUpdate_AfterAKicksUnban_ChecksAtOnce()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await KickWhoseBanLandsLate(bot);
+
+            EnforcementQueue.BannedByUs(Raided, 1);
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(11));
+
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1), "lifted within seconds, not at the 30 s check");
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(6));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task OurOwnBansUpdate_RightAfterAKick_DoesNotUseUpItsChecks()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            EnforcementQueue.BannedByUs(Raided, 1); // the kick's own ban, reported as it usually is
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            bot.Telegram.SetBanned(Raided, 1); // then Telegram's late ban
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(1));
+
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1), "the planned checks still ran");
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ABanAfterAKick_IsNeverLiftedByTheKicksCheck()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            var ban = await bot.RunAsync(EnforcementJob.Ban(Raided, 1));
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(EnforcementOutcome.Done, ban.Outcome);
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1), "the later ban stands");
+            Assert.AreEqual(1, Unbans(bot));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ABanInTheAppAfterAKick_IsNeverLiftedByTheKicksCheck()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(5));
+
+            bot.Telegram.SetBanned(Raided, 1);
+            EnforcementQueue.BannedElsewhere(Raided, 1); // its member update, from the admin
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1), "the admin's ban stands");
+            Assert.AreEqual(1, Unbans(bot));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ABanInTheAppWhoseUpdateComesAfterTheCheckSawIt_StillStands()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(25));
+
+            bot.Telegram.SetBanned(Raided, 1);
+            await bot.AdvanceAsync(TimeSpan.FromSeconds(6)); // the 30 s check sees it banned
+            EnforcementQueue.BannedElsewhere(Raided, 1); // and the update arrives a few seconds late
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(1, Unbans(bot));
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ATempbanAfterAKick_IsNotTheKicksBan_AndStands()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+
+            // Another bot's tempban, whose update never reached us.
+            bot.Telegram.SetBanned(Raided, 1, bot.Clock.UtcNow.AddHours(1));
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(1, Unbans(bot));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task AKicksCheck_IsKeptAcrossARestart()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await KickWhoseBanLandsLate(bot);
+
+            await bot.CrashAndRestartAsync();
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(1));
+
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(1, bot.Telegram.Calls.Count(c => c.Method == "banChatMember"), "resumed at the check, not banned again");
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(6));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ABanAfterAKick_StillStandsAfterARestart()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            bot.Telegram.StartStorm(c => c.Method == "banChatMember", TimeSpan.FromMinutes(2), retryAfter: 60);
+            await bot.RunAsync(EnforcementJob.Ban(Raided, 1)); // waits out the storm in the journal
+
+            await bot.CrashAndRestartAsync();
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(10));
+
+            Assert.AreEqual(MemberState.Kicked, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(1, Unbans(bot));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task ASecondKickWhileTheFirstIsBeingChecked_IsCarriedOut()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            bot.Telegram.SetMember(Raided, 1, MemberState.Member); // came back
+
+            var again = await bot.RunAsync(KickWithNotice(Raided, 1));
+
+            Assert.AreEqual(EnforcementOutcome.Done, again.Outcome);
+            Assert.AreEqual(MemberState.Left, bot.Telegram.GetMember(Raided, 1));
+            Assert.AreEqual(2, bot.Telegram.Calls.Count(c => c.Method == "banChatMember"));
+            await bot.AdvanceAsync(TimeSpan.FromMinutes(6));
+            Assert.AreEqual(0, bot.Hashes.All(Journal(bot)).Count);
+            AssertNoErrors(bot);
+        }
+
+        [TestMethod]
+        public async Task AMuteOfSomeoneWhoCameBack_DoesNotWaitForTheKicksCheck()
+        {
+            await using var bot = await SimulatedBot.StartAsync();
+            bot.Group(Raided, 1);
+            await bot.RunAsync(KickWithNotice(Raided, 1));
+            bot.Telegram.SetMember(Raided, 1, MemberState.Member);
+
+            var mute = await bot.RunAsync(EnforcementJob.Mute(Raided, 1));
+
+            Assert.AreEqual(EnforcementOutcome.Done, mute.Outcome, "within the caller's wait, not after the 5 minute check");
+            Assert.AreEqual(MemberState.Restricted, bot.Telegram.GetMember(Raided, 1));
             AssertNoErrors(bot);
         }
 

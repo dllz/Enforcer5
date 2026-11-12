@@ -83,6 +83,13 @@ namespace Enforcer5.Helpers
                 // A mute lifted, by us or by hand: the queue no longer takes them as muted.
                 if (update.OldChatMember is ChatMemberRestricted && update.NewChatMember is not ChatMemberRestricted)
                     Enforcement.EnforcementQueue.ForgetMute(update.Chat.Id, user.Id);
+                // Banned: by someone else, a kick of theirs never lifts it; by this bot with no job of the queue
+                // left to do it, a kick's ban that Telegram applied after its unban, checked now (2026-11-12).
+                if (update.NewChatMember is ChatMemberBanned && update.OldChatMember is not ChatMemberBanned)
+                {
+                    if (update.From?.Id == Bot.Me?.Id) Enforcement.EnforcementQueue.BannedByUs(update.Chat.Id, user.Id);
+                    else Enforcement.EnforcementQueue.BannedElsewhere(update.Chat.Id, user.Id);
+                }
                 if (!wasIn && isIn)
                 {
                     if (user.IsBot)

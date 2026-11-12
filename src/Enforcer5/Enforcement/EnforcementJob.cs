@@ -119,10 +119,27 @@ namespace Enforcer5.Enforcement
         public List<int> MessageIds { get; set; }
         public ChatPermissions Permissions { get; set; }
         public EnforcementNote Note { get; set; } = new EnforcementNote();
-        /// <summary>How far a two-call job (a kick) got: 1 once the ban went through.</summary>
+        /// <summary>
+        /// How far a kick got: 1 once the ban went through, 2 once the unban did and the person is checked again
+        /// (<see cref="EnforcementQueue.KickRecheckAfter"/>), in case Telegram applied the ban after the unban.
+        /// </summary>
         public int Stage { get; set; }
         /// <summary>When a kick's ban went through and its unban was first not done: it is tried for ten minutes from then.</summary>
         public DateTime? UnbanSinceUtc { get; set; }
+        /// <summary>When a kick's ban went through: a ban by someone else after this is theirs, never lifted by the kick.</summary>
+        public DateTime? BannedUtc { get; set; }
+        /// <summary>When a kick's unban first went through: recorded and told once.</summary>
+        public DateTime? UnbannedUtc { get; set; }
+        /// <summary>A kick's checks since its last unban.</summary>
+        public int Rechecks { get; set; }
+        /// <summary>How often a check found the kick's own ban back and lifted it again.</summary>
+        public int Reunbans { get; set; }
+        /// <summary>
+        /// A kick whose ban went through, after which the person was banned, kicked or unbanned by something else:
+        /// a later job of the queue, an admin in the Telegram app, another bot. It never lifts a ban again
+        /// (Daniel, 2026-11-12: a real ban after /kickme must stand).
+        /// </summary>
+        public bool Superseded { get; set; }
         public int Attempts { get; set; }
         /// <summary>Not to be carried out before this time: a notice deleted once it has said its piece.</summary>
         public DateTime? NotBeforeUtc { get; set; }
@@ -149,6 +166,10 @@ namespace Enforcer5.Enforcement
         [JsonIgnore] internal List<EnforcementJob> Riders = new();
         /// <summary>Being carried out now (set and cleared under the queue's lock), for /queues.</summary>
         [JsonIgnore] internal bool InFlight;
+        /// <summary>Why a kick's check left the person banned (not its own ban), for the log; null otherwise.</summary>
+        [JsonIgnore] internal string GaveWay;
+        /// <summary>A kick's check brought forward by its person's ban update: when it was planned.</summary>
+        [JsonIgnore] internal DateTime? PlannedCheckUtc;
 
         /// <summary>
         /// Another job with the same key while this one waits is the same job. Permission changes are

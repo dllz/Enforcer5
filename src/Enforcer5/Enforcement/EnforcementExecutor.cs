@@ -109,11 +109,47 @@ namespace Enforcer5.Enforcement
                             await api.BanChatMember(job.ChatId, job.TargetId, revokeMessages: job.RevokeMessages);
                             job.Stage = 1;
                             job.Attempts = 0;
+                            job.BannedUtc = Clock.UtcNow;
+                        }
+                        if (job.Stage >= 2)
+                        {
+                            // The checks after the unban (EnforcementQueue.KickRecheckAfter): Telegram can apply the
+                            // ban after the unban that followed it, and the check right after the unban still saw
+                            // them out (/kickme in Off Topic, 2026-11-08). The queue already let anything else that
+                            // banned them since win (Superseded).
+                            var seen = await api.GetChatMember(job.ChatId, job.TargetId);
+                            if (seen is not ChatMemberBanned banned)
+                            {
+                                job.Stage = 2;
+                                break;
+                            }
+                            // The kick's ban is for good: a ban that ends is someone's tempban.
+                            if (banned.UntilDate is { } until && until > Clock.UtcNow && until < Clock.UtcNow.AddDays(366))
+                            {
+                                job.GaveWay = $"a tempban until {until:u}";
+                                break;
+                            }
+                            // Banned, by whom Telegram does not say here. Seen once: looked at again a little later
+                            // (stage 3), so the member update of a ban by an admin or another bot has time to arrive
+                            // and supersede the kick before it lifts anything (Daniel, 2026-11-12).
+                            if (job.Stage == 2)
+                            {
+                                job.Stage = 3;
+                                break;
+                            }
+                            if (job.Reunbans >= EnforcementQueue.MaxKickReunbans)
+                                return Attempt.Refused(Refusal.Other, new StillBannedException(job));
+                            job.Reunbans++;
+                            job.Stage = 1;
+                            job.Attempts = 0;
+                            job.UnbanSinceUtc = null;
+                            LogHelper.Info($"{job}: banned again after its unban (check {job.Rechecks + 1}), unbanning again");
                         }
                         // Not only_if_banned: Telegram may not show the ban yet, and then that unban did
                         // nothing and still answered OK, leaving the person banned (/kickme, 2026-11). They
                         // are being removed either way, so this cannot remove anyone who should stay.
-                        await api.UnbanChatMember(job.ChatId, job.TargetId);
+                        // Lifting its own ban again (seen banned twice) is only_if_banned: they may be back in the group.
+                        await api.UnbanChatMember(job.ChatId, job.TargetId, onlyIfBanned: job.Reunbans > 0);
                         // Checked, as the code before the queue did: a kick must never end as a ban.
                         var member = await api.GetChatMember(job.ChatId, job.TargetId);
                         if (member.Status == ChatMemberStatus.Kicked) return Attempt.Transient(new StillBannedException(job));

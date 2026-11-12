@@ -44,6 +44,21 @@ namespace Enforcer5.Enforcement
         internal static TimeSpan KickUnbanBackoff(int attempts) =>
             TimeSpan.FromSeconds(Math.Pow(2, Math.Clamp(attempts, 1, 20)));
 
+        /// <summary>
+        /// After a kick's unban, its checks that the ban did not come back (Daniel, 2026-11-12): each this long after
+        /// the one before, counted from the unban. Telegram can apply a ban after the unban that followed it.
+        /// </summary>
+        internal static readonly TimeSpan[] KickRecheckAfter = { TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(4.5) };
+
+        /// <summary>
+        /// A check that finds the person banned looks again this much later before lifting anything, so a ban by an
+        /// admin or another bot is known by then from its member update (<see cref="BannedElsewhere"/>).
+        /// </summary>
+        internal static readonly TimeSpan KickConfirmAfter = TimeSpan.FromSeconds(10);
+
+        /// <summary>A kick lifts its own ban at most this often again; past that it is given up and said.</summary>
+        internal const int MaxKickReunbans = 3;
+
         // With the lock held. A ban, kick or unban of the same person submitted after this job.
         private static bool HasLaterMembershipJob(EnforcementJob job) =>
             ByChat.TryGetValue(job.ChatId, out var list) &&
@@ -113,7 +128,7 @@ namespace Enforcer5.Enforcement
         internal static QueueStatus.Reading Read()
         {
             var now = Clock.UtcNow;
-            int jobs, chats, running, ready = 0, due = 0, paused = 0, rights = 0, unbans = 0, later = 0;
+            int jobs, chats, running, ready = 0, due = 0, paused = 0, rights = 0, unbans = 0, rechecks = 0, later = 0;
             lock (Lock)
             {
                 chats = ByChat.Count;
@@ -127,6 +142,7 @@ namespace Enforcer5.Enforcement
                     {
                         if (job.InFlight) continue; // counted as running
                         if (job.Kind == EnforcementKind.Kick && job.Stage == 1 && job.UnbanSinceUtc != null) unbans++;
+                        else if (job.Kind == EnforcementKind.Kick && job.Stage >= 2 && job.DueUtc > now) rechecks++;
                         else if (job.RefusedSinceUtc != null || NoRightsSince.ContainsKey(chat)) rights++;
                         else if (chatPaused) paused++;
                         else if (job.DueUtc > now) later++;
@@ -143,6 +159,7 @@ namespace Enforcer5.Enforcement
             if (paused > 0) parts.Add($"{paused} waiting out a 429");
             if (rights > 0) parts.Add($"{rights} waiting for rights");
             if (unbans > 0) parts.Add($"{unbans} kick unbans to retry");
+            if (rechecks > 0) parts.Add($"{rechecks} kicks to check again");
             if (later > 0) parts.Add($"{later} retrying later");
             parts.Add($"{finished} done");
             return new QueueStatus.Reading(running + ready, Interlocked.Read(ref _tries), string.Join(", ", parts));
@@ -245,15 +262,17 @@ namespace Enforcer5.Enforcement
                 }
 
                 var key = job.DedupeKey;
-                // A kick still trying to lift its ban would hold this person's later ban, kick or unban
-                // back until its next try (up to ten minutes): it tries again now, and gives way if
-                // that fails (see CarryOutAsync).
+                // A kick still trying to lift its ban, or waiting to check it again, would hold this person's
+                // later ban, kick or unban back until its next turn (up to ten minutes): it goes now, and gives
+                // way to the later job (Add marks it superseded; see CarryOutAsync).
                 if (job.Kind is EnforcementKind.Ban or EnforcementKind.Kick or EnforcementKind.Unban &&
                     ByChat.TryGetValue(job.ChatId, out var waitingHere))
-                    foreach (var kick in waitingHere.Where(j => j.Kind == EnforcementKind.Kick && j.Stage == 1 && j.TargetId == job.TargetId))
+                    foreach (var kick in waitingHere.Where(j => j.Kind == EnforcementKind.Kick && j.Stage >= 1 && j.TargetId == job.TargetId))
                         if (kick.DueUtc > now) kick.DueUtc = now;
                 // Only the same job as the person's latest: after "ban, unban", a new ban is a new job.
-                if (key != null && ByKey.TryGetValue(key, out existing) && IsLatestFor(existing)) { }
+                // A kick that is only checking its unban is done: another kick (a second /kickme after rejoining) is new.
+                if (key != null && ByKey.TryGetValue(key, out existing) && IsLatestFor(existing) &&
+                    !(existing.Kind == EnforcementKind.Kick && existing.Stage >= 2)) { }
                 else
                 {
                     existing = null;
@@ -317,10 +336,14 @@ namespace Enforcer5.Enforcement
             ByChat.TryGetValue(job.ChatId, out var list) &&
             !list.Any(o => o != job && o.TargetId == job.TargetId && o.Sequence > job.Sequence);
 
-        // With the lock held.
+        // With the lock held. Also on loading the journal, in the jobs' order, so a kick is superseded again after a restart.
         private static void Add(EnforcementJob job)
         {
             if (!ByChat.TryGetValue(job.ChatId, out var list)) ByChat[job.ChatId] = list = new List<EnforcementJob>();
+            // A later ban, kick or unban of the person decides whether they are banned, never the earlier kick.
+            if (job.TargetId != 0 && job.Kind is EnforcementKind.Ban or EnforcementKind.Kick or EnforcementKind.Unban)
+                foreach (var kick in list.Where(o => o.Kind == EnforcementKind.Kick && o.TargetId == job.TargetId && o.Sequence < job.Sequence))
+                    kick.Superseded = true;
             list.Add(job);
             if (job.DedupeKey != null) ByKey[job.DedupeKey] = job;
         }
@@ -469,7 +492,10 @@ namespace Enforcer5.Enforcement
             EnforcementJob best = null;
             foreach (var job in jobs)
             {
-                if (job.TargetId != 0 && jobs.Any(o => o != job && o.TargetId == job.TargetId && o.Sequence < job.Sequence))
+                // A kick waiting to check its unban holds nothing back: its person is out, and anything later
+                // that changes whether they are banned supersedes it (Add).
+                if (job.TargetId != 0 && jobs.Any(o => o != job && o.TargetId == job.TargetId && o.Sequence < job.Sequence &&
+                                                       !(o.Kind == EnforcementKind.Kick && o.Stage >= 2)))
                     continue;
                 if (job.DueUtc > now)
                 {
@@ -490,13 +516,25 @@ namespace Enforcer5.Enforcement
             var generation = Volatile.Read(ref _generation);
             if (job.Context != null) ErrorReporter.Current = job.Context;
             Attempt attempt;
-            try
+            var stageBefore = job.Stage;
+            bool superseded;
+            lock (Lock) superseded = job.Kind == EnforcementKind.Kick && job.Stage >= 1 && job.Superseded;
+            if (superseded)
             {
-                attempt = await EnforcementExecutor.ExecuteAsync(job);
+                // Its ban went through, and something else banned, kicked or unbanned them since: theirs decides.
+                job.GaveWay = "a later ban, kick or unban";
+                attempt = Attempt.Success;
             }
-            catch (Exception e)
+            else
             {
-                attempt = Attempt.Transient(e);
+                try
+                {
+                    attempt = await EnforcementExecutor.ExecuteAsync(job);
+                }
+                catch (Exception e)
+                {
+                    attempt = Attempt.Transient(e);
+                }
             }
 
             // The process "died" meanwhile: what it was doing is gone with it; the journal has the job.
@@ -521,8 +559,7 @@ namespace Enforcer5.Enforcement
                 job.UnbanSinceUtc ??= now;
                 // They are out of the group, which is what the caller asked for.
                 CompleteOnce(job, EnforcementResult.Done);
-                bool superseded;
-                lock (Lock) superseded = HasLaterMembershipJob(job);
+                lock (Lock) superseded = HasLaterMembershipJob(job) || job.Superseded;
                 var left = job.UnbanSinceUtc.Value + KickUnbanFor - now;
                 if (superseded)
                 {
@@ -548,7 +585,8 @@ namespace Enforcer5.Enforcement
                 }
                 else
                 {
-                    if (job.Attempts == 1) KickNotices.Removed(job);
+                    // Posted once: a kick unbanning its ban again after a check already said so.
+                    if (job.Attempts == 1 && job.UnbannedUtc == null) KickNotices.Removed(job);
                     // The last try is at the ten minutes.
                     var wait = KickUnbanBackoff(job.Attempts);
                     if (wait > left) wait = left;
@@ -559,9 +597,19 @@ namespace Enforcer5.Enforcement
             }
             else switch (attempt.Kind)
             {
+                case AttemptKind.Success when job.Kind == EnforcementKind.Kick:
+                    keep = KickDone(job, stageBefore, now);
+                    if (!keep) result = EnforcementResult.Done;
+                    lock (Lock) NoRightsSince.Remove(job.ChatId);
+                    break;
+                case AttemptKind.Refused when job.Kind == EnforcementKind.Kick && stageBefore == 2 && attempt.Error is StillBannedException:
+                    // Its own ban came back more than MaxKickReunbans times: said, and left there.
+                    ErrorReporter.Report(attempt.Error, $"{job}: banned again after {job.Reunbans} unbans, given up");
+                    KickNotices.Failed(job, KickFailure.GaveUp);
+                    result = EnforcementResult.Done;
+                    break;
                 case AttemptKind.Success:
                     EnforcementExecutor.Record(job);
-                    if (job.Kind == EnforcementKind.Kick) KickNotices.Unbanned(job);
                     result = EnforcementResult.Done;
                     lock (Lock)
                     {
@@ -652,6 +700,106 @@ namespace Enforcer5.Enforcement
             if (result.HasValue) CompleteOnce(job, result.Value);
             if (!keep) job.Riders.Clear();
             Wake();
+        }
+
+        /// <summary>
+        /// A kick's try went through: its unban, a check that found them still out, or a check that left a ban that is
+        /// not its own. The first unban is recorded and told; then it is checked again (<see cref="KickRecheckAfter"/>),
+        /// and after each unban the checks start over. True while there is a check to come.
+        /// </summary>
+        private static bool KickDone(EnforcementJob job, int stageBefore, DateTime now)
+        {
+            CompleteOnce(job, EnforcementResult.Done);
+            if (job.GaveWay != null)
+            {
+                // Never unbanned (superseded while still unbanning): its message stays "removed", as before.
+                if (job.UnbannedUtc == null) KickNotices.Forget(job);
+                LogHelper.Info($"{job}: left banned, the ban is not the kick's ({job.GaveWay})");
+                return false;
+            }
+            if (job.UnbannedUtc == null)
+            {
+                job.UnbannedUtc = now;
+                EnforcementExecutor.Record(job);
+                KickNotices.Unbanned(job);
+            }
+            // Superseded since this try began: whatever came later decides.
+            lock (Lock)
+                if (job.Superseded)
+                {
+                    LogHelper.Info($"{job}: not checked again, a later ban, kick or unban decides");
+                    return false;
+                }
+            job.Attempts = 0;
+            // Seen banned: looked at again shortly, before anything is lifted (EnforcementExecutor, stage 3).
+            if (job.Stage == 3)
+            {
+                job.DueUtc = now + KickConfirmAfter;
+                return true;
+            }
+            var planned = job.PlannedCheckUtc;
+            job.PlannedCheckUtc = null;
+            // An early look (BannedByUs) that found them out: the planned check stays as it was.
+            if (planned is { } at && stageBefore >= 2 && job.Stage == 2)
+            {
+                job.DueUtc = at > now ? at : now;
+                return true;
+            }
+            // An unban just went through (the first, or one lifting the kick's own ban again): the checks start over.
+            if (stageBefore < 2 || job.Stage == 1) job.Rechecks = 0;
+            else job.Rechecks++;
+            if (job.Rechecks >= KickRecheckAfter.Length) return false;
+            job.Stage = 2;
+            job.DueUtc = now + KickRecheckAfter[job.Rechecks];
+            return true;
+        }
+
+        /// <summary>
+        /// Telegram says <paramref name="userId"/> was banned in <paramref name="chatId"/> by someone other than this bot
+        /// (an admin in the app, another bot, the other edition): a kick of theirs whose ban already went through never
+        /// lifts a ban again (Daniel, 2026-11-12). Their ban stands.
+        /// </summary>
+        internal static void BannedElsewhere(long chatId, long userId)
+        {
+            List<EnforcementJob> marked;
+            lock (Lock)
+            {
+                if (!ByChat.TryGetValue(chatId, out var list)) return;
+                marked = list.Where(j => j.Kind == EnforcementKind.Kick && j.TargetId == userId && j.Stage >= 1 && !j.Superseded).ToList();
+                foreach (var kick in marked) kick.Superseded = true;
+            }
+            foreach (var kick in marked)
+            {
+                LogHelper.Info($"{kick}: banned by someone else since, their ban stands");
+                // Kept across a restart; a write already on its way may land after it, and then it is decided again
+                // by the update's order of arrival, which a restart does not replay. Best effort.
+                Journal.SaveAsync(kick).ContinueWith(t => ErrorReporter.Report(t.Exception, $"Journaling {kick}"),
+                    TaskContinuationOptions.OnlyOnFaulted);
+            }
+        }
+
+        /// <summary>
+        /// Telegram says this bot banned <paramref name="userId"/> in <paramref name="chatId"/>. A kick of theirs that
+        /// was already unbanned and waits to check (and no later job of the queue, which would have superseded it)
+        /// means Telegram applied the kick's ban late: checked now rather than at its next check.
+        /// </summary>
+        internal static void BannedByUs(long chatId, long userId)
+        {
+            var woke = false;
+            lock (Lock)
+            {
+                if (!ByChat.TryGetValue(chatId, out var list)) return;
+                foreach (var kick in list.Where(j => j.Kind == EnforcementKind.Kick && j.TargetId == userId && j.Stage >= 2 && !j.Superseded))
+                {
+                    if (kick.DueUtc <= Clock.UtcNow) continue;
+                    // Our own ban's update usually arrives right after the kick, with them already out: that early
+                    // check does not count, and the planned one stays (KickDone).
+                    kick.PlannedCheckUtc ??= kick.DueUtc;
+                    kick.DueUtc = Clock.UtcNow;
+                    woke = true;
+                }
+            }
+            if (woke) Wake();
         }
 
         private static void CompleteOnce(EnforcementJob job, EnforcementResult result)
