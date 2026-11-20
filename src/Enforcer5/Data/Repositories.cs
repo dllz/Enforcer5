@@ -28,8 +28,10 @@ namespace Enforcer5.Data
         internal static IWarnRepository Warns { get; set; } =
             new WarnStore(WarnTable, () => Redis.db, Enforcer5.Helpers.BanHistory.Edition, () => Storage.PostgresStorage.Ready);
 
+        // The mode and the saved and recent reasons are the group's config (PostgreSQL, rollout step 17, Helpers/GroupConfigs);
+        // the removals waiting for a reason stay in Redis, expiring with their question.
         internal static IWarnReasonRepository WarnReasons { get; set; } =
-            new RedisWarnReasonRepository(() => Redis.db);
+            new WarnReasonRepository(() => Redis.db);
 
         internal static IChannelPostRepository ChannelPosts { get; set; } =
             new PolicyChannelPostRepository(() => Redis.db);

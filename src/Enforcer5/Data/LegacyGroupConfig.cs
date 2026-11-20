@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.Json;
+using Enforcer5.Models;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
@@ -22,6 +24,9 @@ namespace Enforcer5.Data
     /// (field <c>link</c>; "no" is none).</item>
     /// <item><c>chat:{id}:extra</c> (trigger to value) and <c>chat:{id}:extra:{trigger}</c> (<c>mediaid</c>, <c>caption</c>),
     /// see <see cref="ExtraConfig.FromLegacy"/>.</item>
+    /// <item>The warn removal reasons (rollout step 17): <c>chat:{id}:warnreasonmode</c> (the mode's number, anything else
+    /// off), <c>chat:{id}:warnreasons</c> (a JSON array; no key or unreadable: never edited) and
+    /// <c>chat:{id}:recentwarnreasons</c> (a list, newest first). None were set on prod (2026-11-20).</item>
     /// </list>
     /// </summary>
     internal static class LegacyGroupConfig
@@ -36,7 +41,11 @@ namespace Enforcer5.Data
             var languageTask = db.StringGetAsync($"chat:{chatId}:language");
             var linkTask = db.HashGetAsync($"chat:{chatId}links", "link");
             var extrasTask = db.HashGetAllAsync($"chat:{chatId}:extra");
-            await Task.WhenAll(settingsTask, welcomeTask, logTask, rulesTask, aboutTask, languageTask, linkTask, extrasTask);
+            var reasonModeTask = db.StringGetAsync($"chat:{chatId}:warnreasonmode");
+            var reasonsTask = db.StringGetAsync($"chat:{chatId}:warnreasons");
+            var recentTask = db.ListRangeAsync($"chat:{chatId}:recentwarnreasons", 0, WarnReasons.MaxRecent - 1);
+            await Task.WhenAll(settingsTask, welcomeTask, logTask, rulesTask, aboutTask, languageTask, linkTask, extrasTask,
+                reasonModeTask, reasonsTask, recentTask);
 
             var settings = (settingsTask.Result ?? Array.Empty<HashEntry>()).ToDictionary(e => e.Name.ToString(), e => e.Value.ToString());
             string Field(string name) => settings.TryGetValue(name, out var value) ? value : null;
@@ -76,8 +85,27 @@ namespace Enforcer5.Data
                 Welcome = Welcome(welcomeTask.Result),
                 LogChat = logChat,
                 Content = content.ToImmutableDictionary(),
-                Extras = extras.ToImmutable()
+                Extras = extras.ToImmutable(),
+                WarnReasonMode = reasonModeTask.Result.TryParse(out int mode) && Enum.IsDefined(typeof(WarnReasonMode), mode)
+                    ? (WarnReasonMode)mode : WarnReasonMode.Off,
+                WarnReasons = SavedReasons(reasonsTask.Result),
+                RecentWarnReasons = (recentTask.Result ?? Array.Empty<RedisValue>())
+                    .Where(v => !v.IsNullOrEmpty).Select(v => v.ToString()).Distinct().Take(WarnReasons.MaxRecent).ToImmutableList()
             };
+        }
+
+        private static ImmutableList<string> SavedReasons(RedisValue value)
+        {
+            if (value.IsNullOrEmpty) return null;
+            try
+            {
+                return (JsonSerializer.Deserialize<string[]>(value.ToString()) ?? Array.Empty<string>()).ToImmutableList();
+            }
+            catch (JsonException)
+            {
+                // Unreadable: the defaults applied before too.
+                return null;
+            }
         }
 
         internal static WelcomeConfig Welcome(HashEntry[] hash)

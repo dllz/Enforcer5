@@ -187,8 +187,27 @@ namespace Enforcer5.Tests.Warns
         }
     }
 
+    /// <summary>A group's config in memory, changed as GroupConfigs changes it, for the warn reason repository.</summary>
+    internal sealed class MemoryGroupConfigs
+    {
+        private readonly System.Collections.Generic.Dictionary<long, GroupConfig> _configs = new();
+
+        public Task<GroupConfig> GetAsync(long chatId) =>
+            Task.FromResult(_configs.TryGetValue(chatId, out var config) ? config : GroupConfig.NewGroup);
+
+        public Task ChangeAsync(long chatId, ConfigChange change)
+        {
+            // Through the queue's JSON, as a change queued while PostgreSQL is down is.
+            change = System.Text.Json.JsonSerializer.Deserialize<ConfigChange>(System.Text.Json.JsonSerializer.Serialize(change));
+            _configs[chatId] = change.ApplyTo(GetAsync(chatId).Result);
+            return Task.CompletedTask;
+        }
+
+        public WarnReasonRepository Repository(FakeRedis redis) => new(() => redis.Database, GetAsync, ChangeAsync);
+    }
+
     [TestClass]
-    public class RedisWarnReasonRepositoryTests
+    public class WarnReasonRepositoryTests
     {
         private const long ChatId = -1001234567890;
         private FakeRedis _redis;
@@ -198,7 +217,7 @@ namespace Enforcer5.Tests.Warns
         public void SetUp()
         {
             _redis = new FakeRedis();
-            _reasons = new RedisWarnReasonRepository(() => _redis.Database);
+            _reasons = new MemoryGroupConfigs().Repository(_redis);
         }
 
         private static PendingWarnRemoval Pending() => new PendingWarnRemoval(
@@ -210,16 +229,6 @@ namespace Enforcer5.Tests.Warns
             Assert.AreEqual(WarnReasonMode.Off, await _reasons.GetModeAsync(ChatId));
             await _reasons.SetModeAsync(ChatId, WarnReasonMode.WarnsAndPrewarns);
             Assert.AreEqual(WarnReasonMode.WarnsAndPrewarns, await _reasons.GetModeAsync(ChatId));
-        }
-
-        [DataTestMethod]
-        [DataRow("9")]
-        [DataRow("-1")]
-        [DataRow("on")]
-        public async Task UnknownMode_ReadsAsOff(string stored)
-        {
-            _redis.Strings["chat:-1001234567890:warnreasonmode"] = (stored, null);
-            Assert.AreEqual(WarnReasonMode.Off, await _reasons.GetModeAsync(ChatId));
         }
 
         [TestMethod]
@@ -237,17 +246,11 @@ namespace Enforcer5.Tests.Warns
         }
 
         [TestMethod]
-        public async Task UnreadableSavedReasons_FallBackToTheDefaults()
-        {
-            _redis.Strings["chat:-1001234567890:warnreasons"] = ("not json", null);
-            Assert.IsNull(await _reasons.GetSavedAsync(ChatId));
-        }
-
-        [TestMethod]
         public async Task RecentReasons_AreNewestFirstDistinctAndBounded()
         {
             foreach (var reason in new[] { "a", "b", "a", "c", "d", "e", "f" })
                 await _reasons.AddRecentAsync(ChatId, reason);
+            await _reasons.AddRecentAsync(ChatId, "");
 
             CollectionAssert.AreEqual(new[] { "f", "e", "d", "c", "a" }, (await _reasons.GetRecentAsync(ChatId)).ToArray());
         }
@@ -285,30 +288,43 @@ namespace Enforcer5.Tests.Warns
         }
 
         [TestMethod]
-        public async Task StorageFormat_IsStable()
+        public async Task OnlyThePendingRemovals_AreInRedis()
         {
-            // Existing data depends on this layout; changing it needs a migration.
             await _reasons.SetModeAsync(ChatId, WarnReasonMode.All);
             await _reasons.SetSavedAsync(ChatId, new[] { "Mistake" });
             await _reasons.AddRecentAsync(ChatId, "AFK");
             await _reasons.SavePendingAsync(ChatId, 500, Pending(), TimeSpan.FromMinutes(10));
 
-            CollectionAssert.AreEquivalent(new[]
-            {
-                "chat:-1001234567890:warnreasonmode",
-                "chat:-1001234567890:warnreasons",
-                "chat:-1001234567890:recentwarnreasons",
-                "chat:-1001234567890:warnreasonprompt:500"
-            }, _redis.Keys.ToArray());
-            Assert.AreEqual("3", _redis.Strings["chat:-1001234567890:warnreasonmode"].Value.ToString());
-            Assert.AreEqual("[\"Mistake\"]", _redis.Strings["chat:-1001234567890:warnreasons"].Value.ToString());
+            CollectionAssert.AreEquivalent(new[] { "chat:-1001234567890:warnreasonprompt:500" }, _redis.Keys.ToArray());
         }
 
-        [TestMethod]
-        public void Constructing_DoesNotTouchTheDatabase()
+        [DataTestMethod]
+        [DataRow("3", "[\"Mistake\",\"AFK\"]", 3, "Mistake|AFK")]
+        [DataRow("9", "not json", 0, null)]
+        [DataRow("on", "[]", 0, "")]
+        [DataRow(null, null, 0, null)]
+        public async Task OldKeys_AreReadByTheConfigImport(string mode, string saved, int expectedMode, string expectedSaved)
         {
-            _ = new RedisWarnReasonRepository(() => throw new InvalidOperationException("not connected"));
-            Assert.IsInstanceOfType(Repositories.WarnReasons, typeof(RedisWarnReasonRepository));
+            var db = new Moq.Mock<IDatabaseAsync>();
+            db.Setup(d => d.StringGetAsync(It("warnreasonmode"), Moq.It.IsAny<CommandFlags>())).Returns(Task.FromResult((RedisValue)mode));
+            db.Setup(d => d.StringGetAsync(It("warnreasons"), Moq.It.IsAny<CommandFlags>())).Returns(Task.FromResult((RedisValue)saved));
+            db.Setup(d => d.ListRangeAsync(It("recentwarnreasons"), 0, WarnReasons.MaxRecent - 1, Moq.It.IsAny<CommandFlags>()))
+                .Returns(Task.FromResult(new RedisValue[] { "b", "a", "b" }));
+
+            var config = await LegacyGroupConfig.ReadAsync(db.Object, ChatId);
+
+            Assert.AreEqual((WarnReasonMode)expectedMode, config.WarnReasonMode);
+            Assert.AreEqual(expectedSaved, config.WarnReasons == null ? null : string.Join("|", config.WarnReasons));
+            CollectionAssert.AreEqual(new[] { "b", "a" }, config.RecentWarnReasons.ToArray());
+        }
+
+        private static RedisKey It(string suffix) => Moq.It.Is<RedisKey>(k => k == $"chat:{ChatId}:{suffix}");
+
+        [TestMethod]
+        public void CompositionRoot_KeepsThemInTheGroupConfig()
+        {
+            _ = new WarnReasonRepository(() => throw new InvalidOperationException("not connected"));
+            Assert.IsInstanceOfType(Repositories.WarnReasons, typeof(WarnReasonRepository));
         }
     }
 
@@ -332,7 +348,7 @@ namespace Enforcer5.Tests.Warns
         {
             _redis = new FakeRedis();
             _warns = new MemoryWarns();
-            _reasons = new RedisWarnReasonRepository(() => _redis.Database);
+            _reasons = new MemoryGroupConfigs().Repository(_redis);
         }
 
         [TestMethod]

@@ -1629,6 +1629,13 @@ namespace Enforcer5.Storage.Migrations
                         .HasDefaultValue("convert")
                         .HasColumnName("prewarn_mode");
 
+                    b.PrimitiveCollection<string[]>("RecentWarnReasons")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("recent_warn_reasons")
+                        .HasDefaultValueSql("'{}'::text[]");
+
                     b.Property<bool>("ReportsEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1661,6 +1668,16 @@ namespace Enforcer5.Storage.Migrations
                         .HasColumnType("bigint")
                         .HasDefaultValue(1L)
                         .HasColumnName("version");
+
+                    b.Property<short>("WarnReasonMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)0)
+                        .HasColumnName("warn_reason_mode");
+
+                    b.PrimitiveCollection<string[]>("WarnReasons")
+                        .HasColumnType("text[]")
+                        .HasColumnName("warn_reasons");
 
                     b.Property<string>("WarningAction")
                         .IsRequired()
@@ -1709,6 +1726,8 @@ namespace Enforcer5.Storage.Migrations
                             t.HasCheckConstraint("group_settings_prewarn_mode_check", "prewarn_mode IN ('convert', 'half')");
 
                             t.HasCheckConstraint("group_settings_version_check", "version > 0");
+
+                            t.HasCheckConstraint("group_settings_warn_reason_mode_check", "warn_reason_mode BETWEEN 0 AND 3");
 
                             t.HasCheckConstraint("group_settings_welcome_media_check", "(welcome_media_file_id IS NULL) = (welcome_media_file_owner_edition IS NULL) AND (welcome_media_file_owner_edition IS NULL OR welcome_media_file_owner_edition IN ('normal', 'premium', 'legacy_unknown'))");
 

@@ -167,6 +167,25 @@ JOIN telegram_accounts a ON a.account_id = e.account_id WHERE a.telegram_user_id
         }
 
         [TestMethod]
+        public async Task SavedWarnReasons_AreRecoveredIntoTheGroupsConfig()
+        {
+            // The group's config since rollout step 17; the item keeps the old key's JSON form.
+            await using var chat = await HarnessChat.StartAsync();
+            var admin = chat.Add("Admin", MemberState.Administrator);
+            var item = $@"{{ ""kind"": ""warnreasons"", ""changes"": [ {{ ""type"": ""str"", ""key"": ""chat:{chat.ChatId}:warnreasons"", ""field"": null, ""before"": null, ""after"": ""[\""Mistake\"",\""Lost one\""]"" }} ] }}";
+            await OfferAsync(chat, File(chat, item));
+
+            var offer = Offer(chat, admin);
+            await Press(chat, admin, offer, "ap");
+            await Press(chat, admin, offer, "ok");
+
+            CollectionAssert.AreEqual(new[] { "Mistake", "Lost one" },
+                (await Repositories.WarnReasons.GetSavedAsync(chat.ChatId)).ToArray());
+            Assert.IsFalse(chat.Keys.Keys.Any(k => k.EndsWith(":warnreasons")), "not written to the old key");
+            AssertNoErrors(chat);
+        }
+
+        [TestMethod]
         public async Task ValuesChangedSince_AddTheDifferenceToWarns_AndSkipTheRest()
         {
             await using var chat = await HarnessChat.StartAsync();

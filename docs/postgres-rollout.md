@@ -47,6 +47,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 14 | Roles and lists, **cut over**: authorized, moderators, elevation blocks, exempt members, @admin opt-outs, report blocks and /pingme per group; language admins, premium groups and ignored chats; kept in memory, each group's old sets imported on first use | `group_role_assignments`, `group_elevation_blocks`, `group_user_preferences`, `global_role_assignments`, `group_entitlements`, `bot_bans` | Built |
 | 15 | Group config, **cut over**: the remaining settings, the welcome, rules, about, language, link, log channel and extras; in memory, each group's old keys imported on its first use; changes queue in Redis while PostgreSQL is down | `group_settings` (the rest of its columns), `group_content_items`, `custom_commands` | Built |
 | 16 | Mute lists, **cut over**: who the bot muted (`/mute`, `/tempmute`, Mute On Join) for `/mutelist`, `/listmutedjoiners` and `/unmutenewjoiners`; each group's old keys imported on its first use; changes queue in Redis while PostgreSQL is down | `group_mutes`, `storage_imports` | Built |
+| 17 | Warn removal reasons, **cut over**: each group's mode, saved reasons and recent reasons, as part of its config (step 15); imported with the config; the removals waiting for a reason stay in Redis | `group_settings` (`warn_reason_mode`, `warn_reasons`, `recent_warn_reasons`) | Built |
 
 ### Step 2: ban history
 
@@ -175,7 +176,7 @@ and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose t
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else (raid state and the slow lane included) and everything read back. (Global bans
-moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14, the group config in step 15, the mute lists in step 16.) Old Redis ban and warn data is not
+moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14, the group config in step 15, the mute lists in step 16, the warn removal reasons in step 17.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -439,6 +440,26 @@ Who the bot muted in each group moved to PostgreSQL (Daniel, 2026-11-20), behind
   each mute here, so it waits at most those 3 s. The lists fail and say so meanwhile.
 - **Upgraded groups** (`Helpers/GroupMigration`): the rows move to the new id (the new id's win), and so does the import
   marker, so the old keys renamed to the new id are not imported again.
+- **Rollback.** The old keys are left as they were at the deploy.
+
+### Step 17: warn removal reasons (cut over)
+
+Which warn removals wait for a reason, and the reasons offered, moved to PostgreSQL with the rest of the group's config
+(Daniel, 2026-11-20): `GroupConfig` carries them, so they are in memory, versioned, and queued in `config:queue:{edition}`
+while PostgreSQL is down, as step 15 describes. `Data/WarnReasonRepository` keeps the `IWarnReasonRepository` the
+commands use. Nothing writes the old keys (`chat:{id}:warnreasonmode`, `warnreasons`, `recentwarnreasons`) any more.
+
+- **Columns** on `group_settings` (not in the approved design): `warn_reason_mode` (the number the /menu button cycles
+  through, 0 to 3), `warn_reasons` (`text[]`; null means never edited, so the language file's defaults apply, while an
+  emptied list stays empty) and `recent_warn_reasons` (`text[]`, newest first, at most 5). A reset of the group's
+  settings leaves them alone, as before.
+- **Recent reasons moved too** (Daniel: "migrate it"): admins see them as buttons, so they are state, not a cache.
+  Each use bumps the config version.
+- **Import** with the group's config, on its first use (`Data/LegacyGroupConfig`); a group whose config was imported
+  before this step gets nothing from the old keys, which is safe because none were set on prod (2026-11-20).
+- **Stays in Redis:** a removal waiting for its reason (`chat:{id}:warnreasonprompt:{message}`), expiring with its
+  question.
+- **Data recovery:** a `warnreasons` item reads and writes the group's config, in the old key's JSON form.
 - **Rollback.** The old keys are left as they were at the deploy.
 
 ## Not built yet: sharing 429s and enforcement across bot processes

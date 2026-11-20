@@ -12,7 +12,7 @@ namespace Enforcer5.Data
     /// moved to the detection settings in PostgreSQL (types <c>inline</c> and <c>stickerset</c>, "true" or "false",
     /// through their repositories), and the warn counts (<c>warns</c>, <c>prewarns</c>, <c>totalWarns</c>), which moved to
     /// PostgreSQL with rollout step 12 (through <see cref="Repositories.Warns"/>), the report blocks (step 14, Helpers/Roles)
-    /// and the extras (step 15, Helpers/GroupConfigs). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
+    /// the extras (step 15, Helpers/GroupConfigs) and the saved warn reasons (step 17, Helpers/GroupConfigs). Only the keys <see cref="Recovery.RecoveryFile"/> accepts for the offer's own group
     /// ever get here.
     /// </summary>
     internal interface IRecoveryValues
@@ -81,6 +81,10 @@ namespace Enforcer5.Data
                     return await Helpers.Roles.ContainsAsync(ChatOf(change), RoleList.ReportBlocked, long.Parse(change.Field)) ? "true" : "false";
                 case "set":
                     return await db.SetContainsAsync(change.Key, change.Field) ? "true" : "false";
+                case "str" when Recovery.RecoveryFile.Suffix(change.Key) == "warnreasons":
+                    // The group's config since rollout step 17, in the old form (a JSON array; null when never edited).
+                    var saved = (await Helpers.GroupConfigs.GetAsync(ChatOf(change))).WarnReasons;
+                    return saved == null ? null : System.Text.Json.JsonSerializer.Serialize(saved);
                 case "str":
                     var value = await db.StringGetAsync(change.Key);
                     return value.IsNull ? null : value.ToString();
@@ -129,6 +133,10 @@ namespace Enforcer5.Data
                 case "set":
                     if (value == "true") await db.SetAddAsync(change.Key, change.Field);
                     else await db.SetRemoveAsync(change.Key, change.Field);
+                    break;
+                case "str" when Recovery.RecoveryFile.Suffix(change.Key) == "warnreasons":
+                    await Helpers.GroupConfigs.ChangeAsync(ChatOf(change), ConfigChange.SetWarnReasons(
+                        value == null ? null : System.Text.Json.JsonSerializer.Deserialize<string[]>(value) ?? Array.Empty<string>()));
                     break;
                 case "str":
                     if (value == null) await db.KeyDeleteAsync(change.Key);

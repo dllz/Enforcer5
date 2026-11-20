@@ -12,7 +12,8 @@ namespace Enforcer5.Data
     /// <summary>
     /// A group's <see cref="GroupConfig"/> in PostgreSQL (rollout step 15): the settings and welcome in
     /// <c>group_settings</c> (with <c>config_version</c> and <c>config_imported_at</c>, since the row itself is the
-    /// detection settings' import marker), the texts in <c>group_content_items</c>, the extras in <c>custom_commands</c>.
+    /// detection settings' import marker), the texts in <c>group_content_items</c>, the extras in <c>custom_commands</c>;
+    /// the warn removal reasons (step 17) in <c>group_settings</c> too.
     /// </summary>
     internal sealed class PostgresGroupConfigRepository
     {
@@ -67,7 +68,8 @@ namespace Enforcer5.Data
             var row = await connection.QuerySingleOrDefaultAsync<SettingsRow>(new CommandDefinition($@"
 SELECT {string.Join(", ", FlagColumns.Select(f => $"s.{f.Column} AS {f.Flag}"))},
        lc.telegram_chat_id AS LogChat, s.welcome_type AS WelcomeType, s.welcome_content AS WelcomeContent,
-       s.welcome_media_file_id AS WelcomeFile, s.welcome_media_file_owner_edition AS WelcomeEdition, s.config_version AS Version
+       s.welcome_media_file_id AS WelcomeFile, s.welcome_media_file_owner_edition AS WelcomeEdition, s.config_version AS Version,
+       s.warn_reason_mode AS WarnReasonMode, s.warn_reasons AS WarnReasons, s.recent_warn_reasons AS RecentWarnReasons
 FROM group_settings s LEFT JOIN telegram_chats lc ON lc.chat_id = s.log_chat_id
 WHERE s.group_id = @GroupId AND s.config_imported_at IS NOT NULL", new { GroupId = groupId }, transaction));
             if (row == null) return null;
@@ -97,6 +99,10 @@ SELECT trigger AS Trigger, content AS Content, media_type AS MediaType, file_id 
                 LogChat = row.LogChat,
                 Content = texts.ToImmutableDictionary(),
                 Extras = extraMap.ToImmutable(),
+                WarnReasonMode = Enum.IsDefined(typeof(Models.WarnReasonMode), (int)row.WarnReasonMode)
+                    ? (Models.WarnReasonMode)row.WarnReasonMode : Models.WarnReasonMode.Off,
+                WarnReasons = row.WarnReasons?.ToImmutableList(),
+                RecentWarnReasons = (row.RecentWarnReasons ?? Array.Empty<string>()).ToImmutableList(),
                 Version = row.Version
             };
         }
@@ -128,6 +134,11 @@ WHERE group_id = @GroupId AND config_imported_at IS NULL", new { GroupId = group
                 await WriteAsync(connection, transaction, groupId, ConfigChange.SetContent(kind, text));
             foreach (var (trigger, extra) in config.Extras)
                 await WriteAsync(connection, transaction, groupId, ConfigChange.SetExtra(trigger, extra));
+            await WriteAsync(connection, transaction, groupId, ConfigChange.SetWarnReasonMode(config.WarnReasonMode));
+            await WriteAsync(connection, transaction, groupId, ConfigChange.SetWarnReasons(config.WarnReasons));
+            await connection.ExecuteAsync(new CommandDefinition(
+                "UPDATE group_settings SET recent_warn_reasons = @Recent WHERE group_id = @GroupId",
+                new { Recent = config.RecentWarnReasons.ToArray(), GroupId = groupId }, transaction));
             var imported = await LoadAsync(connection, transaction, chatId);
             await transaction.CommitAsync();
             return imported;
@@ -204,6 +215,21 @@ UPDATE group_settings SET welcome_type = @Type, welcome_content = @Content, welc
                             Edition = extra?.FileId == null ? null : extra.FileEdition ?? _edition, extra?.Caption
                         }));
                     break;
+                case "warnreasonmode":
+                    await connection.ExecuteAsync(Sql("UPDATE group_settings SET warn_reason_mode = @Mode WHERE group_id = @GroupId",
+                        new { Mode = (short)change.ReasonMode, GroupId = groupId }));
+                    break;
+                case "warnreasons":
+                    await connection.ExecuteAsync(Sql("UPDATE group_settings SET warn_reasons = @Reasons WHERE group_id = @GroupId",
+                        new { change.Reasons, GroupId = groupId }));
+                    break;
+                case "recentwarnreason":
+                    // As ConfigChange.Recent: the reason first, no duplicates, at most the limit.
+                    await connection.ExecuteAsync(Sql(@"
+UPDATE group_settings SET recent_warn_reasons = (ARRAY[@Reason::text] || array_remove(recent_warn_reasons, @Reason::text))[1:@Max]
+WHERE group_id = @GroupId",
+                        new { change.Reason, Max = Models.WarnReasons.MaxRecent, GroupId = groupId }));
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(change), change.Kind, null);
             }
@@ -225,6 +251,9 @@ UPDATE group_settings SET welcome_type = @Type, welcome_content = @Content, welc
             public string WelcomeFile { get; set; }
             public string WelcomeEdition { get; set; }
             public long Version { get; set; }
+            public short WarnReasonMode { get; set; }
+            public string[] WarnReasons { get; set; }
+            public string[] RecentWarnReasons { get; set; }
         }
 
         private sealed class ExtraRow

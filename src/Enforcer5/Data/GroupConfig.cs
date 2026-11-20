@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Enforcer5.Models;
 
 namespace Enforcer5.Data
 {
@@ -84,8 +85,8 @@ namespace Enforcer5.Data
     }
 
     /// <summary>
-    /// A group's settings other than the automatic checks', its welcome, its texts and its extras (rollout step 15).
-    /// Immutable; <see cref="Version"/> is <c>group_settings.config_version</c>.
+    /// A group's settings other than the automatic checks', its welcome, its texts and its extras (rollout step 15), and
+    /// its warn removal reasons (step 17). Immutable; <see cref="Version"/> is <c>group_settings.config_version</c>.
     /// </summary>
     internal sealed record GroupConfig
     {
@@ -95,6 +96,15 @@ namespace Enforcer5.Data
         public ImmutableDictionary<ContentKind, string> Content { get; init; } = ImmutableDictionary<ContentKind, string>.Empty;
         public ImmutableSortedDictionary<string, ExtraConfig> Extras { get; init; } =
             ImmutableSortedDictionary<string, ExtraConfig>.Empty.WithComparers(StringComparer.Ordinal);
+        /// <summary>Which warn removals wait for a reason (/menu).</summary>
+        public WarnReasonMode WarnReasonMode { get; init; }
+        /// <summary>
+        /// The reasons admins saved (/warnreasons), or null when they never edited the list, in which case the language
+        /// file's defaults apply. An edited list that is now empty stays empty.
+        /// </summary>
+        public ImmutableList<string> WarnReasons { get; init; }
+        /// <summary>Recently used reasons, newest first, at most <see cref="Models.WarnReasons.MaxRecent"/>.</summary>
+        public ImmutableList<string> RecentWarnReasons { get; init; } = ImmutableList<string>.Empty;
         public long Version { get; init; }
 
         /// <summary>What a new group gets (as <c>Service.GenerateSettings</c> and <c>NewSetting3</c> wrote to Redis).</summary>
@@ -123,7 +133,12 @@ namespace Enforcer5.Data
             other != null && Welcome == other.Welcome && LogChat == other.LogChat &&
             Enum.GetValues<ConfigFlag>().All(f => Flag(f) == other.Flag(f)) &&
             Content.Count == other.Content.Count && Content.All(c => other.Text(c.Key) == c.Value) &&
-            Extras.Count == other.Extras.Count && Extras.All(e => other.Extra(e.Key) == e.Value);
+            Extras.Count == other.Extras.Count && Extras.All(e => other.Extra(e.Key) == e.Value) &&
+            WarnReasonMode == other.WarnReasonMode && SameList(WarnReasons, other.WarnReasons) &&
+            SameList(RecentWarnReasons, other.RecentWarnReasons);
+
+        private static bool SameList(IReadOnlyList<string> a, IReadOnlyList<string> b) =>
+            a == null || b == null ? a == null && b == null : a.SequenceEqual(b);
     }
 
     /// <summary>One change to a group's config, applied in memory and written to PostgreSQL (or queued). Idempotent.</summary>
@@ -139,13 +154,28 @@ namespace Enforcer5.Data
         public ExtraConfig Extra { get; init; }
         public WelcomeConfig Welcome { get; init; }
         public long? LogChat { get; init; }
+        public WarnReasonMode ReasonMode { get; init; }
+        /// <summary>The saved warn reasons; null brings back the defaults (only the data recovery does).</summary>
+        public string[] Reasons { get; init; }
+        public string Reason { get; init; }
 
         internal static ConfigChange SetFlag(ConfigFlag flag, bool on) => new() { Kind = "flag", Flag = flag, On = on };
         internal static ConfigChange SetContent(ContentKind kind, string text) => new() { Kind = "content", Content = kind, Text = text };
         internal static ConfigChange SetExtra(string trigger, ExtraConfig extra) => new() { Kind = "extra", Trigger = trigger, Extra = extra };
         internal static ConfigChange SetWelcome(WelcomeConfig welcome) => new() { Kind = "welcome", Welcome = welcome };
         internal static ConfigChange SetLogChat(long? chat) => new() { Kind = "logchat", LogChat = chat };
-        /// <summary>The settings and welcome back to a new group's (/resetSettings, the bot added); texts and extras stay.</summary>
+        internal static ConfigChange SetWarnReasonMode(WarnReasonMode mode) => new() { Kind = "warnreasonmode", ReasonMode = mode };
+        internal static ConfigChange SetWarnReasons(IReadOnlyList<string> reasons) =>
+            new() { Kind = "warnreasons", Reasons = reasons?.ToArray() };
+        /// <summary>Moves <paramref name="reason"/> to the front of the recent reasons (idempotent when repeated).</summary>
+        internal static ConfigChange UsedWarnReason(string reason) => new() { Kind = "recentwarnreason", Reason = reason };
+
+        /// <summary>The recent reasons after <paramref name="reason"/> was used: it first, no duplicates, at most the limit.</summary>
+        internal static ImmutableList<string> Recent(IEnumerable<string> recent, string reason) =>
+            new[] { reason }.Concat((recent ?? Enumerable.Empty<string>()).Where(r => r != reason))
+                .Take(WarnReasons.MaxRecent).ToImmutableList();
+
+        /// <summary>The settings and welcome back to a new group's (/resetSettings, the bot added); texts, extras and warn reasons stay.</summary>
         internal static ConfigChange Reset() => new() { Kind = "reset" };
 
         internal GroupConfig ApplyTo(GroupConfig config) => Kind switch
@@ -156,6 +186,9 @@ namespace Enforcer5.Data
             "welcome" => config with { Welcome = Welcome ?? WelcomeConfig.Default },
             "logchat" => config with { LogChat = LogChat },
             "reset" => config with { Flags = GroupConfig.Defaults, Welcome = WelcomeConfig.Default },
+            "warnreasonmode" => config with { WarnReasonMode = ReasonMode },
+            "warnreasons" => config with { WarnReasons = Reasons?.ToImmutableList() },
+            "recentwarnreason" => config with { RecentWarnReasons = Recent(config.RecentWarnReasons, Reason) },
             _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, null)
         };
     }

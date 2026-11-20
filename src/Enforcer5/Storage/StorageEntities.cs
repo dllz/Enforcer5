@@ -373,6 +373,12 @@ namespace Enforcer5.Storage
         public string WelcomeMediaFileOwnerEdition { get; set; }
         public long ConfigVersion { get; set; }
         public DateTimeOffset? ConfigImportedAt { get; set; }
+
+        // Warn removal reasons (rollout step 17), part of the group's config: the mode as the number the menu cycles
+        // through, the saved reasons (null: never edited, the language file's defaults apply), the recent ones newest first.
+        public short WarnReasonMode { get; set; }
+        public string[] WarnReasons { get; set; }
+        public string[] RecentWarnReasons { get; set; }
     }
 
     /// <summary>A group's rules, about text, language or link (the approved design).</summary>

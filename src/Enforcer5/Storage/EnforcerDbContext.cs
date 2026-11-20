@@ -340,6 +340,7 @@ namespace Enforcer5.Storage
                     table.HasCheckConstraint("group_settings_welcome_media_check",
                         "(welcome_media_file_id IS NULL) = (welcome_media_file_owner_edition IS NULL) AND (welcome_media_file_owner_edition IS NULL OR welcome_media_file_owner_edition IN ('normal', 'premium', 'legacy_unknown'))");
                     table.HasCheckConstraint("group_settings_config_version_check", "config_version > 0");
+                    table.HasCheckConstraint("group_settings_warn_reason_mode_check", "warn_reason_mode BETWEEN 0 AND 3");
                 });
                 entity.HasKey(x => x.GroupId);
                 entity.Property(x => x.WelcomeEnabled).HasDefaultValue(false);
@@ -353,6 +354,8 @@ namespace Enforcer5.Storage
                 entity.Property(x => x.WelcomeType).IsRequired().HasDefaultValue("composed");
                 entity.Property(x => x.WelcomeContent).HasDefaultValue("no");
                 entity.Property(x => x.ConfigVersion).HasDefaultValue(1L);
+                entity.Property(x => x.WarnReasonMode).HasDefaultValue((short)0);
+                entity.Property(x => x.RecentWarnReasons).IsRequired().HasDefaultValueSql("'{}'::text[]");
                 entity.HasOne<TelegramChatEntity>().WithMany().HasForeignKey(x => x.LogChatId).OnDelete(DeleteBehavior.SetNull);
                 entity.Property(x => x.WarningAction).IsRequired();
                 entity.Property(x => x.PrewarnMode).IsRequired().HasDefaultValue("convert");
