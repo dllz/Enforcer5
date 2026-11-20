@@ -1478,6 +1478,50 @@ namespace Enforcer5.Storage.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Enforcer5.Storage.GroupMuteEntity", b =>
+                {
+                    b.Property<long>("TelegramChatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_chat_id");
+
+                    b.Property<long>("TelegramUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("telegram_user_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("MutedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("muted_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("bot")
+                        .HasColumnName("source");
+
+                    b.Property<DateTimeOffset?>("UntilAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("until_at");
+
+                    b.HasKey("TelegramChatId", "TelegramUserId");
+
+                    b.ToTable("group_mutes", null, t =>
+                        {
+                            t.HasCheckConstraint("group_mutes_kind_check", "kind IN ('mute', 'tempmute', 'joiner')");
+
+                            t.HasCheckConstraint("group_mutes_source_check", "source IN ('bot', 'redis')");
+
+                            t.HasCheckConstraint("group_mutes_until_check", "(kind = 'tempmute') = (until_at IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Enforcer5.Storage.GroupRoleAssignmentEntity", b =>
                 {
                     b.Property<long>("AssignmentId")

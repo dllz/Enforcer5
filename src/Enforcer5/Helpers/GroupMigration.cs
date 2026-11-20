@@ -18,7 +18,7 @@ namespace Enforcer5.Helpers
     /// <list type="bullet">
     /// <item>PostgreSQL: the group's row points at the new chat. Rows the new id gathered meanwhile (a few seconds' worth)
     /// move to the old group's, or give way where it has one already; then the new id's group row goes. The tempban
-    /// schedule, and log channels and admin chats that were the old group, follow.</item>
+    /// schedule, the mute lists, and log channels and admin chats that were the old group, follow.</item>
     /// <item>Redis: the group's <c>chat:{id}:…</c> keys are renamed, unless the new id has one already.</item>
     /// <item>What this process keeps in memory about either id is forgotten.</item>
     /// </list>
@@ -132,6 +132,20 @@ DELETE FROM tempban_schedule o WHERE o.telegram_chat_id = @From AND EXISTS (
     SELECT 1 FROM tempban_schedule n WHERE n.edition = o.edition AND n.telegram_chat_id = @To AND n.telegram_user_id = o.telegram_user_id);
 UPDATE tempban_schedule SET telegram_chat_id = @To WHERE telegram_chat_id = @From",
                 new { From = from, To = to }, transaction);
+            // The bot's mute lists: one row per member, the new id's wins. Imported there if the old id was, so the old
+            // Redis keys (renamed below) are not imported again over what changed since.
+            await connection.ExecuteAsync(@"
+DELETE FROM group_mutes o WHERE o.telegram_chat_id = @From AND EXISTS (
+    SELECT 1 FROM group_mutes n WHERE n.telegram_chat_id = @To AND n.telegram_user_id = o.telegram_user_id);
+UPDATE group_mutes SET telegram_chat_id = @To WHERE telegram_chat_id = @From;
+INSERT INTO storage_imports (name, done_at, details)
+SELECT @ToImport, now(), 'moved from ' || @FromImport WHERE EXISTS (SELECT 1 FROM storage_imports WHERE name = @FromImport)
+ON CONFLICT (name) DO NOTHING",
+                new
+                {
+                    From = from, To = to, FromImport = Data.PostgresMuteRepository.ImportName(from),
+                    ToImport = Data.PostgresMuteRepository.ImportName(to)
+                }, transaction);
             await transaction.CommitAsync();
         }
 
@@ -177,6 +191,7 @@ ORDER BY c.table_name", transaction: transaction)).ToList();
 
         private static void Forget(long chatId)
         {
+            (Data.Repositories.Mutes as MuteStore)?.Forget(chatId);
             GroupConfigs.Forget(chatId);
             Detection.DetectionSettings.Forget(chatId);
             AdminDirectory.Forget(chatId);

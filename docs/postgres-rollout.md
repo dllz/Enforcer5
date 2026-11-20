@@ -46,6 +46,7 @@ here copies the tables it needs unchanged and adds them in a migration of its ow
 | 13 | Tempban expiry, **cut over**: each edition's schedule in PostgreSQL, claimed by the expiry check; the old Redis schedule imported once; changes queue in Redis while it is down | `tempban_schedule`, `storage_imports` | Built |
 | 14 | Roles and lists, **cut over**: authorized, moderators, elevation blocks, exempt members, @admin opt-outs, report blocks and /pingme per group; language admins, premium groups and ignored chats; kept in memory, each group's old sets imported on first use | `group_role_assignments`, `group_elevation_blocks`, `group_user_preferences`, `global_role_assignments`, `group_entitlements`, `bot_bans` | Built |
 | 15 | Group config, **cut over**: the remaining settings, the welcome, rules, about, language, link, log channel and extras; in memory, each group's old keys imported on its first use; changes queue in Redis while PostgreSQL is down | `group_settings` (the rest of its columns), `group_content_items`, `custom_commands` | Built |
+| 16 | Mute lists, **cut over**: who the bot muted (`/mute`, `/tempmute`, Mute On Join) for `/mutelist`, `/listmutedjoiners` and `/unmutenewjoiners`; each group's old keys imported on its first use; changes queue in Redis while PostgreSQL is down | `group_mutes`, `storage_imports` | Built |
 
 ### Step 2: ban history
 
@@ -174,7 +175,7 @@ and the two-line "On Saturday, 22 October 2016 / At 16:09:11"); a record whose t
 read is still imported, with the import time. Absence means allowed, so nothing is dropped.
 
 Not migrated yet, still Redis only: everything else (raid state and the slow lane included) and everything read back. (Global bans
-moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14, the group config in step 15.) Old Redis ban and warn data is not
+moved in this step; warn counts in step 12, tempban expiry in step 13, the role lists in step 14, the group config in step 15, the mute lists in step 16.) Old Redis ban and warn data is not
 imported: ban history starts when step 2 ships, warn history when step 4 does.
 
 ### Step 8: raid building blocks
@@ -414,6 +415,30 @@ The rest of each group's settings, its welcome and its texts moved to PostgreSQL
 - **Stays in Redis** (caches, cooldowns, expiring state): the last welcome's message id, `chat:{id}:details`, the
   /pingall cooldown, elevation cooldowns and `/elevatelog`, the warn reasons, and a private chat's language
   (`chat:{user}:language`; the design has no place for it yet).
+- **Rollback.** The old keys are left as they were at the deploy.
+
+### Step 16: mute lists (cut over)
+
+Who the bot muted in each group moved to PostgreSQL (Daniel, 2026-11-20), behind the same `IMuteRepository`
+(`Helpers/MuteStore`, `Data/PostgresMuteRepository`). Nothing writes the old keys (`chat:{id}:muted`, `mutedJoiners`,
+`tempmuted`) any more. Telegram enforces every mute itself; this is only the bot's list, and `sanctions` stays the history.
+
+- **`group_mutes`** (not in the approved design): one row per member per group, by Telegram ids as `tempban_schedule`,
+  shared by both editions as the Redis keys were: the kind (`mute`, `tempmute` with `until_at`, `joiner` from Mute On
+  Join), when, and whether it came from Redis. The latest mute wins, except that Mute On Join never replaces a mute for
+  good (else /unmutenewjoiners would lift it). Ended tempmutes are deleted when the list is read, as before.
+- **Why not `sanctions`.** Checked on prod before this step: 47 open mute rows (30 of them Mute On Join) against 12 in
+  Redis. The history never learns that a list dropped someone Telegram shows as free (unmuted in the app, gone), so it
+  cannot be the list.
+- **Import, group by group.** On the group's first change or list (`Data/LegacyMutes`), once ever (`storage_imports`,
+  `mutes:{chat}`), before anything is written for it, so an old entry cannot undo a later change; a queued change
+  imports its group first too. Should a member be in two old lists, a mute for good wins, then a tempmute. Prod
+  had one group with 12 muted members, no joiners and no tempmutes.
+- **While PostgreSQL is down**, or a write takes longer than 3 s, a change goes to `mutes:queue:{edition}` and is
+  written in order once it is back; while anything waits, new changes queue behind it. The enforcement queue records
+  each mute here, so it waits at most those 3 s. The lists fail and say so meanwhile.
+- **Upgraded groups** (`Helpers/GroupMigration`): the rows move to the new id (the new id's win), and so does the import
+  marker, so the old keys renamed to the new id are not imported again.
 - **Rollback.** The old keys are left as they were at the deploy.
 
 ## Not built yet: sharing 429s and enforcement across bot processes

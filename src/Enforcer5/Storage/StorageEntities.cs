@@ -490,6 +490,22 @@ namespace Enforcer5.Storage
         public string ClaimedBy { get; set; }
     }
 
+    /// <summary>
+    /// Who the bot muted in each group (rollout step 16), for /mutelist, /listmutedjoiners and /unmutenewjoiners: one row
+    /// per member per group, the latest mute (<c>mute</c>, <c>tempmute</c> with <see cref="UntilAt"/>, or <c>joiner</c>
+    /// from Mute On Join). By Telegram ids, as <c>tempban_schedule</c>, and shared by both editions, as the Redis keys it
+    /// replaces were. Telegram enforces the mute; this is only the bot's list. <c>sanctions</c> stays the history.
+    /// </summary>
+    internal sealed class GroupMuteEntity
+    {
+        public long TelegramChatId { get; set; }
+        public long TelegramUserId { get; set; }
+        public string Kind { get; set; }
+        public DateTimeOffset? UntilAt { get; set; }
+        public DateTimeOffset MutedAt { get; set; }
+        public string Source { get; set; }
+    }
+
     /// <summary>An entitlement of a group: <c>premium</c> (the premium edition serves it), from the approved design.</summary>
     internal sealed class GroupEntitlementEntity
     {

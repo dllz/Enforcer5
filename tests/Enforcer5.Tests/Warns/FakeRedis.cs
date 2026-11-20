@@ -8,7 +8,7 @@ using Moq;
 namespace Enforcer5.Tests.Warns
 {
     /// <summary>
-    /// An in-memory stand-in for the string, hash, list and key commands the warn repositories use.
+    /// An in-memory stand-in for the string, hash, list, set and key commands the warn repositories use.
     /// Expiry is recorded, not enforced.
     /// </summary>
     internal sealed class FakeRedis
@@ -16,6 +16,7 @@ namespace Enforcer5.Tests.Warns
         public readonly Dictionary<string, (RedisValue Value, TimeSpan? Ttl)> Strings = new();
         public readonly Dictionary<string, Dictionary<RedisValue, RedisValue>> Hashes = new();
         public readonly Dictionary<string, List<RedisValue>> Lists = new();
+        public readonly Dictionary<string, HashSet<RedisValue>> Sets = new();
         public readonly Mock<IDatabaseAsync> Mock = new(MockBehavior.Strict);
 
         public IDatabaseAsync Database => Mock.Object;
@@ -32,9 +33,16 @@ namespace Enforcer5.Tests.Warns
             return list;
         }
 
+        public HashSet<RedisValue> Set(RedisKey key)
+        {
+            if (!Sets.TryGetValue(key.ToString(), out var set)) Sets[key.ToString()] = set = new();
+            return set;
+        }
+
         public IEnumerable<string> Keys =>
             Strings.Keys.Concat(Hashes.Where(h => h.Value.Count > 0).Select(h => h.Key))
-                .Concat(Lists.Where(l => l.Value.Count > 0).Select(l => l.Key));
+                .Concat(Lists.Where(l => l.Value.Count > 0).Select(l => l.Key))
+                .Concat(Sets.Where(l => l.Value.Count > 0).Select(l => l.Key));
 
         public FakeRedis()
         {
@@ -48,7 +56,9 @@ namespace Enforcer5.Tests.Warns
                 });
             Mock.Setup(d => d.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
                 .Returns((RedisKey k, CommandFlags _) => Task.FromResult(
-                    Strings.Remove(k.ToString()) | Hashes.Remove(k.ToString()) | Lists.Remove(k.ToString())));
+                    Strings.Remove(k.ToString()) | Hashes.Remove(k.ToString()) | Lists.Remove(k.ToString()) | Sets.Remove(k.ToString())));
+            Mock.Setup(d => d.SetMembersAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+                .Returns((RedisKey k, CommandFlags _) => Task.FromResult(Set(k).ToArray()));
 
             Mock.Setup(d => d.HashGetAsync(It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<CommandFlags>()))
                 .Returns((RedisKey k, RedisValue f, CommandFlags _) => Task.FromResult(Hash(k).TryGetValue(f, out var v) ? v : RedisValue.Null));

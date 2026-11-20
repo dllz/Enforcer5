@@ -34,8 +34,11 @@ namespace Enforcer5.Data
         internal static IChannelPostRepository ChannelPosts { get; set; } =
             new PolicyChannelPostRepository(() => Redis.db);
 
-        internal static IMuteRepository Mutes { get; set; } =
-            new RedisMuteRepository(() => Redis.db);
+        // PostgreSQL (rollout step 16), shared by both editions, with changes queued in Redis while it is down
+        // (Helpers/MuteStore). Each group's old Redis keys are read once, for its import (LegacyMutes).
+        internal static IMuteRepository Mutes { get; set; } = new MuteStore(
+            new PostgresMuteRepository(() => Storage.PostgresStorage.Database), new LegacyMutes(() => Redis.db),
+            () => Redis.db, Enforcer5.Helpers.BanHistory.Edition, () => Storage.PostgresStorage.Ready);
 
         // PostgreSQL. Only used once PostgresStorage is ready; see Helpers/HistoryWriter.
         internal static IBanHistoryRepository BanHistory { get; set; } =

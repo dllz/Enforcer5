@@ -52,6 +52,20 @@ namespace Enforcer5.Storage
                 entity.HasIndex(x => new { x.TelegramUserId });
             });
 
+            modelBuilder.Entity<GroupMuteEntity>(entity =>
+            {
+                entity.ToTable("group_mutes", table =>
+                {
+                    table.HasCheckConstraint("group_mutes_kind_check", "kind IN ('mute', 'tempmute', 'joiner')");
+                    table.HasCheckConstraint("group_mutes_until_check", "(kind = 'tempmute') = (until_at IS NOT NULL)");
+                    table.HasCheckConstraint("group_mutes_source_check", "source IN ('bot', 'redis')");
+                });
+                entity.HasKey(x => new { x.TelegramChatId, x.TelegramUserId });
+                entity.Property(x => x.Kind).IsRequired();
+                entity.Property(x => x.Source).IsRequired().HasDefaultValue("bot");
+                entity.Property(x => x.MutedAt).HasDefaultValueSql("now()");
+            });
+
             modelBuilder.Entity<GroupEntitlementEntity>(entity =>
             {
                 entity.ToTable("group_entitlements", table => table.HasCheckConstraint("group_entitlements_entitlement_check", "entitlement IN ('premium')"));

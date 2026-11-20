@@ -139,6 +139,8 @@ namespace Enforcer5
             (Data.Repositories.Warns as WarnStore)?.Start(Bot.ShutdownToken);
             // The tempban schedule: the old Redis one imported once, then changes queued while PostgreSQL is down.
             (Data.Repositories.Tempbans as TempbanStore)?.Start(Bot.ShutdownToken);
+            // Who the bot muted: each group's old Redis keys imported on first use, changes queued while PostgreSQL is down.
+            (Data.Repositories.Mutes as MuteStore)?.Start(Bot.ShutdownToken);
             // Who is authorized, elevated, exempt, ... in each group, and the global lists (Helpers/Roles).
             Roles.Start(Bot.ShutdownToken);
             // Changes to groups' settings, welcomes, texts and extras queued while PostgreSQL was down (Helpers/GroupConfigs).

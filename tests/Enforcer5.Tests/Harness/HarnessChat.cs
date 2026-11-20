@@ -198,6 +198,11 @@ namespace Enforcer5.Tests.Harness
                 tempbans.ResetForTests();
                 await tempbans.StartUpAsync(Clock.UtcNow);
             }
+            if (Enforcer5.Data.Repositories.Mutes is MuteStore mutes)
+            {
+                mutes.ResetForTests();
+                await mutes.LoadQueueAsync();
+            }
             // Detection everywhere, as the scenarios were written; DetectionPilotScenarios turn the pilot on.
             Enforcer5.Detection.DetectionPilot.ResetForTests();
             await SettleAsync();
@@ -229,6 +234,11 @@ namespace Enforcer5.Tests.Harness
             {
                 tempbans.ResetForTests();
                 await tempbans.StartUpAsync(Clock.UtcNow);
+            }
+            if (Enforcer5.Data.Repositories.Mutes is MuteStore mutes)
+            {
+                mutes.ResetForTests();
+                await mutes.LoadQueueAsync();
             }
             await SettleAsync();
             _world.QueueStop = new System.Threading.CancellationTokenSource();
